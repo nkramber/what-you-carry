@@ -143,7 +143,7 @@ Determinism rules (D-69 to D-73, D-77):
 
 Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
-- Pin Godot 4.7.2 .NET and .NET 8 LTS at scaffold time (D-169). Upgrade only by a decision entry. The .NET 8 support end on 2026-11-10 forces one bump before Gate 5.
+- Pin Godot 4.7.2 .NET and .NET 10 LTS at scaffold time (D-173). Upgrade only by a decision entry.
 - C# only. GDScript is banned. Tools are C#.
 - The editor is never required. C# builds the scenes.
 - JSON for all content, validated by a schema per type. An absent field is an error.
@@ -567,7 +567,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 
 1. Address every audit finding (D-147). ✅ Done 2026-09-07: D-148 to D-154, F-28 to F-37.
 2. Owner: receive the external SSD and move the checkout to it (D-145).
-3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-169. ✅ OQ-16: D-172. ✅ OQ-30: D-156. Protection deferred: D-170.
+3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-172. ✅ OQ-30: D-156. Protection deferred: D-170.
 4. PR-1, PR-2.
 5. PR-3, PR-4, PR-5.
 6. PR-6, PR-7, PR-8.

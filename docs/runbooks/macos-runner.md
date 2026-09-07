@@ -89,7 +89,7 @@ NOTE: A runner job runs with the owner's user permissions and shares the machine
 
 PR-1 and PR-12 add jobs that need tools on this machine. Install them before those PRs:
 
-1. The .NET 8 SDK (D-169).
+1. The .NET 10 SDK (D-173).
 2. The Godot 4.7.2 .NET editor binary (D-61), on the path.
 
 ## Remove or move the runner

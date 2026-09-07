@@ -189,10 +189,11 @@ How to read this file:
 | D-166 | 2026-09-07 | Corridor | Every corridor is at least three blocks wide and three blocks high. | Resolves OQ-40. Binds PR-8, PR-9. |
 | D-167 | 2026-09-07 | Difficulty budget | Each floor template names a budget number. Each room template names a weight. The sum of room weights is within 10 percent of the budget. PR-16 maps weights to enemy spawns. | Resolves OQ-41. Binds PR-9, PR-16. |
 | D-168 | 2026-09-07 | Content validators | One hand-written C# validator per content type, with an explicit required-field list and an unknown-field check. Revisit past ten types. | Resolves OQ-42. Binds PR-5. |
-| D-169 | 2026-09-07 | .NET pin | .NET 8 LTS. Godot 4.7's C# docs require .NET 8 or later, verified 2026-09-07. | Resolves OQ-2. Binds PR-1. Support for .NET 8 ends 2026-11-10, so a bump to a later LTS is a decision before Gate 5. |
+| D-169 | 2026-09-07 | .NET pin | .NET 8 LTS. Godot 4.7's C# docs require .NET 8 or later, verified 2026-09-07. | Resolves OQ-2. Binds PR-1. Revised by D-173 on 2026-09-07: .NET 10 LTS. |
 | D-170 | 2026-09-07 | Branch protection deferred | No branch protection until launch. GitHub requires Pro or a public repository for it on a private repository, verified 2026-09-07 by a 403 from the API. D-158 becomes a convention: the owner merges, and no session pushes to `main`. | Revises D-158. Resolves F-46. The PR gate and the agent files enforce it by rule, not by GitHub. |
 | D-171 | 2026-09-07 | Runner registration date | Register the Mac Mini runner on 2026-09-08 after the SSD mounts, once, with the work directory on the SSD. The runbook is `docs/runbooks/macos-runner.md`. | Applies D-157. |
 | D-172 | 2026-09-07 | Attribution option | `.claude/settings.json` in the repository sets `attribution.commit` and `attribution.pr` to false, verified against the Claude Code settings reference on 2026-09-07. Codex is unverified. The PR-1 trailer scan is the backstop. | Resolves OQ-16 and F-15 for Claude Code. |
+| D-173 | 2026-09-07 | .NET pin revised | .NET 10 LTS, the current long-term-support release, supported until November 2028. Godot 4.7 accepts .NET 8 or later, so it qualifies under D-62. | Revises D-169. Resolves OQ-2. Binds PR-1. |
 
 ## Rules set during the interview
 

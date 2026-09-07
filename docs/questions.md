@@ -15,7 +15,7 @@ How to file a question (D-124, D-138):
 ## Register
 
 1. **OQ-1. The palette.** The owner designs or approves the 32-color palette (D-85). Blocks PR-14. Recommendation: start from a dark-weighted ramp of eight hues with four values each. Scope corrected 2026-09-07 (audit R-9, F-36): this question blocks PR-14 only, not PR-1.
-2. **OQ-2. The .NET version.** Which .NET LTS does Godot 4.7.2 support? Blocks PR-1. Recommendation: verify on the Godot download page at scaffold time and record the answer in D-62. Resolved 2026-09-07: D-169, .NET 8 LTS.
+2. **OQ-2. The .NET version.** Which .NET LTS does Godot 4.7.2 support? Blocks PR-1. Recommendation: verify on the Godot download page at scaffold time and record the answer in D-62. Resolved 2026-09-07: D-169, .NET 8 LTS. Revised 2026-09-07: D-173, .NET 10 LTS.
 3. **OQ-3. Satchel slot count.** Blocks PR-23. Recommendation: six slots.
 4. **OQ-4. Timer lengths.** Per floor band and for boss floors (D-46, D-140). Blocks PR-17. Recommendation: three minutes on floors 1 to 5, four on 6 to 10, five on 11 to 15, plus two on boss floors.
 5. **OQ-5. Stagger and weight.** Does heavy armor resist stagger (F-21)? Blocks PR-15. Recommendation: yes, heavy armor resists stagger and light armor does not.

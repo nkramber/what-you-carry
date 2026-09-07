@@ -50,7 +50,7 @@ Scope:
   - Game: a Godot .NET project that references Core.
   - Tools: a console project.
   - Tests: an xUnit project that references Core and Tools.
-- `global.json` that pins the .NET 8 SDK (D-62, D-169). `Directory.Build.props` with nullable on, warnings as errors, and one language version (D-68).
+- `global.json` that pins the .NET 10 SDK (D-62, D-173). `Directory.Build.props` with nullable on, warnings as errors, and one language version (D-68).
 - `project.godot` and the Game project file on `Godot.NET.Sdk` at the pinned version (D-61).
 - `.github/workflows/ci.yml` with three jobs: build and test on hosted Linux x64, hosted Windows x64, and the self-hosted macOS arm64 runner (D-100, D-148, OQ-31).
 - `.github/pull_request_template.md` with the gate checklist and one "no change needed because" line per document (D-118). It has one line that names each absent check with the PR that creates it (D-148).
@@ -381,7 +381,7 @@ Procedure: after PR-11, read the night job duration for seven nights. Record the
 One person owns the program. Items run one at a time in this order. Each PR opens only after the one before it merges.
 
 1. Owner: receive the SSD and move the checkout to it (D-145).
-2. Owner: register the runner on 2026-09-08 per `docs/runbooks/macos-runner.md` (D-157, D-171). ✅ OQ-2: D-169. ✅ OQ-16: D-172. Protection deferred: D-170.
+2. Owner: register the runner on 2026-09-08 per `docs/runbooks/macos-runner.md` (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-172. Protection deferred: D-170.
 3. PR-1.
 4. PR-2.
 5. ✅ OQ-33 to OQ-35 answered 2026-09-07: D-159 to D-161.
@@ -408,7 +408,7 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 1. Each 
 Open:
 
 - OQ-12: the biome. Blocks PR-9.
-- OQ-2 resolved 2026-09-07 by D-169: .NET 8 LTS.
+- OQ-2 resolved 2026-09-07 by D-173: .NET 10 LTS. D-169 is revised.
 - OQ-16 resolved 2026-09-07 by D-172: the attribution option is committed.
 
 Resolved 2026-09-07:
