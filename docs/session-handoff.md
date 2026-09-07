@@ -5,7 +5,7 @@ Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end o
 ## Session 4: 2026-09-07, Claude Code
 
 Author: Claude Code
-Session: initial commit and the Phase 1 roadmap. Branch `docs/roadmaps`, no PR yet.
+Session: initial commit and the five focused roadmaps. Branch `docs/roadmaps`, pushed, no PR yet.
 
 ### What this session did, and why
 
@@ -16,18 +16,21 @@ Session: initial commit and the Phase 1 roadmap. Branch `docs/roadmaps`, no PR y
 - Added G-21 to the design guardrails: no `System.Random` or wall-clock reads in Core.
 - Filed OQ-31 to OQ-42 in `docs/questions.md`: the owner actions and the technical choices that Phase 1 PRs need before they start, each with a recommendation.
 - Linked the roadmap from `docs/design.md` section 7.
-- Asked the owner OQ-31 to OQ-42 in three batches and recorded D-157 to D-168. The roadmap now cites those decisions instead of the questions.
+- Asked the owner OQ-31 to OQ-42 in three batches and recorded D-157 to D-168. The Phase 1 roadmap now cites those decisions instead of the questions.
+- Wrote the four later roadmaps in the same format: `phase-2-first-playable.md`, `phase-3-full-loop.md`, `phase-4-content-complete.md`, and `phase-5-early-access.md`. Each has per-PR scope, exit tests, review focus, a check clause, a gate, and a sequence with the owner questions placed before the PR that needs them.
+- Filed OQ-43 to OQ-71 for those phases, each with a recommendation. Added F-40 to F-45 to the design register for gaps the roadmaps exposed: wall fade in the mesher, no Deck unit named, no rarity tiers named, no Tier 3 model or budget, no source for the Deck checklist, and no cloud save file set after D-152.
+- Pushed every commit on `docs/roadmaps` to the remote after the owner pushed the branch.
 
 ### State of the build
 
-- `main` has one commit, `1c16c45`, on the remote. The branch `docs/roadmaps` holds this session's changes.
+- `main` has one commit, `1c16c45`, on the remote. The branch `docs/roadmaps` holds six commits of this session and is on the remote.
 - No code, solution, or CI workflow exists. PR-1 creates them.
 - `CLAUDE.md` and `AGENTS.md` are byte-identical.
 - The STE checker does not exist until PR-2. This session scanned the changed documents by script.
 
 ### In flight
 
-The Phase 1 roadmap is complete on the branch and not merged. Phase 2 to Phase 5 roadmaps do not exist.
+All five roadmaps are complete on the branch and not merged. No PR exists yet.
 
 ### Traps and gotchas
 
@@ -39,11 +42,11 @@ The Phase 1 roadmap is complete on the branch and not merged. Phase 2 to Phase 5
 
 ### Open questions that block progress
 
-`docs/questions.md` holds OQ-1 to OQ-42. Three stay open for Phase 1: OQ-2 and OQ-16 block PR-1, and OQ-12 blocks PR-9. Two owner actions precede PR-1: the runner (D-157) and branch protection (D-158). The SSD arrives 2026-09-08 (D-145).
+`docs/questions.md` holds OQ-1 to OQ-71. Three stay open for Phase 1: OQ-2 and OQ-16 block PR-1, and OQ-12 blocks PR-9. Two owner actions precede PR-1: the runner (D-157) and branch protection (D-158). The SSD arrives 2026-09-08 (D-145). Each later roadmap lists its own open questions in its section 6, with the owner's answer placed in the sequence before the PR that needs it.
 
 ### Next concrete action
 
-The owner chose to answer the Phase 1 questions first, then the later phases. Write `docs/roadmaps/phase-2-first-playable.md` on this branch for PR-12 to PR-20, PR-57, and M-3, in the Phase 1 format. Then Phases 3 to 5. Load `ste-writing` and `design-doc-style` first.
+Open a PR from `docs/roadmaps` to `main` for the cross-provider review of the five roadmaps (T-4). The review file is `docs/reviews/pr-<number>.md` per the `pr-review` skill. After the merge, the owner answers OQ-2 and OQ-16, registers the runner (D-157), protects `main` (D-158), moves the checkout to the SSD (D-145), and PR-1 starts from `phase-1-foundations.md`.
 
 ## Session 3: 2026-09-07, Claude Code
 
