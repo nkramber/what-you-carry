@@ -106,3 +106,30 @@ How to file a question (D-124, D-138):
 48. **OQ-48. The sound parameter format.** Raised 2026-09-07. Blocks PR-20. Recommendation: one JSON file per sound. The fields are an oscillator type, a base frequency, a pitch sweep, an envelope, a noise mix, a low-pass cutoff, and a seed. This is the classic small-synthesizer set, and it covers swings, hits, steps, and alarms.
 49. **OQ-49. The wall fade approach.** Raised 2026-09-07 (F-40). Blocks PR-13. Option one: a shader test that fades fragments inside a capsule between the camera and the player. Option two: per-block visibility flags in the mesher, as D-88's effect note said. Recommendation: the shader test. The mesher stays unchanged, no CPU work runs per frame, and the fade follows the camera at any speed. It revises the effect note of D-88 only, not the decision.
 50. **OQ-50. A Steam Deck unit for M-3.** Raised 2026-09-07 (F-41). Blocks M-3. D-15 makes the Deck the floor, and M-3 measures on one. Do you own a Steam Deck? Options: buy or borrow a Deck before PR-13, or measure on the Windows box with a frame cap as a stand-in until then. Recommendation: a Deck before PR-13, because the stand-in cannot measure the Deck's GPU.
+51. **OQ-51. The first affixes.** Raised 2026-09-07. Blocks PR-21. The behavior set is code, so each affix needs a decision. Recommendation for the first four: lifesteal (heal a share of damage dealt), burning (a small area of fire damage on hit, the arrow area of D-42 for arrows), swift (a shorter windup or draw), and sturdy (extra damage reduction). Each works for the player and for an enemy (D-49).
+52. **OQ-52. Rarity tiers and colors.** Raised 2026-09-07 (F-42). Blocks PR-21 and PR-26. D-49 shows a rarity color on an enemy, but no decision names the rarities. Recommendation: three rarities separate from the tier. Common has no affix and no color. Rare has one affix and a blue outline. Epic has two affixes and a purple outline. Tier sets the base stats. Rarity sets the affix count.
+53. **OQ-53. Satchel and consumable numbers.** Raised 2026-09-07. Blocks PR-23. Recommendation:
+    - the satchel count of OQ-3.
+    - a weapon swap of 45 ticks.
+    - a bomb fuse of 90 ticks, a 2-meter area, and 60 damage.
+    - a health potion of 50 over 60 ticks.
+    - a mana potion of 50 at once.
+54. **OQ-54. Bow and musket numbers.** Raised 2026-09-07. Blocks PR-24. Recommendation for the bow:
+    - a 20-tick full draw.
+    - 40 meters per second at full draw, gravity scale 1.
+    - 25 damage plus 10 in a 1.5-meter area.
+
+    Recommendation for the musket:
+    - a 150-tick reload.
+    - 120 meters per second, gravity scale 0.2.
+    - 80 damage.
+
+    Three sword hits, two arrows, or one musket ball kill a 100-health enemy.
+55. **OQ-55. Mana numbers.** Raised 2026-09-07. Blocks PR-25. Recommendation:
+    - a pool of 100, and regeneration of 2 per second.
+    - an exotic bolt that costs 25, with a 30-tick charge and 40 damage.
+    - a mana potion of 50.
+56. **OQ-56. Point values.** Raised 2026-09-07. Blocks PR-27. Recommendation: points per kill equal the enemy weight times a floor multiplier of 1 plus 0.25 per floor past the first. The boss bonus is 500 times the band index. M-5 tunes these with the payout curve of OQ-21.
+57. **OQ-57. The profile path.** Raised 2026-09-07. Blocks PR-31. Recommendation: `user://profile.json` for the profile and `user://runs/<run-id>.record` for run records, with `user://` as the Godot user directory on every platform. Never a hard-coded path (v1 section 5.3).
+58. **OQ-58. The Tier 3 model and budget.** Raised 2026-09-07 (F-43). Blocks PR-32. D-128 sets the cadence but not the model or the budget. Recommendation: the socket is model-agnostic. The owner runs the weekly session with the harness of the day and a one-hour budget, and files findings in this register. The session never runs unattended (D-117).
+59. **OQ-59. The hub layout.** Raised 2026-09-07. Blocks PR-30. Recommendation: a 24 by 8 by 24 block camp with no enemies. The bank chest, the skill shrine, and the descent entrance stand in a triangle, each within twelve blocks of the spawn.
