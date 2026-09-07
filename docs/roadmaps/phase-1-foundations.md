@@ -27,7 +27,7 @@ The design register in `docs/design.md` section 5 holds every finding. These row
 | F-29 | Four gates preceded their prerequisites | PR-7, PR-9, PR-11 |
 | F-30 | The run record omitted the initial state and versions | PR-6 |
 | F-38 | PR-10's gate named a weapon roster that does not exist until Phase 3 | PR-10 |
-| F-39 | The macOS CI leg needs a self-hosted runner that nobody has registered | PR-1 |
+| F-39 | The macOS CI leg needs a self-hosted runner that nobody has registered. D-157 names the setup | PR-1 |
 
 ## 3. Guardrails for this phase
 
@@ -114,9 +114,9 @@ Gate: exit tests 1 to 5 pass.
 
 Scope:
 
-- `Core/Determinism/Rng.cs`: the algorithm from OQ-33, seeded from one 64-bit seed, with a documented stream split for subsystems.
-- `Core/Determinism/DetMath.cs`: `Sin`, `Cos`, `Atan2`, `Sqrt`, `Pow`, `Abs`, `Floor`, `Clamp`, and `Lerp` in float (D-70). Range reduction and polynomial evaluation use only add, subtract, multiply, divide, and IEEE square root. `Sqrt` wraps the IEEE square root, which is a basic operation. The accuracy target is OQ-35.
-- `Core/Determinism/StateHash.cs`: the hash from OQ-34 over the raw bit patterns of a state, in a fixed field order.
+- `Core/Determinism/Rng.cs`: xoshiro128** streams seeded by SplitMix64 from the 64-bit run seed, one stream per subsystem (D-159).
+- `Core/Determinism/DetMath.cs`: `Sin`, `Cos`, `Atan2`, `Sqrt`, `Pow`, `Abs`, `Floor`, `Clamp`, and `Lerp` in float (D-70). Range reduction and polynomial evaluation use only add, subtract, multiply, divide, and IEEE square root. `Sqrt` wraps the IEEE square root, which is a basic operation. The accuracy target is D-161.
+- `Core/Determinism/StateHash.cs`: FNV-1a 64 over the raw bit patterns of a state, in a fixed declared field order (D-160).
 - `WhatYouCarry.Tools/DetLint/`: a command that parses each Core source file with the C# compiler API and reports each banned symbol (D-67, G-2, G-21). The banned symbols are `System.Math`, `MathF` outside `DetMath.cs`, `System.Numerics.Vector`, `System.Runtime.Intrinsics`, `System.Reflection`, `dynamic`, `System.Random`, `DateTime`, `Stopwatch`, and `Environment.TickCount`.
 - `Tests/BitIdentity/`: a program that runs a fixed RNG stream and a DetMath sweep over a fixed input grid, then prints the state hash.
 - A CI job `bit-identity` that runs that program on each platform and a final step that fails if the three hashes differ (D-69, D-71).
@@ -127,7 +127,7 @@ Exit tests:
 
 1. `RngKnownAnswer` asserts the first sixteen outputs for seed 1 against recorded values.
 2. `RngStreamsDiffer` asserts that two subsystem streams from one seed do not overlap in the first ten thousand outputs.
-3. `DetMathAccuracy` compares each function to a double reference over the OQ-35 range and asserts the OQ-35 tolerance.
+3. `DetMathAccuracy` compares each function to a double reference over [-4 pi, 4 pi] and asserts the D-161 tolerance.
 4. `DetMathRangeReduction` asserts that `Sin` and `Cos` at an angle plus many full turns equal the base angle within tolerance.
 5. `StateHashOrder` asserts that two states with equal fields in a different insertion order hash equal.
 6. `LintFailsSystemMath` runs the lint tool on a fixture that calls `System.Math.Sin` and asserts one finding.
@@ -174,8 +174,8 @@ Gate: exit tests 1 to 6 pass.
 Scope:
 
 - `Core/Content/ContentLoader.cs`: reads a content directory, validates each file against the validator for its type, and returns typed records (D-91, D-92). A failure names the file, the field, and the reason. An unknown field is a failure.
-- One validator per content type, in the form that OQ-42 selects. Phase 1 types: `floor-template` (PR-9), `projectile` (PR-10), and `strings`.
-- `Core/Content/ContentHash.cs`: the hash from OQ-37 over every content file in sorted path order, for the run record header (D-151).
+- One hand-written C# validator per content type, with a required-field list and an unknown-field check (D-168). Phase 1 types: `floor-template` (PR-9), `projectile` (PR-10), and `strings`.
+- `Core/Content/ContentHash.cs`: SHA-256 over each content file's relative path and bytes in sorted path order, for the run record header (D-151, D-163).
 - `Core/Content/Strings.cs`: the ID-keyed string table from `content/strings/en.json` (D-98). An unknown id throws.
 - A lint rule in DetLint (D-98, G-8): a string literal in the Game project outside a `Strings.Get` call is a finding. An allow list covers node names and paths.
 
@@ -203,9 +203,9 @@ Gate: exit tests 1 to 6 pass.
 Scope:
 
 - `Core/Simulation/SimulationLoop.cs`: a fixed step at 60 Hz that advances one tick per intent (D-73). The loop reads no clock.
-- `Core/Simulation/Intent.cs`: the layout from OQ-36 (D-74, D-77).
+- `Core/Simulation/Intent.cs`: the fixed 16-byte frame of D-162 (D-74, D-77).
 - `Core/Simulation/SimulationVersion.cs`: one constant, initial value 1 (D-151, G-20).
-- `Core/Replay/RunRecord.cs`: the header and the frame layout from OQ-37. The header holds the format version, the simulation version, the content hash, the seed, and the immutable initial state (D-151). Phase 1 writes an empty loadout, an empty tree, and no amulet assignment in the initial state, because those types do not exist yet. The schema is complete.
+- `Core/Replay/RunRecord.cs`: one JSON header line, then the fixed frames (D-163). The header holds the format version, the simulation version, the content hash, the seed, and the immutable initial state (D-151). Phase 1 writes an empty loadout, an empty tree, and no amulet assignment in the initial state, because those types do not exist yet. The schema is complete.
 - `Core/Replay/RunRecorder.cs`: writes the header, then appends one checksummed frame per tick from the first tick (D-97, G-5).
 - `Core/Replay/RunReplayer.cs`: reads a record, checks the versions and the content hash, and drives the loop from the frames. It ignores the live bank and tree. A torn tail truncates to the last complete frame (D-152). A mismatch produces a report that names both versions.
 
@@ -233,8 +233,8 @@ Gate: exit tests 1 to 7 pass.
 
 Scope:
 
-- `Core/World/VoxelGrid.cs`: a flat array of block ids with the limits from OQ-38 (D-78). Solid or air per id.
-- `Core/Physics/SweptAabb.cs`: swept movement of an axis-aligned box against the grid, one axis at a time, with the box size and jump from OQ-39 (D-27, D-80).
+- `Core/World/VoxelGrid.cs`: a flat array of one-byte block ids, at most 128 by 32 by 128 (D-78, D-164). Solid or air per id.
+- `Core/Physics/SweptAabb.cs`: swept movement of an axis-aligned box against the grid, one axis at a time. The box is 0.6 by 1.8 by 0.6 meters, and a jump clears one block (D-27, D-80, D-165).
 - `Core/Entities/PlayerBody.cs`: a box that reads the intent's movement vector and jump button, applies gravity, and moves through `SweptAabb` (D-149). No health, no weapon.
 - Constants for gravity, walk speed, sprint speed, and jump velocity in Core, with a decision entry for the initial values.
 
@@ -286,9 +286,9 @@ Gate: exit tests 1 to 5 pass.
 
 Scope:
 
-- `content/floors/*.json`: floor templates with size by depth, room count ranges, corridor cross-section from OQ-40, and the difficulty budget from OQ-41 (D-6, D-46, OQ-12).
+- `content/floors/*.json`: floor templates with size by depth and room count ranges (D-6, D-46). Each names a corridor cross-section of at least 3 by 3 (D-166) and a difficulty budget with room weights (D-167). The biome is OQ-12.
 - `Core/Procgen/FloorGenerator.cs`: rooms and corridors on the grid, a spawn point, and a stairwell, from the run seed and the floor number (D-78).
-- `Core/Procgen/Reachability.cs`: a search over walkable cells. A cell is walkable with two air blocks above it. A move is a step of at most one block up, or any drop, per OQ-39.
+- `Core/Procgen/Reachability.cs`: a search over walkable cells. A cell is walkable with two air blocks above it. A move is a step of at most one block up, or any drop (D-165).
 - `Core/Simulation/StairwellTransition.cs`: on arrival at the stairwell, a policy or the player chooses descend or ascend. Descend generates the next floor. Ascend ends the run (D-50, D-149).
 
 Out of scope: enemies, loot, the timer, the second biome.
@@ -298,8 +298,8 @@ Exit tests:
 1. `EveryRoomReachable` over five thousand seeds per PR and one hundred thousand each night: every room is reachable from the spawn (D-116).
 2. `NoRoomOverlap` asserts no two rooms share a block.
 3. `StairwellReachable` asserts a path from the spawn to the stairwell.
-4. `BudgetWithinTolerance` asserts the floor's budget within the OQ-41 tolerance.
-5. `CorridorCrossSection` asserts every corridor cell has the OQ-40 clearance.
+4. `BudgetWithinTolerance` asserts the sum of room weights within 10 percent of the floor budget (D-167).
+5. `CorridorCrossSection` asserts every corridor cell has three blocks of width and height (D-166).
 6. `FloorSizeGrowsWithDepth` asserts floor 15 is larger than floor 1 for the same seed.
 7. `GenerationIsDeterministic` asserts one grid hash for one seed, and the `bit-identity` job asserts it on three platforms.
 8. `DescendAdvancesFloor` asserts that a descend at the stairwell generates floor n+1 from the same run seed, and that an ascend ends the run.
@@ -346,7 +346,7 @@ Scope:
 - `WhatYouCarry.Tools/BotRunner/`: a command that runs N runs for a policy over a seed range, headless, with no sleep between ticks (D-115, D-127). It writes one JSONL run log per run through the PR-4 logger.
 - Policies in Core, each a few dozen lines (D-149): `RandomWalker` holds a random movement and jump for a random number of ticks, then picks again. `GreedyDescender` walks the reachability path to the stairwell and always descends.
 - Run end states: `bottom` at floor 15, `softlock` after a tick budget with no floor progress, and `crash` on any exception. The log holds the exception.
-- CI: the PR job runs one hundred seeds per policy. A scheduled night job on the self-hosted macOS runner runs five thousand seeds per policy (D-115, D-117). A `night-gate` job in the PR workflow reads the latest night result and fails when it is not a success.
+- CI: the PR job runs one hundred seeds per policy. A scheduled night job on the self-hosted macOS runner (D-157) runs five thousand seeds per policy (D-115, D-117). A `night-gate` job in the PR workflow reads the latest night result and fails when it is not a success.
 
 Out of scope: the coward, full-clearer, and timer-tester policies (PR-16 to PR-18), Tier 3.
 
@@ -381,20 +381,20 @@ Procedure: after PR-11, read the night job duration for seven nights. Record the
 One person owns the program. Items run one at a time in this order. Each PR opens only after the one before it merges.
 
 1. Owner: receive the SSD and move the checkout to it (D-145).
-2. Owner: answer OQ-2, OQ-16, OQ-31, OQ-32.
+2. Owner: register the runner (D-157) and protect `main` (D-158). Answer OQ-2 and OQ-16.
 3. PR-1.
 4. PR-2.
-5. Owner: answer OQ-33, OQ-34, OQ-35.
+5. ✅ OQ-33 to OQ-35 answered 2026-09-07: D-159 to D-161.
 6. PR-3.
 7. PR-4.
-8. Owner: answer OQ-42.
+8. ✅ OQ-42 answered 2026-09-07: D-168.
 9. PR-5.
-10. Owner: answer OQ-36, OQ-37.
+10. ✅ OQ-36 and OQ-37 answered 2026-09-07: D-162 and D-163.
 11. PR-6.
-12. Owner: answer OQ-38, OQ-39.
+12. ✅ OQ-38 and OQ-39 answered 2026-09-07: D-164 and D-165.
 13. PR-7.
 14. PR-8.
-15. Owner: answer OQ-12, OQ-40, OQ-41.
+15. Owner: answer OQ-12. ✅ OQ-40 and OQ-41 answered 2026-09-07: D-166 and D-167.
 16. PR-9.
 17. PR-10.
 18. PR-11.
@@ -405,18 +405,18 @@ One person owns the program. Items run one at a time in this order. Each PR open
 
 The register is `docs/questions.md` (D-144). These questions bind Phase 1. Each names the PR it blocks.
 
+Open:
+
 - OQ-2: the .NET version. Blocks PR-1.
 - OQ-16: the harness attribution option. Blocks PR-1.
-- OQ-31: the self-hosted macOS runner. Blocks PR-1.
-- OQ-32: branch protection on `main`. Recommended before PR-1 merges.
-- OQ-33: the RNG algorithm. Blocks PR-3.
-- OQ-34: the state hash method. Blocks PR-3.
-- OQ-35: the DetMath accuracy target. Blocks PR-3.
-- OQ-36: the intent record layout. Blocks PR-6.
-- OQ-37: the run record file layout and the content hash. Blocks PR-5 and PR-6.
-- OQ-38: the voxel grid limits. Blocks PR-7 and PR-9.
-- OQ-39: the player box and jump height. Blocks PR-7.
-- OQ-40: the corridor cross-section. Blocks PR-8 and PR-9.
-- OQ-41: the difficulty budget definition. Blocks PR-9.
-- OQ-42: the content validator form. Blocks PR-5.
 - OQ-12: the biome. Blocks PR-9.
+
+Resolved 2026-09-07:
+
+- OQ-31 (D-157): the self-hosted macOS runner. Owner action before PR-1.
+- OQ-32 (D-158): branch protection on `main`. Owner action before PR-1 merges.
+- OQ-33 to OQ-35 (D-159 to D-161): the RNG, the state hash, and the DetMath target. PR-3.
+- OQ-36 and OQ-37 (D-162 and D-163): the intent and run record layouts. PR-5 and PR-6.
+- OQ-38 and OQ-39 (D-164 and D-165): the grid limits, the player box, and the jump. PR-7 and PR-9.
+- OQ-40 and OQ-41 (D-166 and D-167): the corridor and the budget. PR-8 and PR-9.
+- OQ-42 (D-168): the validator form. PR-5.

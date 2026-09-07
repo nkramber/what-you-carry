@@ -16,6 +16,7 @@ Session: initial commit and the Phase 1 roadmap. Branch `docs/roadmaps`, no PR y
 - Added G-21 to the design guardrails: no `System.Random` or wall-clock reads in Core.
 - Filed OQ-31 to OQ-42 in `docs/questions.md`: the owner actions and the technical choices that Phase 1 PRs need before they start, each with a recommendation.
 - Linked the roadmap from `docs/design.md` section 7.
+- Asked the owner OQ-31 to OQ-42 in three batches and recorded D-157 to D-168. The roadmap now cites those decisions instead of the questions.
 
 ### State of the build
 
@@ -31,18 +32,18 @@ The Phase 1 roadmap is complete on the branch and not merged. Phase 2 to Phase 5
 ### Traps and gotchas
 
 - The roadmap never restates a decision. It cites D-# ids. Read the `Effect` column before you cite an early decision.
-- PR-1 cannot merge until OQ-2, OQ-16, and OQ-31 have answers and the SSD holds the checkout (D-145).
+- PR-1 cannot merge until OQ-2 and OQ-16 have answers, the runner exists (D-157), and the SSD holds the checkout (D-145).
 - Each Phase 1 PR has owner questions listed before it in the roadmap sequence. Ask them before the PR starts, not inside it (D-124).
 - `Sqrt` in DetMath wraps the IEEE square root. The lint tool must allow `MathF` inside `DetMath.cs` only.
 - The night-gate job in PR-11 reads the latest scheduled run. A red night blocks the next merge by design (D-115).
 
 ### Open questions that block progress
 
-`docs/questions.md` holds OQ-1 to OQ-42. PR-1 waits on OQ-2, OQ-16, OQ-31, and the SSD. PR-3 waits on OQ-33 to OQ-35. PR-5 waits on OQ-42. PR-6 waits on OQ-36 and OQ-37. PR-7 waits on OQ-38 and OQ-39. PR-9 waits on OQ-12, OQ-40, and OQ-41.
+`docs/questions.md` holds OQ-1 to OQ-42. Three stay open for Phase 1: OQ-2 and OQ-16 block PR-1, and OQ-12 blocks PR-9. Two owner actions precede PR-1: the runner (D-157) and branch protection (D-158). The SSD arrives 2026-09-08 (D-145).
 
 ### Next concrete action
 
-Two paths exist. One: the owner reviews `docs/roadmaps/phase-1-foundations.md` on the branch and answers OQ-31 to OQ-42, and the branch becomes a PR for cross-provider review (T-4). Two: write the Phase 2 roadmap, `docs/roadmaps/phase-2-first-playable.md`, on the same branch, for PR-12 to PR-20, PR-57, and M-3. Ask the owner which path comes first.
+The owner chose to answer the Phase 1 questions first, then the later phases. Write `docs/roadmaps/phase-2-first-playable.md` on this branch for PR-12 to PR-20, PR-57, and M-3, in the Phase 1 format. Then Phases 3 to 5. Load `ste-writing` and `design-doc-style` first.
 
 ## Session 3: 2026-09-07, Claude Code
 

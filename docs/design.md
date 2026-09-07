@@ -242,7 +242,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-36 | Audit R-9: section 8 put the palette answer before PR-1, and OQ-1 said it blocks PR-14 | 2026-09-07 | ✅ doc. OQ-1 blocks PR-14 only. Section 8 corrected |
 | F-37 | HEAD pointed at the unborn branch `docs/repository-audit`. The first commit would have missed `main` (D-126) | 2026-09-07 | ✅ D-156. HEAD reset to `main` before the initial commit |
 | F-38 | PR-10's gate named the full weapon roster, which does not exist until Phase 3 | 2026-09-07 | 🔧 A test-only definitions file under D-149. Binds PR-10, PR-24, PR-43 to PR-46 |
-| F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | ❓ OQ-31. Binds PR-1 |
+| F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | 🔧 D-157. Owner action before PR-1 |
 
 ## 6. Guardrails (the safety contract for every PR)
 

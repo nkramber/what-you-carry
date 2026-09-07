@@ -177,6 +177,18 @@ How to read this file:
 | D-154 | 2026-09-07 | Economy test | M-5 uses matched trials in simulated time: one thousand fixed seeds, the basic kit and an empty tree, ascend and die policies at every depth plus shallow-repeat, full-clear, and early-death, simulated ticks over 60 plus a sixty-second hub cost per run start, and a bootstrap 95 percent interval. Pass: at every depth the ascend lower bound exceeds the die upper bound, and deep ascend beats shallow repeat. | Resolves audit R-6 and OQ-29. Binds PR-27, M-5. |
 | D-155 | 2026-09-07 | Project skill location | All project skills live in `.claude/skills/`. Every new project skill must use that directory. Both agent files state the path and require direct access to each required `SKILL.md`. | Extends D-131 to all project skills. Applies even when a skill is absent from the automatic skill list. |
 | D-156 | 2026-09-07 | Initial commit | Reset HEAD to `main`. Commit every file as "initial commit" and push to `origin/main`. Roadmap work happens on the branch `docs/roadmaps`. | Resolves OQ-30 and F-37. Adds `.gitignore` and `.gitattributes`. |
+| D-157 | 2026-09-07 | macOS runner | The Mac Mini is a self-hosted GitHub Actions runner with the label `macos-arm64-self-hosted`. It runs as a launch agent. Its work directory is on the external SSD. | Resolves OQ-31 and F-39. Owner action before PR-1. |
+| D-158 | 2026-09-07 | Branch protection | `main` requires a PR and the `build`, `ste-check`, and `bit-identity` checks as each one exists. Only the owner pushes. | Resolves OQ-32. Owner action before PR-1 merges. |
+| D-159 | 2026-09-07 | RNG | xoshiro128** streams, seeded by SplitMix64 from the 64-bit run seed. One stream per subsystem, split by subsystem id. | Resolves OQ-33. Binds PR-3. |
+| D-160 | 2026-09-07 | State hash | FNV-1a 64 over the raw bit patterns of every state field in a fixed declared order. A test asserts the field order. | Resolves OQ-34. Binds PR-3. |
+| D-161 | 2026-09-07 | DetMath accuracy | Range reduction to [-pi, pi]. Degree-7 minimax polynomials for sine and cosine. Absolute error at most 1e-6 against a double reference. Atan2 at most 1e-6 radians. Sqrt wraps the IEEE square root. Tests cover [-4 pi, 4 pi]. | Resolves OQ-35. Binds PR-3. |
+| D-162 | 2026-09-07 | Intent layout | A fixed 16-byte frame: tick uint32, yaw and pitch deltas int16 in hundredths of a degree, movement x and y int8, buttons uint16 bit mask, CRC32 uint32. | Resolves OQ-36. Binds PR-6. |
+| D-163 | 2026-09-07 | Run record layout | One UTF-8 JSON header line, then the fixed frames of D-162. The content hash is SHA-256 over each content file's relative path and bytes in sorted path order. | Resolves OQ-37. Binds PR-5, PR-6. |
+| D-164 | 2026-09-07 | Grid limits | Block ids are one byte in a flat array. A floor is at most 128 by 32 by 128 blocks. | Resolves OQ-38. Binds PR-7, PR-9. |
+| D-165 | 2026-09-07 | Player box | A box of 0.6 by 1.8 by 0.6 meters. A jump clears exactly one block. No automatic step-up. A move is one block up or any drop, for the player and the pathfinder. | Resolves OQ-39. Binds PR-7, PR-16. |
+| D-166 | 2026-09-07 | Corridor | Every corridor is at least three blocks wide and three blocks high. | Resolves OQ-40. Binds PR-8, PR-9. |
+| D-167 | 2026-09-07 | Difficulty budget | Each floor template names a budget number. Each room template names a weight. The sum of room weights is within 10 percent of the budget. PR-16 maps weights to enemy spawns. | Resolves OQ-41. Binds PR-9, PR-16. |
+| D-168 | 2026-09-07 | Content validators | One hand-written C# validator per content type, with an explicit required-field list and an unknown-field check. Revisit past ten types. | Resolves OQ-42. Binds PR-5. |
 
 ## Rules set during the interview
 
