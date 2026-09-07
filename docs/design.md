@@ -241,6 +241,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-35 | Audit R-8: the header split Godot into stable 4.7.1 and .NET 4.7.2. The source page lists both editions as 4.7.2 | 2026-09-07 | ✅ doc. Header corrected with the refuted text kept |
 | F-36 | Audit R-9: section 8 put the palette answer before PR-1, and OQ-1 said it blocks PR-14 | 2026-09-07 | ✅ doc. OQ-1 blocks PR-14 only. Section 8 corrected |
 | F-37 | HEAD pointed at the unborn branch `docs/repository-audit`. The first commit would have missed `main` (D-126) | 2026-09-07 | ✅ D-156. HEAD reset to `main` before the initial commit |
+| F-38 | PR-10's gate named the full weapon roster, which does not exist until Phase 3 | 2026-09-07 | 🔧 A test-only definitions file under D-149. Binds PR-10, PR-24, PR-43 to PR-46 |
+| F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | ❓ OQ-31. Binds PR-1 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -277,10 +279,11 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 18. **G-18.** Squash merge by the owner, from a short branch, with a conventional commit subject (D-126).
 19. **G-19.** A PR that creates a check passes that check. A PR names any check that does not exist yet, with the PR that creates it (D-148).
 20. **G-20.** Every Core behavior change bumps the simulation version constant, and the review confirms it (D-151).
+21. **G-21.** No `System.Random`, `DateTime`, `Stopwatch`, or `Environment.TickCount` in Core. The seed and the tick are the only sources of randomness and time (D-69, D-73).
 
 ## 7. Roadmap
 
-Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundation gate with a written exit test. Gates 2 to 5 are playable builds with a written exit test and the owner's playtest sign-off. Ids: PR-# code changes, M-# measurements. An entry that covers several PRs notes its reserved id range. Focused roadmaps in `docs/roadmaps/` will expand the phases. None exist yet.
+Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundation gate with a written exit test. Gates 2 to 5 are playable builds with a written exit test and the owner's playtest sign-off. Ids: PR-# code changes, M-# measurements. An entry that covers several PRs notes its reserved id range. Focused roadmaps in `docs/roadmaps/` expand the phases with per-PR exit tests. Phase 1: [phase-1-foundations.md](roadmaps/phase-1-foundations.md).
 
 ### Phase 1: Foundations (foundation gate, D-150: CI green on three platforms with a bit-identical end state, docs and PR gate live, no playtest)
 
@@ -330,8 +333,8 @@ Gate: the night sweep passes on one hundred thousand seeds.
 > *In plain English:* this builds the dungeon floors from a random seed and proves, over huge numbers of seeds, that every floor can be finished.
 
 **PR-10: Projectile simulation.** 🔧
-Implement the projectile integrator with fixed-step Euler, swept collision against the grid and entity boxes, gravity scale, lifetime, and spread from weapon data (G-6). Implement the arc solver with DetMath. Property tests assert three facts. No projectile tunnels through the minimum wall at the maximum velocity. Every projectile ends inside its lifetime. The arc solver reaches a reachable target and reports an unreachable one.
-Gate: the projectile property tests pass over the full weapon roster data.
+Implement the projectile integrator with fixed-step Euler, swept collision against the grid and entity boxes, gravity scale, lifetime, and spread from weapon data (G-6). Implement the arc solver with DetMath. Add a `projectile` content schema and a test-only definitions file (F-38, D-149). The file holds the slowest arc, the fastest flat shot, the longest lifetime, and the widest spread. Property tests assert three facts. No projectile tunnels through the minimum wall at the maximum velocity. Every projectile ends inside its lifetime. The arc solver reaches a reachable target and reports an unreachable one.
+Gate: the projectile property tests pass over the test-only definitions. PR-24 and PR-43 to PR-46 rerun them over the real roster.
 > *In plain English:* bullets and arrows are real objects that fly, drop, and can miss. Tests prove a fast bullet never passes through a wall.
 
 **PR-11: Bot harness (Tier 2).** 🔧

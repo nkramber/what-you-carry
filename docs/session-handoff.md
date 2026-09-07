@@ -2,6 +2,48 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 4: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: initial commit and the Phase 1 roadmap. Branch `docs/roadmaps`, no PR yet.
+
+### What this session did, and why
+
+- Reset HEAD to `main`, added `.gitignore` and `.gitattributes`, and pushed every file to `origin/main` as commit `1c16c45`, message "initial commit" (D-156). The owner asked for a direct push to `main`.
+- Created the branch `docs/roadmaps` from `main` for the focused roadmaps (D-156).
+- Wrote `docs/roadmaps/phase-1-foundations.md`. Each PR entry has scope, out of scope, exit tests, review focus, a check clause, a gate, and a plain-English paragraph. It adds M-1 and M-2 procedures and a Phase 1 sequence.
+- Found two gaps of the audit R-2 class and handled them under D-149. PR-10's gate named a weapon roster that does not exist until Phase 3 (F-38). A test-only definitions file fixes it. The macOS CI leg needs a self-hosted runner that nobody had listed (F-39, OQ-31).
+- Added G-21 to the design guardrails: no `System.Random` or wall-clock reads in Core.
+- Filed OQ-31 to OQ-42 in `docs/questions.md`: the owner actions and the technical choices that Phase 1 PRs need before they start, each with a recommendation.
+- Linked the roadmap from `docs/design.md` section 7.
+
+### State of the build
+
+- `main` has one commit, `1c16c45`, on the remote. The branch `docs/roadmaps` holds this session's changes.
+- No code, solution, or CI workflow exists. PR-1 creates them.
+- `CLAUDE.md` and `AGENTS.md` are byte-identical.
+- The STE checker does not exist until PR-2. This session scanned the changed documents by script.
+
+### In flight
+
+The Phase 1 roadmap is complete on the branch and not merged. Phase 2 to Phase 5 roadmaps do not exist.
+
+### Traps and gotchas
+
+- The roadmap never restates a decision. It cites D-# ids. Read the `Effect` column before you cite an early decision.
+- PR-1 cannot merge until OQ-2, OQ-16, and OQ-31 have answers and the SSD holds the checkout (D-145).
+- Each Phase 1 PR has owner questions listed before it in the roadmap sequence. Ask them before the PR starts, not inside it (D-124).
+- `Sqrt` in DetMath wraps the IEEE square root. The lint tool must allow `MathF` inside `DetMath.cs` only.
+- The night-gate job in PR-11 reads the latest scheduled run. A red night blocks the next merge by design (D-115).
+
+### Open questions that block progress
+
+`docs/questions.md` holds OQ-1 to OQ-42. PR-1 waits on OQ-2, OQ-16, OQ-31, and the SSD. PR-3 waits on OQ-33 to OQ-35. PR-5 waits on OQ-42. PR-6 waits on OQ-36 and OQ-37. PR-7 waits on OQ-38 and OQ-39. PR-9 waits on OQ-12, OQ-40, and OQ-41.
+
+### Next concrete action
+
+Two paths exist. One: the owner reviews `docs/roadmaps/phase-1-foundations.md` on the branch and answers OQ-31 to OQ-42, and the branch becomes a PR for cross-provider review (T-4). Two: write the Phase 2 roadmap, `docs/roadmaps/phase-2-first-playable.md`, on the same branch, for PR-12 to PR-20, PR-57, and M-3. Ask the owner which path comes first.
+
 ## Session 3: 2026-09-07, Claude Code
 
 Author: Claude Code
