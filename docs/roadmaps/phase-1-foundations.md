@@ -124,8 +124,10 @@ Scope:
 - A numbered item counts as a procedural step, with the 20-word limit, only inside a section whose heading contains "Sequence" or "Procedure". Every other numbered item uses the 25-word limit.
 - Exempt by path: `docs/reviews/`, `docs/session-handoff.md`, `docs/session-handoff-archive.md`, `docs/archive/`. Exempt by block: tables and fenced code.
 - Output: one line per finding with file, line, rule id, and the sentence. A non-zero exit code on any finding.
-- A reference check that reads the `Effect` column of `docs/decisions.md` (D-178). It reports each file outside that register that cites a revised decision as a current answer.
-- The reference check skips a line that holds `revises`, `revised by`, or `supersedes`. It also skips a line that names the revising decision beside the revised one. Both forms are self-consistent.
+- A reference check that reads the `Effect` column of `docs/decisions.md` (D-178, D-186). It reports each file outside that register that cites a superseded decision as a current answer.
+- The check keys on `Superseded by D-N` only. A decision marked `Revised in part by D-N` stays citable, because the part that a citation names can still be current (D-186).
+- The check skips a line that holds `supersedes`, and a line that names the superseding decision beside the superseded one. Both forms are self-consistent.
+- A session number check that fails on a duplicate `## Session <number>` heading in `docs/session-handoff.md` (D-187).
 - A CI job `ste-check` that runs the command and the reference check on every non-exempt `.md` file.
 
 Out of scope: the STE dictionary, spell checks, term consistency.
@@ -137,14 +139,16 @@ Exit tests:
 3. `FixtureFindsEveryRule` runs the checker on a fixture file with one violation per rule and asserts one finding per rule.
 4. The `ste-check` CI job exists and runs on the PR.
 5. The PR description names the lint tool and the bit-identity job as absent, with PR-3 (D-148).
-6. `RepositoryCitesNoRevisedDecision` runs the reference check on the repository and asserts zero findings.
-7. `ReferenceCheckFindsAStaleCitation` runs the check on a fixture that cites a revised decision and asserts one finding.
+6. `RepositoryCitesNoSupersededDecision` runs the reference check on the repository and asserts zero findings.
+7. `ReferenceCheckFindsAStaleCitation` runs the check on a fixture that cites a superseded decision and asserts one finding.
+8. `ReferenceCheckAllowsAPartialRevision` runs the check on a fixture that cites a decision marked `Revised in part by` and asserts zero findings (D-186).
+9. `SessionNumberCheckFindsADuplicate` runs the check on a fixture handoff with two entries of the same number and asserts one finding (D-187).
 
 Review focus: errors, input boundaries, documents, test quality.
 
 Check clause: the lint tool and the bit-identity job do not exist. PR-3 creates them. This PR passes its own checker (G-19).
 
-Gate: exit tests 1 to 7 pass.
+Gate: exit tests 1 to 9 pass.
 
 > *In plain English:* this adds a tool that reads every document and reports each sentence that breaks the text rules. Documents are the project's memory, so the tool guards that memory.
 

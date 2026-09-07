@@ -49,7 +49,7 @@ Do not approve through reciprocal review of selected hunks.
 - Follow the read order in `AGENTS.md`.
 - Load `.claude/skills/ste-writing/SKILL.md` before any review text (D-139).
 - Read the PR request, its acceptance criteria, prior review, and applicable focused roadmap.
-- Resolve decision revisions through the `Effect` column in `docs/decisions.md`.
+- Resolve decision revisions through the `Effect` column in `docs/decisions.md` (D-186). `Superseded by D-N` replaces the whole answer. `Revised in part by D-N` changes only the named part, and the rest of that decision stays current.
 - Check `docs/questions.md` for unresolved choices that affect this change (D-124, D-144).
 - Record the PR number, target branch, base commit, merge base, and head commit.
 - Verify that the local checkout and diff represent those commits.
@@ -372,6 +372,7 @@ Push back when the evidence supports it. State the reason and show the proof:
 |---|---|
 | The finding reads a rule too broadly. | Quote the rule. Name the other files that the broad reading also condemns. |
 | The finding cites a superseded decision. | Quote the `Effect` column and name the current decision. |
+| The finding calls a partial revision a supersession. | Quote the `Revised in part by` marker and the part that still stands (D-186). |
 | The trigger does not reproduce. | Give the command, the revision, and the result. |
 | The correction breaks another contract. | Name the contract and the caller that it breaks. |
 | The finding states a style preference. | Name the contract that the code does not break. |
@@ -421,6 +422,7 @@ An uncommitted review record has three effects:
 - `review-gate` cannot read the record, because the record is not on the PR head (D-179, D-181, D-185).
 
 Write the commit message in an impersonal voice. Name no provider, agent, harness, or model (T-6, D-176).
+Fetch the remote and read the handoff again before you write the entry. Take the highest session number and add one (D-187).
 Add the handoff entry at the top of the file, as a new entry (D-146).
 Another provider can add an entry above yours while you work. Add your own entry. Never append to an older one, and never edit theirs.
 
