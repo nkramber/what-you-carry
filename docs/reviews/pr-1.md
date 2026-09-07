@@ -8,7 +8,7 @@ Date: 2026-09-07
 - Target: `main`
 - Base: `1c16c45`
 - Merge base: `1c16c45`
-- Head: `9459534`
+- Head: `60087b0`
 - Branch: `docs/roadmaps`
 
 ## Provider gate
@@ -17,9 +17,9 @@ The session handoff records Claude Code as the author of the substantive roadmap
 
 ## Intended behavior and scope
 
-This PR adds the five focused roadmaps, the macOS runner runbook, repository settings, decision updates, question updates, and session continuity records. The roadmaps define the scope, checks, gates, dependencies, and owner questions for PR-1 through PR-55.
+This PR adds the five focused roadmaps, the macOS runner runbook, repository settings, decision updates, question updates, review records, the review skill format, and session continuity records. The roadmaps define the scope, checks, gates, dependencies, and owner questions for PR-1 through PR-58.
 
-The review inspected the complete diff from `1c16c45` to `9459534`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
+The review inspected the complete diff from `1c16c45` to `60087b0`, the response and new diff since `9459534`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
 
 Affected contracts include T-4, T-5, T-6, D-118, D-137, D-146, D-148, D-150, D-151, D-152, D-157, D-170, D-173, and D-175.
 
@@ -27,7 +27,7 @@ Affected contracts include T-4, T-5, T-6, D-118, D-137, D-146, D-148, D-150, D-1
 
 ### P1-1: The PR commit contains prohibited attribution
 
-Status: open.
+Status: fixed in `e3e2b6a`.
 
 Commit: `9459534`
 
@@ -37,15 +37,17 @@ Expected: T-6 and D-137 prohibit agent, harness, and model attribution in commit
 
 Actual: the commit body names Claude Code and the harness. The settings fix does not remove this historical commit text from the PR.
 
-Consequence: the PR fails the absolute attribution gate even though `.claude/settings.json` is valid JSON.
+Disposition: partial merit under D-176. The body of `9459534` implied a source of the work. The broader interpretation does not apply to tool names that identify a configured file, schema, or verified version.
 
-Correction: rewrite the commit message without provider or harness names, or recreate the PR history with an impersonal message. Add a check that scans subjects and bodies for prohibited attribution before merge.
+Consequence on the reviewed revision: none. The amended commit body does not make that attribution claim.
 
-Regression check: scan every commit in the PR, including the body, for `Claude Code`, `Codex`, `agent`, `harness`, model names, co-author trailers, and generation lines. The scan must return no finding.
+Correction applied: amend the commit body and add the source-of-work attribution rule to the PR-1 exit test and review skill.
+
+Regression check: scan every commit in the PR for a source-of-work claim, co-author trailer, or generation line. The author reports one permitted configured-file path and no source-of-work claim. The result was not independently reproduced by a structured parser because no implementation exists yet.
 
 ### P1-2: `night-gate` has no first-run result
 
-Status: open.
+Status: fixed in `abd2af7`.
 
 File: `docs/roadmaps/phase-1-foundations.md:349-367`
 
@@ -55,15 +57,17 @@ Expected: D-148 and G-19 require a PR that creates a check to pass that check. D
 
 Actual: the roadmap defines behavior only when a prior night result exists. It does not define what happens when the result store is empty. The PR-11 gate can therefore fail forever before the first scheduled run, or pass without evidence if the workflow treats an absent result as success.
 
-Consequence: PR-11 cannot demonstrate its own required gate, and the merge decision can depend on an unspecified missing-result fallback.
+Disposition: full merit under D-177. PR-11 now publishes the result, and PR-58 creates the gate after one scheduled night exists.
 
-Correction: add an explicit bootstrap path. For example, run the night command as a required job in PR-11, publish its result, and make `night-gate` require a matching successful result for the reviewed commit. Define the missing, stale, cancelled, and expired-result cases as failures.
+Consequence on the reviewed revision: the first-run case has an explicit sequence and missing, stale, cancelled, and failed result cases.
 
-Regression check: execute the workflow with no prior night result, with a result for an older commit, with a failed result, and with a successful result for the reviewed commit. Only the last case may pass.
+Correction applied: split the night job and `night-gate` into PR-11 and PR-58. The gate rejects absent, stale, cancelled, and failed records.
+
+Regression check: PR-58 specifies fixture tests for the four failed cases and a real night record. No workflow exists yet, so execution is deferred to PR-11 and PR-58.
 
 ### P2-1: The design source still presents superseded decisions as current
 
-Status: open.
+Status: fixed in `abd2af7`.
 
 Files: `docs/design.md:12`, `docs/design.md:300`, `docs/design.md:572`, `docs/roadmaps/phase-1-foundations.md:68`, `docs/roadmaps/phase-1-foundations.md:384`
 
@@ -80,21 +84,41 @@ Actual:
 
 The decision and question registers contain the later revisions, so readers receive conflicting instructions depending on the file they read.
 
-Consequence: the first implementation PR can select .NET 8, treat the invalid boolean settings as current, or reopen questions that the roadmap marks closed. This also makes the documented source of truth fail its purpose.
+Disposition: full merit under D-178. The six current-status references were corrected, and PR-2 now gains a reference check.
 
-Correction: update every current-status reference to D-173 or D-175. Keep old ids only in revision history, and state clearly that the later decision supersedes the earlier one.
+Consequence on the reviewed revision: the cited design and roadmap references agree with D-173 and D-175. Historical references remain in review and history records.
 
-Regression check: run a repository reference check that reports current-status text for a superseded decision. Confirm that the design and all focused roadmaps agree with the `Effect` column of the latest decision.
+Correction applied: update the six references and add the PR-2 reference check.
+
+Regression check: the author reports a clean stale-reference sweep. The reference checker does not exist yet, so the repository check was not independently executed.
+
+### P2-2: The Phase 1 roadmap header omits its new PR and decision scope
+
+Status: open.
+
+Files: `docs/roadmaps/phase-1-foundations.md:3,9`
+
+Trigger: the roadmap adds PR-58 and the D-177 and D-178 corrections, but its status line and correction-pass line retain the earlier scope.
+
+Expected: the roadmap header must identify every PR and decision that the roadmap governs (D-118, D-146). Its status must describe the current correction state.
+
+Actual: line 3 says the file expands "PR-1 to PR-11, M-1, and M-2" and applies only D-148 to D-152 and D-156. The roadmap now also contains PR-58, D-177, and D-178. Line 9 says `Correction passes: none yet`, although the file contains the D-176 to D-178 correction pass.
+
+Consequence: a new session can omit PR-58 or the reference-check work when it uses the roadmap header as its scope summary. The header also gives a false status for the review corrections.
+
+Correction: update the header to include PR-58, D-177, and D-178, and replace the correction status with the current review correction pass.
+
+Regression check: compare the header scope with every `### PR-` and `### M-` section and with the roadmap's correction entries. The check must report no omitted PR, measurement, or current decision.
 
 ## Verification
 
 - `git diff --check main...docs/roadmaps`: passed.
 - `cmp -s AGENTS.md CLAUDE.md`: passed.
 - JSON parse of `.claude/settings.json`: passed.
-- Commit attribution scan: failed because commit `9459534` names Claude Code and the harness.
+- Commit attribution scan: the old finding was reproduced against `9459534` and is fixed in amended commit `e3e2b6a`. A semantic source-of-work scan was not independently automated because the PR creates the scanner only as a future exit test.
 - Build and test: not run. The repository has no solution or implementation on either the base or reviewed head, as stated in `AGENTS.md`.
 - STE checker: not run. PR-2 creates it, and the project has no checker yet. The changed documents received a manual review against `.claude/skills/ste-writing/SKILL.md`.
-- CI results: unavailable for the reviewed head in the local checkout.
+- CI results: unavailable for the reviewed head in the local checkout. The workflow files described by the roadmap do not exist yet.
 - Runner registration and SSD placement: not verified. The runbook records them as owner actions before PR-1.
 
 ## Open questions and accepted risks
@@ -103,4 +127,4 @@ No new owner question is required for these findings. The existing OQ-12 remains
 
 ## Verdict
 
-**Changes required.** This verdict applies to head `9459534`. The provider gate passes, but P1-1 and P1-2 fail required PR contracts. P2-1 must also be corrected so the roadmap and design have one current source of truth. Re-review the new head after the commit history, bootstrap behavior, and superseded references change.
+**Changes required.** This verdict applies to head `60087b0`. P1-1, P1-2, and P2-1 are fixed by the recorded revisions. P2-2 remains open because the Phase 1 roadmap header does not include PR-58 or the current correction scope.

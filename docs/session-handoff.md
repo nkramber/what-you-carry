@@ -2,6 +2,41 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 8: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #1 on `docs/roadmaps`.
+
+### What this session did, and why
+
+- Rechecked PR #1 at effective head `60087b0` against the prior review and the author response.
+- Confirmed fixes for P1-1, P1-2, and P2-1.
+- Added P2-2 to `docs/reviews/pr-1.md` because the Phase 1 header omits PR-58, D-177, and D-178.
+
+### State of the build
+
+- No solution or implementation exists on the reviewed head.
+- The diff check passes. The agent files remain identical. The settings file parses as JSON.
+- The review verdict remains Changes required.
+
+### In flight
+
+PR #1 needs a small roadmap header correction. The review record now names head `60087b0`.
+
+### Traps and gotchas
+
+- The effective head is the newest commit outside `docs/reviews/`.
+- The old findings stay in the review record with fixed dispositions.
+- The Phase 1 sequence includes PR-58, but the roadmap header still states PR-1 to PR-11 only.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct the Phase 1 roadmap header and request a final repeat review against the new effective head.
+
 ## Session 7: 2026-09-07, Claude Code
 
 Author: Claude Code
@@ -18,11 +53,16 @@ Session: answer the PR #1 review. Branch `docs/roadmaps`, part of PR #1.
 - Recorded D-179 and D-180 and F-50. PR-1 gains a `review-gate` job. It reads `docs/reviews/pr-<number>.md`, requires the verdict `Ready for owner merge`, and requires the recorded head to be the effective head. The job is advisory until launch. Phase 5 step 11 makes it a required check after the repository becomes public.
 - The owner asked for the head to match the PR head. The `pr-review` skill says the opposite: do not require the review file to hold its own hash. The effective head reconciles both. The effective head is the newest commit outside `docs/reviews/`.
 - The owner chose not to require the response file. The gate reads the review file only.
+- Codex re-reviewed at head `60087b0`. P1-1, P1-2, and P2-1 are marked fixed. One new finding, P2-2, is open: the Phase 1 roadmap header omits PR-58 and the new decisions, and it still says `Correction passes: none yet`.
+- P2-2 has full merit. Fixed line 3 and line 9 of the Phase 1 roadmap. Gave `phase-5-early-access.md` the same treatment, because this PR added its sequence step 11. The review did not name that file.
+- Ran the regression check that P2-2 specifies. It found three more defects of the same class. The new phase-1 range `D-156 to D-168` swallowed the revised D-158, `phase-2-first-playable.md` had the same defect in `D-157 to D-168`, and phase-1 line 465 cited D-158 with no revision marker. All three are fixed.
+- A wider sweep found two older ones: `docs/design.md:28` cited D-136 alone, and `phase-3-full-loop.md:372` cited D-94 alone. Both now name the revising decision.
+- Refined D-178. A line passes the reference check when it holds a revision word or when it names the revising decision. Without that clause the check fails on F-34, F-46, and four correct `D-94, D-152` pairs.
 - Rewrote `.claude/skills/pr-review/SKILL.md` for the format. It now holds a review file skeleton, the three machine-read fields, a finding format with stable `P<severity>-<n>` ids, the attribution boundary of D-176, the gate rules, a ten-step repeat review procedure, and the response file contract.
 
 ### State of the build
 
-- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds twelve commits. The head commit of session 5 was amended, and the branch was force pushed.
+- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds thirteen commits. The head commit of session 5 was amended, and the branch was force pushed.
 - No code, solution, or CI workflow exists. PR-1 creates them.
 - `CLAUDE.md` and `AGENTS.md` are byte-identical.
 
@@ -41,7 +81,9 @@ PR #1 needs a repeat review by Codex against the new head.
 - Branch protection and rulesets both return 403 on this repository. Do not plan a hard merge block before launch (D-180).
 - `review-gate` reads three exact things: the file name, the `- Head: ` line, and the verdict name. A reworded verdict fails the job.
 - The effective head ignores a commit that changes only `docs/reviews/`. A review file commit does not invalidate its own approval.
-- `docs/reviews/pr-1.md` records head `9459534`, which the amend replaced. The repeat review must set the Identity list to the new effective head.
+- `docs/reviews/pr-1.md` now records head `60087b0` and holds four findings. P2-2 is the open one, and this session fixed it.
+- A decision range in a header can swallow a revised decision. Write `D-156, D-157, D-159 to D-168`, not `D-156 to D-168`, when D-158 is revised.
+- The roadmap header is a scope summary. Update line 3 and line 9 whenever a PR entry, a measurement, or a governing decision changes.
 
 ### Open questions that block progress
 
@@ -49,7 +91,7 @@ No new owner question. OQ-12 remains open for PR-9.
 
 ### Next concrete action
 
-A Codex session reviews PR #1 again against the new head, per `.claude/skills/pr-review/SKILL.md`. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
+A Codex session reviews PR #1 a third time against the new head, per `.claude/skills/pr-review/SKILL.md`. P2-2 is the only finding to confirm. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
 
 ## Session 6: 2026-09-07, Codex
 

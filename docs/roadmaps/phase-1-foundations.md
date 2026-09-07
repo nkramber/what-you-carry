@@ -1,12 +1,12 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, M-1, and M-2. It applies D-148 to D-152 and D-156. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, D-175, and D-176 to D-180. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
 External facts: none new. The Godot version is in the design header, verified 2026-09-07.
 
-Correction passes: none yet.
+Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 and D-180 add the `review-gate` job to PR-1. PR-58 is new, and it holds the night gate.
 
 ## 1. Thesis
 
@@ -104,7 +104,7 @@ Scope:
 - Exempt by path: `docs/reviews/`, `docs/session-handoff.md`, `docs/session-handoff-archive.md`, `docs/archive/`. Exempt by block: tables and fenced code.
 - Output: one line per finding with file, line, rule id, and the sentence. A non-zero exit code on any finding.
 - A reference check that reads the `Effect` column of `docs/decisions.md` (D-178). It reports each file outside that register that cites a revised decision as a current answer.
-- The reference check skips a line that holds `revises`, `revised by`, or `supersedes`. That line is revision history.
+- The reference check skips a line that holds `revises`, `revised by`, or `supersedes`. It also skips a line that names the revising decision beside the revised one. Both forms are self-consistent.
 - A CI job `ste-check` that runs the command and the reference check on every non-exempt `.md` file.
 
 Out of scope: the STE dictionary, spell checks, term consistency.
@@ -463,7 +463,7 @@ Open:
 Resolved 2026-09-07:
 
 - OQ-31 (D-157, D-171): the self-hosted macOS runner. Registration on 2026-09-08 per the runbook.
-- OQ-32 (D-158, D-170): branch protection on `main`. Deferred until launch, a convention until then.
+- OQ-32: branch protection on `main`. D-170 revises D-158. Protection is deferred until launch, and a convention until then.
 - OQ-33 to OQ-35 (D-159 to D-161): the RNG, the state hash, and the DetMath target. PR-3.
 - OQ-36 and OQ-37 (D-162 and D-163): the intent and run record layouts. PR-5 and PR-6.
 - OQ-38 and OQ-39 (D-164 and D-165): the grid limits, the player box, and the jump. PR-7 and PR-9.

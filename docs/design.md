@@ -25,7 +25,7 @@ Text rules: this file follows ASD-STE100 (D-139). Tables are exempt from sentenc
 
 What You Carry is a solo third-person dungeon crawler for Steam. The player descends a procedural dungeon one floor at a time. At each stairwell the player decides: descend or ascend. Ascension banks the gear. Death loses the gear that the player carried in and found on the way. The dungeon is content. The decision is the game.
 
-The plan puts foundations first, because every later system depends on them: a deterministic core, a replay format, and the document protocol. A first playable floor comes second, because only a person can judge feel. The economy comes third, because it needs the feel to be right. Content and the Steam release come last. Five gated phases hold that order (D-136).
+The plan puts foundations first, because every later system depends on them: a deterministic core, a replay format, and the document protocol. A first playable floor comes second, because only a person can judge feel. The economy comes third, because it needs the feel to be right. Content and the Steam release come last. Five gated phases hold that order (D-136 as revised by D-150).
 
 ## 2. Lessons learned (carry into every PR)
 

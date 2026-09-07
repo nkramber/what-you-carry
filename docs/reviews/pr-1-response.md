@@ -2,8 +2,11 @@
 
 Date: 2026-09-07
 Review: `docs/reviews/pr-1.md`
-Reviewed head: `9459534`
-Revised head: see the PR.
+
+| Round | Reviewed head | Verdict | Answered in |
+|---|---|---|---|
+| 1 | `9459534` | Changes required, P1-1, P1-2, P2-1 | `abd2af7` |
+| 2 | `60087b0` | Changes required, P2-2 | this round |
 
 ## Summary
 
@@ -73,8 +76,37 @@ Two lines keep the old ids on purpose. `docs/design.md` line 18 and the F-15 row
 
 Correction beyond the text fix: D-178 adds a reference check to the PR-2 checker. The check reads the `Effect` column of `docs/decisions.md` and fails on any file outside that register that cites a revised decision as a current answer. It skips a line that holds `revises`, `revised by`, or `supersedes`. PR-2 gains two exit tests for it. The register records F-49.
 
+## P2-2: the Phase 1 roadmap header omits its new PR and decision scope
+
+Disposition: full merit. Corrected under D-178, second round.
+
+Line 3 of `docs/roadmaps/phase-1-foundations.md` named PR-1 to PR-11, M-1, and M-2. It did not name PR-58. It applied D-148 to D-152 and D-156, and it did not name the decisions of this PR. Line 9 said `Correction passes: none yet`, and the file held a correction pass.
+
+Correction:
+
+- Line 3 now names PR-58 and every governing decision.
+- Line 9 records the 2026-09-07 correction pass, with D-176 to D-180 and PR-58.
+- `docs/roadmaps/phase-5-early-access.md` gets the same treatment, because this PR added sequence step 11 to it. The review did not name that file.
+
+The regression check that the finding specifies found three more defects of the same class. The review did not name them:
+
+- The new phase-1 range `D-156 to D-168` swallowed D-158, which D-170 revises. The range is now `D-156, D-157, D-159 to D-168`.
+- `phase-2-first-playable.md` line 3 had the same defect. Its range `D-157 to D-168` also swallowed D-158. It is now `D-157, and D-159 to D-168`.
+- `phase-1-foundations.md` line 465 cited D-158 for OQ-32 with no revision marker. It now states that D-170 revises D-158.
+
+A wider sweep for every revised decision found two more, both older than this PR:
+
+- `docs/design.md:28` cited D-136 alone. D-150 revises it. The line now says `D-136 as revised by D-150`.
+- `phase-3-full-loop.md:372` cited D-94 alone. D-152 revises it. The line now says `D-94 as revised by D-152`.
+
+D-178 is refined in the same pass. A line passes the reference check when it holds a revision word **or** when it names the revising decision beside the revised one. Without the second clause the check would fail on F-34, F-46, and four correct `D-94, D-152` pairs, which are all self-consistent.
+
+Regression check: compare each roadmap header with every `### PR-` and `### M-` heading in that file, and reject a header that names a revised decision. Then run the D-178 reference check over the design doc, the agent files, the roadmaps, and the skills. Both return zero findings.
+
 ## Verification
 
+- Roadmap header scope check over all five roadmaps: passed, zero omitted PR, zero omitted measurement, zero revised id.
+- D-178 reference check over the design doc, both agent files, all five roadmaps, and both skills: zero findings.
 - Attribution scan over every commit on the branch: passed, as stated above.
 - Stale reference sweep for `D-172`, `D-169`, `OQ-2`, `OQ-16`, and `.NET 8` outside `docs/decisions.md`, `docs/questions.md`, `docs/reviews/`, and the handoff: no current-status hit.
 - `cmp -s AGENTS.md CLAUDE.md`: passed.
@@ -87,7 +119,9 @@ Correction beyond the text fix: D-178 adds a reference check to the PR-2 checker
 
 - D-176: the attribution reading.
 - D-177: the night gate bootstrap, and the PR-11 and PR-58 split.
-- D-178: the reference check in PR-2.
+- D-178: the reference check in PR-2, refined in round 2 with the reviser-named exemption.
+- D-179: the `review-gate` check.
+- D-180: the `review-gate` enforcement path.
 
 ## Open questions
 

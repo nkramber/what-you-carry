@@ -369,7 +369,7 @@ Gate: exit tests 1 to 7 pass.
 Scope:
 
 - `Core/Persistence/Profile.cs`: one file with the tree, the bank, the suspended-run pointer, a schema version, a generation number, and the last completed run id (D-94, D-152). Write to a temporary file, flush, then rename. The path is OQ-57.
-- `Core/Persistence/Migrations.cs`: one migration per schema version, from version 1 (D-94).
+- `Core/Persistence/Migrations.cs`: one migration per schema version, from version 1 (D-94 as revised by D-152).
 - `Core/Persistence/RunRecordFile.cs`: the run record of PR-6 as a file, with a run id, and the torn-tail truncation (D-152).
 - `Core/Persistence/Resume.cs`: replay to five seconds before the exit tick when the simulation version and content hash match (D-97, D-151). Otherwise, resume at floor start with a notice and a log line. A repeat crash on resume falls back to floor start.
 - Idempotent completion: a run id already in the profile as completed cannot resume or pay again (D-152).

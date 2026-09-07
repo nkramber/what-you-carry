@@ -1,12 +1,12 @@
 # Phase 5 roadmap: Early Access candidate
 
-Status: **focused roadmap, active.** This file expands Phase 5 of `docs/design.md` section 7: PR-51 to PR-55. It applies D-1, D-15, D-96, D-112, D-142, and D-152. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 5 of `docs/design.md` section 7: PR-51 to PR-55. It applies D-1, D-15, D-96, D-112, D-142, D-152, D-170, D-179, and D-180. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 4 is `phase-4-content-complete.md`. Gate 4 must pass before PR-51 starts.
 
 External facts: the Steam Deck verification requirements and the Apple notarization steps are external. Each PR that depends on one fetches it and records the date and the source (OQ-66, OQ-67).
 
-Correction passes: none yet.
+Correction passes: 2026-09-07, the PR #1 review. Sequence step 11 is new. It makes the repository public and promotes `review-gate` to a required status check (D-170, D-180).
 
 ## 1. Thesis
 
