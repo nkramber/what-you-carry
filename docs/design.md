@@ -8,12 +8,17 @@ External facts, verified 2026-09-07:
 - Metal is the default render driver on Apple Silicon since Godot 4.4. Intel Macs use MoltenVK. Source: godotengine.org, "Dev snapshot: Godot 4.4 dev 1".
 - The Steam Direct fee is 100 USD per app. Steam credits it after 1,000 USD adjusted gross revenue. Source: partner.steamgames.com, "Steam Direct Fee".
 - The Apple Developer Program fee is 99 USD per year. Source: Apple Developer Program pages, via search summaries.
+- GitHub treats a `neutral` or `skipped` check conclusion as a success. A skipped job does not stop a merge, even as a required check. Source: docs.github.com, "About status checks", verified 2026-09-07.
 
-Not verified: the .NET LTS version that Godot 4.7.2 supports (OQ-2).
+Verified 2026-09-07: the .NET LTS pin is .NET 10 LTS (D-173). Godot 4.7 accepts .NET 8 or later.
 
 2026-09-07 correction pass: v2 refuted or superseded fourteen v1 claims. Each stays in the register (F-1 to F-14) with its correction and date. The v1 file stays in the archive unchanged.
 
+2026-09-07 PR #1 review pass: the cross-provider review in `docs/reviews/pr-1.md` raised three findings. The response is `docs/reviews/pr-1-response.md`. The register records them as F-47 to F-49, and D-176 to D-178 resolve them.
+
 2026-09-07 audit pass: the repository audit in `docs/reviews/2026-09-07-repository-audit.md` found nine defects, R-1 to R-9. All nine have merit. The register records them as F-28 to F-36, and D-148 to D-154 resolve them. The response file `docs/reviews/2026-09-07-repository-audit-response.md` gives each disposition. F-37 records a repository state the audit session left behind.
+
+2026-09-07 settings correction pass: the Claude Code startup dialog rejected `.claude/settings.json`. D-172 set `attribution.commit` and `attribution.pr` to booleans, and the schema requires strings. D-175 revises D-172 and sets empty strings. F-15 records the refuted claim.
 
 Text rules: this file follows ASD-STE100 (D-139). Tables are exempt from sentence-length counts.
 
@@ -21,7 +26,7 @@ Text rules: this file follows ASD-STE100 (D-139). Tables are exempt from sentenc
 
 What You Carry is a solo third-person dungeon crawler for Steam. The player descends a procedural dungeon one floor at a time. At each stairwell the player decides: descend or ascend. Ascension banks the gear. Death loses the gear that the player carried in and found on the way. The dungeon is content. The decision is the game.
 
-The plan puts foundations first, because every later system depends on them: a deterministic core, a replay format, and the document protocol. A first playable floor comes second, because only a person can judge feel. The economy comes third, because it needs the feel to be right. Content and the Steam release come last. Five gated phases hold that order (D-136).
+The plan puts foundations first, because every later system depends on them: a deterministic core, a replay format, and the document protocol. A first playable floor comes second, because only a person can judge feel. The economy comes third, because it needs the feel to be right. Content and the Steam release come last. Five gated phases hold that order (D-136 as revised by D-150).
 
 ## 2. Lessons learned (carry into every PR)
 
@@ -143,7 +148,7 @@ Determinism rules (D-69 to D-73, D-77):
 
 Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
-- Pin Godot 4.7.2 .NET at scaffold time. Upgrade only by a decision entry.
+- Pin Godot 4.7.2 .NET and .NET 10 LTS at scaffold time (D-173). Upgrade only by a decision entry.
 - C# only. GDScript is banned. Tools are C#.
 - The editor is never required. C# builds the scenes.
 - JSON for all content, validated by a schema per type. An absent field is an error.
@@ -218,7 +223,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-12 | v1 used Python for the texture generator, against one language | 2026-09-06 | 🔧 D-65. Binds PR-14 |
 | F-13 | v1 determinism matrix omitted Windows x64, the largest audience and the second dev machine | 2026-09-06 | 🔧 D-71. Binds PR-3 |
 | F-14 | v1 had no v1 scope in numbers | 2026-09-06 | ✅ doc. D-56 |
-| F-15 | The harness default adds a co-author trailer to commits. D-137 forbids it | 2026-09-06 | ⚠ Binds every PR. Owner action OQ-16 |
+| F-15 | The harness default adds a co-author trailer to commits. D-137 forbids it | 2026-09-06 | 🔧 Refuted 2026-09-07: D-172 set booleans, the schema requires strings, and the file was ignored. D-175 revises D-172 and sets empty strings. Codex unverified. The PR-1 attribution scan binds every PR (D-176) |
 | F-16 | The borrowed ste-writing skill carried another project's names and a Python checker | 2026-09-07 | ✅ doc (skills created). 🔧 Checker binds PR-2 |
 | F-17 | D-97 rewinds five seconds on resume. A quit undoes five seconds | 2026-09-07 | ⏸ Accepted by the owner |
 | F-18 | All music is generated (D-93). Quality is unproven | 2026-09-07 | ❓ Owner ear at each phase gate. Binds PR-50 |
@@ -241,6 +246,22 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-35 | Audit R-8: the header split Godot into stable 4.7.1 and .NET 4.7.2. The source page lists both editions as 4.7.2 | 2026-09-07 | ✅ doc. Header corrected with the refuted text kept |
 | F-36 | Audit R-9: section 8 put the palette answer before PR-1, and OQ-1 said it blocks PR-14 | 2026-09-07 | ✅ doc. OQ-1 blocks PR-14 only. Section 8 corrected |
 | F-37 | HEAD pointed at the unborn branch `docs/repository-audit`. The first commit would have missed `main` (D-126) | 2026-09-07 | ✅ D-156. HEAD reset to `main` before the initial commit |
+| F-38 | PR-10's gate named the full weapon roster, which does not exist until Phase 3 | 2026-09-07 | 🔧 A test-only definitions file under D-149. Binds PR-10, PR-24, PR-43 to PR-46 |
+| F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | 🔧 D-157. Owner action before PR-1 |
+| F-40 | D-88's effect note put wall fade in the mesher as per-block visibility. A shader test needs no mesher change | 2026-09-07 | ❓ OQ-49. Binds PR-13 |
+| F-41 | No item said whether a Steam Deck unit exists for M-3, and D-15 makes the Deck the floor | 2026-09-07 | ❓ OQ-50. Binds M-3 |
+| F-42 | D-49 shows a rarity color on an enemy, but no decision names the rarity tiers | 2026-09-07 | ❓ OQ-52. Binds PR-21, PR-26 |
+| F-43 | D-128 sets the Tier 3 cadence but not the model or the budget | 2026-09-07 | ❓ OQ-58. Binds PR-32 |
+| F-44 | The Deck verification checklist is an external fact with no source or date in the plan | 2026-09-07 | ❓ OQ-66. Binds PR-54 |
+| F-45 | D-152 changed the save files, and no item names which files cloud saves sync | 2026-09-07 | ❓ OQ-71. Binds PR-52 |
+| F-46 | D-158 required branch protection, and GitHub returned 403: the feature needs Pro or a public repository, against D-106 | 2026-09-07 | ✅ doc. D-170 defers protection until launch |
+| F-47 | PR #1 review P1-1: a commit body implied that an agent wrote the commits, and T-6 had no stated boundary for a tool name | 2026-09-07 | ✅ doc. D-176 fixes the reading. The commit body is rewritten. Binds PR-1 exit test 6 |
+| F-48 | PR #1 review P1-2: PR-11 created the `night-gate` job and the night job together, so the gate had no result to read on its first run, against G-19 | 2026-09-07 | 🔧 D-177 splits them. PR-58 adds the gate after one night runs. Binds PR-11, PR-58 |
+| F-52 | Two providers picked the same session number on the same day, because each read the handoff before the other wrote it | 2026-09-07 | 🔧 D-187. Fetch and re-read before the handoff commit. The PR-2 checker fails on a duplicate |
+| F-53 | One `Revised by` marker made every citation of a partly revised decision stale. Partial revisions carried 33 of 48 citations and caused three rounds of churn | 2026-09-07 | ✅ doc. D-186 splits the marker into `Superseded by` and `Revised in part by`. The D-178 check keys on the first only |
+| F-51 | A grey `review-gate` would stop blocking at launch. GitHub counts a neutral conclusion as a success for a required check, verified 2026-09-07 | 2026-09-07 | 🔧 D-181, D-185. Advisory mode gives neutral. Enforced mode gives failure. The tracked file `.github/review-gate-mode` selects the mode, and the workflow reads it from the base branch |
+| F-50 | Nothing on GitHub stops a merge without a cross-provider review. T-4 and D-101 are rules only, and D-170 leaves `main` unprotected | 2026-09-07 | 🔧 D-179 and D-181, D-185 add the `review-gate` job in PR-1. D-180 makes it a required check at launch. Advisory until then |
+| F-49 | PR #1 review P2-1: six lines cited D-172 or OQ-2 as a current answer after D-173 and D-175 revised them | 2026-09-07 | ✅ doc. All six corrected. 🔧 D-178 adds a reference check to PR-2 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -277,17 +298,18 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 18. **G-18.** Squash merge by the owner, from a short branch, with a conventional commit subject (D-126).
 19. **G-19.** A PR that creates a check passes that check. A PR names any check that does not exist yet, with the PR that creates it (D-148).
 20. **G-20.** Every Core behavior change bumps the simulation version constant, and the review confirms it (D-151).
+21. **G-21.** No `System.Random`, `DateTime`, `Stopwatch`, or `Environment.TickCount` in Core. The seed and the tick are the only sources of randomness and time (D-69, D-73).
 
 ## 7. Roadmap
 
-Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundation gate with a written exit test. Gates 2 to 5 are playable builds with a written exit test and the owner's playtest sign-off. Ids: PR-# code changes, M-# measurements. An entry that covers several PRs notes its reserved id range. Focused roadmaps in `docs/roadmaps/` will expand the phases. None exist yet.
+Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundation gate with a written exit test. Gates 2 to 5 are playable builds with a written exit test and the owner's playtest sign-off. Ids: PR-# code changes, M-# measurements. An entry that covers several PRs notes its reserved id range. Focused roadmaps in `docs/roadmaps/` expand the phases with per-PR exit tests. Phase 1: [phase-1-foundations.md](roadmaps/phase-1-foundations.md). Phase 2: [phase-2-first-playable.md](roadmaps/phase-2-first-playable.md). Phase 3: [phase-3-full-loop.md](roadmaps/phase-3-full-loop.md). Phase 4: [phase-4-content-complete.md](roadmaps/phase-4-content-complete.md). Phase 5: [phase-5-early-access.md](roadmaps/phase-5-early-access.md).
 
 ### Phase 1: Foundations (foundation gate, D-150: CI green on three platforms with a bit-identical end state, docs and PR gate live, no playtest)
 
 **PR-1: Repository scaffold.** 🔧
-Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry.Tools`, and `WhatYouCarry.Tests` (D-108). Pin Godot 4.7.2 .NET and the .NET LTS it supports (D-61, D-62, OQ-2). Create `CLAUDE.md` and `AGENTS.md` as identical pointer files with a test that asserts equality (D-122). Add the GitHub Actions workflow that builds and runs `dotnet test` on Linux x64, macOS arm64, and Windows x64 (D-148). Add a PR template with the gate checklist and the "no change needed because" lines (D-118). The template has a line that names each absent check with the PR that creates it (D-148). Turn off the harness co-author trailer (OQ-16). Needs the external SSD (D-145) and OQ-2, OQ-16. No game code.
-Gate: `dotnet build` and `dotnet test` pass on all three platforms.
-> *In plain English:* this makes the empty project with its four parts and the rules files that every future session reads first. It adds nothing that plays. It is safe because it changes no behavior.
+Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry.Tools`, and `WhatYouCarry.Tests` (D-108). Pin Godot 4.7.2 .NET and .NET 10 LTS (D-61, D-62, D-173). Create `CLAUDE.md` and `AGENTS.md` as identical pointer files with a test that asserts equality (D-122). Add the GitHub Actions workflow that builds and runs `dotnet test` on Linux x64, macOS arm64, and Windows x64 (D-148). Add a PR template with the gate checklist and the "no change needed because" lines (D-118). The template has a line that names each absent check with the PR that creates it (D-148). Add the `review-gate` job (D-179). It publishes a check run with three conclusions (D-181). The mode file `.github/review-gate-mode` selects the mode, and the workflow reads it from the base branch (D-185). Success means an approved review of the effective head. Failure means a review that does not approve, or a stale head. Grey means no review record yet, and only in advisory mode. The job is advisory until launch, because GitHub locks branch protection on a private free repository (D-170, D-180). The attribution option is in place (D-175). Needs the external SSD (D-145) and the runner (D-171). No game code.
+Gate: `dotnet build` and `dotnet test` pass on all three platforms, and the `review-gate` job runs on the PR.
+> *In plain English:* this makes the empty project with its four parts and the rules files that every future session reads first. It also adds a check that turns red when a change has no approved review. It adds nothing that plays. It is safe because it changes no behavior.
 
 **PR-2: STE checker.** 🔧
 Port the STE checker to C# as `WhatYouCarry.Tools.SteCheck` (D-130). It flags passive voice, helper verbs, sentence-initial and preposition-led -ing forms, semicolons, contractions, and the 20-word and 25-word limits. Dated records are exempt. Run it in CI on every hand-written `.md` file.
@@ -330,14 +352,19 @@ Gate: the night sweep passes on one hundred thousand seeds.
 > *In plain English:* this builds the dungeon floors from a random seed and proves, over huge numbers of seeds, that every floor can be finished.
 
 **PR-10: Projectile simulation.** 🔧
-Implement the projectile integrator with fixed-step Euler, swept collision against the grid and entity boxes, gravity scale, lifetime, and spread from weapon data (G-6). Implement the arc solver with DetMath. Property tests assert three facts. No projectile tunnels through the minimum wall at the maximum velocity. Every projectile ends inside its lifetime. The arc solver reaches a reachable target and reports an unreachable one.
-Gate: the projectile property tests pass over the full weapon roster data.
+Implement the projectile integrator with fixed-step Euler, swept collision against the grid and entity boxes, gravity scale, lifetime, and spread from weapon data (G-6). Implement the arc solver with DetMath. Add a `projectile` content schema and a test-only definitions file (F-38, D-149). The file holds the slowest arc, the fastest flat shot, the longest lifetime, and the widest spread. Property tests assert three facts. No projectile tunnels through the minimum wall at the maximum velocity. Every projectile ends inside its lifetime. The arc solver reaches a reachable target and reports an unreachable one.
+Gate: the projectile property tests pass over the test-only definitions. PR-24 and PR-43 to PR-46 rerun them over the real roster.
 > *In plain English:* bullets and arrows are real objects that fly, drop, and can miss. Tests prove a fast bullet never passes through a wall.
 
 **PR-11: Bot harness (Tier 2).** 🔧
-Implement the headless runner at one hundred times speed and the first two policies: random walker and greedy descender (D-127, D-149). Later PRs add a policy with the system it exercises: full-clearer with PR-16, timer-tester with PR-17, coward with PR-18. Each run writes a structured run log with the policy name, seed, and end state. Add a few hundred runs to the PR job and ten thousand to the night job (D-115). A night failure blocks the next merge.
+Implement the headless runner at one hundred times speed and the first two policies: random walker and greedy descender (D-127, D-149). Later PRs add a policy with the system it exercises: full-clearer with PR-16, timer-tester with PR-17, coward with PR-18. Each run writes a structured run log with the policy name, seed, and end state. Add a few hundred runs to the PR job and ten thousand to the night job (D-115). The night job publishes a result record. PR-58 adds the gate that reads it (D-177).
 Gate: ten thousand night runs of the two policies complete with zero crashes and zero softlocks.
 > *In plain English:* simple robots play thousands of runs every night without graphics. They find crashes and dead ends before a person ever sees them.
+
+**PR-58: Night gate.** 🔧
+Add the `night-gate` job to the PR workflow. It reads the result record that the PR-11 night job publishes (D-177). The gate passes only on a success record from a scheduled night in the last 48 hours. An absent, stale, cancelled, or failed record fails the gate, and the message names the case (D-115, T-2). This entry follows PR-11 in the sequence, after one scheduled night runs (G-19).
+Gate: the job fails each of the four bad records and passes on the real night record.
+> *In plain English:* every merge now needs a green night from the robots. A missing or old result stops the merge, so nobody can merge on silence.
 
 **M-1: CI wall time per PR.** 🔧
 Record the wall time of each CI job per platform for ten PRs. Binds the seed counts in D-116 if a PR job exceeds ten minutes.
@@ -553,15 +580,15 @@ Gate: a forced assertion produces a report a session can replay.
 
 ## 8. Sequence (strict order, single owner, rewritten 2026-09-07)
 
-One person owns the program. Items run one at a time in this order. The list changed on 2026-09-07 after the repository audit (D-147, D-149, D-150). The audit findings come first. PR-57 enters Phase 2. PR-32 precedes PR-27. Gate 1 is a foundation gate.
+One person owns the program. Items run one at a time in this order. The list changed on 2026-09-07 after the repository audit (D-147, D-149, D-150). The audit findings come first. PR-57 enters Phase 2. PR-58 enters Phase 1. PR-32 precedes PR-27. Gate 1 is a foundation gate.
 
 1. Address every audit finding (D-147). ✅ Done 2026-09-07: D-148 to D-154, F-28 to F-37.
 2. Owner: receive the external SSD and move the checkout to it (D-145).
-3. Owner: answer OQ-2 and OQ-16. ✅ OQ-30 resolved by D-156.
+3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170.
 4. PR-1, PR-2.
 5. PR-3, PR-4, PR-5.
 6. PR-6, PR-7, PR-8.
-7. PR-9, PR-10, PR-11.
+7. PR-9, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).
 8. M-1, M-2.
 9. **← GATE 1 (foundation).** Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green.
 10. PR-12, PR-13, PR-57, PR-14.

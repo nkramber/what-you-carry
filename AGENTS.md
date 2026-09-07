@@ -41,11 +41,13 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 - When two owner statements conflict, say so and quote both.
 - Every open question belongs to the owner (D-124). Do not pick a default. File the question in `docs/questions.md` and stop.
 - Record each answer in `docs/decisions.md` with the next D-# id and the date. Never renumber.
+- Mark a change to an earlier decision in its `Effect` column (D-186). Use `Superseded by D-N` when the whole answer changes. Use `Revised in part by D-N` when one part changes, and name the part that changed and the parts that stand.
+- A citation of a superseded decision must name the superseding decision. A decision revised in part stays citable.
 - One session is one harness invocation, one PR, and one handoff entry (D-121, D-146).
 
 ## Session handoff
 
-At the end of a session, add a new entry at the top of `docs/session-handoff.md` (D-146). Keep the 10 newest entries in that file. Move any older entry to the top of `docs/session-handoff-archive.md`. Set the author field to `Claude Code` or `Codex`. Each entry has six parts:
+At the end of a session, fetch the remote and read `docs/session-handoff.md` again. Take the highest session number and add one (D-187). Then add a new entry at the top (D-146). Keep the 10 newest entries in that file. Move any older entry to the top of `docs/session-handoff-archive.md`. Set the author field to `Claude Code` or `Codex`. Commit the entry with the review record or the work it describes (D-182). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. Each entry has six parts:
 
 - What the session did, and why.
 - The state of the build.
@@ -95,7 +97,8 @@ A PR merges only when every line holds:
 - [ ] No silent failure. Every error carries context (T-2).
 - [ ] The three-platform bit-identity job is green (G-9).
 - [ ] The lint tool and the STE checker pass (G-2, G-14).
-- [ ] The other provider reviewed it, and `docs/reviews/` has the file (T-4).
+- [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185).
+- [ ] The `review-gate` check is green. Grey means no review record yet. Red means the review does not approve this head (D-179, D-181, D-185).
 - [ ] `docs/decisions.md` has every new decision.
 - [ ] `docs/questions.md` has every new question.
 - [ ] `docs/design.md` matches intent.
