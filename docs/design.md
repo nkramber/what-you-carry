@@ -15,6 +15,8 @@ Not verified: the .NET LTS version that Godot 4.7.2 supports (OQ-2).
 
 2026-09-07 audit pass: the repository audit in `docs/reviews/2026-09-07-repository-audit.md` found nine defects, R-1 to R-9. All nine have merit. The register records them as F-28 to F-36, and D-148 to D-154 resolve them. The response file `docs/reviews/2026-09-07-repository-audit-response.md` gives each disposition. F-37 records a repository state the audit session left behind.
 
+2026-09-07 settings correction pass: the Claude Code startup dialog rejected `.claude/settings.json`. D-172 set `attribution.commit` and `attribution.pr` to booleans, and the schema requires strings. D-175 sets empty strings. F-15 records the refuted claim.
+
 Text rules: this file follows ASD-STE100 (D-139). Tables are exempt from sentence-length counts.
 
 ## 1. Thesis
@@ -218,7 +220,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-12 | v1 used Python for the texture generator, against one language | 2026-09-06 | 🔧 D-65. Binds PR-14 |
 | F-13 | v1 determinism matrix omitted Windows x64, the largest audience and the second dev machine | 2026-09-06 | 🔧 D-71. Binds PR-3 |
 | F-14 | v1 had no v1 scope in numbers | 2026-09-06 | ✅ doc. D-56 |
-| F-15 | The harness default adds a co-author trailer to commits. D-137 forbids it | 2026-09-06 | 🔧 D-172 turns it off for Claude Code. Codex unverified. PR-1's trailer scan binds every PR |
+| F-15 | The harness default adds a co-author trailer to commits. D-137 forbids it | 2026-09-06 | 🔧 D-172 turns it off for Claude Code. Refuted 2026-09-07: D-172 set booleans, the schema requires strings, and the harness ignored the whole file. D-175 sets empty strings. Codex unverified. PR-1's trailer scan binds every PR |
 | F-16 | The borrowed ste-writing skill carried another project's names and a Python checker | 2026-09-07 | ✅ doc (skills created). 🔧 Checker binds PR-2 |
 | F-17 | D-97 rewinds five seconds on resume. A quit undoes five seconds | 2026-09-07 | ⏸ Accepted by the owner |
 | F-18 | All music is generated (D-93). Quality is unproven | 2026-09-07 | ❓ Owner ear at each phase gate. Binds PR-50 |

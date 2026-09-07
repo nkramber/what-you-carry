@@ -29,7 +29,7 @@ How to file a question (D-124, D-138):
 13. **OQ-13. Arrow area damage.** Splinter on impact, or a volley (D-42)? Blocks PR-24. Recommendation: splinter on impact.
 14. **OQ-14. Accessibility.** None in v1 (D-53), or reward-neutral assist options? Blocks PR-53.
 15. **OQ-15. Deck frame target.** 60 or 40 frames per second at 800p. Blocks M-3. Recommendation: 60, with 40 as the fallback if M-3 fails.
-16. **OQ-16. Harness attribution option.** Turn off the co-author trailer in the Claude Code settings file and confirm the Codex equivalent (F-15). Blocks PR-1. Resolved 2026-09-07: D-172, project settings committed. Codex stays unverified.
+16. **OQ-16. Harness attribution option.** Turn off the co-author trailer in the Claude Code settings file and confirm the Codex equivalent (F-15). Blocks PR-1. Resolved 2026-09-07: D-172, project settings committed. Codex stays unverified. Revised 2026-09-07: D-175, empty strings, because the schema rejects booleans.
 17. **OQ-17. Trademark search.** Search Steam and the USPTO for "What You Carry" (F-23). Blocks the store page.
 18. **OQ-18. Purchase dates.** The SSD before PR-1, the Apple account before PR-51, the Steam fee before PR-52 (D-142). Resolved in part 2026-09-07: the SSD arrives 2026-09-08 (D-145). The two accounts stay open.
 19. **OQ-19. Cloud save conflicts.** Newest wins with a prompt, or local wins? Blocks PR-52. Recommendation: always prompt, never resolve in silence.

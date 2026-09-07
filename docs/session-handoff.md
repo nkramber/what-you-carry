@@ -2,6 +2,40 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 5: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: fix the attribution setting, no new PR. Branch `docs/roadmaps`, pushed, part of PR #1.
+
+### What this session did, and why
+
+- Found why the Claude Code startup dialog reported that `.claude/settings.json` failed to parse. The file is valid JSON, but `attribution.commit` and `attribution.pr` were booleans. The schema requires strings. When one value fails validation, the harness ignores the whole file, so the co-author trailer stayed on, against T-6.
+- Set both fields to the empty string, which hides the attribution (D-175). Verified against the settings reference, the schema in the VS Code extension 2.1.263, and the validator in the CLI 2.1.261.
+- Marked D-172 as revised. Updated OQ-16 and F-15. Pushed one commit to `docs/roadmaps`, so PR #1 carries the fix.
+
+### State of the build
+
+- `main` has one commit, `1c16c45`, on the remote. The branch `docs/roadmaps` holds the six commits of session 4 and one commit of this session, all on the remote.
+- No code, solution, or CI workflow exists. PR-1 creates them.
+
+### In flight
+
+PR #1 from `docs/roadmaps` to `main` is open and waits for the other provider's review (T-4). The attribution fix is part of it.
+
+### Traps and gotchas
+
+- `attribution.commit` and `attribution.pr` are strings. A boolean makes the harness ignore the whole settings file, and the startup dialog calls it a parse failure.
+- A settings file that fails validation loses every setting in it, not only the bad field. Run `/doctor` to see what the harness dropped.
+- The traps in the session 4 entry still apply.
+
+### Open questions that block progress
+
+No new question. The session 4 entry lists the open ones.
+
+### Next concrete action
+
+Unchanged from session 4. A Codex session reviews PR #1 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-1.md`. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
+
 ## Session 4: 2026-09-07, Claude Code
 
 Author: Claude Code
