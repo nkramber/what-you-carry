@@ -16,6 +16,8 @@ Session: the neutral grey state for `review-gate`. Branch `docs/roadmaps`, part 
 - D-181 revises D-179. D-180 is not revised, because D-181 only adds the mode step to its launch procedure.
 - Marking D-179 as revised made nine citations stale. The D-178 check found each one. They now name D-181.
 - Updated the PR-1 scope and exit tests to sixteen, both agent files, the `pr-review` skill with a color table, Phase 5 step 11, and the design register.
+- Recorded D-182 after the handoff and review record of sessions 8 and 9 reached this session uncommitted. A later commit absorbed them, and this session then reported the wrong verdict. The `pr-review` skill now requires a commit of the review record with its handoff entry, and the agent files carry the same rule.
+- D-182 narrows the scope limit in the skill, which listed a commit as an unauthorized action. A code fix, a merge, and an external message stay unauthorized.
 
 ### State of the build
 
@@ -35,6 +37,7 @@ Session: the neutral grey state for `review-gate`. Branch `docs/roadmaps`, part 
 - Never write a decision range that spans a revised id. D-179 is revised, so a header says `D-176 to D-178, D-180, and D-181`.
 - Read the review file before a commit that sweeps it in. This session committed an approval it had not read, and then reported the wrong verdict.
 - One session is one handoff entry (D-146). Add a new entry. Do not append to an older one after another provider writes above it.
+- A review record that is not committed is invisible to `review-gate`, because the gate reads the PR head (D-182).
 
 ### Open questions that block progress
 
