@@ -5,7 +5,7 @@ Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end o
 ## Session 16: 2026-09-07, Claude Code
 
 Author: Claude Code
-Session: the toolchain install, the runner registration, and the documentation PR override. Branch `docs/runner-path-and-doc-override`.
+Session: the toolchain install, the runner registration, and the documentation PR override. Branches `docs/runner-path-and-doc-override` (PR #2, merged) and `docs/runner-registration` (PR #3).
 
 ### What this session did, and why
 
@@ -32,6 +32,8 @@ Session: the toolchain install, the runner registration, and the documentation P
 
 ### In flight
 
+PR #2 is merged. PR #3 holds the SSD, runner, and disk access records. This session made two PRs, against the one PR rule of D-121, because a direct push to `main` needed a rewind.
+
 This PR changes documentation only. The owner gives the D-188 override and merges it without a cross-provider review. The PR is also eligible under the D-190 path set, so the rule covers its own PR.
 
 ### Traps and gotchas
@@ -46,6 +48,8 @@ This PR changes documentation only. The owner gives the D-188 override and merge
 - The `dotnet-sdk` cask needs an administrator password. The Microsoft script needs none.
 - This PR holds four concerns, which is against G-10. The session named the conflict, and the owner chose one PR.
 - The file held 11 entries before this session. This entry restores the limit of 10 (D-146).
+- A commit went to `main` directly, against D-126. The owner merged PR #2 and moved the local checkout to `main`. The uncommitted work moved with the checkout, and the next commit and push landed on the trunk. Check the branch name before each commit.
+- The owner chose a rewind. `main` returned to `2d69270`, and the work came back as PR #3. A force push to a trunk is safe only while no other clone holds the old commit.
 
 ### Open questions that block progress
 
