@@ -58,6 +58,7 @@ Scope:
   - `docs/reviews/pr-<number>.md` exists on the PR head.
   - The verdict in that file is `Ready for owner merge`, and not `Blocked` or `Changes required`.
   - The head that the file records is the effective head. The effective head is the newest commit that changes a path outside `docs/reviews/`. A short hash matches by prefix.
+- Compute the effective head with one `git log` command that excludes `docs/reviews/` by pathspec. Do not use a pipeline that stops early, because its exit status is not reliable.
 - The `review-gate` job reports each failure with the rule, the expected value, and the value it found (T-2, D-113). It is advisory until launch (D-180).
 - A build and test command section in `CLAUDE.md` and `AGENTS.md`, identical (D-122).
 
