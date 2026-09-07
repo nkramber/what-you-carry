@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 13: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #1 after the D-184 and D-185 corrections. Branch `docs/roadmaps`, part of PR #1.
+
+### What this session did, and why
+
+- Re-reviewed the diff through effective head `e51e272`.
+- Confirmed P1-3 is fixed: the tracked `.github/review-gate-mode` file supplies `advisory`, and the workflow reads it from the base branch (D-185).
+- Confirmed P1-4 is fixed: the review, handoff, and archive paths are metadata, so the required review commit does not change the effective head (D-184).
+- Added P2-3: the F-51 row in `docs/design.md` still names the removed `REVIEW_GATE_MODE` variable as the mode source.
+
+### State of the build
+
+- No code, solution, or CI workflow exists. PR-1 creates them.
+- The effective-head check resolves to `e51e272` after excluding the D-184 metadata set.
+- `AGENTS.md` and `CLAUDE.md` remain byte-identical.
+- The review verdict is Changes required.
+
+### In flight
+
+PR #1 needs the F-51 mode-source text corrected in `docs/design.md`.
+
+### Traps and gotchas
+
+- The current mode source is `.github/review-gate-mode`, not `REVIEW_GATE_MODE` (D-185).
+- The review record must name the effective head, not the metadata commit (D-184).
+- The review and handoff commits must be pushed to the PR branch (D-182, D-183).
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct the F-51 row, then request another repeat review of PR #1.
+
 ## Session 12: 2026-09-07, Claude Code
 
 Author: Claude Code
@@ -419,4 +456,3 @@ Nothing is half done. Every audit finding has a decision and a document change.
 ### Next concrete action
 
 The owner said the focused roadmaps begin once the audit findings are addressed (D-147). They are addressed. The next action is `docs/roadmaps/phase-1-foundations.md`: expand PR-1 to PR-11 and M-1 to M-2 with per-PR exit tests, under D-148 and D-149. Load `ste-writing` and `design-doc-style` first. Confirm with the owner that Phase 1 is the first roadmap.
-

@@ -8,7 +8,7 @@ Date: 2026-09-07
 - Target: `main`
 - Base: `1c16c45`
 - Merge base: `1c16c45`
-- Head: `6e45d6f`
+- Head: `e51e272`
 - Branch: `docs/roadmaps`
 
 ## Provider gate
@@ -19,9 +19,9 @@ The session handoff records Claude Code as the author of the substantive roadmap
 
 This PR adds the five focused roadmaps, the macOS runner runbook, repository settings, decision updates, question updates, review records, the review skill format, and session continuity records. The roadmaps define the scope, checks, gates, dependencies, and owner questions for PR-1 through PR-58.
 
-The review inspected the complete diff from `1c16c45` to `6e45d6f`, the response and new diffs since `9459534`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
+The review inspected the complete diff from `1c16c45` to `e51e272`, the response and new diffs since `6e45d6f`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
 
-Affected contracts include T-4, T-5, T-6, D-118, D-137, D-146, D-148, D-150, D-151, D-152, D-157, D-170, D-173, D-175, D-181, D-182, and D-183.
+Affected contracts include T-4, T-5, T-6, D-118, D-137, D-146, D-148, D-150, D-151, D-152, D-157, D-170, D-173, D-175, D-181, D-182, D-183, D-184, D-185, D-186, and D-187.
 
 ## Findings
 
@@ -67,7 +67,7 @@ Regression check: PR-58 specifies fixture tests for the four failed cases and a 
 
 ### P1-3: PR-1 has no way to set the required review-gate mode
 
-Status: open.
+Status: fixed in `3684dae`.
 
 File: `docs/roadmaps/phase-1-foundations.md:57-76`
 
@@ -77,7 +77,7 @@ Expected: D-181 requires an explicit `advisory` or `enforced` value. An absent o
 
 Actual: the PR-1 scope only adds repository files and workflow permissions. It does not add an owner setup step, a runbook command, or an API permission that can create the repository variable. GitHub repository variables are external repository state, and `checks: write` plus `contents: read` cannot create one. The roadmap also does not state how a fresh repository gets `REVIEW_GATE_MODE=advisory` before the workflow runs.
 
-Consequence: a fresh PR-1 checkout reaches the explicit absent-variable failure path. The new review-gate check cannot enter its documented grey advisory state or pass its own exit tests until an undocumented external action occurs.
+Consequence on the reviewed revision: none. The tracked mode file gives PR-1 an advisory value without an external repository-variable setup action.
 
 Correction: add the owner setup action before PR-1, with a documented command that creates `REVIEW_GATE_MODE=advisory`, or add a separately scoped bootstrap mechanism. Keep the absent and unknown values as failures.
 
@@ -85,7 +85,7 @@ Regression check: run the workflow with the variable absent, set to `advisory`, 
 
 ### P1-4: The required review commit invalidates its own effective head
 
-Status: open.
+Status: fixed in `3684dae`.
 
 Files: `.claude/skills/pr-review/SKILL.md:200-202,333-365`, `docs/decisions.md:202,205`, and Commit: `6e45d6f`.
 
@@ -95,11 +95,29 @@ Expected: the review record commit and its required handoff commit must be metad
 
 Actual: commit `6e45d6f` changes both the review record and `docs/session-handoff.md`. Under the current effective-head definition, the handoff path is outside `docs/reviews/`, so `6e45d6f` becomes the effective head. The review record in that commit records `8efb267`, and the gate therefore rejects the record. Updating the head and committing the required handoff repeats the same problem with a new commit hash.
 
-Consequence: the review protocol cannot produce a green `review-gate` result after a compliant reviewer commit. The required commit and push path makes the gate self-invalidating.
+Consequence on the reviewed revision: none. D-184 classifies the required review commit and handoff paths as metadata, so they do not change the effective head.
 
 Correction: define metadata paths consistently. Exclude both `docs/reviews/` and `docs/session-handoff.md` from the effective-head computation, or define a metadata commit by its exact required paths. Update D-179, D-182, D-183, the skill, and the PR-1 exit tests together.
 
 Regression check: create a fixture commit that changes the review record and the handoff only. The effective-head command must return the last substantive commit. Create a later commit that changes any other documentation path. The command must return that later commit.
+
+### P2-3: The current F-51 risk row names the removed mode variable
+
+Status: open.
+
+File: `docs/design.md:262`.
+
+Trigger: D-185 revises the mode source from the repository variable `REVIEW_GATE_MODE` to the tracked file `.github/review-gate-mode`. The current F-51 row carries the D-185 citation but still says that `REVIEW_GATE_MODE` selects the mode.
+
+Expected: the current design risk register must state the current mode source and must not present a superseded implementation detail as current (D-118, D-185, D-186).
+
+Actual: the row says: “`REVIEW_GATE_MODE` selects the mode”. This contradicts D-185 and the Phase 1 and Phase 5 roadmaps.
+
+Consequence: the design register gives a future implementer two conflicting mode sources and can cause the review-gate workflow to use repository state that PR-1 no longer creates.
+
+Correction: change the F-51 row to say that `.github/review-gate-mode` selects the mode, and retain the D-185 citation.
+
+Regression check: search all non-exempt current documents for `REVIEW_GATE_MODE` and `repository variable`; no current-status text should name the removed variable as the mode source. Historical review and handoff records remain exempt.
 
 ### P2-1: The design source still presents superseded decisions as current
 
@@ -153,13 +171,14 @@ Regression check: the author reports zero omitted PRs, measurements, and revised
 - `git diff --check main...docs/roadmaps`: passed.
 - `cmp -s AGENTS.md CLAUDE.md`: passed.
 - JSON parse of `.claude/settings.json`: passed.
-- Roadmap header and revised-decision sweep: passed on `6e45d6f`.
-- Effective-head specification review: passed. The follow-up names a single `git log` command with a pathspec and avoids an early-terminating pipeline.
+- Roadmap header and revised-decision sweep: passed on `e51e272`.
+- Effective-head specification review: passed. The metadata set excludes the review and handoff paths, and the branch resolves to `e51e272` as its newest substantive commit.
 - Commit attribution scan: the old finding was reproduced against `9459534` and is fixed in amended commit `e3e2b6a`. A semantic source-of-work scan was not independently automated because the PR creates the scanner only as a future exit test.
 - Build and test: not run. The repository has no solution or implementation on either the base or reviewed head, as stated in `AGENTS.md`.
 - STE checker: not run. PR-2 creates it, and the project has no checker yet. The changed documents received a manual review against `.claude/skills/ste-writing/SKILL.md`.
 - CI results: unavailable for the reviewed head in the local checkout. The workflow files described by the roadmap do not exist yet. The review-gate mode variable is also not present in repository files or the runner runbook.
-- Review-gate metadata-path behavior: failed by causal trace. The current definition excludes `docs/reviews/` but not the required handoff path.
+- Review-gate metadata-path behavior: passed by causal trace. Excluding the D-184 metadata set resolves the branch to `e51e272`, not either review commit.
+- Current mode-source sweep: one stale current reference remains in `docs/design.md:262`; P2-3 is open.
 - Runner registration and SSD placement: not verified. The runbook records them as owner actions before PR-1.
 
 ## Open questions and accepted risks
@@ -168,4 +187,4 @@ No new owner question is required for these findings. The existing OQ-12 remains
 
 ## Verdict
 
-**Changes required.** This verdict applies to head `6e45d6f`. P1-1, P1-2, P2-1, and P2-2 are fixed. P1-3 and P1-4 remain open because the review-gate mode has no setup path and the compliant review commit invalidates its own effective head.
+**Changes required.** This verdict applies to head `e51e272`. P1-1, P1-2, P1-3, P1-4, P2-1, and P2-2 are fixed. P2-3 remains open because the current design risk register still names the removed `REVIEW_GATE_MODE` variable as the mode source.
