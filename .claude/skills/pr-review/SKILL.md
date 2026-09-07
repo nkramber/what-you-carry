@@ -342,7 +342,7 @@ Do these steps in order after the author revises the PR.
 8. Update the Identity list to the new effective head.
 9. Update the Verification section with the commands that ran on the new head.
 10. Write the verdict against the new head.
-11. Commit the review record and the handoff entry together (D-182).
+11. Commit the review record and the handoff entry together, then push to the PR branch (D-182, D-183).
 
 Edit the existing `docs/reviews/pr-<number>.md`. Do not create a second file for the same PR.
 Do not delete the prior verdict. Replace it, and keep each finding and its history.
@@ -367,14 +367,15 @@ A disagreement with a finding belongs here, with the evidence. Do not remove the
 
 ## Commit the record
 
-Always commit the review record and the session handoff (D-182). Do it in the session that writes them.
+Always commit the review record and the session handoff, then push them to the PR branch (D-182, D-183). Do it in the session that writes them.
 
 | After | Commit these files | Who commits |
 |---|---|---|
 | A review or a repeat review | `docs/reviews/pr-<number>.md` and `docs/session-handoff.md` | The reviewer |
 | Work that answers a review | `docs/reviews/pr-<number>-response.md`, each corrected file, and `docs/session-handoff.md` | The author |
 
-Make one commit that holds the record and its handoff entry. Never leave either file uncommitted.
+Make one commit that holds the record and its handoff entry. Never leave either file uncommitted or unpushed.
+A push is the only way `review-gate` sees the record, because the gate reads the PR head (D-183).
 
 An uncommitted review record has three effects:
 
@@ -389,8 +390,9 @@ Another provider can add an entry above yours while you work. Add your own entry
 ## Scope limits
 
 A review request authorizes inspection, verification, the review record, and the handoff entry.
-It requires a commit of those two files (D-182).
+It requires a commit of those two files, and a push of that commit to the PR branch (D-182, D-183).
 It does not by itself authorize a code fix, a merge, or an external message.
+A reviewer never pushes to `main` (D-170).
 Honor explicit authorization already present in the session.
 If the reviewer writes a substantive fix, reassess provider eligibility. The reviewer cannot approve its own contribution.
 Do not disguise a fix as review metadata to bypass the provider gate.
