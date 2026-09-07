@@ -15,6 +15,7 @@ Session: the toolchain install, the runner path risk, and the documentation PR o
 - Made a test solution with a class library and an xUnit project. `dotnet build` and `dotnet test` were successful, and the default target framework is `net10.0`.
 - Found a risk. A launch agent starts with a minimal path, so a CI job on the self-hosted runner cannot find `dotnet`. The owner chose `actions/setup-dotnet` with the `global-json-file` input (D-189).
 - The owner gave an override for a documentation-only PR (D-188). This session recorded it in the decision register, `CLAUDE.md`, and `AGENTS.md`.
+- Found that D-188 could not work at launch. In enforced mode the `review-gate` job fails a PR with no review record (D-181, D-185). The owner chose the label `review-override` and a wider eligible path set, and D-190 records the mechanism. PR-1 implements it, and the roadmap now holds four more exit tests.
 - Deleted the merged local branch `docs/roadmaps`. The remote branch `origin/docs/roadmaps` is still there.
 
 ### State of the build
@@ -25,14 +26,16 @@ Session: the toolchain install, the runner path risk, and the documentation PR o
 
 ### In flight
 
-This PR changes documentation only. The owner gives the D-188 override and merges it without a cross-provider review.
+This PR changes documentation only. The owner gives the D-188 override and merges it without a cross-provider review. The PR is also eligible under the D-190 path set, so the rule covers its own PR.
 
 ### Traps and gotchas
 
 - A launch agent does not read `~/.zshrc`. Do not expect a login shell path on the runner.
-- In enforced mode the `review-gate` job fails a PR with no review record (D-181, D-185). The D-188 override therefore needs a workflow path before launch.
+- D-190 closes the launch hole in D-188. PR-1 must build the override path, or an overridden PR turns red at launch.
+- The `review-override` label does not survive a new commit. A push outside the metadata set after the label needs the label again (D-190).
+- The agents hold the owner GitHub token. The label stops an accident, and it does not stop an attack (D-190).
 - The `dotnet-sdk` cask needs an administrator password. The Microsoft script needs none.
-- This PR holds three concerns, which is against G-10. The session named the conflict, and the owner chose one PR.
+- This PR holds four concerns, which is against G-10. The session named the conflict, and the owner chose one PR.
 - The file held 11 entries before this session. This entry restores the limit of 10 (D-146).
 
 ### Open questions that block progress
