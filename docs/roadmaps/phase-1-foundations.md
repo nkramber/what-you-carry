@@ -54,6 +54,11 @@ Scope:
 - `project.godot` and the Game project file on `Godot.NET.Sdk` at the pinned version (D-61).
 - `.github/workflows/ci.yml` with three jobs: build and test on hosted Linux x64, hosted Windows x64, and the self-hosted macOS arm64 runner (D-100, D-148, OQ-31).
 - `.github/pull_request_template.md` with the gate checklist and one "no change needed because" line per document (D-118). It has one line that names each absent check with the PR that creates it (D-148).
+- `.github/workflows/review-gate.yml` with one job, `review-gate`, on the `pull_request` event (D-179). The job reads the PR number and applies three rules:
+  - `docs/reviews/pr-<number>.md` exists on the PR head.
+  - The verdict in that file is `Ready for owner merge`, and not `Blocked` or `Changes required`.
+  - The head that the file records is the effective head. The effective head is the newest commit that changes a path outside `docs/reviews/`. A short hash matches by prefix.
+- The `review-gate` job reports each failure with the rule, the expected value, and the value it found (T-2, D-113). It is advisory until launch (D-180).
 - A build and test command section in `CLAUDE.md` and `AGENTS.md`, identical (D-122).
 
 Out of scope: any Core type beyond an empty namespace, any scene, any content file.
@@ -66,14 +71,22 @@ Exit tests:
 4. The CI workflow has one job per platform, and the macOS job selects the self-hosted runner label.
 5. The PR description names the STE checker, the lint tool, and the bit-identity job as absent, with PR-2 and PR-3 (D-148).
 6. No commit subject or body in the PR names an agent, harness, or model as the source of the work (T-6, D-175, D-176). The scan covers co-author trailers and generation lines.
+7. `ReviewGateFailsOnMissingFile` asserts a failure when no review file exists for the PR number.
+8. `ReviewGateFailsOnChangesRequired` asserts a failure on a fixture review file with the verdict `Changes required`.
+9. `ReviewGateFailsOnBlocked` asserts a failure on a fixture review file with the verdict `Blocked`.
+10. `ReviewGateFailsOnStaleHead` asserts a failure when the recorded head precedes a later commit outside `docs/reviews/`.
+11. `ReviewGateIgnoresReviewFileCommit` asserts a pass when the only later commit changes `docs/reviews/` alone (D-179).
+12. `ReviewGatePassesOnApproval` asserts a pass on the verdict `Ready for owner merge` at the effective head.
+13. Each failure message names the rule, the expected value, and the value found (T-2).
+14. The `review-gate` job runs on this PR (D-180).
 
 Review focus: Core boundary, input and CI boundaries, dependencies, documents.
 
-Check clause: the STE checker, the lint tool, and the bit-identity job do not exist. PR-2 and PR-3 create them.
+Check clause: the STE checker, the lint tool, and the bit-identity job do not exist. PR-2 and PR-3 create them. Branch protection does not exist, so `review-gate` is advisory until launch (D-170, D-180).
 
-Gate: exit tests 1 to 6 pass.
+Gate: exit tests 1 to 14 pass.
 
-> *In plain English:* this makes the empty project with its four parts. It adds the automatic build on three kinds of computer and the checklist every change must fill in. It adds nothing that plays.
+> *In plain English:* this makes the empty project with its four parts. It adds the automatic build on three kinds of computer and the checklist every change must fill in. It also adds a check that turns red when a change has no approved review. It adds nothing that plays.
 
 ### PR-2: STE checker
 

@@ -14,10 +14,15 @@ Session: answer the PR #1 review. Branch `docs/roadmaps`, part of PR #1.
 - P1-1: T-6 and D-137 prohibit text that names an agent, harness, or model as the source of the work. A tool name that identifies a configured file is not attribution, so the broad reading in the finding would also condemn D-172, D-175, OQ-16, F-15, the PR description, and the settings file path. D-176 states the boundary. The body of the head commit is rewritten, because one clause implied that an agent wrote the commits. PR-1 exit test 6 now scans every subject and body, not only trailers.
 - P1-2: PR-11 created the night job and the `night-gate` job together, so the gate had no result to read on its first run, against G-19. D-177 splits them. PR-11 publishes a result record. The new PR-58 adds the gate after one night runs. An absent, stale, cancelled, or failed record fails the gate.
 - P2-1: fixed all six stale references. The review named five. A sweep found a sixth at `phase-1-foundations.md:412`. D-178 adds a reference check to the PR-2 checker, so the next revision cannot leak.
+- The owner asked for a GitHub merge criterion that blocks a merge without the review files. GitHub returns 403 for branch protection and for rulesets on a private free repository, verified this session. No hard block is possible today.
+- Recorded D-179 and D-180 and F-50. PR-1 gains a `review-gate` job. It reads `docs/reviews/pr-<number>.md`, requires the verdict `Ready for owner merge`, and requires the recorded head to be the effective head. The job is advisory until launch. Phase 5 step 11 makes it a required check after the repository becomes public.
+- The owner asked for the head to match the PR head. The `pr-review` skill says the opposite: do not require the review file to hold its own hash. The effective head reconciles both. The effective head is the newest commit outside `docs/reviews/`.
+- The owner chose not to require the response file. The gate reads the review file only.
+- Rewrote `.claude/skills/pr-review/SKILL.md` for the format. It now holds a review file skeleton, the three machine-read fields, a finding format with stable `P<severity>-<n>` ids, the attribution boundary of D-176, the gate rules, a ten-step repeat review procedure, and the response file contract.
 
 ### State of the build
 
-- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds eleven commits. The head commit was amended, so the branch needs a force push.
+- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds twelve commits. The head commit of session 5 was amended, and the branch was force pushed.
 - No code, solution, or CI workflow exists. PR-1 creates them.
 - `CLAUDE.md` and `AGENTS.md` are byte-identical.
 
@@ -33,6 +38,10 @@ PR #1 needs a repeat review by Codex against the new head.
 - PR-58 is new. Phase 1 now ends with PR-11, one scheduled night, PR-58, then the measurements and Gate 1.
 - Ids never change. PR-58 sits after PR-11 in the sequence, not after PR-57.
 - The PR-2 reference check skips a line that holds `revises`, `revised by`, or `supersedes`. The two F-15 history lines were reworded to hold that word.
+- Branch protection and rulesets both return 403 on this repository. Do not plan a hard merge block before launch (D-180).
+- `review-gate` reads three exact things: the file name, the `- Head: ` line, and the verdict name. A reworded verdict fails the job.
+- The effective head ignores a commit that changes only `docs/reviews/`. A review file commit does not invalidate its own approval.
+- `docs/reviews/pr-1.md` records head `9459534`, which the amend replaced. The repeat review must set the Identity list to the new effective head.
 
 ### Open questions that block progress
 

@@ -182,22 +182,72 @@ Severity describes impact and urgency. It does not replace evidence or the proje
 Do not reduce severity because the patch is small or the author calls the change safe.
 Quote both statements when owner decisions conflict. File the question in `docs/questions.md` and stop dependent work (D-124, D-138).
 
-## Review record and verdict
+## Review record
 
 Use one file per PR in `docs/reviews/` (D-101). Reuse its existing name and finding ids on repeat reviews.
 For a new record, use `docs/reviews/pr-<number>.md` with the actual PR number, not the roadmap id.
 Record provider names only in the permitted review record and handoff author fields (D-137).
 Omit those names from any PR description or GitHub comment.
 
-The review file contains:
+The `review-gate` job reads this file (D-179). Three parts of it are machine-read. Keep their format exact:
 
-1. PR identity, date, base commit, merge base, and head commit.
-2. Author provider evidence, actual reviewer provider, and provider-gate result.
-3. Intended behavior, inspected scope, and affected contracts.
-4. Findings in severity order, with stable ids and current dispositions.
-5. Verification commands, results, CI artifacts, and execution limits.
-6. Open owner questions, absent evidence, and any accepted risks with decision ids.
-7. A verdict and the exact revision to which it applies.
+| Part | Exact form | Rule |
+|---|---|---|
+| The file name | `docs/reviews/pr-<number>.md` | The number is the GitHub PR number, not the roadmap id. |
+| The head field | `- Head: ` and the hash in backticks, in the Identity list | The hash is the effective head. A short hash is permitted. |
+| The verdict | One of the three verdict names, in the `## Verdict` section | Write the name exactly. Do not reword it. |
+
+The effective head is the newest commit that changes a path outside `docs/reviews/`.
+A commit that changes only the review record does not change the effective head.
+Record the effective head, not the tip, when the review record is the last commit.
+
+Use this skeleton. Keep the heading text and the order.
+
+```markdown
+# PR-<number> review
+
+Date: <YYYY-MM-DD>
+
+## Identity
+
+- PR: <number>
+- Target: `main`
+- Base: `<sha>`
+- Merge base: `<sha>`
+- Head: `<effective head sha>`
+- Branch: `<branch>`
+
+## Provider gate
+
+State the author provider, the source of that fact, and the reviewer provider.
+State the gate result against T-4 and D-101.
+
+## Intended behavior and scope
+
+State the intent, what the review inspected, and every affected contract.
+Name any area that remains uninspected.
+
+## Findings
+
+One subsection per finding, in severity order. Use the finding format below.
+Write "No finding." when the review found none.
+
+## Verification
+
+One line per command or check, with its result.
+Name each check that did not run and the reason.
+
+## Open questions and accepted risks
+
+Name each open OQ-# and each accepted risk with its D-# id.
+
+## Verdict
+
+**<Blocked | Changes required | Ready for owner merge>.** This verdict applies to head `<sha>`.
+Give the reason in one or two sentences.
+```
+
+## Verdicts
 
 | Verdict | Required condition |
 |---|---|
@@ -211,18 +261,101 @@ The owner alone merges the PR (D-102, D-126).
 
 When the review record enters the PR, retain the assessed implementation head in that file.
 Check any later metadata commit before the final verdict.
-State the final PR head in the review response. Do not require the review file to contain its own commit hash.
+Do not require the review file to contain its own commit hash.
 A metadata commit cannot hide code, content, requirement, or test changes.
 
-## Repeat review and scope limits
+## Finding format
 
-- Check the provider gate again after each substantive fix.
-- Verify each claimed fix against its original trigger and regression test.
-- Inspect the new diff for additional defects and affected consumers.
-- Retain prior findings with their disposition, evidence, and fix revision.
-- Close a finding only after the evidence establishes the fix or an owner decision resolves the requirement.
-- Record any required checks that still await a result.
-- Recheck the PR revision immediately before the final verdict.
+Give each finding a stable id: the letter `P`, the severity number, a hyphen, and an index. `P1-1` is the first P1 finding.
+Keep the id for the life of the PR. Never renumber a finding on a repeat review.
+
+```markdown
+### P<severity>-<n>: <short title that states the defect>
+
+Status: <open | fixed in `<sha>` | accepted risk, D-# | withdrawn>.
+
+File: `<path>:<line range>`, or Commit: `<sha>`.
+
+Trigger: the input or state that produces the defect.
+
+Expected: the required behavior, with the contract, tenet, guardrail, or D-# id.
+
+Actual: the observed behavior.
+
+Consequence: the effect on the player, the data, the build, or the maintainer.
+
+Correction: the smallest change that restores the contract.
+
+Regression check: the command or test that establishes the fix, and the result that must appear.
+```
+
+A withdrawn finding stays in the file with the evidence that refuted it. Never delete a finding.
+
+## Do not raise a tool name as attribution
+
+T-6 and D-137 prohibit text that names an agent, harness, or model **as the source of the work** (D-176).
+A tool name that identifies a configured file, a schema, or a verified version is not attribution.
+
+| Raise it | Do not raise it |
+|---|---|
+| A commit body that says an agent wrote the change. | The path `.claude/settings.json`. |
+| A co-author trailer or a generation line. | A decision that names the schema it was verified against. |
+| A PR description that credits a model. | A document that records which tool rejected a file. |
+
+Apply the same test to every file before a finding. A reading that condemns the decision register is too broad.
+
+## The review gate check
+
+PR-1 adds a `review-gate` CI job (D-179). It fails the PR when one of three rules breaks:
+
+1. No `docs/reviews/pr-<number>.md` exists for the PR number.
+2. The verdict is not `Ready for owner merge`.
+3. The head in the Identity list is not the effective head.
+
+The job is advisory until launch, because GitHub locks branch protection on a private free repository (D-170, D-180).
+A red `review-gate` job means the PR is not ready. The owner alone merges (D-102, D-126).
+
+Rule 3 fails when the author pushes code after the approval. That result is correct.
+Reassess the new diff, then update the head field and the verdict together.
+Rule 3 does not fail when the last commit changes only `docs/reviews/`.
+
+## Repeat review procedure
+
+Do these steps in order after the author revises the PR.
+
+1. Read the response file when one exists.
+2. Check the provider gate again. A reviewer fix changes eligibility.
+3. Read the new head, the new base, and the diff since the reviewed head.
+4. Verify each claimed fix against its original trigger and its regression check.
+5. Set the `Status` line of each prior finding. Keep every id and every piece of evidence.
+6. Inspect the new diff for new defects and affected consumers.
+7. Add any new finding with the next index in its severity.
+8. Update the Identity list to the new effective head.
+9. Update the Verification section with the commands that ran on the new head.
+10. Write the verdict against the new head.
+
+Edit the existing `docs/reviews/pr-<number>.md`. Do not create a second file for the same PR.
+Do not delete the prior verdict. Replace it, and keep each finding and its history.
+Close a finding only when the evidence establishes the fix or an owner decision resolves it.
+Record any required check that still waits for a result.
+
+## The response file
+
+The author answers a review in `docs/reviews/pr-<number>-response.md`.
+This file is a convention, not a gate. `review-gate` does not read it (D-179).
+Write one when the verdict is `Changes required` or `Blocked`. A clean first pass needs none.
+
+The response file states, for each finding:
+
+- The disposition: full merit, partial merit, or no merit.
+- The evidence, when the disposition is partial merit or no merit.
+- The correction that landed, with the file and the decision id.
+- The regression check that ran, and its result.
+
+The response also lists each new D-# and F-# id, and the final PR head.
+A disagreement with a finding belongs here, with the evidence. Do not remove the finding from the review file.
+
+## Scope limits
 
 A review request authorizes inspection, verification, and a local review record.
 It does not by itself authorize a code fix, commit, push, merge, or external message.

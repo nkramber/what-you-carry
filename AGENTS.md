@@ -95,7 +95,8 @@ A PR merges only when every line holds:
 - [ ] No silent failure. Every error carries context (T-2).
 - [ ] The three-platform bit-identity job is green (G-9).
 - [ ] The lint tool and the STE checker pass (G-2, G-14).
-- [ ] The other provider reviewed it, and `docs/reviews/` has the file (T-4).
+- [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179).
+- [ ] The `review-gate` job is green. It is advisory until launch (D-180).
 - [ ] `docs/decisions.md` has every new decision.
 - [ ] `docs/questions.md` has every new question.
 - [ ] `docs/design.md` matches intent.

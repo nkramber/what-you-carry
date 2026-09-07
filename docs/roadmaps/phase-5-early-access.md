@@ -184,7 +184,8 @@ One person owns the program. Items run one at a time in this order. Gate 4 must 
 8. PR-54.
 9. Owner: answer OQ-70.
 10. PR-55.
-11. **← GATE 5 (Early Access candidate).** Every exit test in this file passes. The store page has no attribution (T-6). The owner signs the gate in `docs/decisions.md`.
+11. Owner: make the repository public, then set `review-gate` and the three-platform job as required status checks on `main` (D-170, D-180).
+12. **← GATE 5 (Early Access candidate).** Every exit test in this file passes. The store page has no attribution (T-6). The owner signs the gate in `docs/decisions.md`.
 
 ## 6. Open questions
 
