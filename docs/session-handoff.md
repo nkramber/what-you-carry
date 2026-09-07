@@ -2,6 +2,41 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 11: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #1 after the neutral review-gate change.
+
+### What this session did, and why
+
+- Rechecked PR #1 at effective head `8efb267`, including the D-181, D-182, and D-183 changes.
+- Confirmed the prior four findings remain fixed.
+- Added P1-3 to `docs/reviews/pr-1.md`: PR-1 does not define how `REVIEW_GATE_MODE=advisory` is created.
+
+### State of the build
+
+- No solution or implementation exists on the reviewed head.
+- The diff check passes. The agent files remain identical. The settings file parses as JSON.
+- The review verdict is Changes required.
+
+### In flight
+
+PR #1 needs an owner setup step or bootstrap mechanism for the required review-gate repository variable.
+
+### Traps and gotchas
+
+- D-181 forbids a default for an absent or unknown `REVIEW_GATE_MODE`.
+- The PR-1 roadmap says it sets the variable, but the scope contains no repository-state action.
+- The effective head is `8efb267`.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Define the advisory-mode variable setup, revise PR #1, and request another repeat review.
+
 ## Session 10: 2026-09-07, Claude Code
 
 Author: Claude Code

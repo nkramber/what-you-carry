@@ -8,7 +8,7 @@ Date: 2026-09-07
 - Target: `main`
 - Base: `1c16c45`
 - Merge base: `1c16c45`
-- Head: `223aae8`
+- Head: `8efb267`
 - Branch: `docs/roadmaps`
 
 ## Provider gate
@@ -19,9 +19,9 @@ The session handoff records Claude Code as the author of the substantive roadmap
 
 This PR adds the five focused roadmaps, the macOS runner runbook, repository settings, decision updates, question updates, review records, the review skill format, and session continuity records. The roadmaps define the scope, checks, gates, dependencies, and owner questions for PR-1 through PR-58.
 
-The review inspected the complete diff from `1c16c45` to `223aae8`, the response and new diffs since `9459534`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
+The review inspected the complete diff from `1c16c45` to `8efb267`, the response and new diffs since `9459534`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
 
-Affected contracts include T-4, T-5, T-6, D-118, D-137, D-146, D-148, D-150, D-151, D-152, D-157, D-170, D-173, and D-175.
+Affected contracts include T-4, T-5, T-6, D-118, D-137, D-146, D-148, D-150, D-151, D-152, D-157, D-170, D-173, D-175, D-181, D-182, and D-183.
 
 ## Findings
 
@@ -64,6 +64,24 @@ Consequence on the reviewed revision: the first-run case has an explicit sequenc
 Correction applied: split the night job and `night-gate` into PR-11 and PR-58. The gate rejects absent, stale, cancelled, and failed records.
 
 Regression check: PR-58 specifies fixture tests for the four failed cases and a real night record. No workflow exists yet, so execution is deferred to PR-11 and PR-58.
+
+### P1-3: PR-1 has no way to set the required review-gate mode
+
+Status: open.
+
+File: `docs/roadmaps/phase-1-foundations.md:57-76`
+
+Trigger: PR-1 creates the `review-gate` workflow. The workflow reads the repository variable `REVIEW_GATE_MODE`, and the roadmap says PR-1 sets that variable to `advisory`.
+
+Expected: D-181 requires an explicit `advisory` or `enforced` value. An absent or unknown value must fail. PR-1 must therefore provide a valid variable before its review-gate check can pass.
+
+Actual: the PR-1 scope only adds repository files and workflow permissions. It does not add an owner setup step, a runbook command, or an API permission that can create the repository variable. GitHub repository variables are external repository state, and `checks: write` plus `contents: read` cannot create one. The roadmap also does not state how a fresh repository gets `REVIEW_GATE_MODE=advisory` before the workflow runs.
+
+Consequence: a fresh PR-1 checkout reaches the explicit absent-variable failure path. The new review-gate check cannot enter its documented grey advisory state or pass its own exit tests until an undocumented external action occurs.
+
+Correction: add the owner setup action before PR-1, with a documented command that creates `REVIEW_GATE_MODE=advisory`, or add a separately scoped bootstrap mechanism. Keep the absent and unknown values as failures.
+
+Regression check: run the workflow with the variable absent, set to `advisory`, set to `enforced`, and set to an unknown value. The first and last cases must fail. PR-1 must document and perform the advisory setup before its real check run.
 
 ### P2-1: The design source still presents superseded decisions as current
 
@@ -117,12 +135,12 @@ Regression check: the author reports zero omitted PRs, measurements, and revised
 - `git diff --check main...docs/roadmaps`: passed.
 - `cmp -s AGENTS.md CLAUDE.md`: passed.
 - JSON parse of `.claude/settings.json`: passed.
-- Roadmap header and revised-decision sweep: passed on `223aae8`.
+- Roadmap header and revised-decision sweep: passed on `8efb267`.
 - Effective-head specification review: passed. The follow-up names a single `git log` command with a pathspec and avoids an early-terminating pipeline.
 - Commit attribution scan: the old finding was reproduced against `9459534` and is fixed in amended commit `e3e2b6a`. A semantic source-of-work scan was not independently automated because the PR creates the scanner only as a future exit test.
 - Build and test: not run. The repository has no solution or implementation on either the base or reviewed head, as stated in `AGENTS.md`.
 - STE checker: not run. PR-2 creates it, and the project has no checker yet. The changed documents received a manual review against `.claude/skills/ste-writing/SKILL.md`.
-- CI results: unavailable for the reviewed head in the local checkout. The workflow files described by the roadmap do not exist yet.
+- CI results: unavailable for the reviewed head in the local checkout. The workflow files described by the roadmap do not exist yet. The review-gate mode variable is also not present in repository files or the runner runbook.
 - Runner registration and SSD placement: not verified. The runbook records them as owner actions before PR-1.
 
 ## Open questions and accepted risks
@@ -131,4 +149,4 @@ No new owner question is required for these findings. The existing OQ-12 remains
 
 ## Verdict
 
-**Ready for owner merge.** This verdict applies to head `223aae8`. P1-1, P1-2, P2-1, and P2-2 are fixed. No new finding remains. Build and CI execution remain unavailable because this documentation PR defines the solution and workflows that PR-1 will create.
+**Changes required.** This verdict applies to head `8efb267`. P1-1, P1-2, P2-1, and P2-2 are fixed. P1-3 remains open because PR-1 does not define how its required `REVIEW_GATE_MODE=advisory` repository variable is created.
