@@ -24,7 +24,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 - **T-1. Readable, simple, not wasteful.** Explicit over implicit. A fresh model must understand a function from the function and its helper signatures. Helpers go one level deep (D-110). Two concrete cases before any abstraction (D-111). No clever one-liners. Tune only on measurement (D-109).
 - **T-2. Zero silent failures.** No empty catch blocks. An absent value is an error, never a zero. Every error carries its context (D-113). Assertions stay on in shipped builds (D-112).
 - **T-3. Tests cover everything.** No merge without tests. A bug fix ships with a regression test that fails on the old code.
-- **T-4. Cross-provider review before merge.** The provider that wrote the code does not review it. The review file in `docs/reviews/` records the findings (D-101).
+- **T-4. Cross-provider review before merge.** The provider that wrote the code does not review it. The review file in `docs/reviews/` records the findings (D-101). A PR that changes only documentation merges without a review when the owner gives the override for that PR (D-188).
 - **T-5. Document everything.** Continuity is the first duty. Each session adds its entry at the top of `docs/session-handoff.md` (D-146). The other documents update when intent, a decision, or a plan changes (D-118).
 - **T-6. No attribution.** No code, game text, commit, PR description, or GitHub comment names an agent, harness, or model as the source of work (D-137). Two places are exempt: the author field in `docs/session-handoff.md`, and the files in `docs/reviews/`.
 
@@ -97,7 +97,7 @@ A PR merges only when every line holds:
 - [ ] No silent failure. Every error carries context (T-2).
 - [ ] The three-platform bit-identity job is green (G-9).
 - [ ] The lint tool and the STE checker pass (G-2, G-14).
-- [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185).
+- [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185). A documentation-only PR is exempt when the owner gives the override for that PR (D-188).
 - [ ] The `review-gate` check is green. Grey means no review record yet. Red means the review does not approve this head (D-179, D-181, D-185).
 - [ ] `docs/decisions.md` has every new decision.
 - [ ] `docs/questions.md` has every new question.

@@ -2,6 +2,8 @@
 
 Status: procedure, written 2026-09-07 for the registration on 2026-09-08 (D-157, D-171). Written in ASD-STE100.
 
+Revised 2026-09-07: this runbook records the tool versions and the path risk of the launch agent (D-189).
+
 This runbook registers the Mac Mini as a self-hosted GitHub Actions runner for the repository `nkramber/what-you-carry`. The runner has the label `macos-arm64-self-hosted`. It runs as a launch agent. Its work directory is on the external SSD.
 
 Facts checked on 2026-09-07:
@@ -10,6 +12,8 @@ Facts checked on 2026-09-07:
 - The repository has zero runners.
 - The `gh` command is logged in as the owner with the `repo` scope, which the registration token needs.
 - No external volume is mounted yet.
+- The runner service script `runsvc.sh` reads a `.path` file and sets the path from it. Source: `actions/runner`, checked 2026-09-07.
+- The `actions/setup-dotnet` action supports a self-hosted runner and reads `global.json`. Source: the action README, checked 2026-09-07.
 
 ## Before you start
 
@@ -87,10 +91,26 @@ NOTE: A runner job runs with the owner's user permissions and shares the machine
 
 ## Tools that the jobs need
 
-PR-1 and PR-12 add jobs that need tools on this machine. Install them before those PRs:
+PR-1 and PR-12 add jobs that need tools on this machine. This machine has both tools:
 
-1. The .NET 10 SDK (D-173).
-2. The Godot 4.7.2 .NET editor binary (D-61), on the path.
+| Tool | Version | Location | Date | Decision |
+|---|---|---|---|---|
+| .NET SDK | 10.0.400 | `~/.dotnet` | 2026-09-07 | D-173 |
+| Godot .NET editor | 4.7.2.stable.mono | `/Applications/Godot_mono.app` | 2026-09-07 | D-61 |
+
+The Homebrew cask `dotnet-sdk` installs a package file, and that file needs an administrator password. The Microsoft script `dotnet-install.sh` put the SDK in `~/.dotnet`, and that script needs no password. The Homebrew cask `godot-mono` put the editor in `/Applications`. A wrapper is at `/opt/homebrew/bin/godot-mono`.
+
+The file `~/.zshrc` sets `DOTNET_ROOT` and adds `~/.dotnet` to the path. This applies to a login shell only.
+
+A test on 2026-09-07 made a class library and an xUnit project. The commands `dotnet build` and `dotnet test` were successful. The default target framework is `net10.0`.
+
+### CAUTION: the launch agent does not read the login shell path
+
+A launch agent starts with a minimal path. It does not read `~/.zshrc`. The path holds neither `~/.dotnet` nor `/opt/homebrew/bin`. A CI job that calls `dotnet` directly fails, and the message is `command not found`.
+
+The workflow calls `actions/setup-dotnet` with the `global-json-file` input (D-189). The action installs the pinned SDK for each job. No job depends on the path of this machine, and all three platforms read one file.
+
+NOTE: The runner also reads a `.path` file in its directory. D-189 does not use that file, because a version in the repository is easier to audit than a version on one machine.
 
 ## Remove or move the runner
 

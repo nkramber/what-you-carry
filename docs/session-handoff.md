@@ -2,6 +2,47 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 16: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: the toolchain install, the runner path risk, and the documentation PR override. Branch `docs/runner-path-and-doc-override`.
+
+### What this session did, and why
+
+- PR #1 merged as `5c6d7b5`. The next action of session 15 is complete.
+- Installed the .NET 10 SDK, version 10.0.400, and the Godot 4.7.2 .NET editor. The runbook names both tools, and this machine had neither.
+- The Homebrew cask for the SDK installs a package file that needs an administrator password. This session cannot enter a password, so the Microsoft script `dotnet-install.sh` installed the SDK to `~/.dotnet`.
+- Made a test solution with a class library and an xUnit project. `dotnet build` and `dotnet test` were successful, and the default target framework is `net10.0`.
+- Found a risk. A launch agent starts with a minimal path, so a CI job on the self-hosted runner cannot find `dotnet`. The owner chose `actions/setup-dotnet` with the `global-json-file` input (D-189).
+- The owner gave an override for a documentation-only PR (D-188). This session recorded it in the decision register, `CLAUDE.md`, and `AGENTS.md`.
+- Deleted the merged local branch `docs/roadmaps`. The remote branch `origin/docs/roadmaps` is still there.
+
+### State of the build
+
+- `main` is at `5c6d7b5`. No code, solution, or CI workflow exists. PR-1 creates them.
+- `CLAUDE.md` and `AGENTS.md` are byte-identical.
+- The .NET SDK and the Godot editor are ready on the Mac Mini. The runner is not registered.
+
+### In flight
+
+This PR changes documentation only. The owner gives the D-188 override and merges it without a cross-provider review.
+
+### Traps and gotchas
+
+- A launch agent does not read `~/.zshrc`. Do not expect a login shell path on the runner.
+- In enforced mode the `review-gate` job fails a PR with no review record (D-181, D-185). The D-188 override therefore needs a workflow path before launch.
+- The `dotnet-sdk` cask needs an administrator password. The Microsoft script needs none.
+- This PR holds three concerns, which is against G-10. The session named the conflict, and the owner chose one PR.
+- The file held 11 entries before this session. This entry restores the limit of 10 (D-146).
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+On 2026-09-08 mount the SSD, move the checkout (D-174), and run `docs/runbooks/macos-runner.md` (D-171). Then start PR-1.
+
 ## Session 15: 2026-09-07, Codex
 
 Author: Codex
@@ -366,72 +407,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 A Codex session reviews PR #1 a third time against the new head, per `.claude/skills/pr-review/SKILL.md`. P2-2 is the only finding to confirm. Sessions 8 and 9 did that work.
-
-## Session 6: 2026-09-07, Codex
-
-Author: Codex
-Session: review PR #1 on `docs/roadmaps`.
-
-### What this session did, and why
-
-- Read the handoff, agent rules, review skill, STE skill, design, decisions, questions, existing reviews, and focused roadmaps.
-- Verified PR #1 at base `1c16c45` and head `9459534`.
-- Wrote `docs/reviews/pr-1.md` with three findings and a Changes required verdict.
-
-### State of the build
-
-- No solution or implementation exists on the reviewed head.
-- The diff passes `git diff --check`.
-- The agent files remain byte-identical. The settings file parses as JSON.
-
-### In flight
-
-PR #1 needs a revision. The review identifies prohibited attribution in a commit body, an undefined first-run path for `night-gate`, and stale references to D-172 and the unresolved OQ-2 state.
-
-### Traps and gotchas
-
-- T-6 applies to commit bodies as well as commit subjects.
-- D-175 supersedes D-172. D-173 supersedes D-169.
-- PR-11 creates the night result and the gate. The empty-result case needs an explicit contract.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Revise PR #1, then run a repeat review against the new head. Recheck the commit history, the first night-gate run, and every current-status reference to the revised decisions.
-
-## Session 5: 2026-09-07, Claude Code
-
-Author: Claude Code
-Session: fix the attribution setting, no new PR. Branch `docs/roadmaps`, pushed, part of PR #1.
-
-### What this session did, and why
-
-- Found why the Claude Code startup dialog reported that `.claude/settings.json` failed to parse. The file is valid JSON, but `attribution.commit` and `attribution.pr` were booleans. The schema requires strings. When one value fails validation, the harness ignores the whole file, so the co-author trailer stayed on, against T-6.
-- Set both fields to the empty string, which hides the attribution (D-175). Verified against the settings reference, the schema in the VS Code extension 2.1.263, and the validator in the CLI 2.1.261.
-- Marked D-172 as revised. Updated OQ-16 and F-15. Pushed one commit to `docs/roadmaps`, so PR #1 carries the fix.
-
-### State of the build
-
-- `main` has one commit, `1c16c45`, on the remote. The branch `docs/roadmaps` holds the six commits of session 4 and one commit of this session, all on the remote.
-- No code, solution, or CI workflow exists. PR-1 creates them.
-
-### In flight
-
-PR #1 from `docs/roadmaps` to `main` is open and waits for the other provider's review (T-4). The attribution fix is part of it.
-
-### Traps and gotchas
-
-- `attribution.commit` and `attribution.pr` are strings. A boolean makes the harness ignore the whole settings file, and the startup dialog calls it a parse failure.
-- A settings file that fails validation loses every setting in it, not only the bad field. Run `/doctor` to see what the harness dropped.
-- The traps in the session 4 entry still apply.
-
-### Open questions that block progress
-
-No new question. The session 4 entry lists the open ones.
-
-### Next concrete action
-
-Unchanged from session 4. A Codex session reviews PR #1 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-1.md`. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.

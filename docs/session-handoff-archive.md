@@ -2,7 +2,74 @@
 
 Entries older than the 10 newest sessions move here from `docs/session-handoff.md` (D-146). Newest first.
 
-No entries yet.
+## Session 6: 2026-09-07, Codex
+
+Author: Codex
+Session: review PR #1 on `docs/roadmaps`.
+
+### What this session did, and why
+
+- Read the handoff, agent rules, review skill, STE skill, design, decisions, questions, existing reviews, and focused roadmaps.
+- Verified PR #1 at base `1c16c45` and head `9459534`.
+- Wrote `docs/reviews/pr-1.md` with three findings and a Changes required verdict.
+
+### State of the build
+
+- No solution or implementation exists on the reviewed head.
+- The diff passes `git diff --check`.
+- The agent files remain byte-identical. The settings file parses as JSON.
+
+### In flight
+
+PR #1 needs a revision. The review identifies prohibited attribution in a commit body, an undefined first-run path for `night-gate`, and stale references to D-172 and the unresolved OQ-2 state.
+
+### Traps and gotchas
+
+- T-6 applies to commit bodies as well as commit subjects.
+- D-175 supersedes D-172. D-173 supersedes D-169.
+- PR-11 creates the night result and the gate. The empty-result case needs an explicit contract.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Revise PR #1, then run a repeat review against the new head. Recheck the commit history, the first night-gate run, and every current-status reference to the revised decisions.
+
+## Session 5: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: fix the attribution setting, no new PR. Branch `docs/roadmaps`, pushed, part of PR #1.
+
+### What this session did, and why
+
+- Found why the Claude Code startup dialog reported that `.claude/settings.json` failed to parse. The file is valid JSON, but `attribution.commit` and `attribution.pr` were booleans. The schema requires strings. When one value fails validation, the harness ignores the whole file, so the co-author trailer stayed on, against T-6.
+- Set both fields to the empty string, which hides the attribution (D-175). Verified against the settings reference, the schema in the VS Code extension 2.1.263, and the validator in the CLI 2.1.261.
+- Marked D-172 as revised. Updated OQ-16 and F-15. Pushed one commit to `docs/roadmaps`, so PR #1 carries the fix.
+
+### State of the build
+
+- `main` has one commit, `1c16c45`, on the remote. The branch `docs/roadmaps` holds the six commits of session 4 and one commit of this session, all on the remote.
+- No code, solution, or CI workflow exists. PR-1 creates them.
+
+### In flight
+
+PR #1 from `docs/roadmaps` to `main` is open and waits for the other provider's review (T-4). The attribution fix is part of it.
+
+### Traps and gotchas
+
+- `attribution.commit` and `attribution.pr` are strings. A boolean makes the harness ignore the whole settings file, and the startup dialog calls it a parse failure.
+- A settings file that fails validation loses every setting in it, not only the bad field. Run `/doctor` to see what the harness dropped.
+- The traps in the session 4 entry still apply.
+
+### Open questions that block progress
+
+No new question. The session 4 entry lists the open ones.
+
+### Next concrete action
+
+Unchanged from session 4. A Codex session reviews PR #1 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-1.md`. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
 ## Session 4: 2026-09-07, Claude Code
 
 Author: Claude Code
