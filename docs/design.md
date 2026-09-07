@@ -247,6 +247,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-41 | No item said whether a Steam Deck unit exists for M-3, and D-15 makes the Deck the floor | 2026-09-07 | ❓ OQ-50. Binds M-3 |
 | F-42 | D-49 shows a rarity color on an enemy, but no decision names the rarity tiers | 2026-09-07 | ❓ OQ-52. Binds PR-21, PR-26 |
 | F-43 | D-128 sets the Tier 3 cadence but not the model or the budget | 2026-09-07 | ❓ OQ-58. Binds PR-32 |
+| F-44 | The Deck verification checklist is an external fact with no source or date in the plan | 2026-09-07 | ❓ OQ-66. Binds PR-54 |
+| F-45 | D-152 changed the save files, and no item names which files cloud saves sync | 2026-09-07 | ❓ OQ-71. Binds PR-52 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -287,7 +289,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 
 ## 7. Roadmap
 
-Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundation gate with a written exit test. Gates 2 to 5 are playable builds with a written exit test and the owner's playtest sign-off. Ids: PR-# code changes, M-# measurements. An entry that covers several PRs notes its reserved id range. Focused roadmaps in `docs/roadmaps/` expand the phases with per-PR exit tests. Phase 1: [phase-1-foundations.md](roadmaps/phase-1-foundations.md). Phase 2: [phase-2-first-playable.md](roadmaps/phase-2-first-playable.md). Phase 3: [phase-3-full-loop.md](roadmaps/phase-3-full-loop.md).
+Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundation gate with a written exit test. Gates 2 to 5 are playable builds with a written exit test and the owner's playtest sign-off. Ids: PR-# code changes, M-# measurements. An entry that covers several PRs notes its reserved id range. Focused roadmaps in `docs/roadmaps/` expand the phases with per-PR exit tests. Phase 1: [phase-1-foundations.md](roadmaps/phase-1-foundations.md). Phase 2: [phase-2-first-playable.md](roadmaps/phase-2-first-playable.md). Phase 3: [phase-3-full-loop.md](roadmaps/phase-3-full-loop.md). Phase 4: [phase-4-content-complete.md](roadmaps/phase-4-content-complete.md). Phase 5: [phase-5-early-access.md](roadmaps/phase-5-early-access.md).
 
 ### Phase 1: Foundations (foundation gate, D-150: CI green on three platforms with a bit-identical end state, docs and PR gate live, no playtest)
 

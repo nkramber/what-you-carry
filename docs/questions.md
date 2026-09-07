@@ -133,3 +133,25 @@ How to file a question (D-124, D-138):
 57. **OQ-57. The profile path.** Raised 2026-09-07. Blocks PR-31. Recommendation: `user://profile.json` for the profile and `user://runs/<run-id>.record` for run records, with `user://` as the Godot user directory on every platform. Never a hard-coded path (v1 section 5.3).
 58. **OQ-58. The Tier 3 model and budget.** Raised 2026-09-07 (F-43). Blocks PR-32. D-128 sets the cadence but not the model or the budget. Recommendation: the socket is model-agnostic. The owner runs the weekly session with the harness of the day and a one-hour budget, and files findings in this register. The session never runs unattended (D-117).
 59. **OQ-59. The hub layout.** Raised 2026-09-07. Blocks PR-30. Recommendation: a 24 by 8 by 24 block camp with no enemies. The bank chest, the skill shrine, and the descent entrance stand in a triangle, each within twelve blocks of the spawn.
+60. **OQ-60. The boss pattern format.** Raised 2026-09-07. Blocks PR-33. Recommendation: a boss is a list of phases. Each phase has a health threshold, a list of attacks, and a movement rule. Each attack references a weapon or projectile definition and names its telegraph in ticks, with a minimum of 30 ticks. Boss health is 800 times the band index.
+61. **OQ-61. The silhouette specification.** Raised 2026-09-07. Blocks PR-36 to PR-42. Recommendation: one JSON file per family with three fields. The first is the proportion ratios of head, torso, and limbs against the base body. The second is one distinctive box that no other family has. The third is a color role from the palette. A family is distinct when at least two of the three differ from every earlier family.
+62. **OQ-62. The Tier 4 protocol.** Raised 2026-09-07. Blocks the Tier 4 pass. Recommendation: three sessions of ten minutes each, on a full floor, a boss fight, and the hub. Screenshots go through the socket at one to two per second. The model answers a fixed checklist. The items are the telegraphs it missed, the projectiles it could not tell apart, what the UI covered, and where the camera clipped. Findings go to this register.
+63. **OQ-63. The music direction and track list.** Raised 2026-09-07. Blocks PR-50. Recommendation: six tracks: hub, dungeon bands 1 to 5, 6 to 10, and 11 to 15, boss, and hunter. A dark tempo of 80 to 100 beats per minute and a small synthesizer palette of four voices. The hunter track is a pulse that rises. The owner's ear decides (F-18).
+64. **OQ-64. The prop set.** Raised 2026-09-07. Blocks PR-48. Recommendation: three props, barrel, crate, and torch stand, with 20 health each, no drops in v1 except a 5 percent potion chance from a barrel.
+65. **OQ-65. The polygon budget, pivot rule, and UV rule.** Raised 2026-09-07. Blocks PR-49. Recommendation:
+    - at most 40 boxes per character model and 12 per weapon.
+    - the pivot at the center of the feet for a character, and at the grip for a weapon.
+    - every face mapped to the atlas.
+66. **OQ-66. The Deck checklist source.** Raised 2026-09-07 (F-44). Blocks PR-54. The Steam Deck verification requirements are an external fact. Recommendation: fetch Valve's current requirements at the start of PR-54. Record the date and the source in the Phase 5 roadmap. Copy each item into the exit evidence table.
+67. **OQ-67. The notarization tool.** Raised 2026-09-07. Blocks PR-51. Options: Apple's notarization tool on the Mac Mini, or a cross-platform signature tool from Linux as the v1 design suggested. Recommendation: Apple's tool on the Mac Mini, because the Mac exists and is the CI runner (D-157). Record the steps and the date in the Phase 5 roadmap.
+68. **OQ-68. The achievement list.** Raised 2026-09-07. Blocks PR-52. Recommendation: ten achievements at launch:
+    - first ascension, and first death.
+    - floor 5, floor 10, and the ending.
+    - a full bank.
+    - a run with the basic kit only.
+    - a boss without a hit.
+    - a floor under half the timer.
+    - an ascension from floor 14.
+69. **OQ-69. The settings list.** Raised 2026-09-07. Blocks PR-53. Recommendation: video with resolution, window mode, and vertical sync. Audio with master, effects, and music volumes. Input with sensitivity, invert look, and a full rebind. Accessibility per OQ-14.
+70. **OQ-70. The crash report location.** Raised 2026-09-07. Blocks PR-55. Recommendation: `user://reports/<date>-<seed>/` with the report JSON and a copy of the run record, plus a copy-to-clipboard summary. No upload in v1, so no privacy policy is needed for reports.
+71. **OQ-71. The cloud save file set.** Raised 2026-09-07 (F-45). Blocks PR-52. D-152 changed the files. Recommendation: the profile file and the suspended run record only. Completed run records and reports stay local.
