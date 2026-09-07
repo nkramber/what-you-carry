@@ -4,7 +4,7 @@ Status: procedure, written 2026-09-07 for the registration on 2026-09-08 (D-157,
 
 Revised 2026-09-07: this runbook records the tool versions and the path risk of the launch agent (D-189).
 
-Completed 2026-09-07: the SSD came one day early, and the registration ran on 2026-09-07 (D-192). The runner `mac-mini-m4` is online. A Full Disk Access grant was necessary (D-193, F-54).
+Completed 2026-09-07: the SSD came one day early, and the registration ran on 2026-09-07 (D-192). The runner `mac-mini-m4` is online. A Full Disk Access grant was necessary (D-193, F-54). A smoke job passed on 2026-09-07. It proved the checkout, the external volume under a real job, `actions/setup-dotnet`, and a build and test cycle.
 
 This runbook registers the Mac Mini as a self-hosted GitHub Actions runner for the repository `nkramber/what-you-carry`. The runner has the label `macos-arm64-self-hosted`. It runs as a launch agent. Its work directory is on the external SSD.
 
