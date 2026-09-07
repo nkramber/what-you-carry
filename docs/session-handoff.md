@@ -5,7 +5,7 @@ Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end o
 ## Session 16: 2026-09-07, Claude Code
 
 Author: Claude Code
-Session: the toolchain install, the runner path risk, and the documentation PR override. Branch `docs/runner-path-and-doc-override`.
+Session: the toolchain install, the runner registration, and the documentation PR override. Branches `docs/runner-path-and-doc-override` (PR #2, merged) and `docs/runner-registration` (PR #3).
 
 ### What this session did, and why
 
@@ -16,27 +16,40 @@ Session: the toolchain install, the runner path risk, and the documentation PR o
 - Found a risk. A launch agent starts with a minimal path, so a CI job on the self-hosted runner cannot find `dotnet`. The owner chose `actions/setup-dotnet` with the `global-json-file` input (D-189).
 - The owner gave an override for a documentation-only PR (D-188). This session recorded it in the decision register, `CLAUDE.md`, and `AGENTS.md`.
 - Found that D-188 could not work at launch. In enforced mode the `review-gate` job fails a PR with no review record (D-181, D-185). The owner chose the label `review-override` and a wider eligible path set, and D-190 records the mechanism. PR-1 implements it, and the roadmap now holds four more exit tests.
+- The SSD came one day early. The owner formatted it as case-sensitive APFS with no encryption, and named the volume `SSD-1TB` (D-191). A probe confirmed the case sensitivity, the write access, and that the volume keeps a file mode.
+- Registered the runner on 2026-09-07, one day before the date in D-171 (D-192). The name is `mac-mini-m4` and the version is 2.337.0.
+- The launch agent failed at once with `Operation not permitted`, and it exited 126. macOS denies a launch agent every path on an external volume. A launchd probe repeated the denial, and a login shell read the same path correctly (F-54).
+- The owner chose the Full Disk Access grant over a move to the internal drive, and added `/bin/bash` and the runner `node` binary (D-193). The runner is online and listens for jobs.
 - Deleted the merged local branch `docs/roadmaps`. The remote branch `origin/docs/roadmaps` is still there.
 
 ### State of the build
 
 - `main` is at `5c6d7b5`. No code, solution, or CI workflow exists. PR-1 creates them.
 - `CLAUDE.md` and `AGENTS.md` are byte-identical.
-- The .NET SDK and the Godot editor are ready on the Mac Mini. The runner is not registered.
+- The .NET SDK and the Godot editor are ready on the Mac Mini.
+- The runner `mac-mini-m4` is online, and it is not busy. The work directory is `/Volumes/SSD-1TB/actions-work`.
+- No workflow exists, so no job ever ran on the runner. PR-1 gives it the first job.
 
 ### In flight
+
+PR #2 is merged. PR #3 holds the SSD, runner, and disk access records. This session made two PRs, against the one PR rule of D-121, because a direct push to `main` needed a rewind.
 
 This PR changes documentation only. The owner gives the D-188 override and merges it without a cross-provider review. The PR is also eligible under the D-190 path set, so the rule covers its own PR.
 
 ### Traps and gotchas
 
 - A launch agent does not read `~/.zshrc`. Do not expect a login shell path on the runner.
+- A launch agent reads no external volume without Full Disk Access (F-54, D-193). A machine rebuild repeats the grant, or every job fails.
+- Every bash process on the Mac Mini now reads every file. That is the cost of the work directory on the SSD (D-193).
+- The runner is online, and no workflow ever ran on it. Treat the macOS leg of PR-1 as unproven until a job passes.
 - D-190 closes the launch hole in D-188. PR-1 must build the override path, or an overridden PR turns red at launch.
 - The `review-override` label does not survive a new commit. A push outside the metadata set after the label needs the label again (D-190).
 - The agents hold the owner GitHub token. The label stops an accident, and it does not stop an attack (D-190).
 - The `dotnet-sdk` cask needs an administrator password. The Microsoft script needs none.
 - This PR holds four concerns, which is against G-10. The session named the conflict, and the owner chose one PR.
 - The file held 11 entries before this session. This entry restores the limit of 10 (D-146).
+- A commit went to `main` directly, against D-126. The owner merged PR #2 and moved the local checkout to `main`. The uncommitted work moved with the checkout, and the next commit and push landed on the trunk. Check the branch name before each commit.
+- The owner chose a rewind. `main` returned to `2d69270`, and the work came back as PR #3. A force push to a trunk is safe only while no other clone holds the old commit.
 
 ### Open questions that block progress
 
@@ -44,7 +57,7 @@ No new owner question. OQ-12 remains open for PR-9.
 
 ### Next concrete action
 
-On 2026-09-08 mount the SSD, move the checkout (D-174), and run `docs/runbooks/macos-runner.md` (D-171). Then start PR-1.
+Move the checkout to the SSD (D-174). Then start PR-1. The runner and both tools are ready, so no owner purchase or setup blocks it.
 
 ## Session 15: 2026-09-07, Codex
 
