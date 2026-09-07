@@ -5,7 +5,7 @@ Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end o
 ## Session 4: 2026-09-07, Claude Code
 
 Author: Claude Code
-Session: initial commit and the five focused roadmaps. Branch `docs/roadmaps`, pushed, no PR yet.
+Session: initial commit, the five focused roadmaps, and PR #1. Branch `docs/roadmaps`, pushed.
 
 ### What this session did, and why
 
@@ -32,7 +32,7 @@ Session: initial commit and the five focused roadmaps. Branch `docs/roadmaps`, p
 
 ### In flight
 
-All five roadmaps are complete on the branch and not merged. No PR exists yet.
+All five roadmaps are on the branch. PR #1 from `docs/roadmaps` to `main` is open and waits for the other provider's review (T-4).
 
 ### Traps and gotchas
 
@@ -50,7 +50,7 @@ All five roadmaps are complete on the branch and not merged. No PR exists yet.
 
 ### Next concrete action
 
-Open a PR from `docs/roadmaps` to `main` for the cross-provider review of the five roadmaps (T-4). The review file is `docs/reviews/pr-<number>.md` per the `pr-review` skill. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md` with the volume name. After the merge, PR-1 starts from `phase-1-foundations.md`.
+A Codex session reviews PR #1 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-1.md`. The author of this branch is Claude Code, so Claude Code cannot review it. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md` with the volume name. After the owner merges PR #1, PR-1 starts from `phase-1-foundations.md`.
 
 ## Session 3: 2026-09-07, Claude Code
 
