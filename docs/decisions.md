@@ -194,6 +194,7 @@ How to read this file:
 | D-171 | 2026-09-07 | Runner registration date | Register the Mac Mini runner on 2026-09-08 after the SSD mounts, once, with the work directory on the SSD. The runbook is `docs/runbooks/macos-runner.md`. | Applies D-157. |
 | D-172 | 2026-09-07 | Attribution option | `.claude/settings.json` in the repository sets `attribution.commit` and `attribution.pr` to false, verified against the Claude Code settings reference on 2026-09-07. Codex is unverified. The PR-1 trailer scan is the backstop. | Resolves OQ-16 and F-15 for Claude Code. |
 | D-173 | 2026-09-07 | .NET pin revised | .NET 10 LTS, the current long-term-support release, supported until November 2028. Godot 4.7 accepts .NET 8 or later, so it qualifies under D-62. | Revises D-169. Resolves OQ-2. Binds PR-1. |
+| D-174 | 2026-09-07 | Repository name | The GitHub repository is `nkramber/what-you-carry`. The local checkout is `/Users/nate/Repos/what-you-carry` until the SSD move (D-145). | Renamed from `roguelite-game`. GitHub redirects the old name. PR #1 stays open. |
 
 ## Rules set during the interview
 

@@ -2,7 +2,7 @@
 
 Status: procedure, written 2026-09-07 for the registration on 2026-09-08 (D-157, D-171). Written in ASD-STE100.
 
-This runbook registers the Mac Mini as a self-hosted GitHub Actions runner for the repository `nkramber/roguelite-game`. The runner has the label `macos-arm64-self-hosted`. It runs as a launch agent. Its work directory is on the external SSD.
+This runbook registers the Mac Mini as a self-hosted GitHub Actions runner for the repository `nkramber/what-you-carry`. The runner has the label `macos-arm64-self-hosted`. It runs as a launch agent. Its work directory is on the external SSD.
 
 Facts checked on 2026-09-07:
 
@@ -44,14 +44,14 @@ Facts checked on 2026-09-07:
 4. Get a registration token. The token is valid for one hour.
 
    ```sh
-   TOKEN=$(gh api -X POST repos/nkramber/roguelite-game/actions/runners/registration-token -q .token)
+   TOKEN=$(gh api -X POST repos/nkramber/what-you-carry/actions/runners/registration-token -q .token)
    ```
 
 5. Configure the runner without prompts:
 
    ```sh
    ./config.sh --unattended \
-     --url https://github.com/nkramber/roguelite-game \
+     --url https://github.com/nkramber/what-you-carry \
      --token "$TOKEN" \
      --name mac-mini-m4 \
      --labels macos-arm64-self-hosted \
@@ -69,7 +69,7 @@ Facts checked on 2026-09-07:
 7. Verify that the runner is online:
 
    ```sh
-   gh api repos/nkramber/roguelite-game/actions/runners -q '.runners[] | {name, status, labels: [.labels[].name]}'
+   gh api repos/nkramber/what-you-carry/actions/runners -q '.runners[] | {name, status, labels: [.labels[].name]}'
    ```
 
    The status must be `online`.
@@ -105,7 +105,7 @@ PR-1 and PR-12 add jobs that need tools on this machine. Install them before tho
 2. Get a removal token and remove the registration:
 
    ```sh
-   TOKEN=$(gh api -X POST repos/nkramber/roguelite-game/actions/runners/remove-token -q .token)
+   TOKEN=$(gh api -X POST repos/nkramber/what-you-carry/actions/runners/remove-token -q .token)
    ./config.sh remove --token "$TOKEN"
    ```
 

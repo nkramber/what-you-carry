@@ -22,6 +22,7 @@ Session: initial commit, the five focused roadmaps, and PR #1. Branch `docs/road
 - Pushed every commit on `docs/roadmaps` to the remote after the owner pushed the branch.
 - Closed OQ-2 (D-169, .NET 8 LTS, revised the same day to .NET 10 LTS as D-173), OQ-16 (D-172, `.claude/settings.json` with attribution off), and the runner timing (D-171, tomorrow on the SSD). Wrote `docs/runbooks/macos-runner.md`.
 - Found that branch protection needs GitHub Pro or a public repository. The owner deferred it until launch (D-170, F-46).
+- Renamed the GitHub repository to `nkramber/what-you-carry` and moved the checkout to `/Users/nate/Repos/what-you-carry` (D-174). The runbook cites the new name.
 
 ### State of the build
 
@@ -40,6 +41,7 @@ All five roadmaps are on the branch. PR #1 from `docs/roadmaps` to `main` is ope
 - PR-1 cannot merge until the runner exists (D-157, D-171) and the SSD holds the checkout (D-145). OQ-2 and OQ-16 are closed.
 - Nothing on GitHub stops a push to `main` (D-170). The rule in the agent files is the only guard. Never push to `main`.
 - The .NET pin is .NET 10 LTS (D-173). D-169 stays in the register as revised.
+- The checkout path changed on 2026-09-07 (D-174). Open `/Users/nate/Repos/what-you-carry` in the editor. The session memory for the old path was copied to the new path.
 - Each Phase 1 PR has owner questions listed before it in the roadmap sequence. Ask them before the PR starts, not inside it (D-124).
 - `Sqrt` in DetMath wraps the IEEE square root. The lint tool must allow `MathF` inside `DetMath.cs` only.
 - The night-gate job in PR-11 reads the latest scheduled run. A red night blocks the next merge by design (D-115).
