@@ -2,6 +2,48 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 10: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: the neutral grey state for `review-gate`. Branch `docs/roadmaps`, part of PR #1.
+
+### What this session did, and why
+
+- The owner asked where the red check appears, then asked for a neutral grey state instead of a permanent red one. `review-gate` failed whenever no review record existed, so a PR stayed red for most of its life and a red rollup masked a real build failure.
+- Verified first that GitHub counts a neutral or skipped conclusion as a success for a required status check. Source: docs.github.com, "About status checks", verified 2026-09-07. A plain grey-when-absent gate would stop blocking a merge at launch. Recorded F-51.
+- D-181 gives the check three conclusions and two modes. In `advisory` mode a missing review file is neutral. In `enforced` mode it is a failure. The repository variable `REVIEW_GATE_MODE` selects the mode. An absent or unknown value fails the job and names the variable (T-2).
+- A workflow job cannot set a neutral conclusion by its exit code. The job publishes a check run through the Checks API, so the workflow needs `checks: write`.
+- D-181 revises D-179. D-180 is not revised, because D-181 only adds the mode step to its launch procedure.
+- Marking D-179 as revised made nine citations stale. The D-178 check found each one. They now name D-181.
+- Updated the PR-1 scope and exit tests to sixteen, both agent files, the `pr-review` skill with a color table, Phase 5 step 11, and the design register.
+
+### State of the build
+
+- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds fifteen commits, all on the remote.
+- No code, solution, or CI workflow exists. PR-1 creates them.
+- `CLAUDE.md` and `AGENTS.md` are byte-identical.
+
+### In flight
+
+**PR #1 is not ready to merge.** Session 9 approved head `223aae8`. This session pushed `4f7796e` after that approval, and it changes eight files outside `docs/reviews/`, including both agent files, the decision register, and the review skill. The approval does not cover the effective head. Rule 3 of D-179 applies.
+
+### Traps and gotchas
+
+- The verdict in `docs/reviews/pr-1.md` reads `Ready for owner merge`, and it applies to head `223aae8` only. Read the head field, not the verdict alone.
+- Grey is correct only in advisory mode. Never use a neutral conclusion for an enforced gate (F-51).
+- The `review-gate` job stays green itself. The check run it publishes carries the color, so the Checks list holds two rows.
+- Never write a decision range that spans a revised id. D-179 is revised, so a header says `D-176 to D-178, D-180, and D-181`.
+- Read the review file before a commit that sweeps it in. This session committed an approval it had not read, and then reported the wrong verdict.
+- One session is one handoff entry (D-146). Add a new entry. Do not append to an older one after another provider writes above it.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session reviews the diff from `223aae8` to `4f7796e` and updates `docs/reviews/pr-1.md` to the new effective head. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
+
 ## Session 9: 2026-09-07, Codex
 
 Author: Codex
@@ -93,10 +135,6 @@ Session: answer the PR #1 review. Branch `docs/roadmaps`, part of PR #1.
 - Ran the regression check that P2-2 specifies. It found three more defects of the same class. The new phase-1 range `D-156 to D-168` swallowed the revised D-158, `phase-2-first-playable.md` had the same defect in `D-157 to D-168`, and phase-1 line 465 cited D-158 with no revision marker. All three are fixed.
 - A wider sweep found two older ones: `docs/design.md:28` cited D-136 alone, and `phase-3-full-loop.md:372` cited D-94 alone. Both now name the revising decision.
 - Refined D-178. A line passes the reference check when it holds a revision word or when it names the revising decision. Without that clause the check fails on F-34, F-46, and four correct `D-94, D-152` pairs.
-- The owner asked for a neutral grey check instead of a permanent red one. Verified first that GitHub counts a neutral or skipped conclusion as a success for a required check. Source: docs.github.com, "About status checks", 2026-09-07. A plain grey-when-absent gate would therefore stop blocking at launch (F-51).
-- D-181 gives `review-gate` three conclusions and two modes. In `advisory` mode a missing review file is neutral. In `enforced` mode it is a failure. The repository variable `REVIEW_GATE_MODE` selects the mode, and an absent or unknown value fails the job (T-2).
-- A workflow job cannot set a neutral conclusion by its exit code. The job publishes a check run through the Checks API, so the workflow needs `checks: write`.
-- D-181 revises D-179. D-180 is not revised, because D-181 only adds a step to its launch procedure.
 - Rewrote `.claude/skills/pr-review/SKILL.md` for the format. It now holds a review file skeleton, the three machine-read fields, a finding format with stable `P<severity>-<n>` ids, the attribution boundary of D-176, the gate rules, a ten-step repeat review procedure, and the response file contract.
 
 ### State of the build
@@ -124,8 +162,6 @@ PR #1 needs a repeat review by Codex against the new head.
 - A decision range in a header can swallow a revised decision. Write `D-156, D-157, D-159 to D-168`, not `D-156 to D-168`, when D-158 is revised.
 - The roadmap header is a scope summary. Update line 3 and line 9 whenever a PR entry, a measurement, or a governing decision changes.
 - Never write a decision range that spans a revised id. D-179 is revised, so a header says `D-176 to D-178, D-180, and D-181`.
-- Grey is correct only in advisory mode. Never use a neutral conclusion for an enforced gate (F-51).
-- The `review-gate` job stays green itself. The check run it publishes carries the color, so the Checks list holds two rows.
 
 ### Open questions that block progress
 
@@ -133,7 +169,7 @@ No new owner question. OQ-12 remains open for PR-9.
 
 ### Next concrete action
 
-A Codex session reviews PR #1 a third time against the new head, per `.claude/skills/pr-review/SKILL.md`. P2-2 is the only finding to confirm. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
+A Codex session reviews PR #1 a third time against the new head, per `.claude/skills/pr-review/SKILL.md`. P2-2 is the only finding to confirm. Sessions 8 and 9 did that work.
 
 ## Session 6: 2026-09-07, Codex
 
