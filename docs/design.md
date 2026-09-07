@@ -143,7 +143,7 @@ Determinism rules (D-69 to D-73, D-77):
 
 Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
-- Pin Godot 4.7.2 .NET at scaffold time. Upgrade only by a decision entry.
+- Pin Godot 4.7.2 .NET and .NET 8 LTS at scaffold time (D-169). Upgrade only by a decision entry. The .NET 8 support end on 2026-11-10 forces one bump before Gate 5.
 - C# only. GDScript is banned. Tools are C#.
 - The editor is never required. C# builds the scenes.
 - JSON for all content, validated by a schema per type. An absent field is an error.
@@ -218,7 +218,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-12 | v1 used Python for the texture generator, against one language | 2026-09-06 | 🔧 D-65. Binds PR-14 |
 | F-13 | v1 determinism matrix omitted Windows x64, the largest audience and the second dev machine | 2026-09-06 | 🔧 D-71. Binds PR-3 |
 | F-14 | v1 had no v1 scope in numbers | 2026-09-06 | ✅ doc. D-56 |
-| F-15 | The harness default adds a co-author trailer to commits. D-137 forbids it | 2026-09-06 | ⚠ Binds every PR. Owner action OQ-16 |
+| F-15 | The harness default adds a co-author trailer to commits. D-137 forbids it | 2026-09-06 | 🔧 D-172 turns it off for Claude Code. Codex unverified. PR-1's trailer scan binds every PR |
 | F-16 | The borrowed ste-writing skill carried another project's names and a Python checker | 2026-09-07 | ✅ doc (skills created). 🔧 Checker binds PR-2 |
 | F-17 | D-97 rewinds five seconds on resume. A quit undoes five seconds | 2026-09-07 | ⏸ Accepted by the owner |
 | F-18 | All music is generated (D-93). Quality is unproven | 2026-09-07 | ❓ Owner ear at each phase gate. Binds PR-50 |
@@ -249,6 +249,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-43 | D-128 sets the Tier 3 cadence but not the model or the budget | 2026-09-07 | ❓ OQ-58. Binds PR-32 |
 | F-44 | The Deck verification checklist is an external fact with no source or date in the plan | 2026-09-07 | ❓ OQ-66. Binds PR-54 |
 | F-45 | D-152 changed the save files, and no item names which files cloud saves sync | 2026-09-07 | ❓ OQ-71. Binds PR-52 |
+| F-46 | D-158 required branch protection, and GitHub returned 403: the feature needs Pro or a public repository, against D-106 | 2026-09-07 | ✅ doc. D-170 defers protection until launch |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -294,7 +295,7 @@ Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundat
 ### Phase 1: Foundations (foundation gate, D-150: CI green on three platforms with a bit-identical end state, docs and PR gate live, no playtest)
 
 **PR-1: Repository scaffold.** 🔧
-Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry.Tools`, and `WhatYouCarry.Tests` (D-108). Pin Godot 4.7.2 .NET and the .NET LTS it supports (D-61, D-62, OQ-2). Create `CLAUDE.md` and `AGENTS.md` as identical pointer files with a test that asserts equality (D-122). Add the GitHub Actions workflow that builds and runs `dotnet test` on Linux x64, macOS arm64, and Windows x64 (D-148). Add a PR template with the gate checklist and the "no change needed because" lines (D-118). The template has a line that names each absent check with the PR that creates it (D-148). Turn off the harness co-author trailer (OQ-16). Needs the external SSD (D-145) and OQ-2, OQ-16. No game code.
+Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry.Tools`, and `WhatYouCarry.Tests` (D-108). Pin Godot 4.7.2 .NET and the .NET LTS it supports (D-61, D-62, OQ-2). Create `CLAUDE.md` and `AGENTS.md` as identical pointer files with a test that asserts equality (D-122). Add the GitHub Actions workflow that builds and runs `dotnet test` on Linux x64, macOS arm64, and Windows x64 (D-148). Add a PR template with the gate checklist and the "no change needed because" lines (D-118). The template has a line that names each absent check with the PR that creates it (D-148). The attribution option is in place (D-172). Needs the external SSD (D-145) and the runner (D-171). No game code.
 Gate: `dotnet build` and `dotnet test` pass on all three platforms.
 > *In plain English:* this makes the empty project with its four parts and the rules files that every future session reads first. It adds nothing that plays. It is safe because it changes no behavior.
 
@@ -566,7 +567,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 
 1. Address every audit finding (D-147). ✅ Done 2026-09-07: D-148 to D-154, F-28 to F-37.
 2. Owner: receive the external SSD and move the checkout to it (D-145).
-3. Owner: answer OQ-2 and OQ-16. ✅ OQ-30 resolved by D-156.
+3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-169. ✅ OQ-16: D-172. ✅ OQ-30: D-156. Protection deferred: D-170.
 4. PR-1, PR-2.
 5. PR-3, PR-4, PR-5.
 6. PR-6, PR-7, PR-8.

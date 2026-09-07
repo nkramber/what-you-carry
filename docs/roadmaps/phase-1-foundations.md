@@ -50,7 +50,7 @@ Scope:
   - Game: a Godot .NET project that references Core.
   - Tools: a console project.
   - Tests: an xUnit project that references Core and Tools.
-- `global.json` that pins the .NET SDK (D-62, OQ-2). `Directory.Build.props` with nullable on, warnings as errors, and one language version (D-68).
+- `global.json` that pins the .NET 8 SDK (D-62, D-169). `Directory.Build.props` with nullable on, warnings as errors, and one language version (D-68).
 - `project.godot` and the Game project file on `Godot.NET.Sdk` at the pinned version (D-61).
 - `.github/workflows/ci.yml` with three jobs: build and test on hosted Linux x64, hosted Windows x64, and the self-hosted macOS arm64 runner (D-100, D-148, OQ-31).
 - `.github/pull_request_template.md` with the gate checklist and one "no change needed because" line per document (D-118). It has one line that names each absent check with the PR that creates it (D-148).
@@ -65,7 +65,7 @@ Exit tests:
 3. `CoreReferencesNoEngine` reads the Core project file and asserts no package reference and no project reference (G-1).
 4. The CI workflow has one job per platform, and the macOS job selects the self-hosted runner label.
 5. The PR description names the STE checker, the lint tool, and the bit-identity job as absent, with PR-2 and PR-3 (D-148).
-6. No commit in the PR carries a co-author trailer or a generation line (T-6).
+6. No commit in the PR carries a co-author trailer or a generation line (T-6, D-172).
 
 Review focus: Core boundary, input and CI boundaries, dependencies, documents.
 
@@ -381,7 +381,7 @@ Procedure: after PR-11, read the night job duration for seven nights. Record the
 One person owns the program. Items run one at a time in this order. Each PR opens only after the one before it merges.
 
 1. Owner: receive the SSD and move the checkout to it (D-145).
-2. Owner: register the runner (D-157) and protect `main` (D-158). Answer OQ-2 and OQ-16.
+2. Owner: register the runner on 2026-09-08 per `docs/runbooks/macos-runner.md` (D-157, D-171). ✅ OQ-2: D-169. ✅ OQ-16: D-172. Protection deferred: D-170.
 3. PR-1.
 4. PR-2.
 5. ✅ OQ-33 to OQ-35 answered 2026-09-07: D-159 to D-161.
@@ -407,14 +407,14 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 1. Each 
 
 Open:
 
-- OQ-2: the .NET version. Blocks PR-1.
-- OQ-16: the harness attribution option. Blocks PR-1.
 - OQ-12: the biome. Blocks PR-9.
+- OQ-2 resolved 2026-09-07 by D-169: .NET 8 LTS.
+- OQ-16 resolved 2026-09-07 by D-172: the attribution option is committed.
 
 Resolved 2026-09-07:
 
-- OQ-31 (D-157): the self-hosted macOS runner. Owner action before PR-1.
-- OQ-32 (D-158): branch protection on `main`. Owner action before PR-1 merges.
+- OQ-31 (D-157, D-171): the self-hosted macOS runner. Registration on 2026-09-08 per the runbook.
+- OQ-32 (D-158, D-170): branch protection on `main`. Deferred until launch, a convention until then.
 - OQ-33 to OQ-35 (D-159 to D-161): the RNG, the state hash, and the DetMath target. PR-3.
 - OQ-36 and OQ-37 (D-162 and D-163): the intent and run record layouts. PR-5 and PR-6.
 - OQ-38 and OQ-39 (D-164 and D-165): the grid limits, the player box, and the jump. PR-7 and PR-9.

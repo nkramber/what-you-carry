@@ -178,7 +178,7 @@ How to read this file:
 | D-155 | 2026-09-07 | Project skill location | All project skills live in `.claude/skills/`. Every new project skill must use that directory. Both agent files state the path and require direct access to each required `SKILL.md`. | Extends D-131 to all project skills. Applies even when a skill is absent from the automatic skill list. |
 | D-156 | 2026-09-07 | Initial commit | Reset HEAD to `main`. Commit every file as "initial commit" and push to `origin/main`. Roadmap work happens on the branch `docs/roadmaps`. | Resolves OQ-30 and F-37. Adds `.gitignore` and `.gitattributes`. |
 | D-157 | 2026-09-07 | macOS runner | The Mac Mini is a self-hosted GitHub Actions runner with the label `macos-arm64-self-hosted`. It runs as a launch agent. Its work directory is on the external SSD. | Resolves OQ-31 and F-39. Owner action before PR-1. |
-| D-158 | 2026-09-07 | Branch protection | `main` requires a PR and the `build`, `ste-check`, and `bit-identity` checks as each one exists. Only the owner pushes. | Resolves OQ-32. Owner action before PR-1 merges. |
+| D-158 | 2026-09-07 | Branch protection | `main` requires a PR and the `build`, `ste-check`, and `bit-identity` checks as each one exists. Only the owner pushes. | Resolves OQ-32. Revised by D-170 on 2026-09-07: deferred until launch, a convention until then. |
 | D-159 | 2026-09-07 | RNG | xoshiro128** streams, seeded by SplitMix64 from the 64-bit run seed. One stream per subsystem, split by subsystem id. | Resolves OQ-33. Binds PR-3. |
 | D-160 | 2026-09-07 | State hash | FNV-1a 64 over the raw bit patterns of every state field in a fixed declared order. A test asserts the field order. | Resolves OQ-34. Binds PR-3. |
 | D-161 | 2026-09-07 | DetMath accuracy | Range reduction to [-pi, pi]. Degree-7 minimax polynomials for sine and cosine. Absolute error at most 1e-6 against a double reference. Atan2 at most 1e-6 radians. Sqrt wraps the IEEE square root. Tests cover [-4 pi, 4 pi]. | Resolves OQ-35. Binds PR-3. |
@@ -189,6 +189,10 @@ How to read this file:
 | D-166 | 2026-09-07 | Corridor | Every corridor is at least three blocks wide and three blocks high. | Resolves OQ-40. Binds PR-8, PR-9. |
 | D-167 | 2026-09-07 | Difficulty budget | Each floor template names a budget number. Each room template names a weight. The sum of room weights is within 10 percent of the budget. PR-16 maps weights to enemy spawns. | Resolves OQ-41. Binds PR-9, PR-16. |
 | D-168 | 2026-09-07 | Content validators | One hand-written C# validator per content type, with an explicit required-field list and an unknown-field check. Revisit past ten types. | Resolves OQ-42. Binds PR-5. |
+| D-169 | 2026-09-07 | .NET pin | .NET 8 LTS. Godot 4.7's C# docs require .NET 8 or later, verified 2026-09-07. | Resolves OQ-2. Binds PR-1. Support for .NET 8 ends 2026-11-10, so a bump to a later LTS is a decision before Gate 5. |
+| D-170 | 2026-09-07 | Branch protection deferred | No branch protection until launch. GitHub requires Pro or a public repository for it on a private repository, verified 2026-09-07 by a 403 from the API. D-158 becomes a convention: the owner merges, and no session pushes to `main`. | Revises D-158. Resolves F-46. The PR gate and the agent files enforce it by rule, not by GitHub. |
+| D-171 | 2026-09-07 | Runner registration date | Register the Mac Mini runner on 2026-09-08 after the SSD mounts, once, with the work directory on the SSD. The runbook is `docs/runbooks/macos-runner.md`. | Applies D-157. |
+| D-172 | 2026-09-07 | Attribution option | `.claude/settings.json` in the repository sets `attribution.commit` and `attribution.pr` to false, verified against the Claude Code settings reference on 2026-09-07. Codex is unverified. The PR-1 trailer scan is the backstop. | Resolves OQ-16 and F-15 for Claude Code. |
 
 ## Rules set during the interview
 

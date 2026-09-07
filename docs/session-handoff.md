@@ -20,6 +20,8 @@ Session: initial commit and the five focused roadmaps. Branch `docs/roadmaps`, p
 - Wrote the four later roadmaps in the same format: `phase-2-first-playable.md`, `phase-3-full-loop.md`, `phase-4-content-complete.md`, and `phase-5-early-access.md`. Each has per-PR scope, exit tests, review focus, a check clause, a gate, and a sequence with the owner questions placed before the PR that needs them.
 - Filed OQ-43 to OQ-71 for those phases, each with a recommendation. Added F-40 to F-45 to the design register for gaps the roadmaps exposed: wall fade in the mesher, no Deck unit named, no rarity tiers named, no Tier 3 model or budget, no source for the Deck checklist, and no cloud save file set after D-152.
 - Pushed every commit on `docs/roadmaps` to the remote after the owner pushed the branch.
+- Closed OQ-2 (D-169, .NET 8 LTS against a recommendation of .NET 10, with the support end noted), OQ-16 (D-172, `.claude/settings.json` with attribution off), and the runner timing (D-171, tomorrow on the SSD). Wrote `docs/runbooks/macos-runner.md`.
+- Found that branch protection needs GitHub Pro or a public repository. The owner deferred it until launch (D-170, F-46).
 
 ### State of the build
 
@@ -35,18 +37,20 @@ All five roadmaps are complete on the branch and not merged. No PR exists yet.
 ### Traps and gotchas
 
 - The roadmap never restates a decision. It cites D-# ids. Read the `Effect` column before you cite an early decision.
-- PR-1 cannot merge until OQ-2 and OQ-16 have answers, the runner exists (D-157), and the SSD holds the checkout (D-145).
+- PR-1 cannot merge until the runner exists (D-157, D-171) and the SSD holds the checkout (D-145). OQ-2 and OQ-16 are closed.
+- Nothing on GitHub stops a push to `main` (D-170). The rule in the agent files is the only guard. Never push to `main`.
+- .NET 8 leaves support on 2026-11-10. A pin bump is a decision before Gate 5 (D-169).
 - Each Phase 1 PR has owner questions listed before it in the roadmap sequence. Ask them before the PR starts, not inside it (D-124).
 - `Sqrt` in DetMath wraps the IEEE square root. The lint tool must allow `MathF` inside `DetMath.cs` only.
 - The night-gate job in PR-11 reads the latest scheduled run. A red night blocks the next merge by design (D-115).
 
 ### Open questions that block progress
 
-`docs/questions.md` holds OQ-1 to OQ-71. Three stay open for Phase 1: OQ-2 and OQ-16 block PR-1, and OQ-12 blocks PR-9. Two owner actions precede PR-1: the runner (D-157) and branch protection (D-158). The SSD arrives 2026-09-08 (D-145). Each later roadmap lists its own open questions in its section 6, with the owner's answer placed in the sequence before the PR that needs it.
+`docs/questions.md` holds OQ-1 to OQ-71. One stays open for Phase 1: OQ-12 blocks PR-9. One owner action precedes PR-1: the runner registration on 2026-09-08 per the runbook (D-171). The SSD arrives the same day (D-145). Each later roadmap lists its own open questions in its section 6, with the owner's answer placed in the sequence before the PR that needs it.
 
 ### Next concrete action
 
-Open a PR from `docs/roadmaps` to `main` for the cross-provider review of the five roadmaps (T-4). The review file is `docs/reviews/pr-<number>.md` per the `pr-review` skill. After the merge, the owner answers OQ-2 and OQ-16, registers the runner (D-157), protects `main` (D-158), moves the checkout to the SSD (D-145), and PR-1 starts from `phase-1-foundations.md`.
+Open a PR from `docs/roadmaps` to `main` for the cross-provider review of the five roadmaps (T-4). The review file is `docs/reviews/pr-<number>.md` per the `pr-review` skill. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md` with the volume name. After the merge, PR-1 starts from `phase-1-foundations.md`.
 
 ## Session 3: 2026-09-07, Claude Code
 
