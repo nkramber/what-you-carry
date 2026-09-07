@@ -20,6 +20,8 @@ Session: the toolchain install, the runner registration, and the documentation P
 - Registered the runner on 2026-09-07, one day before the date in D-171 (D-192). The name is `mac-mini-m4` and the version is 2.337.0.
 - The launch agent failed at once with `Operation not permitted`, and it exited 126. macOS denies a launch agent every path on an external volume. A launchd probe repeated the denial, and a login shell read the same path correctly (F-54).
 - The owner chose the Full Disk Access grant over a move to the internal drive, and added `/bin/bash` and the runner `node` binary (D-193). The runner is online and listens for jobs.
+- Ran a smoke job on the runner from a throwaway branch, and then deleted the branch. The job proved five things: the runner accepts a job, the launch agent reads the external volume in a real job, `actions/checkout` works, `actions/setup-dotnet` resolves 10.0.400 from `global.json`, and a build and test cycle passes. The macOS leg of PR-1 is no longer a guess.
+- The smoke job found that the .NET 10 SDK creates a `.slnx` file, and the roadmap named `WhatYouCarry.sln` (F-55). A probe proved that Godot 4.7.2 builds from a `.slnx` and creates no `.sln`. The owner chose `.slnx` (D-194).
 - Deleted the merged local branch `docs/roadmaps`. The remote branch `origin/docs/roadmaps` is still there.
 
 ### State of the build
@@ -28,11 +30,11 @@ Session: the toolchain install, the runner registration, and the documentation P
 - `CLAUDE.md` and `AGENTS.md` are byte-identical.
 - The .NET SDK and the Godot editor are ready on the Mac Mini.
 - The runner `mac-mini-m4` is online, and it is not busy. The work directory is `/Volumes/SSD-1TB/actions-work`.
-- No workflow exists, so no job ever ran on the runner. PR-1 gives it the first job.
+- One smoke job passed on the runner on 2026-09-07. No workflow is in the repository, because the smoke branch is deleted. PR-1 adds the first tracked workflow.
 
 ### In flight
 
-PR #2 is merged. PR #3 holds the SSD, runner, and disk access records. This session made two PRs, against the one PR rule of D-121, because a direct push to `main` needed a rewind.
+PR #2 and PR #3 are merged. PR #4 holds the solution format decision and the smoke job record. This session made three PRs, against the one PR rule of D-121. A direct push to `main` needed a rewind, and the smoke job then produced a new decision.
 
 This PR changes documentation only. The owner gives the D-188 override and merges it without a cross-provider review. The PR is also eligible under the D-190 path set, so the rule covers its own PR.
 
@@ -41,7 +43,8 @@ This PR changes documentation only. The owner gives the D-188 override and merge
 - A launch agent does not read `~/.zshrc`. Do not expect a login shell path on the runner.
 - A launch agent reads no external volume without Full Disk Access (F-54, D-193). A machine rebuild repeats the grant, or every job fails.
 - Every bash process on the Mac Mini now reads every file. That is the cost of the work directory on the SSD (D-193).
-- The runner is online, and no workflow ever ran on it. Treat the macOS leg of PR-1 as unproven until a job passes.
+- `actions/setup-dotnet` installs to `~/.dotnet` on this runner, and it reported `already installed` for 10.0.400. No job downloads the SDK again.
+- `dotnet new sln` gives a `.slnx` file on .NET 10. A command that names a `.sln` file fails with MSB1009 (F-55).
 - D-190 closes the launch hole in D-188. PR-1 must build the override path, or an overridden PR turns red at launch.
 - The `review-override` label does not survive a new commit. A push outside the metadata set after the label needs the label again (D-190).
 - The agents hold the owner GitHub token. The label stops an accident, and it does not stop an attack (D-190).
@@ -57,7 +60,7 @@ No new owner question. OQ-12 remains open for PR-9.
 
 ### Next concrete action
 
-Move the checkout to the SSD (D-174). Then start PR-1. The runner and both tools are ready, so no owner purchase or setup blocks it.
+Move the checkout to the SSD (D-174). Then start PR-1. The runner, both tools, and the CI chain are proven, so no owner purchase or setup blocks it. PR-1 has 23 exit tests.
 
 ## Session 15: 2026-09-07, Codex
 

@@ -1,12 +1,12 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, D-175, D-176 to D-178, D-180, D-182 to D-185, D-189, and D-190. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, D-175, D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, and D-194. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
 External facts: none new. The Godot version is in the design header, verified 2026-09-07.
 
-Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job.
+Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner.
 
 ## 1. Thesis
 
@@ -45,7 +45,7 @@ Each entry has: scope, out of scope, exit tests, review focus, the check clause,
 
 Scope:
 
-- `WhatYouCarry.sln` with four projects (D-108, D-66):
+- `WhatYouCarry.slnx` with four projects (D-108, D-66, D-194). The .NET 10 SDK creates that XML format by default, and Godot 4.7.2 accepts it (F-55):
   - Core: a class library with no package or project references.
   - Game: a Godot .NET project that references Core.
   - Tools: a console project.
@@ -114,12 +114,13 @@ Exit tests:
 20. `ReviewGateFailsOnOverrideLabelWithCodePath` asserts a failure when the label is present and one changed path is in the code set. The message names that path (D-190, T-2).
 21. `ReviewGateFailsOnOverrideLabelBeforeNewCommit` asserts a failure when a commit outside the metadata set is newer than the label event (D-190).
 22. `ReviewGateRunsOnLabelEvent` asserts that the `labeled` and `unlabeled` event types start the workflow (D-190).
+23. `SolutionIsSlnx` asserts that `WhatYouCarry.slnx` exists, that the repository holds no `.sln` file, and that the solution lists the four projects (D-194).
 
 Review focus: Core boundary, input and CI boundaries, dependencies, documents.
 
 Check clause: the STE checker, the lint tool, and the bit-identity job do not exist. PR-2 and PR-3 create them. Branch protection does not exist, so `review-gate` is advisory until launch (D-170, D-180).
 
-Gate: exit tests 1 to 22 pass.
+Gate: exit tests 1 to 23 pass.
 
 > *In plain English:* this makes the empty project with its four parts. It adds the automatic build on three kinds of computer and the checklist every change must fill in. It also adds a check that turns red when a change has no approved review. It adds nothing that plays.
 
