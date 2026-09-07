@@ -262,6 +262,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-51 | A grey `review-gate` would stop blocking at launch. GitHub counts a neutral conclusion as a success for a required check, verified 2026-09-07 | 2026-09-07 | 🔧 D-181, D-185. Advisory mode gives neutral. Enforced mode gives failure. The tracked file `.github/review-gate-mode` selects the mode, and the workflow reads it from the base branch |
 | F-50 | Nothing on GitHub stops a merge without a cross-provider review. T-4 and D-101 are rules only, and D-170 leaves `main` unprotected | 2026-09-07 | 🔧 D-179 and D-181, D-185 add the `review-gate` job in PR-1. D-180 makes it a required check at launch. Advisory until then |
 | F-49 | PR #1 review P2-1: six lines cited D-172 or OQ-2 as a current answer after D-173 and D-175 revised them | 2026-09-07 | ✅ doc. All six corrected. 🔧 D-178 adds a reference check to PR-2 |
+| F-54 | A launch agent cannot read an external volume. macOS denied `/Volumes/SSD-1TB/actions-runner/runsvc.sh` with `Operation not permitted`, and the agent exited 126. A launchd probe repeated the denial, and a login shell read the same path correctly, verified 2026-09-07 | 2026-09-07 | ✅ D-193. Full Disk Access for `/bin/bash` and the runner `node` binary. Binds PR-1 and every machine rebuild |
 
 ## 6. Guardrails (the safety contract for every PR)
 
