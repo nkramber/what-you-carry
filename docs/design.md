@@ -243,6 +243,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-37 | HEAD pointed at the unborn branch `docs/repository-audit`. The first commit would have missed `main` (D-126) | 2026-09-07 | ✅ D-156. HEAD reset to `main` before the initial commit |
 | F-38 | PR-10's gate named the full weapon roster, which does not exist until Phase 3 | 2026-09-07 | 🔧 A test-only definitions file under D-149. Binds PR-10, PR-24, PR-43 to PR-46 |
 | F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | 🔧 D-157. Owner action before PR-1 |
+| F-40 | D-88's effect note put wall fade in the mesher as per-block visibility. A shader test needs no mesher change | 2026-09-07 | ❓ OQ-49. Binds PR-13 |
+| F-41 | No item said whether a Steam Deck unit exists for M-3, and D-15 makes the Deck the floor | 2026-09-07 | ❓ OQ-50. Binds M-3 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -283,7 +285,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 
 ## 7. Roadmap
 
-Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundation gate with a written exit test. Gates 2 to 5 are playable builds with a written exit test and the owner's playtest sign-off. Ids: PR-# code changes, M-# measurements. An entry that covers several PRs notes its reserved id range. Focused roadmaps in `docs/roadmaps/` expand the phases with per-PR exit tests. Phase 1: [phase-1-foundations.md](roadmaps/phase-1-foundations.md).
+Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundation gate with a written exit test. Gates 2 to 5 are playable builds with a written exit test and the owner's playtest sign-off. Ids: PR-# code changes, M-# measurements. An entry that covers several PRs notes its reserved id range. Focused roadmaps in `docs/roadmaps/` expand the phases with per-PR exit tests. Phase 1: [phase-1-foundations.md](roadmaps/phase-1-foundations.md). Phase 2: [phase-2-first-playable.md](roadmaps/phase-2-first-playable.md).
 
 ### Phase 1: Foundations (foundation gate, D-150: CI green on three platforms with a bit-identical end state, docs and PR gate live, no playtest)
 

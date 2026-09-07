@@ -79,3 +79,30 @@ How to file a question (D-124, D-138):
 40. **OQ-40. The corridor cross-section.** Raised 2026-09-07. Blocks PR-8 and PR-9. Recommendation: three blocks wide and three blocks high as the minimum for every corridor. The camera boom of PR-8 needs the width, and the jump of OQ-39 needs the height. Resolved 2026-09-07: D-166.
 41. **OQ-41. The difficulty budget definition.** Raised 2026-09-07. Blocks PR-9. No enemies exist in Phase 1, so the budget cannot count them. Recommendation: each floor template names a budget number, and each room template names a weight. The generator's sum must be within 10 percent of the budget. PR-16 maps weights to enemy spawns. Resolved 2026-09-07: D-167.
 42. **OQ-42. The content validator form.** Raised 2026-09-07. Blocks PR-5. Options: JSON Schema files with a validator package, or one hand-written C# validator per type. Recommendation: hand-written validators with an explicit required-field list per type. The types are few, the code is plain, and no dependency needs a decision entry (G-16). Revisit if the type count passes ten. Resolved 2026-09-07: D-168.
+43. **OQ-43. The chunk size and mesh budget.** Raised 2026-09-07. Blocks PR-13. The mesher emits one mesh per chunk. Options: 16 by 32 by 16 chunks, which gives 64 meshes for a maximum floor (D-164), or one mesh per floor. Recommendation: 16 by 32 by 16 chunks and a budget of 64 world meshes plus one per entity. Chunks let the Game layer upload the next floor over several frames (PR-18) and keep one draw per chunk.
+44. **OQ-44. The transition hitch budget.** Raised 2026-09-07. Blocks PR-18. Recommendation: no frame over 33 milliseconds on the Steam Deck across a floor transition, which is two frames at 60. The general target is OQ-15.
+45. **OQ-45. The animation keyframe format.** Raised 2026-09-07. Blocks PR-15. Recommendation: one JSON file per animation. Each bone has a list of keyframes with a time in ticks at 60 Hz and an euler rotation in degrees. Interpolation is linear. Each tick range has a phase tag: `windup`, `active`, `recovery`, or `idle`. Ticks, not seconds, so the test of D-87 compares integers.
+46. **OQ-46. The initial combat numbers.** Raised 2026-09-07. Blocks PR-15. Tuning numbers are decisions (D-123). Recommendation:
+    - player health 100.
+    - sword windup 12 ticks, active 6, recovery 18, damage 34.
+    - dodge cooldown 45 ticks at zero weight, dodge distance 3 meters.
+    - walk 4 meters per second, sprint 7.
+
+    Three sword hits kill a 100-health enemy, which matches fast and lethal (D-25).
+47. **OQ-47. Default bindings and curves.** Raised 2026-09-07. Blocks PR-12. Recommendation for keyboard and mouse:
+    - WASD move, mouse look.
+    - left button attack, right button block.
+    - space jump, left shift dodge, left control sprint.
+    - E interact, Q throwable, R reload, Tab satchel, F amulet active.
+
+    Recommendation for a controller:
+    - left stick move, right stick look.
+    - A jump, B dodge.
+    - right trigger attack, left trigger block.
+    - left bumper sprint, right bumper throwable.
+    - X interact, Y amulet active, D-pad satchel, view button reload.
+
+    Curves: a linear mouse and a cubic stick curve with a 15 percent dead zone.
+48. **OQ-48. The sound parameter format.** Raised 2026-09-07. Blocks PR-20. Recommendation: one JSON file per sound. The fields are an oscillator type, a base frequency, a pitch sweep, an envelope, a noise mix, a low-pass cutoff, and a seed. This is the classic small-synthesizer set, and it covers swings, hits, steps, and alarms.
+49. **OQ-49. The wall fade approach.** Raised 2026-09-07 (F-40). Blocks PR-13. Option one: a shader test that fades fragments inside a capsule between the camera and the player. Option two: per-block visibility flags in the mesher, as D-88's effect note said. Recommendation: the shader test. The mesher stays unchanged, no CPU work runs per frame, and the fade follows the camera at any speed. It revises the effect note of D-88 only, not the decision.
+50. **OQ-50. A Steam Deck unit for M-3.** Raised 2026-09-07 (F-41). Blocks M-3. D-15 makes the Deck the floor, and M-3 measures on one. Do you own a Steam Deck? Options: buy or borrow a Deck before PR-13, or measure on the Windows box with a frame cap as a stand-in until then. Recommendation: a Deck before PR-13, because the stand-in cannot measure the Deck's GPU.
