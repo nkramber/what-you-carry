@@ -8,7 +8,8 @@ Review: `docs/reviews/pr-1.md`
 | 1 | `9459534` | Changes required, P1-1, P1-2, P2-1 | `abd2af7` |
 | 2 | `60087b0` | Changes required, P2-2 | `b1b772a` |
 | 3 | `223aae8` | Ready for owner merge | superseded by later commits |
-| 4 | `6e45d6f` | Changes required, P1-3 and P1-4 | this round |
+| 4 | `6e45d6f` | Changes required, P1-3 and P1-4 | `3684dae` |
+| 5 | `e51e272` | Changes required, P2-3 | this round |
 
 ## Summary
 
@@ -127,6 +128,23 @@ Correction: D-184 defines the metadata set as `docs/reviews/`, `docs/session-han
 
 Regression check: with the metadata set excluded, the effective head of this branch resolves to `8efb267`, the last substantive commit, and not to either review commit. PR-1 exit tests 12 and 13 cover the metadata commit and the mixed commit.
 
+## P2-3: the F-51 risk row names the removed mode variable
+
+Disposition: full merit. Corrected in the design register.
+
+The defect came from the D-185 citation pass. That pass added the `D-185` id to every line that cited `D-181`, and it did not read the prose beside the id. The F-51 row gained the correct citation and kept the sentence "`REVIEW_GATE_MODE` selects the mode". A mechanical citation edit does not make the sentence true.
+
+Correction: the row now says that the tracked file `.github/review-gate-mode` selects the mode, and that the workflow reads it from the base branch. The D-181 and D-185 citations stand.
+
+The finding names one line. The regression check that it specifies covers more, so this response ran that sweep across every current document. It returned two further hits, and neither is a defect:
+
+- `docs/decisions.md:204` is the D-181 row. The register records what D-181 said, and the row carries the `Revised in part by D-185 on 2026-09-07, the mode source only` marker. D-186 requires that form.
+- `docs/decisions.md:208` is the D-185 row. It named the thing that it replaced, not a current source. The wording now says "Revises the mode source in D-181", because D-186 requires the Effect column to name the changed part. That change also removes the phrase from the sweep.
+
+Regression check: search every non-exempt current document for `REVIEW_GATE_MODE` and `repository variable`. The search returns only the D-181 register row, which carries its revision marker. Reviews, handoffs, and the archive stay exempt.
+
+Lesson recorded in the handoff: a mechanical citation pass must read the sentence that holds the citation. F-53 covers the churn that caused the pass.
+
 ## Verification
 
 - Roadmap header scope check over all five roadmaps: passed, zero omitted PR, zero omitted measurement, zero revised id.
@@ -152,6 +170,8 @@ Regression check: with the metadata set excluded, the effective head of this bra
 - D-183: the reviewer pushes its own review commit.
 - D-184: the metadata paths for the effective head.
 - D-185: the tracked mode file, read from the base branch.
+- D-186: the two revision markers, `Superseded by` and `Revised in part by`.
+- D-187: the session number procedure.
 
 ## Open questions
 
