@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: Review a pull request at principal-engineer depth. Require the opposite provider, precise evidence, regression checks, and a revision-specific verdict. Use for PR reviews and repeat reviews after fixes.
+description: Review a pull request at principal-engineer depth, or answer a review as the author. Require the opposite provider, precise evidence, regression checks, and a revision-specific verdict. A finding is a claim, not a fact, and the author can refute one with evidence. Use for PR reviews, repeat reviews after fixes, and any request to address, answer, or fix review findings or review feedback.
 ---
 
 # PR review skill
@@ -189,7 +189,7 @@ For a new record, use `docs/reviews/pr-<number>.md` with the actual PR number, n
 Record provider names only in the permitted review record and handoff author fields (D-137).
 Omit those names from any PR description or GitHub comment.
 
-The `review-gate` job reads this file (D-179, D-181). Three parts of it are machine-read. Keep their format exact:
+The `review-gate` job reads this file (D-179, D-181, D-185). Three parts of it are machine-read. Keep their format exact:
 
 | Part | Exact form | Rule |
 |---|---|---|
@@ -197,9 +197,12 @@ The `review-gate` job reads this file (D-179, D-181). Three parts of it are mach
 | The head field | `- Head: ` and the hash in backticks, in the Identity list | The hash is the effective head. A short hash is permitted. |
 | The verdict | One of the three verdict names, in the `## Verdict` section | Write the name exactly. Do not reword it. |
 
-The effective head is the newest commit that changes a path outside `docs/reviews/`.
-A commit that changes only the review record does not change the effective head.
-Record the effective head, not the tip, when the review record is the last commit.
+The effective head is the newest commit that changes a path outside the metadata set (D-184).
+The metadata set is `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md`.
+A commit that changes only those paths is a metadata commit, and it does not change the effective head.
+The required review commit holds the review record and the handoff entry, so it is always a metadata commit (D-182).
+Without that rule the review commit would invalidate the review that it publishes.
+Record the effective head, not the tip, when the review commit is the last commit.
 
 Use this skeleton. Keep the heading text and the order.
 
@@ -306,7 +309,7 @@ Apply the same test to every file before a finding. A reading that condemns the 
 
 ## The review gate check
 
-PR-1 adds a `review-gate` check (D-179, D-181). It applies three rules:
+PR-1 adds a `review-gate` check (D-179, D-181, D-185). It applies three rules:
 
 1. `docs/reviews/pr-<number>.md` exists for the PR number.
 2. The verdict is `Ready for owner merge`.
@@ -320,13 +323,13 @@ The check has three states. Read the color before you start:
 | Red | A review record exists, and it does not approve this head. | Read the findings. The author corrects them. |
 | Green | An approved review covers the effective head. | The owner may merge (D-102, D-126). |
 
-Grey appears only while the check is advisory. At launch the same case turns red (D-181).
+Grey appears only while the check is advisory. At launch the same case turns red (D-181, D-185).
 GitHub counts a neutral conclusion as a success for a required check, so enforced mode never uses grey.
 The check is advisory until launch, because GitHub locks branch protection on a private free repository (D-170, D-180).
 
 Rule 3 fails when the author pushes code after the approval. That result is correct.
 Reassess the new diff, then update the head field and the verdict together.
-Rule 3 does not fail when the last commit changes only `docs/reviews/`.
+Rule 3 does not fail when the last commit changes only the metadata paths (D-184).
 
 ## Repeat review procedure
 
@@ -349,10 +352,44 @@ Do not delete the prior verdict. Replace it, and keep each finding and its histo
 Close a finding only when the evidence establishes the fix or an owner decision resolves it.
 Record any required check that still waits for a result.
 
+## Address review findings
+
+Use this section when you answer a review. The author does this work, not the reviewer.
+
+**A finding is a claim, not a fact.** A review can be wrong. Assess each finding against the evidence before you change anything. A finding carries no authority that the evidence does not give it.
+
+1. Read the finding, then read the file and the lines it names.
+2. Reproduce the trigger. A finding that does not reproduce has no merit.
+3. Read the contract the finding cites. Check the `Effect` column of `docs/decisions.md` for a later revision.
+4. Decide the disposition: full merit, partial merit, or no merit.
+5. Correct every finding that has merit. Use the smallest change that restores the contract.
+6. Record each disposition in `docs/reviews/pr-<number>-response.md`.
+7. Commit and push the response, the corrections, and the handoff entry (D-182, D-183).
+
+Push back when the evidence supports it. State the reason and show the proof:
+
+| Reason to push back | What to show |
+|---|---|
+| The finding reads a rule too broadly. | Quote the rule. Name the other files that the broad reading also condemns. |
+| The finding cites a superseded decision. | Quote the `Effect` column and name the current decision. |
+| The trigger does not reproduce. | Give the command, the revision, and the result. |
+| The correction breaks another contract. | Name the contract and the caller that it breaks. |
+| The finding states a style preference. | Name the contract that the code does not break. |
+| The finding repeats a risk that a decision already accepted. | Quote the D-# id and its accepted risk. |
+
+A disagreement belongs in the response file, with the evidence. Never delete a finding from the review record.
+The reviewer sets a refuted finding to `withdrawn` and keeps the evidence that refuted it.
+
+Never accept a finding only to close the review faster. A wrong correction costs more than a written disagreement.
+Never widen a correction past the contract that the finding names.
+Ask the owner when a finding and an owner decision conflict. Quote both (D-124, D-138).
+
+Partial merit is common. Correct the part that has merit, and refute the rest in the same entry.
+
 ## The response file
 
 The author answers a review in `docs/reviews/pr-<number>-response.md`.
-This file is a convention, not a gate. `review-gate` does not read it (D-179, D-181).
+This file is a convention, not a gate. `review-gate` does not read it (D-179, D-181, D-185).
 Write one when the verdict is `Changes required` or `Blocked`. A clean first pass needs none.
 
 The response file states, for each finding:
@@ -381,7 +418,7 @@ An uncommitted review record has three effects:
 
 - The next commit from the other provider absorbs it, and the history no longer shows who wrote what.
 - An author can commit an approval that the author never read, and then report the wrong verdict.
-- `review-gate` cannot read the record, because the record is not on the PR head (D-179, D-181).
+- `review-gate` cannot read the record, because the record is not on the PR head (D-179, D-181, D-185).
 
 Write the commit message in an impersonal voice. Name no provider, agent, harness, or model (T-6, D-176).
 Add the handoff entry at the top of the file, as a new entry (D-146).

@@ -1,12 +1,12 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, D-175, D-176 to D-178, D-180, and D-181. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, D-175, D-176 to D-178, D-180, and D-182 to D-185. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
 External facts: none new. The Godot version is in the design header, verified 2026-09-07.
 
-Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1, and D-181 revises D-179. PR-58 is new, and it holds the night gate.
+Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate.
 
 ## 1. Thesis
 
@@ -54,13 +54,14 @@ Scope:
 - `project.godot` and the Game project file on `Godot.NET.Sdk` at the pinned version (D-61).
 - `.github/workflows/ci.yml` with three jobs: build and test on hosted Linux x64, hosted Windows x64, and the self-hosted macOS arm64 runner (D-100, D-148, OQ-31).
 - `.github/pull_request_template.md` with the gate checklist and one "no change needed because" line per document (D-118). It has one line that names each absent check with the PR that creates it (D-148).
-- `.github/workflows/review-gate.yml` on the `pull_request` event (D-179, D-181). It needs `checks: write` and `contents: read`.
+- `.github/workflows/review-gate.yml` on the `pull_request` event (D-179, D-181, D-185). It needs `checks: write` and `contents: read`.
 - The job reads the PR number and applies three rules:
   - `docs/reviews/pr-<number>.md` exists on the PR head.
   - The verdict in that file is `Ready for owner merge`, and not `Blocked` or `Changes required`.
-  - The head that the file records is the effective head. The effective head is the newest commit that changes a path outside `docs/reviews/`. A short hash matches by prefix.
-- Compute the effective head with one `git log` command that excludes `docs/reviews/` by pathspec. Do not use a pipeline that stops early, because its exit status is not reliable.
-- The job publishes a check run named `review-gate` on the PR head commit, through the Checks API (D-181). A workflow job cannot set a neutral conclusion by its exit code.
+  - The head that the file records is the effective head. The effective head is the newest commit that changes a path outside the metadata set (D-184). A short hash matches by prefix.
+- The metadata set is `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184).
+- Compute the effective head with one `git log` command that excludes each metadata path by pathspec. Do not use a pipeline that stops early, because its exit status is not reliable.
+- The job publishes a check run named `review-gate` on the PR head commit, through the Checks API (D-181, D-185). A workflow job cannot set a neutral conclusion by its exit code.
 - The conclusions are:
 
 | Condition | `advisory` mode | `enforced` mode | Shows as |
@@ -70,8 +71,9 @@ Scope:
 | The recorded head is not the effective head | `failure` | `failure` | Red |
 | Approved review of the effective head | `success` | `success` | Green |
 
-- The mode comes from the repository variable `REVIEW_GATE_MODE` (D-181). PR-1 sets it to `advisory`. Phase 5 sets it to `enforced`.
-- An absent or unknown `REVIEW_GATE_MODE` fails the job and names the variable (T-2). Do not default the value.
+- `.github/review-gate-mode`: a tracked file that holds `advisory` or `enforced` (D-185). PR-1 creates it with `advisory`, so PR-1 passes its own check with no owner action (G-19).
+- The workflow reads the mode file from the base branch, never from the PR head (D-185). A PR must not change the mode that judges it.
+- An absent file, an empty file, or an unknown value fails the job and names the file (T-2). Do not default the value.
 - Neutral is correct only while the check is advisory. GitHub counts a neutral conclusion as a success for a required check (F-51).
 - The check run output names the rule, the expected value, and the value it found (T-2, D-113).
 - A build and test command section in `CLAUDE.md` and `AGENTS.md`, identical (D-122).
@@ -90,18 +92,20 @@ Exit tests:
 8. `ReviewGateFailsOnMissingFileWhenEnforced` asserts a failure conclusion in `enforced` mode for the same input.
 9. `ReviewGateFailsOnChangesRequired` asserts a failure on a fixture review file with the verdict `Changes required`.
 10. `ReviewGateFailsOnBlocked` asserts a failure on a fixture review file with the verdict `Blocked`.
-11. `ReviewGateFailsOnStaleHead` asserts a failure when the recorded head precedes a later commit outside `docs/reviews/`.
-12. `ReviewGateIgnoresReviewFileCommit` asserts a success when the only later commit changes `docs/reviews/` alone (D-179, D-181).
-13. `ReviewGatePassesOnApproval` asserts a success on the verdict `Ready for owner merge` at the effective head.
-14. `ReviewGateFailsOnUnsetMode` asserts a failure when `REVIEW_GATE_MODE` is absent or unknown, and asserts that the message names the variable (T-2).
-15. Each failure output names the rule, the expected value, and the value found (T-2).
-16. The `review-gate` check run appears on the PR head commit (D-181).
+11. `ReviewGateFailsOnStaleHead` asserts a failure when the recorded head precedes a later commit outside the metadata set.
+12. `ReviewGateIgnoresMetadataCommit` asserts a success when the only later commit changes the metadata paths alone (D-184).
+13. `ReviewGateFailsOnHandoffPlusCodeCommit` asserts a failure when a later commit changes a metadata path and any other path.
+14. `ReviewGatePassesOnApproval` asserts a success on the verdict `Ready for owner merge` at the effective head.
+15. `ReviewGateFailsOnUnsetMode` asserts a failure when the mode file is absent, empty, or unknown, and asserts that the message names the file (T-2).
+16. `ReviewGateReadsModeFromBase` asserts that a PR which changes `.github/review-gate-mode` does not change its own mode (D-185).
+17. Each failure output names the rule, the expected value, and the value found (T-2).
+18. The `review-gate` check run appears on the PR head commit (D-181, D-185).
 
 Review focus: Core boundary, input and CI boundaries, dependencies, documents.
 
 Check clause: the STE checker, the lint tool, and the bit-identity job do not exist. PR-2 and PR-3 create them. Branch protection does not exist, so `review-gate` is advisory until launch (D-170, D-180).
 
-Gate: exit tests 1 to 16 pass.
+Gate: exit tests 1 to 18 pass.
 
 > *In plain English:* this makes the empty project with its four parts. It adds the automatic build on three kinds of computer and the checklist every change must fill in. It also adds a check that turns red when a change has no approved review. It adds nothing that plays.
 

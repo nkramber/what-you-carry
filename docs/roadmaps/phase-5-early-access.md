@@ -1,12 +1,12 @@
 # Phase 5 roadmap: Early Access candidate
 
-Status: **focused roadmap, active.** This file expands Phase 5 of `docs/design.md` section 7: PR-51 to PR-55. It applies D-1, D-15, D-96, D-112, D-142, D-152, D-170, D-180, and D-181. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 5 of `docs/design.md` section 7: PR-51 to PR-55. It applies D-1, D-15, D-96, D-112, D-142, D-152, D-170, D-180, and D-185. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 4 is `phase-4-content-complete.md`. Gate 4 must pass before PR-51 starts.
 
 External facts: the Steam Deck verification requirements and the Apple notarization steps are external. Each PR that depends on one fetches it and records the date and the source (OQ-66, OQ-67).
 
-Correction passes: 2026-09-07, the PR #1 review. Sequence step 11 is new. It makes the repository public, sets `REVIEW_GATE_MODE` to `enforced`, and promotes `review-gate` to a required status check (D-170, D-180, D-181).
+Correction passes: 2026-09-07, the PR #1 review. Sequence step 11 is new. It makes the repository public, changes the mode file to `enforced`, and promotes `review-gate` to a required status check (D-170, D-180, D-185).
 
 ## 1. Thesis
 
@@ -184,7 +184,7 @@ One person owns the program. Items run one at a time in this order. Gate 4 must 
 8. PR-54.
 9. Owner: answer OQ-70.
 10. PR-55.
-11. Owner: make the repository public. Set `REVIEW_GATE_MODE` to `enforced` (D-181). Then set `review-gate` and the three-platform job as required status checks on `main` (D-170, D-180).
+11. Owner: make the repository public. Merge a PR that sets `.github/review-gate-mode` to `enforced` (D-185). Then set `review-gate` and the three-platform job as required status checks on `main` (D-170, D-180).
 12. **← GATE 5 (Early Access candidate).** Every exit test in this file passes. The store page has no attribution (T-6). The owner signs the gate in `docs/decisions.md`.
 
 ## 6. Open questions

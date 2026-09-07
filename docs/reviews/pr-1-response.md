@@ -6,7 +6,9 @@ Review: `docs/reviews/pr-1.md`
 | Round | Reviewed head | Verdict | Answered in |
 |---|---|---|---|
 | 1 | `9459534` | Changes required, P1-1, P1-2, P2-1 | `abd2af7` |
-| 2 | `60087b0` | Changes required, P2-2 | this round |
+| 2 | `60087b0` | Changes required, P2-2 | `b1b772a` |
+| 3 | `223aae8` | Ready for owner merge | superseded by later commits |
+| 4 | `6e45d6f` | Changes required, P1-3 and P1-4 | this round |
 
 ## Summary
 
@@ -103,9 +105,32 @@ D-178 is refined in the same pass. A line passes the reference check when it hol
 
 Regression check: compare each roadmap header with every `### PR-` and `### M-` heading in that file, and reject a header that names a revised decision. Then run the D-178 reference check over the design doc, the agent files, the roadmaps, and the skills. Both return zero findings.
 
+## P1-3: PR-1 has no way to set the review gate mode
+
+Disposition: full merit. Corrected under D-185.
+
+D-181 put the mode in the repository variable `REVIEW_GATE_MODE`. A workflow cannot create a repository variable, and `checks: write` with `contents: read` does not grant it. D-181 also makes an absent value a failure. PR-1 therefore could not pass the check that it creates, against G-19. This is the same class as P1-2.
+
+Correction: D-185 moves the mode to the tracked file `.github/review-gate-mode`. PR-1 creates the file with `advisory`, so PR-1 passes its own check with no owner action. The workflow reads the file from the base branch, never from the PR head, so a PR cannot change the mode that judges it. Phase 5 step 11 changes the file through a reviewed PR instead of an invisible settings edit. An absent, empty, or unknown value still fails and names the file (T-2).
+
+Regression check: run the check with the file absent, empty, `advisory`, `enforced`, and an unknown value. Only the two known values pass. Open a PR that edits the mode file and confirm that the run uses the base value. PR-1 exit tests 15 and 16 cover both.
+
+## P1-4: the required review commit invalidates its own effective head
+
+Disposition: full merit. Corrected under D-184.
+
+D-182 and D-183 require the reviewer to commit and push the review record together with the handoff entry. The effective head excluded only `docs/reviews/`, so that commit changed a path outside the exclusion and became the effective head. The record inside it then named an older commit, and rule 3 rejected it. Every corrective commit repeated the loop.
+
+Reproduced on this branch. Commit `6e45d6f` holds `docs/reviews/pr-1.md` and `docs/session-handoff.md` only. Under the old rule the effective head was `eab18db`, while the record named `6e45d6f`, so the gate rejected a compliant review.
+
+Correction: D-184 defines the metadata set as `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md`. The effective head is the newest commit outside that set. A commit that changes only those paths is a metadata commit. The archive is in the set because a handoff rollover writes it in the same commit (D-146).
+
+Regression check: with the metadata set excluded, the effective head of this branch resolves to `8efb267`, the last substantive commit, and not to either review commit. PR-1 exit tests 12 and 13 cover the metadata commit and the mixed commit.
+
 ## Verification
 
 - Roadmap header scope check over all five roadmaps: passed, zero omitted PR, zero omitted measurement, zero revised id.
+- Effective head under D-184, computed on this branch: `8efb267`, the last substantive commit. The old rule returned a review commit.
 - D-178 reference check over the design doc, both agent files, all five roadmaps, and both skills: zero findings.
 - Attribution scan over every commit on the branch: passed, as stated above.
 - Stale reference sweep for `D-172`, `D-169`, `OQ-2`, `OQ-16`, and `.NET 8` outside `docs/decisions.md`, `docs/questions.md`, `docs/reviews/`, and the handoff: no current-status hit.
@@ -122,6 +147,11 @@ Regression check: compare each roadmap header with every `### PR-` and `### M-` 
 - D-178: the reference check in PR-2, refined in round 2 with the reviser-named exemption.
 - D-179: the `review-gate` check.
 - D-180: the `review-gate` enforcement path.
+- D-181: three conclusions and two modes, revised by D-185 for the mode source.
+- D-182: commit the review record with the handoff entry.
+- D-183: the reviewer pushes its own review commit.
+- D-184: the metadata paths for the effective head.
+- D-185: the tracked mode file, read from the base branch.
 
 ## Open questions
 
