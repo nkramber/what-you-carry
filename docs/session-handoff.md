@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 15: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #1 after the P2-3 correction. Branch `docs/roadmaps`, part of PR #1.
+
+### What this session did, and why
+
+- Re-reviewed the diff through effective head `c255a17`.
+- Confirmed P2-3 is fixed. The F-51 row now names `.github/review-gate-mode` and the base-branch read.
+- Confirmed the sweep leaves only the historical D-181 decision row for `REVIEW_GATE_MODE`, with its revision marker.
+- Updated `docs/reviews/pr-1.md` to approve the effective head.
+
+### State of the build
+
+- No code, solution, or CI workflow exists. PR-1 creates them.
+- The effective-head check resolves to `c255a17` after excluding the D-184 metadata set.
+- `AGENTS.md` and `CLAUDE.md` remain byte-identical.
+- The review verdict is Ready for owner merge.
+
+### In flight
+
+PR #1 is ready for the owner to merge. The owner must complete the runner and SSD actions before implementation work starts (D-145, D-171).
+
+### Traps and gotchas
+
+- The current mode source is `.github/review-gate-mode`, not `REVIEW_GATE_MODE` (D-185).
+- The review record must name the effective head, not the metadata commit (D-184).
+- The review and handoff commits must be pushed to the PR branch (D-182, D-183).
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner merges PR #1 after confirming the review-gate and other PR gate conditions. Then run `docs/runbooks/macos-runner.md` on 2026-09-08.
+
 ## Session 14: 2026-09-07, Claude Code
 
 Author: Claude Code
@@ -398,4 +435,3 @@ No new question. The session 4 entry lists the open ones.
 ### Next concrete action
 
 Unchanged from session 4. A Codex session reviews PR #1 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-1.md`. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
-

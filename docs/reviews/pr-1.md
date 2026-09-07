@@ -8,7 +8,7 @@ Date: 2026-09-07
 - Target: `main`
 - Base: `1c16c45`
 - Merge base: `1c16c45`
-- Head: `e51e272`
+- Head: `c255a17`
 - Branch: `docs/roadmaps`
 
 ## Provider gate
@@ -19,7 +19,7 @@ The session handoff records Claude Code as the author of the substantive roadmap
 
 This PR adds the five focused roadmaps, the macOS runner runbook, repository settings, decision updates, question updates, review records, the review skill format, and session continuity records. The roadmaps define the scope, checks, gates, dependencies, and owner questions for PR-1 through PR-58.
 
-The review inspected the complete diff from `1c16c45` to `e51e272`, the response and new diffs since `6e45d6f`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
+The review inspected the complete diff from `1c16c45` to `c255a17`, the response and new diffs since `e51e272`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
 
 Affected contracts include T-4, T-5, T-6, D-118, D-137, D-146, D-148, D-150, D-151, D-152, D-157, D-170, D-173, D-175, D-181, D-182, D-183, D-184, D-185, D-186, and D-187.
 
@@ -103,7 +103,7 @@ Regression check: create a fixture commit that changes the review record and the
 
 ### P2-3: The current F-51 risk row names the removed mode variable
 
-Status: open.
+Status: fixed in `c255a17`.
 
 File: `docs/design.md:262`.
 
@@ -111,13 +111,13 @@ Trigger: D-185 revises the mode source from the repository variable `REVIEW_GATE
 
 Expected: the current design risk register must state the current mode source and must not present a superseded implementation detail as current (D-118, D-185, D-186).
 
-Actual: the row says: “`REVIEW_GATE_MODE` selects the mode”. This contradicts D-185 and the Phase 1 and Phase 5 roadmaps.
+Actual on the prior reviewed revision: the row said: “`REVIEW_GATE_MODE` selects the mode”. This contradicted D-185 and the Phase 1 and Phase 5 roadmaps.
 
-Consequence: the design register gives a future implementer two conflicting mode sources and can cause the review-gate workflow to use repository state that PR-1 no longer creates.
+Consequence on the prior reviewed revision: the design register gave a future implementer two conflicting mode sources and could cause the review-gate workflow to use repository state that PR-1 no longer creates.
 
 Correction: change the F-51 row to say that `.github/review-gate-mode` selects the mode, and retain the D-185 citation.
 
-Regression check: search all non-exempt current documents for `REVIEW_GATE_MODE` and `repository variable`; no current-status text should name the removed variable as the mode source. Historical review and handoff records remain exempt.
+Regression check: search all non-exempt current documents for `REVIEW_GATE_MODE` and `repository variable`; the only remaining hit is the D-181 decision row, which records the earlier answer and carries its revision marker. Historical review and handoff records remain exempt.
 
 ### P2-1: The design source still presents superseded decisions as current
 
@@ -171,14 +171,14 @@ Regression check: the author reports zero omitted PRs, measurements, and revised
 - `git diff --check main...docs/roadmaps`: passed.
 - `cmp -s AGENTS.md CLAUDE.md`: passed.
 - JSON parse of `.claude/settings.json`: passed.
-- Roadmap header and revised-decision sweep: passed on `e51e272`.
-- Effective-head specification review: passed. The metadata set excludes the review and handoff paths, and the branch resolves to `e51e272` as its newest substantive commit.
+- Roadmap header and revised-decision sweep: passed on `c255a17`.
+- Effective-head specification review: passed. The metadata set excludes the review and handoff paths, and the branch resolves to `c255a17` as its newest substantive commit.
 - Commit attribution scan: the old finding was reproduced against `9459534` and is fixed in amended commit `e3e2b6a`. A semantic source-of-work scan was not independently automated because the PR creates the scanner only as a future exit test.
 - Build and test: not run. The repository has no solution or implementation on either the base or reviewed head, as stated in `AGENTS.md`.
 - STE checker: not run. PR-2 creates it, and the project has no checker yet. The changed documents received a manual review against `.claude/skills/ste-writing/SKILL.md`.
 - CI results: unavailable for the reviewed head in the local checkout. The workflow files described by the roadmap do not exist yet. The review-gate mode variable is also not present in repository files or the runner runbook.
 - Review-gate metadata-path behavior: passed by causal trace. Excluding the D-184 metadata set resolves the branch to `e51e272`, not either review commit.
-- Current mode-source sweep: one stale current reference remains in `docs/design.md:262`; P2-3 is open.
+- Current mode-source sweep: passed. The only remaining non-exempt hit is the revised D-181 decision row.
 - Runner registration and SSD placement: not verified. The runbook records them as owner actions before PR-1.
 
 ## Open questions and accepted risks
@@ -187,4 +187,4 @@ No new owner question is required for these findings. The existing OQ-12 remains
 
 ## Verdict
 
-**Changes required.** This verdict applies to head `e51e272`. P1-1, P1-2, P1-3, P1-4, P2-1, and P2-2 are fixed. P2-3 remains open because the current design risk register still names the removed `REVIEW_GATE_MODE` variable as the mode source.
+**Ready for owner merge.** This verdict applies to head `c255a17`. P1-1, P1-2, P1-3, P1-4, P2-1, P2-2, and P2-3 are fixed. The review covers the effective head; the review and handoff metadata commit does not change it under D-184.
