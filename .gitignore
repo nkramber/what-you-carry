@@ -1,0 +1,25 @@
+# Godot
+.godot/
+*.import
+export_credentials.cfg
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs, run records, and local artifacts
+logs/
+artifacts/
+*.log
