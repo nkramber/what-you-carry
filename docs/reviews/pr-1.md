@@ -8,7 +8,7 @@ Date: 2026-09-07
 - Target: `main`
 - Base: `1c16c45`
 - Merge base: `1c16c45`
-- Head: `60087b0`
+- Head: `223aae8`
 - Branch: `docs/roadmaps`
 
 ## Provider gate
@@ -19,7 +19,7 @@ The session handoff records Claude Code as the author of the substantive roadmap
 
 This PR adds the five focused roadmaps, the macOS runner runbook, repository settings, decision updates, question updates, review records, the review skill format, and session continuity records. The roadmaps define the scope, checks, gates, dependencies, and owner questions for PR-1 through PR-58.
 
-The review inspected the complete diff from `1c16c45` to `60087b0`, the response and new diff since `9459534`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
+The review inspected the complete diff from `1c16c45` to `223aae8`, the response and new diffs since `9459534`, all changed files in context, the current design and decision registers, the question register, the existing audit records, the project agent files, the required review and STE skills, and the runner procedure.
 
 Affected contracts include T-4, T-5, T-6, D-118, D-137, D-146, D-148, D-150, D-151, D-152, D-157, D-170, D-173, and D-175.
 
@@ -94,7 +94,7 @@ Regression check: the author reports a clean stale-reference sweep. The referenc
 
 ### P2-2: The Phase 1 roadmap header omits its new PR and decision scope
 
-Status: open.
+Status: fixed in `b1b772a`.
 
 Files: `docs/roadmaps/phase-1-foundations.md:3,9`
 
@@ -104,17 +104,21 @@ Expected: the roadmap header must identify every PR and decision that the roadma
 
 Actual: line 3 says the file expands "PR-1 to PR-11, M-1, and M-2" and applies only D-148 to D-152 and D-156. The roadmap now also contains PR-58, D-177, and D-178. Line 9 says `Correction passes: none yet`, although the file contains the D-176 to D-178 correction pass.
 
-Consequence: a new session can omit PR-58 or the reference-check work when it uses the roadmap header as its scope summary. The header also gives a false status for the review corrections.
+Disposition: full merit under D-178. The correction added the missing scope and status. The follow-up sweep also corrected related revised-decision ranges in the other roadmaps.
 
-Correction: update the header to include PR-58, D-177, and D-178, and replace the correction status with the current review correction pass.
+Consequence on the reviewed revision: none. The five roadmap headers now state their current scope, and the affected revised-decision references name their revising decisions.
 
-Regression check: compare the header scope with every `### PR-` and `### M-` section and with the roadmap's correction entries. The check must report no omitted PR, measurement, or current decision.
+Correction applied: update the Phase 1 and Phase 5 headers, correct the related decision ranges and references, and refine D-178 to accept a line that names its revising decision.
+
+Regression check: the author reports zero omitted PRs, measurements, and revised ids across all five roadmaps. The current manual sweep found no remaining header omission or unmarked revised-decision citation.
 
 ## Verification
 
 - `git diff --check main...docs/roadmaps`: passed.
 - `cmp -s AGENTS.md CLAUDE.md`: passed.
 - JSON parse of `.claude/settings.json`: passed.
+- Roadmap header and revised-decision sweep: passed on `223aae8`.
+- Effective-head specification review: passed. The follow-up names a single `git log` command with a pathspec and avoids an early-terminating pipeline.
 - Commit attribution scan: the old finding was reproduced against `9459534` and is fixed in amended commit `e3e2b6a`. A semantic source-of-work scan was not independently automated because the PR creates the scanner only as a future exit test.
 - Build and test: not run. The repository has no solution or implementation on either the base or reviewed head, as stated in `AGENTS.md`.
 - STE checker: not run. PR-2 creates it, and the project has no checker yet. The changed documents received a manual review against `.claude/skills/ste-writing/SKILL.md`.
@@ -127,4 +131,4 @@ No new owner question is required for these findings. The existing OQ-12 remains
 
 ## Verdict
 
-**Changes required.** This verdict applies to head `60087b0`. P1-1, P1-2, and P2-1 are fixed by the recorded revisions. P2-2 remains open because the Phase 1 roadmap header does not include PR-58 or the current correction scope.
+**Ready for owner merge.** This verdict applies to head `223aae8`. P1-1, P1-2, P2-1, and P2-2 are fixed. No new finding remains. Build and CI execution remain unavailable because this documentation PR defines the solution and workflows that PR-1 will create.

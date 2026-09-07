@@ -189,7 +189,7 @@ For a new record, use `docs/reviews/pr-<number>.md` with the actual PR number, n
 Record provider names only in the permitted review record and handoff author fields (D-137).
 Omit those names from any PR description or GitHub comment.
 
-The `review-gate` job reads this file (D-179). Three parts of it are machine-read. Keep their format exact:
+The `review-gate` job reads this file (D-179, D-181). Three parts of it are machine-read. Keep their format exact:
 
 | Part | Exact form | Rule |
 |---|---|---|
@@ -306,14 +306,23 @@ Apply the same test to every file before a finding. A reading that condemns the 
 
 ## The review gate check
 
-PR-1 adds a `review-gate` CI job (D-179). It fails the PR when one of three rules breaks:
+PR-1 adds a `review-gate` check (D-179, D-181). It applies three rules:
 
-1. No `docs/reviews/pr-<number>.md` exists for the PR number.
-2. The verdict is not `Ready for owner merge`.
-3. The head in the Identity list is not the effective head.
+1. `docs/reviews/pr-<number>.md` exists for the PR number.
+2. The verdict is `Ready for owner merge`.
+3. The head in the Identity list is the effective head.
 
-The job is advisory until launch, because GitHub locks branch protection on a private free repository (D-170, D-180).
-A red `review-gate` job means the PR is not ready. The owner alone merges (D-102, D-126).
+The check has three states. Read the color before you start:
+
+| Color | Meaning | What to do |
+|---|---|---|
+| Grey | No review record exists for this PR. | Write one. This is the normal state before a review. |
+| Red | A review record exists, and it does not approve this head. | Read the findings. The author corrects them. |
+| Green | An approved review covers the effective head. | The owner may merge (D-102, D-126). |
+
+Grey appears only while the check is advisory. At launch the same case turns red (D-181).
+GitHub counts a neutral conclusion as a success for a required check, so enforced mode never uses grey.
+The check is advisory until launch, because GitHub locks branch protection on a private free repository (D-170, D-180).
 
 Rule 3 fails when the author pushes code after the approval. That result is correct.
 Reassess the new diff, then update the head field and the verdict together.
@@ -342,7 +351,7 @@ Record any required check that still waits for a result.
 ## The response file
 
 The author answers a review in `docs/reviews/pr-<number>-response.md`.
-This file is a convention, not a gate. `review-gate` does not read it (D-179).
+This file is a convention, not a gate. `review-gate` does not read it (D-179, D-181).
 Write one when the verdict is `Changes required` or `Blocked`. A clean first pass needs none.
 
 The response file states, for each finding:

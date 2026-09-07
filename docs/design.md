@@ -8,6 +8,7 @@ External facts, verified 2026-09-07:
 - Metal is the default render driver on Apple Silicon since Godot 4.4. Intel Macs use MoltenVK. Source: godotengine.org, "Dev snapshot: Godot 4.4 dev 1".
 - The Steam Direct fee is 100 USD per app. Steam credits it after 1,000 USD adjusted gross revenue. Source: partner.steamgames.com, "Steam Direct Fee".
 - The Apple Developer Program fee is 99 USD per year. Source: Apple Developer Program pages, via search summaries.
+- GitHub treats a `neutral` or `skipped` check conclusion as a success. A skipped job does not stop a merge, even as a required check. Source: docs.github.com, "About status checks", verified 2026-09-07.
 
 Verified 2026-09-07: the .NET LTS pin is .NET 10 LTS (D-173). Godot 4.7 accepts .NET 8 or later.
 
@@ -256,7 +257,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-46 | D-158 required branch protection, and GitHub returned 403: the feature needs Pro or a public repository, against D-106 | 2026-09-07 | ✅ doc. D-170 defers protection until launch |
 | F-47 | PR #1 review P1-1: a commit body implied that an agent wrote the commits, and T-6 had no stated boundary for a tool name | 2026-09-07 | ✅ doc. D-176 fixes the reading. The commit body is rewritten. Binds PR-1 exit test 6 |
 | F-48 | PR #1 review P1-2: PR-11 created the `night-gate` job and the night job together, so the gate had no result to read on its first run, against G-19 | 2026-09-07 | 🔧 D-177 splits them. PR-58 adds the gate after one night runs. Binds PR-11, PR-58 |
-| F-50 | Nothing on GitHub stops a merge without a cross-provider review. T-4 and D-101 are rules only, and D-170 leaves `main` unprotected | 2026-09-07 | 🔧 D-179 adds the `review-gate` job in PR-1. D-180 makes it a required check at launch. Advisory until then |
+| F-51 | A grey `review-gate` would stop blocking at launch. GitHub counts a neutral conclusion as a success for a required check, verified 2026-09-07 | 2026-09-07 | 🔧 D-181. Advisory mode gives neutral. Enforced mode gives failure. `REVIEW_GATE_MODE` selects the mode |
+| F-50 | Nothing on GitHub stops a merge without a cross-provider review. T-4 and D-101 are rules only, and D-170 leaves `main` unprotected | 2026-09-07 | 🔧 D-179 and D-181 add the `review-gate` job in PR-1. D-180 makes it a required check at launch. Advisory until then |
 | F-49 | PR #1 review P2-1: six lines cited D-172 or OQ-2 as a current answer after D-173 and D-175 revised them | 2026-09-07 | ✅ doc. All six corrected. 🔧 D-178 adds a reference check to PR-2 |
 
 ## 6. Guardrails (the safety contract for every PR)
@@ -303,7 +305,7 @@ Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundat
 ### Phase 1: Foundations (foundation gate, D-150: CI green on three platforms with a bit-identical end state, docs and PR gate live, no playtest)
 
 **PR-1: Repository scaffold.** 🔧
-Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry.Tools`, and `WhatYouCarry.Tests` (D-108). Pin Godot 4.7.2 .NET and .NET 10 LTS (D-61, D-62, D-173). Create `CLAUDE.md` and `AGENTS.md` as identical pointer files with a test that asserts equality (D-122). Add the GitHub Actions workflow that builds and runs `dotnet test` on Linux x64, macOS arm64, and Windows x64 (D-148). Add a PR template with the gate checklist and the "no change needed because" lines (D-118). The template has a line that names each absent check with the PR that creates it (D-148). Add the `review-gate` job (D-179). It fails on a missing review file, on a verdict that is not an approval, and on an approval of a superseded head. The job is advisory until launch, because GitHub locks branch protection on a private free repository (D-170, D-180). The attribution option is in place (D-175). Needs the external SSD (D-145) and the runner (D-171). No game code.
+Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry.Tools`, and `WhatYouCarry.Tests` (D-108). Pin Godot 4.7.2 .NET and .NET 10 LTS (D-61, D-62, D-173). Create `CLAUDE.md` and `AGENTS.md` as identical pointer files with a test that asserts equality (D-122). Add the GitHub Actions workflow that builds and runs `dotnet test` on Linux x64, macOS arm64, and Windows x64 (D-148). Add a PR template with the gate checklist and the "no change needed because" lines (D-118). The template has a line that names each absent check with the PR that creates it (D-148). Add the `review-gate` job (D-179). It publishes a check run with three conclusions (D-181). Success means an approved review of the effective head. Failure means a review that does not approve, or a stale head. Grey means no review record yet, and only in advisory mode. The job is advisory until launch, because GitHub locks branch protection on a private free repository (D-170, D-180). The attribution option is in place (D-175). Needs the external SSD (D-145) and the runner (D-171). No game code.
 Gate: `dotnet build` and `dotnet test` pass on all three platforms, and the `review-gate` job runs on the PR.
 > *In plain English:* this makes the empty project with its four parts and the rules files that every future session reads first. It also adds a check that turns red when a change has no approved review. It adds nothing that plays. It is safe because it changes no behavior.
 

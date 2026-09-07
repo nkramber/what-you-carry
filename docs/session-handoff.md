@@ -2,6 +2,41 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 9: 2026-09-07, Codex
+
+Author: Codex
+Session: final repeat review of PR #1 on `docs/roadmaps`.
+
+### What this session did, and why
+
+- Rechecked PR #1 at effective head `223aae8`.
+- Confirmed the P2-2 fix and reviewed the effective-head command clarification.
+- Updated `docs/reviews/pr-1.md` with a Ready for owner merge verdict.
+
+### State of the build
+
+- No solution or implementation exists on the reviewed head.
+- The diff check passes. The agent files remain identical. The settings file parses as JSON.
+- All four prior findings are fixed. No new finding remains.
+
+### In flight
+
+PR #1 is ready for owner merge. Build and CI checks remain deferred because this PR defines the solution and workflows that PR-1 creates.
+
+### Traps and gotchas
+
+- The reviewed effective head is `223aae8`.
+- The review file is machine-read. Keep its head field and verdict exact.
+- The owner must still register the runner and move the checkout to the SSD before PR-1.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner can merge PR #1. Then complete the SSD and runner actions before starting PR-1.
+
 ## Session 8: 2026-09-07, Codex
 
 Author: Codex
@@ -58,6 +93,10 @@ Session: answer the PR #1 review. Branch `docs/roadmaps`, part of PR #1.
 - Ran the regression check that P2-2 specifies. It found three more defects of the same class. The new phase-1 range `D-156 to D-168` swallowed the revised D-158, `phase-2-first-playable.md` had the same defect in `D-157 to D-168`, and phase-1 line 465 cited D-158 with no revision marker. All three are fixed.
 - A wider sweep found two older ones: `docs/design.md:28` cited D-136 alone, and `phase-3-full-loop.md:372` cited D-94 alone. Both now name the revising decision.
 - Refined D-178. A line passes the reference check when it holds a revision word or when it names the revising decision. Without that clause the check fails on F-34, F-46, and four correct `D-94, D-152` pairs.
+- The owner asked for a neutral grey check instead of a permanent red one. Verified first that GitHub counts a neutral or skipped conclusion as a success for a required check. Source: docs.github.com, "About status checks", 2026-09-07. A plain grey-when-absent gate would therefore stop blocking at launch (F-51).
+- D-181 gives `review-gate` three conclusions and two modes. In `advisory` mode a missing review file is neutral. In `enforced` mode it is a failure. The repository variable `REVIEW_GATE_MODE` selects the mode, and an absent or unknown value fails the job (T-2).
+- A workflow job cannot set a neutral conclusion by its exit code. The job publishes a check run through the Checks API, so the workflow needs `checks: write`.
+- D-181 revises D-179. D-180 is not revised, because D-181 only adds a step to its launch procedure.
 - Rewrote `.claude/skills/pr-review/SKILL.md` for the format. It now holds a review file skeleton, the three machine-read fields, a finding format with stable `P<severity>-<n>` ids, the attribution boundary of D-176, the gate rules, a ten-step repeat review procedure, and the response file contract.
 
 ### State of the build
@@ -84,6 +123,9 @@ PR #1 needs a repeat review by Codex against the new head.
 - `docs/reviews/pr-1.md` now records head `60087b0` and holds four findings. P2-2 is the open one, and this session fixed it.
 - A decision range in a header can swallow a revised decision. Write `D-156, D-157, D-159 to D-168`, not `D-156 to D-168`, when D-158 is revised.
 - The roadmap header is a scope summary. Update line 3 and line 9 whenever a PR entry, a measurement, or a governing decision changes.
+- Never write a decision range that spans a revised id. D-179 is revised, so a header says `D-176 to D-178, D-180, and D-181`.
+- Grey is correct only in advisory mode. Never use a neutral conclusion for an enforced gate (F-51).
+- The `review-gate` job stays green itself. The check run it publishes carries the color, so the Checks list holds two rows.
 
 ### Open questions that block progress
 
