@@ -9,9 +9,10 @@ Session: repeat review of PR #1 after the neutral review-gate change.
 
 ### What this session did, and why
 
-- Rechecked PR #1 at effective head `8efb267`, including the D-181, D-182, and D-183 changes.
+- Rechecked PR #1 at effective head `6e45d6f`, including the D-181, D-182, and D-183 changes.
 - Confirmed the prior four findings remain fixed.
 - Added P1-3 to `docs/reviews/pr-1.md`: PR-1 does not define how `REVIEW_GATE_MODE=advisory` is created.
+- Added P1-4: the required review commit changes the handoff path and invalidates its own effective head.
 
 ### State of the build
 
@@ -21,13 +22,14 @@ Session: repeat review of PR #1 after the neutral review-gate change.
 
 ### In flight
 
-PR #1 needs an owner setup step or bootstrap mechanism for the required review-gate repository variable.
+PR #1 needs an owner setup step or bootstrap mechanism for the required review-gate repository variable, and a metadata-path correction for the effective-head rule.
 
 ### Traps and gotchas
 
 - D-181 forbids a default for an absent or unknown `REVIEW_GATE_MODE`.
 - The PR-1 roadmap says it sets the variable, but the scope contains no repository-state action.
-- The effective head is `8efb267`.
+- D-182 and D-183 require the review record and handoff in one commit, but D-179 excludes only `docs/reviews/`.
+- The effective head at review start is `6e45d6f`.
 
 ### Open questions that block progress
 
@@ -35,7 +37,7 @@ No new owner question. OQ-12 remains open for PR-9.
 
 ### Next concrete action
 
-Define the advisory-mode variable setup, revise PR #1, and request another repeat review.
+Define the advisory-mode variable setup, correct the metadata-path rule, revise PR #1, and request another repeat review.
 
 ## Session 10: 2026-09-07, Claude Code
 
