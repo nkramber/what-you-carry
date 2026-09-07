@@ -9,13 +9,15 @@ External facts, verified 2026-09-07:
 - The Steam Direct fee is 100 USD per app. Steam credits it after 1,000 USD adjusted gross revenue. Source: partner.steamgames.com, "Steam Direct Fee".
 - The Apple Developer Program fee is 99 USD per year. Source: Apple Developer Program pages, via search summaries.
 
-Not verified: the .NET LTS version that Godot 4.7.2 supports (OQ-2).
+Verified 2026-09-07: the .NET LTS pin is .NET 10 LTS (D-173). Godot 4.7 accepts .NET 8 or later.
 
 2026-09-07 correction pass: v2 refuted or superseded fourteen v1 claims. Each stays in the register (F-1 to F-14) with its correction and date. The v1 file stays in the archive unchanged.
 
+2026-09-07 PR #1 review pass: the cross-provider review in `docs/reviews/pr-1.md` raised three findings. The response is `docs/reviews/pr-1-response.md`. The register records them as F-47 to F-49, and D-176 to D-178 resolve them.
+
 2026-09-07 audit pass: the repository audit in `docs/reviews/2026-09-07-repository-audit.md` found nine defects, R-1 to R-9. All nine have merit. The register records them as F-28 to F-36, and D-148 to D-154 resolve them. The response file `docs/reviews/2026-09-07-repository-audit-response.md` gives each disposition. F-37 records a repository state the audit session left behind.
 
-2026-09-07 settings correction pass: the Claude Code startup dialog rejected `.claude/settings.json`. D-172 set `attribution.commit` and `attribution.pr` to booleans, and the schema requires strings. D-175 sets empty strings. F-15 records the refuted claim.
+2026-09-07 settings correction pass: the Claude Code startup dialog rejected `.claude/settings.json`. D-172 set `attribution.commit` and `attribution.pr` to booleans, and the schema requires strings. D-175 revises D-172 and sets empty strings. F-15 records the refuted claim.
 
 Text rules: this file follows ASD-STE100 (D-139). Tables are exempt from sentence-length counts.
 
@@ -220,7 +222,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-12 | v1 used Python for the texture generator, against one language | 2026-09-06 | 🔧 D-65. Binds PR-14 |
 | F-13 | v1 determinism matrix omitted Windows x64, the largest audience and the second dev machine | 2026-09-06 | 🔧 D-71. Binds PR-3 |
 | F-14 | v1 had no v1 scope in numbers | 2026-09-06 | ✅ doc. D-56 |
-| F-15 | The harness default adds a co-author trailer to commits. D-137 forbids it | 2026-09-06 | 🔧 D-172 turns it off for Claude Code. Refuted 2026-09-07: D-172 set booleans, the schema requires strings, and the harness ignored the whole file. D-175 sets empty strings. Codex unverified. PR-1's trailer scan binds every PR |
+| F-15 | The harness default adds a co-author trailer to commits. D-137 forbids it | 2026-09-06 | 🔧 Refuted 2026-09-07: D-172 set booleans, the schema requires strings, and the file was ignored. D-175 revises D-172 and sets empty strings. Codex unverified. The PR-1 attribution scan binds every PR (D-176) |
 | F-16 | The borrowed ste-writing skill carried another project's names and a Python checker | 2026-09-07 | ✅ doc (skills created). 🔧 Checker binds PR-2 |
 | F-17 | D-97 rewinds five seconds on resume. A quit undoes five seconds | 2026-09-07 | ⏸ Accepted by the owner |
 | F-18 | All music is generated (D-93). Quality is unproven | 2026-09-07 | ❓ Owner ear at each phase gate. Binds PR-50 |
@@ -252,6 +254,9 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-44 | The Deck verification checklist is an external fact with no source or date in the plan | 2026-09-07 | ❓ OQ-66. Binds PR-54 |
 | F-45 | D-152 changed the save files, and no item names which files cloud saves sync | 2026-09-07 | ❓ OQ-71. Binds PR-52 |
 | F-46 | D-158 required branch protection, and GitHub returned 403: the feature needs Pro or a public repository, against D-106 | 2026-09-07 | ✅ doc. D-170 defers protection until launch |
+| F-47 | PR #1 review P1-1: a commit body implied that an agent wrote the commits, and T-6 had no stated boundary for a tool name | 2026-09-07 | ✅ doc. D-176 fixes the reading. The commit body is rewritten. Binds PR-1 exit test 6 |
+| F-48 | PR #1 review P1-2: PR-11 created the `night-gate` job and the night job together, so the gate had no result to read on its first run, against G-19 | 2026-09-07 | 🔧 D-177 splits them. PR-58 adds the gate after one night runs. Binds PR-11, PR-58 |
+| F-49 | PR #1 review P2-1: six lines cited D-172 or OQ-2 as a current answer after D-173 and D-175 revised them | 2026-09-07 | ✅ doc. All six corrected. 🔧 D-178 adds a reference check to PR-2 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -297,7 +302,7 @@ Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundat
 ### Phase 1: Foundations (foundation gate, D-150: CI green on three platforms with a bit-identical end state, docs and PR gate live, no playtest)
 
 **PR-1: Repository scaffold.** 🔧
-Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry.Tools`, and `WhatYouCarry.Tests` (D-108). Pin Godot 4.7.2 .NET and the .NET LTS it supports (D-61, D-62, OQ-2). Create `CLAUDE.md` and `AGENTS.md` as identical pointer files with a test that asserts equality (D-122). Add the GitHub Actions workflow that builds and runs `dotnet test` on Linux x64, macOS arm64, and Windows x64 (D-148). Add a PR template with the gate checklist and the "no change needed because" lines (D-118). The template has a line that names each absent check with the PR that creates it (D-148). The attribution option is in place (D-172). Needs the external SSD (D-145) and the runner (D-171). No game code.
+Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry.Tools`, and `WhatYouCarry.Tests` (D-108). Pin Godot 4.7.2 .NET and .NET 10 LTS (D-61, D-62, D-173). Create `CLAUDE.md` and `AGENTS.md` as identical pointer files with a test that asserts equality (D-122). Add the GitHub Actions workflow that builds and runs `dotnet test` on Linux x64, macOS arm64, and Windows x64 (D-148). Add a PR template with the gate checklist and the "no change needed because" lines (D-118). The template has a line that names each absent check with the PR that creates it (D-148). The attribution option is in place (D-175). Needs the external SSD (D-145) and the runner (D-171). No game code.
 Gate: `dotnet build` and `dotnet test` pass on all three platforms.
 > *In plain English:* this makes the empty project with its four parts and the rules files that every future session reads first. It adds nothing that plays. It is safe because it changes no behavior.
 
@@ -347,9 +352,14 @@ Gate: the projectile property tests pass over the test-only definitions. PR-24 a
 > *In plain English:* bullets and arrows are real objects that fly, drop, and can miss. Tests prove a fast bullet never passes through a wall.
 
 **PR-11: Bot harness (Tier 2).** 🔧
-Implement the headless runner at one hundred times speed and the first two policies: random walker and greedy descender (D-127, D-149). Later PRs add a policy with the system it exercises: full-clearer with PR-16, timer-tester with PR-17, coward with PR-18. Each run writes a structured run log with the policy name, seed, and end state. Add a few hundred runs to the PR job and ten thousand to the night job (D-115). A night failure blocks the next merge.
+Implement the headless runner at one hundred times speed and the first two policies: random walker and greedy descender (D-127, D-149). Later PRs add a policy with the system it exercises: full-clearer with PR-16, timer-tester with PR-17, coward with PR-18. Each run writes a structured run log with the policy name, seed, and end state. Add a few hundred runs to the PR job and ten thousand to the night job (D-115). The night job publishes a result record. PR-58 adds the gate that reads it (D-177).
 Gate: ten thousand night runs of the two policies complete with zero crashes and zero softlocks.
 > *In plain English:* simple robots play thousands of runs every night without graphics. They find crashes and dead ends before a person ever sees them.
+
+**PR-58: Night gate.** 🔧
+Add the `night-gate` job to the PR workflow. It reads the result record that the PR-11 night job publishes (D-177). The gate passes only on a success record from a scheduled night in the last 48 hours. An absent, stale, cancelled, or failed record fails the gate, and the message names the case (D-115, T-2). This entry follows PR-11 in the sequence, after one scheduled night runs (G-19).
+Gate: the job fails each of the four bad records and passes on the real night record.
+> *In plain English:* every merge now needs a green night from the robots. A missing or old result stops the merge, so nobody can merge on silence.
 
 **M-1: CI wall time per PR.** 🔧
 Record the wall time of each CI job per platform for ten PRs. Binds the seed counts in D-116 if a PR job exceeds ten minutes.
@@ -565,15 +575,15 @@ Gate: a forced assertion produces a report a session can replay.
 
 ## 8. Sequence (strict order, single owner, rewritten 2026-09-07)
 
-One person owns the program. Items run one at a time in this order. The list changed on 2026-09-07 after the repository audit (D-147, D-149, D-150). The audit findings come first. PR-57 enters Phase 2. PR-32 precedes PR-27. Gate 1 is a foundation gate.
+One person owns the program. Items run one at a time in this order. The list changed on 2026-09-07 after the repository audit (D-147, D-149, D-150). The audit findings come first. PR-57 enters Phase 2. PR-58 enters Phase 1. PR-32 precedes PR-27. Gate 1 is a foundation gate.
 
 1. Address every audit finding (D-147). ✅ Done 2026-09-07: D-148 to D-154, F-28 to F-37.
 2. Owner: receive the external SSD and move the checkout to it (D-145).
-3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-172. ✅ OQ-30: D-156. Protection deferred: D-170.
+3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170.
 4. PR-1, PR-2.
 5. PR-3, PR-4, PR-5.
 6. PR-6, PR-7, PR-8.
-7. PR-9, PR-10, PR-11.
+7. PR-9, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).
 8. M-1, M-2.
 9. **← GATE 1 (foundation).** Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green.
 10. PR-12, PR-13, PR-57, PR-14.

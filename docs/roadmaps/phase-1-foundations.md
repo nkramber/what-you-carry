@@ -65,7 +65,7 @@ Exit tests:
 3. `CoreReferencesNoEngine` reads the Core project file and asserts no package reference and no project reference (G-1).
 4. The CI workflow has one job per platform, and the macOS job selects the self-hosted runner label.
 5. The PR description names the STE checker, the lint tool, and the bit-identity job as absent, with PR-2 and PR-3 (D-148).
-6. No commit in the PR carries a co-author trailer or a generation line (T-6, D-172).
+6. No commit subject or body in the PR names an agent, harness, or model as the source of the work (T-6, D-175, D-176). The scan covers co-author trailers and generation lines.
 
 Review focus: Core boundary, input and CI boundaries, dependencies, documents.
 
@@ -90,7 +90,9 @@ Scope:
 - A numbered item counts as a procedural step, with the 20-word limit, only inside a section whose heading contains "Sequence" or "Procedure". Every other numbered item uses the 25-word limit.
 - Exempt by path: `docs/reviews/`, `docs/session-handoff.md`, `docs/session-handoff-archive.md`, `docs/archive/`. Exempt by block: tables and fenced code.
 - Output: one line per finding with file, line, rule id, and the sentence. A non-zero exit code on any finding.
-- A CI job `ste-check` that runs the command on every non-exempt `.md` file.
+- A reference check that reads the `Effect` column of `docs/decisions.md` (D-178). It reports each file outside that register that cites a revised decision as a current answer.
+- The reference check skips a line that holds `revises`, `revised by`, or `supersedes`. That line is revision history.
+- A CI job `ste-check` that runs the command and the reference check on every non-exempt `.md` file.
 
 Out of scope: the STE dictionary, spell checks, term consistency.
 
@@ -101,12 +103,14 @@ Exit tests:
 3. `FixtureFindsEveryRule` runs the checker on a fixture file with one violation per rule and asserts one finding per rule.
 4. The `ste-check` CI job exists and runs on the PR.
 5. The PR description names the lint tool and the bit-identity job as absent, with PR-3 (D-148).
+6. `RepositoryCitesNoRevisedDecision` runs the reference check on the repository and asserts zero findings.
+7. `ReferenceCheckFindsAStaleCitation` runs the check on a fixture that cites a revised decision and asserts one finding.
 
 Review focus: errors, input boundaries, documents, test quality.
 
 Check clause: the lint tool and the bit-identity job do not exist. PR-3 creates them. This PR passes its own checker (G-19).
 
-Gate: exit tests 1 to 5 pass.
+Gate: exit tests 1 to 7 pass.
 
 > *In plain English:* this adds a tool that reads every document and reports each sentence that breaks the text rules. Documents are the project's memory, so the tool guards that memory.
 
@@ -346,9 +350,9 @@ Scope:
 - `WhatYouCarry.Tools/BotRunner/`: a command that runs N runs for a policy over a seed range, headless, with no sleep between ticks (D-115, D-127). It writes one JSONL run log per run through the PR-4 logger.
 - Policies in Core, each a few dozen lines (D-149): `RandomWalker` holds a random movement and jump for a random number of ticks, then picks again. `GreedyDescender` walks the reachability path to the stairwell and always descends.
 - Run end states: `bottom` at floor 15, `softlock` after a tick budget with no floor progress, and `crash` on any exception. The log holds the exception.
-- CI: the PR job runs one hundred seeds per policy. A scheduled night job on the self-hosted macOS runner (D-157) runs five thousand seeds per policy (D-115, D-117). A `night-gate` job in the PR workflow reads the latest night result and fails when it is not a success.
+- CI: the PR job runs one hundred seeds per policy. A scheduled night job on the self-hosted macOS runner (D-157) runs five thousand seeds per policy (D-115, D-117). The night job publishes a result record with the commit, the end time, and the status. PR-58 adds the gate that reads it (D-177).
 
-Out of scope: the coward, full-clearer, and timer-tester policies (PR-16 to PR-18), Tier 3.
+Out of scope: the `night-gate` job (PR-58, D-177), the coward, full-clearer, and timer-tester policies (PR-16 to PR-18), Tier 3.
 
 Exit tests:
 
@@ -358,15 +362,45 @@ Exit tests:
 4. `GreedyDescenderReachesBottom` asserts the `bottom` end state on one hundred seeds.
 5. The PR job completes two hundred runs with zero crashes.
 6. The night job completes ten thousand runs with zero crashes and zero softlocks.
-7. `NightGateFailsOnRedNight` asserts that the gate job fails on a fixture night result of failure.
+7. `NightResultIsPublished` asserts that the night job writes a record with the commit, the end time, and the status.
 
 Review focus: determinism, errors, input and CI boundaries, test quality.
 
-Check clause: none.
+Check clause: the `night-gate` job does not exist. PR-58 creates it (D-148, D-177, G-19).
 
 Gate: exit tests 1 to 7 pass.
 
 > *In plain English:* simple robots play thousands of runs every night without graphics. They find crashes and dead ends before a person ever sees them, and a bad night stops the next merge.
+
+### PR-58: Night gate
+
+Scope:
+
+- A `night-gate` job in the PR workflow. It reads the result record that the PR-11 night job publishes (D-177).
+- The gate passes only on a success record from a scheduled night that ran in the last 48 hours.
+- The gate fails on an absent record, a stale record, a cancelled record, and a failed record (D-115, D-177).
+- Each failure message names the case, the record commit, and the record time (T-2, D-113).
+- This PR opens only after one scheduled night runs, so a real record exists for the gate to read (G-19).
+
+Out of scope: the night job itself (PR-11), the Tier 3 policies (PR-16 to PR-18).
+
+Exit tests:
+
+1. `NightGateFailsOnRedNight` asserts a failure on a fixture record of failure.
+2. `NightGateFailsOnMissingResult` asserts a failure on an empty result store.
+3. `NightGateFailsOnStaleResult` asserts a failure on a fixture record older than 48 hours.
+4. `NightGateFailsOnCancelledResult` asserts a failure on a fixture record of cancellation.
+5. `NightGatePassesOnGreenNight` asserts a pass on a fixture success record inside the window.
+6. Each failure message names the case and the record time (T-2).
+7. The `night-gate` job runs on this PR and passes against the real night record (G-19).
+
+Review focus: errors, CI boundaries, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 7 pass, and the job passes on this PR.
+
+> *In plain English:* every merge now needs a green night from the robots. A missing or old night result stops the merge, so nobody can merge on silence.
 
 ### M-1: CI wall time per PR
 
@@ -381,7 +415,7 @@ Procedure: after PR-11, read the night job duration for seven nights. Record the
 One person owns the program. Items run one at a time in this order. Each PR opens only after the one before it merges.
 
 1. Owner: receive the SSD and move the checkout to it (D-145).
-2. Owner: register the runner on 2026-09-08 per `docs/runbooks/macos-runner.md` (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-172. Protection deferred: D-170.
+2. Owner: register the runner on 2026-09-08 per `docs/runbooks/macos-runner.md` (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. Protection deferred: D-170.
 3. PR-1.
 4. PR-2.
 5. ✅ OQ-33 to OQ-35 answered 2026-09-07: D-159 to D-161.
@@ -398,8 +432,10 @@ One person owns the program. Items run one at a time in this order. Each PR open
 16. PR-9.
 17. PR-10.
 18. PR-11.
-19. M-1 table complete. M-2 table complete.
-20. **← GATE 1 (foundation).** Every exit test in this file passes. The bit-identity job, `dotnet test`, and the night sweep are green. The owner signs the gate in `docs/decisions.md`.
+19. One scheduled night runs on the runner (D-177).
+20. PR-58.
+21. M-1 table complete. M-2 table complete.
+22. **← GATE 1 (foundation).** Every exit test in this file passes. The bit-identity job, `dotnet test`, and the night sweep are green. The owner signs the gate in `docs/decisions.md`.
 
 ## 6. Open questions
 
@@ -409,7 +445,7 @@ Open:
 
 - OQ-12: the biome. Blocks PR-9.
 - OQ-2 resolved 2026-09-07 by D-173: .NET 10 LTS. D-169 is revised.
-- OQ-16 resolved 2026-09-07 by D-172: the attribution option is committed.
+- OQ-16 resolved 2026-09-07 by D-175: the attribution option is committed. D-172 is revised.
 
 Resolved 2026-09-07:
 

@@ -2,6 +2,81 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 7: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: answer the PR #1 review. Branch `docs/roadmaps`, part of PR #1.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-1.md` and checked each of the three findings against the branch, the registers, and the PR.
+- P1-2 and P2-1 have full merit. P1-1 has partial merit. The owner approved every disposition. Recorded D-176 to D-178 and F-47 to F-49. Wrote `docs/reviews/pr-1-response.md`.
+- P1-1: T-6 and D-137 prohibit text that names an agent, harness, or model as the source of the work. A tool name that identifies a configured file is not attribution, so the broad reading in the finding would also condemn D-172, D-175, OQ-16, F-15, the PR description, and the settings file path. D-176 states the boundary. The body of the head commit is rewritten, because one clause implied that an agent wrote the commits. PR-1 exit test 6 now scans every subject and body, not only trailers.
+- P1-2: PR-11 created the night job and the `night-gate` job together, so the gate had no result to read on its first run, against G-19. D-177 splits them. PR-11 publishes a result record. The new PR-58 adds the gate after one night runs. An absent, stale, cancelled, or failed record fails the gate.
+- P2-1: fixed all six stale references. The review named five. A sweep found a sixth at `phase-1-foundations.md:412`. D-178 adds a reference check to the PR-2 checker, so the next revision cannot leak.
+
+### State of the build
+
+- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds eleven commits. The head commit was amended, so the branch needs a force push.
+- No code, solution, or CI workflow exists. PR-1 creates them.
+- `CLAUDE.md` and `AGENTS.md` are byte-identical.
+
+### In flight
+
+PR #1 needs a repeat review by Codex against the new head.
+
+### Traps and gotchas
+
+- The head commit was amended. The review file `docs/reviews/pr-1.md` names head `9459534`, which no longer exists.
+- D-176 fixes the attribution reading. Do not strip a tool name that identifies a configured file, a schema, or a version. Strip a claim about the source of the work.
+- The owner squash-merges (D-126). GitHub fills the squash body with every commit message. Check that body before the merge.
+- PR-58 is new. Phase 1 now ends with PR-11, one scheduled night, PR-58, then the measurements and Gate 1.
+- Ids never change. PR-58 sits after PR-11 in the sequence, not after PR-57.
+- The PR-2 reference check skips a line that holds `revises`, `revised by`, or `supersedes`. The two F-15 history lines were reworded to hold that word.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session reviews PR #1 again against the new head, per `.claude/skills/pr-review/SKILL.md`. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
+
+## Session 6: 2026-09-07, Codex
+
+Author: Codex
+Session: review PR #1 on `docs/roadmaps`.
+
+### What this session did, and why
+
+- Read the handoff, agent rules, review skill, STE skill, design, decisions, questions, existing reviews, and focused roadmaps.
+- Verified PR #1 at base `1c16c45` and head `9459534`.
+- Wrote `docs/reviews/pr-1.md` with three findings and a Changes required verdict.
+
+### State of the build
+
+- No solution or implementation exists on the reviewed head.
+- The diff passes `git diff --check`.
+- The agent files remain byte-identical. The settings file parses as JSON.
+
+### In flight
+
+PR #1 needs a revision. The review identifies prohibited attribution in a commit body, an undefined first-run path for `night-gate`, and stale references to D-172 and the unresolved OQ-2 state.
+
+### Traps and gotchas
+
+- T-6 applies to commit bodies as well as commit subjects.
+- D-175 supersedes D-172. D-173 supersedes D-169.
+- PR-11 creates the night result and the gate. The empty-result case needs an explicit contract.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Revise PR #1, then run a repeat review against the new head. Recheck the commit history, the first night-gate run, and every current-status reference to the revised decisions.
+
 ## Session 5: 2026-09-07, Claude Code
 
 Author: Claude Code
