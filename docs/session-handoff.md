@@ -2,6 +2,49 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 43: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: the scope rules for the `pr-review` skill. Branch `docs/pr-review-scope`.
+
+### What this session did, and why
+
+- The owner asked for a skill change after the PR #12 review. That review reopened one finding four times and another one three times (F-70).
+- Each pass found a real defect, and each correction was right. The sum went past the PR-3 scope, which names a lint tool for the banned symbols of G-2 and G-21. Five owner decisions, D-204 to D-208, came from that one boundary.
+- Added a "Stay inside the pull request" section. The roadmap entry for the PR and its exit tests set the boundary. Four tests say a concern is in scope, and four say a later PR holds it.
+- Added the `## Out of scope` heading to the review record skeleton. A line there names the PR that holds the concern, takes no severity, and never gives the verdict `Changes required`.
+- Added the rule for a new check. A PR that creates a check must pass that check (G-19), and the check does not cover the whole platform on the first day.
+- Added a "When a finding closes" section. A finding closes when its stated trigger and its regression check pass. A new trigger of the same class takes a new id. The third assessment of one id stops, and the owner settles the scope.
+- Added two rows to the author push-back table, for a finding outside the scope and for a third reopen.
+- The section states in two places that it never lowers the standard for the code that a PR changes. The risk of a scope rule is a dodged defect, and each PR #12 finding stayed a defect under these rules.
+- D-209 records the owner decision. This PR changes only `.claude/skills/`, `docs/`, and no code.
+
+### State of the build
+
+- `main` is at `86078b8`. This branch holds one commit above it.
+- Remote head: `origin/docs/pr-review-scope` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `ste-check` reports 0 findings in 15 files. A planted sentence proved that the checker reads the skill file.
+- This branch changes no code, so the build, the tests, and the bit-identity job are unchanged from `main`.
+
+### In flight
+
+PR #12 is open with the PR-3 work, and it waits for a repeat review at head `3fd32c4`. This PR is separate, because a skill change and the determinism work are two concerns (G-10).
+
+### Traps and gotchas
+
+- `git checkout <file>` restores from HEAD and drops every uncommitted edit in that file. This session lost the whole skill change that way and wrote it again. Commit first, or copy the file.
+- This branch starts at `main`, so its registers hold no D-200 to D-208 and no session 28 to 42. Those live on the PR #12 branch. D-209 and session 43 avoid both ranges.
+- The owner merges PR #12 first. This branch then needs a rebase, and `docs/decisions.md` and `docs/session-handoff.md` are the two files that conflict.
+- A scope rule can hide a real defect. Each rule here names the code that the PR changes as the part that keeps the full standard.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner adds the `review-override` label to this PR and merges it, because it changes no code (D-190). Then the PR #12 review continues under the new rules.
+
 ## Session 27: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -342,40 +385,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 The owner adds the `review-override` label to the proof PR and merges it. Then a new session starts PR-2, the STE checker (D-121: one session, one PR).
-
-## Session 18: 2026-09-08, Codex
-
-Author: Codex
-Session: review PR #6. Branch `feat/pr-1-scaffold`.
-
-### What this session did, and why
-
-- Reviewed PR #6 at head `39db1f9` against base and merge base `546a70a`.
-- Confirmed the opposite-provider gate. The PR author is Claude Code, and the reviewer is Codex.
-- Found two P1 defects in the review gate. The workflow runs PR-controlled evaluator code with `checks: write`. A PR author can replace an approved review record in a metadata-only commit.
-- Wrote `docs/reviews/pr-6.md` with the verdict `Changes required`.
-
-### State of the build
-
-- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
-- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 32 tests and 0 failures.
-- GitHub reports passing Linux, Windows, and macOS CI for PR #6. The custom review-gate check is neutral until the review record approves the head.
-- The Godot command did not run because `Godot` is not on this checkout's command path.
-
-### In flight
-
-PR #6 needs both P1 findings corrected and a repeat review at the new effective head.
-
-### Traps and gotchas
-
-- The review-gate workflow checks out the PR head and runs `WhatYouCarry.Tools` from that head.
-- The effective-head rule excludes `docs/reviews/`, so it does not detect a review-file replacement.
-- PR #6 has GitHub base `546a70a`, while `main` now points to `4ec9708`.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Correct P1-1 and P1-2, then request a repeat review of PR #6.
