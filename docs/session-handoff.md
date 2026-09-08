@@ -2,6 +2,46 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 36: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the fourth PR #12 review. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- The fourth review kept P2-3 and P2-6 open. Both reproduce, so both have full merit.
+- P2-3 reopened for the fourth time. `System.ComponentModel.TypeDescriptor.GetProperties` compiles in Core and gave no finding. Each pass named one more type: namespace text, member words, `System.Enum`, then `TypeDescriptor`.
+- The denylist was the defect, not its contents. `System.Linq.Expressions`, `System.Text.Json`, `System.Runtime.Serialization`, and `System.Dynamic` all reach type metadata under no name that a rule held. A fifth pass was likely.
+- The owner chose the namespace allowlist (D-205, OQ-78, F-66). Core uses `System`, `System.Collections.Generic`, `System.Globalization`, `System.Numerics`, `System.Runtime.CompilerServices`, and any namespace under `WhatYouCarry.`. Each entry matches one namespace and never its children, so `System` does not approve `System.ComponentModel`.
+- The type denylist stays for the cases inside an approved namespace. `TypeDescriptor` joined it too, so the review's regression check reads `L-REFLECTION` and not the wider rule.
+- Core used two namespaces, so the rule changed no Core file. An adversarial run reported all five planted uses, and three of them name a namespace that no denylist ever held.
+- P2-6, second pass. The description named head `5316033` and session 28 after the first correction. It now names the effective head and the current session.
+- 172 tests pass. The bit-identity hash is unchanged, because no Core number changed.
+
+### State of the build
+
+- `main` is at `86078b8`. The branch holds four review commits and four correction commits above it.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 172 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged.
+
+### Traps and gotchas
+
+- A denylist over a library the size of the class library never ends. Four review passes proved it on this PR. Turn the boundary around and approve what enters.
+- An allowlist entry matches one namespace and never its children. `System` must not approve `System.ComponentModel`, so the match is exact.
+- Keep the type denylist beside the allowlist. `System.Math` and `System.Type` sit inside an approved namespace, and only the denylist reaches them.
+- A specific rule id carries more than a wide one. `TypeDescriptor` sits in both lists, so the finding says reflection and not namespace.
+- The PR description is part of the record (D-118), and a review reads it. Update it with each correction, and name the effective head in it.
+
+### Open questions that block progress
+
+No new owner question. OQ-78 is resolved by D-205. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
+
 ## Session 35: 2026-09-08, Codex
 
 Author: Codex
@@ -389,38 +429,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 The owner merges PR #11 with the `review-override` label. Then a new session starts PR-3: the seeded RNG, DetMath, the lint tool, and the bit-identity CI job.
-
-## Session 26: 2026-09-07, Codex
-
-Author: Codex
-Session: repeat review of PR #10. Branch `feat/pr-2-ste-check`.
-
-### What this session did, and why
-
-- Re-reviewed PR #10 at effective head `b9bc6cd` against base and merge base `94aadc5`.
-- Confirmed that P2-1 to P2-4 are resolved.
-- Updated `docs/reviews/pr-10.md` to `Ready for owner merge`.
-
-### State of the build
-
-- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
-- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 63 tests and 0 failures.
-- The repository checker reports 0 findings in 15 files.
-- The Godot 4.7.2 headless build check passes with the installed executable.
-
-### In flight
-
-PR #10 is ready for owner merge.
-
-### Traps and gotchas
-
-- The mask pass must protect every delimiter inside an earlier masked span.
-- The review commit is metadata. The review head remains `b9bc6cd` under D-184.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-The owner merges PR #10. Then PR-3 starts with the seeded RNG, DetMath, the lint tool, and the bit-identity job.

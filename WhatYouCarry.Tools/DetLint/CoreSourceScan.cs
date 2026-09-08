@@ -250,6 +250,14 @@ public static class CoreSourceScan
             return;
         }
 
+        // The allowlist is the last word on the owner. A namespace that nobody approved is a finding, so a
+        // surface that no denylist names cannot reach Core (D-205).
+        if (!IsAllowedNamespace(owner.ContainingNamespace))
+        {
+            findings.Add(Create(name, path, "L-NAMESPACE", fullUsed, BannedSymbols.NamespaceDetail));
+            return;
+        }
+
         AddProducedTypeFinding(findings, symbol, name, path, used);
     }
 
@@ -285,7 +293,30 @@ public static class CoreSourceScan
         if (BannedNamespace(producedType.ContainingNamespace.ToDisplayString()) is BannedSymbols.BannedName bannedNamespace)
         {
             findings.Add(Create(name, path, bannedNamespace.Rule, used, $"{used} gives back {producedName}. {bannedNamespace.Detail}"));
+            return;
         }
+
+        if (!IsAllowedNamespace(producedType.ContainingNamespace))
+        {
+            findings.Add(Create(name, path, "L-NAMESPACE", used, $"{used} gives back {producedName}. {BannedSymbols.NamespaceDetail}"));
+        }
+    }
+
+    /// <summary>
+    /// Answers whether Core may use a namespace. Each approved entry matches one namespace and never its
+    /// children, so `System` does not approve `System.ComponentModel` (D-205).
+    /// </summary>
+    private static bool IsAllowedNamespace(INamespaceSymbol space)
+    {
+        // A type with no namespace comes from the compilation itself, never from the class library.
+        if (space.IsGlobalNamespace)
+        {
+            return true;
+        }
+
+        string full = space.ToDisplayString();
+        return full.StartsWith(BannedSymbols.ProjectNamespacePrefix, StringComparison.Ordinal)
+            || BannedSymbols.AllowedNamespaces.Contains(full);
     }
 
     /// <summary>Adds a MathF finding unless the file is the one DetMath file and the member is an exact operation.</summary>

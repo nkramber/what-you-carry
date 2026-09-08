@@ -190,3 +190,9 @@ How to file a question (D-124, D-138):
     - the symbols now, and a ban when a Core file first needs a branch.
 
     Recommendation: the ban. The second option cannot be complete, and a gate with a known hole is worse than a stricter rule. Core holds no conditional directive today. Resolved 2026-09-08: D-204, the ban.
+78. **OQ-78. The reflection boundary of the lint tool.** Raised 2026-09-08 (PR #12 review P2-3, fourth pass). Blocks PR-3. The review reopened the reflection finding four times, and each pass named one more type: namespace text, then member words, then `System.Enum`, then `System.ComponentModel.TypeDescriptor`. Options:
+    - a namespace allowlist for Core, with the type denylist kept for the cases inside an approved namespace.
+    - the new type added, and a hand audit of the remaining class library surface.
+    - the allowlist as a warning, with no effect on the exit code.
+
+    Recommendation: the allowlist. No audit can complete a denylist over the class library, and each gap ships green until someone finds it. Core used two namespaces on this date. Resolved 2026-09-08: D-205, the allowlist.

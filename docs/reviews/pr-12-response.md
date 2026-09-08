@@ -2,7 +2,7 @@
 
 Date: 2026-09-08
 
-This file answers `docs/reviews/pr-12.md`. The passes answer the review of head `c2ba592`, and the repeat reviews of heads `1bc665b` and `5316033`.
+This file answers `docs/reviews/pr-12.md`. The passes answer the review of head `c2ba592`, and the repeat reviews of heads `1bc665b`, `5316033`, and `549c75c`.
 
 ## Summary
 
@@ -136,9 +136,49 @@ Correction: the description now holds a table of all six findings and their stat
 ## New ids, second and third pass
 
 - D-204: Core holds no conditional compilation. Resolves OQ-77.
+- D-205: the Core namespace allowlist. Resolves OQ-78.
 - OQ-77: the P2-5 correction. Resolved by D-204.
+- OQ-78: the reflection boundary of the lint tool. Resolved by D-205.
 - F-65: the conditional compilation gap.
-- F-64 now records all three P2-3 passes.
+- F-66: the denylist that four passes could not complete.
+- F-64 now records all four P2-3 passes.
+
+## P2-3, fourth pass: the denylist itself was the defect
+
+Disposition: full merit, and the correction goes wider than the finding asks.
+
+The trigger reproduces. `System.ComponentModel.TypeDescriptor.GetProperties(object)` compiles in the Core project, checked with `dotnet build`, and gave 0 findings at `549c75c`.
+
+The review asks for two things: the `TypeDescriptor` surface, and an audit of the remaining class library surfaces. The first has a plain correction. The second cannot end, and this response says so with the record of this review as the evidence.
+
+P2-3 reopened four times. Each pass named one more thing the denylist missed:
+
+| Pass | Head | What the denylist missed |
+|---|---|---|
+| 1 | `c2ba592` | reflection that never spells `System.Reflection` |
+| 2 | `1bc665b` | `Type.GetEvents`, and a false report on a Core `probe.GetMethods` |
+| 3 | `5316033` | `System.Enum` |
+| 4 | `549c75c` | `System.ComponentModel.TypeDescriptor` |
+
+The class library holds more of these. `System.Linq.Expressions`, `System.Text.Json`, `System.Runtime.Serialization`, and `System.Dynamic` each reach type metadata without a name that any current rule holds. A fifth pass was likely.
+
+The owner selected the structural answer (D-205). Core may use only an approved namespace, and `det-lint` reports every other one as `L-NAMESPACE`. The approved set is `System`, `System.Collections.Generic`, `System.Globalization`, `System.Numerics`, `System.Runtime.CompilerServices`, and any namespace under `WhatYouCarry.`. Each entry matches one namespace and never its children, so `System` does not approve `System.ComponentModel`.
+
+The type denylist stays, for the cases inside an approved namespace: `System.Math`, `System.Type`, `System.Enum`, `System.Random`, `System.DateTime`, and the rest. `System.ComponentModel.TypeDescriptor` also joins it, so the review's regression check reads `L-REFLECTION` and not the wider rule.
+
+Core used two namespaces on this date, `System` and `System.Globalization`, so the rule changed no Core file.
+
+Regression check: `TypeDescriptorIsAReflectionFinding` covers the review trigger. `ANamespaceOutsideTheAllowlistIsAFinding` covers `System.Text`, `System.Linq.Expressions`, `System.Text.Json`, `System.Collections`, and `System.Threading`. `AnApprovedNamespaceIsNotAFinding` and `AProjectNamespaceIsNotAFinding` guard the other side. Every prior probe test stays green.
+
+An adversarial run against the real Core tree reported all five planted uses, and three of those five name a namespace that no denylist ever held.
+
+## P2-6, second pass: the head and the session number
+
+Disposition: full merit.
+
+The description carried the semantic scan and 160 tests after the first correction, and it still named head `5316033` and session 28. Both were stale.
+
+Correction: the description now names the effective head, the current session, and the current review state. This response also records that the description changes with each correction, because the PR record is part of the documentation set (D-118).
 
 ## Verification
 

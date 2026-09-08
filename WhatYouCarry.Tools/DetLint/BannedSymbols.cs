@@ -61,6 +61,7 @@ public static class BannedSymbols
         ["System.RuntimeMethodHandle"] = new("L-REFLECTION", "A runtime handle names a method at run time. Core is static (G-2)."),
         ["System.RuntimeFieldHandle"] = new("L-REFLECTION", "A runtime handle names a field at run time. Core is static (G-2)."),
         ["System.Runtime.CompilerServices.RuntimeHelpers"] = new("L-REFLECTION", "RuntimeHelpers reads the object identity and the type at run time. Core is static (G-2)."),
+        ["System.ComponentModel.TypeDescriptor"] = new("L-REFLECTION", "TypeDescriptor reads the type metadata at run time, beside reflection. Core is static (G-2)."),
         ["System.Numerics.Vector"] = new("L-SIMD", "A hardware vector gives another result width on another platform (G-2)."),
         ["System.Numerics.Vector2"] = new("L-SIMD", "A System.Numerics vector may use SIMD. Core declares its own types (G-2)."),
         ["System.Numerics.Vector3"] = new("L-SIMD", "A System.Numerics vector may use SIMD. Core declares its own types (G-2)."),
@@ -87,6 +88,35 @@ public static class BannedSymbols
     /// is the entry to every reflection call, and the value can reach a place that names no banned type (F-64).
     /// </summary>
     public const string TypeOfDetail = "typeof gives back System.Type, which reads the type at run time. Core is static (G-2).";
+
+    /// <summary>
+    /// The namespaces that Core may use (D-205). Every other namespace is a finding, so a metadata surface that
+    /// no denylist names, such as `System.ComponentModel` or `System.Linq.Expressions`, cannot reach Core.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Each entry matches one namespace and never its children. `System` does not allow `System.ComponentModel`.
+    /// A later Core PR that needs another namespace adds it here, with a decision that says why (G-16, F-66).
+    /// </para>
+    /// <para>
+    /// A denylist over the whole class library cannot be complete. The PR #12 review reopened the reflection
+    /// finding four times, and each pass named one more type. This list turns the boundary around.
+    /// </para>
+    /// </remarks>
+    public static readonly IReadOnlySet<string> AllowedNamespaces = new HashSet<string>
+    {
+        "System",
+        "System.Collections.Generic",
+        "System.Globalization",
+        "System.Numerics",
+        "System.Runtime.CompilerServices",
+    };
+
+    /// <summary>The prefix of this project's own namespaces. Core may use any namespace under it.</summary>
+    public const string ProjectNamespacePrefix = "WhatYouCarry.";
+
+    /// <summary>The reason that the scan gives for a namespace outside <see cref="AllowedNamespaces"/>.</summary>
+    public const string NamespaceDetail = "Core may use only an approved namespace, so a metadata or platform surface cannot enter without a decision (G-2, G-16, D-205).";
 
     /// <summary>
     /// The reason that the scan gives for a conditional compilation directive (D-204, F-65). A `#if` makes two

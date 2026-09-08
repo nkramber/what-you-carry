@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 26: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #10. Branch `feat/pr-2-ste-check`.
+
+### What this session did, and why
+
+- Re-reviewed PR #10 at effective head `b9bc6cd` against base and merge base `94aadc5`.
+- Confirmed that P2-1 to P2-4 are resolved.
+- Updated `docs/reviews/pr-10.md` to `Ready for owner merge`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 63 tests and 0 failures.
+- The repository checker reports 0 findings in 15 files.
+- The Godot 4.7.2 headless build check passes with the installed executable.
+
+### In flight
+
+PR #10 is ready for owner merge.
+
+### Traps and gotchas
+
+- The mask pass must protect every delimiter inside an earlier masked span.
+- The review commit is metadata. The review head remains `b9bc6cd` under D-184.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner merges PR #10. Then PR-3 starts with the seeded RNG, DetMath, the lint tool, and the bit-identity job.
+
 ## Session 25: 2026-09-08, Claude Code
 
 Author: Claude Code

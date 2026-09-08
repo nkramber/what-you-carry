@@ -281,6 +281,70 @@ public sealed class DetLintTests
     }
 
     /// <summary>
+    /// TypeDescriptor reads type metadata beside reflection, so it carries the reflection rule id (F-66).
+    /// </summary>
+    [Fact]
+    public void TypeDescriptorIsAReflectionFinding()
+    {
+        // The review trigger. It compiles in Core, and the old scan reported nothing.
+        Assert.Contains(
+            Scan("public static class A { public static object B(object o) => System.ComponentModel.TypeDescriptor.GetProperties(o); }"),
+            finding => finding.Rule == "L-REFLECTION");
+    }
+
+    /// <summary>
+    /// A namespace that nobody approved is a finding, whatever it holds (D-205, F-66). A denylist over the class
+    /// library cannot be complete, so the allowlist is the last word.
+    /// </summary>
+    [Theory]
+    [InlineData("public static object B() => new System.Text.StringBuilder();")]
+    [InlineData("public static object B() => System.Linq.Expressions.Expression.Constant(1);")]
+    [InlineData("public static object B(string s) => System.Text.Json.JsonDocument.Parse(s);")]
+    [InlineData("public static object B() => new System.Collections.ArrayList();")]
+    [InlineData("public static object B() => System.Threading.Thread.CurrentThread;")]
+    public void ANamespaceOutsideTheAllowlistIsAFinding(string member)
+    {
+        Assert.Contains(
+            Scan($"public static class A {{ {member} }}"),
+            finding => finding.Rule == "L-NAMESPACE");
+    }
+
+    /// <summary>Every approved namespace stays legal, and so does a namespace of this project.</summary>
+    [Theory]
+    [InlineData("public static object B() => new System.InvalidOperationException(\"x\");")]
+    [InlineData("public static object B() => new System.Collections.Generic.List<int>();")]
+    [InlineData("public static string B(int i) => i.ToString(System.Globalization.CultureInfo.InvariantCulture);")]
+    [InlineData("public static int B(uint u) => System.Numerics.BitOperations.PopCount(u);")]
+    [InlineData("public static uint B(float f) => System.BitConverter.SingleToUInt32Bits(f);")]
+    public void AnApprovedNamespaceIsNotAFinding(string member)
+    {
+        Assert.Empty(Scan($"public static class A {{ {member} }}"));
+    }
+
+    /// <summary>A type of this project is never a namespace finding, at any depth.</summary>
+    [Fact]
+    public void AProjectNamespaceIsNotAFinding()
+    {
+        Assert.Empty(Scan("""
+            namespace WhatYouCarry.Core.World.Deep
+            {
+                public struct Block
+                {
+                    public byte Id;
+                }
+            }
+
+            namespace WhatYouCarry.Core.Determinism
+            {
+                public static class A
+                {
+                    public static byte B(WhatYouCarry.Core.World.Deep.Block block) => block.Id;
+                }
+            }
+            """));
+    }
+
+    /// <summary>
     /// Conditional compilation in Core is a finding (D-204, F-65). The Core build defines the target-framework
     /// symbol, so a `#if NET10_0` branch compiles while a lint that defines no symbol reads an empty branch.
     /// </summary>
