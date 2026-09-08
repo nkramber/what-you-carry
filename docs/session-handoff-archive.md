@@ -2,6 +2,41 @@
 
 Entries older than the 10 newest sessions move here from `docs/session-handoff.md` (D-146). Newest first.
 
+## Session 9: 2026-09-07, Codex
+
+Author: Codex
+Session: final repeat review of PR #1 on `docs/roadmaps`.
+
+### What this session did, and why
+
+- Rechecked PR #1 at effective head `223aae8`.
+- Confirmed the P2-2 fix and reviewed the effective-head command clarification.
+- Updated `docs/reviews/pr-1.md` with a Ready for owner merge verdict.
+
+### State of the build
+
+- No solution or implementation exists on the reviewed head.
+- The diff check passes. The agent files remain identical. The settings file parses as JSON.
+- All four prior findings are fixed. No new finding remains.
+
+### In flight
+
+PR #1 is ready for owner merge. Build and CI checks remain deferred because this PR defines the solution and workflows that PR-1 creates.
+
+### Traps and gotchas
+
+- The reviewed effective head is `223aae8`.
+- The review file is machine-read. Keep its head field and verdict exact.
+- The owner must still register the runner and move the checkout to the SSD before PR-1.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner can merge PR #1. Then complete the SSD and runner actions before starting PR-1.
+
 ## Session 8: 2026-09-07, Codex
 
 Author: Codex

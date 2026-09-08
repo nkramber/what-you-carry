@@ -54,7 +54,7 @@ Scope:
 - `project.godot` and the Game project file on `Godot.NET.Sdk` at the pinned version (D-61).
 - `.github/workflows/ci.yml` with three jobs: build and test on hosted Linux x64, hosted Windows x64, and the self-hosted macOS arm64 runner (D-100, D-148, OQ-31).
 - `.github/pull_request_template.md` with the gate checklist and one "no change needed because" line per document (D-118). It has one line that names each absent check with the PR that creates it (D-148).
-- `.github/workflows/review-gate.yml` on the `pull_request_target` event (D-179, D-181, D-185, D-197). GitHub runs the workflow file and the tool from the base branch, and the job fetches the PR head as data only. The event types are `opened`, `reopened`, `synchronize`, `labeled`, and `unlabeled`. The two label types make the check run again when the owner adds or removes the label (D-190). It needs `checks: write`, `contents: read`, and `pull-requests: read`.
+- `.github/workflows/review-gate.yml` on the `pull_request_target` event (D-179, D-181, D-185, D-197). GitHub runs the workflow file and the tool from the base branch, and the job fetches the PR head as data only. GitHub triggers the event only when the file exists on the default branch (F-58), so the check first runs on the PR after PR-1. The event types are `opened`, `reopened`, `synchronize`, `labeled`, and `unlabeled`. The two label types make the check run again when the owner adds or removes the label (D-190). It needs `checks: write`, `contents: read`, and `pull-requests: read`.
 - The job first reads the labels of the PR. The label `review-override` selects the override path of D-190, and the job then applies the override rules below.
 - Without that label, the job reads the PR number and applies three rules:
   - `docs/reviews/pr-<number>.md` exists on the PR head.
@@ -120,7 +120,7 @@ Exit tests:
 
 Review focus: Core boundary, input and CI boundaries, dependencies, documents.
 
-Check clause: the STE checker, the lint tool, and the bit-identity job do not exist. PR-2 and PR-3 create them. Branch protection does not exist, so `review-gate` is advisory until launch (D-170, D-180).
+Check clause: the STE checker, the lint tool, and the bit-identity job do not exist. PR-2 and PR-3 create them. Branch protection does not exist, so `review-gate` is advisory until launch (D-170, D-180). The `review-gate` check does not run on PR-1 itself (D-197, F-58). A throwaway PR against `main` after the merge proves it.
 
 Gate: exit tests 1 to 25 pass.
 

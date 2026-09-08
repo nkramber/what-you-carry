@@ -2,6 +2,45 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 19: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the PR #6 review. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Read the two P1 findings in `docs/reviews/pr-6.md` and assessed each against the evidence.
+- P1-1 has full merit. The `pull_request` event ran the tool from the PR head with `checks: write`. The owner chose `pull_request_target` (D-197). The workflow now checks out the base, fetches the PR head as data, and runs the base-branch tool. `ReviewGateRunsOnPullRequestTarget` covers it.
+- P1-2 has partial merit. The rewrite of a review file reproduces, and the requested identity check cannot be built, because every commit has one identity and no signature. The owner accepted the risk under D-190 (D-198). The output now names the commit that last changed the review file. Two tests cover it.
+- Opened PR #7, a throwaway adversarial PR against the PR-1 branch, to prove the trusted evaluator live. GitHub produced no run. The events reference says `pull_request_target` triggers only when the workflow file exists on the default branch (F-58). Closed PR #7 and deleted the branch.
+- Wrote `docs/reviews/pr-6-response.md`, D-197, D-198, F-56 to F-58, and the roadmap corrections.
+
+### State of the build
+
+- `main` is at `4ec9708`. The branch holds the scaffold, the D-196 records, the Codex review, the `9624cfa` fix, and this entry.
+- `dotnet build` and `dotnet test` pass on the Mac Mini: 35 tests, 0 failures. CI passed on the three platforms at `9624cfa`.
+- No `review-gate` check runs on PR #6 from `9624cfa` on. `main` has no workflow, and the head workflow no longer uses `pull_request` (D-197, F-58). The last gate run, on the review commit `4b5add8`, gave the correct failure for `Changes required`.
+
+### In flight
+
+PR #6 waits for a repeat Codex review of the diff since `39db1f9`. After the merge, a throwaway PR against `main` with an always-approve evaluator proves D-197, and the response file records the run.
+
+### Traps and gotchas
+
+- `pull_request_target` reads the trigger from the default branch. A workflow on a feature branch never runs for that event, and a PR against that branch gives no error, only silence (F-58).
+- A `pull_request_target` run lists the base branch as its head branch in `gh run list`. Do not filter by the PR branch.
+- The gate cannot see PR #6 until the merge. The owner merges PR #6 on the review record alone, as for PR #1 to PR #5.
+- The identity of a commit proves nothing about the provider (D-198). Read the "Review file last changed by" line in the check output.
+- The adversarial proof must never merge. Close the PR and delete the branch after the run.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session reviews the diff since `39db1f9` and updates `docs/reviews/pr-6.md`. Then the owner merges. Then a session opens the throwaway adversarial PR against `main`, records the run in the response file, closes it, and starts PR-2.
+
 ## Session 18: 2026-09-08, Codex
 
 Author: Codex
@@ -389,38 +428,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 A Codex session reviews the diff from `223aae8` to `4f7796e` and updates `docs/reviews/pr-1.md` to the new effective head. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
-
-## Session 9: 2026-09-07, Codex
-
-Author: Codex
-Session: final repeat review of PR #1 on `docs/roadmaps`.
-
-### What this session did, and why
-
-- Rechecked PR #1 at effective head `223aae8`.
-- Confirmed the P2-2 fix and reviewed the effective-head command clarification.
-- Updated `docs/reviews/pr-1.md` with a Ready for owner merge verdict.
-
-### State of the build
-
-- No solution or implementation exists on the reviewed head.
-- The diff check passes. The agent files remain identical. The settings file parses as JSON.
-- All four prior findings are fixed. No new finding remains.
-
-### In flight
-
-PR #1 is ready for owner merge. Build and CI checks remain deferred because this PR defines the solution and workflows that PR-1 creates.
-
-### Traps and gotchas
-
-- The reviewed effective head is `223aae8`.
-- The review file is machine-read. Keep its head field and verdict exact.
-- The owner must still register the runner and move the checkout to the SSD before PR-1.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-The owner can merge PR #1. Then complete the SSD and runner actions before starting PR-1.
