@@ -215,7 +215,7 @@ Gate: exit tests 1 to 8 pass.
 Scope:
 
 - `Core/Logging/ILogSink.cs`: where a finished line goes. Core opens no file (D-211).
-- `Core/Logging/JsonlLogger.cs`: one JSON object per line, with a required field set per context (D-68, D-113). Every line also carries a level and a message (D-212), and `StringBuilder` builds it (D-213). The run context requires seed, floor, tick, subsystem, and entity ids. The hub context requires save versions, screen, action, and file paths. The logger throws on an absent required field.
+- `Core/Logging/JsonlLogger.cs`: one JSON object per line, with a required field set per context (D-68, D-113). Every line also carries a level and a message (D-212), and `StringBuilder` builds it (D-213). A field name is an identifier, and invalid text in one is an error. A value and a message take the replacement character in place of invalid text (F-73, F-77). The run context requires seed, floor, tick, subsystem, and entity ids. The hub context requires save versions, screen, action, and file paths. The logger throws on an absent required field.
 - `Core/Logging/Invariant.cs`: `Assert` that writes a full report and continues where the caller marks the call safe, and throws elsewhere (D-112). The report holds the context, the message, and the call site that the compiler names (D-215). It walks no stack, because a stack trace changes with the build and the platform.
 - `Core/Logging/ContextException.cs`: an exception type that carries the context and adds to it on each rethrow.
 

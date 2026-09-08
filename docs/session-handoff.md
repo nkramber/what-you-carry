@@ -2,6 +2,47 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 52: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the second PR #15 repeat review. Branch `feat/pr-4-logging`.
+
+### What this session did, and why
+
+- The review closed P2-3, P2-5, and P2-6, and it opened P2-7. That one has full merit, and the F-73 correction caused it.
+- P2-7. The replacement character stood in place of a lone surrogate everywhere, and a field name took it too. A field named with a lone high surrogate and one named with a lone low surrogate both reached the object as one property name, which is the ambiguity that F-72 removed.
+- The split is the fix. A field name is an identifier that the code writes, and it must reach the line unchanged, so invalid text in one is an error at the add. A value and a message carry content from the run, and those keep the replacement and never throw (F-77).
+- The same pass flattened the add path. `AddField` called `Has`, which put it two levels below the caller, and the new name scan would have made a third. `AddField` calls no method now (D-110).
+- The review used D-217 for the first time. It made four edits to the PR description and recorded each one under `## Description edits`. Every edit is correct, and none changes what the PR says it does.
+- 1 new test. The total is 234.
+
+### State of the build
+
+- `main` is at `51b3de7`. The branch holds the PR-4 work, three review commits, and three correction commits.
+- Remote head: `origin/feat/pr-4-logging` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 234 tests and 0 failures.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged.
+
+### In flight
+
+PR #15 needs a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- A fix for content can break an identifier. The replacement character is right for a message and wrong for a field name, because two names can then reach the object as one.
+- The response file states the name and value split as a Core contract, and no owner decision holds it. The owner can make it a decision.
+- A depth fix and a new check meet. `AddField` was already two levels below its caller, and the name scan would have made a third, so the method calls nothing now.
+- D-217 works. The reviewer corrected four stale facts in the description in the same pass that found P2-7.
+
+### Open questions that block progress
+
+No new owner question. No open question blocks PR-5 to PR-11.
+
+### Next concrete action
+
+A Codex session re-reviews PR #15 per the repeat review procedure, and it updates `docs/reviews/pr-15.md` to the new effective head.
+
 ## Session 51: 2026-09-08, Codex
 
 Author: Codex
@@ -403,43 +444,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 A Codex session re-reviews PR #12 under the new scope rules, and updates `docs/reviews/pr-12.md` to the new effective head.
-
-## Session 42: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the seventh PR #12 review. Branch `feat/pr-3-determinism`.
-
-### What this session did, and why
-
-- The seventh review kept P2-6 and P2-9 open. Both reproduce, so both have full merit.
-- P2-9, third pass. The type allowlist approved every member of an approved type. `new CultureInfo("en-US", useUserOverride: true)`, `string.Intern(v)`, and `string.IsInterned(v)` each gave no finding, and the .NET contract names the user settings and the process intern pool.
-- The gap moved from the namespace to the type, and the type still approved its whole surface. A member denylist would miss `new CultureInfo("en-US")`, which has the same behavior as the two-argument form.
-- A measurement found six members and two constructors of an outside type in Core. The owner chose the member allowlist with the overload arity (D-208, OQ-81, F-69).
-- The arity closes a gap that no trigger named. `UInt64.ToString/2` takes a format provider, and `ToString/0` reads the current culture. The same split binds `Parse`, `TryParse`, and `Compare`.
-- Two corrections came from a run and not from the finding. A named argument carries a containing type and is not a member of it, so `useUserOverride:` gave a false finding until the rule read a method, a property, a field, and an event alone. `Object.GetType` joined the member denylist, so it keeps the `L-REFLECTION` id.
-- P2-6, fourth pass. The decision section counted rows and not ids, the P2-6 row named a session that the description no longer holds, and the summary named the pass count and the newest review head. All three are corrected.
-- 193 tests pass. The bit-identity hash is unchanged, because no Core number changed.
-
-### State of the build
-
-- `main` is at `86078b8`. The branch holds seven review commits and seven correction commits above it.
-- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 193 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged.
-
-### Traps and gotchas
-
-- The boundary moved four times: namespace, then `System` type, then every type, then every member. Each level approved the whole of the level below it. A member entry with an overload arity is the first form with nothing below it to leak.
-- A named argument and a local both carry a containing type. Read a method, a property, a field, and an event alone.
-- Keep a specific rule id beside the wide one. `Object.GetType` sits in the member denylist, so the finding says reflection and not member.
-- An overload is not a behavior. `ToString/0` and `ToString/2` differ, and so do the `Parse` and `Compare` families.
-- A description that names a pass count or a review head goes stale at the next review. Name the effective head alone.
-
-### Open questions that block progress
-
-No new owner question. OQ-81 is resolved by D-208. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.

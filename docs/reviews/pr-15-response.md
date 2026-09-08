@@ -2,7 +2,7 @@
 
 Date: 2026-09-08
 
-This file answers `docs/reviews/pr-15.md`. The first pass answers the review of head `41206bb`. The second pass answers the repeat review of head `e42a0a8`.
+This file answers `docs/reviews/pr-15.md`. The passes answer the review of head `41206bb`, and the repeat reviews of heads `e42a0a8` and `d530f4c`.
 
 ## Summary
 
@@ -104,6 +104,27 @@ Correction: D-214 states the counts in the code, 9 types and 18 members, and the
 
 The owner also gave the reviewer a way to end this class of finding. D-217 lets a review correct a stale fact in the PR description directly, and record each edit under `## Description edits`. The PR #12 review reopened its description finding four times, and this one reopened once (F-76).
 
+## P2-7: Distinct accepted field names collapse to one JSON property name
+
+Disposition: full merit. The F-73 correction caused this one.
+
+The trigger reproduces. A field named `\uD800` and a field named `\uDC00` both reached the object as a property named with the replacement character, so the line held two properties of one name. That is the ambiguity that F-72 removed for the reserved names, and the surrogate fix brought it back for any name.
+
+The review names the cause exactly. Replacement is right for content and wrong for an identifier.
+
+Correction: `LogFields.AddField` rejects a name that holds a surrogate without its pair, with the position in the context. A value and a message keep the replacement and never throw, because those carry content from the run and a logger that throws on a message is a poor tool for a crash report.
+
+This is the split that the review offers as the F-73 policy, and this response states it as the contract:
+
+- A field name is an identifier that the code writes. It must reach the line unchanged, so invalid text in one is an error.
+- A value and a message carry content from the run. Invalid text in either one takes the replacement character.
+
+The same pass also flattened the add path. `AddField` called `Has`, which put it two levels below the caller, and the new name scan would have made a third. `AddField` calls no method now, so the whole add path is one level (D-110).
+
+This response states a Core contract that no owner decision holds. The owner can make it a decision, and the code and the two documents carry it either way.
+
+Regression check: `TwoNamesNeverCollapseToOneProperty` covers the review trigger, and it then builds a line with a valid surrogate pair in a name and asserts that every property name is its own. `AnUnpairedSurrogateKeepsTheLineValid` asserts the rejection for a name and the replacement for a value and a message, over four rows and five shapes each.
+
 ## Verification
 
 - The four review triggers, run against `41206bb` before any correction: three of three runtime probes failed, and the helper trace matched the finding.
@@ -134,3 +155,18 @@ The owner also gave the reviewer a way to end this class of finding. D-217 lets 
 ## Final head
 
 The final head of this answer is the commit that holds this file.
+
+## Verification, third pass at `d530f4c`
+
+- The P2-7 trigger, run before the correction: two properties of one name, and the contract assertion failed with 2 against 1.
+- `dotnet build WhatYouCarry.slnx -m:1`: 0 warnings, 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1`: 234 tests, 0 failures.
+- `det-lint --root .`: 0 findings in 11 Core files.
+- `ste-check --root .`: 0 findings in 15 files.
+- `bit-identity`: `4d6385bb92454694`, unchanged.
+
+## New ids, third pass
+
+- F-77: the two field names that reached the object as one.
+
+The review used D-217 for the first time. It made four edits to the PR description and recorded each one under `## Description edits`. Every edit is correct, and none of them changes what this PR says it does.

@@ -1,5 +1,45 @@
 # Session handoff archive
 
+## Session 42: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the seventh PR #12 review. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- The seventh review kept P2-6 and P2-9 open. Both reproduce, so both have full merit.
+- P2-9, third pass. The type allowlist approved every member of an approved type. `new CultureInfo("en-US", useUserOverride: true)`, `string.Intern(v)`, and `string.IsInterned(v)` each gave no finding, and the .NET contract names the user settings and the process intern pool.
+- The gap moved from the namespace to the type, and the type still approved its whole surface. A member denylist would miss `new CultureInfo("en-US")`, which has the same behavior as the two-argument form.
+- A measurement found six members and two constructors of an outside type in Core. The owner chose the member allowlist with the overload arity (D-208, OQ-81, F-69).
+- The arity closes a gap that no trigger named. `UInt64.ToString/2` takes a format provider, and `ToString/0` reads the current culture. The same split binds `Parse`, `TryParse`, and `Compare`.
+- Two corrections came from a run and not from the finding. A named argument carries a containing type and is not a member of it, so `useUserOverride:` gave a false finding until the rule read a method, a property, a field, and an event alone. `Object.GetType` joined the member denylist, so it keeps the `L-REFLECTION` id.
+- P2-6, fourth pass. The decision section counted rows and not ids, the P2-6 row named a session that the description no longer holds, and the summary named the pass count and the newest review head. All three are corrected.
+- 193 tests pass. The bit-identity hash is unchanged, because no Core number changed.
+
+### State of the build
+
+- `main` is at `86078b8`. The branch holds seven review commits and seven correction commits above it.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 193 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged.
+
+### Traps and gotchas
+
+- The boundary moved four times: namespace, then `System` type, then every type, then every member. Each level approved the whole of the level below it. A member entry with an overload arity is the first form with nothing below it to leak.
+- A named argument and a local both carry a containing type. Read a method, a property, a field, and an event alone.
+- Keep a specific rule id beside the wide one. `Object.GetType` sits in the member denylist, so the finding says reflection and not member.
+- An overload is not a behavior. `ToString/0` and `ToString/2` differ, and so do the `Parse` and `Compare` families.
+- A description that names a pass count or a review head goes stale at the next review. Name the effective head alone.
+
+### Open questions that block progress
+
+No new owner question. OQ-81 is resolved by D-208. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
+
 ## Session 41: 2026-09-08, Codex
 
 Author: Codex

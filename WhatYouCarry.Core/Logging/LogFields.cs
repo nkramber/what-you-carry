@@ -115,6 +115,17 @@ public sealed class LogFields
         return false;
     }
 
+    /// <summary>
+    /// Checks one name and keeps the field. This method calls no other one, so the whole add path is one level
+    /// below the caller (D-110).
+    /// </summary>
+    /// <remarks>
+    /// A field name is an identifier that the code writes, and a name must reach the line unchanged. The writer
+    /// puts the replacement character in place of a lone surrogate, so two names that differ only there would
+    /// reach the object as one name, and a reader could then take either value. A name with a lone surrogate is
+    /// a defect of the caller, and it is an error here (T-2, F-77). A value and a message carry content from the
+    /// run, so those keep the replacement and never throw (F-73).
+    /// </remarks>
     private void AddField(string name, string value, bool quoted)
     {
         if (name.Length == 0)
@@ -133,11 +144,36 @@ public sealed class LogFields
             throw reserved;
         }
 
-        if (this.Has(name))
+        for (int index = 0; index < name.Length; index++)
         {
-            ContextException error = new($"The log field '{name}' is already present, and a JSON object with two equal names has no defined reading.");
-            error.AddContext("field", name);
-            throw error;
+            char letter = name[index];
+            bool isHighSurrogate = letter >= '\uD800' && letter <= '\uDBFF';
+            bool isLowSurrogate = letter >= '\uDC00' && letter <= '\uDFFF';
+            if (!isHighSurrogate && !isLowSurrogate)
+            {
+                continue;
+            }
+
+            // A high surrogate with its low partner is one character, and the name keeps it.
+            if (isHighSurrogate && index + 1 < name.Length && name[index + 1] >= '\uDC00' && name[index + 1] <= '\uDFFF')
+            {
+                index++;
+                continue;
+            }
+
+            ContextException invalid = new("A log field name must hold valid text, and this one holds a surrogate without its pair.");
+            invalid.AddContext("position", ((long)index).ToString(CultureInfo.InvariantCulture));
+            throw invalid;
+        }
+
+        foreach (LogField field in this.fields)
+        {
+            if (field.Name == name)
+            {
+                ContextException repeated = new($"The log field '{name}' is already present, and a JSON object with two equal names has no defined reading.");
+                repeated.AddContext("field", name);
+                throw repeated;
+            }
         }
 
         this.fields.Add(new LogField(name, value, quoted));

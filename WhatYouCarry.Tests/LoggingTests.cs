@@ -237,10 +237,14 @@ public sealed class LoggingTests
             CollectingSink sink = new();
             JsonlLogger logger = new(sink);
 
-            // The value stands in a field value, in a field name, and in the message of one line.
+            // A field name is an identifier, and a lone surrogate in one is an error (F-77).
+            LogFields names = RunFields();
+            ContextException error = Assert.Throws<ContextException>(() => names.Add("name" + value, "a value"));
+            Assert.Contains("surrogate", error.Message, StringComparison.Ordinal);
+
+            // A value and a message carry content from the run, and those take the replacement (F-73).
             LogFields fields = RunFields();
             fields.Add("path", value);
-            fields.Add("name" + value, "a value");
             logger.Write(LogContextKind.Run, LogLevel.Info, value, fields);
 
             string line = Assert.Single(sink.Lines);
@@ -255,6 +259,36 @@ public sealed class LoggingTests
         }
 
         Assert.NotEmpty(label);
+    }
+
+    /// <summary>
+    /// Two field names that differ only in a lone surrogate would reach the object as one name, because the
+    /// writer puts the replacement character in place of each one. The add rejects such a name, so every
+    /// accepted name stays its own property (F-77).
+    /// </summary>
+    [Fact]
+    public void TwoNamesNeverCollapseToOneProperty()
+    {
+        // The review trigger. Both names were accepted, and the object then held two properties of one name.
+        LogFields fields = new();
+        Assert.Throws<ContextException>(() => fields.Add("\uD800", "first"));
+        Assert.Throws<ContextException>(() => fields.Add("\uDC00", "second"));
+        Assert.Empty(fields.Fields);
+
+        // Every accepted name gives one property, and no two share a name.
+        LogFields accepted = RunFields();
+        accepted.Add("a\U0001F600b", "a pair is valid text");
+        accepted.Add("plain", "a value");
+
+        System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(JsonlLogger.BuildLine(LogLevel.Info, "m", accepted));
+        List<string> names = [];
+        foreach (System.Text.Json.JsonProperty property in document.RootElement.EnumerateObject())
+        {
+            Assert.DoesNotContain(property.Name, names);
+            names.Add(property.Name);
+        }
+
+        Assert.Equal(accepted.Fields.Count + 2, names.Count);
     }
 
     /// <summary>A matched surrogate pair is one character, and it reads back as the same text.</summary>
