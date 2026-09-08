@@ -171,7 +171,7 @@ Check clause: the lint tool and the bit-identity job do not exist. PR-3 creates 
 
 Gate: exit tests 1 to 9 pass.
 
-Result, 2026-09-08: every exit test passes. The reference check skips the exempt paths too, because a dated record is history, and a rewrite to name the reviser falsifies it. The checker treats a colon as a sentence end everywhere (8.4), and text in backticks, quotes, or parentheses as one opaque word (8.5, 8.6). The `ste-writing` skill records the rules and the exemptions.
+Result, 2026-09-08: every exit test passes. The reference check skips the exempt paths too, because a dated record is history, and a rewrite to name the reviser falsifies it. The checker treats a colon that a space follows as a sentence end in any text (8.4). Text in backticks, quotes, or parentheses is one opaque word, and parentheses can nest (8.5, 8.6). The `ste-writing` skill records the rules and the exemptions.
 
 > *In plain English:* this adds a tool that reads every document and reports each sentence that breaks the text rules. Documents are the project's memory, so the tool guards that memory.
 

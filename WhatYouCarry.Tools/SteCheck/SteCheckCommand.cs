@@ -11,15 +11,17 @@ public static class SteCheckCommand
     public static int Run(string[] args)
     {
         string? root = null;
-        for (int i = 0; i + 1 < args.Length; i += 2)
+        int i = 0;
+        while (i < args.Length)
         {
-            if (args[i] == "--root")
+            if (args[i] == "--root" && i + 1 < args.Length)
             {
                 root = args[i + 1];
+                i += 2;
                 continue;
             }
 
-            Console.Error.WriteLine($"Unknown option '{args[i]}'. Options: --root <checkout>.");
+            Console.Error.WriteLine($"Unexpected argument '{args[i]}'. The only option is --root <checkout>, and every argument must belong to it.");
             return 2;
         }
 

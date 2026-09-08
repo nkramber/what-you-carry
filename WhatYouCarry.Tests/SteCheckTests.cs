@@ -180,6 +180,10 @@ public sealed class SteCheckTests
 
             Assert.Equal(2, Program.Main(["ste-check"]));
             Assert.Equal(2, Program.Main(["ste-check", "--file", root]));
+            // Review P2-3: a trailing argument, an extra option, and an option without a value are usage errors.
+            Assert.Equal(2, Program.Main(["ste-check", "--root", root, "trailing-argument"]));
+            Assert.Equal(2, Program.Main(["ste-check", "--root", root, "--unknown"]));
+            Assert.Equal(2, Program.Main(["ste-check", "--root"]));
         }
         finally
         {

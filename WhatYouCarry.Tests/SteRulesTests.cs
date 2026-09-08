@@ -116,6 +116,28 @@ public sealed class SteRulesTests
     }
 
     [Fact]
+    public void ColonInsideAWordDoesNotEndASentence()
+    {
+        // Review P2-1: a colon ends a sentence only when a space or the line end follows it. A time, a ratio, and a URL stay whole.
+        List<Sentence> sentences = Sentences("Read https://www.asd-ste100.org/ at 10:30 in 16:9 today.");
+        Assert.Equal(7, Assert.Single(sentences).WordCount);
+        Assert.Equal(2, Sentences("Options: the value.").Count);
+        Assert.Single(Sentences("Options:the value."));
+    }
+
+    [Fact]
+    public void NestedParenthesesAreOneOpaqueWord()
+    {
+        // Review P2-2: rule 8.5, the complete outer span is one word, and no grammar rule reads inside it.
+        Sentence sentence = Assert.Single(Sentences("Read (the (short) name) now."));
+        Assert.Equal(3, sentence.WordCount);
+        Assert.Equal(["Read", "(the (short) name)", "now."], sentence.Words.Select(SentenceText.Unmask).ToArray());
+        Assert.Empty(Rules("The name (it was written (by hand) once) is short."));
+        // An unclosed span stays plain text.
+        Assert.Equal(5, Assert.Single(Sentences("Read (the (short name now.")).WordCount);
+    }
+
+    [Fact]
     public void HeadingsTablesAndFencesAreNotChecked()
     {
         string text = "# The heading was written by hand\n\n| a | b |\n|---|---|\n| was written | it's |\n\n```\nThe code was written; it's fine.\n```\n\n---\n\nThe prose is clean.\n";

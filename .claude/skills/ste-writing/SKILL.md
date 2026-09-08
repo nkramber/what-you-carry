@@ -170,7 +170,8 @@ An -ing word that is a noun or a technical name passes: nothing, during, warning
 - Tables, fenced code blocks, and thematic breaks are exempt from every rule. Keep cell text short.
 - Headings are titles. They count as one word (8.6). The checker reads no rule on a heading.
 - Text in backticks, in double quotes, or in parentheses is one word (8.5, 8.6). The grammar rules do not read inside it.
-- A colon ends a sentence everywhere, not only in a vertical list (8.4).
+- A colon that a space or the line end follows ends a sentence, in any text and not only in a vertical list (8.4). A colon inside a word, as in a time or a URL, does not.
+- Parentheses can nest. The complete outer span is one word.
 - A sentence stays on one line. The checker reads each line alone, so a sentence that wraps to a second line counts as two.
 - A numbered item is a procedural step only under a heading that holds "Sequence" or "Procedure". The nearest heading above the item decides, at any level.
 - The "plain-English" paragraphs in the design doc are descriptive text. Rule 6.3 applies (max 25 words).

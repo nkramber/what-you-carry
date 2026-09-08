@@ -2,6 +2,87 @@
 
 Entries older than the 10 newest sessions move here from `docs/session-handoff.md` (D-146). Newest first.
 
+## Session 13: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #1 after the D-184 and D-185 corrections. Branch `docs/roadmaps`, part of PR #1.
+
+### What this session did, and why
+
+- Re-reviewed the diff through effective head `e51e272`.
+- Confirmed P1-3 is fixed: the tracked `.github/review-gate-mode` file supplies `advisory`, and the workflow reads it from the base branch (D-185).
+- Confirmed P1-4 is fixed: the review, handoff, and archive paths are metadata, so the required review commit does not change the effective head (D-184).
+- Added P2-3: the F-51 row in `docs/design.md` still names the removed `REVIEW_GATE_MODE` variable as the mode source.
+
+### State of the build
+
+- No code, solution, or CI workflow exists. PR-1 creates them.
+- The effective-head check resolves to `e51e272` after excluding the D-184 metadata set.
+- `AGENTS.md` and `CLAUDE.md` remain byte-identical.
+- The review verdict is Changes required.
+
+### In flight
+
+PR #1 needs the F-51 mode-source text corrected in `docs/design.md`.
+
+### Traps and gotchas
+
+- The current mode source is `.github/review-gate-mode`, not `REVIEW_GATE_MODE` (D-185).
+- The review record must name the effective head, not the metadata commit (D-184).
+- The review and handoff commits must be pushed to the PR branch (D-182, D-183).
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct the F-51 row, then request another repeat review of PR #1.
+
+## Session 12: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: answer the P1-3 and P1-4 findings, and add the push-back rule to the review skill. Branch `docs/roadmaps`, part of PR #1.
+
+### What this session did, and why
+
+- The review at head `6e45d6f` raised P1-3 and P1-4. Both have full merit. Recorded D-184 and D-185 and wrote the dispositions in `docs/reviews/pr-1-response.md`.
+- P1-4: D-182 requires the reviewer to commit the review record with the handoff entry, and the effective head excluded only `docs/reviews/`. The review commit therefore became the effective head and rejected the record it published. Reproduced it. The old rule returned `eab18db` while the record named `6e45d6f`.
+- D-184 defines the metadata set: `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md`. With that set excluded the effective head resolves to `8efb267`, the last substantive commit. The archive is in the set because a handoff rollover writes it in the same commit.
+- P1-3: a workflow cannot create a repository variable, so PR-1 could not pass the check it creates, against G-19. D-185 moves the mode to the tracked file `.github/review-gate-mode`. PR-1 creates it with `advisory`. The workflow reads the file from the base branch, so a PR cannot change the mode that judges it.
+- The owner asked that a request to address review findings load the `pr-review` skill, and that the skill state that a finding is a claim, not a fact. Added an "Address review findings" section with a seven-step procedure and a push-back table. Widened the skill description so the request triggers it.
+- D-185 revises D-181, which made fifteen citations stale. The D-178 check found each one. They now name D-185.
+- The owner then asked how to stop the two recurring problems. Recorded D-186 and D-187, and F-52 and F-53.
+- D-186 splits the revision marker. `Superseded by D-N` replaces the whole answer, and every citation must name D-N. `Revised in part by D-N` changes one named part, and the decision stays citable. The Effect column must name the part that changed and the parts that stand.
+- Reclassified the seven revisions. D-94, D-158, D-169, and D-172 are superseded. D-136, D-179, and D-181 are revised in part. The register already used `Superseded by` for D-10 and D-95, so the verb is not new.
+- The D-178 check now keys on `Superseded by` only. Partial revisions carried 33 of the 48 citations, and they produced all three rounds of churn.
+- D-187 fixes the session number. Fetch the remote and read the handoff again immediately before the handoff commit, then take the highest number and add one. Every session pushes (D-183), so a push serializes the writers. The PR-2 checker fails on a duplicate number.
+
+### State of the build
+
+- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds the review commits and this session's commit.
+- No code, solution, or CI workflow exists. PR-1 creates them.
+- `CLAUDE.md` and `AGENTS.md` are byte-identical.
+
+### In flight
+
+PR #1 needs a repeat review. P1-3 and P1-4 are corrected in documents only, because no workflow exists yet.
+
+### Traps and gotchas
+
+- The effective head excludes three paths now, not one (D-184). A review commit that touches only those paths is metadata.
+- The mode file is read from the base branch, never the PR head (D-185). A PR that edits the mode file does not change its own mode.
+- A finding is a claim, not a fact. Assess it, and refute it with evidence when it does not hold.
+- A partial revision still marks the whole decision as revised, so every citation must name the reviser. D-181 needed fifteen edits.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session reviews the diff since `6e45d6f` and updates `docs/reviews/pr-1.md` to the new effective head. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
+
 ## Session 11: 2026-09-07, Codex
 
 Author: Codex

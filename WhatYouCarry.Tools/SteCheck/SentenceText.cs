@@ -9,7 +9,8 @@ public sealed record Sentence(int Line, string Text, IReadOnlyList<string> Words
 
 /// <summary>
 /// Splits a prose line into sentences and words. A sentence ends at a period, an exclamation mark, a question mark,
-/// or a colon that a space or the line end follows (rule 8.4). Text in backticks, in double quotes, or in parentheses
+/// or a colon that a space or the line end follows (rule 8.4). A colon inside a word, as in a time or a URL, is not
+/// a sentence end. Text in backticks, in double quotes, or in parentheses
 /// is one word (rules 8.5 and 8.6), so the splitter masks its inner spaces and punctuation first. A masked word is
 /// opaque: the grammar rules do not read inside it.
 /// </summary>
@@ -142,6 +143,7 @@ public static class SentenceText
         return MaskSpans(result, '(', ')');
     }
 
+    /// <summary>A span with different open and close characters can nest: "(the (short) name)" is one span (rule 8.5).</summary>
     private static string MaskSpans(string text, char open, char close)
     {
         var builder = new StringBuilder(text.Length);
@@ -149,7 +151,7 @@ public static class SentenceText
         while (index < text.Length)
         {
             int spanStart = text.IndexOf(open, index);
-            int spanEnd = spanStart < 0 ? -1 : text.IndexOf(close, spanStart + 1);
+            int spanEnd = spanStart < 0 ? -1 : FindSpanEnd(text, spanStart, open, close);
             if (spanStart < 0 || spanEnd < 0)
             {
                 builder.Append(text, index, text.Length - index);
@@ -167,6 +169,31 @@ public static class SentenceText
         }
 
         return builder.ToString();
+    }
+
+    /// <summary>The index of the close character that matches the open character at <paramref name="spanStart"/>, or -1 when none does.</summary>
+    private static int FindSpanEnd(string text, int spanStart, char open, char close)
+    {
+        int depth = 0;
+        for (int index = spanStart; index < text.Length; index++)
+        {
+            if (text[index] == open && (open != close || index == spanStart))
+            {
+                depth++;
+                continue;
+            }
+
+            if (text[index] == close)
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    return index;
+                }
+            }
+        }
+
+        return -1;
     }
 
     private static char MaskChar(char c)
