@@ -2,6 +2,50 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 43: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: the scope rules for the `pr-review` skill. Branch `feat/pr-3-determinism`, PR #12.
+
+### What this session did, and why
+
+- The owner asked for a skill change after seven review passes on PR #12. That review reopened one finding four times and another one three times (F-70).
+- Each pass found a real defect, and each correction was right. The sum went past the PR-3 scope, which names a lint tool for the banned symbols of G-2 and G-21. Five owner decisions, D-204 to D-208, came from that one boundary.
+- Added a "Stay inside the pull request" section. The roadmap entry for the PR and its exit tests set the boundary. Four tests say a concern is in scope, and four say a later PR holds it.
+- Added the `## Out of scope` heading to the review record skeleton. A line there names the PR that holds the concern, takes no severity, and never gives the verdict `Changes required`.
+- Added the rule for a new check. A PR that creates a check must pass that check (G-19), and the check does not cover the whole platform on the first day.
+- Added a "When a finding closes" section. A finding closes when its stated trigger and its regression check pass. A new trigger of the same class takes a new id. The third assessment of one id stops, and the owner settles the scope.
+- Added two rows to the author push-back table, for a finding outside the scope and for a third reopen.
+- The section states in two places that it never lowers the standard for the code that a PR changes. Every PR #12 finding stays a defect under these rules.
+- This session first opened PR #13 for the skill change, on the G-10 reading that a skill change and the determinism work are two concerns. The owner asked for it on PR #12 instead. PR #13 is closed, and its branch is deleted.
+
+### State of the build
+
+- `main` is at `86078b8`. This branch holds the PR-3 work and this skill change above it.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 193 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged. This commit changes no code.
+
+### In flight
+
+PR #12 needs a repeat review at the new effective head, under the new scope rules.
+
+### Traps and gotchas
+
+- `git checkout <file>` restores from HEAD and drops every uncommitted edit in that file. This session lost the whole skill change that way and wrote it again. Commit first, or copy the file.
+- A scope rule can hide a real defect. Each rule here names the code that the PR changes as the part that keeps the full standard.
+- The skill file was identical on `main` and on this branch, so the change moved between branches as a whole file. Check that before a copy.
+- A second PR for a second concern is the G-10 reading, and the owner decides when one PR carries both.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session re-reviews PR #12 under the new scope rules, and updates `docs/reviews/pr-12.md` to the new effective head.
+
 ## Session 42: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -383,47 +427,3 @@ No new owner question. OQ-77 is resolved by D-204. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
-
-## Session 33: 2026-09-08, Codex
-
-Author: Codex
-Session: second repeat review of PR #12. Branch `feat/pr-3-determinism`.
-
-### What this session did, and why
-
-- Re-reviewed PR #12 at effective head `5316033` against base and merge base `86078b8`.
-- Confirmed that the provider gate still passes. Claude Code wrote the correction, and Codex reviewed it.
-- Confirmed that the semantic scan fixes the two prior P2-3 probes and the F-# citations.
-- Kept P2-3 open. `Enum.IsDefined` compiles in Core and gives no reflection finding, against G-2 and the Session 28 record.
-- Added P2-5. A `System.Math.Sin` call under active `#if NET10_0` code builds, but the lint reports no finding.
-- Added P2-6. The PR description still reports the removed member word list, 144 tests, and the old effective head.
-- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
-
-### State of the build
-
-- `main` and the merge base are at `86078b8`. The reviewed effective head is `5316033`.
-- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 146 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
-- GitHub reports green CI, lint, STE, and bit-identity jobs at `5316033`.
-- The review-gate results stay red because the review verdict stays `Changes required`.
-
-### In flight
-
-PR #12 needs corrections for P2-3, P2-5, and P2-6, then another repeat review.
-
-### Traps and gotchas
-
-- Reflection APIs also exist outside `System.Type`, `System.Activator`, and the `System.Reflection` namespace.
-- A semantic scan only reads the branch that its parse symbols select.
-- The Core build defines target-framework symbols that the lint compilation does not define.
-- The PR description is part of the evidence record. Update it after a correction changes the implementation.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Correct P2-3 and P2-5, then update the PR description for P2-6. Request another repeat review.

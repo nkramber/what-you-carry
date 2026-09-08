@@ -62,6 +62,30 @@ The PR description states intent. The diff and verified behavior establish what 
 Label an uncommitted patch review as provisional. It cannot satisfy a review gate for an unidentified PR revision.
 If the base or head changes, assess the new diff and affected evidence before a final verdict.
 
+## Stay inside the pull request
+
+A review judges the change in front of it. It does not design the next one.
+
+Read the roadmap entry for this PR and its exit tests before the first finding. Those two texts set the boundary. This section limits the reach of a review. It never lowers the standard for the code that the PR changes.
+
+A concern is in scope when one of these holds:
+
+- The changed code gives a wrong result under a supported condition.
+- The change breaks a caller, a saved file, or a build that exists today.
+- A stated exit test of this PR does not hold.
+- A guardrail that the PR names does not hold for the code that this PR adds.
+
+A concern belongs to a later PR when one of these holds:
+
+- It asks a tool that this PR creates to cover a surface that no exit test names.
+- It asks for behavior that the roadmap gives to a later PR.
+- It repeats a class of defect that this PR corrected, in a surface that this PR does not touch.
+- It needs an owner decision about scope, and not a correction.
+
+Write the second kind under `## Out of scope` in the review record. Name the PR or the roadmap item that holds it. Give it no severity. A line in that section never blocks the merge.
+
+A PR that creates a check must pass that check (G-19). A new check does not cover the whole platform on the first day. A gap in a new tool is a defect of this PR only when a stated exit test names the missing case.
+
 ## Principal-engineer review standard
 
 Build an independent account of the behavior before comparison with the author's explanation.
@@ -171,6 +195,13 @@ Group repeated symptoms under one cause. Identify other affected locations witho
 Do not prescribe a broad rewrite when a smaller correction restores the contract.
 Do not invent findings to meet a quota. A thorough review can produce no actionable findings.
 
+Answer two questions before a finding enters the record:
+
+1. Does the changed code break a contract that this PR names?
+2. Does a stated exit test of this PR fail?
+
+A finding needs one yes. A concern with two answers of no goes under `## Out of scope`.
+
 | Severity | Meaning |
 |---|---|
 | P0 | Immediate critical failure, such as broad durable data loss or a release that cannot start. State the demonstrated scope. |
@@ -178,6 +209,7 @@ Do not invent findings to meet a quota. A thorough review can produce no actiona
 | P2 | A concrete defect or material contract gap under a supported condition. Resolve before merge or obtain an explicit owner disposition. |
 | P3 | An optional improvement with no broken required contract. It does not block merge. |
 
+Scope decides whether a concern enters the table at all. Severity decides how much it blocks. A concern outside the scope of this PR takes no severity.
 Severity describes impact and urgency. It does not replace evidence or the project gate.
 Do not reduce severity because the patch is small or the author calls the change safe.
 Quote both statements when owner decisions conflict. File the question in `docs/questions.md` and stop dependent work (D-124, D-138).
@@ -235,6 +267,11 @@ Name any area that remains uninspected.
 One subsection per finding, in severity order. Use the finding format below.
 Write "No finding." when the review found none.
 
+## Out of scope
+
+One line per concern that a later PR holds. Name that PR or roadmap item.
+Give no severity here. Write "None." when the review found none.
+
 ## Verification
 
 One line per command or check, with its result.
@@ -256,9 +293,10 @@ Give the reason in one or two sentences.
 | Verdict | Required condition |
 |---|---|
 | Blocked | Provider independence, the review target, a necessary owner decision, or required evidence remains unresolved. Record any verified defects too. |
-| Changes required | The eligible review found defects or contract violations that need correction. List the required changes. |
+| Changes required | The eligible review found in-scope defects or contract violations that need correction. List the required changes. |
 | Ready for owner merge | The provider gate passes, the complete scope has review coverage, all required checks pass, and no blocking finding remains. |
 
+A line under `## Out of scope` never gives the verdict `Changes required`.
 No findings does not mean no risk. State material limits without a claim of zero regressions.
 Approval applies only to the recorded revision. A new base or head requires assessment of the changed scope and evidence.
 The owner alone merges the PR (D-102, D-126).
@@ -353,6 +391,14 @@ Do not delete the prior verdict. Replace it, and keep each finding and its histo
 Close a finding only when the evidence establishes the fix or an owner decision resolves it.
 Record any required check that still waits for a result.
 
+### When a finding closes
+
+A finding closes when the correction makes its stated trigger pass and its regression check pass. Set the status to `fixed in <sha>` then.
+
+A new trigger for the same class of defect is a new finding with a new id. Assess that new finding against the scope rules above. It is not a reason to hold the old id open.
+
+Stop at the third assessment of one id. Write the pattern in the review record, and ask the owner whether this PR carries the whole surface, or a later PR does. A fourth correction of one finding is a scope question, and not a defect.
+
 ## Address review findings
 
 Use this section when you answer a review. The author does this work, not the reviewer.
@@ -379,6 +425,8 @@ Push back when the evidence supports it. State the reason and show the proof:
 | The correction breaks another contract. | Name the contract and the caller that it breaks. |
 | The finding states a style preference. | Name the contract that the code does not break. |
 | The finding repeats a risk that a decision already accepted. | Quote the D-# id and its accepted risk. |
+| The finding asks for work outside the PR scope. | Quote the roadmap entry and the exit tests. Name the PR that holds the work. |
+| The finding reopens one id for the third time. | Name the three triggers and ask the owner to settle the scope (D-124). |
 
 A disagreement belongs in the response file, with the evidence. Never delete a finding from the review record.
 The reviewer sets a refuted finding to `withdrawn` and keeps the evidence that refuted it.

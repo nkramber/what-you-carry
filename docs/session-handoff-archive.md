@@ -1,5 +1,49 @@
 # Session handoff archive
 
+## Session 33: 2026-09-08, Codex
+
+Author: Codex
+Session: second repeat review of PR #12. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- Re-reviewed PR #12 at effective head `5316033` against base and merge base `86078b8`.
+- Confirmed that the provider gate still passes. Claude Code wrote the correction, and Codex reviewed it.
+- Confirmed that the semantic scan fixes the two prior P2-3 probes and the F-# citations.
+- Kept P2-3 open. `Enum.IsDefined` compiles in Core and gives no reflection finding, against G-2 and the Session 28 record.
+- Added P2-5. A `System.Math.Sin` call under active `#if NET10_0` code builds, but the lint reports no finding.
+- Added P2-6. The PR description still reports the removed member word list, 144 tests, and the old effective head.
+- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
+
+### State of the build
+
+- `main` and the merge base are at `86078b8`. The reviewed effective head is `5316033`.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 146 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `5316033`.
+- The review-gate results stay red because the review verdict stays `Changes required`.
+
+### In flight
+
+PR #12 needs corrections for P2-3, P2-5, and P2-6, then another repeat review.
+
+### Traps and gotchas
+
+- Reflection APIs also exist outside `System.Type`, `System.Activator`, and the `System.Reflection` namespace.
+- A semantic scan only reads the branch that its parse symbols select.
+- The Core build defines target-framework symbols that the lint compilation does not define.
+- The PR description is part of the evidence record. Update it after a correction changes the implementation.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-3 and P2-5, then update the PR description for P2-6. Request another repeat review.
+
 ## Session 32: 2026-09-08, Claude Code
 
 Author: Claude Code
