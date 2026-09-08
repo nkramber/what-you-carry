@@ -2,6 +2,49 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 35: 2026-09-08, Codex
+
+Author: Codex
+Session: third repeat review of PR #12. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- Re-reviewed PR #12 at effective head `549c75c` against base and merge base `86078b8`.
+- Confirmed that the provider gate passes. Claude Code wrote the correction, and Codex reviewed it.
+- Confirmed that P2-5 is fixed. The lint reports active and inactive `#if` directives under D-204.
+- Kept P2-3 open. `TypeDescriptor.GetProperties(object)` compiles in Core and gives no reflection finding.
+- Kept P2-6 open. The PR description omits effective head `549c75c` and incorrectly identifies Session 28 as current.
+- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
+
+### State of the build
+
+- `main` and the merge base are at `86078b8`. The reviewed effective head is `549c75c`.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 160 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `549c75c`.
+- The review-gate results stay red because the review verdict stays `Changes required`.
+
+### In flight
+
+PR #12 needs corrections for P2-3 and P2-6, then another repeat review.
+
+### Traps and gotchas
+
+- `TypeDescriptor` accesses type metadata without a `System.Reflection` symbol or a `System.Type` result.
+- A finite banned-type table needs probes against all BCL metadata-access surfaces.
+- The PR description must identify the effective head, not only the prior review head.
+- A session number in the PR description becomes stale after each review response.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-3, then update the PR description for P2-6. Request another repeat review.
+
 ## Session 34: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -381,38 +424,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 The owner merges PR #10. Then PR-3 starts with the seeded RNG, DetMath, the lint tool, and the bit-identity job.
-
-## Session 25: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the PR #10 repeat review. Branch `feat/pr-2-ste-check`.
-
-### What this session did, and why
-
-- Read the repeat review in `docs/reviews/pr-10.md`. P2-1 to P2-3 are resolved, and P2-4 is new.
-- P2-4 has full merit. The quote pass masked the text inside a quote, but it left a quoted `)` as a plain character, so the parenthesis pass paired the outer `(` with it. `MaskChar` now masks both parentheses, both quote forms, and the backtick inside a span, and `Unmask` restores them. Four new assertions in `NestedParenthesesAreOneOpaqueWord` cover it.
-- Updated `docs/reviews/pr-10-response.md` with the P2-4 disposition.
-- The review commit `712b2e0` was on the local checkout and not on the remote, as `29b1066` was before it. This session pushes it with the response commit.
-
-### State of the build
-
-- `dotnet build` and `dotnet test` pass on the Mac Mini: 63 tests, 0 failures. The checker reports 0 findings in 15 files.
-- PR #10 is open. The effective head is the commit that holds this entry, because it holds the code correction too.
-
-### In flight
-
-PR #10 needs a repeat review at the new effective head.
-
-### Traps and gotchas
-
-- A mask pass must mask every delimiter inside its span, not only the sentence punctuation. A later pass reads any character that the earlier pass left plain.
-- An unbalanced quote or an unclosed parenthesis stays plain text. Each token then counts on its own.
-- The reviewer's commit was unpushed for the second time. Check `git status` before you start, and push it.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session re-reviews PR #10 at the new effective head and updates `docs/reviews/pr-10.md`.
