@@ -88,24 +88,39 @@ public sealed class JsonlLogger
     }
 
     /// <summary>One JSON object, with no line break. The level and the message come first, then every field.</summary>
+    /// <remarks>
+    /// This method owns the line. It calls one helper for one job: <c>LevelName</c> for the severity name, and
+    /// <c>AppendQuoted</c> for each JSON string. Neither helper calls another one, so the whole write path stays
+    /// one level deep (D-110, F-73).
+    /// </remarks>
     public static string BuildLine(LogLevel level, string message, LogFields fields)
     {
         StringBuilder builder = new();
         builder.Append('{');
-        AppendText(builder, "level", LevelName(level));
+
+        AppendQuoted(builder, LogFields.LevelName);
+        builder.Append(':');
+        AppendQuoted(builder, LevelName(level));
+
         builder.Append(',');
-        AppendText(builder, "message", message);
+        AppendQuoted(builder, LogFields.MessageName);
+        builder.Append(':');
+        AppendQuoted(builder, message);
 
         foreach (LogField field in fields.Fields)
         {
             builder.Append(',');
+            AppendQuoted(builder, field.Name);
+            builder.Append(':');
+
             if (field.Quoted)
             {
-                AppendText(builder, field.Name, field.Value);
+                AppendQuoted(builder, field.Value);
             }
             else
             {
-                AppendRaw(builder, field.Name, field.Value);
+                // The caller already formed this value as a number, a list, or a keyword.
+                builder.Append(field.Value);
             }
         }
 
@@ -137,62 +152,59 @@ public sealed class JsonlLogger
         }
     }
 
-    /// <summary>Appends one name and one quoted value, with both escaped.</summary>
-    private static void AppendText(StringBuilder builder, string name, string value)
-    {
-        AppendQuoted(builder, name);
-        builder.Append(':');
-        AppendQuoted(builder, value);
-    }
-
-    /// <summary>Appends one name and one value that the caller already formed, such as a number or a list.</summary>
-    private static void AppendRaw(StringBuilder builder, string name, string value)
-    {
-        AppendQuoted(builder, name);
-        builder.Append(':');
-        builder.Append(value);
-    }
-
     /// <summary>
-    /// Appends one JSON string. It escapes the two characters that JSON reserves, and every control character
-    /// below the space, so one line always stays one line.
+    /// Appends one JSON string. It escapes the two characters that JSON reserves, every control character below
+    /// the space, and every surrogate that stands without its pair.
     /// </summary>
+    /// <remarks>
+    /// An unpaired surrogate is not text that UTF-8 can hold, and a parser rejects a line that carries one raw.
+    /// The escape form keeps the line valid and keeps the value readable (F-73). This method calls no helper.
+    /// </remarks>
     private static void AppendQuoted(StringBuilder builder, string value)
     {
         builder.Append('"');
-        foreach (char letter in value)
+        for (int index = 0; index < value.Length; index++)
         {
+            char letter = value[index];
+            bool isHighSurrogate = letter >= '\uD800' && letter <= '\uDBFF';
+            bool isLowSurrogate = letter >= '\uDC00' && letter <= '\uDFFF';
+
+            // A high surrogate with its low partner is one character, and the pair stays as it is.
+            if (isHighSurrogate && index + 1 < value.Length && value[index + 1] >= '\uDC00' && value[index + 1] <= '\uDFFF')
+            {
+                builder.Append(letter);
+                builder.Append(value[index + 1]);
+                index++;
+                continue;
+            }
+
             switch (letter)
             {
-                case '"': builder.Append("\\\""); break;
-                case '\\': builder.Append("\\\\"); break;
-                case '\n': builder.Append("\\n"); break;
-                case '\r': builder.Append("\\r"); break;
-                case '\t': builder.Append("\\t"); break;
-                case '\b': builder.Append("\\b"); break;
-                case '\f': builder.Append("\\f"); break;
-                default:
-                    if (letter < ' ')
-                    {
-                        builder.Append("\\u00");
-                        builder.Append(HexDigit(letter >> 4));
-                        builder.Append(HexDigit(letter & 0xF));
-                    }
-                    else
-                    {
-                        builder.Append(letter);
-                    }
+                case '"': builder.Append("\\\""); continue;
+                case '\\': builder.Append("\\\\"); continue;
+                case '\n': builder.Append("\\n"); continue;
+                case '\r': builder.Append("\\r"); continue;
+                case '\t': builder.Append("\\t"); continue;
+                case '\b': builder.Append("\\b"); continue;
+                case '\f': builder.Append("\\f"); continue;
+                default: break;
+            }
 
-                    break;
+            if (letter >= ' ' && !isHighSurrogate && !isLowSurrogate)
+            {
+                builder.Append(letter);
+                continue;
+            }
+
+            // Four lowercase hexadecimal digits, most significant first.
+            builder.Append("\\u");
+            for (int shift = 12; shift >= 0; shift -= 4)
+            {
+                int digit = (letter >> shift) & 0xF;
+                builder.Append((char)(digit < 10 ? '0' + digit : 'a' + (digit - 10)));
             }
         }
 
         builder.Append('"');
-    }
-
-    /// <summary>One lowercase hexadecimal digit for a value from 0 to 15.</summary>
-    private static char HexDigit(int value)
-    {
-        return value < 10 ? (char)('0' + value) : (char)('a' + (value - 10));
     }
 }

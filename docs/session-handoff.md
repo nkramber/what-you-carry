@@ -2,6 +2,51 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 48: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the PR #15 review. Branch `feat/pr-4-logging`.
+
+### What this session did, and why
+
+- Read the four P2 findings in `docs/reviews/pr-15.md`. Each one reproduces, so each one has full merit.
+- The first draft of this entry took the number 47, which the review session already held. The D-187 check caught it, and the entry is 48.
+- This is the first review under D-209. It used the `## Out of scope` section for the Game-layer sink of PR-31 and PR-55 and for the simulation version constant of PR-7, and it gave neither a severity. Both readings are correct.
+- P2-1. A caller field named `level` or `message` gave a line with two properties of one name. `LogFields` now reserves both names and rejects them at the add, so no such line reaches the sink (F-72).
+- P2-2. A safe assertion added its call site to the caller field set, so a second safe assertion threw on the repeated name. A safe assertion promises to continue, and this turned the second one into an exception. The report takes a copy now (F-72).
+- P2-3. A value with an unpaired surrogate gave a line that the parser rejected. The escape pass reads by index, keeps a matched pair as one character, and escapes every other surrogate. A check showed that `JsonDocument.Parse` accepts the escape form, so the fix keeps the value and never throws on a message (F-73).
+- P2-4. The JSON write path ran three helper levels below its operation. `AppendText`, `AppendRaw`, and `HexDigit` are gone, and `BuildLine` calls only leaves (D-110, F-73).
+- The P2-3 fix needs `System.String.this[]` for the one-character lookahead, and the owner approved that entry. D-214 records it.
+- 7 new tests. The total is 226.
+
+### State of the build
+
+- `main` is at `51b3de7`. The branch holds the PR-4 work, the review commit, and this correction commit.
+- Remote head: `origin/feat/pr-4-logging` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 226 tests and 0 failures.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged.
+
+### In flight
+
+PR #15 needs a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- A helper that takes a caller object and adds to it changes that object for every later call. A report takes a copy.
+- The logger writes its own `level` and `message`, so those two names need a rule of their own. A duplicate-name check over the caller fields alone does not reach them.
+- An unpaired surrogate is not text that UTF-8 can hold. A parser rejects the raw form and accepts the `\u` escape form.
+- D-110 counts every level. `BuildLine` to `AppendText` to `AppendQuoted` to `HexDigit` is three, and one is the limit.
+- A patch script that fails part way leaves the file unchanged, and the build then passes on the old code. Read the file after a large scripted edit.
+
+### Open questions that block progress
+
+No new owner question. No open question blocks PR-5 to PR-11.
+
+### Next concrete action
+
+A Codex session re-reviews PR #15 per the repeat review procedure and updates `docs/reviews/pr-15.md` to the new effective head.
+
 ## Session 47: 2026-09-08, Codex
 
 Author: Codex
@@ -395,44 +440,3 @@ No new owner question was filed in this review. The correction for P2-9 can requ
 ### Next concrete action
 
 Correct P2-6 and P2-9, add a regression test for the comparer trigger, and request another repeat review.
-
-## Session 38: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the fifth PR #12 review. Branch `feat/pr-3-determinism`.
-
-### What this session did, and why
-
-- The fifth review closed P2-3 and P2-6, and it opened P2-7 and P2-8. Both reproduce, so both have full merit.
-- P2-7. `System.Guid.NewGuid()` compiles in Core and gave no finding. D-205 approved `System` as a whole namespace, and `System` is the one broad namespace that Core uses, so the rest of the nondeterminism sits inside it.
-- Before the question, this session measured the cost. A run with `System` removed from the allowlist named seven `System` types in Core. The owner chose the type allowlist with that number in hand (D-206, OQ-79, F-67).
-- D-206 revises D-205 in part. `System` is approved by type now, and the other approved namespaces stand as whole namespaces.
-- `Guid` and `HashCode` also join the type denylist, so each reports its own rule. The review asks for a randomness finding on `Guid.NewGuid()`, and it reads `L-RANDOM`.
-- One correction goes past the finding. `Object.GetHashCode` and `String.GetHashCode` report `L-IDENTITY`, because a member of an approved type can still read the machine. A hash of an address changes an iteration order between two runs of one seed.
-- The first form of the `System` rule was wrong, and the check caught it. The rule also read the type a method gives back, and `det-lint` reported 24 findings on clean Core code. The allowlist binds the names that Core writes, never a return type.
-- P2-8. `using System.Text;` gave no finding, because `AddImportFinding` read the denylist alone. It calls the allowlist now.
-- 183 tests pass. The bit-identity hash is unchanged, because no Core number changed.
-
-### State of the build
-
-- `main` is at `86078b8`. The branch holds five review commits and five correction commits above it.
-- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 183 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged.
-
-### Traps and gotchas
-
-- An allowlist at the namespace level leaves the one namespace that the project uses. `System` holds `Guid`, `HashCode`, `GC`, `OperatingSystem`, `Console`, and `AppContext`. Approve that namespace by type.
-- A type rule must bind the names that the source writes, not the type a method gives back. The first form flagged every method that gives back a bool. Run the tool on clean code before you keep a rule.
-- A member of an approved type can still read the machine. `Object.GetHashCode` gives an address, and `String.GetHashCode` takes a new seed in each process.
-- An allowlist binds each entry point on its own. The import check and the use check are two entry points, and P2-8 was the one that nobody updated.
-- Measure the friction before you ask the owner for a stricter rule. Seven types was the number that settled the question.
-
-### Open questions that block progress
-
-No new owner question. OQ-79 is resolved by D-206. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.

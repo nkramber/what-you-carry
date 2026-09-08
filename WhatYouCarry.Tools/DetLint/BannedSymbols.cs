@@ -183,6 +183,7 @@ public static class BannedSymbols
         "System.Int64.ToString/1",
         "System.Single.ToString/2",
         "System.String.Length",
+        "System.String.this[]",
         "System.Text.StringBuilder.new/0",
         "System.Text.StringBuilder.Append/1",
         "System.Text.StringBuilder.ToString/0",

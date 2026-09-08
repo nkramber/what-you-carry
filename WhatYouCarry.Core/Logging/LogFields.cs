@@ -13,6 +13,12 @@ namespace WhatYouCarry.Core.Logging;
 /// </remarks>
 public sealed class LogFields
 {
+    /// <summary>The name that the logger writes for the severity of a line (D-212). No caller field takes it.</summary>
+    public const string LevelName = "level";
+
+    /// <summary>The name that the logger writes for the text of a line (D-212). No caller field takes it.</summary>
+    public const string MessageName = "message";
+
     private readonly List<LogField> fields = [];
 
     /// <summary>Every field, in the order that the caller added it.</summary>
@@ -64,6 +70,21 @@ public sealed class LogFields
         this.AddField(name, builder.ToString(), quoted: false);
     }
 
+    /// <summary>
+    /// A copy that holds the same fields. A caller keeps its own set unchanged when another part adds to the
+    /// copy, which the assertion report needs (F-72).
+    /// </summary>
+    public LogFields Copy()
+    {
+        LogFields copy = new();
+        foreach (LogField field in this.fields)
+        {
+            copy.fields.Add(field);
+        }
+
+        return copy;
+    }
+
     /// <summary>Answers whether a field of this name exists.</summary>
     public bool Has(string name)
     {
@@ -83,6 +104,15 @@ public sealed class LogFields
         if (name.Length == 0)
         {
             throw new ContextException("A log field needs a name, and this one is empty.");
+        }
+
+        // The logger writes these two names itself, so a caller field of the same name would put two of one
+        // name in the object, and a reader could then take either value (D-212, F-72).
+        if (name == LevelName || name == MessageName)
+        {
+            ContextException reserved = new($"The log field name '{name}' belongs to the logger, and no caller field takes it.");
+            reserved.AddContext("field", name);
+            throw reserved;
         }
 
         if (this.Has(name))

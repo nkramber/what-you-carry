@@ -151,6 +151,96 @@ public sealed class LoggingTests
         Assert.Throws<ContextException>(() => logger.Write(LogContextKind.Run, LogLevel.Info, string.Empty, RunFields()));
     }
 
+    /// <summary>
+    /// The logger writes the level and the message itself, so a caller field of either name is an error. Two
+    /// fields of one name in a JSON object let a reader take either value (D-212, F-72).
+    /// </summary>
+    [Theory]
+    [InlineData("level")]
+    [InlineData("message")]
+    public void AReservedFieldNameIsAnError(string reserved)
+    {
+        LogFields fields = new();
+        ContextException error = Assert.Throws<ContextException>(() => fields.Add(reserved, "a value"));
+        Assert.Contains(reserved, error.Message, StringComparison.Ordinal);
+
+        // The rejection happens at the add, so no line ever reaches the sink with two of one name.
+        CollectingSink sink = new();
+        JsonlLogger logger = new(sink);
+        logger.Write(LogContextKind.Run, LogLevel.Error, "a message", RunFields());
+        System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(Assert.Single(sink.Lines));
+        int count = 0;
+        foreach (System.Text.Json.JsonProperty property in document.RootElement.EnumerateObject())
+        {
+            if (property.Name == reserved)
+            {
+                count++;
+            }
+        }
+
+        Assert.Equal(1, count);
+    }
+
+    /// <summary>
+    /// A safe assertion leaves the caller field set as it found it, so a second safe assertion with the same
+    /// set writes its report and does not throw (D-112, F-72).
+    /// </summary>
+    [Fact]
+    public void ASafeAssertionLeavesTheCallerContextAlone()
+    {
+        CollectingSink sink = new();
+        JsonlLogger logger = new(sink);
+        LogFields fields = RunFields();
+        int before = fields.Fields.Count;
+
+        Invariant.Assert(false, "the first invariant", logger, LogContextKind.Run, fields, continueOnFailure: true);
+        Invariant.Assert(false, "the second invariant", logger, LogContextKind.Run, fields, continueOnFailure: true);
+
+        Assert.Equal(2, sink.Lines.Count);
+        Assert.Equal(before, fields.Fields.Count);
+        Assert.False(fields.Has("assertFile"));
+
+        // An ordinary line after a safe failure carries no assertion field.
+        logger.Write(LogContextKind.Run, LogLevel.Info, "an ordinary line", fields);
+        Assert.DoesNotContain("assertFile", sink.Lines[2], StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A surrogate that stands without its pair takes an escape, so the line stays valid JSON (F-73). A pair
+    /// stays as one character and reads back unchanged.
+    /// </summary>
+    [Theory]
+    [InlineData("a\uD800b")]
+    [InlineData("a\uDC00b")]
+    [InlineData("\uD800")]
+    [InlineData("\uDBFF\uD800")]
+    public void AnUnpairedSurrogateKeepsTheLineValid(string value)
+    {
+        CollectingSink sink = new();
+        JsonlLogger logger = new(sink);
+        LogFields fields = RunFields();
+        fields.Add("path", value);
+        logger.Write(LogContextKind.Run, LogLevel.Info, value, fields);
+
+        string line = Assert.Single(sink.Lines);
+        System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(line);
+        Assert.NotNull(document.RootElement.GetProperty("path").GetString());
+    }
+
+    /// <summary>A matched surrogate pair is one character, and it reads back as the same text.</summary>
+    [Fact]
+    public void AMatchedSurrogatePairReadsBackUnchanged()
+    {
+        CollectingSink sink = new();
+        JsonlLogger logger = new(sink);
+        LogFields fields = RunFields();
+        fields.Add("path", "a😀b");
+        logger.Write(LogContextKind.Run, LogLevel.Info, "a message", fields);
+
+        System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(Assert.Single(sink.Lines));
+        Assert.Equal("a😀b", document.RootElement.GetProperty("path").GetString());
+    }
+
     /// <summary>PR-4 exit test 3. An assertion report carries the seed of the run it failed in.</summary>
     [Fact]
     public void AssertionReportHasSeed()
