@@ -2,6 +2,56 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 17: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: PR-1, the repository scaffold. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Started PR-1 from `/Volumes/SSD-1TB/what-you-carry` after the owner merged PR #5. Session 16 named it as the next action, and nothing blocked it.
+- Created `WhatYouCarry.slnx` with the four projects (D-108, D-194), `global.json` on SDK 10.0.400 (D-173), and `Directory.Build.props` with nullable on, warnings as errors, and one language version (D-68).
+- Put one directory per project at the root. `project.godot` lives in `WhatYouCarry.Game/`, next to its project file, so the Godot editor scans the Game directory and not the whole checkout. The solution stays at the root. This is a layout judgment, and not a decision.
+- Wrote the `review-gate` tool as the `review-gate` command of `WhatYouCarry.Tools` (D-65). The rules are one pure function. Git reads are one class. The workflow only gathers the inputs and posts the check run.
+- Wrote 32 tests. Every exit test with a name in the roadmap has a test with that name. The git-backed tests build throwaway repositories and run the real `git log` pathspec command.
+- Wrote `ci.yml` with one job per platform (D-71, D-100, D-157, D-189) and `review-gate.yml` on the five event types (D-190).
+- Wrote the PR template with the gate checklist, the absent checks, and the document lines (D-118, D-148).
+- Ran the Godot 4.7.2 editor headless with `--build-solutions` on the Game project. It built, made no solution file, and left the project file unchanged.
+- Ran the tool against this checkout with `origin/main` as the base. It found that the base has no mode file, and it gave a failure that names the file. That is OQ-72.
+- Added the build and test commands to `CLAUDE.md` and `AGENTS.md` (D-122).
+
+### State of the build
+
+- `main` is at `546a70a`. The branch `feat/pr-1-scaffold` holds the scaffold commit and this entry.
+- `dotnet build WhatYouCarry.slnx` and `dotnet test WhatYouCarry.slnx --no-build` pass on the Mac Mini: 32 tests, 0 failures.
+- No CI run exists yet. The PR opens the first run on the three platforms.
+- `CLAUDE.md` and `AGENTS.md` are byte-identical.
+
+### In flight
+
+PR-1 is open and waits for a Codex review (T-4). The `review-gate` check on PR-1 is red on the mode-file rule until the owner answers OQ-72. The CI workflow runs for the first time on this PR, so the Linux and Windows legs are unproven.
+
+### Traps and gotchas
+
+- The Godot editor writes `TargetFramework` `net8.0` into a project file that has none, and it keeps a `.csproj.old` copy. Each project file names `net10.0` for that reason. Do not move the target framework into `Directory.Build.props`.
+- The Godot SDK knows the configurations `Debug`, `ExportDebug`, and `ExportRelease`. CI builds the default `Debug`. A `--configuration Release` build of the solution is untested.
+- `git cat-file -e <rev>:<path>` exits 128 for an absent path, and not 1. The tool uses `git ls-tree`, which prints nothing and exits 0 for an absent path.
+- The tool reads the mode file from the base branch, so the base must hold it. PR-1 is the one PR where it does not (OQ-72).
+- A merge of `main` into a PR branch is a commit outside the metadata set, so it moves the effective head and needs a repeat review. A rebase does the same.
+- Git marks its object files read-only. The temp-repository helper clears the attribute before delete, or Windows refuses the delete.
+- `dotnet run` prints the build output to stdout, so the tool writes its result to a file and never to stdout.
+- The workflow uses `jq --slurp` to make one array from the paginated timeline. An empty timeline gives `[]`.
+- `Microsoft.NET.Test.Sdk` and `xunit.runner.visualstudio` are in the test project as the xUnit stack under D-66. They are the packages that `dotnet test` needs to run xUnit. No separate decision entry exists for them.
+- `timeout` does not exist on macOS. `perl -e 'alarm N; exec @ARGV'` does the same job.
+
+### Open questions that block progress
+
+OQ-72 blocks the PR-1 merge under G-19. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner answers OQ-72 and records the decision. A Codex session reviews PR-1 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-<number>.md`. After the merge, PR-2 starts: the STE checker.
+
 ## Session 16: 2026-09-07, Claude Code
 
 Author: Claude Code
@@ -371,60 +421,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 Correct the Phase 1 roadmap header and request a final repeat review against the new effective head.
-
-## Session 7: 2026-09-07, Claude Code
-
-Author: Claude Code
-Session: answer the PR #1 review. Branch `docs/roadmaps`, part of PR #1.
-
-### What this session did, and why
-
-- Read `docs/reviews/pr-1.md` and checked each of the three findings against the branch, the registers, and the PR.
-- P1-2 and P2-1 have full merit. P1-1 has partial merit. The owner approved every disposition. Recorded D-176 to D-178 and F-47 to F-49. Wrote `docs/reviews/pr-1-response.md`.
-- P1-1: T-6 and D-137 prohibit text that names an agent, harness, or model as the source of the work. A tool name that identifies a configured file is not attribution, so the broad reading in the finding would also condemn D-172, D-175, OQ-16, F-15, the PR description, and the settings file path. D-176 states the boundary. The body of the head commit is rewritten, because one clause implied that an agent wrote the commits. PR-1 exit test 6 now scans every subject and body, not only trailers.
-- P1-2: PR-11 created the night job and the `night-gate` job together, so the gate had no result to read on its first run, against G-19. D-177 splits them. PR-11 publishes a result record. The new PR-58 adds the gate after one night runs. An absent, stale, cancelled, or failed record fails the gate.
-- P2-1: fixed all six stale references. The review named five. A sweep found a sixth at `phase-1-foundations.md:412`. D-178 adds a reference check to the PR-2 checker, so the next revision cannot leak.
-- The owner asked for a GitHub merge criterion that blocks a merge without the review files. GitHub returns 403 for branch protection and for rulesets on a private free repository, verified this session. No hard block is possible today.
-- Recorded D-179 and D-180 and F-50. PR-1 gains a `review-gate` job. It reads `docs/reviews/pr-<number>.md`, requires the verdict `Ready for owner merge`, and requires the recorded head to be the effective head. The job is advisory until launch. Phase 5 step 11 makes it a required check after the repository becomes public.
-- The owner asked for the head to match the PR head. The `pr-review` skill says the opposite: do not require the review file to hold its own hash. The effective head reconciles both. The effective head is the newest commit outside `docs/reviews/`.
-- The owner chose not to require the response file. The gate reads the review file only.
-- Codex re-reviewed at head `60087b0`. P1-1, P1-2, and P2-1 are marked fixed. One new finding, P2-2, is open: the Phase 1 roadmap header omits PR-58 and the new decisions, and it still says `Correction passes: none yet`.
-- P2-2 has full merit. Fixed line 3 and line 9 of the Phase 1 roadmap. Gave `phase-5-early-access.md` the same treatment, because this PR added its sequence step 11. The review did not name that file.
-- Ran the regression check that P2-2 specifies. It found three more defects of the same class. The new phase-1 range `D-156 to D-168` swallowed the revised D-158, `phase-2-first-playable.md` had the same defect in `D-157 to D-168`, and phase-1 line 465 cited D-158 with no revision marker. All three are fixed.
-- A wider sweep found two older ones: `docs/design.md:28` cited D-136 alone, and `phase-3-full-loop.md:372` cited D-94 alone. Both now name the revising decision.
-- Refined D-178. A line passes the reference check when it holds a revision word or when it names the revising decision. Without that clause the check fails on F-34, F-46, and four correct `D-94, D-152` pairs.
-- Rewrote `.claude/skills/pr-review/SKILL.md` for the format. It now holds a review file skeleton, the three machine-read fields, a finding format with stable `P<severity>-<n>` ids, the attribution boundary of D-176, the gate rules, a ten-step repeat review procedure, and the response file contract.
-
-### State of the build
-
-- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds thirteen commits. The head commit of session 5 was amended, and the branch was force pushed.
-- No code, solution, or CI workflow exists. PR-1 creates them.
-- `CLAUDE.md` and `AGENTS.md` are byte-identical.
-
-### In flight
-
-PR #1 needs a repeat review by Codex against the new head.
-
-### Traps and gotchas
-
-- The head commit was amended. The review file `docs/reviews/pr-1.md` names head `9459534`, which no longer exists.
-- D-176 fixes the attribution reading. Do not strip a tool name that identifies a configured file, a schema, or a version. Strip a claim about the source of the work.
-- The owner squash-merges (D-126). GitHub fills the squash body with every commit message. Check that body before the merge.
-- PR-58 is new. Phase 1 now ends with PR-11, one scheduled night, PR-58, then the measurements and Gate 1.
-- Ids never change. PR-58 sits after PR-11 in the sequence, not after PR-57.
-- The PR-2 reference check skips a line that holds `revises`, `revised by`, or `supersedes`. The two F-15 history lines were reworded to hold that word.
-- Branch protection and rulesets both return 403 on this repository. Do not plan a hard merge block before launch (D-180).
-- `review-gate` reads three exact things: the file name, the `- Head: ` line, and the verdict name. A reworded verdict fails the job.
-- The effective head ignores a commit that changes only `docs/reviews/`. A review file commit does not invalidate its own approval.
-- `docs/reviews/pr-1.md` now records head `60087b0` and holds four findings. P2-2 is the open one, and this session fixed it.
-- A decision range in a header can swallow a revised decision. Write `D-156, D-157, D-159 to D-168`, not `D-156 to D-168`, when D-158 is revised.
-- The roadmap header is a scope summary. Update line 3 and line 9 whenever a PR entry, a measurement, or a governing decision changes.
-- Never write a decision range that spans a revised id. D-179 is revised, so a header says `D-176 to D-178, D-180, and D-181`.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session reviews PR #1 a third time against the new head, per `.claude/skills/pr-review/SKILL.md`. P2-2 is the only finding to confirm. Sessions 8 and 9 did that work.
