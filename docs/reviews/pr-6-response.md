@@ -16,6 +16,7 @@ Regression check:
 
 - `ReviewGateRunsOnPullRequestTarget` asserts the event, that no step checks out the head, and that the head is fetched as a ref. It fails on the old workflow. 35 tests pass locally.
 - The live adversarial run that the review asks for cannot happen before the merge. GitHub triggers `pull_request_target` only when the workflow file exists on the default branch (F-58). PR #7, a throwaway PR against `feat/pr-1-scaffold` with an evaluator that approves every PR and a workflow that posts success, produced no run at all. PR #7 is closed and its branch is deleted. After the merge, a throwaway PR against `main` with the same head proves the trusted evaluator, and this file records the run.
+- Proof after the merge, 2026-09-08: PR #8, head `6e07259`, an evaluator that approves every PR and a workflow that posts success. Run 34180347093 ran the workflow and the tool from `main` at `a3b20e2`. The only `review-gate` check run on that head is `neutral`, "No review record", and the head's "Adversary approves" text appears nowhere. PR #8 is closed and its branch is deleted.
 
 ## P1-2: A PR author can replace an approved review record in a metadata-only commit
 
