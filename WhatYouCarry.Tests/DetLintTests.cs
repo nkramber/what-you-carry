@@ -293,30 +293,17 @@ public sealed class DetLintTests
     }
 
     /// <summary>
-    /// A namespace that nobody approved is a finding, whatever it holds (D-205, F-66). A denylist over the class
-    /// library cannot be complete, so the allowlist is the last word.
+    /// Every approved type stays legal. Core uses no array member and no collection yet, so `System.Array` and
+    /// the collection types are absent from the list. The PR that first needs one adds it with a decision
+    /// (D-207, G-16).
     /// </summary>
     [Theory]
-    [InlineData("public static object B() => new System.Text.StringBuilder();")]
-    [InlineData("public static object B() => System.Linq.Expressions.Expression.Constant(1);")]
-    [InlineData("public static object B(string s) => System.Text.Json.JsonDocument.Parse(s);")]
-    [InlineData("public static object B() => new System.Collections.ArrayList();")]
-    [InlineData("public static object B() => System.Threading.Thread.CurrentThread;")]
-    public void ANamespaceOutsideTheAllowlistIsAFinding(string member)
-    {
-        Assert.Contains(
-            Scan($"public static class A {{ {member} }}"),
-            finding => finding.Rule == "L-NAMESPACE");
-    }
-
-    /// <summary>Every approved namespace stays legal, and so does a namespace of this project.</summary>
-    [Theory]
     [InlineData("public static object B() => new System.InvalidOperationException(\"x\");")]
-    [InlineData("public static object B() => new System.Collections.Generic.List<int>();")]
     [InlineData("public static string B(int i) => i.ToString(System.Globalization.CultureInfo.InvariantCulture);")]
-    [InlineData("public static int B(uint u) => System.Numerics.BitOperations.PopCount(u);")]
     [InlineData("public static uint B(float f) => System.BitConverter.SingleToUInt32Bits(f);")]
-    public void AnApprovedNamespaceIsNotAFinding(string member)
+    [InlineData("public static bool B(float f) => float.IsNegative(f);")]
+    [InlineData("public static int[] B() => new int[4];")]
+    public void AnApprovedTypeIsNotAFinding(string member)
     {
         Assert.Empty(Scan($"public static class A {{ {member} }}"));
     }
@@ -357,8 +344,8 @@ public sealed class DetLintTests
     }
 
     /// <summary>
-    /// A `System` type that nobody approved is a finding, whatever it does (D-206, F-67). `System` holds the
-    /// platform randomness, time, and machine state beside the types that the denylist names.
+    /// A type that nobody approved is a finding, whatever it does and whichever namespace holds it (D-207, F-68).
+    /// No namespace is approved as a whole, so a machine-dependent type cannot enter beside a needed one.
     /// </summary>
     [Theory]
     [InlineData("public static long B() => System.GC.GetTotalMemory(false);")]
@@ -366,11 +353,49 @@ public sealed class DetLintTests
     [InlineData("public static void B() => System.Console.WriteLine(\"x\");")]
     [InlineData("public static object? B() => System.AppContext.GetData(\"x\");")]
     [InlineData("public static object B() => new System.Uri(\"http://x\");")]
-    public void AnUnapprovedSystemTypeIsAFinding(string member)
+    [InlineData("public static object B() => new System.Text.StringBuilder();")]
+    [InlineData("public static object B() => System.Linq.Expressions.Expression.Constant(1);")]
+    [InlineData("public static object B(string s) => System.Text.Json.JsonDocument.Parse(s);")]
+    [InlineData("public static object B() => new System.Collections.ArrayList();")]
+    [InlineData("public static object B() => System.Threading.Thread.CurrentThread;")]
+    [InlineData("public static object B() => new System.Collections.Generic.List<int>();")]
+    [InlineData("public static int B(uint u) => System.Numerics.BitOperations.PopCount(u);")]
+    public void AnUnapprovedTypeIsAFinding(string member)
     {
         Assert.Contains(
             Scan($"public static class A {{ {member} }}"),
-            finding => finding.Rule == "L-SYSTEM");
+            finding => finding.Rule == "L-TYPE");
+    }
+
+    /// <summary>
+    /// A machine-dependent member reached through an approved wrapper is a finding. The review found the
+    /// process-randomized string hash behind `EqualityComparer`, which no member ban on `String` reaches (F-68).
+    /// </summary>
+    [Fact]
+    public void AMachineMemberBehindAWrapperIsAFinding()
+    {
+        // The review trigger. Three processes gave three hashes for one string.
+        Assert.Contains(
+            Scan("public static class A { public static int B(string v) => System.Collections.Generic.EqualityComparer<string>.Default.GetHashCode(v); }"),
+            finding => finding.Rule == "L-TYPE");
+
+        Assert.Contains(
+            Scan("public static class A { public static bool B() => System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported; }"),
+            finding => finding.Rule == "L-TYPE");
+    }
+
+    /// <summary>
+    /// An approved type can still hold a member that reads the user. `CultureInfo` is approved for
+    /// `InvariantCulture`, and the culture of the machine is a finding (F-68).
+    /// </summary>
+    [Fact]
+    public void AMachineMemberOfAnApprovedTypeIsAFinding()
+    {
+        LintFinding finding = Assert.Single(Scan("public static class A { public static object B() => System.Globalization.CultureInfo.CurrentCulture; }"));
+        Assert.Equal("L-CLOCK", finding.Rule);
+
+        // The member that Core needs stays clean.
+        Assert.Empty(Scan("public static class A { public static object B() => System.Globalization.CultureInfo.InvariantCulture; }"));
     }
 
     /// <summary>

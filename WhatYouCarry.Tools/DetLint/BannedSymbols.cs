@@ -102,64 +102,53 @@ public static class BannedSymbols
     {
         ["System.Object.GetHashCode"] = new("L-IDENTITY", "The default hash of a reference type is its address, and it changes between runs (G-21)."),
         ["System.String.GetHashCode"] = new("L-IDENTITY", "The string hash takes a new seed in each process, so it changes between runs (G-21)."),
+        ["System.Globalization.CultureInfo.CurrentCulture"] = new("L-CLOCK", "The current culture reads the user, not the simulation input. Use InvariantCulture (G-21)."),
+        ["System.Globalization.CultureInfo.CurrentUICulture"] = new("L-CLOCK", "The current culture reads the user, not the simulation input. Use InvariantCulture (G-21)."),
+        ["System.Globalization.CultureInfo.InstalledUICulture"] = new("L-CLOCK", "The installed culture reads the machine, not the simulation input. Use InvariantCulture (G-21)."),
+        ["System.Globalization.CultureInfo.DefaultThreadCurrentCulture"] = new("L-CLOCK", "The thread culture reads the process, not the simulation input. Use InvariantCulture (G-21)."),
+        ["System.Globalization.CultureInfo.DefaultThreadCurrentUICulture"] = new("L-CLOCK", "The thread culture reads the process, not the simulation input. Use InvariantCulture (G-21)."),
     };
 
     /// <summary>
-    /// The namespaces that Core may use (D-205). Every other namespace is a finding, so a metadata surface that
-    /// no denylist names, such as `System.ComponentModel` or `System.Linq.Expressions`, cannot reach Core.
+    /// Every type outside this project that Core may use, by full name (D-207). No namespace is approved as a
+    /// whole, so a machine-dependent type cannot enter through a namespace that Core uses for something else.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Each entry matches one namespace and never its children. `System` does not allow `System.ComponentModel`.
-    /// A later Core PR that needs another namespace adds it here, with a decision that says why (G-16, F-66).
+    /// A whole namespace is too coarse. `System.Collections.Generic` holds `EqualityComparer`, whose string hash
+    /// takes a new seed in each process, and `System.Runtime.CompilerServices` holds `RuntimeFeature`, which
+    /// reads the runtime. The PR #12 review found each of those behind an approved namespace (F-68).
     /// </para>
     /// <para>
-    /// A denylist over the whole class library cannot be complete. The PR #12 review reopened the reflection
-    /// finding four times, and each pass named one more type. This list turns the boundary around.
-    /// </para>
-    /// </remarks>
-    public static readonly IReadOnlySet<string> AllowedNamespaces = new HashSet<string>
-    {
-        "System.Collections.Generic",
-        "System.Globalization",
-        "System.Numerics",
-        "System.Runtime.CompilerServices",
-    };
-
-    /// <summary>The one namespace that Core approves by type and not as a whole.</summary>
-    public const string SystemNamespace = "System";
-
-    /// <summary>
-    /// The `System` types that Core may use (D-206). `System` is broad, and it holds the rest of the
-    /// nondeterminism beside the denied types: Guid, HashCode, GC, OperatingSystem, Console, and AppContext.
-    /// Core approves its `System` surface one type at a time (F-67).
-    /// </summary>
-    /// <remarks>
     /// A primitive keyword such as `float` names no symbol on its own, so this list holds a primitive only when
-    /// Core calls one of its members, as `float.IsNegative` does. A later Core PR adds a type here with a
-    /// decision that says why (G-16).
+    /// Core calls one of its members, as `float.IsNegative` does. The list also binds the names that Core writes
+    /// and never the type that a method gives back, because every method that gives back a bool would need an
+    /// entry. A later Core PR adds a type here with a decision that says why (G-16).
+    /// </para>
     /// </remarks>
-    public static readonly IReadOnlySet<string> AllowedSystemTypes = new HashSet<string>
+    public static readonly IReadOnlySet<string> AllowedTypes = new HashSet<string>
     {
-        "ArgumentOutOfRangeException",
-        "BitConverter",
-        "IEquatable",
-        "Int32",
-        "InvalidOperationException",
-        "Object",
-        "Single",
-        "String",
-        "UInt64",
+        "System.ArgumentOutOfRangeException",
+        "System.BitConverter",
+        "System.IEquatable",
+        "System.Int32",
+        "System.InvalidOperationException",
+        "System.Object",
+        "System.Single",
+        "System.String",
+        "System.UInt64",
+        "System.Globalization.CultureInfo",
     };
 
-    /// <summary>The reason that the scan gives for a `System` type outside <see cref="AllowedSystemTypes"/>.</summary>
-    public const string SystemTypeDetail = "Core approves its System types one at a time, because System holds the platform randomness, time, and machine state (G-21, G-16, D-206).";
-
-    /// <summary>The prefix of this project's own namespaces. Core may use any namespace under it.</summary>
+    /// <summary>The prefix of this project's own namespaces. Core may use any type under it.</summary>
     public const string ProjectNamespacePrefix = "WhatYouCarry.";
 
-    /// <summary>The reason that the scan gives for a namespace outside <see cref="AllowedNamespaces"/>.</summary>
-    public const string NamespaceDetail = "Core may use only an approved namespace, so a metadata or platform surface cannot enter without a decision (G-2, G-16, D-205).";
+    /// <summary>The reason that the scan gives for a type outside <see cref="AllowedTypes"/>.</summary>
+    public const string TypeDetail = "Core approves each type it uses outside this project, because a namespace holds machine-dependent types beside the ones Core needs (G-2, G-21, G-16, D-207).";
+
+    /// <summary>The reason that the scan gives for an import that holds no approved type.</summary>
+    public const string NamespaceDetail = "Core approves no type in this namespace, so the import can bring in nothing that Core may use (G-16, D-207).";
+
 
     /// <summary>
     /// The reason that the scan gives for a conditional compilation directive (D-204, F-65). A `#if` makes two

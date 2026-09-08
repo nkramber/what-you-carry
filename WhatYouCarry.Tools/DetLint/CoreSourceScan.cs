@@ -198,8 +198,8 @@ public static class CoreSourceScan
         }
 
         // The allowlist binds an import too. Without this an unapproved namespace enters the file, and only a
-        // use of one of its types gives a finding (D-205).
-        if (!IsAllowedNamespace(imported))
+        // use of one of its types gives a finding (D-205, D-207).
+        if (!IsApprovedImport(imported))
         {
             findings.Add(Create(usingDirective, path, "L-NAMESPACE", full, BannedSymbols.NamespaceDetail));
         }
@@ -267,9 +267,9 @@ public static class CoreSourceScan
 
         // The allowlist is the last word on the owner. A namespace that nobody approved is a finding, so a
         // surface that no denylist names cannot reach Core (D-205, D-206).
-        if (Unapproved(owner) is string ownerRule)
+        if (!IsApprovedType(owner))
         {
-            findings.Add(Create(name, path, ownerRule, fullUsed, ownerRule == "L-SYSTEM" ? BannedSymbols.SystemTypeDetail : BannedSymbols.NamespaceDetail));
+            findings.Add(Create(name, path, "L-TYPE", fullUsed, BannedSymbols.TypeDetail));
             return;
         }
 
@@ -311,48 +311,39 @@ public static class CoreSourceScan
             return;
         }
 
-        // The namespace rule only. The `System` type allowlist binds the names that Core writes, and a return
-        // type is not one of those: every method that gives back a bool or a void would be a finding.
-        // A denied `System` type that reaches here, such as Guid, is already a finding above.
-        if (!IsAllowedNamespace(producedType.ContainingNamespace))
+        // The denied namespaces only. The allowlist binds the names that Core writes, and a return type is not
+        // one of those: every method that gives back a bool or a void would be a finding. A use of a member of
+        // the value that comes back names its own type, and the owner rule reads that name.
+        if (BannedNamespace(producedType.ContainingNamespace.ToDisplayString()) is BannedSymbols.BannedName bannedProducedNamespace)
         {
-            findings.Add(Create(name, path, "L-NAMESPACE", used, $"{used} gives back {producedName}. {BannedSymbols.NamespaceDetail}"));
+            findings.Add(Create(name, path, bannedProducedNamespace.Rule, used, $"{used} gives back {producedName}. {bannedProducedNamespace.Detail}"));
         }
     }
 
     /// <summary>
-    /// The rule id when Core may not use a type, or null when it may. `System` is approved by type, and every
-    /// other approved namespace is approved as a whole (D-205, D-206).
+    /// Answers whether Core may use a type. Every type of this project passes, and every other type must stand
+    /// in <see cref="BannedSymbols.AllowedTypes"/> by its full name (D-207).
     /// </summary>
-    private static string? Unapproved(INamedTypeSymbol type)
+    private static bool IsApprovedType(INamedTypeSymbol type)
     {
         INamespaceSymbol space = type.ContainingNamespace;
 
         // A type with no namespace comes from the compilation itself, never from the class library.
         if (space.IsGlobalNamespace)
         {
-            return null;
+            return true;
         }
 
         string full = space.ToDisplayString();
-        if (full.StartsWith(BannedSymbols.ProjectNamespacePrefix, StringComparison.Ordinal))
-        {
-            return null;
-        }
-
-        if (full.Equals(BannedSymbols.SystemNamespace, StringComparison.Ordinal))
-        {
-            return BannedSymbols.AllowedSystemTypes.Contains(type.Name) ? null : "L-SYSTEM";
-        }
-
-        return BannedSymbols.AllowedNamespaces.Contains(full) ? null : "L-NAMESPACE";
+        return full.StartsWith(BannedSymbols.ProjectNamespacePrefix, StringComparison.Ordinal)
+            || BannedSymbols.AllowedTypes.Contains($"{full}.{type.Name}");
     }
 
     /// <summary>
-    /// Answers whether Core may use a namespace. Each approved entry matches one namespace and never its
-    /// children, so `System` does not approve `System.ComponentModel` (D-205).
+    /// Answers whether Core may import a namespace. A namespace passes when the allowlist holds a type in it,
+    /// so the import rule follows <see cref="BannedSymbols.AllowedTypes"/> and needs no list of its own.
     /// </summary>
-    private static bool IsAllowedNamespace(INamespaceSymbol space)
+    private static bool IsApprovedImport(INamespaceSymbol space)
     {
         if (space.IsGlobalNamespace)
         {
@@ -360,11 +351,23 @@ public static class CoreSourceScan
         }
 
         string full = space.ToDisplayString();
+        if (full.StartsWith(BannedSymbols.ProjectNamespacePrefix, StringComparison.Ordinal))
+        {
+            return true;
+        }
 
-        // An import of System is correct. Its types pass the allowlist of D-206 one at a time.
-        return full.Equals(BannedSymbols.SystemNamespace, StringComparison.Ordinal)
-            || full.StartsWith(BannedSymbols.ProjectNamespacePrefix, StringComparison.Ordinal)
-            || BannedSymbols.AllowedNamespaces.Contains(full);
+        string prefix = full + ".";
+        foreach (string approved in BannedSymbols.AllowedTypes)
+        {
+            // The type name holds no dot, so one approved name under this prefix means the namespace itself.
+            if (approved.StartsWith(prefix, StringComparison.Ordinal)
+                && approved.IndexOf('.', prefix.Length) < 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Adds a MathF finding unless the file is the one DetMath file and the member is an exact operation.</summary>
@@ -424,6 +427,38 @@ public static class CoreSourceScan
         }
 
         return false;
+    }
+
+    /// <summary>Answers whether a name stands on the right of a dot, as the member of a member access.</summary>
+    private static bool IsMemberName(SimpleNameSyntax identifier)
+    {
+        return identifier.Parent is MemberAccessExpressionSyntax access && access.Name == identifier;
+    }
+
+    /// <summary>
+    /// The member that a banned type names, or null when the type stands alone. The type is the left side of a
+    /// member access in <c>Math.Sin</c>, and it is the name of an inner access in <c>System.Math.Sin</c>.
+    /// A bare name, such as one behind a <c>using static</c>, gives null.
+    /// </summary>
+    private static string? MemberAfter(SimpleNameSyntax identifier)
+    {
+        if (identifier.Parent is not MemberAccessExpressionSyntax access)
+        {
+            return null;
+        }
+
+        if (access.Expression == identifier)
+        {
+            return access.Name.Identifier.ValueText;
+        }
+
+        // The type is the right side of an access, so the member is one level above: System.Math then .Sin.
+        if (access.Name == identifier && access.Parent is MemberAccessExpressionSyntax outer && outer.Expression == access)
+        {
+            return outer.Name.Identifier.ValueText;
+        }
+
+        return null;
     }
 
     /// <summary>One finding at the position of a node. The line and the column both count from one, as a compiler reports them.</summary>

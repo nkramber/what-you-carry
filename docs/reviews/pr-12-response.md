@@ -2,7 +2,7 @@
 
 Date: 2026-09-08
 
-This file answers `docs/reviews/pr-12.md`. The passes answer the review of head `c2ba592`, and the repeat reviews of heads `1bc665b`, `5316033`, `549c75c`, and `60d678e`.
+This file answers `docs/reviews/pr-12.md`. The passes answer the review of head `c2ba592`, and the repeat reviews of heads `1bc665b`, `5316033`, `549c75c`, `60d678e`, and `9ad2a4c`.
 
 ## Summary
 
@@ -143,7 +143,10 @@ Correction: the description now holds a table of all six findings and their stat
 - D-206: the Core `System` type allowlist. Resolves OQ-79, and revises D-205 in part.
 - OQ-79: the `System` surface of Core. Resolved by D-206.
 - F-66: the denylist that four passes could not complete.
+- D-207: the Core type allowlist. Resolves OQ-80, and supersedes D-205 and D-206.
+- OQ-80: the whole-namespace approvals. Resolved by D-207.
 - F-67: the randomness source inside the approved namespace, and the import that escaped the allowlist.
+- F-68: the machine-dependent member behind an approved namespace.
 - F-64 now records all four P2-3 passes.
 
 ## P2-3, fourth pass: the denylist itself was the defect
@@ -214,6 +217,36 @@ The trigger reproduces. `using System.Text;` in a Core file gave 0 findings at `
 Correction: `AddImportFinding` now calls `IsAllowedNamespace` after the denylist. An import of `System` stays correct, because D-206 approves its types one at a time.
 
 Regression check: `AnUnapprovedNamespaceImportIsAFinding` asserts one `L-NAMESPACE` finding for `using System.Text;` with no use of a type in it, and no finding for `using System;`.
+
+## P2-9: An approved namespace bypasses the seeded-identity rule
+
+Disposition: full merit.
+
+The trigger reproduces. `System.Collections.Generic.EqualityComparer<string>.Default.GetHashCode(v)` compiles in Core and gave 0 findings at `9ad2a4c`. `CultureInfo.CurrentCulture` and `RuntimeFeature.IsDynamicCodeSupported` gave none either. The review also ran three processes and got three hashes for one string, which is the strongest evidence in this review so far.
+
+The cause is the same shape as P2-7, one level out. D-205 approved four namespaces as wholes, and each of those holds a machine-dependent type beside the one Core needs. `System.Collections.Generic` holds `EqualityComparer`, and `System.Runtime.CompilerServices` holds `RuntimeFeature`.
+
+The review rules out one more member ban, and the evidence supports that. The same process-randomized string hash is reachable through `Dictionary`, `HashSet`, and any comparer that a caller gives.
+
+This session measured the wide correction before it asked. A run with the four namespaces removed from the allowlist named one type: `CultureInfo`. The owner chose the one allowlist with that number in hand (D-207).
+
+D-207 supersedes D-205 and D-206. Core approves every type outside this project by full name, and no namespace passes as a whole. The list holds ten entries. The tool is also smaller: the namespace allowlist and the `System` type list become one list, and the import rule reads that list instead of a second one, so it stays current on its own.
+
+One case needs a member rule beside the type rule. `CultureInfo` is approved, because `StateHash` formats with `InvariantCulture`, and the same type holds `CurrentCulture`, which reads the user. The member denylist now holds the five culture members that read the user, the process, or the machine. A type with both kinds of member needs both rules, and that is the limit of a type allowlist.
+
+`System.Array` and the collection types are absent from the list, because Core uses no array member and no collection today. The PR that first needs one adds it with a decision. PR-7 will need `System.Array`.
+
+Regression check: `AMachineMemberBehindAWrapperIsAFinding` covers the comparer trigger and `RuntimeFeature`. `AMachineMemberOfAnApprovedTypeIsAFinding` covers `CultureInfo.CurrentCulture` and asserts that `InvariantCulture` stays clean. `AnUnapprovedTypeIsAFinding` covers twelve types across eight namespaces. `AnApprovedTypeIsNotAFinding` guards the other side.
+
+An adversarial run against the real Core tree reported all three planted uses and stayed silent on `CultureInfo.InvariantCulture` in the same file.
+
+## P2-6, third pass: the owner-decision section
+
+Disposition: full merit.
+
+The description carried a section titled "Four owner decisions this PR needed" that listed D-200 to D-203, while the gate section of the same description named D-200 to D-206. D-204 to D-207 each came from a review finding, and the section omitted them.
+
+Correction: the section now lists every decision of this PR with the finding that produced it. The review also asks not to bind the description to a session number that the next review makes stale, and the description no longer names one.
 
 ## Verification
 

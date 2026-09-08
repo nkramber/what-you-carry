@@ -195,10 +195,16 @@ How to file a question (D-124, D-138):
     - the new type added, and a hand audit of the remaining class library surface.
     - the allowlist as a warning, with no effect on the exit code.
 
-    Recommendation: the allowlist. No audit can complete a denylist over the class library, and each gap ships green until someone finds it. Core used two namespaces on this date. Resolved 2026-09-08: D-205, the allowlist.
+    Recommendation: the allowlist. No audit can complete a denylist over the class library, and each gap ships green until someone finds it. Core used two namespaces on this date. Resolved 2026-09-08: D-205, the allowlist. D-207 supersedes it on the same date, and it approves each type by name.
 79. **OQ-79. The System surface of Core.** Raised 2026-09-08 (PR #12 review P2-7). Blocks PR-3. `System.Guid.NewGuid()` compiles in Core and gives no finding. `System.Guid` sits in the approved `System` namespace and outside the type denylist, so Core can make random state while the check stays green (G-21). Options:
     - an allowlist of the `System` types for Core.
     - `System.Guid` added to the denylist.
     - one audit of `System`, and a denylist of each type that the audit finds.
 
-    Recommendation: the allowlist. `System` holds the rest of the nondeterminism: `HashCode` takes a new seed in each process, and `GC`, `OperatingSystem`, `Console`, and `AppContext` read the machine. A measurement found seven `System` types in Core, so the list is short. Resolved 2026-09-08: D-206, the allowlist.
+    Recommendation: the allowlist. `System` holds the rest of the nondeterminism: `HashCode` takes a new seed in each process, and `GC`, `OperatingSystem`, `Console`, and `AppContext` read the machine. A measurement found seven `System` types in Core, so the list is short. Resolved 2026-09-08: D-206, the allowlist. D-207 supersedes it on the same date, and it approves every namespace by type.
+80. **OQ-80. The whole-namespace approvals.** Raised 2026-09-08 (PR #12 review P2-9). Blocks PR-3. `EqualityComparer<string>.Default.GetHashCode(v)` gives no finding. The member belongs to `EqualityComparer`, and D-205 approved `System.Collections.Generic` as a whole namespace, which D-207 supersedes. Three processes gave three hashes for one string. `CultureInfo.CurrentCulture` and `RuntimeFeature.IsDynamicCodeSupported` pass the same way. Options:
+    - one allowlist of approved types, with no namespace approved as a whole.
+    - a ban on each member that the review found.
+    - a rule that guesses which members read the machine.
+
+    Recommendation: the one allowlist. A ban on three members leaves the same hash behind `Dictionary`, `HashSet`, and any comparer a caller gives. A measurement found one type outside `System` in Core, so the list holds ten entries. Resolved 2026-09-08: D-207, the one allowlist.

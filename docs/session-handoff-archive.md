@@ -1,5 +1,49 @@
 # Session handoff archive
 
+## Session 30: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the PR #12 review. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- Read the four P2 findings in `docs/reviews/pr-12.md`. Each one reproduces, and each one has full merit.
+- P2-1. `Atan2` read the sign of y with `y < 0.0f`, and negative zero is not below zero. `Atan2(-0, -1)` gave pi against the reference -pi, an error of two pi. The sign now comes from `float.IsNegative` (F-62).
+- P2-2. A `StateHash` from `default` held zero and not the FNV offset basis, and it accepted fields in silence. The struct now rejects a hash that `Start` did not make (T-2, F-63).
+- P2-3. The reflection rule read the namespace text alone, so `typeof(x).GetMethods()` gave no finding. A reflection member name is now a finding on its own. The list holds no name that a Core type can hold too, so `block.Type` stays clean.
+- P2-4. The `MathF` exemption compared the file name alone. It now compares the whole Core-relative path (F-64).
+- The bit-identity sweep never made a negative zero, so the three-platform check could not have caught P2-1. The sweep now holds the four sign pairs. The pinned hash moved from `ef592d4148eb8ba0` to `4d6385bb92454694`. Core gives the same numbers for every input the old sweep read, so this is a wider check and not a behavior change.
+- Wrote `docs/reviews/pr-12-response.md` with the disposition and the evidence for each finding.
+- 11 new tests. The total is 144, and all pass.
+
+### State of the build
+
+- `main` is at `86078b8`. The branch holds the review commit and this correction commit above it.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 144 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- Each of the five review triggers failed against `c2ba592` before the corrections.
+
+### In flight
+
+PR #12 needs a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- Negative zero passes every comparison against zero. Read the sign bit with `float.IsNegative` when the sign matters.
+- A struct that `default` makes skips every factory. A hash, a counter, or any accumulator with a non-zero start needs a guard.
+- A determinism sweep proves only what it reads. The `Atan2` grid held no negative zero, so it could not see the defect. Widen the sweep with each defect it missed.
+- A first correction for P2-1 added a branch for a negative zero x. A check showed the branch changed no result, and it is gone. Test a defensive branch before you keep it.
+- The pinned bit-identity hash changes when the sweep grows, not only when Core changes. Say which one it was.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
+
 ## Session 29: 2026-09-08, Codex
 
 Author: Codex
