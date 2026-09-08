@@ -2,6 +2,43 @@
 
 Entries older than the 10 newest sessions move here from `docs/session-handoff.md` (D-146). Newest first.
 
+## Session 14: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: answer the P2-3 finding. Branch `docs/roadmaps`, part of PR #1.
+
+### What this session did, and why
+
+- The review at head `e51e272` raised P2-3. It has full merit. The F-51 row in the design register still said that `REVIEW_GATE_MODE` selects the mode, and D-185 replaced that variable with the tracked file `.github/review-gate-mode`.
+- The defect came from the D-185 citation pass in session 12. That pass added the `D-185` id to every line that cited `D-181` by script, and it did not read the prose beside the id. A mechanical citation edit does not make the sentence true.
+- Corrected the F-51 row. It now names the tracked file and the base-branch read.
+- Ran the sweep that the finding specifies across every current document. It returned two further hits in `docs/decisions.md`, and neither is a defect. The D-181 row records what D-181 said and carries its revision marker. The D-185 row named the thing it replaced, and its Effect now says "Revises the mode source in D-181", which D-186 requires.
+- Used the D-187 procedure for the first time. A fetch showed session 13 on the remote, so this entry is session 14. No collision.
+
+### State of the build
+
+- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds the review commits and this session's commit.
+- No code, solution, or CI workflow exists. PR-1 creates them.
+- `CLAUDE.md` and `AGENTS.md` are byte-identical.
+
+### In flight
+
+PR #1 needs a repeat review. P2-3 is corrected in documents only, because no workflow exists yet.
+
+### Traps and gotchas
+
+- A mechanical citation pass must read the sentence that holds the citation. The script that added `D-185` beside `D-181` left one sentence false, and the review caught it.
+- The sweep for a removed name belongs with the citation pass, not after the next review.
+- The D-187 procedure works. Fetch, read the highest number, then add one.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session reviews the diff through `e51e272` and updates `docs/reviews/pr-1.md` to the new effective head. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
+
 ## Session 13: 2026-09-07, Codex
 
 Author: Codex

@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 24: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #10. Branch `feat/pr-2-ste-check`.
+
+### What this session did, and why
+
+- Re-reviewed PR #10 at effective head `d55666d` against base and merge base `94aadc5`.
+- Confirmed that the three prior P2 findings are resolved.
+- Found P2-4. A quoted close parenthesis can end an outer parenthesized span.
+- Updated `docs/reviews/pr-10.md` with the new finding and the verdict `Changes required`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 63 tests and 0 failures.
+- The repository checker reports 0 findings in 15 files.
+- The Godot check did not complete because Godot could not write its macOS support file.
+
+### In flight
+
+PR #10 needs P2-4 corrected and a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- The masking passes run in sequence. A later pass can read delimiters that an earlier pass already made opaque.
+- `FindSpanEnd` fixes nested parentheses of one type. It does not protect against delimiters from another span type.
+- The review commit is metadata. The review head remains `d55666d` under D-184.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-4, add the regression tests, and request another repeat Codex review.
+
 ## Session 23: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -384,40 +421,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 The owner merges PR #1 after confirming the review-gate and other PR gate conditions. Then run `docs/runbooks/macos-runner.md` on 2026-09-08.
-
-## Session 14: 2026-09-07, Claude Code
-
-Author: Claude Code
-Session: answer the P2-3 finding. Branch `docs/roadmaps`, part of PR #1.
-
-### What this session did, and why
-
-- The review at head `e51e272` raised P2-3. It has full merit. The F-51 row in the design register still said that `REVIEW_GATE_MODE` selects the mode, and D-185 replaced that variable with the tracked file `.github/review-gate-mode`.
-- The defect came from the D-185 citation pass in session 12. That pass added the `D-185` id to every line that cited `D-181` by script, and it did not read the prose beside the id. A mechanical citation edit does not make the sentence true.
-- Corrected the F-51 row. It now names the tracked file and the base-branch read.
-- Ran the sweep that the finding specifies across every current document. It returned two further hits in `docs/decisions.md`, and neither is a defect. The D-181 row records what D-181 said and carries its revision marker. The D-185 row named the thing it replaced, and its Effect now says "Revises the mode source in D-181", which D-186 requires.
-- Used the D-187 procedure for the first time. A fetch showed session 13 on the remote, so this entry is session 14. No collision.
-
-### State of the build
-
-- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds the review commits and this session's commit.
-- No code, solution, or CI workflow exists. PR-1 creates them.
-- `CLAUDE.md` and `AGENTS.md` are byte-identical.
-
-### In flight
-
-PR #1 needs a repeat review. P2-3 is corrected in documents only, because no workflow exists yet.
-
-### Traps and gotchas
-
-- A mechanical citation pass must read the sentence that holds the citation. The script that added `D-185` beside `D-181` left one sentence false, and the review caught it.
-- The sweep for a removed name belongs with the citation pass, not after the next review.
-- The D-187 procedure works. Fetch, read the highest number, then add one.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session reviews the diff since `e51e272` and updates `docs/reviews/pr-1.md` to the new effective head. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
