@@ -2,6 +2,51 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 49: 2026-09-08, Codex
+
+Author: Codex
+Session: repeat review of PR #15 for PR-4. Branch `feat/pr-4-logging`.
+
+### What this session did, and why
+
+- Re-reviewed PR #15 at effective head `e42a0a8` against base and merge base `51b3de7`.
+- Confirmed the provider gate. Claude Code wrote the corrections, and Codex reviewed them.
+- Closed P2-1. `LogFields` rejects the two logger names before a line exists.
+- Closed P2-2. The assertion report uses a copy, so two safe failures preserve the caller fields.
+- Kept P2-3 open. The encoder correction passes, but xUnit skips one required surrogate row because two rows have one test id.
+- Closed P2-4. `BuildLine` calls two leaf helpers, and the prior nested helpers are absent.
+- Added P2-5. A caller field with an assertion call-site name prevents every report and changes a safe failure to an exception.
+- Added P2-6. D-214, the response, and the PR description disagree about the member count, test count, and final head.
+- Updated `docs/reviews/pr-15.md` with the verdict `Changes required` for `e42a0a8`.
+
+### State of the build
+
+- `main` and the merge base are at `51b3de7`. The reviewed effective head is `e42a0a8`.
+- Remote head: `origin/feat/pr-4-logging` holds the metadata commit for this entry, verified with the session-end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` reports 226 passes and 0 failures.
+- The test run warns that xUnit skips one duplicate-id surrogate row. The P2-3 regression check is incomplete.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `e42a0a8`.
+
+### In flight
+
+PR #15 needs corrections for P2-3, P2-5, and P2-6, then another repeat review.
+
+### Traps and gotchas
+
+- xUnit can omit a theory row before execution when two invalid strings produce one display id.
+- The assertion call-site names are logger-owned names, like `level` and `message`.
+- A correction that adds an allowlist member must update the count and every current revision record.
+
+### Open questions that block progress
+
+No new owner question. No open question blocks the corrections.
+
+### Next concrete action
+
+Correct P2-3, P2-5, and P2-6, add the regression checks, and request another repeat Codex review.
+
 ## Session 48: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -396,47 +441,3 @@ No new owner question. OQ-80 is resolved by D-207. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
-
-## Session 39: 2026-09-08, Codex
-
-Author: Codex
-Session: fifth repeat review of PR #12. Branch `feat/pr-3-determinism`.
-
-### What this session did, and why
-
-- Re-reviewed PR #12 at effective head `9ad2a4c` against base and merge base `86078b8`.
-- Confirmed that the provider gate passes. Claude Code wrote the correction, and Codex reviewed it.
-- Confirmed that P2-7 is fixed. `Guid.NewGuid()` now reports `L-RANDOM`.
-- Confirmed that P2-8 is fixed. An unused `using System.Text;` now reports `L-NAMESPACE`.
-- Kept P2-6 open. The PR description says that four owner decisions were needed and lists D-200 to D-203, but the same description identifies D-200 to D-206 as the decisions for the PR.
-- Added P2-9. `EqualityComparer<string>.Default.GetHashCode(value)` compiles in Core and gives no lint finding. Three processes gave three values for the same string.
-- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
-
-### State of the build
-
-- `main` and the merge base are at `86078b8`. The reviewed effective head is `9ad2a4c`.
-- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 183 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
-- GitHub reports green CI, lint, STE, and bit-identity jobs at `9ad2a4c`.
-- The review-gate results stay red because the review verdict stays `Changes required`.
-
-### In flight
-
-PR #12 needs corrections for P2-6 and P2-9, then another repeat review.
-
-### Traps and gotchas
-
-- A member ban reads the type that declares the member. `EqualityComparer<string>.GetHashCode` reaches the string hash, but the member belongs to the comparer and not to `String`.
-- A whole-namespace approval can admit process state through a type that the decision never names.
-- Run a process-randomized hash probe in separate processes. Repeated calls inside one process use one seed.
-- A session number in the PR description becomes stale when the required review adds the next handoff entry.
-
-### Open questions that block progress
-
-No new owner question was filed in this review. The correction for P2-9 can require a revision to D-205. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Correct P2-6 and P2-9, add a regression test for the comparer trigger, and request another repeat review.

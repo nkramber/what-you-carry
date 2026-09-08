@@ -1,5 +1,49 @@
 # Session handoff archive
 
+## Session 39: 2026-09-08, Codex
+
+Author: Codex
+Session: fifth repeat review of PR #12. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- Re-reviewed PR #12 at effective head `9ad2a4c` against base and merge base `86078b8`.
+- Confirmed that the provider gate passes. Claude Code wrote the correction, and Codex reviewed it.
+- Confirmed that P2-7 is fixed. `Guid.NewGuid()` now reports `L-RANDOM`.
+- Confirmed that P2-8 is fixed. An unused `using System.Text;` now reports `L-NAMESPACE`.
+- Kept P2-6 open. The PR description says that four owner decisions were needed and lists D-200 to D-203, but the same description identifies D-200 to D-206 as the decisions for the PR.
+- Added P2-9. `EqualityComparer<string>.Default.GetHashCode(value)` compiles in Core and gives no lint finding. Three processes gave three values for the same string.
+- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
+
+### State of the build
+
+- `main` and the merge base are at `86078b8`. The reviewed effective head is `9ad2a4c`.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 183 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `9ad2a4c`.
+- The review-gate results stay red because the review verdict stays `Changes required`.
+
+### In flight
+
+PR #12 needs corrections for P2-6 and P2-9, then another repeat review.
+
+### Traps and gotchas
+
+- A member ban reads the type that declares the member. `EqualityComparer<string>.GetHashCode` reaches the string hash, but the member belongs to the comparer and not to `String`.
+- A whole-namespace approval can admit process state through a type that the decision never names.
+- Run a process-randomized hash probe in separate processes. Repeated calls inside one process use one seed.
+- A session number in the PR description becomes stale when the required review adds the next handoff entry.
+
+### Open questions that block progress
+
+No new owner question was filed in this review. The correction for P2-9 can require a revision to D-205. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-6 and P2-9, add a regression test for the comparer trigger, and request another repeat review.
+
 ## Session 38: 2026-09-08, Claude Code
 
 Author: Claude Code
