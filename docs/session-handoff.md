@@ -2,6 +2,50 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 33: 2026-09-08, Codex
+
+Author: Codex
+Session: second repeat review of PR #12. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- Re-reviewed PR #12 at effective head `5316033` against base and merge base `86078b8`.
+- Confirmed that the provider gate still passes. Claude Code wrote the correction, and Codex reviewed it.
+- Confirmed that the semantic scan fixes the two prior P2-3 probes and the F-# citations.
+- Kept P2-3 open. `Enum.IsDefined` compiles in Core and gives no reflection finding, against G-2 and the Session 28 record.
+- Added P2-5. A `System.Math.Sin` call under active `#if NET10_0` code builds, but the lint reports no finding.
+- Added P2-6. The PR description still reports the removed member word list, 144 tests, and the old effective head.
+- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
+
+### State of the build
+
+- `main` and the merge base are at `86078b8`. The reviewed effective head is `5316033`.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 146 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `5316033`.
+- The review-gate results stay red because the review verdict stays `Changes required`.
+
+### In flight
+
+PR #12 needs corrections for P2-3, P2-5, and P2-6, then another repeat review.
+
+### Traps and gotchas
+
+- Reflection APIs also exist outside `System.Type`, `System.Activator`, and the `System.Reflection` namespace.
+- A semantic scan only reads the branch that its parse symbols select.
+- The Core build defines target-framework symbols that the lint compilation does not define.
+- The PR description is part of the evidence record. Update it after a correction changes the implementation.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-3 and P2-5, then update the PR description for P2-6. Request another repeat review.
+
 ## Session 32: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -365,40 +409,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 Correct P2-4, add the regression tests, and request another repeat Codex review.
-
-## Session 23: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the PR #10 review. Branch `feat/pr-2-ste-check`.
-
-### What this session did, and why
-
-- Read the three P2 findings in `docs/reviews/pr-10.md` and assessed each against the evidence.
-- P2-1 has partial merit. The splitter requires a space after a colon on purpose: the `ste-writing` skill holds a bare URL in prose, and a split at every colon cuts it, and cuts every time and ratio. The roadmap and the skill over-claimed with "everywhere". Both now state the space condition, and `ColonInsideAWordDoesNotEndASentence` covers it.
-- P2-2 has full merit. Nested parentheses ended the span early. `FindSpanEnd` now counts depth, and `NestedParenthesesAreOneOpaqueWord` covers it.
-- P2-3 has full merit. A trailing argument after `--root` was silent. The loop now rejects every argument that is not a `--root <value>` pair, with exit 2 and a message that names the argument. Three new assertions cover it.
-- Wrote `docs/reviews/pr-10-response.md`.
-- The review commit `29b1066` was on the local checkout and not on the remote. This session pushes it with the response commit.
-
-### State of the build
-
-- `dotnet build` and `dotnet test` pass on the Mac Mini: 63 tests, 0 failures. The checker reports 0 findings in 15 files.
-- PR #10 is open. The effective head is the commit that holds this entry, because it holds the code corrections too.
-
-### In flight
-
-PR #10 needs a repeat review at the new effective head.
-
-### Traps and gotchas
-
-- The reviewer commits on this checkout when both providers share it. Check `git status` for an unpushed commit before you start, and push it.
-- `Sentence.Words` holds the masked tokens. Unmask a word before you compare it to text.
-- Count the words of a test sentence with the splitter, not in your head. Three expectations in this PR were off by one.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session re-reviews PR #10 per the repeat review procedure and updates `docs/reviews/pr-10.md` to the new effective head.
