@@ -50,6 +50,22 @@ public sealed class ReviewGateGitTests
     }
 
     [Fact]
+    public void ReviewGateNamesARewriteOfTheReviewFile()
+    {
+        // D-198: a later commit that rewrites the review file keeps the effective head, and the output names that commit.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string reviewed = repo.Commit("feat: first", Files(("WhatYouCarry.Core/A.cs", "// a")));
+        repo.Commit("docs: review", Files((ReviewFile, ReviewFixture.Text(reviewed, "Changes required"))));
+        string rewrite = repo.Commit("docs: rewrite the review", Files((ReviewFile, ReviewFixture.Text(reviewed, "Ready for owner merge"))));
+
+        ReviewGateResult result = Evaluate(repo, rewrite);
+
+        Assert.Equal(ReviewGateResult.Success, result.Conclusion);
+        Assert.Contains($"Review file last changed by: {rewrite} \"docs: rewrite the review\"", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReviewGateFailsOnHandoffPlusCodeCommit()
     {
         using var repo = new TemporaryGitRepository();

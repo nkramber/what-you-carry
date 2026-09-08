@@ -8,6 +8,9 @@ namespace WhatYouCarry.Tools.ReviewGate;
 /// <summary>A commit and its committer time.</summary>
 public sealed record CommitStamp(string Sha, DateTimeOffset CommitTime);
 
+/// <summary>A commit and its subject line.</summary>
+public sealed record CommitSubject(string Sha, string Subject);
+
 /// <summary>Runs git in one checkout. Every failure carries the command, the exit code, and stderr (T-2).</summary>
 public sealed class GitRepository
 {
@@ -59,6 +62,21 @@ public sealed class GitRepository
 
         DateTimeOffset time = DateTimeOffset.Parse(parts[1], CultureInfo.InvariantCulture);
         return new CommitStamp(parts[0], time);
+    }
+
+    /// <summary>The newest commit up to the head that changes the path, with its subject, or null when no commit does.</summary>
+    public CommitSubject? NewestCommitThatChanged(string head, string filePath)
+    {
+        string line = Run(["log", "-1", "--format=%H %s", head, "--", filePath]).Trim();
+        if (line.Length == 0)
+        {
+            return null;
+        }
+
+        int space = line.IndexOf(' ');
+        string sha = space < 0 ? line : line[..space];
+        string subject = space < 0 ? string.Empty : line[(space + 1)..];
+        return new CommitSubject(sha, subject);
     }
 
     public IReadOnlyList<string> ChangedPaths(string mergeBase, string head)

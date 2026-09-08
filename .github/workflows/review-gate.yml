@@ -1,9 +1,13 @@
-# Publishes the review-gate check run on the PR head (D-179, D-181, D-184, D-185, D-190).
+# Publishes the review-gate check run on the PR head (D-179, D-181, D-184, D-185, D-190, D-197).
 # The rules live in WhatYouCarry.Tools, command review-gate. This file only gathers the inputs and posts the result.
+#
+# The event is pull_request_target, so GitHub runs this file and the tool from the base branch (D-197).
+# The PR head is data only. The job fetches it into the git object store and never checks it out.
+# The tool reads the head through git. A PR cannot change the code that judges it.
 name: Review gate
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, synchronize, labeled, unlabeled]
 
 permissions:
@@ -20,10 +24,19 @@ jobs:
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       BASE_REF: ${{ github.event.pull_request.base.ref }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Check out the base branch
+        # No ref input: on pull_request_target the default ref is the base branch (D-197).
+        uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+
+      - name: Fetch the PR head as data
+        # The head commits enter the object store under a remote ref. The working tree stays on the base branch.
+        run: |
+          git fetch origin "+refs/pull/${PR_NUMBER}/head:refs/remotes/pull/${PR_NUMBER}/head"
+          git cat-file -e "${HEAD_SHA}^{commit}"
+          echo "base: $(git rev-parse HEAD)"
+          echo "head: ${HEAD_SHA}"
 
       - uses: actions/setup-dotnet@v5
         with:
@@ -50,7 +63,7 @@ jobs:
             > request.json
           cat request.json
 
-      - name: Evaluate the rules
+      - name: Evaluate the rules with the base-branch tool
         run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json
 
       - name: Publish the check run

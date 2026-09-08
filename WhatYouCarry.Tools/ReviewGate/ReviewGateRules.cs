@@ -141,7 +141,7 @@ public static class ReviewGateRules
 
         if (record.Verdict != ApprovedVerdict)
         {
-            return Fail($"The verdict in '{reviewFile}' approves the PR", $"'{ApprovedVerdict}'", $"'{record.Verdict}'");
+            return Fail($"The verdict in '{reviewFile}' approves the PR", $"'{ApprovedVerdict}'", $"'{record.Verdict}'. {ReviewFileCommitLine(facts)}");
         }
 
         if (facts.EffectiveHead is null)
@@ -163,7 +163,21 @@ public static class ReviewGateRules
         return new ReviewGateResult(
             ReviewGateResult.Success,
             "Approved review of the effective head",
-            $"Review: {reviewFile}\nVerdict: {record.Verdict}\nEffective head: {facts.EffectiveHead.Sha}\nMode: {mode}.");
+            $"Review: {reviewFile}\nVerdict: {record.Verdict}\nEffective head: {facts.EffectiveHead.Sha}\n{ReviewFileCommitLine(facts)}\nMode: {mode}.");
+    }
+
+    /// <summary>
+    /// Names the commit that last changed the review file. One shared identity cannot prove the reviewer (D-198),
+    /// so the owner reads this line and recognizes a commit that the reviewer did not make.
+    /// </summary>
+    private static string ReviewFileCommitLine(ReviewGateFacts facts)
+    {
+        if (facts.ReviewFileCommit is null)
+        {
+            return "Review file last changed by: no commit";
+        }
+
+        return $"Review file last changed by: {facts.ReviewFileCommit.Sha} \"{facts.ReviewFileCommit.Subject}\"";
     }
 
     private static bool IsEligible(string path)

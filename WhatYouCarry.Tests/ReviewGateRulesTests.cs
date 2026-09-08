@@ -52,6 +52,17 @@ public sealed class ReviewGateRulesTests
     }
 
     [Fact]
+    public void ReviewGateNamesTheCommitThatChangedTheReviewFile()
+    {
+        // D-198: the output names the commit that last changed the review file, on success and on a verdict failure.
+        ReviewGateResult success = ReviewGateRules.Evaluate(Facts(mode: "advisory", reviewFile: ReviewFixture.Text(Head, "Ready for owner merge")));
+        Assert.Contains("Review file last changed by: fedcba9876543210fedcba9876543210fedcba98 \"docs: review PR #7\"", success.Summary, StringComparison.Ordinal);
+
+        ReviewGateResult failure = ReviewGateRules.Evaluate(Facts(mode: "advisory", reviewFile: ReviewFixture.Text(Head, "Blocked")));
+        Assert.Contains("Review file last changed by: fedcba9876543210fedcba9876543210fedcba98", failure.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReviewGatePassesOnApprovalInEnforcedMode()
     {
         ReviewGateResult result = ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: ReviewFixture.Text(Head, "Ready for owner merge")));
@@ -169,6 +180,7 @@ public sealed class ReviewGateRulesTests
             ChangedPaths = changedPaths ?? ["WhatYouCarry.Core/Core.cs"],
             EffectiveHead = new CommitStamp(Head, commitTime ?? labelTime.AddHours(-1)),
             ReviewFileText = reviewFile,
+            ReviewFileCommit = reviewFile is null ? null : new CommitSubject("fedcba9876543210fedcba9876543210fedcba98", "docs: review PR #7"),
         };
     }
 }

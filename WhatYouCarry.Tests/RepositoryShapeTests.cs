@@ -84,6 +84,17 @@ public sealed class RepositoryShapeTests
     }
 
     [Fact]
+    public void ReviewGateRunsOnPullRequestTarget()
+    {
+        // D-197: the workflow and the tool come from the base branch, and no step checks out the PR head.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/review-gate.yml");
+        Assert.Contains("\n  pull_request_target:\n", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("\n  pull_request:\n", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("ref: ${{ github.event.pull_request.head", workflow, StringComparison.Ordinal);
+        Assert.Contains("refs/pull/${PR_NUMBER}/head", workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReviewGateModeFileHoldsAdvisory()
     {
         // D-185: PR-1 creates the mode file with advisory.

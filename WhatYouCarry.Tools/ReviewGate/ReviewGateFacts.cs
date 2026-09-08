@@ -29,6 +29,9 @@ public sealed class ReviewGateFacts
     /// <summary>The review file on the PR head, or null when it is absent (D-179).</summary>
     public required string? ReviewFileText { get; init; }
 
+    /// <summary>The newest commit that changed the review file, or null when the file is absent. The output names it (D-198).</summary>
+    public required CommitSubject? ReviewFileCommit { get; init; }
+
     /// <summary>Reads the facts for a request from its git checkout.</summary>
     public static ReviewGateFacts Gather(ReviewGateRequest request)
     {
@@ -44,6 +47,7 @@ public sealed class ReviewGateFacts
             ChangedPaths = git.ChangedPaths(mergeBase, request.HeadSha),
             EffectiveHead = git.NewestCommitOutside(mergeBase, request.HeadSha, ReviewGateRules.MetadataPaths),
             ReviewFileText = git.ReadFileOrNull(request.HeadSha, ReviewGateRules.ReviewFilePath(request.PullRequestNumber)),
+            ReviewFileCommit = git.NewestCommitThatChanged(request.HeadSha, ReviewGateRules.ReviewFilePath(request.PullRequestNumber)),
         };
     }
 
