@@ -37,7 +37,7 @@ The newest handoff entry can describe a review rather than authorship. A Git acc
 Do not infer authorship from prose style, commit email, or a branch name.
 
 **Stop with `Blocked` if the providers match, authorship is unknown, or the evidence conflicts.**
-State which fact or eligible reviewer is required. Ask the owner to supply that fact or start the opposite-provider session.
+State the fact or the eligible reviewer that the review needs. Ask the owner to supply that fact or start the opposite-provider session.
 Do not perform a substitute review with another model from the same provider.
 
 If both providers wrote substantive changes in the PR, neither qualifies for the whole PR.
@@ -74,7 +74,7 @@ State the invariant that each boundary must preserve.
 - Trace state ownership and lifetime across Core, Game, Tools, and Tests.
 - Inspect initialization, cancellation, cleanup, restart, and replay when the change affects those paths.
 - Check event order, resource disposal, integer bounds, and float edge cases where they affect the result.
-- Inspect compatibility with existing callers, content, saves, and exported builds.
+- Inspect compatibility with current callers, content, saves, and exported builds.
 - Check whether a local fix creates a defect in another consumer of the same contract.
 - Verify each acceptance criterion against implementation and evidence.
 
@@ -84,7 +84,7 @@ A pre-existing defect blocks this PR only when it prevents the changed behavior 
 
 ### Project contracts
 
-Apply each relevant row. Record why an area does not apply when its omission could mislead a reviewer.
+Apply each relevant row. Record why an area does not apply when its omission can mislead a reviewer.
 
 | Area | Required examination |
 |---|---|
@@ -153,7 +153,7 @@ Absent required evidence blocks approval. Optional evidence gaps belong in the l
 ## Precise findings
 
 Investigate each suspected defect before it becomes a finding.
-Search for a caller guarantee, validation layer, existing test, or later decision that could refute the concern.
+Search for a caller guarantee, validation layer, existing test, or later decision that can refute the concern.
 Use a reproduction, failed assertion, or complete causal trace as evidence.
 Separate a verified defect from an unresolved question or an optional suggestion.
 
@@ -201,7 +201,7 @@ The effective head is the newest commit that changes a path outside the metadata
 The metadata set is `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md`.
 A commit that changes only those paths is a metadata commit, and it does not change the effective head.
 The required review commit holds the review record and the handoff entry, so it is always a metadata commit (D-182).
-Without that rule the review commit would invalidate the review that it publishes.
+Without that rule the review commit invalidates the review that it publishes.
 Record the effective head, not the tip, when the review commit is the last commit.
 
 Use this skeleton. Keep the heading text and the order.

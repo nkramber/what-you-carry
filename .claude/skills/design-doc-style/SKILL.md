@@ -26,7 +26,7 @@ The design doc is one file: `docs/design.md`. Its roadmap section is the high-le
 7. **Guardrails.** Numbered invariants that every PR must keep.
 8. **Roadmap.** Phases. Each entry has an id (PR-#, M-#, I-#), a technical paragraph, and a gate. It ends with a plain-English paragraph in a block quote that starts with "*In plain English:*".
 9. **Sequence.** A strict ordered list with a single owner. Mark the gate.
-10. **Open questions.** A link to `docs/questions.md` (D-144). The register there is numbered. Record the date and the answer there when one arrives.
+10. **Open questions.** A link to `docs/questions.md` (D-144). The register there has numbers. Record the date and the answer there when one arrives.
 
 ## Rules
 
@@ -42,7 +42,7 @@ The design doc is one file: `docs/design.md`. Its roadmap section is the high-le
 
 - Max 25 words per sentence (STE rule 6.3).
 - No code identifiers unless the reader needs them.
-- Say what is missing today, what the change does, and why it is safe.
+- Say what the game lacks today, what the change does, and why it is safe.
 
 ## Focused roadmaps
 

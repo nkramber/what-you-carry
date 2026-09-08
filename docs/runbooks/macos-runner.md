@@ -12,8 +12,8 @@ Facts checked on 2026-09-07:
 
 - The machine is arm64 on macOS 26.5.2.
 - The repository has zero runners.
-- The `gh` command is logged in as the owner with the `repo` scope, which the registration token needs.
-- No external volume is mounted yet.
+- The `gh` command has a login as the owner with the `repo` scope, which the registration token needs.
+- The machine has no external volume yet.
 - The runner service script `runsvc.sh` reads a `.path` file and sets the path from it. Source: `actions/runner`, checked 2026-09-07.
 - The `actions/setup-dotnet` action supports a self-hosted runner and reads `global.json`. Source: the action README, checked 2026-09-07.
 

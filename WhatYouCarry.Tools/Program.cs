@@ -1,11 +1,12 @@
 using System;
 using WhatYouCarry.Tools.ReviewGate;
+using WhatYouCarry.Tools.SteCheck;
 
 namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check.";
 
     public static int Main(string[] args)
     {
@@ -21,6 +22,8 @@ public static class Program
         {
             case "review-gate":
                 return ReviewGateCommand.Run(commandArgs);
+            case "ste-check":
+                return SteCheckCommand.Run(commandArgs);
             default:
                 Console.Error.WriteLine($"Unknown command '{command}'. {Usage}");
                 return 2;

@@ -28,7 +28,7 @@ All guardrails in `docs/design.md` section 6.2 apply. These three matter most in
 
 1. **G-7.** Every content file validates. A family, a weapon, an affix, and a boss are content.
 2. **G-10.** One concern per PR. One family, one weapon batch, one boss per PR.
-3. **G-12.** Ids never change. PR-36 to PR-42 and PR-43 to PR-46 are reserved ranges, one id per PR.
+3. **G-12.** Ids never change. PR-36 to PR-42 and PR-43 to PR-46 are ranges in reserve, one id per PR.
 
 ## 4. Roadmap
 
@@ -130,7 +130,7 @@ Check clause: none.
 
 Gate per PR: exit tests 1 to 5 pass.
 
-> *In plain English:* seven more kinds of enemy, each added alone so its shape and its behavior can be judged on their own.
+> *In plain English:* seven more kinds of enemy, each added alone, so the owner can judge its shape and its behavior on their own.
 
 ### PR-43 to PR-46: Weapons to twelve
 
@@ -177,7 +177,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 3 pass.
 
-> *In plain English:* more random item powers, each proven to work for you and against you, and none that everyone would always pick.
+> *In plain English:* more random item powers, each proven to work for you and against you, and none that everyone always picks.
 
 ### PR-48: Destructible props
 
@@ -202,7 +202,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 4 pass.
 
-> *In plain English:* barrels and crates break. Walls do not, so the hunter can never be walled off.
+> *In plain English:* barrels and crates break. Walls do not, so no wall can stop the hunter.
 
 ### PR-49: Asset QA gate v2
 
@@ -248,7 +248,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 4 pass.
 
-> *In plain English:* music made from recipes. If it does not sound good enough, the decision to generate it is reopened.
+> *In plain English:* music made from recipes. If it does not sound good enough, the decision to generate it opens again.
 
 ### Tier 4 pass
 

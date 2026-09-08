@@ -111,7 +111,7 @@ Scope:
 - `Core/Entities/QuickSlot.cs`: one consumable ready to use with the main weapon equipped (D-22).
 - `Core/Combat/Bomb.cs`: a thrown projectile with a fuse, an area, and full self-damage (D-32).
 - `Core/Entities/Potions.cs`: a health potion and a mana potion with the numbers from OQ-53.
-- `Core/Entities/WeaponSwap.cs`: a swap from the satchel that takes the OQ-53 time and cannot be canceled (D-21).
+- `Core/Entities/WeaponSwap.cs`: a swap from the satchel that takes the OQ-53 time, and the player cannot cancel it (D-21).
 - `WhatYouCarry.Game/Ui/SatchelScreen.cs`: the satchel screen for a controller at Deck size (D-90, G-15).
 
 Out of scope: found amulets as items (PR-28), the bank (PR-30).
@@ -246,7 +246,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 5 pass.
 
-> *In plain English:* a language model can play the game slowly through a text channel to hunt for exploits a robot would not try. A summary tool hands it the strangest runs.
+> *In plain English:* a language model can play the game slowly through a text channel to hunt for exploits that a robot does not try. A summary tool hands it the strangest runs.
 
 ### PR-27: Skill points and the death payout
 
@@ -255,7 +255,7 @@ Scope:
 - `Core/Economy/SkillPoints.cs`: points per kill from the enemy weight and a floor multiplier, plus a boss bonus, with the numbers from OQ-56 (D-44).
 - `Core/Economy/DeathPayout.cs`: the retained share by depth from the curve in OQ-21 (D-52).
 - `Core/Economy/RunTotal.cs`: the live run total, paid in full on ascend and at the retained share on death.
-- `WhatYouCarry.Tools/EconomyTrials/`: the M-5 harness (D-154). It uses one thousand fixed seeds, the basic kit and an empty tree, and the policy set. Time is simulated ticks over 60 plus sixty seconds of hub cost per run start. The statistic has a bootstrap 95 percent interval. Policies: `AscendAtDepth(n)` and `DieAtDepth(n)` for n in 1 to 14, `ShallowRepeat`, `FullClear`, `EarlyDeath`.
+- `WhatYouCarry.Tools/EconomyTrials/`: the M-5 harness (D-154). It uses one thousand fixed seeds, the basic kit and an empty tree, and the policy set. Time is the tick count over 60 plus sixty seconds of hub cost per run start. The statistic has a bootstrap 95 percent interval. Policies: `AscendAtDepth(n)` and `DieAtDepth(n)` for n in 1 to 14, `ShallowRepeat`, `FullClear`, `EarlyDeath`.
 - Points events in the run log.
 - A Tier 3 session on this PR (D-128).
 
@@ -268,7 +268,7 @@ Exit tests:
 3. `AscendPaysInFull` asserts the full total on ascend.
 4. `TrialsAreDeterministic` runs the harness twice and asserts equal results.
 5. `M5PassCondition` asserts at every depth the ascend lower bound exceeds the die upper bound, and deep ascend beats shallow repeat (D-154).
-6. The Tier 3 session's findings are filed.
+6. The Tier 3 session files its findings.
 
 Review focus: economy, determinism, test quality.
 
@@ -362,7 +362,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 7 pass.
 
-> *In plain English:* the camp between runs is where you choose what to risk. What you carry down can be lost, and a basic sword is always there so you can always go again.
+> *In plain English:* the camp between runs is where you choose what to risk. You can lose what you carry down, and a basic sword is always there so you can always go again.
 
 ### PR-31: Persistence and replay resume
 
@@ -380,7 +380,7 @@ Exit tests:
 
 1. `ProfileWriteIsAtomic` kills the process during a write in a fixture and asserts the old profile intact.
 2. `KillAtEveryBoundary` kills at departure, ascension, death, and migration in turn, and asserts one consistent profile with no duplicated reward (D-152).
-3. `CompletedRunCannotPayTwice` resumes a record whose run id is completed and asserts a refusal with a report.
+3. `CompletedRunCannotPayTwice` resumes a record whose run id is complete and asserts a refusal with a report.
 4. `ResumeRewindsFiveSeconds` kills mid-floor and asserts the resume tick equals the exit tick minus three hundred.
 5. `MismatchResumesAtFloorStart` bumps the simulation version and asserts a floor-start resume with a notice (D-151).
 6. `RepeatCrashFallsBack` throws on the first resume and asserts a floor-start resume on the second.
@@ -433,7 +433,7 @@ One person owns the program. Items run one at a time in this order. Gate 2 must 
 24. PR-31.
 25. M-4 table complete. M-5 table dated.
 26. Owner: answer OQ-20. Friends play.
-27. **← GATE 3 (full loop).** Every exit test in this file passes. The M-5 pass condition holds. Two friend sessions are filed. The owner signs the gate in `docs/decisions.md`.
+27. **← GATE 3 (full loop).** Every exit test in this file passes. The M-5 pass condition holds. Two friend sessions have reports on file. The owner signs the gate in `docs/decisions.md`.
 
 ## 6. Open questions
 

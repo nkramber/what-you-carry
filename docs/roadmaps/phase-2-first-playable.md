@@ -12,7 +12,7 @@ Correction passes: none yet.
 
 Phase 2 puts the first floor in the owner's hands (D-57). It ends at Gate 2, the first playable milestone (D-150). That build has one generated floor, one sword, one enemy family, the timer, the hunter, and a stairwell. The owner signs off on feel. Every system in this phase renders or drives what Phase 1 built. The order follows dependency. The Game skeleton comes first, because nothing is visible without it. The mesher and the model loader come next, because the player and the enemies need bodies. The asset QA tool follows the loader, before any armor exists (D-149). The player, the first enemy, the timer, and the stairwell then arrive in play order. The HUD and the first sounds close the phase, because feel needs both.
 
-This phase holds the first balance numbers of the project. Each number that a fresh session could set differently is a decision (D-123). The questions in section 6 collect them before the PR that needs them.
+This phase holds the first balance numbers of the project. Each number that a fresh session can set differently is a decision (D-123). The questions in section 6 collect them before the PR that needs them.
 
 ## 2. Findings that bind this phase
 
@@ -268,7 +268,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 7 pass.
 
-> *In plain English:* you reach the stairs, choose to go down or leave, and the next floor is already built, so there is no pause.
+> *In plain English:* you reach the stairs, choose to go down or leave, and the next floor already exists, so there is no pause.
 
 ### PR-19: HUD and controller navigation
 

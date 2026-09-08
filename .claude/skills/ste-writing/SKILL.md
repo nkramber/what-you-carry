@@ -119,7 +119,10 @@ The rules permit these as written. They are technical names (rule 1.5):
 - Tools and platforms: Godot, C#, .NET, xUnit, dotnet format, GitHub Actions, Steam, Steamworks, Steam Deck, Blockbench, JSON, JSONL, Metal, Vulkan, MoltenVK.
 - The two harnesses: Claude Code, Codex.
 - Project names: WhatYouCarry.Core, WhatYouCarry.Game, WhatYouCarry.Tools, WhatYouCarry.Tests, DetMath.
-- Game terms: run, floor, stairwell, hunter, timer, boss, hub, bank, loadout, satchel, quick slot, amulet, skill orb, skill tree, skill point, affix, rarity, tier, band, potion, mana, cooldown, reload, hyper-armor, stagger, dodge, block, shield, intent, tick, seed, replay, voxel, greedy meshing, pathfinding, lighting, ambient occlusion.
+- Game terms, the run: run, floor, stairwell, hunter, timer, boss, hub, bank, loadout, tick, seed, replay.
+- Game terms, the gear: satchel, quick slot, amulet, skill orb, skill tree, skill point, affix, rarity, tier, band, potion, mana.
+- Game terms, combat: cooldown, reload, hyper-armor, stagger, dodge, block, shield, intent.
+- Game terms, the world: voxel, greedy meshing, pathfinding, lighting, ambient occlusion.
 - Process terms: session handoff, decision register, questions register, PR gate, cross-provider review, property test, bot sweep, seed sweep, smoke session, foundation gate.
 - Save terms: profile file, run record, basic kit, simulation version, content hash.
 - The standard itself: ASD-STE100, STE.
@@ -136,12 +139,39 @@ Use one term per concept. Examples:
 
 ## The checker
 
-A C# tool, `WhatYouCarry.Tools.SteCheck`, will run on every hand-written `.md` file in the PR gate (D-130). The tool does not exist yet. Until it exists, apply the checklist by hand and state that you did in the PR.
+The C# tool `WhatYouCarry.Tools.SteCheck` runs on every hand-written `.md` file in the PR gate (D-130). The `ste-check` CI job runs it on every PR. Run it before you commit:
 
-The checker flags passive voice (3.6) and modal and helper verbs (3.2, 3.4). It flags sentence-initial and preposition-led -ing forms (3.5), and the 20-word limit in a numbered step (5.1). It also flags semicolons, contractions, and the 25-word limit. Dated records are exempt: review files, session handoffs, and audit files.
+```
+dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .
+```
+
+The command prints one line per finding: the file, the line, the rule id, what the rule saw, and the sentence. It exits 1 on any finding. The rules and the exemptions:
+
+| Rule id | What the checker flags |
+|---|---|
+| STE 5.1 | More than 20 words in a numbered item under a heading that holds "Sequence" or "Procedure" |
+| STE 6.3 | More than 25 words in any other sentence |
+| STE 8.1 | A semicolon |
+| STE 4.2 | A contraction: `n't`, or a pronoun with `'s`, `'re`, `'ve`, `'ll`, `'d`, or `'m`. A possessive passes |
+| STE 3.6 | Passive voice: is, are, was, were, be, been, or being, then a past participle. One adverb can stand between them |
+| STE 3.4 | A helper verb: should, would, could, might, may, shall, ought. Also has, have, or had before a participle, and is or are before an -ing form |
+| STE 3.5 | An -ing form as the first word of a sentence, or after a preposition |
+| D-178 | A citation of a decision that the register marks `Superseded by D-N`, on a line with no revision word and without D-N |
+| D-187 | Two `## Session <number>` headings with the same number in `docs/session-handoff.md` |
+
+Dated records are exempt by path: `docs/reviews/`, `docs/session-handoff.md`, `docs/session-handoff-archive.md`, and `docs/archive/`. The reference check also skips them, because a dated record is history, and a rewrite to name the reviser falsifies it.
+
+The passive and participle rules are heuristics. A past participle is an irregular form from a list, or a word that ends in "ed". "is closed" is a finding, and so is "is required". Rewrite the sentence with the actor as the subject: "the build needs the SDK". "must", "can", and "will" pass, because the standard approves them.
+
+An -ing word that is a noun or a technical name passes: nothing, during, warning, heading, finding, lighting, meshing, pathfinding, and a few more. A hyphenated word never counts as an -ing form. To add a technical name, add it to the list in `SteRules.cs` with a test.
 
 ## Markdown notes
 
-- Tables and code blocks are exempt from sentence-length counts. Keep cell text short.
-- Headings are titles. They count as one word (8.6).
+- Tables, fenced code blocks, and thematic breaks are exempt from every rule. Keep cell text short.
+- Headings are titles. They count as one word (8.6). The checker reads no rule on a heading.
+- Text in backticks, in double quotes, or in parentheses is one word (8.5, 8.6). The grammar rules do not read inside it.
+- A colon that a space or the line end follows ends a sentence, in any text and not only in a vertical list (8.4). A colon inside a word, as in a time or a URL, does not.
+- Parentheses can nest. The complete outer span is one word.
+- A sentence stays on one line. The checker reads each line alone, so a sentence that wraps to a second line counts as two.
+- A numbered item is a procedural step only under a heading that holds "Sequence" or "Procedure". The nearest heading above the item decides, at any level.
 - The "plain-English" paragraphs in the design doc are descriptive text. Rule 6.3 applies (max 25 words).

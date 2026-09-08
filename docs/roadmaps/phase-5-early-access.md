@@ -51,9 +51,9 @@ Out of scope: Steam upload (PR-52), auto-update.
 Exit tests:
 
 1. `ExportJobProducesThree` asserts three artifacts from one tag.
-2. `MacBuildIsNotarized` asserts the notarization ticket is stapled, by the tool's own check.
+2. `MacBuildIsNotarized` asserts that the tool's own check finds the stapled notarization ticket.
 3. `CleanInstallRunsSmoke` runs the smoke session from a clean install on each platform and asserts exit code 0.
-4. `NoCredentialInRepository` asserts no credential file is tracked.
+4. `NoCredentialInRepository` asserts that git tracks no credential file.
 5. `ShaderPrewarmCoversAllMaterials` asserts every material in the atlas set draws during the pre-warm.
 
 Review focus: input and CI boundaries, presentation, dependencies.
@@ -62,7 +62,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 5 pass.
 
-> *In plain English:* the game becomes something a player can install, also on a Mac that would otherwise block it. The first launch never stutters on a new shader.
+> *In plain English:* the game becomes something a player can install, also on a Mac that blocks unsigned software. The first launch never stutters on a new shader.
 
 ### PR-52: Steamworks
 
@@ -97,7 +97,7 @@ Gate: exit tests 1 to 5 pass.
 Scope:
 
 - `WhatYouCarry.Game/Ui/SettingsScreen.cs`: the settings from OQ-69, for a controller at Deck size (D-90, G-15).
-- Rebinding for keyboard, mouse, and controller, saved in the profile.
+- A rebind for keyboard, mouse, and controller, saved in the profile.
 - Accessibility options per OQ-14, each with no effect on the simulation seed context unless D-53 changes.
 - The string table complete for every screen (D-98).
 
@@ -143,7 +143,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 4 pass.
 
-> *In plain English:* the game is confirmed to play well on the handheld.
+> *In plain English:* a test confirms that the game plays well on the handheld.
 
 ### PR-55: Crash report flow
 
