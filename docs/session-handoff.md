@@ -2,6 +2,48 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 31: 2026-09-08, Codex
+
+Author: Codex
+Session: repeat review of PR #12. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- Re-reviewed PR #12 at effective head `1bc665b` against base and merge base `86078b8`.
+- Confirmed that the provider gate still passes. Claude Code wrote the corrections, and Codex reviewed them.
+- Confirmed that P2-1, P2-2, and P2-4 are fixed, with regression coverage.
+- Kept P2-3 open. The new name list gives both a false negative and a false positive.
+- A probe with `Type.GetEvents()` gave no finding. A user-defined `probe.GetMethods()` call gave `L-REFLECTION`.
+- Updated `docs/reviews/pr-12.md` with the changed hash and the repeat-review evidence.
+
+### State of the build
+
+- `main` and the merge base are at `86078b8`. The reviewed effective head is `1bc665b`.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 144 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `1bc665b`.
+- The review-gate results stay red because the review verdict stays `Changes required`.
+
+### In flight
+
+PR #12 needs a complete P2-3 correction and another repeat review.
+
+### Traps and gotchas
+
+- Member text does not identify the member symbol. A Core type can declare a method with a reflection-like name.
+- A finite reflection member list can miss a supported `System.Type` API.
+- The P2-3 code comments cite F-62. F-64 is the register entry for the reflection defect.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-3 with complete reflection detection and tests for both probe cases. Then request another repeat review.
+
 ## Session 30: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -352,47 +394,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 Correct P2-1 to P2-3, add the regression tests, and request a repeat Codex review.
-
-## Session 21: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: PR-2, the STE checker. Branch `feat/pr-2-ste-check`, PR #10.
-
-### What this session did, and why
-
-- Started PR-2 after the owner merged PR #9. Session 19 named it as the next action, and nothing blocked it.
-- Wrote the `ste-check` command of `WhatYouCarry.Tools` (D-130, D-139). One reader turns a Markdown file into prose lines, one splitter turns a line into sentences and words, and one rules class holds the seven STE rules. The reference check (D-178, D-186) and the session number check (D-187) are two more classes. `RepositoryCheck` runs all three over one checkout.
-- The splitter masks text in backticks, double quotes, and parentheses. Each span is one opaque word (8.5, 8.6), and no grammar rule reads inside it. A colon ends a sentence everywhere (8.4).
-- Wrote 25 tests. Exit tests 1 to 9 of the roadmap each have a test, and the command test runs `Program.Main` on a throwaway checkout for the exit codes 0, 1, and 2.
-- Wrote `.github/workflows/ste-check.yml` with the one job `ste-check`. It runs on Linux only, because the checks read text.
-- The first run found 77 findings in 15 files: 52 passive, 15 helper verbs, 5 over 25 words, and 5 -ing forms. Two were rule gaps. A hyphenated identifier in a skill front matter matched the -ing rule, and the noun "finding" matched it after "per". Both are exclusions now, with tests. The other 75 were real, and each sentence is rewritten with the same meaning.
-- Rewrote the checker section of the `ste-writing` skill. It gives the command, a table of the rule ids, the exemptions, and the Markdown conventions the checker needs.
-- Marked PR-1 and PR-2 done in the design doc and the roadmap. PR-1 was still marked planned after its merge.
-
-### State of the build
-
-- `main` is at `94aadc5`. The branch holds one code commit, `3ea5f23`, and this entry.
-- `dotnet build` and `dotnet test` pass on the Mac Mini: 61 tests, 0 failures. The checker reports 0 findings in 15 files.
-- PR #10 is open. CI, `ste-check`, and `review-gate` run on it from the trunk workflows.
-
-### In flight
-
-PR #10 waits for a Codex review (T-4). The `review-gate` check shows grey until the review record lands.
-
-### Traps and gotchas
-
-- The passive rule is a heuristic: an auxiliary, an optional adverb, and a word that ends in "ed" or is on the irregular list. "is required" and "is closed" are findings. Rewrite with the actor as the subject.
-- "have" before a participle is a complex tense, so "the docs have dated records" is a finding. Use "hold".
-- The checker reads each line alone. A sentence that wraps to a second line counts as two short ones.
-- The reference check skips the exempt paths. A dated record cites old decisions as history, and a rewrite to name the reviser falsifies it.
-- `perl -p` reads one line at a time. A multi-line replacement needs `-0`, and an argument that starts with a hyphen needs `--` before it. Both failed silently this session before the fix.
-- A `## Procedure` or `## Sequence` heading gives every numbered item below it the 20-word limit, until the next heading at any level.
-- To add a technical name that ends in -ing, add it to `NotIngForms` in `SteRules.cs` with a test.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session reviews PR #10 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-10.md`. After the merge, PR-3 starts: the seeded RNG, DetMath, the lint tool, and the bit-identity CI job.
