@@ -24,12 +24,12 @@ Session: PR-1, the repository scaffold. Branch `feat/pr-1-scaffold`.
 
 - `main` is at `546a70a`. The branch `feat/pr-1-scaffold` holds the scaffold commit and this entry.
 - `dotnet build WhatYouCarry.slnx` and `dotnet test WhatYouCarry.slnx --no-build` pass on the Mac Mini: 32 tests, 0 failures.
-- No CI run exists yet. The PR opens the first run on the three platforms.
+- PR #6 is open. The first CI run passed on all three platforms, with 32 tests on each. The `review-gate` workflow posted its check run on the head commit, with the OQ-72 failure.
 - `CLAUDE.md` and `AGENTS.md` are byte-identical.
 
 ### In flight
 
-PR-1 is open and waits for a Codex review (T-4). The `review-gate` check on PR-1 is red on the mode-file rule until the owner answers OQ-72. The CI workflow runs for the first time on this PR, so the Linux and Windows legs are unproven.
+PR-1 is open and waits for a Codex review (T-4). The `review-gate` check on PR-1 is red on the mode-file rule until the owner answers OQ-72. The CI workflow passed its first run on this PR on all three platforms.
 
 ### Traps and gotchas
 
