@@ -220,6 +220,100 @@ public sealed class DetLintTests
     }
 
     /// <summary>
+    /// Reflection that sits outside System.Type, System.Activator, and the System.Reflection namespace is a
+    /// finding too. `Enum.IsDefined` reads the enum metadata, and session 28 removed it from Core for that
+    /// reason (F-64).
+    /// </summary>
+    [Theory]
+    [InlineData("public static bool B() => System.Enum.IsDefined(typeof(Probe), 0);")]
+    [InlineData("public static string[] B() => System.Enum.GetNames(typeof(Probe));")]
+    [InlineData("public static object B() => System.Enum.GetValues(typeof(Probe));")]
+    [InlineData("public static object B() => System.Enum.Parse(typeof(Probe), \"A\");")]
+    [InlineData("public static bool B(Probe p) => p.HasFlag(Probe.A);")]
+    [InlineData("public static object B(System.Delegate d) => d.Method;")]
+    [InlineData("public static object B() => System.AppDomain.CurrentDomain;")]
+    [InlineData("public static int B(object o) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(o);")]
+    public void ReflectionOutsideTheKnownTypesIsAFinding(string member)
+    {
+        Assert.Contains(
+            Scan($"public enum Probe {{ A = 1 }}\npublic static class A {{ {member} }}"),
+            finding => finding.Rule == "L-REFLECTION");
+    }
+
+    /// <summary>
+    /// `typeof` gives back a System.Type, and no symbol carries its name, so the keyword itself is the rule.
+    /// Without it a Core file can hold a type value that reaches a place where no name is banned (F-64).
+    /// </summary>
+    [Fact]
+    public void TypeOfIsAFinding()
+    {
+        LintFinding finding = Assert.Single(Scan("public static class A { public static object B() { var t = typeof(A); return t; } }"));
+        Assert.Equal("L-REFLECTION", finding.Rule);
+        Assert.Equal("typeof", finding.Symbol);
+    }
+
+    /// <summary>
+    /// An ordinary enum stays legal. The ban reads `System.Enum`, which owns the metadata methods, and never the
+    /// Core enum that declares the values.
+    /// </summary>
+    [Fact]
+    public void AnOrdinaryEnumIsNotAFinding()
+    {
+        Assert.Empty(Scan("""
+            namespace WhatYouCarry.Core.Determinism
+            {
+                public enum Stream
+                {
+                    First = 0,
+                    Second = 1,
+                }
+
+                public static class A
+                {
+                    public static bool B(Stream stream) => stream == Stream.First;
+
+                    public static int C(Stream stream) => (int)stream;
+
+                    public static bool D(Stream stream) => stream >= Stream.First && stream <= Stream.Second;
+                }
+            }
+            """));
+    }
+
+    /// <summary>
+    /// Conditional compilation in Core is a finding (D-204, F-65). The Core build defines the target-framework
+    /// symbol, so a `#if NET10_0` branch compiles while a lint that defines no symbol reads an empty branch.
+    /// </summary>
+    [Fact]
+    public void ConditionalCompilationInCoreIsAFinding()
+    {
+        // The review trigger. The build compiles this call, and the old scan reported nothing.
+        IReadOnlyList<LintFinding> findings = Scan("public static class A {\n#if NET10_0\n    public static double B(double c) => System.Math.Sin(c);\n#endif\n}");
+        LintFinding finding = Assert.Single(findings);
+        Assert.Equal("L-CONDITIONAL", finding.Rule);
+        Assert.Equal("#if", finding.Symbol);
+        Assert.Equal(2, finding.Line);
+
+        // A branch that the lint symbols would select is a finding too. The rule reads the directive, not the body.
+        Assert.Contains(
+            Scan("public static class A {\n#if DEBUG\n    public static int B() => 1;\n#else\n    public static int B() => 2;\n#endif\n}"),
+            other => other.Rule == "L-CONDITIONAL");
+    }
+
+    /// <summary>
+    /// A directive that selects no branch stays legal. The rule reads conditional compilation alone (D-204).
+    /// </summary>
+    [Theory]
+    [InlineData("#nullable enable")]
+    [InlineData("#region Parts")]
+    [InlineData("#pragma warning disable CA1000")]
+    public void ADirectiveThatSelectsNoBranchIsNotAFinding(string directive)
+    {
+        string suffix = directive.StartsWith("#region", StringComparison.Ordinal) ? "\n#endregion" : string.Empty;
+        Assert.Empty(Scan($"{directive}\npublic static class A {{ public static int B() => 1; }}{suffix}"));
+    }
+
+    /// <summary>
     /// A banned name inside a comment or a string is not a finding. The scan reads symbols, so prose can never
     /// reach a rule (D-202).
     /// </summary>

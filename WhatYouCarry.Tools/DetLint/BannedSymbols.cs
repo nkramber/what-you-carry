@@ -52,6 +52,15 @@ public static class BannedSymbols
         ["System.Environment"] = new("L-CLOCK", "Environment reads the machine, and TickCount is a wall clock (G-21)."),
         ["System.Type"] = new("L-REFLECTION", "System.Type reads the type at run time. Core is static (G-2)."),
         ["System.Activator"] = new("L-REFLECTION", "Activator makes a type at run time. Core is static (G-2)."),
+        ["System.Enum"] = new("L-REFLECTION", "An Enum method reads the enum metadata at run time. Compare the value, or hold an explicit list (G-2)."),
+        ["System.Attribute"] = new("L-REFLECTION", "An Attribute method reads the metadata at run time. Core is static (G-2)."),
+        ["System.AppDomain"] = new("L-REFLECTION", "AppDomain reads the loaded assemblies at run time. Core is static (G-2)."),
+        ["System.Delegate"] = new("L-REFLECTION", "A Delegate member reads or makes a method at run time. Core is static (G-2)."),
+        ["System.MulticastDelegate"] = new("L-REFLECTION", "A Delegate member reads or makes a method at run time. Core is static (G-2)."),
+        ["System.RuntimeTypeHandle"] = new("L-REFLECTION", "A runtime handle names a type at run time. Core is static (G-2)."),
+        ["System.RuntimeMethodHandle"] = new("L-REFLECTION", "A runtime handle names a method at run time. Core is static (G-2)."),
+        ["System.RuntimeFieldHandle"] = new("L-REFLECTION", "A runtime handle names a field at run time. Core is static (G-2)."),
+        ["System.Runtime.CompilerServices.RuntimeHelpers"] = new("L-REFLECTION", "RuntimeHelpers reads the object identity and the type at run time. Core is static (G-2)."),
         ["System.Numerics.Vector"] = new("L-SIMD", "A hardware vector gives another result width on another platform (G-2)."),
         ["System.Numerics.Vector2"] = new("L-SIMD", "A System.Numerics vector may use SIMD. Core declares its own types (G-2)."),
         ["System.Numerics.Vector3"] = new("L-SIMD", "A System.Numerics vector may use SIMD. Core declares its own types (G-2)."),
@@ -72,6 +81,19 @@ public static class BannedSymbols
         ["System.Reflection"] = new("L-REFLECTION", "Reflection reads the assembly at run time. Core is static (G-2)."),
         ["System.Runtime.Intrinsics"] = new("L-SIMD", "An intrinsic is hardware dependent (G-2)."),
     };
+
+    /// <summary>
+    /// The reason that the scan gives for a <c>typeof</c> expression. It gives back a <c>System.Type</c>, which
+    /// is the entry to every reflection call, and the value can reach a place that names no banned type (F-64).
+    /// </summary>
+    public const string TypeOfDetail = "typeof gives back System.Type, which reads the type at run time. Core is static (G-2).";
+
+    /// <summary>
+    /// The reason that the scan gives for a conditional compilation directive (D-204, F-65). A `#if` makes two
+    /// programs from one file, and a lint that parses one set of symbols can never read the other. Core holds
+    /// one simulation, so it holds no conditional branch (D-69).
+    /// </summary>
+    public const string ConditionalDetail = "Conditional compilation makes two programs from one Core file, and only one of them reaches this check. Core is one simulation (D-69, D-204).";
 
     /// <summary>The rule id and the reason for one banned symbol.</summary>
     public readonly record struct BannedName(string Rule, string Detail);

@@ -184,3 +184,9 @@ How to file a question (D-124, D-138):
     - the same range and degree, and a target of 2.5e-4 for sine and 1.4e-3 for cosine.
 
     Recommendation: the fold. It gives 1.2e-09 for sine and 1.1e-07 for atan, at the same multiply count as the degree-7 form. Resolved 2026-09-08: D-203.
+77. **OQ-77. Conditional compilation in Core.** Raised 2026-09-08 (PR #12 review P2-5). Blocks PR-3. Code inside `#if NET10_0` compiles in the Core build, and `det-lint` reports nothing, because the lint parse defines no symbol. Options:
+    - a ban on conditional compilation in Core. This is complete, and it adds a rule for Core source.
+    - the Core build symbols in the lint parse. This catches the reported case, and `DEBUG` and `RELEASE` are both real builds, so one of them stays unread.
+    - the symbols now, and a ban when a Core file first needs a branch.
+
+    Recommendation: the ban. The second option cannot be complete, and a gate with a known hole is worse than a stricter rule. Core holds no conditional directive today. Resolved 2026-09-08: D-204, the ban.

@@ -2,7 +2,7 @@
 
 Date: 2026-09-08
 
-This file answers `docs/reviews/pr-12.md`. The first pass answers the review of head `c2ba592`. The second pass answers the repeat review of head `1bc665b`.
+This file answers `docs/reviews/pr-12.md`. The passes answer the review of head `c2ba592`, and the repeat reviews of heads `1bc665b` and `5316033`.
 
 ## Summary
 
@@ -96,6 +96,49 @@ Regression check: `OnlyTheCanonicalDetMathPathIsExempt` asserts an `L-MATHF` fin
 - F-64: the `DetMath.cs` file-name exemption defect.
 
 No new decision. No new open question.
+
+## P2-3, third pass: the symbol table omitted System.Enum
+
+Disposition: full merit.
+
+The trigger reproduces. `System.Enum.IsDefined(typeof(ReviewProbeValue), 0)` compiled in Core and gave 0 findings at `5316033`. The symbol read was correct, and the table was short.
+
+The review names the strongest evidence for it. Session 28 removed `Enum.IsDefined` from `Rng.ForStream` and named it reflection that G-2 bans, so the tool contradicted the code it guards.
+
+Correction: `BannedSymbols.Types` gains `System.Enum`, `System.Attribute`, `System.AppDomain`, `System.Delegate`, `System.MulticastDelegate`, the three runtime handle types, and `System.Runtime.CompilerServices.RuntimeHelpers`. `CoreSourceScan` also reports the `typeof` keyword. No symbol carries that name, and a `typeof` value can reach a place where no name is banned, so the keyword itself is the rule.
+
+An ordinary enum stays legal. The ban reads `System.Enum`, which owns the metadata methods, and never the Core enum that declares the values. `Rng.ForStream` compares two `RngStream` values, and `det-lint` reports 0 findings on Core.
+
+Regression check: `ReflectionOutsideTheKnownTypesIsAFinding` covers `Enum.IsDefined`, `Enum.GetNames`, `Enum.GetValues`, `Enum.Parse`, `HasFlag`, `Delegate.Method`, `AppDomain.CurrentDomain`, and `RuntimeHelpers.GetHashCode`. `TypeOfIsAFinding` covers the keyword. `AnOrdinaryEnumIsNotAFinding` declares a Core enum and asserts no finding. The two prior probe tests stay green.
+
+## P2-5: Active conditional code escapes the lint compilation
+
+Disposition: full merit.
+
+The trigger reproduces. A `System.Math.Sin` call inside `#if NET10_0` gave 0 findings at `5316033`. The Core project targets net10.0, so the build defines that symbol and compiles the call.
+
+The correction is an owner decision, because one of the two options adds a rule for Core source. This session gave the owner the evidence for both and the owner selected the ban (D-204).
+
+The reason the other option loses: it cannot be complete. `DEBUG` and `RELEASE` are both real builds, so a lint that parses one configuration never reads the other. The bit-identity job builds Debug, so a Release-only divergence would ship unproven by the gate that exists to catch it. A symbol list also has to track the target framework, and a later bump that misses it reopens the hole in silence.
+
+Correction: `CoreSourceScan` reports each `#if` as `L-CONDITIONAL`. The rule reads the directive and not its body, so an inactive branch is a finding too. A `#nullable`, `#region`, or `#pragma` directive stays legal, because none of them selects a branch. Core held no conditional directive, so the rule changed no Core file.
+
+Regression check: `ConditionalCompilationInCoreIsAFinding` covers the review trigger and a `#if DEBUG` pair. `ADirectiveThatSelectsNoBranchIsNotAFinding` covers the three legal directives.
+
+## P2-6: The PR description reports the superseded lint correction
+
+Disposition: full merit.
+
+The description still named the member word list, 144 tests, and head `1bc665b`. The record did not match the change.
+
+Correction: the description now holds a table of all six findings and their state, a section on the symbol read, the reason the sweep grew once, 156 tests, and the current review state. It was updated before this commit, and again after D-204 landed.
+
+## New ids, second and third pass
+
+- D-204: Core holds no conditional compilation. Resolves OQ-77.
+- OQ-77: the P2-5 correction. Resolved by D-204.
+- F-65: the conditional compilation gap.
+- F-64 now records all three P2-3 passes.
 
 ## Verification
 

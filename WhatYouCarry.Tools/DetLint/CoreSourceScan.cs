@@ -120,6 +120,16 @@ public static class CoreSourceScan
             string path = tree.FilePath;
             AddCompilerErrors(findings, reportEveryCompilerError ? compilation.GetDiagnostics() : tree.GetDiagnostics(), path);
 
+            // A conditional directive is trivia, so the node walk below never reaches it. The rule reads `#if`
+            // alone, which gives one finding for each conditional block (D-204).
+            foreach (SyntaxNode directive in tree.GetRoot().DescendantNodes(descendIntoTrivia: true))
+            {
+                if (directive is IfDirectiveTriviaSyntax)
+                {
+                    findings.Add(Create(directive, path, "L-CONDITIONAL", "#if", BannedSymbols.ConditionalDetail));
+                }
+            }
+
             SemanticModel model = compilation.GetSemanticModel(tree);
             bool isDetMath = path.Replace('\\', '/').Equals(BannedSymbols.DetMathPath, StringComparison.Ordinal);
 
@@ -128,6 +138,14 @@ public static class CoreSourceScan
                 if (node is UsingDirectiveSyntax usingDirective)
                 {
                     AddImportFinding(findings, model, usingDirective, path);
+                    continue;
+                }
+
+                // `typeof` is a keyword, so no symbol names it and no Core type can carry its name. It gives back
+                // a System.Type value that can reach a place where no name is banned, so the keyword is the rule.
+                if (node is TypeOfExpressionSyntax typeOfExpression)
+                {
+                    findings.Add(Create(typeOfExpression, path, "L-REFLECTION", "typeof", BannedSymbols.TypeOfDetail));
                     continue;
                 }
 

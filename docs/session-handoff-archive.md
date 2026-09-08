@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 24: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #10. Branch `feat/pr-2-ste-check`.
+
+### What this session did, and why
+
+- Re-reviewed PR #10 at effective head `d55666d` against base and merge base `94aadc5`.
+- Confirmed that the three prior P2 findings are resolved.
+- Found P2-4. A quoted close parenthesis can end an outer parenthesized span.
+- Updated `docs/reviews/pr-10.md` with the new finding and the verdict `Changes required`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 63 tests and 0 failures.
+- The repository checker reports 0 findings in 15 files.
+- The Godot check did not complete because Godot could not write its macOS support file.
+
+### In flight
+
+PR #10 needs P2-4 corrected and a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- The masking passes run in sequence. A later pass can read delimiters that an earlier pass already made opaque.
+- `FindSpanEnd` fixes nested parentheses of one type. It does not protect against delimiters from another span type.
+- The review commit is metadata. The review head remains `d55666d` under D-184.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-4, add the regression tests, and request another repeat Codex review.
+
 ## Session 23: 2026-09-08, Claude Code
 
 Author: Claude Code
