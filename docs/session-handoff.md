@@ -15,7 +15,7 @@ Session: PR-3, the seeded RNG, DetMath, the lint tool, and the bit-identity job.
 - Wrote `Rng.cs` (xoshiro128** with SplitMix64 seeding), `DetMath.cs`, `StateHash.cs`, and `RngStream.cs` in Core.
 - Wrote the `det-lint` command, which parses each Core file with the C# compiler API (D-202), and the `bit-identity` command (D-201).
 - Wrote `.github/workflows/bit-identity.yml` and `.github/workflows/det-lint.yml`. The bit-identity workflow passes each hash up as a job output, so it needs no artifact action.
-- 70 new tests. The total is 133, and all pass. Exit tests 1 to 7 each have a test, and exit test 8 needs the live CI run.
+- 70 new tests. The total is 133, and all pass. Exit tests 1 to 7 each have a test, and the CI run proved exit test 8.
 - Corrected exit test 5. The roadmap asked for the opposite of D-160, and no FNV-1a hash can hold the roadmap form (F-61).
 - Updated the PR template. PR-3 creates the lint tool and the bit-identity job, so the two bootstrap notes are gone.
 
@@ -25,7 +25,8 @@ Session: PR-3, the seeded RNG, DetMath, the lint tool, and the bit-identity job.
 - Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build` passes with 0 warnings. `dotnet test` passes with 133 tests and 0 failures.
 - `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- The bit-identity hash on macOS arm64 is `ef592d4148eb8ba0`. The other two platforms answer on the PR.
+- The bit-identity job on PR #12 proved exit test 8. Linux x64, Windows x64, and macOS arm64 each answered `ef592d4148eb8ba0`, and the compare job agreed. This is the first live proof of G-9.
+- Every check on PR #12 is green: CI on the three platforms, `bit-identity` on the three platforms and its compare job, `det-lint`, and `ste-check`. The `review-gate` check is neutral with the title "No review record", which is the advisory grey of D-181.
 - The Godot 4.7.2 headless build check passes with `/Applications/Godot_mono.app/Contents/MacOS/Godot`. The name `Godot` is not on the command path.
 
 ### In flight
