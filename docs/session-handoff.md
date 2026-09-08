@@ -2,6 +2,170 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 20: 2026-09-08, Codex
+
+Author: Codex
+Session: repeat review of PR #6. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Re-reviewed PR #6 at effective head `03e6a29` against base and merge base `546a70a`.
+- Confirmed P1-1 is fixed in `9624cfa`. The `pull_request_target` workflow runs the base-branch evaluator and fetches the PR head as data only.
+- Confirmed P1-2 remains an accepted risk under D-198. The output names the commit that last changed the review file, and the repository cannot prove provider identity with its shared unsigned commits.
+- Found no new finding. Updated `docs/reviews/pr-6.md` to `Ready for owner merge`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 35 tests and 0 failures.
+- GitHub reports passing Linux, Windows, and macOS CI at head `03e6a29`.
+- The review-gate check does not run on PR #6 before the workflow reaches `main`, as recorded in D-197 and F-58.
+
+### In flight
+
+The owner can merge PR #6. After the merge, run the adversarial proof against `main` that D-197 requires.
+
+### Traps and gotchas
+
+- The `pull_request_target` workflow is available only after its file reaches the default branch.
+- The review-record identity risk remains accepted under D-198.
+- The effective head is `03e6a29`, because the latest register changes are outside the metadata paths.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner merges PR #6. Then run the adversarial proof against `main` and record its result.
+
+## Session 19: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the PR #6 review. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Read the two P1 findings in `docs/reviews/pr-6.md` and assessed each against the evidence.
+- P1-1 has full merit. The `pull_request` event ran the tool from the PR head with `checks: write`. The owner chose `pull_request_target` (D-197). The workflow now checks out the base, fetches the PR head as data, and runs the base-branch tool. `ReviewGateRunsOnPullRequestTarget` covers it.
+- P1-2 has partial merit. The rewrite of a review file reproduces, and the requested identity check cannot be built, because every commit has one identity and no signature. The owner accepted the risk under D-190 (D-198). The output now names the commit that last changed the review file. Two tests cover it.
+- Opened PR #7, a throwaway adversarial PR against the PR-1 branch, to prove the trusted evaluator live. GitHub produced no run. The events reference says `pull_request_target` triggers only when the workflow file exists on the default branch (F-58). Closed PR #7 and deleted the branch.
+- Wrote `docs/reviews/pr-6-response.md`, D-197, D-198, F-56 to F-58, and the roadmap corrections.
+
+### State of the build
+
+- `main` is at `4ec9708`. The branch holds the scaffold, the D-196 records, the Codex review, the `9624cfa` fix, and this entry.
+- `dotnet build` and `dotnet test` pass on the Mac Mini: 35 tests, 0 failures. CI passed on the three platforms at `9624cfa`.
+- No `review-gate` check runs on PR #6 from `9624cfa` on. `main` has no workflow, and the head workflow no longer uses `pull_request` (D-197, F-58). The last gate run, on the review commit `4b5add8`, gave the correct failure for `Changes required`.
+
+### In flight
+
+PR #6 waits for a repeat Codex review of the diff since `39db1f9`. After the merge, a throwaway PR against `main` with an always-approve evaluator proves D-197, and the response file records the run.
+
+### Traps and gotchas
+
+- `pull_request_target` reads the trigger from the default branch. A workflow on a feature branch never runs for that event, and a PR against that branch gives no error, only silence (F-58).
+- A `pull_request_target` run lists the base branch as its head branch in `gh run list`. Do not filter by the PR branch.
+- The gate cannot see PR #6 until the merge. The owner merges PR #6 on the review record alone, as for PR #1 to PR #5.
+- The identity of a commit proves nothing about the provider (D-198). Read the "Review file last changed by" line in the check output.
+- The adversarial proof must never merge. Close the PR and delete the branch after the run.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session reviews the diff since `39db1f9` and updates `docs/reviews/pr-6.md`. Then the owner merges. Then a session opens the throwaway adversarial PR against `main`, records the run in the response file, closes it, and starts PR-2.
+
+## Session 18: 2026-09-08, Codex
+
+Author: Codex
+Session: review PR #6. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Reviewed PR #6 at head `39db1f9` against base and merge base `546a70a`.
+- Confirmed the opposite-provider gate. The PR author is Claude Code, and the reviewer is Codex.
+- Found two P1 defects in the review gate. The workflow runs PR-controlled evaluator code with `checks: write`. A PR author can replace an approved review record in a metadata-only commit.
+- Wrote `docs/reviews/pr-6.md` with the verdict `Changes required`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 32 tests and 0 failures.
+- GitHub reports passing Linux, Windows, and macOS CI for PR #6. The custom review-gate check is neutral until the review record approves the head.
+- The Godot command did not run because `Godot` is not on this checkout's command path.
+
+### In flight
+
+PR #6 needs both P1 findings corrected and a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- The review-gate workflow checks out the PR head and runs `WhatYouCarry.Tools` from that head.
+- The effective-head rule excludes `docs/reviews/`, so it does not detect a review-file replacement.
+- PR #6 has GitHub base `546a70a`, while `main` now points to `4ec9708`.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P1-1 and P1-2, then request a repeat review of PR #6.
+
+## Session 17: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: PR-1, the repository scaffold. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Started PR-1 from `/Volumes/SSD-1TB/what-you-carry` after the owner merged PR #5. Session 16 named it as the next action, and nothing blocked it.
+- Created `WhatYouCarry.slnx` with the four projects (D-108, D-194), `global.json` on SDK 10.0.400 (D-173), and `Directory.Build.props` with nullable on, warnings as errors, and one language version (D-68).
+- Put one directory per project at the root. `project.godot` lives in `WhatYouCarry.Game/`, next to its project file, so the Godot editor scans the Game directory and not the whole checkout. The solution stays at the root. This is a layout judgment, and not a decision.
+- Wrote the `review-gate` tool as the `review-gate` command of `WhatYouCarry.Tools` (D-65). The rules are one pure function. Git reads are one class. The workflow only gathers the inputs and posts the check run.
+- Wrote 32 tests. Every exit test with a name in the roadmap has a test with that name. The git-backed tests build throwaway repositories and run the real `git log` pathspec command.
+- Wrote `ci.yml` with one job per platform (D-71, D-100, D-157, D-189) and `review-gate.yml` on the five event types (D-190).
+- Wrote the PR template with the gate checklist, the absent checks, and the document lines (D-118, D-148).
+- Ran the Godot 4.7.2 editor headless with `--build-solutions` on the Game project. It built, made no solution file, and left the project file unchanged.
+- Ran the tool against this checkout with `origin/main` as the base. It found that the base has no mode file, and it gave a failure that names the file. That was OQ-72. The owner chose option (b), and this session put the one-line file on `main` in `4ec9708` on that instruction (D-196). The owner asked first whether a Codex approval plus the override label gives green. It does not: the mode rule runs first, and D-190 keeps code paths out of the override.
+- Added the build and test commands to `CLAUDE.md` and `AGENTS.md` (D-122).
+
+### State of the build
+
+- `main` is at `4ec9708`, which holds only the mode file above `546a70a`. The branch `feat/pr-1-scaffold` holds the scaffold commit, the D-196 records, and this entry.
+- `dotnet build WhatYouCarry.slnx` and `dotnet test WhatYouCarry.slnx --no-build` pass on the Mac Mini: 32 tests, 0 failures.
+- PR #6 is open. The first CI run passed on all three platforms, with 32 tests on each. The `review-gate` workflow posted its check run on the head commit, with the OQ-72 failure.
+- `CLAUDE.md` and `AGENTS.md` are byte-identical.
+
+### In flight
+
+PR #6 is open and waits for a Codex review (T-4). After D-196 the `review-gate` check on PR #6 reads `advisory` from `main` and shows grey until the review record lands. The CI workflow passed its first run on this PR on all three platforms.
+
+### Traps and gotchas
+
+- The Godot editor writes `TargetFramework` `net8.0` into a project file that has none, and it keeps a `.csproj.old` copy. Each project file names `net10.0` for that reason. Do not move the target framework into `Directory.Build.props`.
+- The Godot SDK knows the configurations `Debug`, `ExportDebug`, and `ExportRelease`. CI builds the default `Debug`. A `--configuration Release` build of the solution is untested.
+- `git cat-file -e <rev>:<path>` exits 128 for an absent path, and not 1. The tool uses `git ls-tree`, which prints nothing and exits 0 for an absent path.
+- The tool reads the mode file from the base branch, so the base must hold it. D-196 put it there before PR-1 merged. A repository rebuild must keep that file on the trunk.
+- One commit went to `main` without a PR on the owner instruction (D-196). That is the exception, not the rule (D-126, D-170).
+- A merge of `main` into a PR branch is a commit outside the metadata set, so it moves the effective head and needs a repeat review. A rebase does the same.
+- Git marks its object files read-only. The temp-repository helper clears the attribute before delete, or Windows refuses the delete.
+- `dotnet run` prints the build output to stdout, so the tool writes its result to a file and never to stdout.
+- The workflow uses `jq --slurp` to make one array from the paginated timeline. An empty timeline gives `[]`.
+- `Microsoft.NET.Test.Sdk` and `xunit.runner.visualstudio` are in the test project as the xUnit stack under D-66. They are the packages that `dotnet test` needs to run xUnit. No separate decision entry exists for them.
+- `timeout` does not exist on macOS. `perl -e 'alarm N; exec @ARGV'` does the same job.
+
+### Open questions that block progress
+
+No open question blocks PR-1. OQ-72 is resolved by D-196. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session reviews PR #6 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-<number>.md`. After the merge, PR-2 starts: the STE checker.
+
 ## Session 16: 2026-09-07, Claude Code
 
 Author: Claude Code
@@ -255,176 +419,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 Define the advisory-mode variable setup, correct the metadata-path rule, revise PR #1, and request another repeat review.
-
-## Session 10: 2026-09-07, Claude Code
-
-Author: Claude Code
-Session: the neutral grey state for `review-gate`. Branch `docs/roadmaps`, part of PR #1.
-
-### What this session did, and why
-
-- The owner asked where the red check appears, then asked for a neutral grey state instead of a permanent red one. `review-gate` failed whenever no review record existed, so a PR stayed red for most of its life and a red rollup masked a real build failure.
-- Verified first that GitHub counts a neutral or skipped conclusion as a success for a required status check. Source: docs.github.com, "About status checks", verified 2026-09-07. A plain grey-when-absent gate would stop blocking a merge at launch. Recorded F-51.
-- D-181 gives the check three conclusions and two modes. In `advisory` mode a missing review file is neutral. In `enforced` mode it is a failure. The repository variable `REVIEW_GATE_MODE` selects the mode. An absent or unknown value fails the job and names the variable (T-2).
-- A workflow job cannot set a neutral conclusion by its exit code. The job publishes a check run through the Checks API, so the workflow needs `checks: write`.
-- D-181 revises D-179. D-180 is not revised, because D-181 only adds the mode step to its launch procedure.
-- Marking D-179 as revised made nine citations stale. The D-178 check found each one. They now name D-181.
-- Updated the PR-1 scope and exit tests to sixteen, both agent files, the `pr-review` skill with a color table, Phase 5 step 11, and the design register.
-- Recorded D-182 after the handoff and review record of sessions 8 and 9 reached this session uncommitted. A later commit absorbed them, and this session then reported the wrong verdict. The `pr-review` skill now requires a commit of the review record with its handoff entry, and the agent files carry the same rule.
-- D-182 narrows the scope limit in the skill, which listed a commit as an unauthorized action. A code fix, a merge, and an external message stay unauthorized.
-- D-183 lets the reviewer push its own review commit to the PR branch. A push is the only way `review-gate` reads the record, because the gate reads the PR head. The reviewer never pushes to `main`.
-
-### State of the build
-
-- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds fifteen commits, all on the remote.
-- No code, solution, or CI workflow exists. PR-1 creates them.
-- `CLAUDE.md` and `AGENTS.md` are byte-identical.
-
-### In flight
-
-**PR #1 is not ready to merge.** Session 9 approved head `223aae8`. This session pushed `4f7796e` after that approval, and it changes eight files outside `docs/reviews/`, including both agent files, the decision register, and the review skill. The approval does not cover the effective head. Rule 3 of D-179 applies.
-
-### Traps and gotchas
-
-- The verdict in `docs/reviews/pr-1.md` reads `Ready for owner merge`, and it applies to head `223aae8` only. Read the head field, not the verdict alone.
-- Grey is correct only in advisory mode. Never use a neutral conclusion for an enforced gate (F-51).
-- The `review-gate` job stays green itself. The check run it publishes carries the color, so the Checks list holds two rows.
-- Never write a decision range that spans a revised id. D-179 is revised, so a header says `D-176 to D-178, D-180, and D-181`.
-- Read the review file before a commit that sweeps it in. This session committed an approval it had not read, and then reported the wrong verdict.
-- One session is one handoff entry (D-146). Add a new entry. Do not append to an older one after another provider writes above it.
-- A review record that is not committed is invisible to `review-gate`, because the gate reads the PR head (D-182).
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session reviews the diff from `223aae8` to `4f7796e` and updates `docs/reviews/pr-1.md` to the new effective head. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
-
-## Session 9: 2026-09-07, Codex
-
-Author: Codex
-Session: final repeat review of PR #1 on `docs/roadmaps`.
-
-### What this session did, and why
-
-- Rechecked PR #1 at effective head `223aae8`.
-- Confirmed the P2-2 fix and reviewed the effective-head command clarification.
-- Updated `docs/reviews/pr-1.md` with a Ready for owner merge verdict.
-
-### State of the build
-
-- No solution or implementation exists on the reviewed head.
-- The diff check passes. The agent files remain identical. The settings file parses as JSON.
-- All four prior findings are fixed. No new finding remains.
-
-### In flight
-
-PR #1 is ready for owner merge. Build and CI checks remain deferred because this PR defines the solution and workflows that PR-1 creates.
-
-### Traps and gotchas
-
-- The reviewed effective head is `223aae8`.
-- The review file is machine-read. Keep its head field and verdict exact.
-- The owner must still register the runner and move the checkout to the SSD before PR-1.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-The owner can merge PR #1. Then complete the SSD and runner actions before starting PR-1.
-
-## Session 8: 2026-09-07, Codex
-
-Author: Codex
-Session: repeat review of PR #1 on `docs/roadmaps`.
-
-### What this session did, and why
-
-- Rechecked PR #1 at effective head `60087b0` against the prior review and the author response.
-- Confirmed fixes for P1-1, P1-2, and P2-1.
-- Added P2-2 to `docs/reviews/pr-1.md` because the Phase 1 header omits PR-58, D-177, and D-178.
-
-### State of the build
-
-- No solution or implementation exists on the reviewed head.
-- The diff check passes. The agent files remain identical. The settings file parses as JSON.
-- The review verdict remains Changes required.
-
-### In flight
-
-PR #1 needs a small roadmap header correction. The review record now names head `60087b0`.
-
-### Traps and gotchas
-
-- The effective head is the newest commit outside `docs/reviews/`.
-- The old findings stay in the review record with fixed dispositions.
-- The Phase 1 sequence includes PR-58, but the roadmap header still states PR-1 to PR-11 only.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Correct the Phase 1 roadmap header and request a final repeat review against the new effective head.
-
-## Session 7: 2026-09-07, Claude Code
-
-Author: Claude Code
-Session: answer the PR #1 review. Branch `docs/roadmaps`, part of PR #1.
-
-### What this session did, and why
-
-- Read `docs/reviews/pr-1.md` and checked each of the three findings against the branch, the registers, and the PR.
-- P1-2 and P2-1 have full merit. P1-1 has partial merit. The owner approved every disposition. Recorded D-176 to D-178 and F-47 to F-49. Wrote `docs/reviews/pr-1-response.md`.
-- P1-1: T-6 and D-137 prohibit text that names an agent, harness, or model as the source of the work. A tool name that identifies a configured file is not attribution, so the broad reading in the finding would also condemn D-172, D-175, OQ-16, F-15, the PR description, and the settings file path. D-176 states the boundary. The body of the head commit is rewritten, because one clause implied that an agent wrote the commits. PR-1 exit test 6 now scans every subject and body, not only trailers.
-- P1-2: PR-11 created the night job and the `night-gate` job together, so the gate had no result to read on its first run, against G-19. D-177 splits them. PR-11 publishes a result record. The new PR-58 adds the gate after one night runs. An absent, stale, cancelled, or failed record fails the gate.
-- P2-1: fixed all six stale references. The review named five. A sweep found a sixth at `phase-1-foundations.md:412`. D-178 adds a reference check to the PR-2 checker, so the next revision cannot leak.
-- The owner asked for a GitHub merge criterion that blocks a merge without the review files. GitHub returns 403 for branch protection and for rulesets on a private free repository, verified this session. No hard block is possible today.
-- Recorded D-179 and D-180 and F-50. PR-1 gains a `review-gate` job. It reads `docs/reviews/pr-<number>.md`, requires the verdict `Ready for owner merge`, and requires the recorded head to be the effective head. The job is advisory until launch. Phase 5 step 11 makes it a required check after the repository becomes public.
-- The owner asked for the head to match the PR head. The `pr-review` skill says the opposite: do not require the review file to hold its own hash. The effective head reconciles both. The effective head is the newest commit outside `docs/reviews/`.
-- The owner chose not to require the response file. The gate reads the review file only.
-- Codex re-reviewed at head `60087b0`. P1-1, P1-2, and P2-1 are marked fixed. One new finding, P2-2, is open: the Phase 1 roadmap header omits PR-58 and the new decisions, and it still says `Correction passes: none yet`.
-- P2-2 has full merit. Fixed line 3 and line 9 of the Phase 1 roadmap. Gave `phase-5-early-access.md` the same treatment, because this PR added its sequence step 11. The review did not name that file.
-- Ran the regression check that P2-2 specifies. It found three more defects of the same class. The new phase-1 range `D-156 to D-168` swallowed the revised D-158, `phase-2-first-playable.md` had the same defect in `D-157 to D-168`, and phase-1 line 465 cited D-158 with no revision marker. All three are fixed.
-- A wider sweep found two older ones: `docs/design.md:28` cited D-136 alone, and `phase-3-full-loop.md:372` cited D-94 alone. Both now name the revising decision.
-- Refined D-178. A line passes the reference check when it holds a revision word or when it names the revising decision. Without that clause the check fails on F-34, F-46, and four correct `D-94, D-152` pairs.
-- Rewrote `.claude/skills/pr-review/SKILL.md` for the format. It now holds a review file skeleton, the three machine-read fields, a finding format with stable `P<severity>-<n>` ids, the attribution boundary of D-176, the gate rules, a ten-step repeat review procedure, and the response file contract.
-
-### State of the build
-
-- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds thirteen commits. The head commit of session 5 was amended, and the branch was force pushed.
-- No code, solution, or CI workflow exists. PR-1 creates them.
-- `CLAUDE.md` and `AGENTS.md` are byte-identical.
-
-### In flight
-
-PR #1 needs a repeat review by Codex against the new head.
-
-### Traps and gotchas
-
-- The head commit was amended. The review file `docs/reviews/pr-1.md` names head `9459534`, which no longer exists.
-- D-176 fixes the attribution reading. Do not strip a tool name that identifies a configured file, a schema, or a version. Strip a claim about the source of the work.
-- The owner squash-merges (D-126). GitHub fills the squash body with every commit message. Check that body before the merge.
-- PR-58 is new. Phase 1 now ends with PR-11, one scheduled night, PR-58, then the measurements and Gate 1.
-- Ids never change. PR-58 sits after PR-11 in the sequence, not after PR-57.
-- The PR-2 reference check skips a line that holds `revises`, `revised by`, or `supersedes`. The two F-15 history lines were reworded to hold that word.
-- Branch protection and rulesets both return 403 on this repository. Do not plan a hard merge block before launch (D-180).
-- `review-gate` reads three exact things: the file name, the `- Head: ` line, and the verdict name. A reworded verdict fails the job.
-- The effective head ignores a commit that changes only `docs/reviews/`. A review file commit does not invalidate its own approval.
-- `docs/reviews/pr-1.md` now records head `60087b0` and holds four findings. P2-2 is the open one, and this session fixed it.
-- A decision range in a header can swallow a revised decision. Write `D-156, D-157, D-159 to D-168`, not `D-156 to D-168`, when D-158 is revised.
-- The roadmap header is a scope summary. Update line 3 and line 9 whenever a PR entry, a measurement, or a governing decision changes.
-- Never write a decision range that spans a revised id. D-179 is revised, so a header says `D-176 to D-178, D-180, and D-181`.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session reviews PR #1 a third time against the new head, per `.claude/skills/pr-review/SKILL.md`. P2-2 is the only finding to confirm. Sessions 8 and 9 did that work.

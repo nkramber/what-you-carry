@@ -1,0 +1,48 @@
+# Build and test on three platforms (D-71, D-100, D-148). One job per platform.
+# The SDK comes from actions/setup-dotnet and global.json on every platform (D-189).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Test
+        run: dotnet test WhatYouCarry.slnx --no-build
+
+  windows-x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Test
+        run: dotnet test WhatYouCarry.slnx --no-build
+
+  macos-arm64:
+    runs-on: [self-hosted, macos-arm64-self-hosted]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Test
+        run: dotnet test WhatYouCarry.slnx --no-build

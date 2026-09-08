@@ -264,6 +264,9 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-49 | PR #1 review P2-1: six lines cited D-172 or OQ-2 as a current answer after D-173 and D-175 revised them | 2026-09-07 | ✅ doc. All six corrected. 🔧 D-178 adds a reference check to PR-2 |
 | F-54 | A launch agent cannot read an external volume. macOS denied `/Volumes/SSD-1TB/actions-runner/runsvc.sh` with `Operation not permitted`, and the agent exited 126. A launchd probe repeated the denial, and a login shell read the same path correctly, verified 2026-09-07 | 2026-09-07 | ✅ D-193. Full Disk Access for `/bin/bash` and the runner `node` binary. Binds PR-1 and every machine rebuild |
 | F-55 | The Phase 1 roadmap named `WhatYouCarry.sln`, and the .NET 10 SDK creates a `.slnx` file. `dotnet new sln --format` gives `Default: slnx`, and a smoke job on the runner made `Smoke.slnx`, verified 2026-09-07 | 2026-09-07 | ✅ D-194. `WhatYouCarry.slnx`. Godot 4.7.2 accepts it. Binds PR-1 |
+| F-56 | PR #6 review P1-1: the `review-gate` workflow ran the tool from the PR head with `checks: write`, so a PR could change the code that judges it | 2026-09-08 | ✅ D-197. `pull_request_target`, the head as data only. Binds PR-1 and Phase 5 |
+| F-57 | PR #6 review P1-2: an author can rewrite the approved review file in a metadata commit, and one shared identity cannot prove the reviewer, verified 2026-09-08 | 2026-09-08 | 🔧 D-198. Accepted risk under D-190. The output names the commit that last changed the review file |
+| F-58 | GitHub triggers `pull_request_target` only when the workflow file exists on the default branch. PR #7 against the PR-1 branch produced no run, and the events reference states the rule, verified 2026-09-08 | 2026-09-08 | 🔧 D-197 Effect. The `review-gate` check cannot run on PR-1 itself. The proof runs after the merge |
 
 ## 6. Guardrails (the safety contract for every PR)
 

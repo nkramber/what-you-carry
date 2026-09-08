@@ -1,12 +1,12 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, D-175, D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, and D-194. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, D-175, D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, and D-196 to D-198. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
 External facts: none new. The Godot version is in the design header, verified 2026-09-07.
 
-Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner.
+Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner. 2026-09-07, PR-1: the claim that PR-1 passes its own check with no owner action was refuted by a run of the gate against `main`, and D-196 puts the mode file on `main` first. 2026-09-08, the PR #6 review. D-197 moves the gate to `pull_request_target`, and D-198 accepts the review-record risk with a named commit in the output.
 
 ## 1. Thesis
 
@@ -54,7 +54,7 @@ Scope:
 - `project.godot` and the Game project file on `Godot.NET.Sdk` at the pinned version (D-61).
 - `.github/workflows/ci.yml` with three jobs: build and test on hosted Linux x64, hosted Windows x64, and the self-hosted macOS arm64 runner (D-100, D-148, OQ-31).
 - `.github/pull_request_template.md` with the gate checklist and one "no change needed because" line per document (D-118). It has one line that names each absent check with the PR that creates it (D-148).
-- `.github/workflows/review-gate.yml` on the `pull_request` event (D-179, D-181, D-185). The event types are `opened`, `reopened`, `synchronize`, `labeled`, and `unlabeled`. The two label types make the check run again when the owner adds or removes the label (D-190). It needs `checks: write`, `contents: read`, and `pull-requests: read`.
+- `.github/workflows/review-gate.yml` on the `pull_request_target` event (D-179, D-181, D-185, D-197). GitHub runs the workflow file and the tool from the base branch, and the job fetches the PR head as data only. GitHub triggers the event only when the file exists on the default branch (F-58), so the check first runs on the PR after PR-1. The event types are `opened`, `reopened`, `synchronize`, `labeled`, and `unlabeled`. The two label types make the check run again when the owner adds or removes the label (D-190). It needs `checks: write`, `contents: read`, and `pull-requests: read`.
 - The job first reads the labels of the PR. The label `review-override` selects the override path of D-190, and the job then applies the override rules below.
 - Without that label, the job reads the PR number and applies three rules:
   - `docs/reviews/pr-<number>.md` exists on the PR head.
@@ -81,7 +81,7 @@ Scope:
 | The `review-override` label, and one code path changed | `failure` | `failure` | Red |
 | The `review-override` label, and a newer commit outside the metadata set | `failure` | `failure` | Red |
 
-- `.github/review-gate-mode`: a tracked file that holds `advisory` or `enforced` (D-185). PR-1 creates it with `advisory`, so PR-1 passes its own check with no owner action (G-19).
+- `.github/review-gate-mode`: a tracked file that holds `advisory` or `enforced` (D-185). PR-1 creates it with `advisory`. The workflow reads the base branch, so the owner put the same file on `main` before the merge (D-196), and PR-1 passes its own check (G-19).
 - The workflow reads the mode file from the base branch, never from the PR head (D-185). A PR must not change the mode that judges it.
 - An absent file, an empty file, or an unknown value fails the job and names the file (T-2). Do not default the value.
 - Neutral is correct only while the check is advisory. GitHub counts a neutral conclusion as a success for a required check (F-51).
@@ -115,12 +115,14 @@ Exit tests:
 21. `ReviewGateFailsOnOverrideLabelBeforeNewCommit` asserts a failure when a commit outside the metadata set is newer than the label event (D-190).
 22. `ReviewGateRunsOnLabelEvent` asserts that the `labeled` and `unlabeled` event types start the workflow (D-190).
 23. `SolutionIsSlnx` asserts that `WhatYouCarry.slnx` exists, that the repository holds no `.sln` file, and that the solution lists the four projects (D-194).
+24. `ReviewGateRunsOnPullRequestTarget` asserts the `pull_request_target` event, and that no step checks out the PR head (D-197).
+25. `ReviewGateNamesTheCommitThatChangedTheReviewFile` asserts that the output names the commit that last changed the review file, with its subject (D-198).
 
 Review focus: Core boundary, input and CI boundaries, dependencies, documents.
 
-Check clause: the STE checker, the lint tool, and the bit-identity job do not exist. PR-2 and PR-3 create them. Branch protection does not exist, so `review-gate` is advisory until launch (D-170, D-180).
+Check clause: the STE checker, the lint tool, and the bit-identity job do not exist. PR-2 and PR-3 create them. Branch protection does not exist, so `review-gate` is advisory until launch (D-170, D-180). The `review-gate` check does not run on PR-1 itself (D-197, F-58). A throwaway PR against `main` after the merge proves it.
 
-Gate: exit tests 1 to 23 pass.
+Gate: exit tests 1 to 25 pass.
 
 > *In plain English:* this makes the empty project with its four parts. It adds the automatic build on three kinds of computer and the checklist every change must fill in. It also adds a check that turns red when a change has no approved review. It adds nothing that plays.
 

@@ -1,0 +1,11 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <!-- The Godot layer (D-61). It references Core and nothing else. -->
+  <!-- The Godot editor writes net8.0 into a project file that has no TargetFramework. Keep this line. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
+  </ItemGroup>
+</Project>

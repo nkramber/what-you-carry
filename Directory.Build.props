@@ -1,0 +1,10 @@
+<Project>
+  <!-- One language version, nullable on, warnings as errors (D-68). Each project names its target framework (D-173). -->
+  <PropertyGroup>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

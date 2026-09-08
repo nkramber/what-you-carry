@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- xUnit (D-66). The runner and the test SDK are the packages that `dotnet test` needs to run xUnit. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
+    <ProjectReference Include="../WhatYouCarry.Tools/WhatYouCarry.Tools.csproj" />
+  </ItemGroup>
+</Project>
