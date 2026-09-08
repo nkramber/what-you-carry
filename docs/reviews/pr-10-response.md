@@ -2,7 +2,7 @@
 
 Date: 2026-09-08
 
-Answers `docs/reviews/pr-10.md`, verdict `Changes required` at head `3ea5f23`.
+Answers `docs/reviews/pr-10.md`, verdict `Changes required` at head `3ea5f23`, and the repeat review at head `d55666d`.
 
 ## P2-1: The sentence splitter does not end every sentence at a colon
 
@@ -34,11 +34,23 @@ Correction: the argument loop in `SteCheckCommand.Run` now consumes `--root <val
 
 Regression check: `SteCheckCommandExitsOneOnAFindingAndZeroWhenClean` now also asserts exit 2 for a trailing positional argument, for an extra option, and for `--root` without a value. The first two assertions fail on the old code with exit 0. The test passes, and `ste-check --root . trailing-argument` exits 2 with the message.
 
+## P2-4: A parenthesized span can terminate at a delimiter inside a quoted span
+
+Disposition: full merit.
+
+Reproduced: `Read ("a) b") now.` gave five words. The quote pass masked the inner text, but it left `)` as a plain character, so the parenthesis pass paired the outer `(` with the quoted `)`.
+
+Correction: `MaskChar` now masks every delimiter character inside a span: both parentheses, the straight and curly double quotes, and the backtick. A later pass cannot read a masked delimiter, and `Unmask` restores each one. The masked delimiters are in the `MaskedPunctuation` set, so a token that holds one is opaque. Commit: the commit that holds this file.
+
+Regression check: `NestedParenthesesAreOneOpaqueWord` now also asserts three words for `Read ("a) b") now.` with the middle word `("a) b")`, three words for a code span that holds `)` inside parentheses, no passive finding for a quoted `was written)` inside parentheses, and five words for a sentence with an unbalanced quote and an unclosed parenthesis. The first assertion fails on the old code with five words. It passes.
+
 ## New ids
 
 None. No decision and no question came from this review.
 
 ## Verification
+
+After the P2-4 correction, 2026-09-08:
 
 - `dotnet build WhatYouCarry.slnx -m:1`: 0 warnings, 0 errors.
 - `dotnet test WhatYouCarry.slnx --no-build -m:1`: 63 tests, 0 failures.
@@ -46,4 +58,4 @@ None. No decision and no question came from this review.
 
 ## Final PR head
 
-The corrections, this file, and the session 23 handoff entry are in one commit (D-182), so that commit is the effective head. Its hash is in the session 23 handoff. The review commit `29b1066` was on the local checkout only, and this push carries it to the branch (D-183).
+The P2-1 to P2-3 corrections landed in `d55666d` with the session 23 handoff entry. The P2-4 correction, this update, and the session 25 handoff entry are in one commit (D-182), so that commit is the effective head. Its hash is in the session 25 handoff. Both review commits, `29b1066` and `712b2e0`, were on the local checkout only, and the response push carried each one to the branch (D-183).

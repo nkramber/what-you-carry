@@ -2,6 +2,41 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 25: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the PR #10 repeat review. Branch `feat/pr-2-ste-check`.
+
+### What this session did, and why
+
+- Read the repeat review in `docs/reviews/pr-10.md`. P2-1 to P2-3 are resolved, and P2-4 is new.
+- P2-4 has full merit. The quote pass masked the text inside a quote, but it left a quoted `)` as a plain character, so the parenthesis pass paired the outer `(` with it. `MaskChar` now masks both parentheses, both quote forms, and the backtick inside a span, and `Unmask` restores them. Four new assertions in `NestedParenthesesAreOneOpaqueWord` cover it.
+- Updated `docs/reviews/pr-10-response.md` with the P2-4 disposition.
+- The review commit `712b2e0` was on the local checkout and not on the remote, as `29b1066` was before it. This session pushes it with the response commit.
+
+### State of the build
+
+- `dotnet build` and `dotnet test` pass on the Mac Mini: 63 tests, 0 failures. The checker reports 0 findings in 15 files.
+- PR #10 is open. The effective head is the commit that holds this entry, because it holds the code correction too.
+
+### In flight
+
+PR #10 needs a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- A mask pass must mask every delimiter inside its span, not only the sentence punctuation. A later pass reads any character that the earlier pass left plain.
+- An unbalanced quote or an unclosed parenthesis stays plain text. Each token then counts on its own.
+- The reviewer's commit was unpushed for the second time. Check `git status` before you start, and push it.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session re-reviews PR #10 at the new effective head and updates `docs/reviews/pr-10.md`.
+
 ## Session 24: 2026-09-07, Codex
 
 Author: Codex
@@ -384,40 +419,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 Start PR-1 from `/Volumes/SSD-1TB/what-you-carry`. The runner, both tools, the CI chain, and the checkout move are complete, so no owner purchase or setup blocks it. PR-1 has 23 exit tests, and the roadmap holds the full scope.
-
-## Session 15: 2026-09-07, Codex
-
-Author: Codex
-Session: repeat review of PR #1 after the P2-3 correction. Branch `docs/roadmaps`, part of PR #1.
-
-### What this session did, and why
-
-- Re-reviewed the diff through effective head `c255a17`.
-- Confirmed P2-3 is fixed. The F-51 row now names `.github/review-gate-mode` and the base-branch read.
-- Confirmed the sweep leaves only the historical D-181 decision row for `REVIEW_GATE_MODE`, with its revision marker.
-- Updated `docs/reviews/pr-1.md` to approve the effective head.
-
-### State of the build
-
-- No code, solution, or CI workflow exists. PR-1 creates them.
-- The effective-head check resolves to `c255a17` after excluding the D-184 metadata set.
-- `AGENTS.md` and `CLAUDE.md` remain byte-identical.
-- The review verdict is Ready for owner merge.
-
-### In flight
-
-PR #1 is ready for the owner to merge. The owner must complete the runner and SSD actions before implementation work starts (D-145, D-171).
-
-### Traps and gotchas
-
-- The current mode source is `.github/review-gate-mode`, not `REVIEW_GATE_MODE` (D-185).
-- The review record must name the effective head, not the metadata commit (D-184).
-- The review and handoff commits must be pushed to the PR branch (D-182, D-183).
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-The owner merges PR #1 after confirming the review-gate and other PR gate conditions. Then run `docs/runbooks/macos-runner.md` on 2026-09-08.

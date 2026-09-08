@@ -133,6 +133,13 @@ public sealed class SteRulesTests
         Assert.Equal(3, sentence.WordCount);
         Assert.Equal(["Read", "(the (short) name)", "now."], sentence.Words.Select(SentenceText.Unmask).ToArray());
         Assert.Empty(Rules("The name (it was written (by hand) once) is short."));
+        // Review P2-4: a delimiter inside an earlier masked span is not a delimiter for a later pass.
+        Sentence quoted = Assert.Single(Sentences("Read (\"a) b\") now."));
+        Assert.Equal(["Read", "(\"a) b\")", "now."], quoted.Words.Select(SentenceText.Unmask).ToArray());
+        Assert.Equal(3, Assert.Single(Sentences("Read (see `)` here) now.")).WordCount);
+        // An unbalanced quote and an unclosed parenthesis stay plain text, and the code span does not pair with them.
+        Assert.Equal(5, Assert.Single(Sentences("Read `(\"` and \"(x\" now.")).WordCount);
+        Assert.Empty(Rules("The line (the quote \"was written)\" holds) is short."));
         // An unclosed span stays plain text.
         Assert.Equal(5, Assert.Single(Sentences("Read (the (short name now.")).WordCount);
     }

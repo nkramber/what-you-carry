@@ -23,8 +23,18 @@ public static class SentenceText
     private const char MaskedApostrophe = '\uE003';
     private const char MaskedExclamation = '\uE004';
     private const char MaskedQuestion = '\uE005';
+    private const char MaskedOpenParenthesis = '\uE006';
+    private const char MaskedCloseParenthesis = '\uE007';
+    private const char MaskedQuote = '\uE008';
+    private const char MaskedOpenCurlyQuote = '\uE009';
+    private const char MaskedCloseCurlyQuote = '\uE00A';
+    private const char MaskedBacktick = '\uE00B';
 
-    private static readonly char[] MaskedPunctuation = [MaskedPeriod, MaskedColon, MaskedSemicolon, MaskedApostrophe, MaskedExclamation, MaskedQuestion];
+    private static readonly char[] MaskedPunctuation =
+    [
+        MaskedPeriod, MaskedColon, MaskedSemicolon, MaskedApostrophe, MaskedExclamation, MaskedQuestion,
+        MaskedOpenParenthesis, MaskedCloseParenthesis, MaskedQuote, MaskedOpenCurlyQuote, MaskedCloseCurlyQuote, MaskedBacktick,
+    ];
     private static readonly char[] SentenceEnds = ['.', '!', '?', ':'];
     private static readonly char[] TrailingClosers = ['*', '_', '\'', '"', ')', ']'];
 
@@ -75,7 +85,9 @@ public static class SentenceText
     public static string Unmask(string text)
     {
         return text.Replace(MaskedSpace, ' ').Replace(MaskedPeriod, '.').Replace(MaskedColon, ':').Replace(MaskedSemicolon, ';')
-            .Replace(MaskedApostrophe, '\'').Replace(MaskedExclamation, '!').Replace(MaskedQuestion, '?');
+            .Replace(MaskedApostrophe, '\'').Replace(MaskedExclamation, '!').Replace(MaskedQuestion, '?')
+            .Replace(MaskedOpenParenthesis, '(').Replace(MaskedCloseParenthesis, ')').Replace(MaskedQuote, '"')
+            .Replace(MaskedOpenCurlyQuote, '“').Replace(MaskedCloseCurlyQuote, '”').Replace(MaskedBacktick, '`');
     }
 
     private static void AddSentence(List<Sentence> sentences, TextLine line, string maskedSentence)
@@ -134,7 +146,10 @@ public static class SentenceText
         return next >= text.Length || text[next] == ' ' || text[next] == '\t';
     }
 
-    /// <summary>Masks code spans first, because a code span can hold a quote or a parenthesis. Then quotes, then parentheses.</summary>
+    /// <summary>
+    /// Masks code spans first, because a code span can hold a quote or a parenthesis. Then quotes, then parentheses.
+    /// A pass masks every delimiter character inside its span too, so a later pass cannot read a quoted parenthesis as a close.
+    /// </summary>
     private static string Mask(string text)
     {
         string result = MaskSpans(text, '`', '`');
@@ -207,6 +222,12 @@ public static class SentenceText
             '\'' => MaskedApostrophe,
             '!' => MaskedExclamation,
             '?' => MaskedQuestion,
+            '(' => MaskedOpenParenthesis,
+            ')' => MaskedCloseParenthesis,
+            '"' => MaskedQuote,
+            '“' => MaskedOpenCurlyQuote,
+            '”' => MaskedCloseCurlyQuote,
+            '`' => MaskedBacktick,
             _ => c,
         };
     }
