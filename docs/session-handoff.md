@@ -2,6 +2,41 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 26: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #10. Branch `feat/pr-2-ste-check`.
+
+### What this session did, and why
+
+- Re-reviewed PR #10 at effective head `b9bc6cd` against base and merge base `94aadc5`.
+- Confirmed that P2-1 to P2-4 are resolved.
+- Updated `docs/reviews/pr-10.md` to `Ready for owner merge`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 63 tests and 0 failures.
+- The repository checker reports 0 findings in 15 files.
+- The Godot 4.7.2 headless build check passes with the installed executable.
+
+### In flight
+
+PR #10 is ready for owner merge.
+
+### Traps and gotchas
+
+- The mask pass must protect every delimiter inside an earlier masked span.
+- The review commit is metadata. The review head remains `b9bc6cd` under D-184.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner merges PR #10. Then PR-3 starts with the seeded RNG, DetMath, the lint tool, and the bit-identity job.
+
 ## Session 25: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -357,65 +392,3 @@ No open question blocks PR-1. OQ-72 is resolved by D-196. OQ-12 remains open for
 ### Next concrete action
 
 A Codex session reviews PR #6 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-<number>.md`. After the merge, PR-2 starts: the STE checker.
-
-## Session 16: 2026-09-07, Claude Code
-
-Author: Claude Code
-Session: the toolchain install, the runner registration, and the documentation PR override. Branches `docs/runner-path-and-doc-override` (PR #2, merged) and `docs/runner-registration` (PR #3).
-
-### What this session did, and why
-
-- PR #1 merged as `5c6d7b5`. The next action of session 15 is complete.
-- Installed the .NET 10 SDK, version 10.0.400, and the Godot 4.7.2 .NET editor. The runbook names both tools, and this machine had neither.
-- The Homebrew cask for the SDK installs a package file that needs an administrator password. This session cannot enter a password, so the Microsoft script `dotnet-install.sh` installed the SDK to `~/.dotnet`.
-- Made a test solution with a class library and an xUnit project. `dotnet build` and `dotnet test` were successful, and the default target framework is `net10.0`.
-- Found a risk. A launch agent starts with a minimal path, so a CI job on the self-hosted runner cannot find `dotnet`. The owner chose `actions/setup-dotnet` with the `global-json-file` input (D-189).
-- The owner gave an override for a documentation-only PR (D-188). This session recorded it in the decision register, `CLAUDE.md`, and `AGENTS.md`.
-- Found that D-188 could not work at launch. In enforced mode the `review-gate` job fails a PR with no review record (D-181, D-185). The owner chose the label `review-override` and a wider eligible path set, and D-190 records the mechanism. PR-1 implements it, and the roadmap now holds four more exit tests.
-- The SSD came one day early. The owner formatted it as case-sensitive APFS with no encryption, and named the volume `SSD-1TB` (D-191). A probe confirmed the case sensitivity, the write access, and that the volume keeps a file mode.
-- Registered the runner on 2026-09-07, one day before the date in D-171 (D-192). The name is `mac-mini-m4` and the version is 2.337.0.
-- The launch agent failed at once with `Operation not permitted`, and it exited 126. macOS denies a launch agent every path on an external volume. A launchd probe repeated the denial, and a login shell read the same path correctly (F-54).
-- The owner chose the Full Disk Access grant over a move to the internal drive, and added `/bin/bash` and the runner `node` binary (D-193). The runner is online and listens for jobs.
-- Ran a smoke job on the runner from a throwaway branch, and then deleted the branch. The job proved five things: the runner accepts a job, the launch agent reads the external volume in a real job, `actions/checkout` works, `actions/setup-dotnet` resolves 10.0.400 from `global.json`, and a build and test cycle passes. The macOS leg of PR-1 is no longer a guess.
-- The smoke job found that the .NET 10 SDK creates a `.slnx` file, and the roadmap named `WhatYouCarry.sln` (F-55). A probe proved that Godot 4.7.2 builds from a `.slnx` and creates no `.sln`. The owner chose `.slnx` (D-194).
-- Moved the checkout to `/Volumes/SSD-1TB/what-you-carry` (D-195). `git fsck` reported no corruption. This completes the SSD step in the Phase 1 sequence.
-- Deleted every merged branch, and pruned the stale remote-tracking refs.
-
-### State of the build
-
-- `main` is at `4ddf2d5`. No code, solution, or CI workflow exists. PR-1 creates them.
-- `CLAUDE.md` and `AGENTS.md` are byte-identical.
-- The .NET SDK and the Godot editor are ready on the Mac Mini.
-- The runner `mac-mini-m4` is online, and it is not busy. The work directory is `/Volumes/SSD-1TB/actions-work`.
-- One smoke job passed on the runner on 2026-09-07. No workflow is in the repository, because the smoke branch is deleted. PR-1 adds the first tracked workflow.
-
-### In flight
-
-PR #2, PR #3, and PR #4 are merged. PR #5 holds the checkout path. This session made four PRs, against the one PR rule of D-121. A direct push to `main` needed a rewind, the smoke job produced a decision, and the checkout move produced another.
-
-This PR changes documentation only. The owner gives the D-188 override and merges it without a cross-provider review. The PR is also eligible under the D-190 path set, so the rule covers its own PR.
-
-### Traps and gotchas
-
-- A launch agent does not read `~/.zshrc`. Do not expect a login shell path on the runner.
-- A launch agent reads no external volume without Full Disk Access (F-54, D-193). A machine rebuild repeats the grant, or every job fails.
-- Every bash process on the Mac Mini now reads every file. That is the cost of the work directory on the SSD (D-193).
-- `actions/setup-dotnet` installs to `~/.dotnet` on this runner, and it reported `already installed` for 10.0.400. No job downloads the SDK again.
-- `dotnet new sln` gives a `.slnx` file on .NET 10. A command that names a `.sln` file fails with MSB1009 (F-55).
-- The checkout is on the SSD. A session needs the volume mounted, or no file opens (D-195).
-- D-190 closes the launch hole in D-188. PR-1 must build the override path, or an overridden PR turns red at launch.
-- The `review-override` label does not survive a new commit. A push outside the metadata set after the label needs the label again (D-190).
-- The agents hold the owner GitHub token. The label stops an accident, and it does not stop an attack (D-190).
-- The `dotnet-sdk` cask needs an administrator password. The Microsoft script needs none.
-- This PR holds four concerns, which is against G-10. The session named the conflict, and the owner chose one PR.
-- The file held 11 entries before this session. This entry restores the limit of 10 (D-146).
-- A commit went to `main` directly, against D-126. The owner merged PR #2 and moved the local checkout to `main`. The uncommitted work moved with the checkout, and the next commit and push landed on the trunk. Check the branch name before each commit.
-- The owner chose a rewind. `main` returned to `2d69270`, and the work came back as PR #3. A force push to a trunk is safe only while no other clone holds the old commit.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Start PR-1 from `/Volumes/SSD-1TB/what-you-carry`. The runner, both tools, the CI chain, and the checkout move are complete, so no owner purchase or setup blocks it. PR-1 has 23 exit tests, and the roadmap holds the full scope.
