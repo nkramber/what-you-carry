@@ -2,6 +2,52 @@
 
 Entries older than the 10 newest sessions move here from `docs/session-handoff.md` (D-146). Newest first.
 
+## Session 10: 2026-09-07, Claude Code
+
+Author: Claude Code
+Session: the neutral grey state for `review-gate`. Branch `docs/roadmaps`, part of PR #1.
+
+### What this session did, and why
+
+- The owner asked where the red check appears, then asked for a neutral grey state instead of a permanent red one. `review-gate` failed whenever no review record existed, so a PR stayed red for most of its life and a red rollup masked a real build failure.
+- Verified first that GitHub counts a neutral or skipped conclusion as a success for a required status check. Source: docs.github.com, "About status checks", verified 2026-09-07. A plain grey-when-absent gate would stop blocking a merge at launch. Recorded F-51.
+- D-181 gives the check three conclusions and two modes. In `advisory` mode a missing review file is neutral. In `enforced` mode it is a failure. The repository variable `REVIEW_GATE_MODE` selects the mode. An absent or unknown value fails the job and names the variable (T-2).
+- A workflow job cannot set a neutral conclusion by its exit code. The job publishes a check run through the Checks API, so the workflow needs `checks: write`.
+- D-181 revises D-179. D-180 is not revised, because D-181 only adds the mode step to its launch procedure.
+- Marking D-179 as revised made nine citations stale. The D-178 check found each one. They now name D-181.
+- Updated the PR-1 scope and exit tests to sixteen, both agent files, the `pr-review` skill with a color table, Phase 5 step 11, and the design register.
+- Recorded D-182 after the handoff and review record of sessions 8 and 9 reached this session uncommitted. A later commit absorbed them, and this session then reported the wrong verdict. The `pr-review` skill now requires a commit of the review record with its handoff entry, and the agent files carry the same rule.
+- D-182 narrows the scope limit in the skill, which listed a commit as an unauthorized action. A code fix, a merge, and an external message stay unauthorized.
+- D-183 lets the reviewer push its own review commit to the PR branch. A push is the only way `review-gate` reads the record, because the gate reads the PR head. The reviewer never pushes to `main`.
+
+### State of the build
+
+- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds fifteen commits, all on the remote.
+- No code, solution, or CI workflow exists. PR-1 creates them.
+- `CLAUDE.md` and `AGENTS.md` are byte-identical.
+
+### In flight
+
+**PR #1 is not ready to merge.** Session 9 approved head `223aae8`. This session pushed `4f7796e` after that approval, and it changes eight files outside `docs/reviews/`, including both agent files, the decision register, and the review skill. The approval does not cover the effective head. Rule 3 of D-179 applies.
+
+### Traps and gotchas
+
+- The verdict in `docs/reviews/pr-1.md` reads `Ready for owner merge`, and it applies to head `223aae8` only. Read the head field, not the verdict alone.
+- Grey is correct only in advisory mode. Never use a neutral conclusion for an enforced gate (F-51).
+- The `review-gate` job stays green itself. The check run it publishes carries the color, so the Checks list holds two rows.
+- Never write a decision range that spans a revised id. D-179 is revised, so a header says `D-176 to D-178, D-180, and D-181`.
+- Read the review file before a commit that sweeps it in. This session committed an approval it had not read, and then reported the wrong verdict.
+- One session is one handoff entry (D-146). Add a new entry. Do not append to an older one after another provider writes above it.
+- A review record that is not committed is invisible to `review-gate`, because the gate reads the PR head (D-182).
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session reviews the diff from `223aae8` to `4f7796e` and updates `docs/reviews/pr-1.md` to the new effective head. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
+
 ## Session 9: 2026-09-07, Codex
 
 Author: Codex

@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 20: 2026-09-08, Codex
+
+Author: Codex
+Session: repeat review of PR #6. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Re-reviewed PR #6 at effective head `03e6a29` against base and merge base `546a70a`.
+- Confirmed P1-1 is fixed in `9624cfa`. The `pull_request_target` workflow runs the base-branch evaluator and fetches the PR head as data only.
+- Confirmed P1-2 remains an accepted risk under D-198. The output names the commit that last changed the review file, and the repository cannot prove provider identity with its shared unsigned commits.
+- Found no new finding. Updated `docs/reviews/pr-6.md` to `Ready for owner merge`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 35 tests and 0 failures.
+- GitHub reports passing Linux, Windows, and macOS CI at head `03e6a29`.
+- The review-gate check does not run on PR #6 before the workflow reaches `main`, as recorded in D-197 and F-58.
+
+### In flight
+
+The owner can merge PR #6. After the merge, run the adversarial proof against `main` that D-197 requires.
+
+### Traps and gotchas
+
+- The `pull_request_target` workflow is available only after its file reaches the default branch.
+- The review-record identity risk remains accepted under D-198.
+- The effective head is `03e6a29`, because the latest register changes are outside the metadata paths.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner merges PR #6. Then run the adversarial proof against `main` and record its result.
+
 ## Session 19: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -382,49 +419,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 Define the advisory-mode variable setup, correct the metadata-path rule, revise PR #1, and request another repeat review.
-
-## Session 10: 2026-09-07, Claude Code
-
-Author: Claude Code
-Session: the neutral grey state for `review-gate`. Branch `docs/roadmaps`, part of PR #1.
-
-### What this session did, and why
-
-- The owner asked where the red check appears, then asked for a neutral grey state instead of a permanent red one. `review-gate` failed whenever no review record existed, so a PR stayed red for most of its life and a red rollup masked a real build failure.
-- Verified first that GitHub counts a neutral or skipped conclusion as a success for a required status check. Source: docs.github.com, "About status checks", verified 2026-09-07. A plain grey-when-absent gate would stop blocking a merge at launch. Recorded F-51.
-- D-181 gives the check three conclusions and two modes. In `advisory` mode a missing review file is neutral. In `enforced` mode it is a failure. The repository variable `REVIEW_GATE_MODE` selects the mode. An absent or unknown value fails the job and names the variable (T-2).
-- A workflow job cannot set a neutral conclusion by its exit code. The job publishes a check run through the Checks API, so the workflow needs `checks: write`.
-- D-181 revises D-179. D-180 is not revised, because D-181 only adds the mode step to its launch procedure.
-- Marking D-179 as revised made nine citations stale. The D-178 check found each one. They now name D-181.
-- Updated the PR-1 scope and exit tests to sixteen, both agent files, the `pr-review` skill with a color table, Phase 5 step 11, and the design register.
-- Recorded D-182 after the handoff and review record of sessions 8 and 9 reached this session uncommitted. A later commit absorbed them, and this session then reported the wrong verdict. The `pr-review` skill now requires a commit of the review record with its handoff entry, and the agent files carry the same rule.
-- D-182 narrows the scope limit in the skill, which listed a commit as an unauthorized action. A code fix, a merge, and an external message stay unauthorized.
-- D-183 lets the reviewer push its own review commit to the PR branch. A push is the only way `review-gate` reads the record, because the gate reads the PR head. The reviewer never pushes to `main`.
-
-### State of the build
-
-- `main` has one commit, `1c16c45`. The branch `docs/roadmaps` holds fifteen commits, all on the remote.
-- No code, solution, or CI workflow exists. PR-1 creates them.
-- `CLAUDE.md` and `AGENTS.md` are byte-identical.
-
-### In flight
-
-**PR #1 is not ready to merge.** Session 9 approved head `223aae8`. This session pushed `4f7796e` after that approval, and it changes eight files outside `docs/reviews/`, including both agent files, the decision register, and the review skill. The approval does not cover the effective head. Rule 3 of D-179 applies.
-
-### Traps and gotchas
-
-- The verdict in `docs/reviews/pr-1.md` reads `Ready for owner merge`, and it applies to head `223aae8` only. Read the head field, not the verdict alone.
-- Grey is correct only in advisory mode. Never use a neutral conclusion for an enforced gate (F-51).
-- The `review-gate` job stays green itself. The check run it publishes carries the color, so the Checks list holds two rows.
-- Never write a decision range that spans a revised id. D-179 is revised, so a header says `D-176 to D-178, D-180, and D-181`.
-- Read the review file before a commit that sweeps it in. This session committed an approval it had not read, and then reported the wrong verdict.
-- One session is one handoff entry (D-146). Add a new entry. Do not append to an older one after another provider writes above it.
-- A review record that is not committed is invisible to `review-gate`, because the gate reads the PR head (D-182).
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session reviews the diff from `223aae8` to `4f7796e` and updates `docs/reviews/pr-1.md` to the new effective head. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
