@@ -87,7 +87,14 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 
 ## Build and test commands
 
-No solution exists yet. PR-1 creates it. Until then, there is nothing to build. After PR-1, this section lists the exact commands.
+The SDK version in `global.json` is required. Run each command from the checkout root.
+
+- Build: `dotnet build WhatYouCarry.slnx`
+- Test: `dotnet test WhatYouCarry.slnx --no-build`
+- Godot build check: `Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
+- Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
+
+The layout is one directory per project at the root. `project.godot` lives in `WhatYouCarry.Game/`, next to its project file. The solution file stays at the root. Each project file names its target framework, because the Godot editor writes `net8.0` into a project file that has none.
 
 ## PR gate
 

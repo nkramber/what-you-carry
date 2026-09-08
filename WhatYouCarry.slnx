@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
+  <Project Path="WhatYouCarry.Game/WhatYouCarry.Game.csproj" />
+  <Project Path="WhatYouCarry.Tests/WhatYouCarry.Tests.csproj" />
+  <Project Path="WhatYouCarry.Tools/WhatYouCarry.Tools.csproj" />
+</Solution>

@@ -1,0 +1,68 @@
+# Publishes the review-gate check run on the PR head (D-179, D-181, D-184, D-185, D-190).
+# The rules live in WhatYouCarry.Tools, command review-gate. This file only gathers the inputs and posts the result.
+name: Review gate
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Read the labels and the override label events
+        # The timeline gives every labeled event for review-override. The tool takes the newest one (D-190).
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '[.labels[].name]' > labels.json
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/timeline" \
+            --jq '.[] | select(.event == "labeled" and .label.name == "review-override") | {createdAt: .created_at, actor: .actor.login}' \
+            | jq --slurp '.' > override-label-events.json
+
+      - name: Write the request
+        run: |
+          jq --null-input \
+            --arg repositoryPath "$GITHUB_WORKSPACE" \
+            --argjson pullRequestNumber "$PR_NUMBER" \
+            --arg headSha "$HEAD_SHA" \
+            --arg baseRef "origin/${BASE_REF}" \
+            --slurpfile labels labels.json \
+            --slurpfile overrideLabelEvents override-label-events.json \
+            '{repositoryPath: $repositoryPath, pullRequestNumber: $pullRequestNumber, headSha: $headSha, baseRef: $baseRef, labels: $labels[0], overrideLabelEvents: $overrideLabelEvents[0]}' \
+            > request.json
+          cat request.json
+
+      - name: Evaluate the rules
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json
+
+      - name: Publish the check run
+        run: |
+          cat check-run.json
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/check-runs" --input check-run.json --jq '{id, name, conclusion, html_url}'
+
+      - name: Fail the job on a failure conclusion
+        run: |
+          conclusion="$(jq --raw-output '.conclusion' check-run.json)"
+          echo "review-gate conclusion: ${conclusion}"
+          if [ "${conclusion}" = "failure" ]; then
+            jq --raw-output '.output.summary' check-run.json
+            exit 1
+          fi
