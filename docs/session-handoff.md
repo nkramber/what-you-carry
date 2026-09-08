@@ -2,6 +2,51 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 47: 2026-09-08, Codex
+
+Author: Codex
+Session: review PR #15 for PR-4. Branch `feat/pr-4-logging`.
+
+### What this session did, and why
+
+- Reviewed PR #15 at effective head `41206bb` against base and merge base `51b3de7`.
+- Confirmed the provider gate. Claude Code wrote the substantive change, and Codex reviewed it.
+- Inspected the complete diff, the six exit tests, all changed documents, and the current callers.
+- Added P2-1. Caller fields can add a second `level` or `message` property to the JSON object.
+- Added P2-2. One safe assertion changes the caller fields, so a second safe assertion throws on `assertFile`.
+- Added P2-3. An unpaired surrogate passes the logger and produces JSON that `JsonDocument` rejects.
+- Added P2-4. The JSON write path has nested helper calls beyond the one level that D-110 permits.
+- Wrote `docs/reviews/pr-15.md` with the verdict `Changes required`.
+
+### State of the build
+
+- `main` and the merge base are at `51b3de7`. The reviewed effective head is `41206bb`.
+- Remote head: `origin/feat/pr-4-logging` holds the metadata commit for this entry, verified with the session-end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 219 tests and 0 failures.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `41206bb`.
+- Three focused review probes fail and reproduce P2-1, P2-2, and P2-3.
+
+### In flight
+
+PR #15 needs corrections for P2-1 to P2-4, then a repeat Codex review.
+
+### Traps and gotchas
+
+- `LogFields` checks duplicates only inside the caller set. It does not reserve the logger keys.
+- `Invariant.Assert` adds its call-site fields to the object that the caller owns.
+- A JSON control-character check does not cover invalid UTF-16 surrogate sequences.
+- A green broad suite did not cover repeated safe failures or the complete string domain.
+
+### Open questions that block progress
+
+No new owner question. No open question blocks the corrections.
+
+### Next concrete action
+
+Correct P2-1 to P2-4, add regression tests, and request a repeat Codex review.
+
 ## Session 46: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -391,47 +436,3 @@ No new owner question. OQ-79 is resolved by D-206. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
-
-## Session 37: 2026-09-08, Codex
-
-Author: Codex
-Session: fourth repeat review of PR #12. Branch `feat/pr-3-determinism`.
-
-### What this session did, and why
-
-- Re-reviewed PR #12 at effective head `60d678e` against base and merge base `86078b8`.
-- Confirmed that the provider gate passes. Claude Code wrote the correction, and Codex reviewed it.
-- Confirmed that P2-3 is fixed. The allowlist blocks the prior reflection and metadata probes.
-- Confirmed that P2-6 is fixed at this effective head. The PR description identifies the current correction evidence.
-- Added P2-7. `Guid.NewGuid()` compiles in Core and gives no lint finding against the seed-only rule.
-- Added P2-8. An unapproved `using System.Text;` directive compiles and gives no `L-NAMESPACE` finding.
-- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
-
-### State of the build
-
-- `main` and the merge base are at `86078b8`. The reviewed effective head is `60d678e`.
-- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 172 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
-- GitHub reports green CI, lint, STE, and bit-identity jobs at `60d678e`.
-- The review-gate results stay red because the review verdict stays `Changes required`.
-
-### In flight
-
-PR #12 needs corrections for P2-7 and P2-8, then another repeat review.
-
-### Traps and gotchas
-
-- The exact `System` namespace contains `Guid.NewGuid()` and other nondeterministic APIs.
-- A namespace allowlist still needs symbol bans inside each approved namespace.
-- `AddImportFinding` applies the old namespace denylist, but it does not apply the new allowlist.
-- An unused `using` directive compiles without a warning in the Core project.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Correct P2-7 and P2-8, add their regression tests, and request another repeat review.

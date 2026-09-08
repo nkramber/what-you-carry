@@ -1,5 +1,49 @@
 # Session handoff archive
 
+## Session 37: 2026-09-08, Codex
+
+Author: Codex
+Session: fourth repeat review of PR #12. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- Re-reviewed PR #12 at effective head `60d678e` against base and merge base `86078b8`.
+- Confirmed that the provider gate passes. Claude Code wrote the correction, and Codex reviewed it.
+- Confirmed that P2-3 is fixed. The allowlist blocks the prior reflection and metadata probes.
+- Confirmed that P2-6 is fixed at this effective head. The PR description identifies the current correction evidence.
+- Added P2-7. `Guid.NewGuid()` compiles in Core and gives no lint finding against the seed-only rule.
+- Added P2-8. An unapproved `using System.Text;` directive compiles and gives no `L-NAMESPACE` finding.
+- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
+
+### State of the build
+
+- `main` and the merge base are at `86078b8`. The reviewed effective head is `60d678e`.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 172 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `60d678e`.
+- The review-gate results stay red because the review verdict stays `Changes required`.
+
+### In flight
+
+PR #12 needs corrections for P2-7 and P2-8, then another repeat review.
+
+### Traps and gotchas
+
+- The exact `System` namespace contains `Guid.NewGuid()` and other nondeterministic APIs.
+- A namespace allowlist still needs symbol bans inside each approved namespace.
+- `AddImportFinding` applies the old namespace denylist, but it does not apply the new allowlist.
+- An unused `using` directive compiles without a warning in the Core project.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-7 and P2-8, add their regression tests, and request another repeat review.
+
 ## Session 36: 2026-09-08, Claude Code
 
 Author: Claude Code
