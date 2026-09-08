@@ -1,12 +1,12 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-203. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-209. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
 External facts: none new. The Godot version is in the design header, verified 2026-09-07.
 
-Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner. 2026-09-07, PR-1: a run of the gate against `main` refuted the claim that PR-1 passes its own check with no owner action. D-196 puts the mode file on `main` first. 2026-09-08, the PR #6 review. D-197 moves the gate to `pull_request_target`, and D-198 accepts the review-record risk with a named commit in the output. 2026-09-08, PR-2: the first run of the checker found 77 findings in 15 files, and the PR rewrote each sentence. 2026-09-08, PR-3: a measurement refuted D-161. Degree 7 on [-pi, pi] reaches 2.5e-4 for sine, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 gives `Pow` an integer exponent, D-201 puts the bit-identity program in `WhatYouCarry.Tools`, and D-202 records the compiler API dependency. Exit test 5 asked for the opposite of D-160, and this pass corrects it (F-61).
+Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner. 2026-09-07, PR-1: a run of the gate against `main` refuted the claim that PR-1 passes its own check with no owner action. D-196 puts the mode file on `main` first. 2026-09-08, the PR #6 review. D-197 moves the gate to `pull_request_target`, and D-198 accepts the review-record risk with a named commit in the output. 2026-09-08, PR-2: the first run of the checker found 77 findings in 15 files, and the PR rewrote each sentence. 2026-09-08, PR-3: a measurement refuted D-161, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 to D-202 answer the `Pow` contract, the location of the bit-identity program, and the compiler API dependency. The review took seven passes on the lint boundary. D-204 to D-208 record the answers. D-204 stops conditional compilation in Core. The boundary then moved from a namespace list to a type list, and to a member list with the overload arity (F-65 to F-69). D-209 gives a review its scope, after the same finding reopened four times (F-70). 2026-09-08, PR-3: a measurement refuted D-161. Degree 7 on [-pi, pi] reaches 2.5e-4 for sine, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 gives `Pow` an integer exponent, D-201 puts the bit-identity program in `WhatYouCarry.Tools`, and D-202 records the compiler API dependency. Exit test 5 asked for the opposite of D-160, and this pass corrects it (F-61).
 
 ## 1. Thesis
 
@@ -177,7 +177,7 @@ Result, 2026-09-08: every exit test passes. The reference check skips the exempt
 
 ### PR-3: Seeded RNG, DetMath, lint, and the bit-identity CI job
 
-Status: PR #12, opened 2026-09-08.
+Status: merged 2026-09-08 as PR #12, commit `9e6fd5f`.
 
 Scope:
 

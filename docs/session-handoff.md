@@ -2,6 +2,48 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 45: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: record the PR-3 merge across the documents. Branch `docs/pr-3-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #12 as `9e6fd5f`, after a Codex review gave the verdict `Ready for owner merge` at effective head `4d7cb3e`.
+- Audited every document against the merged state. The registers were complete: D-200 to D-209, OQ-73 to OQ-81, and F-60 to F-70 all landed with the PR.
+- Four documents held a stale line, and this session corrects each one.
+- `docs/roadmaps/phase-1-foundations.md`: the PR-3 status line said "opened", and it names the merge commit now. The header cited D-200 to D-203, and it cites D-200 to D-209 now. The correction passes record the PR-3 outcome.
+- `docs/design.md`: the PR-2 and PR-3 markers now name the merge, as the PR-1 marker does. The Phase 1 sequence marks PR-2 and PR-3 as merged.
+- `dotnet test` caught the one defect in this session. `RepositoryDocumentsPass` runs the STE checker over the repository, and a new sentence of 26 words failed it. The sentence is three sentences now.
+
+### State of the build
+
+- `main` is at `9e6fd5f`, the squash merge of PR #12. This branch holds one commit above it.
+- Remote head: `origin/docs/pr-3-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 193 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs on `main` at `9e6fd5f`.
+
+### In flight
+
+This PR changes only `docs/`, so the `review-override` label covers it (D-190). PR-4 starts after the merge.
+
+### Traps and gotchas
+
+- `RepositoryDocumentsPass` fails the test suite on any STE finding. A document edit needs `dotnet test`, and not the checker alone.
+- A merged PR leaves a status line in two places: the focused roadmap and the design doc. The design doc also holds the Phase 1 sequence, which is a third place.
+- The roadmap header lists the decisions that the file applies. A PR that adds a decision extends that list.
+- Phase 1 has no gate before PR-11. Gate 1 needs the bit-identity job, `dotnet test`, and the night sweep of PR-58.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 blocks PR-9, and it needs the one v1 biome concept. PR-4 to PR-8 need no open answer.
+
+### Next concrete action
+
+The owner merges this documentation PR with the `review-override` label. Then a new session starts PR-4: the JSONL logger, the error context sets, and the assertion helper (D-68, D-112, D-113).
+
 ## Session 44: 2026-09-08, Codex
 
 Author: Codex
@@ -382,46 +424,3 @@ No new owner question. OQ-78 is resolved by D-205. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
-
-## Session 35: 2026-09-08, Codex
-
-Author: Codex
-Session: third repeat review of PR #12. Branch `feat/pr-3-determinism`.
-
-### What this session did, and why
-
-- Re-reviewed PR #12 at effective head `549c75c` against base and merge base `86078b8`.
-- Confirmed that the provider gate passes. Claude Code wrote the correction, and Codex reviewed it.
-- Confirmed that P2-5 is fixed. The lint reports active and inactive `#if` directives under D-204.
-- Kept P2-3 open. `TypeDescriptor.GetProperties(object)` compiles in Core and gives no reflection finding.
-- Kept P2-6 open. The PR description omits effective head `549c75c` and incorrectly identifies Session 28 as current.
-- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
-
-### State of the build
-
-- `main` and the merge base are at `86078b8`. The reviewed effective head is `549c75c`.
-- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 160 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
-- GitHub reports green CI, lint, STE, and bit-identity jobs at `549c75c`.
-- The review-gate results stay red because the review verdict stays `Changes required`.
-
-### In flight
-
-PR #12 needs corrections for P2-3 and P2-6, then another repeat review.
-
-### Traps and gotchas
-
-- `TypeDescriptor` accesses type metadata without a `System.Reflection` symbol or a `System.Type` result.
-- A finite banned-type table needs probes against all BCL metadata-access surfaces.
-- The PR description must identify the effective head, not only the prior review head.
-- A session number in the PR description becomes stale after each review response.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Correct P2-3, then update the PR description for P2-6. Request another repeat review.
