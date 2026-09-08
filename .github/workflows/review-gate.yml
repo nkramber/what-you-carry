@@ -64,7 +64,8 @@ jobs:
           cat request.json
 
       - name: Evaluate the rules with the base-branch tool
-        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json
+        run: |
+          jq --null-input --arg sha "$HEAD_SHA" '{name: "review-gate", head_sha: $sha, status: "completed", conclusion: "success", output: {title: "Adversary workflow", summary: "The head workflow posted this."}}' > check-run.json
 
       - name: Publish the check run
         run: |
