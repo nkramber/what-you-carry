@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 27: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: the session end gate for the `pr-review` skill. Branch `docs/pr-review-push-gate`, PR #11.
+
+### What this session did, and why
+
+- The owner asked for a fix after the reviewer left its commit unpushed on the shared checkout twice on PR #10 (F-59). The skill said "push" in three places, with no verification step and no evidence trail.
+- Added a "Session end gate" section to the skill. Four commands after the commit, and the evidence comes from the remote: `git status --short --branch` shows no `[ahead N]`, and `gh pr view --json headRefOid` equals `git rev-parse HEAD`.
+- Added the push line as a required part of the Verification section in the review skeleton. A record with no push line is incomplete.
+- Added the failure path. A denied push does not end the session. The session asks the owner to approve it and says in the handoff that the record is unpushed. A sandbox that blocks the network denies a push in silence, so the status line is the evidence and not the push output.
+- Added the start-of-session check for both roles. If the checkout is ahead with the other provider's commit, push it first and record that.
+- The owner also chose the rule for every session, not only reviews. D-199 records it, and revises in part D-146: the state of the build names the remote head. `CLAUDE.md` and `AGENTS.md` carry the rule in the session handoff section.
+- This is the second PR of one harness invocation, after PR #10, on the owner instruction. D-121 names one PR per session.
+
+### State of the build
+
+- `main` is at `d5eb298`, the squash merge of PR #10. The branch holds one commit above it, and this entry is in that commit.
+- Remote head: `origin/docs/pr-review-push-gate` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` and `dotnet test` pass: 63 tests, 0 failures. The checker reports 0 findings.
+
+### In flight
+
+PR #11 changes only `docs/`, `CLAUDE.md`, `AGENTS.md`, and `.claude/skills/`, so the `review-override` label covers it (D-190). The owner asked for the label in the instruction, and this session added it.
+
+### Traps and gotchas
+
+- The evidence for a push is the remote, never the local checkout. A sandbox denial gives no git error.
+- A revision of one part of a decision needs the `Revised in part by` marker on the old row, and the reference check does not flag it (D-186).
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner merges PR #11 with the `review-override` label. Then a new session starts PR-3: the seeded RNG, DetMath, the lint tool, and the bit-identity CI job.
+
 ## Session 26: 2026-09-07, Codex
 
 Author: Codex
