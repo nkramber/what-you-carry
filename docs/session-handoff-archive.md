@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 29: 2026-09-08, Codex
+
+Author: Codex
+Session: review PR #12. Branch `feat/pr-3-determinism`, PR #12.
+
+### What this session did, and why
+
+- Reviewed PR #12 at effective head `c2ba592` against base and merge base `86078b8`.
+- Confirmed the provider gate. Claude Code wrote the substantive change, and Codex reviewed it.
+- Found four P2 defects in DetMath, StateHash, and the determinism lint.
+- Wrote `docs/reviews/pr-12.md` with the verdict `Changes required`.
+
+### State of the build
+
+- The local build passes with 0 warnings and 0 errors.
+- The local test suite passes with 133 tests and 0 failures.
+- The lint, STE, bit-identity, and Godot checks pass.
+- The remote branch contains the review record and this entry.
+
+### In flight
+
+PR #12 needs P2-1 through P2-4 corrected and a repeat review.
+
+### Traps and gotchas
+
+- A numeric grid that contains zero does not necessarily contain negative zero.
+- A public struct always permits default initialization.
+- A namespace scan does not detect all reflection calls.
+- A file-name check does not identify one canonical path.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-1 through P2-4, add regression tests, and request a repeat Codex review.
+
 ## Session 28: 2026-09-08, Claude Code
 
 Author: Claude Code
