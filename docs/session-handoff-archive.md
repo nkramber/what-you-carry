@@ -1,5 +1,47 @@
 # Session handoff archive
 
+## Session 31: 2026-09-08, Codex
+
+Author: Codex
+Session: repeat review of PR #12. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- Re-reviewed PR #12 at effective head `1bc665b` against base and merge base `86078b8`.
+- Confirmed that the provider gate still passes. Claude Code wrote the corrections, and Codex reviewed them.
+- Confirmed that P2-1, P2-2, and P2-4 are fixed, with regression coverage.
+- Kept P2-3 open. The new name list gives both a false negative and a false positive.
+- A probe with `Type.GetEvents()` gave no finding. A user-defined `probe.GetMethods()` call gave `L-REFLECTION`.
+- Updated `docs/reviews/pr-12.md` with the changed hash and the repeat-review evidence.
+
+### State of the build
+
+- `main` and the merge base are at `86078b8`. The reviewed effective head is `1bc665b`.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 144 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `1bc665b`.
+- The review-gate results stay red because the review verdict stays `Changes required`.
+
+### In flight
+
+PR #12 needs a complete P2-3 correction and another repeat review.
+
+### Traps and gotchas
+
+- Member text does not identify the member symbol. A Core type can declare a method with a reflection-like name.
+- A finite reflection member list can miss a supported `System.Type` API.
+- The P2-3 code comments cite F-62. F-64 is the register entry for the reflection defect.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-3 with complete reflection detection and tests for both probe cases. Then request another repeat review.
+
 ## Session 30: 2026-09-08, Claude Code
 
 Author: Claude Code
