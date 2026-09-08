@@ -269,6 +269,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-56 | PR #6 review P1-1: the `review-gate` workflow ran the tool from the PR head with `checks: write`, so a PR could change the code that judges it | 2026-09-08 | ✅ D-197. `pull_request_target`, the head as data only. Binds PR-1 and Phase 5 |
 | F-57 | PR #6 review P1-2: an author can rewrite the approved review file in a metadata commit, and one shared identity cannot prove the reviewer, verified 2026-09-08 | 2026-09-08 | 🔧 D-198. Accepted risk under D-190. The output names the commit that last changed the review file |
 | F-58 | GitHub triggers `pull_request_target` only when the workflow file exists on the default branch. PR #7 against the PR-1 branch produced no run, and the events reference states the rule, verified 2026-09-08 | 2026-09-08 | 🔧 D-197 Effect. The `review-gate` check cannot run on PR-1 itself. The proof runs after the merge |
+| F-59 | The reviewer left its commit unpushed on the shared checkout twice on PR #10, against D-183, and the author pushed it each time. The `pr-review` skill said "push" in three places with no verification step and no evidence trail | 2026-09-08 | ✅ D-199. The session end gate reads the remote. The push line is a required part of the review record. Binds every session |
 
 ## 6. Guardrails (the safety contract for every PR)
 

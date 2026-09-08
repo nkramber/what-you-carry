@@ -239,6 +239,7 @@ Write "No finding." when the review found none.
 
 One line per command or check, with its result.
 Name each check that did not run and the reason.
+End with the push line: `- Push: <sha> is the head of origin/<branch>, verified with gh pr view.`
 
 ## Open questions and accepted risks
 
@@ -345,7 +346,7 @@ Do these steps in order after the author revises the PR.
 8. Update the Identity list to the new effective head.
 9. Update the Verification section with the commands that ran on the new head.
 10. Write the verdict against the new head.
-11. Commit the review record and the handoff entry together, then push to the PR branch (D-182, D-183).
+11. Commit the review record and the handoff entry together, then run the session end gate (D-182, D-183, D-199).
 
 Edit the existing `docs/reviews/pr-<number>.md`. Do not create a second file for the same PR.
 Do not delete the prior verdict. Replace it, and keep each finding and its history.
@@ -358,13 +359,14 @@ Use this section when you answer a review. The author does this work, not the re
 
 **A finding is a claim, not a fact.** A review can be wrong. Assess each finding against the evidence before you change anything. A finding carries no authority that the evidence does not give it.
 
-1. Read the finding, then read the file and the lines it names.
-2. Reproduce the trigger. A finding that does not reproduce has no merit.
-3. Read the contract the finding cites. Check the `Effect` column of `docs/decisions.md` for a later revision.
-4. Decide the disposition: full merit, partial merit, or no merit.
-5. Correct every finding that has merit. Use the smallest change that restores the contract.
-6. Record each disposition in `docs/reviews/pr-<number>-response.md`.
-7. Commit and push the response, the corrections, and the handoff entry (D-182, D-183).
+1. Run `git fetch` and `git status --short --branch`. If the checkout is ahead of the remote with the reviewer's commit, push it first. Record that in the response file (F-59).
+2. Read the finding, then read the file and the lines it names.
+3. Reproduce the trigger. A finding that does not reproduce has no merit.
+4. Read the contract the finding cites. Check the `Effect` column of `docs/decisions.md` for a later revision.
+5. Decide the disposition: full merit, partial merit, or no merit.
+6. Correct every finding that has merit. Use the smallest change that restores the contract.
+7. Record each disposition in `docs/reviews/pr-<number>-response.md`.
+8. Commit the response, the corrections, and the handoff entry, then run the session end gate (D-182, D-183, D-199).
 
 Push back when the evidence supports it. State the reason and show the proof:
 
@@ -414,6 +416,7 @@ Always commit the review record and the session handoff, then push them to the P
 
 Make one commit that holds the record and its handoff entry. Never leave either file uncommitted or unpushed.
 A push is the only way `review-gate` sees the record, because the gate reads the PR head (D-183).
+A review is complete only when the remote holds the record. The session end gate below proves it.
 
 An uncommitted review record has three effects:
 
@@ -423,8 +426,31 @@ An uncommitted review record has three effects:
 
 Write the commit message in an impersonal voice. Name no provider, agent, harness, or model (T-6, D-176).
 Fetch the remote and read the handoff again before you write the entry. Take the highest session number and add one (D-187).
+Name the remote head in the state of the build (D-199).
 Add the handoff entry at the top of the file, as a new entry (D-146).
 Another provider can add an entry above yours while you work. Add your own entry. Never append to an older one, and never edit theirs.
+
+## Session end gate
+
+Run these four commands after the commit, in this order. The evidence comes from the remote, not from the local checkout (D-199).
+
+```
+git push origin <branch>
+git fetch origin
+git status --short --branch
+gh pr view <number> --json headRefOid --jq .headRefOid
+```
+
+The status line must show no `[ahead N]`. The hash from `gh pr view` must equal `git rev-parse HEAD`.
+Write the push line in the Verification section of the review record, and name the remote head in the handoff entry.
+A record with no push line is incomplete, and the next session treats it as unpushed.
+
+If the remote refuses the push, the review is not complete. Do not end the session.
+Ask the owner to approve the push, and say in the handoff that the record has a commit and no push.
+A sandbox that blocks the network denies the push without a message from git, so read the status line and not the push output.
+
+At the start of a review or a repeat review, run `git fetch` and `git status --short --branch` too.
+If the checkout is ahead of the remote with a commit from the other provider, push it first. Record that in the review file (F-59).
 
 ## Scope limits
 

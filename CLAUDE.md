@@ -47,10 +47,10 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 
 ## Session handoff
 
-At the end of a session, fetch the remote and read `docs/session-handoff.md` again. Take the highest session number and add one (D-187). Then add a new entry at the top (D-146). Keep the 10 newest entries in that file. Move any older entry to the top of `docs/session-handoff-archive.md`. Set the author field to `Claude Code` or `Codex`. Commit the entry with the review record or the work it describes (D-182). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. Each entry has six parts:
+At the end of a session, fetch the remote and read `docs/session-handoff.md` again. Take the highest session number and add one (D-187). Then add a new entry at the top (D-146). Keep the 10 newest entries in that file. Move any older entry to the top of `docs/session-handoff-archive.md`. Set the author field to `Claude Code` or `Codex`. Commit the entry with the review record or the work it describes (D-182). Push, then fetch, and check that the status shows no `[ahead N]` (D-199). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. Each entry has six parts:
 
 - What the session did, and why.
-- The state of the build.
+- The state of the build, with the remote head (D-199).
 - What is in flight.
 - Traps and gotchas.
 - The questions that block progress.
