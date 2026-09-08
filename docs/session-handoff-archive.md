@@ -1,5 +1,45 @@
 # Session handoff archive
 
+## Session 19: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the PR #6 review. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Read the two P1 findings in `docs/reviews/pr-6.md` and assessed each against the evidence.
+- P1-1 has full merit. The `pull_request` event ran the tool from the PR head with `checks: write`. The owner chose `pull_request_target` (D-197). The workflow now checks out the base, fetches the PR head as data, and runs the base-branch tool. `ReviewGateRunsOnPullRequestTarget` covers it.
+- P1-2 has partial merit. The rewrite of a review file reproduces, and the requested identity check cannot be built, because every commit has one identity and no signature. The owner accepted the risk under D-190 (D-198). The output now names the commit that last changed the review file. Two tests cover it.
+- Opened PR #7, a throwaway adversarial PR against the PR-1 branch, to prove the trusted evaluator live. GitHub produced no run. The events reference says `pull_request_target` triggers only when the workflow file exists on the default branch (F-58). Closed PR #7 and deleted the branch.
+- Wrote `docs/reviews/pr-6-response.md`, D-197, D-198, F-56 to F-58, and the roadmap corrections.
+- After the owner merged PR #6 as `a3b20e2`, opened PR #8, a throwaway adversarial PR against `main`. The trusted tool from `main` answered `neutral` on the adversarial head, and the head's approval never posted. Run 34180347093. Closed PR #8 and deleted the branch. The response file records the proof.
+
+### State of the build
+
+- `main` is at `a3b20e2`, the squash merge of PR #6. The CI workflow and the review-gate workflow are on the trunk.
+- `dotnet build` and `dotnet test` pass on the Mac Mini: 35 tests, 0 failures. CI passed on the three platforms at `9624cfa`.
+- The `review-gate` check now runs on every PR against `main` from the trunk workflow (D-197). PR #8 proved it.
+
+### In flight
+
+PR #6 is merged. The branch `docs/d-197-proof` records the proof in the response file and this entry. It changes documents only, so the owner adds the `review-override` label (D-190). That label run is the first live use of the override path.
+
+### Traps and gotchas
+
+- `pull_request_target` reads the trigger from the default branch. A workflow on a feature branch never runs for that event, and a PR against that branch gives no error, only silence (F-58).
+- A `pull_request_target` run lists the base branch as its head branch in `gh run list`. Do not filter by the PR branch.
+- The gate cannot see PR #6 until the merge. The owner merges PR #6 on the review record alone, as for PR #1 to PR #5.
+- The identity of a commit proves nothing about the provider (D-198). Read the "Review file last changed by" line in the check output.
+- The adversarial proof must never merge. Close the PR and delete the branch after the run.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner adds the `review-override` label to the proof PR and merges it. Then a new session starts PR-2, the STE checker (D-121: one session, one PR).
+
 Entries older than the 10 newest sessions move here from `docs/session-handoff.md` (D-146). Newest first.
 
 ## Session 18: 2026-09-08, Codex
