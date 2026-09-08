@@ -94,7 +94,7 @@ public sealed class DetLintTests
     [InlineData("MathF.Floor(c)")]
     public void DetMathMayCallAnExactOperation(string call)
     {
-        Assert.Empty(Scan($"public static class A {{ public static float B(float c) => {call}; }}", "WhatYouCarry.Core/Determinism/DetMath.cs"));
+        Assert.Empty(Scan($"public static class A {{ public static float B(float c) => {call}; }}", BannedSymbols.DetMathPath));
     }
 
     /// <summary>
@@ -108,7 +108,7 @@ public sealed class DetLintTests
     [InlineData("MathF.Atan2(c, 1f)", "MathF.Atan2")]
     public void DetMathMayNotCallATranscendental(string call, string symbol)
     {
-        LintFinding finding = Assert.Single(Scan($"public static class A {{ public static float B(float c) => {call}; }}", "WhatYouCarry.Core/Determinism/DetMath.cs"));
+        LintFinding finding = Assert.Single(Scan($"public static class A {{ public static float B(float c) => {call}; }}", BannedSymbols.DetMathPath));
         Assert.Equal("L-MATHF", finding.Rule);
         Assert.Equal(symbol, finding.Symbol);
     }
@@ -117,8 +117,61 @@ public sealed class DetLintTests
     [Fact]
     public void ABareMathFIsAFinding()
     {
-        LintFinding finding = Assert.Single(Scan("using static System.MathF;\npublic static class A { }", "WhatYouCarry.Core/Determinism/DetMath.cs"));
+        LintFinding finding = Assert.Single(Scan("using static System.MathF;\npublic static class A { }", BannedSymbols.DetMathPath));
         Assert.Equal("L-MATHF", finding.Rule);
+    }
+
+    /// <summary>
+    /// Reflection through a type reads no namespace, so the member name is the only signal (F-62).
+    /// </summary>
+    [Theory]
+    [InlineData("public static class A { public static object B() => typeof(string).GetMethods(); }")]
+    [InlineData("public static class A { public static object B(object c) => c.GetType(); }")]
+    [InlineData("public static class A { public static object B(object c) => c.GetType().GetProperty(\"X\"); }")]
+    [InlineData("public static class A { public static object? B() => System.Activator.CreateInstance(typeof(A)); }")]
+    public void ReflectionWithoutTheNamespaceIsAFinding(string source)
+    {
+        Assert.Contains(Scan(source), finding => finding.Rule == "L-REFLECTION");
+    }
+
+    /// <summary>
+    /// A member name that a Core type can hold too is not a reflection finding. The list holds no such name,
+    /// so ordinary Core code keeps its own members.
+    /// </summary>
+    [Theory]
+    [InlineData("public static class A { public static int B(C c) => c.Type; }")]
+    [InlineData("public static class A { public static int B(C c) => c.Value; }")]
+    [InlineData("public static class A { public static string B() => nameof(A); }")]
+    public void AnOrdinaryMemberIsNotAReflectionFinding(string source)
+    {
+        Assert.DoesNotContain(Scan(source), finding => finding.Rule == "L-REFLECTION");
+    }
+
+    /// <summary>
+    /// Only the one canonical DetMath path takes the MathF exemption. A second file with the same name in
+    /// another directory does not (F-64).
+    /// </summary>
+    [Fact]
+    public void OnlyTheCanonicalDetMathPathIsExempt()
+    {
+        // The review trigger. The old code compared the file name alone and reported no finding.
+        LintFinding finding = Assert.Single(Scan("public static class A { public static float B(float c) => MathF.Sqrt(c); }", "WhatYouCarry.Core/Other/DetMath.cs"));
+        Assert.Equal("L-MATHF", finding.Rule);
+
+        Assert.Single(Scan("public static class A { public static float B(float c) => MathF.Sqrt(c); }", "WhatYouCarry.Core/DetMath.cs"));
+        Assert.Empty(Scan("public static class A { public static float B(float c) => MathF.Sqrt(c); }", BannedSymbols.DetMathPath));
+
+        // A Windows separator names the same file, so the rule must read it too.
+        Assert.Empty(Scan("public static class A { public static float B(float c) => MathF.Sqrt(c); }", BannedSymbols.DetMathPath.Replace('/', '\\')));
+    }
+
+    /// <summary>The canonical DetMath path names a file that exists, so the exemption is never dead.</summary>
+    [Fact]
+    public void TheCanonicalDetMathPathExists()
+    {
+        Assert.Contains(
+            CoreSourceScan.SourceFiles(RepositoryRoot.Find()),
+            path => path.Replace('\\', '/').EndsWith(BannedSymbols.DetMathPath, StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -188,7 +241,7 @@ public sealed class DetLintTests
     [Fact]
     public void EveryAllowedMathFMemberHasACaller()
     {
-        string detMath = RepositoryRoot.ReadFile("WhatYouCarry.Core/Determinism/DetMath.cs");
+        string detMath = RepositoryRoot.ReadFile(BannedSymbols.DetMathPath);
         foreach (string member in BannedSymbols.AllowedMathFMembers)
         {
             Assert.Contains($"MathF.{member}(", detMath, StringComparison.Ordinal);

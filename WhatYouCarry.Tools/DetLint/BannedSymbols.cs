@@ -8,8 +8,12 @@ namespace WhatYouCarry.Tools.DetLint;
 /// </summary>
 public static class BannedSymbols
 {
-    /// <summary>The one Core file that may name <c>MathF</c>, and only for the members in <see cref="AllowedMathFMembers"/>.</summary>
-    public const string DetMathFileName = "DetMath.cs";
+    /// <summary>
+    /// The one Core file that may name <c>MathF</c>, and only for the members in <see cref="AllowedMathFMembers"/>.
+    /// The rule reads the whole path and never the file name alone. A second file with the same name in another
+    /// directory takes no exemption (F-64).
+    /// </summary>
+    public const string DetMathPath = "WhatYouCarry.Core/Determinism/DetMath.cs";
 
     /// <summary>
     /// The <c>MathF</c> members that <c>DetMath.cs</c> may call. Each one is an exact IEEE operation, so it gives
@@ -31,7 +35,7 @@ public static class BannedSymbols
     public static readonly IReadOnlyDictionary<string, BannedName> Names = new Dictionary<string, BannedName>
     {
         ["Math"] = new("L-MATH", "The platform decides the last bits of a Math function. Use DetMath (G-2)."),
-        ["MathF"] = new("L-MATHF", $"Only {DetMathFileName} may name MathF, and only for an exact IEEE operation (G-2)."),
+        ["MathF"] = new("L-MATHF", $"Only {DetMathPath} may name MathF, and only for an exact IEEE operation (G-2)."),
         ["Random"] = new("L-RANDOM", "The seed is the one source of randomness. Use Rng (G-21)."),
         ["DateTime"] = new("L-CLOCK", "The tick is the one source of time. A wall clock is not deterministic (G-21)."),
         ["DateTimeOffset"] = new("L-CLOCK", "The tick is the one source of time. A wall clock is not deterministic (G-21)."),
@@ -46,6 +50,48 @@ public static class BannedSymbols
         ["Vector256"] = new("L-SIMD", "An intrinsic vector is hardware dependent (G-2)."),
         ["Vector512"] = new("L-SIMD", "An intrinsic vector is hardware dependent (G-2)."),
         ["dynamic"] = new("L-DYNAMIC", "Dynamic dispatch hides the call that runs. Core is explicit (G-2, T-1)."),
+        ["Activator"] = new("L-REFLECTION", "Activator makes a type at run time. Core is static (G-2)."),
+        ["Assembly"] = new("L-REFLECTION", "Reflection reads the assembly at run time. Core is static (G-2)."),
+        ["TypeInfo"] = new("L-REFLECTION", "Reflection reads the type at run time. Core is static (G-2)."),
+        ["MethodInfo"] = new("L-REFLECTION", "Reflection reads the type at run time. Core is static (G-2)."),
+        ["FieldInfo"] = new("L-REFLECTION", "Reflection reads the type at run time. Core is static (G-2)."),
+        ["PropertyInfo"] = new("L-REFLECTION", "Reflection reads the type at run time. Core is static (G-2)."),
+        ["ConstructorInfo"] = new("L-REFLECTION", "Reflection reads the type at run time. Core is static (G-2)."),
+        ["MemberInfo"] = new("L-REFLECTION", "Reflection reads the type at run time. Core is static (G-2)."),
+        ["BindingFlags"] = new("L-REFLECTION", "BindingFlags selects a reflected member. Core is static (G-2)."),
+    };
+
+    /// <summary>
+    /// A member that only reflection gives. G-2 bans reflection in Core, and a call such as
+    /// <c>typeof(string).GetMethods()</c> never spells the namespace, so the namespace rule cannot see it.
+    /// The scan reports one of these names when it stands on the right of a dot (F-62).
+    /// </summary>
+    /// <remarks>
+    /// The list holds no name that a Core type can hold too. `Type` and `typeof` are absent for that reason:
+    /// a property call such as `block.Type` is correct Core code, and `typeof` alone reads nothing at run time.
+    /// Each dangerous operation needs one of the names below.
+    /// </remarks>
+    public static readonly IReadOnlySet<string> ReflectionMembers = new HashSet<string>
+    {
+        "GetType",
+        "GetMethod",
+        "GetMethods",
+        "GetField",
+        "GetFields",
+        "GetProperty",
+        "GetProperties",
+        "GetMember",
+        "GetMembers",
+        "GetConstructor",
+        "GetConstructors",
+        "GetInterfaces",
+        "GetNestedType",
+        "GetNestedTypes",
+        "GetCustomAttribute",
+        "GetCustomAttributes",
+        "GetGenericArguments",
+        "MakeGenericType",
+        "InvokeMember",
     };
 
     /// <summary>

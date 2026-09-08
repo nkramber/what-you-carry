@@ -24,14 +24,24 @@ public struct StateHash : IEquatable<StateHash>
     private const ulong Prime = 1099511628211UL;
 
     private ulong value;
+    private bool started;
 
     private StateHash(ulong value)
     {
         this.value = value;
+        this.started = true;
     }
 
     /// <summary>The hash so far. It is the identity of every field added up to this point.</summary>
-    public readonly ulong Value => this.value;
+    /// <exception cref="InvalidOperationException">The hash comes from <c>default</c> and not from <see cref="Start"/>.</exception>
+    public readonly ulong Value
+    {
+        get
+        {
+            this.EnsureStarted();
+            return this.value;
+        }
+    }
 
     /// <summary>A new hash with no field in it.</summary>
     public static StateHash Start()
@@ -89,9 +99,10 @@ public struct StateHash : IEquatable<StateHash>
     }
 
     /// <inheritdoc/>
+    /// <remarks>A hash that `default` made equals no hash that <see cref="Start"/> made, and this never throws.</remarks>
     public readonly bool Equals(StateHash other)
     {
-        return this.value == other.value;
+        return this.value == other.value && this.started == other.started;
     }
 
     /// <inheritdoc/>
@@ -101,21 +112,38 @@ public struct StateHash : IEquatable<StateHash>
     }
 
     /// <inheritdoc/>
+    /// <remarks>This reads the field and never throws, because a dictionary may hold a hash that `default` made.</remarks>
     public readonly override int GetHashCode()
     {
         return (int)this.value ^ (int)(this.value >> 32);
     }
 
     /// <summary>The hash as 16 hexadecimal digits. This is the form that the bit-identity job compares.</summary>
+    /// <exception cref="InvalidOperationException">The hash comes from <c>default</c> and not from <see cref="Start"/>.</exception>
     public readonly override string ToString()
     {
+        this.EnsureStarted();
         return this.value.ToString("x16", CultureInfo.InvariantCulture);
     }
 
     /// <summary>One FNV-1a step: exclusive-or the byte into the value, then multiply by the prime.</summary>
     private void AddByte(byte part)
     {
+        this.EnsureStarted();
         this.value ^= part;
         this.value *= Prime;
+    }
+
+    /// <summary>
+    /// Stops a hash that <c>default</c> made. Its value is zero, and FNV-1a starts from the offset basis, so
+    /// it would give a stable number that is not the FNV-1a hash of anything. An absent value is an error and
+    /// never a zero (T-2, D-160, F-63).
+    /// </summary>
+    private readonly void EnsureStarted()
+    {
+        if (!this.started)
+        {
+            throw new InvalidOperationException("This StateHash comes from `default`, which holds no FNV-1a offset basis. Make one with StateHash.Start().");
+        }
     }
 }

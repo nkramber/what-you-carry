@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 20: 2026-09-08, Codex
+
+Author: Codex
+Session: repeat review of PR #6. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Re-reviewed PR #6 at effective head `03e6a29` against base and merge base `546a70a`.
+- Confirmed P1-1 is fixed in `9624cfa`. The `pull_request_target` workflow runs the base-branch evaluator and fetches the PR head as data only.
+- Confirmed P1-2 remains an accepted risk under D-198. The output names the commit that last changed the review file, and the repository cannot prove provider identity with its shared unsigned commits.
+- Found no new finding. Updated `docs/reviews/pr-6.md` to `Ready for owner merge`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 35 tests and 0 failures.
+- GitHub reports passing Linux, Windows, and macOS CI at head `03e6a29`.
+- The review-gate check does not run on PR #6 before the workflow reaches `main`, as recorded in D-197 and F-58.
+
+### In flight
+
+The owner can merge PR #6. After the merge, run the adversarial proof against `main` that D-197 requires.
+
+### Traps and gotchas
+
+- The `pull_request_target` workflow is available only after its file reaches the default branch.
+- The review-record identity risk remains accepted under D-198.
+- The effective head is `03e6a29`, because the latest register changes are outside the metadata paths.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner merges PR #6. Then run the adversarial proof against `main` and record its result.
+
 ## Session 19: 2026-09-08, Claude Code
 
 Author: Claude Code

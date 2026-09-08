@@ -129,12 +129,17 @@ public static class DetMath
             ? AtanUnitInterval(absoluteY / absoluteX)
             : HalfPi - AtanUnitInterval(absoluteX / absoluteY);
 
+        // A negative zero x needs no fold. Atan2 gives pi/2 for a positive y on either sign of a zero x,
+        // and `x < 0.0f` is already false for negative zero.
         if (x < 0.0f)
         {
             angle = Pi - angle;
         }
 
-        return y < 0.0f ? -angle : angle;
+        // The sign of y comes from its sign bit and not from a comparison, because negative zero is not below
+        // zero. Atan2(-0, -1) is -pi and not pi, and Atan2(-0, 1) is negative zero. The state hash reads the
+        // raw bits, so the sign of a zero result is part of the contract too (D-160, F-62).
+        return float.IsNegative(y) ? -angle : angle;
     }
 
     /// <summary>The square root. The IEEE square root is correctly rounded, so it is exact on every platform (D-161).</summary>

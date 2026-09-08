@@ -1,0 +1,79 @@
+# PR-12 review response
+
+Date: 2026-09-08
+
+This file answers `docs/reviews/pr-12.md`, the review of head `c2ba592`.
+
+## Summary
+
+All four findings have full merit. Each trigger reproduces on `c2ba592`. Each one now has a correction and a regression test that fails on the old code.
+
+The checkout was not ahead of the remote at the start of this session, so the review commit `2f4f7cc` needed no push (F-59).
+
+## P2-1: Atan2 loses negative zero on the negative x-axis
+
+Disposition: full merit.
+
+The trigger reproduces. `DetMath.Atan2(-0.0f, -1.0f)` gave `3.1415927` at `c2ba592`, and `Math.Atan2` gives `-3.1415927`. The error is two pi. The cause is the line `return y < 0.0f ? -angle : angle;`. Negative zero is not below zero, so the comparison missed it.
+
+Correction: `WhatYouCarry.Core/Determinism/DetMath.cs`. The sign now comes from `float.IsNegative(y)`, which reads the sign bit. The review also names the raw bits, and that part has merit too: `Atan2(-0.0f, 1.0f)` now gives negative zero, which the state hash reads as a different field from positive zero (D-160).
+
+The `x < 0.0f` fold needs no change. A negative zero x is not below zero, and `Atan2` gives pi/2 for a positive y on either sign of a zero x, so the fold must not run there. A first correction added a branch for that case, and a check showed the branch changed no result. The branch is gone.
+
+Regression check: `Atan2ReadsTheSignBitOfANegativeZero` in `WhatYouCarry.Tests/DetMathTests.cs`. It asserts the negative-pi result, the negative-zero result, both zero-x axes, and every sign pair against the double reference. It failed on the old code with `3.1415927` against `-3.1415927`.
+
+The sweep also grew. The `Atan2` grid in `BitIdentitySweep` never makes a negative zero, so the three-platform check could not have caught this defect. The sweep now holds the four sign pairs. That changes the pinned hash from `ef592d4148eb8ba0` to `4d6385bb92454694`, and the CI job proves the new number on the three platforms. This addition is wider than the finding asks. The reason is that the check this PR creates missed the defect this review found.
+
+## P2-2: A default StateHash silently uses the wrong FNV offset
+
+Disposition: full merit.
+
+The trigger reproduces. `StateHash uninitialized = default;` then `uninitialized.Add(1)` gave a stable number at `c2ba592`, and no FNV-1a hash holds it. FNV-1a starts from the offset basis, and a default struct starts from zero.
+
+Correction: `WhatYouCarry.Core/Determinism/StateHash.cs`. The struct holds a `started` field that only the private constructor sets. `AddByte`, `Value`, and `ToString` each call `EnsureStarted`, which throws with the name of the correct factory. An absent value is an error and never a zero (T-2).
+
+The review permits two corrections: a valid default, or a rejected default. This takes the second one. A valid default needs the field to hold the value exclusive-or the offset basis, and a reader must then hold that indirection in mind. A default `StateHash` means a caller that never called `Start`, and T-2 asks the code to name that mistake.
+
+`Equals` compares both fields, so a default hash equals no started hash. `GetHashCode` reads the field and never throws, because a dictionary can hold a default value.
+
+Regression check: `ADefaultStateHashReportsItself` in `WhatYouCarry.Tests/StateHashTests.cs`. It asserts the error on every `Add` overload, on `Value`, and on `ToString`, and it asserts that `Equals` and `GetHashCode` still answer. It failed on the old code, which threw nothing.
+
+## P2-3: The lint check does not detect reflection through System.Type
+
+Disposition: full merit.
+
+The trigger reproduces. A scan of `typeof(string).GetMethods()` reported no finding at `c2ba592`. The namespace rule reads the text `System.Reflection`, and this code never spells it.
+
+Correction: `WhatYouCarry.Tools/DetLint/BannedSymbols.cs` holds a new `ReflectionMembers` list, and `CoreSourceScan` reports one of those names when it stands on the right of a dot. The list holds `GetType`, the `GetMethod` family, `GetCustomAttributes`, `InvokeMember`, `MakeGenericType`, and the rest. The `Names` list also gains `Activator`, `Assembly`, `BindingFlags`, and the four `Info` types.
+
+The review asks to keep legitimate type operations available, and the list follows that. It holds no name that a Core type can hold too. `Type` is absent, because `block.Type` is correct Core code. `typeof` is absent, because it reads nothing at run time on its own. Each dangerous operation needs one of the listed names.
+
+Regression check: `ReflectionWithoutTheNamespaceIsAFinding` asserts an `L-REFLECTION` finding for the review trigger and for three more forms. `AnOrdinaryMemberIsNotAReflectionFinding` asserts that `c.Type`, `c.Value`, and `nameof` stay clean. Both are in `WhatYouCarry.Tests/DetLintTests.cs`.
+
+## P2-4: Any file named DetMath.cs receives the MathF exemption
+
+Disposition: full merit.
+
+The trigger reproduces. A scan of `WhatYouCarry.Core/Other/DetMath.cs` with a `MathF.Sqrt` call reported no finding at `c2ba592`. The rule read `Path.GetFileName(path)`.
+
+Correction: `BannedSymbols.DetMathFileName` becomes `BannedSymbols.DetMathPath`, which holds `WhatYouCarry.Core/Determinism/DetMath.cs`. `CoreSourceScan.ScanText` compares the whole Core-relative path, and it turns a Windows separator into a forward slash first.
+
+Regression check: `OnlyTheCanonicalDetMathPathIsExempt` asserts an `L-MATHF` finding for the review trigger and for `WhatYouCarry.Core/DetMath.cs`, and no finding for the canonical path in either separator form. `TheCanonicalDetMathPathExists` asserts that the canonical path names a file in this checkout, so the exemption can never point at nothing.
+
+## New ids
+
+- F-62: the `Atan2` negative-zero defect, and the sweep gap that hid it.
+- F-63: the default `StateHash` defect.
+- F-64: the `DetMath.cs` file-name exemption defect.
+
+No new decision. No new open question.
+
+## Verification
+
+- `dotnet build WhatYouCarry.slnx -m:1`: 0 warnings, 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1`: 144 tests, 0 failures. 11 are new.
+- The five review triggers, run against `c2ba592` before any correction: all five failed.
+- `det-lint --root .`: 0 findings in 4 Core files.
+- `ste-check --root .`: 0 findings in 15 files.
+- `bit-identity`: `4d6385bb92454694` on macOS arm64.
+- The pinned hash changed only because the sweep grew. Core gives the same numbers for every input that the old sweep read.

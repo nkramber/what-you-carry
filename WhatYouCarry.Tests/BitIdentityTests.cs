@@ -19,7 +19,7 @@ public sealed class BitIdentityTests
     /// A deliberate change to the simulation changes this number. G-20 asks the review to confirm the change and
     /// the version bump that goes with it.
     /// </remarks>
-    private const string ExpectedHash = "ef592d4148eb8ba0";
+    private const string ExpectedHash = "4d6385bb92454694";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

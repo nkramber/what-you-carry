@@ -139,6 +139,45 @@ public sealed class DetMathTests
         Assert.Throws<ArgumentOutOfRangeException>(() => DetMath.Sqrt(angle));
     }
 
+    /// <summary>
+    /// Atan2 reads the sign bit of y, so a negative zero gives a negative angle (F-62). Negative zero is not
+    /// below zero, and a comparison against zero misses it.
+    /// </summary>
+    [Fact]
+    public void Atan2ReadsTheSignBitOfANegativeZero()
+    {
+        // The review trigger. The old code gave positive pi here, an error of two pi.
+        Assert.Equal(Math.Atan2(-0.0f, -1.0f), DetMath.Atan2(-0.0f, -1.0f), 6);
+        Assert.Equal(-DetMath.Pi, DetMath.Atan2(-0.0f, -1.0f));
+        Assert.Equal(DetMath.Pi, DetMath.Atan2(0.0f, -1.0f));
+
+        // The state hash reads the raw bits, so the sign of a zero result is part of the contract (D-160).
+        Assert.True(float.IsNegative(DetMath.Atan2(-0.0f, 1.0f)));
+        Assert.False(float.IsNegative(DetMath.Atan2(0.0f, 1.0f)));
+
+        // A zero x needs no fold, and both signs of that zero give the same angle.
+        Assert.Equal(DetMath.HalfPi, DetMath.Atan2(1.0f, -0.0f));
+        Assert.Equal(DetMath.HalfPi, DetMath.Atan2(1.0f, 0.0f));
+        Assert.Equal(-DetMath.HalfPi, DetMath.Atan2(-1.0f, -0.0f));
+
+        // Every sign pair agrees with the double reference.
+        float[] values = [-2.5f, -1.0f, -0.0f, 0.0f, 1.0f, 2.5f];
+        foreach (float y in values)
+        {
+            foreach (float x in values)
+            {
+                if (y == 0.0f && x == 0.0f)
+                {
+                    continue;
+                }
+
+                Assert.True(
+                    Math.Abs(DetMath.Atan2(y, x) - Math.Atan2(y, x)) <= Tolerance,
+                    $"Atan2 missed at y={y} and x={x}.");
+            }
+        }
+    }
+
     /// <summary>The zero vector has no angle, so Atan2 reports it (T-2).</summary>
     [Fact]
     public void TheZeroVectorHasNoAngle()

@@ -106,6 +106,22 @@ public static class BitIdentitySweep
             }
         }
 
+        // The grid above never makes a negative zero, so it cannot see a platform that reads the sign bit of a
+        // zero differently. These pairs cover both signs of zero on both axes (F-62).
+        float[] signCases = [-0.0f, 0.0f, -1.0f, 1.0f];
+        foreach (float y in signCases)
+        {
+            foreach (float x in signCases)
+            {
+                if (y == 0.0f && x == 0.0f)
+                {
+                    continue;
+                }
+
+                hash.Add(DetMath.Atan2(y, x));
+            }
+        }
+
         for (int sample = 0; sample <= 512; sample++)
         {
             float value = sample * 0.5f;

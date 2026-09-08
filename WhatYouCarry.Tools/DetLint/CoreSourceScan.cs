@@ -68,7 +68,9 @@ public static class CoreSourceScan
     {
         SyntaxTree tree = CSharpSyntaxTree.ParseText(sourceText);
         SyntaxNode root = tree.GetRoot();
-        bool isDetMath = Path.GetFileName(path).Equals(BannedSymbols.DetMathFileName, StringComparison.Ordinal);
+        // The whole Core-relative path, never the file name alone. A second DetMath.cs in another directory
+        // must not take the MathF exemption (F-64).
+        bool isDetMath = path.Replace('\\', '/').Equals(BannedSymbols.DetMathPath, StringComparison.Ordinal);
 
         List<LintFinding> findings = [];
 
@@ -156,6 +158,14 @@ public static class CoreSourceScan
     private static void AddNameFinding(List<LintFinding> findings, SimpleNameSyntax identifier, string path, bool isDetMath)
     {
         string name = identifier.Identifier.ValueText;
+
+        // A reflection call names no namespace, so the member name on the right of a dot is the only signal.
+        if (IsMemberName(identifier) && BannedSymbols.ReflectionMembers.Contains(name))
+        {
+            findings.Add(Create(identifier, path, "L-REFLECTION", name, "Reflection reads the type at run time. Core is static (G-2)."));
+            return;
+        }
+
         if (!BannedSymbols.Names.TryGetValue(name, out BannedSymbols.BannedName banned))
         {
             return;
@@ -167,14 +177,14 @@ public static class CoreSourceScan
         {
             if (!isDetMath)
             {
-                findings.Add(Create(identifier, path, banned.Rule, "MathF", $"Only {BannedSymbols.DetMathFileName} may name MathF (G-2)."));
+                findings.Add(Create(identifier, path, banned.Rule, "MathF", $"Only {BannedSymbols.DetMathPath} may name MathF (G-2)."));
                 return;
             }
 
             if (member is null || !BannedSymbols.AllowedMathFMembers.Contains(member))
             {
                 string called = member is null ? "MathF" : $"MathF.{member}";
-                findings.Add(Create(identifier, path, banned.Rule, called, $"{BannedSymbols.DetMathFileName} may call only an exact IEEE operation: {string.Join(", ", BannedSymbols.AllowedMathFMembers)} (G-2)."));
+                findings.Add(Create(identifier, path, banned.Rule, called, $"{BannedSymbols.DetMathPath} may call only an exact IEEE operation: {string.Join(", ", BannedSymbols.AllowedMathFMembers)} (G-2)."));
             }
 
             return;
@@ -182,6 +192,12 @@ public static class CoreSourceScan
 
         string symbol = member is null ? name : $"{name}.{member}";
         findings.Add(Create(identifier, path, banned.Rule, symbol, banned.Detail));
+    }
+
+    /// <summary>Answers whether a name stands on the right of a dot, as the member of a member access.</summary>
+    private static bool IsMemberName(SimpleNameSyntax identifier)
+    {
+        return identifier.Parent is MemberAccessExpressionSyntax access && access.Name == identifier;
     }
 
     /// <summary>

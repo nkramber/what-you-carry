@@ -1,3 +1,4 @@
+using System;
 using WhatYouCarry.Core.Determinism;
 using Xunit;
 
@@ -56,6 +57,31 @@ public sealed class StateHashTests
         }
 
         Assert.Equal(expected, hash.Value);
+    }
+
+    /// <summary>
+    /// A hash that `default` made holds zero and not the FNV offset basis. It reports that, and it never gives
+    /// a stable number that is the FNV-1a hash of nothing (T-2, F-63).
+    /// </summary>
+    [Fact]
+    public void ADefaultStateHashReportsItself()
+    {
+        StateHash uninitialized = default;
+
+        // The review trigger. The old code accepted the field and returned a number that no FNV-1a hash holds.
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => uninitialized.Add(1));
+        Assert.Contains("StateHash.Start()", error.Message, StringComparison.Ordinal);
+
+        Assert.Throws<InvalidOperationException>(() => uninitialized.Add(1.0f));
+        Assert.Throws<InvalidOperationException>(() => uninitialized.Add(true));
+        Assert.Throws<InvalidOperationException>(() => uninitialized.Add((byte)1));
+        Assert.Throws<InvalidOperationException>(() => uninitialized.Value);
+        Assert.Throws<InvalidOperationException>(() => uninitialized.ToString());
+
+        // A default hash equals no started hash, and neither comparison throws.
+        Assert.NotEqual(StateHash.Start(), uninitialized);
+        Assert.Equal(default, uninitialized);
+        _ = uninitialized.GetHashCode();
     }
 
     /// <summary>An empty hash is the FNV offset basis, and the text form is 16 hexadecimal digits.</summary>
