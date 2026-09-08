@@ -14,7 +14,10 @@ Session: record the PR-3 merge across the documents. Branch `docs/pr-3-merge-rec
 - Four documents held a stale line, and this session corrects each one.
 - `docs/roadmaps/phase-1-foundations.md`: the PR-3 status line said "opened", and it names the merge commit now. The header cited D-200 to D-203, and it cites D-200 to D-209 now. The correction passes record the PR-3 outcome.
 - `docs/design.md`: the PR-2 and PR-3 markers now name the merge, as the PR-1 marker does. The Phase 1 sequence marks PR-2 and PR-3 as merged.
-- `dotnet test` caught the one defect in this session. `RepositoryDocumentsPass` runs the STE checker over the repository, and a new sentence of 26 words failed it. The sentence is three sentences now.
+- `dotnet test` caught the one defect in this session. `RepositoryDocumentsPass` runs the STE checker over the repository, and a new sentence of 26 words failed it. The sentence is three sentences now. A second sentence failed the same limit later, for the biome entry.
+- The owner answered OQ-12, the last open question of Phase 1 before PR-9. The v1 biome is a collapsed deep mine (D-210). The block set holds seven blocks, and the three depth bands are floors 1 to 5, 6 to 10, and 11 to 15.
+- The biome answer reaches four documents: the decision register, the questions register, the design doc world section and PR-9 entry, and the PR-9 scope in the focused roadmap.
+- D-210 feeds four open questions that a later phase needs: OQ-1 the palette, OQ-61 the silhouettes, OQ-64 the props, and PR-14 the texture generator. The three props of OQ-64 belong in a mine with no change.
 
 ### State of the build
 
@@ -27,7 +30,7 @@ Session: record the PR-3 merge across the documents. Branch `docs/pr-3-merge-rec
 
 ### In flight
 
-This PR changes only `docs/`, so the `review-override` label covers it (D-190). PR-4 starts after the merge.
+This PR changes only `docs/`, so the `review-override` label covers it (D-190). It carries two concerns, the merge record and the biome decision, and the owner asked for one PR. PR-4 starts after the merge.
 
 ### Traps and gotchas
 
@@ -38,11 +41,11 @@ This PR changes only `docs/`, so the `review-override` label covers it (D-190). 
 
 ### Open questions that block progress
 
-No new owner question. OQ-12 blocks PR-9, and it needs the one v1 biome concept. PR-4 to PR-8 need no open answer.
+No new owner question. D-210 resolves OQ-12, so no open question blocks any PR of Phase 1. PR-4 to PR-11 each have every answer they need.
 
 ### Next concrete action
 
-The owner merges this documentation PR with the `review-override` label. Then a new session starts PR-4: the JSONL logger, the error context sets, and the assertion helper (D-68, D-112, D-113).
+The owner merges this documentation PR with the `review-override` label. Then a new session starts PR-4: the JSONL logger, the error context sets, and the assertion helper (D-68, D-112, D-113). PR-4 is the first PR with no absent check, so the check clause of D-148 does not apply to it.
 
 ## Session 44: 2026-09-08, Codex
 

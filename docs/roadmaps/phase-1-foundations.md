@@ -354,7 +354,7 @@ Gate: exit tests 1 to 5 pass.
 
 Scope:
 
-- `content/floors/*.json`: floor templates with size by depth and room count ranges (D-6, D-46). Each names a corridor cross-section of at least 3 by 3 (D-166) and a difficulty budget with room weights (D-167). The biome is OQ-12.
+- `content/floors/*.json`: floor templates with size by depth and room count ranges (D-6, D-46). Each names a corridor cross-section of at least 3 by 3 (D-166) and a difficulty budget with room weights (D-167). The biome is the collapsed deep mine of D-210. Its three depth bands are floors 1 to 5, 6 to 10, and 11 to 15.
 - `Core/Procgen/FloorGenerator.cs`: rooms and corridors on the grid, a spawn point, and a stairwell, from the run seed and the floor number (D-78).
 - `Core/Procgen/Reachability.cs`: a search over walkable cells. A cell is walkable with two air blocks above it. A move is a step of at most one block up, or any drop (D-165).
 - `Core/Simulation/StairwellTransition.cs`: on arrival at the stairwell, a policy or the player chooses descend or ascend. Descend generates the next floor. Ascend ends the run (D-50, D-149).

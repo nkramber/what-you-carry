@@ -130,7 +130,7 @@ The v1 scope is small (D-56): 15 floors, one biome, 3 bosses, about 12 weapons, 
 
 ### 3.11 World and art
 
-The world theme is fantasy with black-powder guns (D-7). The tone is dark with dry humor (D-8). The look reference is Minecraft Dungeons, pushed darker with torchlight (D-59). The world is a voxel grid of one-meter cubes (D-78). Props break, and walls are permanent (D-79).
+The world theme is fantasy with black-powder guns (D-7). The v1 biome is a collapsed deep mine, and a blasting charge is a mining tool (D-210). The tone is dark with dry humor (D-8). The look reference is Minecraft Dungeons, pushed darker with torchlight (D-59). The world is a voxel grid of one-meter cubes (D-78). Props break, and walls are permanent (D-79).
 
 Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
@@ -366,7 +366,7 @@ Gate: a recorded run with camera motion replays to the same hash on all three pl
 > *In plain English:* the camera is part of the simulation, not decoration, so where you look and where you aim replay exactly.
 
 **PR-9: Procgen v1 and property tests.** 🔧
-Implement floor generation on the grid for one biome (D-6, D-13, D-46, OQ-12). A floor has rooms, corridors with a minimum width for the camera, a spawn point, and a stairwell. Floor size grows with depth. Implement the stairwell transition in Core (D-50, D-149). On arrival, a policy or the player chooses descend or ascend. The next floor generates from the run seed and the floor number. Floor templates are JSON. Property tests run over thousands of seeds per PR and one hundred thousand each night (D-116). They assert four facts: every room is reachable, no rooms overlap, the stairwell is reachable, and the difficulty budget is within tolerance.
+Implement floor generation on the grid for one biome, a collapsed deep mine (D-6, D-13, D-46, D-210). A floor has rooms, corridors with a minimum width for the camera, a spawn point, and a stairwell. Floor size grows with depth. Implement the stairwell transition in Core (D-50, D-149). On arrival, a policy or the player chooses descend or ascend. The next floor generates from the run seed and the floor number. Floor templates are JSON. Property tests run over thousands of seeds per PR and one hundred thousand each night (D-116). They assert four facts: every room is reachable, no rooms overlap, the stairwell is reachable, and the difficulty budget is within tolerance.
 Gate: the night sweep passes on one hundred thousand seeds.
 > *In plain English:* this builds the dungeon floors from a random seed and proves, over huge numbers of seeds, that a player can finish every floor.
 

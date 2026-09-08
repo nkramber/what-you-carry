@@ -25,7 +25,7 @@ How to file a question (D-124, D-138):
 9. **OQ-9. Enemy families.** The eight families and which are humanoid. Blocks PR-16 and PR-36 to PR-42.
 10. **OQ-10. Weapon list.** The twelve weapons by class. Blocks PR-24 and PR-43 to PR-46.
 11. **OQ-11. Boss concepts.** Three bosses. Blocks PR-33 to PR-35.
-12. **OQ-12. The biome.** The one v1 biome concept. Blocks PR-9.
+12. **OQ-12. The biome.** The one v1 biome concept. Blocks PR-9. Options: a collapsed deep mine, a drowned keep, a buried undercity, or a powder magazine. Recommendation: the mine. The descent is the logic of the biome, black powder needs no explanation, and torchlight is native. Resolved 2026-09-08: D-210, the collapsed deep mine.
 13. **OQ-13. Arrow area damage.** Splinter on impact, or a volley (D-42)? Blocks PR-24. Recommendation: splinter on impact.
 14. **OQ-14. Accessibility.** None in v1 (D-53), or reward-neutral assist options? Blocks PR-53.
 15. **OQ-15. Deck frame target.** 60 or 40 frames per second at 800p. Blocks M-3. Recommendation: 60, with 40 as the fallback if M-3 fails.
