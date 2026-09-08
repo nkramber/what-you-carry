@@ -2,6 +2,44 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 27: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: the session end gate for the `pr-review` skill. Branch `docs/pr-review-push-gate`, PR #11.
+
+### What this session did, and why
+
+- The owner asked for a fix after the reviewer left its commit unpushed on the shared checkout twice on PR #10 (F-59). The skill said "push" in three places, with no verification step and no evidence trail.
+- Added a "Session end gate" section to the skill. Four commands after the commit, and the evidence comes from the remote: `git status --short --branch` shows no `[ahead N]`, and `gh pr view --json headRefOid` equals `git rev-parse HEAD`.
+- Added the push line as a required part of the Verification section in the review skeleton. A record with no push line is incomplete.
+- Added the failure path. A denied push does not end the session. The session asks the owner to approve it and says in the handoff that the record is unpushed. A sandbox that blocks the network denies a push in silence, so the status line is the evidence and not the push output.
+- Added the start-of-session check for both roles. If the checkout is ahead with the other provider's commit, push it first and record that.
+- The owner also chose the rule for every session, not only reviews. D-199 records it, and revises in part D-146: the state of the build names the remote head. `CLAUDE.md` and `AGENTS.md` carry the rule in the session handoff section.
+- This is the second PR of one harness invocation, after PR #10, on the owner instruction. D-121 names one PR per session.
+
+### State of the build
+
+- `main` is at `d5eb298`, the squash merge of PR #10. The branch holds one commit above it, and this entry is in that commit.
+- Remote head: `origin/docs/pr-review-push-gate` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` and `dotnet test` pass: 63 tests, 0 failures. The checker reports 0 findings.
+
+### In flight
+
+PR #11 changes only `docs/`, `CLAUDE.md`, `AGENTS.md`, and `.claude/skills/`, so the `review-override` label covers it (D-190). The owner asked for the label in the instruction, and this session added it.
+
+### Traps and gotchas
+
+- The evidence for a push is the remote, never the local checkout. A sandbox denial gives no git error.
+- A revision of one part of a decision needs the `Revised in part by` marker on the old row, and the reference check does not flag it (D-186).
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+The owner merges PR #11 with the `review-override` label. Then a new session starts PR-3: the seeded RNG, DetMath, the lint tool, and the bit-identity CI job.
+
 ## Session 26: 2026-09-07, Codex
 
 Author: Codex
@@ -341,54 +379,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 Correct P1-1 and P1-2, then request a repeat review of PR #6.
-
-## Session 17: 2026-09-07, Claude Code
-
-Author: Claude Code
-Session: PR-1, the repository scaffold. Branch `feat/pr-1-scaffold`.
-
-### What this session did, and why
-
-- Started PR-1 from `/Volumes/SSD-1TB/what-you-carry` after the owner merged PR #5. Session 16 named it as the next action, and nothing blocked it.
-- Created `WhatYouCarry.slnx` with the four projects (D-108, D-194), `global.json` on SDK 10.0.400 (D-173), and `Directory.Build.props` with nullable on, warnings as errors, and one language version (D-68).
-- Put one directory per project at the root. `project.godot` lives in `WhatYouCarry.Game/`, next to its project file, so the Godot editor scans the Game directory and not the whole checkout. The solution stays at the root. This is a layout judgment, and not a decision.
-- Wrote the `review-gate` tool as the `review-gate` command of `WhatYouCarry.Tools` (D-65). The rules are one pure function. Git reads are one class. The workflow only gathers the inputs and posts the check run.
-- Wrote 32 tests. Every exit test with a name in the roadmap has a test with that name. The git-backed tests build throwaway repositories and run the real `git log` pathspec command.
-- Wrote `ci.yml` with one job per platform (D-71, D-100, D-157, D-189) and `review-gate.yml` on the five event types (D-190).
-- Wrote the PR template with the gate checklist, the absent checks, and the document lines (D-118, D-148).
-- Ran the Godot 4.7.2 editor headless with `--build-solutions` on the Game project. It built, made no solution file, and left the project file unchanged.
-- Ran the tool against this checkout with `origin/main` as the base. It found that the base has no mode file, and it gave a failure that names the file. That was OQ-72. The owner chose option (b), and this session put the one-line file on `main` in `4ec9708` on that instruction (D-196). The owner asked first whether a Codex approval plus the override label gives green. It does not: the mode rule runs first, and D-190 keeps code paths out of the override.
-- Added the build and test commands to `CLAUDE.md` and `AGENTS.md` (D-122).
-
-### State of the build
-
-- `main` is at `4ec9708`, which holds only the mode file above `546a70a`. The branch `feat/pr-1-scaffold` holds the scaffold commit, the D-196 records, and this entry.
-- `dotnet build WhatYouCarry.slnx` and `dotnet test WhatYouCarry.slnx --no-build` pass on the Mac Mini: 32 tests, 0 failures.
-- PR #6 is open. The first CI run passed on all three platforms, with 32 tests on each. The `review-gate` workflow posted its check run on the head commit, with the OQ-72 failure.
-- `CLAUDE.md` and `AGENTS.md` are byte-identical.
-
-### In flight
-
-PR #6 is open and waits for a Codex review (T-4). After D-196 the `review-gate` check on PR #6 reads `advisory` from `main` and shows grey until the review record lands. The CI workflow passed its first run on this PR on all three platforms.
-
-### Traps and gotchas
-
-- The Godot editor writes `TargetFramework` `net8.0` into a project file that has none, and it keeps a `.csproj.old` copy. Each project file names `net10.0` for that reason. Do not move the target framework into `Directory.Build.props`.
-- The Godot SDK knows the configurations `Debug`, `ExportDebug`, and `ExportRelease`. CI builds the default `Debug`. A `--configuration Release` build of the solution is untested.
-- `git cat-file -e <rev>:<path>` exits 128 for an absent path, and not 1. The tool uses `git ls-tree`, which prints nothing and exits 0 for an absent path.
-- The tool reads the mode file from the base branch, so the base must hold it. D-196 put it there before PR-1 merged. A repository rebuild must keep that file on the trunk.
-- One commit went to `main` without a PR on the owner instruction (D-196). That is the exception, not the rule (D-126, D-170).
-- A merge of `main` into a PR branch is a commit outside the metadata set, so it moves the effective head and needs a repeat review. A rebase does the same.
-- Git marks its object files read-only. The temp-repository helper clears the attribute before delete, or Windows refuses the delete.
-- `dotnet run` prints the build output to stdout, so the tool writes its result to a file and never to stdout.
-- The workflow uses `jq --slurp` to make one array from the paginated timeline. An empty timeline gives `[]`.
-- `Microsoft.NET.Test.Sdk` and `xunit.runner.visualstudio` are in the test project as the xUnit stack under D-66. They are the packages that `dotnet test` needs to run xUnit. No separate decision entry exists for them.
-- `timeout` does not exist on macOS. `perl -e 'alarm N; exec @ARGV'` does the same job.
-
-### Open questions that block progress
-
-No open question blocks PR-1. OQ-72 is resolved by D-196. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session reviews PR #6 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-<number>.md`. After the merge, PR-2 starts: the STE checker.
