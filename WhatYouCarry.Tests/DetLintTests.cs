@@ -345,6 +345,96 @@ public sealed class DetLintTests
     }
 
     /// <summary>
+    /// A randomness source outside `Rng` is a finding, even inside the approved `System` namespace (G-21, F-67).
+    /// </summary>
+    [Fact]
+    public void AnotherRandomnessSourceIsAFinding()
+    {
+        // The review trigger. Guid sits in System and outside the old denylist, and it gave no finding.
+        Assert.Contains(
+            Scan("public static class A { public static object B() => System.Guid.NewGuid(); }"),
+            finding => finding.Rule == "L-RANDOM");
+    }
+
+    /// <summary>
+    /// A `System` type that nobody approved is a finding, whatever it does (D-206, F-67). `System` holds the
+    /// platform randomness, time, and machine state beside the types that the denylist names.
+    /// </summary>
+    [Theory]
+    [InlineData("public static long B() => System.GC.GetTotalMemory(false);")]
+    [InlineData("public static bool B() => System.OperatingSystem.IsMacOS();")]
+    [InlineData("public static void B() => System.Console.WriteLine(\"x\");")]
+    [InlineData("public static object? B() => System.AppContext.GetData(\"x\");")]
+    [InlineData("public static object B() => new System.Uri(\"http://x\");")]
+    public void AnUnapprovedSystemTypeIsAFinding(string member)
+    {
+        Assert.Contains(
+            Scan($"public static class A {{ {member} }}"),
+            finding => finding.Rule == "L-SYSTEM");
+    }
+
+    /// <summary>
+    /// A hash that reads the machine is a finding, although its type is approved. The default hash of a
+    /// reference type is its address, and the string hash takes a new seed in each process (G-21, F-67).
+    /// </summary>
+    [Theory]
+    [InlineData("public static int B(object o) => o.GetHashCode();")]
+    [InlineData("public static int B(string s) => s.GetHashCode();")]
+    [InlineData("public static int B() => System.HashCode.Combine(1, 2);")]
+    public void AHashThatReadsTheMachineIsAFinding(string member)
+    {
+        Assert.Contains(
+            Scan($"public static class A {{ {member} }}"),
+            finding => finding.Rule == "L-IDENTITY");
+    }
+
+    /// <summary>
+    /// Every approved `System` type stays legal, and an ordinary return type never needs an entry. The allowlist
+    /// binds the names that Core writes, not the types that flow through it.
+    /// </summary>
+    [Fact]
+    public void AnApprovedSystemTypeIsNotAFinding()
+    {
+        Assert.Empty(Scan("""
+            namespace WhatYouCarry.Core.Determinism
+            {
+                public static class A
+                {
+                    public static bool B(float f) => float.IsNegative(f);
+
+                    public static uint C(float f) => System.BitConverter.SingleToUInt32Bits(f);
+
+                    public static (float First, int Second) D() => (1.0f, 2);
+
+                    public static void E(int i)
+                    {
+                        if (i < 0)
+                        {
+                            throw new System.ArgumentOutOfRangeException(nameof(i), "x");
+                        }
+                    }
+                }
+            }
+            """));
+    }
+
+    /// <summary>
+    /// An import of an unapproved namespace is a finding on its own, with no use of a type in it (D-205, F-67).
+    /// </summary>
+    [Fact]
+    public void AnUnapprovedNamespaceImportIsAFinding()
+    {
+        // The review trigger. The import check read the denylist alone and reported nothing.
+        LintFinding finding = Assert.Single(Scan("using System.Text;\n\npublic static class A { public static int B() => 1; }"));
+        Assert.Equal("L-NAMESPACE", finding.Rule);
+        Assert.Equal("System.Text", finding.Symbol);
+        Assert.Equal(1, finding.Line);
+
+        // An import of System is correct. Its types pass the allowlist of D-206 one at a time.
+        Assert.Empty(Scan("using System;\n\npublic static class A { public static int B() => 1; }"));
+    }
+
+    /// <summary>
     /// Conditional compilation in Core is a finding (D-204, F-65). The Core build defines the target-framework
     /// symbol, so a `#if NET10_0` branch compiles while a lint that defines no symbol reads an empty branch.
     /// </summary>

@@ -2,7 +2,7 @@
 
 Date: 2026-09-08
 
-This file answers `docs/reviews/pr-12.md`. The passes answer the review of head `c2ba592`, and the repeat reviews of heads `1bc665b`, `5316033`, and `549c75c`.
+This file answers `docs/reviews/pr-12.md`. The passes answer the review of head `c2ba592`, and the repeat reviews of heads `1bc665b`, `5316033`, `549c75c`, and `60d678e`.
 
 ## Summary
 
@@ -140,7 +140,10 @@ Correction: the description now holds a table of all six findings and their stat
 - OQ-77: the P2-5 correction. Resolved by D-204.
 - OQ-78: the reflection boundary of the lint tool. Resolved by D-205.
 - F-65: the conditional compilation gap.
+- D-206: the Core `System` type allowlist. Resolves OQ-79, and revises D-205 in part.
+- OQ-79: the `System` surface of Core. Resolved by D-206.
 - F-66: the denylist that four passes could not complete.
+- F-67: the randomness source inside the approved namespace, and the import that escaped the allowlist.
 - F-64 now records all four P2-3 passes.
 
 ## P2-3, fourth pass: the denylist itself was the defect
@@ -179,6 +182,38 @@ Disposition: full merit.
 The description carried the semantic scan and 160 tests after the first correction, and it still named head `5316033` and session 28. Both were stale.
 
 Correction: the description now names the effective head, the current session, and the current review state. This response also records that the description changes with each correction, because the PR record is part of the documentation set (D-118).
+
+## P2-7: The System allowlist permits a second randomness source
+
+Disposition: full merit.
+
+The trigger reproduces. `System.Guid.NewGuid()` compiles in Core, checked with `dotnet build`, and gave 0 findings at `60d678e`. D-205 approved `System` as a whole namespace, and `Guid` sits inside it and outside the type denylist.
+
+The finding also shows the limit of the D-205 answer. The allowlist closed every namespace that Core does not use, and `System` is the one broad namespace that Core does use. The rest of the nondeterminism lives there: `HashCode` takes a new seed in each process, and `GC`, `OperatingSystem`, `Console`, and `AppContext` each read the machine.
+
+The review offers the narrow correction first, and this session measured the cost of the wide one before it asked the owner. A run with `System` removed from the allowlist named every `System` type that Core uses, and there are seven of them. The list starts at nine with `Object` and `String`.
+
+The owner selected the allowlist (D-206). `System` is approved by type now, and the other approved namespaces stand as whole namespaces, so D-206 revises D-205 in part.
+
+`Guid` and `HashCode` also join the type denylist, so each one reports its own rule. The review asks for a randomness finding on `Guid.NewGuid()`, and it reads `L-RANDOM` and not the wider `L-SYSTEM`.
+
+One correction goes past the finding. A member of an approved type can still read the machine, so `Object.GetHashCode` and `String.GetHashCode` report `L-IDENTITY`. The default hash of a reference type is its address, and the string hash takes a new seed in each process. Either one changes an iteration order between two runs of one seed. This session found that gap while it checked the allowlist claim, and a known determinism hole is worse than a small scope change.
+
+The first form of this correction was wrong, and a check caught it. The `System` type rule also read the type that a method gives back, and `det-lint` then reported 24 findings on clean Core code: every method that gives back a bool, a void, or a uint. The allowlist binds the names that Core writes, and never a return type. The namespace rule still reads a return type, because a namespace has no such noise.
+
+Regression check: `AnotherRandomnessSourceIsAFinding` covers the review trigger. `AnUnapprovedSystemTypeIsAFinding` covers `GC`, `OperatingSystem`, `Console`, `AppContext`, and `Uri`. `AHashThatReadsTheMachineIsAFinding` covers the three hash paths. `AnApprovedSystemTypeIsNotAFinding` guards the other side with a tuple return, an exception, and a primitive member call.
+
+An adversarial run against the real Core tree reported all seven planted uses, and two of them name a `System` type that no denylist held.
+
+## P2-8: Unapproved namespace imports escape the allowlist
+
+Disposition: full merit. This one is a plain defect in the D-205 correction.
+
+The trigger reproduces. `using System.Text;` in a Core file gave 0 findings at `60d678e`. `AddImportFinding` read the namespace denylist and never the allowlist, so D-205 bound a use of a type and not an import.
+
+Correction: `AddImportFinding` now calls `IsAllowedNamespace` after the denylist. An import of `System` stays correct, because D-206 approves its types one at a time.
+
+Regression check: `AnUnapprovedNamespaceImportIsAFinding` asserts one `L-NAMESPACE` finding for `using System.Text;` with no use of a type in it, and no finding for `using System;`.
 
 ## Verification
 

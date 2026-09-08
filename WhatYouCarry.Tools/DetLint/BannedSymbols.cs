@@ -62,6 +62,8 @@ public static class BannedSymbols
         ["System.RuntimeFieldHandle"] = new("L-REFLECTION", "A runtime handle names a field at run time. Core is static (G-2)."),
         ["System.Runtime.CompilerServices.RuntimeHelpers"] = new("L-REFLECTION", "RuntimeHelpers reads the object identity and the type at run time. Core is static (G-2)."),
         ["System.ComponentModel.TypeDescriptor"] = new("L-REFLECTION", "TypeDescriptor reads the type metadata at run time, beside reflection. Core is static (G-2)."),
+        ["System.Guid"] = new("L-RANDOM", "A new Guid draws from the platform, not from the run seed. The seed is the one source of randomness (G-21)."),
+        ["System.HashCode"] = new("L-IDENTITY", "HashCode takes a new seed in each process, so its result changes between runs (G-21)."),
         ["System.Numerics.Vector"] = new("L-SIMD", "A hardware vector gives another result width on another platform (G-2)."),
         ["System.Numerics.Vector2"] = new("L-SIMD", "A System.Numerics vector may use SIMD. Core declares its own types (G-2)."),
         ["System.Numerics.Vector3"] = new("L-SIMD", "A System.Numerics vector may use SIMD. Core declares its own types (G-2)."),
@@ -90,6 +92,19 @@ public static class BannedSymbols
     public const string TypeOfDetail = "typeof gives back System.Type, which reads the type at run time. Core is static (G-2).";
 
     /// <summary>
+    /// A member that Core must not call, although its type is approved. The key is the full member name.
+    /// </summary>
+    /// <remarks>
+    /// The default hash of a reference type is its address, and the string hash takes a new seed in each
+    /// process. Either one changes an iteration order between two runs of one seed (G-21, F-67).
+    /// </remarks>
+    public static readonly IReadOnlyDictionary<string, BannedName> Members = new Dictionary<string, BannedName>
+    {
+        ["System.Object.GetHashCode"] = new("L-IDENTITY", "The default hash of a reference type is its address, and it changes between runs (G-21)."),
+        ["System.String.GetHashCode"] = new("L-IDENTITY", "The string hash takes a new seed in each process, so it changes between runs (G-21)."),
+    };
+
+    /// <summary>
     /// The namespaces that Core may use (D-205). Every other namespace is a finding, so a metadata surface that
     /// no denylist names, such as `System.ComponentModel` or `System.Linq.Expressions`, cannot reach Core.
     /// </summary>
@@ -105,12 +120,40 @@ public static class BannedSymbols
     /// </remarks>
     public static readonly IReadOnlySet<string> AllowedNamespaces = new HashSet<string>
     {
-        "System",
         "System.Collections.Generic",
         "System.Globalization",
         "System.Numerics",
         "System.Runtime.CompilerServices",
     };
+
+    /// <summary>The one namespace that Core approves by type and not as a whole.</summary>
+    public const string SystemNamespace = "System";
+
+    /// <summary>
+    /// The `System` types that Core may use (D-206). `System` is broad, and it holds the rest of the
+    /// nondeterminism beside the denied types: Guid, HashCode, GC, OperatingSystem, Console, and AppContext.
+    /// Core approves its `System` surface one type at a time (F-67).
+    /// </summary>
+    /// <remarks>
+    /// A primitive keyword such as `float` names no symbol on its own, so this list holds a primitive only when
+    /// Core calls one of its members, as `float.IsNegative` does. A later Core PR adds a type here with a
+    /// decision that says why (G-16).
+    /// </remarks>
+    public static readonly IReadOnlySet<string> AllowedSystemTypes = new HashSet<string>
+    {
+        "ArgumentOutOfRangeException",
+        "BitConverter",
+        "IEquatable",
+        "Int32",
+        "InvalidOperationException",
+        "Object",
+        "Single",
+        "String",
+        "UInt64",
+    };
+
+    /// <summary>The reason that the scan gives for a `System` type outside <see cref="AllowedSystemTypes"/>.</summary>
+    public const string SystemTypeDetail = "Core approves its System types one at a time, because System holds the platform randomness, time, and machine state (G-21, G-16, D-206).";
 
     /// <summary>The prefix of this project's own namespaces. Core may use any namespace under it.</summary>
     public const string ProjectNamespacePrefix = "WhatYouCarry.";

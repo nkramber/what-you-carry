@@ -194,6 +194,14 @@ public static class CoreSourceScan
         if (BannedNamespace(full) is BannedSymbols.BannedName banned)
         {
             findings.Add(Create(usingDirective, path, banned.Rule, full, banned.Detail));
+            return;
+        }
+
+        // The allowlist binds an import too. Without this an unapproved namespace enters the file, and only a
+        // use of one of its types gives a finding (D-205).
+        if (!IsAllowedNamespace(imported))
+        {
+            findings.Add(Create(usingDirective, path, "L-NAMESPACE", full, BannedSymbols.NamespaceDetail));
         }
     }
 
@@ -244,6 +252,13 @@ public static class CoreSourceScan
             return;
         }
 
+        // A member of an approved type can still read the machine, as the default hash of a reference type does.
+        if (!namesTheTypeItself && BannedSymbols.Members.TryGetValue(fullUsed, out BannedSymbols.BannedName bannedMember))
+        {
+            findings.Add(Create(name, path, bannedMember.Rule, used, bannedMember.Detail));
+            return;
+        }
+
         if (BannedNamespace(owner.ContainingNamespace.ToDisplayString()) is BannedSymbols.BannedName bannedNamespace)
         {
             findings.Add(Create(name, path, bannedNamespace.Rule, fullUsed, bannedNamespace.Detail));
@@ -251,10 +266,10 @@ public static class CoreSourceScan
         }
 
         // The allowlist is the last word on the owner. A namespace that nobody approved is a finding, so a
-        // surface that no denylist names cannot reach Core (D-205).
-        if (!IsAllowedNamespace(owner.ContainingNamespace))
+        // surface that no denylist names cannot reach Core (D-205, D-206).
+        if (Unapproved(owner) is string ownerRule)
         {
-            findings.Add(Create(name, path, "L-NAMESPACE", fullUsed, BannedSymbols.NamespaceDetail));
+            findings.Add(Create(name, path, ownerRule, fullUsed, ownerRule == "L-SYSTEM" ? BannedSymbols.SystemTypeDetail : BannedSymbols.NamespaceDetail));
             return;
         }
 
@@ -296,10 +311,41 @@ public static class CoreSourceScan
             return;
         }
 
+        // The namespace rule only. The `System` type allowlist binds the names that Core writes, and a return
+        // type is not one of those: every method that gives back a bool or a void would be a finding.
+        // A denied `System` type that reaches here, such as Guid, is already a finding above.
         if (!IsAllowedNamespace(producedType.ContainingNamespace))
         {
             findings.Add(Create(name, path, "L-NAMESPACE", used, $"{used} gives back {producedName}. {BannedSymbols.NamespaceDetail}"));
         }
+    }
+
+    /// <summary>
+    /// The rule id when Core may not use a type, or null when it may. `System` is approved by type, and every
+    /// other approved namespace is approved as a whole (D-205, D-206).
+    /// </summary>
+    private static string? Unapproved(INamedTypeSymbol type)
+    {
+        INamespaceSymbol space = type.ContainingNamespace;
+
+        // A type with no namespace comes from the compilation itself, never from the class library.
+        if (space.IsGlobalNamespace)
+        {
+            return null;
+        }
+
+        string full = space.ToDisplayString();
+        if (full.StartsWith(BannedSymbols.ProjectNamespacePrefix, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        if (full.Equals(BannedSymbols.SystemNamespace, StringComparison.Ordinal))
+        {
+            return BannedSymbols.AllowedSystemTypes.Contains(type.Name) ? null : "L-SYSTEM";
+        }
+
+        return BannedSymbols.AllowedNamespaces.Contains(full) ? null : "L-NAMESPACE";
     }
 
     /// <summary>
@@ -308,14 +354,16 @@ public static class CoreSourceScan
     /// </summary>
     private static bool IsAllowedNamespace(INamespaceSymbol space)
     {
-        // A type with no namespace comes from the compilation itself, never from the class library.
         if (space.IsGlobalNamespace)
         {
             return true;
         }
 
         string full = space.ToDisplayString();
-        return full.StartsWith(BannedSymbols.ProjectNamespacePrefix, StringComparison.Ordinal)
+
+        // An import of System is correct. Its types pass the allowlist of D-206 one at a time.
+        return full.Equals(BannedSymbols.SystemNamespace, StringComparison.Ordinal)
+            || full.StartsWith(BannedSymbols.ProjectNamespacePrefix, StringComparison.Ordinal)
             || BannedSymbols.AllowedNamespaces.Contains(full);
     }
 

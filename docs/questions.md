@@ -196,3 +196,9 @@ How to file a question (D-124, D-138):
     - the allowlist as a warning, with no effect on the exit code.
 
     Recommendation: the allowlist. No audit can complete a denylist over the class library, and each gap ships green until someone finds it. Core used two namespaces on this date. Resolved 2026-09-08: D-205, the allowlist.
+79. **OQ-79. The System surface of Core.** Raised 2026-09-08 (PR #12 review P2-7). Blocks PR-3. `System.Guid.NewGuid()` compiles in Core and gives no finding. `System.Guid` sits in the approved `System` namespace and outside the type denylist, so Core can make random state while the check stays green (G-21). Options:
+    - an allowlist of the `System` types for Core.
+    - `System.Guid` added to the denylist.
+    - one audit of `System`, and a denylist of each type that the audit finds.
+
+    Recommendation: the allowlist. `System` holds the rest of the nondeterminism: `HashCode` takes a new seed in each process, and `GC`, `OperatingSystem`, `Console`, and `AppContext` read the machine. A measurement found seven `System` types in Core, so the list is short. Resolved 2026-09-08: D-206, the allowlist.
