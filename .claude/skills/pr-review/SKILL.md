@@ -272,6 +272,11 @@ Write "No finding." when the review found none.
 One line per concern that a later PR holds. Name that PR or roadmap item.
 Give no severity here. Write "None." when the review found none.
 
+## Description edits
+
+One line per correction that this review made to the PR description.
+Give the old value and the new one. Write "None." when the review changed nothing.
+
 ## Verification
 
 One line per command or check, with its result.
@@ -287,6 +292,31 @@ Name each open OQ-# and each accepted risk with its D-# id.
 **<Blocked | Changes required | Ready for owner merge>.** This verdict applies to head `<sha>`.
 Give the reason in one or two sentences.
 ```
+
+## Correct the PR description
+
+A PR description is part of the documentation set (D-118). A description that names a stale head, an old count, or a superseded correction misleads the owner at the merge.
+
+The reviewer corrects such a description directly (D-217). It needs no finding, and the author needs no extra pass for it.
+
+The reviewer changes only a fact that the review verified:
+
+- the effective head, the base, or the merge base.
+- a count that the review ran, such as the test total or the finding total.
+- a check result that the review read.
+- a sentence that names a correction that a later commit replaced.
+
+The reviewer never changes:
+
+- what the author says the PR does, or why.
+- a decision, a tradeoff, or a recommendation.
+- a gate line that the owner ticks.
+
+Name no provider, agent, harness, or model in the description (T-6, D-137).
+
+Write one line for each edit in the review record, under `## Description edits`. Give the old value and the new one. The owner then reads every change in one place.
+
+A claim that is wrong in substance stays a finding. The reviewer corrects a stale fact, and the author corrects a wrong statement.
 
 ## Verdicts
 
@@ -504,7 +534,8 @@ If the checkout is ahead of the remote with a commit from the other provider, pu
 
 A review request authorizes inspection, verification, the review record, and the handoff entry.
 It requires a commit of those two files, and a push of that commit to the PR branch (D-182, D-183).
-It does not by itself authorize a code fix, a merge, or an external message.
+It also authorizes a correction of a stale fact in the PR description, under "Correct the PR description" (D-217).
+It does not by itself authorize a code fix, a merge, or another external message.
 A reviewer never pushes to `main` (D-170).
 Honor explicit authorization already present in the session.
 If the reviewer writes a substantive fix, reassess provider eligibility. The reviewer cannot approve its own contribution.

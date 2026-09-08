@@ -158,6 +158,9 @@ public sealed class LoggingTests
     [Theory]
     [InlineData("level")]
     [InlineData("message")]
+    [InlineData("assertFile")]
+    [InlineData("assertLine")]
+    [InlineData("assertMember")]
     public void AReservedFieldNameIsAnError(string reserved)
     {
         LogFields fields = new();
@@ -178,7 +181,10 @@ public sealed class LoggingTests
             }
         }
 
-        Assert.Equal(1, count);
+        // The logger writes the level and the message on every line. The three call-site names belong to the
+        // assertion report, so an ordinary line carries none of them.
+        int expected = reserved == LogFields.LevelName || reserved == LogFields.MessageName ? 1 : 0;
+        Assert.Equal(expected, count);
     }
 
     /// <summary>
@@ -206,25 +212,49 @@ public sealed class LoggingTests
     }
 
     /// <summary>
-    /// A surrogate that stands without its pair takes an escape, so the line stays valid JSON (F-73). A pair
-    /// stays as one character and reads back unchanged.
+    /// A surrogate that stands without its pair takes an escape, so the line stays valid JSON (F-73). Each row
+    /// carries a label, because two rows of raw surrogate text take one test id and one of them never runs.
     /// </summary>
     [Theory]
-    [InlineData("a\uD800b")]
-    [InlineData("a\uDC00b")]
-    [InlineData("\uD800")]
-    [InlineData("\uDBFF\uD800")]
-    public void AnUnpairedSurrogateKeepsTheLineValid(string value)
+    [InlineData("the first high surrogate", 0xD800)]
+    [InlineData("the last high surrogate", 0xDBFF)]
+    [InlineData("the first low surrogate", 0xDC00)]
+    [InlineData("the last low surrogate", 0xDFFF)]
+    public void AnUnpairedSurrogateKeepsTheLineValid(string label, int codeUnit)
     {
-        CollectingSink sink = new();
-        JsonlLogger logger = new(sink);
-        LogFields fields = RunFields();
-        fields.Add("path", value);
-        logger.Write(LogContextKind.Run, LogLevel.Info, value, fields);
+        char lone = (char)codeUnit;
+        string[] values =
+        [
+            "a" + lone + "b",
+            lone.ToString(),
+            new string(lone, 2),
+            lone + "a",
+            "a" + lone,
+        ];
 
-        string line = Assert.Single(sink.Lines);
-        System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(line);
-        Assert.NotNull(document.RootElement.GetProperty("path").GetString());
+        foreach (string value in values)
+        {
+            CollectingSink sink = new();
+            JsonlLogger logger = new(sink);
+
+            // The value stands in a field value, in a field name, and in the message of one line.
+            LogFields fields = RunFields();
+            fields.Add("path", value);
+            fields.Add("name" + value, "a value");
+            logger.Write(LogContextKind.Run, LogLevel.Info, value, fields);
+
+            string line = Assert.Single(sink.Lines);
+            System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(line);
+
+            // A reader must get the value back. The escape form parses and then fails on GetString, so the
+            // line carries the replacement character in place of the lone surrogate (F-73).
+            string read = document.RootElement.GetProperty("path").GetString()!;
+            Assert.DoesNotContain(lone, read);
+            Assert.Contains('\uFFFD', read);
+            Assert.NotNull(document.RootElement.GetProperty("message").GetString());
+        }
+
+        Assert.NotEmpty(label);
     }
 
     /// <summary>A matched surrogate pair is one character, and it reads back as the same text.</summary>
@@ -239,6 +269,31 @@ public sealed class LoggingTests
 
         System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(Assert.Single(sink.Lines));
         Assert.Equal("a😀b", document.RootElement.GetProperty("path").GetString());
+    }
+
+    /// <summary>
+    /// A caller field can never stop the assertion report. The three call-site names are reserved, so an
+    /// assertion always writes its report and a safe one always continues (D-112, F-74).
+    /// </summary>
+    [Theory]
+    [InlineData("assertFile")]
+    [InlineData("assertLine")]
+    [InlineData("assertMember")]
+    public void ACallerFieldCannotStopTheAssertionReport(string reserved)
+    {
+        LogFields fields = RunFields();
+        ContextException error = Assert.Throws<ContextException>(() => fields.Add(reserved, "a value"));
+        Assert.Contains(reserved, error.Message, StringComparison.Ordinal);
+
+        // The report still lands, and the safe call still returns.
+        CollectingSink sink = new();
+        JsonlLogger logger = new(sink);
+        Invariant.Assert(false, "an invariant", logger, LogContextKind.Run, fields, continueOnFailure: true);
+
+        System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(Assert.Single(sink.Lines));
+        Assert.EndsWith("LoggingTests.cs", document.RootElement.GetProperty("assertFile").GetString(), StringComparison.Ordinal);
+        Assert.Equal(nameof(this.ACallerFieldCannotStopTheAssertionReport), document.RootElement.GetProperty("assertMember").GetString());
+        Assert.True(document.RootElement.GetProperty("assertLine").GetInt64() > 0);
     }
 
     /// <summary>PR-4 exit test 3. An assertion report carries the seed of the run it failed in.</summary>

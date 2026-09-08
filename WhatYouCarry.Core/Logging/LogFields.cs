@@ -19,6 +19,15 @@ public sealed class LogFields
     /// <summary>The name that the logger writes for the text of a line (D-212). No caller field takes it.</summary>
     public const string MessageName = "message";
 
+    /// <summary>The name that the assertion report writes for the file of the call site (D-215).</summary>
+    public const string AssertFileName = "assertFile";
+
+    /// <summary>The name that the assertion report writes for the line of the call site (D-215).</summary>
+    public const string AssertLineName = "assertLine";
+
+    /// <summary>The name that the assertion report writes for the member of the call site (D-215).</summary>
+    public const string AssertMemberName = "assertMember";
+
     private readonly List<LogField> fields = [];
 
     /// <summary>Every field, in the order that the caller added it.</summary>
@@ -71,10 +80,14 @@ public sealed class LogFields
     }
 
     /// <summary>
-    /// A copy that holds the same fields. A caller keeps its own set unchanged when another part adds to the
-    /// copy, which the assertion report needs (F-72).
+    /// A copy of these fields, and the call site of an assertion after them (D-215). The caller keeps its own
+    /// set unchanged (F-72).
     /// </summary>
-    public LogFields Copy()
+    /// <remarks>
+    /// The three call-site names are reserved, so no caller field carries one and this method never meets a
+    /// repeated name. An assertion must always write its report, and a caller field must not stop it (F-74).
+    /// </remarks>
+    public LogFields CopyWithCallSite(string file, long line, string member)
     {
         LogFields copy = new();
         foreach (LogField field in this.fields)
@@ -82,6 +95,9 @@ public sealed class LogFields
             copy.fields.Add(field);
         }
 
+        copy.fields.Add(new LogField(AssertFileName, file, Quoted: true));
+        copy.fields.Add(new LogField(AssertLineName, line.ToString(CultureInfo.InvariantCulture), Quoted: false));
+        copy.fields.Add(new LogField(AssertMemberName, member, Quoted: true));
         return copy;
     }
 
@@ -106,9 +122,11 @@ public sealed class LogFields
             throw new ContextException("A log field needs a name, and this one is empty.");
         }
 
-        // The logger writes these two names itself, so a caller field of the same name would put two of one
-        // name in the object, and a reader could then take either value (D-212, F-72).
-        if (name == LevelName || name == MessageName)
+        // The logger writes the first two names itself, and the assertion report writes the other three. A
+        // caller field of any of them would put two of one name in the object, and a reader could then take
+        // either value. A repeated call-site name would also stop the report that D-112 requires (F-72, F-74).
+        if (name == LevelName || name == MessageName
+            || name == AssertFileName || name == AssertLineName || name == AssertMemberName)
         {
             ContextException reserved = new($"The log field name '{name}' belongs to the logger, and no caller field takes it.");
             reserved.AddContext("field", name);

@@ -48,12 +48,10 @@ public static class Invariant
             return;
         }
 
-        // The report takes a copy. A safe assertion returns, and the caller then uses the same field set again,
-        // so this method must leave that set as it found it (F-72).
-        LogFields report = fields.Copy();
-        report.Add("assertFile", callerFile);
-        report.Add("assertLine", callerLine);
-        report.Add("assertMember", callerMember);
+        // The report takes a copy with the call site after it. A safe assertion returns, and the caller then
+        // uses the same field set again, so this method leaves that set as it found it (F-72). The three
+        // call-site names are reserved, so no caller field can stop the report that D-112 requires (F-74).
+        LogFields report = fields.CopyWithCallSite(callerFile, callerLine, callerMember);
         logger.Write(context, LogLevel.Error, message, report);
 
         if (continueOnFailure)

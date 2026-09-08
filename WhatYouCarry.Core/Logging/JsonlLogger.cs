@@ -157,8 +157,9 @@ public sealed class JsonlLogger
     /// the space, and every surrogate that stands without its pair.
     /// </summary>
     /// <remarks>
-    /// An unpaired surrogate is not text that UTF-8 can hold, and a parser rejects a line that carries one raw.
-    /// The escape form keeps the line valid and keeps the value readable (F-73). This method calls no helper.
+    /// An unpaired surrogate is not text that UTF-8 can hold. A raw one makes the line unparseable, and the
+    /// `\u` escape form leaves a value that a reader cannot take back, so this method writes the replacement
+    /// character in its place (F-73). This method calls no helper.
     /// </remarks>
     private static void AppendQuoted(StringBuilder builder, string value)
     {
@@ -190,13 +191,22 @@ public sealed class JsonlLogger
                 default: break;
             }
 
-            if (letter >= ' ' && !isHighSurrogate && !isLowSurrogate)
+            // A surrogate without its pair is not valid text, and no JSON escape gives it back: a reader that
+            // asks for the string still fails on it. The replacement character is the standard mark for text
+            // that was not valid, and it keeps the whole value readable (F-73).
+            if (isHighSurrogate || isLowSurrogate)
+            {
+                builder.Append('\uFFFD');
+                continue;
+            }
+
+            if (letter >= ' ')
             {
                 builder.Append(letter);
                 continue;
             }
 
-            // Four lowercase hexadecimal digits, most significant first.
+            // A control character takes four lowercase hexadecimal digits, most significant first.
             builder.Append("\\u");
             for (int shift = 12; shift >= 0; shift -= 4)
             {
