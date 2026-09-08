@@ -2,6 +2,48 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 44: 2026-09-08, Codex
+
+Author: Codex
+Session: repeat review of PR #12 at the changed effective head. Branch `feat/pr-3-determinism`, PR #12.
+
+### What this session did, and why
+
+- Reloaded the `pr-review` skill after the owner approved its change as a second concern on this PR.
+- Re-reviewed PR #12 at effective head `4d7cb3e` against base and merge base `86078b8`.
+- Inspected the D-208 member allowlist correction and the D-209 review-scope rules. The provider gate passes because Claude Code wrote the substantive changes and Codex reviewed them.
+- Closed P2-6. The PR description now identifies the effective head alone, its decision counts agree with its D-200 to D-209 table, and the P2-6 row describes the correction that the page contains.
+- Closed P2-9. A focused Core probe reported the original comparer, runtime-feature, and current-culture paths, and it reported the later culture-constructor and string-intern paths.
+- Added the required `## Out of scope` section to the review record. This review found no concern to put there.
+- Set the verdict to `Ready for owner merge` for effective head `4d7cb3e`.
+
+### State of the build
+
+- `main` and the merge base are at `86078b8`. The reviewed effective head is `4d7cb3e`.
+- Remote head: `origin/feat/pr-3-determinism` will hold the metadata commit for this entry after the session-end push. The effective head stays `4d7cb3e` under D-184.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 193 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `4d7cb3e`. The review-gate results still reflect the prior verdict until this metadata commit runs them again.
+
+### In flight
+
+PR #12 is ready for the owner to merge after the review-gate checks turn green for this review record.
+
+### Traps and gotchas
+
+- The effective head includes the skill change because `.claude/skills/pr-review/SKILL.md` is outside the metadata set.
+- D-209 closes an existing finding when its stated trigger and regression check pass. A different trigger takes a new id and must pass the PR-scope test before it becomes a finding.
+- The focused probe is temporary. Remove it before the clean lint and build gates.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9 and does not block this review.
+
+### Next concrete action
+
+Wait for the review-gate checks on the metadata commit. The owner can then squash-merge PR #12.
+
 ## Session 43: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -383,47 +425,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 Correct P2-3, then update the PR description for P2-6. Request another repeat review.
-
-## Session 34: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the third PR #12 review. Branch `feat/pr-3-determinism`.
-
-### What this session did, and why
-
-- The third review kept P2-3 open and added P2-5 and P2-6. All three reproduce, so all three have full merit.
-- P2-3, third pass. The symbol read was correct, and the table was short. `System.Enum.IsDefined` gave no finding, and session 28 had already named `Enum.IsDefined` as reflection when it removed the call from `Rng.ForStream`. The tool contradicted the code it guards.
-- The table gains `System.Enum`, `System.Attribute`, `System.AppDomain`, `System.Delegate`, `System.MulticastDelegate`, the three runtime handle types, and `RuntimeHelpers`. The scan also reports the `typeof` keyword, because no symbol carries that name and a type value can reach a place where no name is banned.
-- An ordinary enum stays legal. The ban reads `System.Enum`, never the Core enum that declares the values, and `AnOrdinaryEnumIsNotAFinding` holds that.
-- P2-5. A `System.Math.Sin` call inside `#if NET10_0` compiles in the Core build and gave no finding. The owner chose the ban on conditional compilation over the build symbols (D-204, OQ-77, F-65). The other option cannot be complete, because Debug and Release are both real builds and a lint parses one.
-- `det-lint` reports each `#if` as `L-CONDITIONAL`. A `#nullable`, `#region`, or `#pragma` directive stays legal. Core held no conditional directive, so no Core file changed.
-- P2-6. The PR description named the superseded word list, 144 tests, and an old head. It now holds a table of all six findings, the symbol read, and the current evidence.
-- 160 tests pass. The bit-identity hash is unchanged, because no Core number changed.
-
-### State of the build
-
-- `main` is at `86078b8`. The branch holds three review commits and three correction commits above it.
-- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 160 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged.
-
-### In flight
-
-PR #12 needs a repeat review at the new effective head.
-
-### Traps and gotchas
-
-- A symbol table is a list, and a list is never complete on its own. Check the table against the code the project already rejected. Session 28 removed `Enum.IsDefined`, and the tool did not know it.
-- A ban on a platform type is not a ban on the language feature. `System.Enum` owns the metadata methods, and a Core enum owns its values. Test the ordinary use.
-- `#if` is trivia. A node walk does not reach it, and `DescendantNodes(descendIntoTrivia: true)` does.
-- The lint parse defines no preprocessor symbol, so an active branch reads as empty. That is why D-204 bans the directive and does not read the branch.
-- The PR description is part of the record (D-118). Update it with each correction, not at the end.
-
-### Open questions that block progress
-
-No new owner question. OQ-77 is resolved by D-204. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
