@@ -149,11 +149,12 @@ public static class CoreSourceScan
                     continue;
                 }
 
-                // A constructor names no member on the right of a dot, so the name pass cannot read it. The
-                // CultureInfo constructor reads the user settings, and its type is approved (D-208).
-                if (node is ObjectCreationExpressionSyntax creation)
+                // A constructor and an indexer name no member on the right of a dot, so the name pass cannot
+                // read either one. `new CultureInfo(...)`, `new(...)` with a target type, a `base(...)`
+                // initializer, and `x[i]` all reach a member this way (D-208, F-71).
+                if (node is BaseObjectCreationExpressionSyntax or ConstructorInitializerSyntax or ElementAccessExpressionSyntax)
                 {
-                    AddConstructorFinding(findings, model, creation, path);
+                    AddInvokedMemberFinding(findings, model, node, path);
                     continue;
                 }
 
@@ -339,26 +340,23 @@ public static class CoreSourceScan
     }
 
     /// <summary>
-    /// Adds a finding when a constructor of an approved outside type has no entry in the member allowlist.
-    /// An unapproved type is already a finding from its own name, so this rule stays silent for one.
+    /// Adds a finding when a member that the source reaches without a dot has no entry in the member allowlist.
+    /// A constructor and an indexer both arrive here. An unapproved type is already a finding from its own name,
+    /// so this rule stays silent for one.
     /// </summary>
-    private static void AddConstructorFinding(List<LintFinding> findings, SemanticModel model, ObjectCreationExpressionSyntax creation, string path)
+    private static void AddInvokedMemberFinding(List<LintFinding> findings, SemanticModel model, SyntaxNode node, string path)
     {
-        if (model.GetSymbolInfo(creation).Symbol is not IMethodSymbol constructor)
+        ISymbol? symbol = model.GetSymbolInfo(node).Symbol;
+        INamedTypeSymbol? owner = symbol?.ContainingType?.OriginalDefinition;
+        if (symbol is null || owner is null || IsProjectType(owner) || !IsApprovedType(owner))
         {
             return;
         }
 
-        INamedTypeSymbol owner = constructor.ContainingType.OriginalDefinition;
-        if (IsProjectType(owner) || !IsApprovedType(owner))
-        {
-            return;
-        }
-
-        string key = MemberKey(owner, constructor);
+        string key = MemberKey(owner, symbol);
         if (!BannedSymbols.AllowedMembers.Contains(key))
         {
-            findings.Add(Create(creation, path, "L-MEMBER", key, BannedSymbols.MemberDetail));
+            findings.Add(Create(node, path, "L-MEMBER", key, BannedSymbols.MemberDetail));
         }
     }
 

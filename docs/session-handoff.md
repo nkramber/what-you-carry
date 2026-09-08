@@ -2,6 +2,54 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 46: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: PR-4, the logger, the error context, and the assertions. Branch `feat/pr-4-logging`.
+
+### What this session did, and why
+
+- Started PR-4 after the owner merged PR #14. No open question blocked it, and PR-4 is the first PR with no absent check, so the D-148 clause does not apply.
+- Five owner questions came before the code, and D-211 to D-216 record the answers.
+- D-211: Core builds a line and hands it to an `ILogSink`. Core opens no file, so a disk failure never reaches the simulation thread, and `System.IO` stays out of the allowlist.
+- D-212: every line carries a level and a message beside its context fields. No line carries a wall clock, because the tick is the only time in Core.
+- D-213: `StringBuilder` builds the line, because the escape pass appends one character at a time.
+- D-215: the assertion report names the call site from the compiler, and it walks no stack. A stack trace changes with the build and the platform. This revises the PR-4 scope line, which said "the stack".
+- Wrote `LogLevel`, `LogContextKind`, `ILogSink`, `LogFields`, `ContextException`, `JsonlLogger`, and `Invariant` in `Core/Logging/`.
+- 26 new tests. The total is 219. Exit tests 1 to 6 each have a test, and the JSON tests parse each line with a real parser.
+- D-214 records the allowlist additions: 8 types and 16 members. A removal check proved each one in use. It also found two dead entries in the PR-3 list, `System.Object` and `List.new/0`, and both are gone.
+- The removal check found a live gap. `CultureInfo c = new("en-US", true);` gave no finding, and `new CultureInfo("en-US", true)` gave one, so the P2-9 case was reachable by another spelling. A `base` initializer and an indexer passed the same way (F-71). D-216 closes all three, and the owner chose the fix in this branch over a separate PR.
+- `det-lint` caught one real defect in the new Core code. `context.ToString()` on an enum reads the enum metadata, which G-2 bans. An explicit switch replaces it.
+
+### State of the build
+
+- `main` is at `51b3de7`. This branch holds the PR-4 work above it.
+- Remote head: `origin/feat/pr-4-logging` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 219 tests and 0 failures.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged. PR-4 adds no simulation number.
+
+### In flight
+
+PR-4 waits for a Codex review (T-4). It changes code, so no override applies.
+
+### Traps and gotchas
+
+- The allowlist needs a removal check, and not a reading. Two entries of the PR-3 list were dead, and one gap hid behind a spelling that the rule never read.
+- A dead allowlist entry widens the boundary in silence. Check each new entry by removal before the PR opens.
+- `det-lint` reads the new Core code as it lands. It caught an enum `ToString` in this session, which is reflection under G-2.
+- A collection expression, `[]`, calls no constructor that the source names, so `List.new/0` stayed dead.
+- An xUnit lambda with every path throwing binds to `Func<Task>` and not to `Action`. Name the delegate type.
+- A test that asserts a lint finding breaks when a later PR approves that type. Two such tests moved to a type that stays unapproved.
+
+### Open questions that block progress
+
+No new owner question. OQ-82 to OQ-86 are resolved by D-211 to D-216. No open question blocks PR-5 to PR-11.
+
+### Next concrete action
+
+A Codex session reviews PR-4 per `.claude/skills/pr-review/SKILL.md`, under the scope rules of D-209, and writes `docs/reviews/pr-<number>.md`.
+
 ## Session 45: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -387,43 +435,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 Correct P2-7 and P2-8, add their regression tests, and request another repeat review.
-
-## Session 36: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the fourth PR #12 review. Branch `feat/pr-3-determinism`.
-
-### What this session did, and why
-
-- The fourth review kept P2-3 and P2-6 open. Both reproduce, so both have full merit.
-- P2-3 reopened for the fourth time. `System.ComponentModel.TypeDescriptor.GetProperties` compiles in Core and gave no finding. Each pass named one more type: namespace text, member words, `System.Enum`, then `TypeDescriptor`.
-- The denylist was the defect, not its contents. `System.Linq.Expressions`, `System.Text.Json`, `System.Runtime.Serialization`, and `System.Dynamic` all reach type metadata under no name that a rule held. A fifth pass was likely.
-- The owner chose the namespace allowlist (D-205, OQ-78, F-66). Core uses `System`, `System.Collections.Generic`, `System.Globalization`, `System.Numerics`, `System.Runtime.CompilerServices`, and any namespace under `WhatYouCarry.`. Each entry matches one namespace and never its children, so `System` does not approve `System.ComponentModel`.
-- The type denylist stays for the cases inside an approved namespace. `TypeDescriptor` joined it too, so the review's regression check reads `L-REFLECTION` and not the wider rule.
-- Core used two namespaces, so the rule changed no Core file. An adversarial run reported all five planted uses, and three of them name a namespace that no denylist ever held.
-- P2-6, second pass. The description named head `5316033` and session 28 after the first correction. It now names the effective head and the current session.
-- 172 tests pass. The bit-identity hash is unchanged, because no Core number changed.
-
-### State of the build
-
-- `main` is at `86078b8`. The branch holds four review commits and four correction commits above it.
-- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 172 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged.
-
-### Traps and gotchas
-
-- A denylist over a library the size of the class library never ends. Four review passes proved it on this PR. Turn the boundary around and approve what enters.
-- An allowlist entry matches one namespace and never its children. `System` must not approve `System.ComponentModel`, so the match is exact.
-- Keep the type denylist beside the allowlist. `System.Math` and `System.Type` sit inside an approved namespace, and only the denylist reaches them.
-- A specific rule id carries more than a wide one. `TypeDescriptor` sits in both lists, so the finding says reflection and not namespace.
-- The PR description is part of the record (D-118), and a review reads it. Update it with each correction, and name the effective head in it.
-
-### Open questions that block progress
-
-No new owner question. OQ-78 is resolved by D-205. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
