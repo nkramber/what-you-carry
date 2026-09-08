@@ -161,3 +161,56 @@ How to file a question (D-124, D-138):
     - (c) The tool reads the head when the base has no file. This weakens D-185 for every later PR.
 
     Recommendation: (a). The red is the correct output of D-185 and T-2, the check is advisory until launch (D-180), and the exception ends when PR-1 merges. Resolved 2026-09-07: D-196, option (b). The owner put the file on `main` in `4ec9708`.
+73. **OQ-73. The DetMath Pow contract.** Raised 2026-09-08. Blocks PR-3. D-161 names no accuracy target for `Pow`. An absolute error of 1e-6 has no meaning for a result with no bound. Options:
+    - an integer exponent. Each step is one multiply, so the result is exact and needs no target.
+    - a full float exponent through exp2 and log2, with a relative target over a named domain.
+    - no `Pow` in PR-3, and a scope change in this roadmap.
+
+    Recommendation: the integer exponent. `Sqrt` covers the exponent one half, and no Phase 1 caller needs another fractional exponent (D-111). Resolved 2026-09-08: D-200.
+74. **OQ-74. The location of the bit-identity program.** Raised 2026-09-08. Blocks PR-3. The Phase 1 roadmap names `Tests/BitIdentity/` and calls it a program. `WhatYouCarry.Tests` is a test library and not a program, and D-108 names four projects. Options:
+    - a `bit-identity` command of `WhatYouCarry.Tools`, which keeps the four projects.
+    - the same command, and a test that asserts the hash against a constant in the source.
+    - a fifth executable project, which needs a decision that extends D-108.
+
+    Recommendation: the command in `WhatYouCarry.Tools`. It matches the `review-gate` and `ste-check` pattern, and the CI job compares the standard output of the three platforms. Resolved 2026-09-08: D-201.
+75. **OQ-75. The parser of the lint tool.** Raised 2026-09-08. Blocks PR-3. The roadmap names the C# compiler API, which is the package `Microsoft.CodeAnalysis.CSharp`. G-16 needs a decision entry for every dependency, and no decision names this package. Options:
+    - the compiler API, with the dependency entry that G-16 requires.
+    - a hand-written text scan, which needs no package.
+
+    Recommendation: the compiler API. A text scan reports a banned name inside a comment or a string, and it cannot follow a `using static` alias. Resolved 2026-09-08: D-202.
+76. **OQ-76. The conflict inside D-161.** Raised 2026-09-08. Blocks PR-3. D-161 names three things together: a reduction to [-pi, pi], degree-7 minimax polynomials, and an absolute error of at most 1e-6. A measurement of 2026-09-08 refutes the set. A true Remez minimax fit of degree 7 on [-pi, pi] reaches 2.5e-4 for sine, which is 250 times the target. Options:
+    - a fold to [-pi/4, pi/4] and a quadrant, which keeps the degree and the target.
+    - the same range, and a rise of the degree to 11 for sine, 12 for cosine, and 13 for atan.
+    - the same range and degree, and a target of 2.5e-4 for sine and 1.4e-3 for cosine.
+
+    Recommendation: the fold. It gives 1.2e-09 for sine and 1.1e-07 for atan, at the same multiply count as the degree-7 form. Resolved 2026-09-08: D-203.
+77. **OQ-77. Conditional compilation in Core.** Raised 2026-09-08 (PR #12 review P2-5). Blocks PR-3. Code inside `#if NET10_0` compiles in the Core build, and `det-lint` reports nothing, because the lint parse defines no symbol. Options:
+    - a ban on conditional compilation in Core. This is complete, and it adds a rule for Core source.
+    - the Core build symbols in the lint parse. This catches the reported case, and `DEBUG` and `RELEASE` are both real builds, so one of them stays unread.
+    - the symbols now, and a ban when a Core file first needs a branch.
+
+    Recommendation: the ban. The second option cannot be complete, and a gate with a known hole is worse than a stricter rule. Core holds no conditional directive today. Resolved 2026-09-08: D-204, the ban.
+78. **OQ-78. The reflection boundary of the lint tool.** Raised 2026-09-08 (PR #12 review P2-3, fourth pass). Blocks PR-3. The review reopened the reflection finding four times, and each pass named one more type: namespace text, then member words, then `System.Enum`, then `System.ComponentModel.TypeDescriptor`. Options:
+    - a namespace allowlist for Core, with the type denylist kept for the cases inside an approved namespace.
+    - the new type added, and a hand audit of the remaining class library surface.
+    - the allowlist as a warning, with no effect on the exit code.
+
+    Recommendation: the allowlist. No audit can complete a denylist over the class library, and each gap ships green until someone finds it. Core used two namespaces on this date. Resolved 2026-09-08: D-205, the allowlist. D-207 supersedes it on the same date, and it approves each type by name.
+79. **OQ-79. The System surface of Core.** Raised 2026-09-08 (PR #12 review P2-7). Blocks PR-3. `System.Guid.NewGuid()` compiles in Core and gives no finding. `System.Guid` sits in the approved `System` namespace and outside the type denylist, so Core can make random state while the check stays green (G-21). Options:
+    - an allowlist of the `System` types for Core.
+    - `System.Guid` added to the denylist.
+    - one audit of `System`, and a denylist of each type that the audit finds.
+
+    Recommendation: the allowlist. `System` holds the rest of the nondeterminism: `HashCode` takes a new seed in each process, and `GC`, `OperatingSystem`, `Console`, and `AppContext` read the machine. A measurement found seven `System` types in Core, so the list is short. Resolved 2026-09-08: D-206, the allowlist. D-207 supersedes it on the same date, and it approves every namespace by type.
+80. **OQ-80. The whole-namespace approvals.** Raised 2026-09-08 (PR #12 review P2-9). Blocks PR-3. `EqualityComparer<string>.Default.GetHashCode(v)` gives no finding. The member belongs to `EqualityComparer`, and D-205 approved `System.Collections.Generic` as a whole namespace, which D-207 supersedes. Three processes gave three hashes for one string. `CultureInfo.CurrentCulture` and `RuntimeFeature.IsDynamicCodeSupported` pass the same way. Options:
+    - one allowlist of approved types, with no namespace approved as a whole.
+    - a ban on each member that the review found.
+    - a rule that guesses which members read the machine.
+
+    Recommendation: the one allowlist. A ban on three members leaves the same hash behind `Dictionary`, `HashSet`, and any comparer a caller gives. A measurement found one type outside `System` in Core, so the list holds ten entries. Resolved 2026-09-08: D-207, the one allowlist.
+81. **OQ-81. The member surface of an approved type.** Raised 2026-09-08 (PR #12 review P2-9, third pass). Blocks PR-3. The type allowlist approves every member of an approved type, so `new CultureInfo("en-US", useUserOverride: true)`, `string.Intern(v)`, and `string.IsInterned(v)` give no finding. Options:
+    - an allowlist of members with the overload arity.
+    - an allowlist of members by name alone.
+    - member entries for the types that hold both kinds of member.
+
+    Recommendation: the arity form. The name form leaves `value.ToString()` beside the invariant overload that Core uses, and the same gap covers `Parse`, `TryParse`, and `Compare`. The third option needs a judgment about which type holds both kinds of member, and `Int32.Parse` puts `Int32` in that group too. A measurement found six members and two constructors in Core. Resolved 2026-09-08: D-208, the arity form.

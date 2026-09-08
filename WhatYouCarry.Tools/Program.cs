@@ -1,4 +1,6 @@
 using System;
+using WhatYouCarry.Tools.BitIdentity;
+using WhatYouCarry.Tools.DetLint;
 using WhatYouCarry.Tools.ReviewGate;
 using WhatYouCarry.Tools.SteCheck;
 
@@ -6,7 +8,7 @@ namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check, det-lint, bit-identity.";
 
     public static int Main(string[] args)
     {
@@ -24,6 +26,10 @@ public static class Program
                 return ReviewGateCommand.Run(commandArgs);
             case "ste-check":
                 return SteCheckCommand.Run(commandArgs);
+            case "det-lint":
+                return DetLintCommand.Run(commandArgs);
+            case "bit-identity":
+                return BitIdentityCommand.Run(commandArgs);
             default:
                 Console.Error.WriteLine($"Unknown command '{command}'. {Usage}");
                 return 2;

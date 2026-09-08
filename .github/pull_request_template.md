@@ -9,8 +9,8 @@ Each line holds before the owner merges (`CLAUDE.md`, PR gate).
 - [ ] Tests written and green (T-3).
 - [ ] No silent failure. Every error carries context (T-2).
 - [ ] The three-platform build-and-test workflow is green (D-148).
-- [ ] The three-platform bit-identity job is green (G-9). Absent until PR-3 creates it (D-148).
-- [ ] The lint tool passes (G-2). Absent until PR-3 creates it (D-148).
+- [ ] The three-platform bit-identity job is green (G-9).
+- [ ] The `det-lint` job is green (G-2, G-21).
 - [ ] The `ste-check` job is green (G-14). It runs the STE checker, the reference check, and the session number check (D-178, D-187).
 - [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-184). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
 - [ ] The `review-gate` check is green. Grey means no review record yet. Red means the review does not approve this head (D-181, D-185).
