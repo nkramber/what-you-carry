@@ -2,7 +2,7 @@
 
 Date: 2026-09-08
 
-This file answers `docs/reviews/pr-12.md`, the review of head `c2ba592`.
+This file answers `docs/reviews/pr-12.md`. The first pass answers the review of head `c2ba592`. The second pass answers the repeat review of head `1bc665b`.
 
 ## Summary
 
@@ -50,6 +50,35 @@ The review asks to keep legitimate type operations available, and the list follo
 
 Regression check: `ReflectionWithoutTheNamespaceIsAFinding` asserts an `L-REFLECTION` finding for the review trigger and for three more forms. `AnOrdinaryMemberIsNotAReflectionFinding` asserts that `c.Type`, `c.Value`, and `nameof` stay clean. Both are in `WhatYouCarry.Tests/DetLintTests.cs`.
 
+## P2-3, second pass: the word list was incomplete
+
+Disposition: full merit.
+
+The repeat review at `1bc665b` kept P2-3 open and gave two probes. Both reproduce.
+
+- `Type.GetEvents()` gave no finding. `GetEvents` was absent from the member list, and no list of words can be complete.
+- A Core `probe.GetMethods()` gave an `L-REFLECTION` finding. The word matched, and the symbol was a Core member.
+
+The review is correct about the cause. A word list cannot tell two symbols with one name apart. Any list I extend keeps both defects, because `GetType` itself can be a Core member: a class that declares `public new string GetType()` compiles, and this session checked that.
+
+Correction: `WhatYouCarry.Tools/DetLint/CoreSourceScan.cs` now compiles the Core sources with `CSharpCompilation` and asks the semantic model what each name means. The rules read symbols:
+
+- the type that owns the symbol, by its full name, such as `System.Type` or `System.Math`.
+- the namespace of that type, for `System.Reflection` and `System.Runtime.Intrinsics`.
+- the type that a method or a property gives back, which catches `object.GetType()`. That method belongs to `System.Object`, so the owner rule alone cannot see it.
+
+`BannedSymbols` now holds full type names instead of bare words. The member word list is gone.
+
+This correction is the first option that the review names. The second option, another complete check without text ambiguity, stays possible: a ban on `typeof`, on `GetType`, and on `Type` outside member position covers the two probes. This session did not take it, because it keeps two ambiguities of its own, and because a word rule would also reject the Core `Vector3` that PR-7 declares.
+
+The scan needed one guard for T-2. Without the runtime references every name resolves to nothing, and the scan would report no finding for any file. The compilation now checks that `System.Math` and `System.Reflection.Assembly` resolve, and it throws with context when they do not. The repository scan also reports every compiler error, because a Core file that does not compile resolves no symbol and would pass in silence.
+
+Regression check: `ReflectionWithoutItsNamespaceIsAFinding` covers `typeof(x).GetMethods()`, `o.GetType()`, `t.GetEvents()`, `t.GetProperties()`, and `Activator.CreateInstance`. `ACoreMemberThatSharesAReflectionNameIsNotAFinding` declares a Core type with `GetMethods`, `GetProperties`, and `Type` members and asserts no finding. `ACoreTypeThatSharesABannedNameIsNotAFinding` declares a Core `Vector3` and asserts no finding. `ACoreSourceThatDoesNotCompileIsAFinding` covers the T-2 guard. All are in `WhatYouCarry.Tests/DetLintTests.cs`, and each fails on the old code.
+
+An adversarial run against the real Core tree reported all nine planted uses, and it reported nothing for the Core `Vector3`.
+
+The review also asks for the F-# correction, and that has merit. The reflection comments cited F-62, which is the `Atan2` defect. F-64 is the register entry, and every comment now cites it. F-64 also records this second pass, and D-202 carries a dated note: the package stands, and the tool reads symbols and not words.
+
 ## P2-4: Any file named DetMath.cs receives the MathF exemption
 
 Disposition: full merit.
@@ -77,3 +106,13 @@ No new decision. No new open question.
 - `ste-check --root .`: 0 findings in 15 files.
 - `bit-identity`: `4d6385bb92454694` on macOS arm64.
 - The pinned hash changed only because the sweep grew. Core gives the same numbers for every input that the old sweep read.
+
+## Verification, second pass at `1bc665b`
+
+- The two repeat-review probes, run before the correction: both failed.
+- `dotnet build WhatYouCarry.slnx -m:1`: 0 warnings, 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1`: 146 tests, 0 failures.
+- `det-lint --root .`: 0 findings in 4 Core files.
+- An adversarial Core tree with nine planted uses: 10 findings, and no finding for the Core `Vector3` in the same file.
+- `ste-check --root .`: 0 findings in 15 files.
+- `bit-identity`: `4d6385bb92454694`, unchanged. The second pass changed no Core number.

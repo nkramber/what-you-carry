@@ -1,20 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using WhatYouCarry.Tools.DetLint;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The determinism lint tool (D-67, G-2, G-21; PR-3 exit tests 6 and 7).</summary>
+/// <summary>The determinism lint tool (D-67, D-202, G-2, G-21; PR-3 exit tests 6 and 7).</summary>
+/// <remarks>
+/// Each fragment below compiles on its own, because the scan reads symbols and not words. A fragment that names
+/// a type it does not declare resolves to nothing, and the scan then reports nothing.
+/// </remarks>
 public sealed class DetLintTests
 {
     /// <summary>PR-3 exit test 6. A file that calls System.Math.Sin gives one finding.</summary>
     [Fact]
     public void LintFailsSystemMath()
     {
-        LintFinding finding = Assert.Single(Scan("public static class A { public static float B(float c) => System.Math.Sin(c); }"));
+        LintFinding finding = Assert.Single(Scan("public static class A { public static double B(double c) => System.Math.Sin(c); }"));
         Assert.Equal("L-MATH", finding.Rule);
         Assert.Equal("Math.Sin", finding.Symbol);
         Assert.Equal(1, finding.Line);
@@ -34,16 +37,18 @@ public sealed class DetLintTests
         Assert.Contains(CoreSourceScan.SourceFiles(root), path => path.EndsWith("DetMath.cs", StringComparison.Ordinal));
     }
 
-    /// <summary>Each banned name gives a finding with its rule id.</summary>
+    /// <summary>Each banned symbol gives a finding with its rule id.</summary>
     [Theory]
     [InlineData("var a = new System.Random();", "L-RANDOM")]
     [InlineData("var a = System.DateTime.Now;", "L-CLOCK")]
+    [InlineData("var a = System.DateTimeOffset.Now;", "L-CLOCK")]
     [InlineData("var a = System.Environment.TickCount;", "L-CLOCK")]
-    [InlineData("var a = Stopwatch.StartNew();", "L-CLOCK")]
+    [InlineData("var a = System.Diagnostics.Stopwatch.StartNew();", "L-CLOCK")]
     [InlineData("var a = new System.Numerics.Vector3();", "L-SIMD")]
-    [InlineData("var a = Vector128<float>.Zero;", "L-SIMD")]
+    [InlineData("var a = System.Runtime.Intrinsics.Vector128<float>.Zero;", "L-SIMD")]
+    [InlineData("var a = System.Numerics.Vector<float>.Zero;", "L-SIMD")]
     [InlineData("dynamic a = 1;", "L-DYNAMIC")]
-    public void EachBannedNameGivesItsRule(string statement, string rule)
+    public void EachBannedSymbolGivesItsRule(string statement, string rule)
     {
         LintFinding finding = Assert.Single(Scan($"public static class A {{ public static void B() {{ {statement} }} }}"));
         Assert.Equal(rule, finding.Rule);
@@ -69,29 +74,27 @@ public sealed class DetLintTests
         Assert.Equal("System.Reflection.Assembly", finding.Symbol);
     }
 
-    /// <summary>
-    /// A namespace that only starts with the same letters is not a match. The rule needs the whole segment.
-    /// </summary>
+    /// <summary>A namespace that only starts with the same letters is not a match. The rule needs the whole segment.</summary>
     [Fact]
     public void ALongerNamespaceOfAnotherFamilyIsNotAMatch()
     {
-        Assert.Empty(Scan("using System.ReflectionExtras;\npublic static class A { }"));
+        Assert.DoesNotContain(Scan("namespace System.ReflectionExtras { public static class A { } }"), finding => finding.Rule == "L-REFLECTION");
     }
 
-    /// <summary>MathF outside DetMath.cs is a finding, whichever member it calls.</summary>
+    /// <summary>MathF outside the one DetMath file is a finding, whichever member it calls.</summary>
     [Fact]
     public void MathFOutsideDetMathIsAFinding()
     {
-        LintFinding finding = Assert.Single(Scan("public static class A { public static float B(float c) => MathF.Sqrt(c); }", "WhatYouCarry.Core/Other.cs"));
+        LintFinding finding = Assert.Single(Scan("public static class A { public static float B(float c) => System.MathF.Sqrt(c); }", "WhatYouCarry.Core/Other.cs"));
         Assert.Equal("L-MATHF", finding.Rule);
-        Assert.Contains("DetMath.cs", finding.Detail, StringComparison.Ordinal);
+        Assert.Contains(BannedSymbols.DetMathPath, finding.Detail, StringComparison.Ordinal);
     }
 
     /// <summary>DetMath.cs may call an exact IEEE operation, and only those.</summary>
     [Theory]
-    [InlineData("MathF.Sqrt(c)")]
-    [InlineData("MathF.Abs(c)")]
-    [InlineData("MathF.Floor(c)")]
+    [InlineData("System.MathF.Sqrt(c)")]
+    [InlineData("System.MathF.Abs(c)")]
+    [InlineData("System.MathF.Floor(c)")]
     public void DetMathMayCallAnExactOperation(string call)
     {
         Assert.Empty(Scan($"public static class A {{ public static float B(float c) => {call}; }}", BannedSymbols.DetMathPath));
@@ -102,10 +105,10 @@ public sealed class DetLintTests
     /// defect that DetMath exists to remove (D-69).
     /// </summary>
     [Theory]
-    [InlineData("MathF.Sin(c)", "MathF.Sin")]
-    [InlineData("MathF.Cos(c)", "MathF.Cos")]
-    [InlineData("MathF.Pow(c, 2f)", "MathF.Pow")]
-    [InlineData("MathF.Atan2(c, 1f)", "MathF.Atan2")]
+    [InlineData("System.MathF.Sin(c)", "MathF.Sin")]
+    [InlineData("System.MathF.Cos(c)", "MathF.Cos")]
+    [InlineData("System.MathF.Pow(c, 2f)", "MathF.Pow")]
+    [InlineData("System.MathF.Atan2(c, 1f)", "MathF.Atan2")]
     public void DetMathMayNotCallATranscendental(string call, string symbol)
     {
         LintFinding finding = Assert.Single(Scan($"public static class A {{ public static float B(float c) => {call}; }}", BannedSymbols.DetMathPath));
@@ -122,47 +125,23 @@ public sealed class DetLintTests
     }
 
     /// <summary>
-    /// Reflection through a type reads no namespace, so the member name is the only signal (F-62).
-    /// </summary>
-    [Theory]
-    [InlineData("public static class A { public static object B() => typeof(string).GetMethods(); }")]
-    [InlineData("public static class A { public static object B(object c) => c.GetType(); }")]
-    [InlineData("public static class A { public static object B(object c) => c.GetType().GetProperty(\"X\"); }")]
-    [InlineData("public static class A { public static object? B() => System.Activator.CreateInstance(typeof(A)); }")]
-    public void ReflectionWithoutTheNamespaceIsAFinding(string source)
-    {
-        Assert.Contains(Scan(source), finding => finding.Rule == "L-REFLECTION");
-    }
-
-    /// <summary>
-    /// A member name that a Core type can hold too is not a reflection finding. The list holds no such name,
-    /// so ordinary Core code keeps its own members.
-    /// </summary>
-    [Theory]
-    [InlineData("public static class A { public static int B(C c) => c.Type; }")]
-    [InlineData("public static class A { public static int B(C c) => c.Value; }")]
-    [InlineData("public static class A { public static string B() => nameof(A); }")]
-    public void AnOrdinaryMemberIsNotAReflectionFinding(string source)
-    {
-        Assert.DoesNotContain(Scan(source), finding => finding.Rule == "L-REFLECTION");
-    }
-
-    /// <summary>
     /// Only the one canonical DetMath path takes the MathF exemption. A second file with the same name in
     /// another directory does not (F-64).
     /// </summary>
     [Fact]
     public void OnlyTheCanonicalDetMathPathIsExempt()
     {
+        const string source = "public static class A { public static float B(float c) => System.MathF.Sqrt(c); }";
+
         // The review trigger. The old code compared the file name alone and reported no finding.
-        LintFinding finding = Assert.Single(Scan("public static class A { public static float B(float c) => MathF.Sqrt(c); }", "WhatYouCarry.Core/Other/DetMath.cs"));
+        LintFinding finding = Assert.Single(Scan(source, "WhatYouCarry.Core/Other/DetMath.cs"));
         Assert.Equal("L-MATHF", finding.Rule);
 
-        Assert.Single(Scan("public static class A { public static float B(float c) => MathF.Sqrt(c); }", "WhatYouCarry.Core/DetMath.cs"));
-        Assert.Empty(Scan("public static class A { public static float B(float c) => MathF.Sqrt(c); }", BannedSymbols.DetMathPath));
+        Assert.Single(Scan(source, "WhatYouCarry.Core/DetMath.cs"));
+        Assert.Empty(Scan(source, BannedSymbols.DetMathPath));
 
         // A Windows separator names the same file, so the rule must read it too.
-        Assert.Empty(Scan("public static class A { public static float B(float c) => MathF.Sqrt(c); }", BannedSymbols.DetMathPath.Replace('/', '\\')));
+        Assert.Empty(Scan(source, BannedSymbols.DetMathPath.Replace('/', '\\')));
     }
 
     /// <summary>The canonical DetMath path names a file that exists, so the exemption is never dead.</summary>
@@ -175,8 +154,74 @@ public sealed class DetLintTests
     }
 
     /// <summary>
-    /// A banned name inside a comment or a string is not a finding. A parse reads the code alone, which is the
-    /// reason the tool uses the compiler API and not a text search (D-202).
+    /// Reflection that never names its namespace is a finding. The compiler gives the symbol, so the scan sees
+    /// System.Type behind `typeof`, behind `GetType`, and behind a variable of that type (F-64).
+    /// </summary>
+    [Theory]
+    [InlineData("public static class A { public static object B() => typeof(string).GetMethods(); }")]
+    [InlineData("public static class A { public static object B(object c) => c.GetType(); }")]
+    [InlineData("public static class A { public static object B(System.Type t) => t.GetEvents(); }")]
+    [InlineData("public static class A { public static object B(System.Type t) => t.GetProperties(); }")]
+    [InlineData("public static class A { public static object? B() => System.Activator.CreateInstance(typeof(A)); }")]
+    public void ReflectionWithoutItsNamespaceIsAFinding(string source)
+    {
+        Assert.Contains(Scan(source), finding => finding.Rule == "L-REFLECTION");
+    }
+
+    /// <summary>
+    /// A Core member with the same name as a reflection member is not a finding. The compiler tells the two
+    /// symbols apart, and a word list cannot. This is the false report that the review found (F-64).
+    /// </summary>
+    [Fact]
+    public void ACoreMemberThatSharesAReflectionNameIsNotAFinding()
+    {
+        IReadOnlyList<LintFinding> findings = Scan("""
+            public sealed class Probe
+            {
+                public int Type => 1;
+                public object GetMethods() => this;
+                public object GetProperties() => this;
+            }
+
+            public static class A
+            {
+                public static object B(Probe probe) => probe.GetMethods();
+                public static object C(Probe probe) => probe.GetProperties();
+                public static int D(Probe probe) => probe.Type;
+            }
+            """);
+
+        Assert.Empty(findings);
+    }
+
+    /// <summary>
+    /// A Core type may carry the name of a banned platform type. PR-7 declares a Core vector, and the scan must
+    /// read the symbol and not the word (G-2, F-64).
+    /// </summary>
+    [Fact]
+    public void ACoreTypeThatSharesABannedNameIsNotAFinding()
+    {
+        IReadOnlyList<LintFinding> findings = Scan("""
+            namespace WhatYouCarry.Core.World
+            {
+                public struct Vector3
+                {
+                    public float X;
+                }
+
+                public static class A
+                {
+                    public static float B(Vector3 v) => v.X;
+                }
+            }
+            """);
+
+        Assert.Empty(findings);
+    }
+
+    /// <summary>
+    /// A banned name inside a comment or a string is not a finding. The scan reads symbols, so prose can never
+    /// reach a rule (D-202).
     /// </summary>
     [Fact]
     public void ABannedNameInProseIsNotAFinding()
@@ -192,40 +237,36 @@ public sealed class DetLintTests
             """));
     }
 
-    /// <summary>A member named like a banned type is not a finding. Only the type on the left of the dot counts.</summary>
-    [Fact]
-    public void AMemberNamedLikeABannedTypeIsNotAFinding()
-    {
-        Assert.Empty(Scan("public static class A { public static int Environment => 1; public static int B(A a) => 2; }"));
-    }
-
-    /// <summary>A file that does not parse is a finding, so no rule below it fails in silence (T-2).</summary>
+    /// <summary>A file that does not compile is a finding, so no rule below it fails in silence (T-2).</summary>
     [Fact]
     public void AFileThatDoesNotParseIsAFinding()
     {
-        IReadOnlyList<LintFinding> findings = Scan("public static class A { this is not C# ");
-        Assert.Contains(findings, finding => finding.Rule == "L-PARSE");
+        Assert.Contains(Scan("public static class A { this is not C# "), finding => finding.Rule == "L-PARSE");
+    }
+
+    /// <summary>
+    /// A Core source that does not compile is a finding on the repository scan. Without it every rule below the
+    /// error would resolve no symbol and pass in silence (T-2).
+    /// </summary>
+    [Fact]
+    public void ACoreSourceThatDoesNotCompileIsAFinding()
+    {
+        using TemporaryCheckout checkout = new();
+        checkout.WriteCoreFile("Broken.cs", "public static class A { public static Missing B() => null!; }");
+
+        Assert.Contains(CoreSourceScan.Run(checkout.Root), finding => finding.Rule == "L-PARSE");
     }
 
     /// <summary>The scan reads every hand-written Core file and leaves the build output out.</summary>
     [Fact]
     public void TheScanLeavesTheBuildOutputOut()
     {
-        string root = Path.Combine(Path.GetTempPath(), "wyc-lint-" + Guid.NewGuid().ToString("n"));
-        try
-        {
-            Directory.CreateDirectory(Path.Combine(root, "WhatYouCarry.Core", "Determinism"));
-            Directory.CreateDirectory(Path.Combine(root, "WhatYouCarry.Core", "obj", "Debug"));
-            File.WriteAllText(Path.Combine(root, "WhatYouCarry.Core", "Determinism", "Good.cs"), "public static class A { }");
-            File.WriteAllText(Path.Combine(root, "WhatYouCarry.Core", "obj", "Debug", "Generated.cs"), "public static class B { public static object C => new System.Random(); }");
+        using TemporaryCheckout checkout = new();
+        checkout.WriteCoreFile("Determinism/Good.cs", "public static class A { }");
+        checkout.WriteCoreFile("obj/Debug/Generated.cs", "public static class B { public static object C => new System.Random(); }");
 
-            Assert.Single(CoreSourceScan.SourceFiles(root));
-            Assert.Empty(CoreSourceScan.Run(root));
-        }
-        finally
-        {
-            Directory.Delete(root, recursive: true);
-        }
+        Assert.Single(CoreSourceScan.SourceFiles(checkout.Root));
+        Assert.Empty(CoreSourceScan.Run(checkout.Root));
     }
 
     /// <summary>A checkout with no Core directory is an error that names the path (T-2).</summary>
@@ -251,5 +292,32 @@ public sealed class DetLintTests
     private static IReadOnlyList<LintFinding> Scan(string source, string path = "WhatYouCarry.Core/Test.cs")
     {
         return CoreSourceScan.ScanText(source, path);
+    }
+
+    /// <summary>A throwaway checkout with a Core directory, for the scans that read files.</summary>
+    private sealed class TemporaryCheckout : IDisposable
+    {
+        public TemporaryCheckout()
+        {
+            this.Root = Path.Combine(Path.GetTempPath(), "wyc-lint-" + Guid.NewGuid().ToString("n"));
+            Directory.CreateDirectory(Path.Combine(this.Root, CoreSourceScan.CoreDirectory));
+        }
+
+        public string Root { get; }
+
+        public void WriteCoreFile(string relativePath, string text)
+        {
+            string full = Path.Combine(this.Root, CoreSourceScan.CoreDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+            File.WriteAllText(full, text);
+        }
+
+        public void Dispose()
+        {
+            if (Directory.Exists(this.Root))
+            {
+                Directory.Delete(this.Root, recursive: true);
+            }
+        }
     }
 }
