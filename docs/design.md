@@ -130,7 +130,7 @@ The v1 scope is small (D-56): 15 floors, one biome, 3 bosses, about 12 weapons, 
 
 ### 3.11 World and art
 
-The world theme is fantasy with black-powder guns (D-7). The tone is dark with dry humor (D-8). The look reference is Minecraft Dungeons, pushed darker with torchlight (D-59). The world is a voxel grid of one-meter cubes (D-78). Props break, and walls are permanent (D-79).
+The world theme is fantasy with black-powder guns (D-7). The v1 biome is a collapsed deep mine, and a blasting charge is a mining tool (D-210). The tone is dark with dry humor (D-8). The look reference is Minecraft Dungeons, pushed darker with torchlight (D-59). The world is a voxel grid of one-meter cubes (D-78). Props break, and walls are permanent (D-79).
 
 Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
@@ -330,12 +330,12 @@ Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry
 Gate: `dotnet build` and `dotnet test` pass on all three platforms, and the `review-gate` job runs on the PR.
 > *In plain English:* this makes the empty project with its four parts and the rules files that every future session reads first. It also adds a check that turns red when a change has no approved review. It adds nothing that plays. It is safe because it changes no behavior.
 
-**PR-2: STE checker.** ✅ PR #10.
+**PR-2: STE checker.** ✅ Merged 2026-09-08 as PR #10.
 Port the STE checker to C# as `WhatYouCarry.Tools.SteCheck` (D-130). It flags passive voice, helper verbs, sentence-initial and preposition-led -ing forms, semicolons, contractions, and the 20-word and 25-word limits. Dated records are exempt. Run it in CI on every hand-written `.md` file. The same command runs the reference check (D-178, D-186) and the session number check (D-187).
 Gate: the checker passes on itself, on this file, and on the skills. The PR names the absent lint tool and bit-identity job with PR-3 (D-148).
 > *In plain English:* this adds a tool that reads every document and reports sentences that break the text rules. Documents are the project's memory, so the tool guards that memory.
 
-**PR-3: Seeded RNG, DetMath, lint, and the bit-identity CI job.** ✅ PR #12.
+**PR-3: Seeded RNG, DetMath, lint, and the bit-identity CI job.** ✅ Merged 2026-09-08 as PR #12.
 Implement the seeded RNG as xoshiro128** streams, one per subsystem, seeded by SplitMix64 (D-159). Implement DetMath in float from polynomial methods that use only the five exact IEEE operations (D-70, D-161). `Sin` and `Cos` fold to [-pi/4, pi/4] and a quadrant, and `Atan2` folds to the octant (D-203). `Pow` takes an integer exponent (D-200). Implement the state hash as FNV-1a 64 over the raw field bits, in a fixed declared order (D-160). Implement the `det-lint` command, which parses each Core source file with the C# compiler API (D-67, D-202). Add the `bit-identity` command and the CI job that runs it on Linux x64, macOS arm64, and Windows x64 (D-201). A fourth job compares the three hashes (D-69, D-71).
 Gate: this PR passes its own lint tool and bit-identity job (D-148), and the lint tool fails a test file that calls `System.Math.Sin`.
 > *In plain English:* different computers give slightly different answers for functions like sine. A Windows machine then cannot repeat a bug from a Mac. This adds our own math that gives the same answer everywhere, and a check that proves it on every change.
@@ -366,7 +366,7 @@ Gate: a recorded run with camera motion replays to the same hash on all three pl
 > *In plain English:* the camera is part of the simulation, not decoration, so where you look and where you aim replay exactly.
 
 **PR-9: Procgen v1 and property tests.** 🔧
-Implement floor generation on the grid for one biome (D-6, D-13, D-46, OQ-12). A floor has rooms, corridors with a minimum width for the camera, a spawn point, and a stairwell. Floor size grows with depth. Implement the stairwell transition in Core (D-50, D-149). On arrival, a policy or the player chooses descend or ascend. The next floor generates from the run seed and the floor number. Floor templates are JSON. Property tests run over thousands of seeds per PR and one hundred thousand each night (D-116). They assert four facts: every room is reachable, no rooms overlap, the stairwell is reachable, and the difficulty budget is within tolerance.
+Implement floor generation on the grid for one biome, a collapsed deep mine (D-6, D-13, D-46, D-210). A floor has rooms, corridors with a minimum width for the camera, a spawn point, and a stairwell. Floor size grows with depth. Implement the stairwell transition in Core (D-50, D-149). On arrival, a policy or the player chooses descend or ascend. The next floor generates from the run seed and the floor number. Floor templates are JSON. Property tests run over thousands of seeds per PR and one hundred thousand each night (D-116). They assert four facts: every room is reachable, no rooms overlap, the stairwell is reachable, and the difficulty budget is within tolerance.
 Gate: the night sweep passes on one hundred thousand seeds.
 > *In plain English:* this builds the dungeon floors from a random seed and proves, over huge numbers of seeds, that a player can finish every floor.
 
@@ -604,8 +604,8 @@ One person owns the program. Items run one at a time in this order. The list cha
 1. Address every audit finding (D-147). ✅ Done 2026-09-07: D-148 to D-154, F-28 to F-37.
 2. Owner: receive the external SSD and move the checkout to it (D-145).
 3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170.
-4. PR-1, PR-2. ✅ PR-1 merged 2026-09-08 as PR #6. ✅ PR-2 is PR #10.
-5. PR-3, PR-4, PR-5.
+4. PR-1, PR-2. ✅ PR-1 merged 2026-09-08 as PR #6. ✅ PR-2 merged 2026-09-08 as PR #10.
+5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12.
 6. PR-6, PR-7, PR-8.
 7. PR-9, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).
 8. M-1, M-2.
