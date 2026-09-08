@@ -161,3 +161,26 @@ How to file a question (D-124, D-138):
     - (c) The tool reads the head when the base has no file. This weakens D-185 for every later PR.
 
     Recommendation: (a). The red is the correct output of D-185 and T-2, the check is advisory until launch (D-180), and the exception ends when PR-1 merges. Resolved 2026-09-07: D-196, option (b). The owner put the file on `main` in `4ec9708`.
+73. **OQ-73. The DetMath Pow contract.** Raised 2026-09-08. Blocks PR-3. D-161 names no accuracy target for `Pow`. An absolute error of 1e-6 has no meaning for a result with no bound. Options:
+    - an integer exponent. Each step is one multiply, so the result is exact and needs no target.
+    - a full float exponent through exp2 and log2, with a relative target over a named domain.
+    - no `Pow` in PR-3, and a scope change in this roadmap.
+
+    Recommendation: the integer exponent. `Sqrt` covers the exponent one half, and no Phase 1 caller needs another fractional exponent (D-111). Resolved 2026-09-08: D-200.
+74. **OQ-74. The location of the bit-identity program.** Raised 2026-09-08. Blocks PR-3. The Phase 1 roadmap names `Tests/BitIdentity/` and calls it a program. `WhatYouCarry.Tests` is a test library and not a program, and D-108 names four projects. Options:
+    - a `bit-identity` command of `WhatYouCarry.Tools`, which keeps the four projects.
+    - the same command, and a test that asserts the hash against a constant in the source.
+    - a fifth executable project, which needs a decision that extends D-108.
+
+    Recommendation: the command in `WhatYouCarry.Tools`. It matches the `review-gate` and `ste-check` pattern, and the CI job compares the standard output of the three platforms. Resolved 2026-09-08: D-201.
+75. **OQ-75. The parser of the lint tool.** Raised 2026-09-08. Blocks PR-3. The roadmap names the C# compiler API, which is the package `Microsoft.CodeAnalysis.CSharp`. G-16 needs a decision entry for every dependency, and no decision names this package. Options:
+    - the compiler API, with the dependency entry that G-16 requires.
+    - a hand-written text scan, which needs no package.
+
+    Recommendation: the compiler API. A text scan reports a banned name inside a comment or a string, and it cannot follow a `using static` alias. Resolved 2026-09-08: D-202.
+76. **OQ-76. The conflict inside D-161.** Raised 2026-09-08. Blocks PR-3. D-161 names three things together: a reduction to [-pi, pi], degree-7 minimax polynomials, and an absolute error of at most 1e-6. A measurement of 2026-09-08 refutes the set. A true Remez minimax fit of degree 7 on [-pi, pi] reaches 2.5e-4 for sine, which is 250 times the target. Options:
+    - a fold to [-pi/4, pi/4] and a quadrant, which keeps the degree and the target.
+    - the same range, and a rise of the degree to 11 for sine, 12 for cosine, and 13 for atan.
+    - the same range and degree, and a target of 2.5e-4 for sine and 1.4e-3 for cosine.
+
+    Recommendation: the fold. It gives 1.2e-09 for sine and 1.1e-07 for atan, at the same multiply count as the degree-7 form. Resolved 2026-09-08: D-203.

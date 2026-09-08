@@ -1,12 +1,12 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, and D-196 to D-198. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-203. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
 External facts: none new. The Godot version is in the design header, verified 2026-09-07.
 
-Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner. 2026-09-07, PR-1: a run of the gate against `main` refuted the claim that PR-1 passes its own check with no owner action. D-196 puts the mode file on `main` first. 2026-09-08, the PR #6 review. D-197 moves the gate to `pull_request_target`, and D-198 accepts the review-record risk with a named commit in the output. 2026-09-08, PR-2: the first run of the checker found 77 findings in 15 files, and the PR rewrote each sentence.
+Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner. 2026-09-07, PR-1: a run of the gate against `main` refuted the claim that PR-1 passes its own check with no owner action. D-196 puts the mode file on `main` first. 2026-09-08, the PR #6 review. D-197 moves the gate to `pull_request_target`, and D-198 accepts the review-record risk with a named commit in the output. 2026-09-08, PR-2: the first run of the checker found 77 findings in 15 files, and the PR rewrote each sentence. 2026-09-08, PR-3: a measurement refuted D-161. Degree 7 on [-pi, pi] reaches 2.5e-4 for sine, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 gives `Pow` an integer exponent, D-201 puts the bit-identity program in `WhatYouCarry.Tools`, and D-202 records the compiler API dependency. Exit test 5 asked for the opposite of D-160, and this pass corrects it (F-61).
 
 ## 1. Thesis
 
@@ -130,7 +130,7 @@ Gate: exit tests 1 to 25 pass.
 
 ### PR-2: STE checker
 
-Status: PR #10, opened 2026-09-08.
+Status: merged 2026-09-08 as PR #10, commit `d5eb298`.
 
 Scope:
 
@@ -177,14 +177,17 @@ Result, 2026-09-08: every exit test passes. The reference check skips the exempt
 
 ### PR-3: Seeded RNG, DetMath, lint, and the bit-identity CI job
 
+Status: PR #12, opened 2026-09-08.
+
 Scope:
 
 - `Core/Determinism/Rng.cs`: xoshiro128** streams seeded by SplitMix64 from the 64-bit run seed, one stream per subsystem (D-159).
-- `Core/Determinism/DetMath.cs`: `Sin`, `Cos`, `Atan2`, `Sqrt`, `Pow`, `Abs`, `Floor`, `Clamp`, and `Lerp` in float (D-70). Range reduction and polynomial evaluation use only add, subtract, multiply, divide, and IEEE square root. `Sqrt` wraps the IEEE square root, which is a basic operation. The accuracy target is D-161.
+- `Core/Determinism/DetMath.cs`: `Sin`, `Cos`, `Atan2`, `Sqrt`, `Pow`, `Abs`, `Floor`, `Clamp`, and `Lerp` in float (D-70). The range reduction and each polynomial use only add, subtract, multiply, divide, and the IEEE square root. `Sqrt` wraps the IEEE square root, which is a basic operation. The accuracy target is D-161. `Sin` and `Cos` fold to [-pi/4, pi/4] and a quadrant, and `Atan2` folds to the octant (D-203). The domain limit is 4096 radians. `Pow` takes an integer exponent (D-200).
 - `Core/Determinism/StateHash.cs`: FNV-1a 64 over the raw bit patterns of a state, in a fixed declared field order (D-160).
-- `WhatYouCarry.Tools/DetLint/`: a command that parses each Core source file with the C# compiler API and reports each banned symbol (D-67, G-2, G-21). The banned symbols are `System.Math`, `MathF` outside `DetMath.cs`, `System.Numerics.Vector`, `System.Runtime.Intrinsics`, `System.Reflection`, `dynamic`, `System.Random`, `DateTime`, `Stopwatch`, and `Environment.TickCount`.
-- `Tests/BitIdentity/`: a program that runs a fixed RNG stream and a DetMath sweep over a fixed input grid, then prints the state hash.
-- A CI job `bit-identity` that runs that program on each platform and a final step that fails if the three hashes differ (D-69, D-71).
+- `WhatYouCarry.Tools/DetLint/`: the `det-lint` command. It parses each Core source file with the C# compiler API and reports each banned symbol (D-67, D-202, G-2, G-21). The banned symbols are `System.Math`, `MathF` outside `DetMath.cs`, `System.Numerics.Vector`, `System.Runtime.Intrinsics`, `System.Reflection`, `dynamic`, `System.Random`, `DateTime`, `Stopwatch`, and `Environment.TickCount`. Inside `DetMath.cs` the tool permits only `MathF.Sqrt`, `MathF.Abs`, and `MathF.Floor`, because each one is an exact IEEE operation. A `MathF` transcendental is a finding in every file.
+- `WhatYouCarry.Tools/BitIdentity/`: the `bit-identity` command (D-201). It runs a fixed RNG stream and a DetMath sweep over a fixed input grid, then prints the state hash. The Phase 1 roadmap first named `Tests/BitIdentity/`, and `WhatYouCarry.Tests` is a test library and not a program.
+- `.github/workflows/bit-identity.yml`: one job per platform that runs the command, and a fourth job that compares the three hashes and fails on a difference (D-69, D-71).
+- `.github/workflows/det-lint.yml`: one job that runs `det-lint` on the checkout. One platform is enough, because the tool reads source text.
 
 Out of scope: any simulation type, any vector or matrix type beyond what DetMath needs.
 
@@ -194,7 +197,7 @@ Exit tests:
 2. `RngStreamsDiffer` asserts that two subsystem streams from one seed do not overlap in the first ten thousand outputs.
 3. `DetMathAccuracy` compares each function to a double reference over [-4 pi, 4 pi] and asserts the D-161 tolerance.
 4. `DetMathRangeReduction` asserts that `Sin` and `Cos` at an angle plus many full turns equal the base angle within tolerance.
-5. `StateHashOrder` asserts that two states with equal fields in a different insertion order hash equal.
+5. `StateHashOrderIsPartOfTheContract` asserts that two states with equal fields in another order hash differently (D-160, F-61).
 6. `LintFailsSystemMath` runs the lint tool on a fixture that calls `System.Math.Sin` and asserts one finding.
 7. `LintPassesCore` runs the lint tool on the Core project and asserts zero findings.
 8. The `bit-identity` CI job reports one equal hash on three platforms.
@@ -517,3 +520,10 @@ Resolved 2026-09-07:
 - OQ-38 and OQ-39 (D-164 and D-165): the grid limits, the player box, and the jump. PR-7 and PR-9.
 - OQ-40 and OQ-41 (D-166 and D-167): the corridor and the budget. PR-8 and PR-9.
 - OQ-42 (D-168): the validator form. PR-5.
+
+Resolved 2026-09-08:
+
+- OQ-73 (D-200): the `Pow` contract. An integer exponent. PR-3.
+- OQ-74 (D-201): the location of the bit-identity program. `WhatYouCarry.Tools`. PR-3.
+- OQ-75 (D-202): the parser of the lint tool. The C# compiler API. PR-3.
+- OQ-76 (D-203): the conflict inside D-161. A fold to [-pi/4, pi/4] and a quadrant. PR-3.

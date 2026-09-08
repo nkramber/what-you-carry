@@ -95,6 +95,40 @@ public sealed class RepositoryShapeTests
     }
 
     [Fact]
+    public void BitIdentityWorkflowHasOneJobPerPlatformAndACompareJob()
+    {
+        // D-69, D-71, G-9: the sweep runs on the three platforms, and one job compares the three hashes.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/bit-identity.yml");
+        Dictionary<string, string> runsOnByJob = WorkflowText.RunsOnByJob(workflow);
+        Assert.Equal(4, runsOnByJob.Count);
+        Assert.Equal("ubuntu-latest", runsOnByJob["linux-x64"]);
+        Assert.Equal("windows-latest", runsOnByJob["windows-x64"]);
+        Assert.Contains("macos-arm64-self-hosted", runsOnByJob["macos-arm64"], StringComparison.Ordinal);
+        Assert.Equal("ubuntu-latest", runsOnByJob["compare"]);
+
+        // The compare job must wait for all three, or it would compare an absent hash.
+        Assert.Contains("needs: [linux-x64, windows-x64, macos-arm64]", workflow, StringComparison.Ordinal);
+
+        // Each platform job passes its hash up, and the compare job reads all three.
+        foreach (string job in new[] { "linux-x64", "windows-x64", "macos-arm64" })
+        {
+            Assert.Contains($"needs.{job}.outputs.hash", workflow, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void DetLintWorkflowScansTheCheckout()
+    {
+        // D-67, D-202, G-2: one job, on Linux, because the tool parses source text.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/det-lint.yml");
+        Dictionary<string, string> runsOnByJob = WorkflowText.RunsOnByJob(workflow);
+        KeyValuePair<string, string> job = Assert.Single(runsOnByJob);
+        Assert.Equal("det-lint", job.Key);
+        Assert.Equal("ubuntu-latest", job.Value);
+        Assert.Contains("det-lint --root .", workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReviewGateModeFileHoldsAdvisory()
     {
         // D-185: PR-1 creates the mode file with advisory.

@@ -1,0 +1,104 @@
+# Runs the bit-identity sweep on the three platforms and compares the three hashes (D-69, D-71, D-201, G-9).
+# The sweep lives in WhatYouCarry.Tools, command bit-identity. It prints the state hash alone on standard
+# output, and its context on standard error, so each job captures the hash with no filter.
+#
+# The three platform jobs pass their hash up as a job output, and the compare job reads all three. A job output
+# needs no artifact action, so this workflow adds no dependency (G-16).
+name: Bit identity
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux-x64:
+    runs-on: ubuntu-latest
+    outputs:
+      hash: ${{ steps.sweep.outputs.hash }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
+      - name: Run the sweep
+        id: sweep
+        shell: bash
+        run: |
+          hash="$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bit-identity)"
+          echo "linux-x64: ${hash}"
+          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
+
+  windows-x64:
+    runs-on: windows-latest
+    outputs:
+      hash: ${{ steps.sweep.outputs.hash }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
+      - name: Run the sweep
+        id: sweep
+        # bash on the Windows runner too, so the three jobs use one syntax for the job output.
+        shell: bash
+        run: |
+          hash="$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bit-identity)"
+          echo "windows-x64: ${hash}"
+          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
+
+  macos-arm64:
+    runs-on: [self-hosted, macos-arm64-self-hosted]
+    outputs:
+      hash: ${{ steps.sweep.outputs.hash }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
+      - name: Run the sweep
+        id: sweep
+        shell: bash
+        run: |
+          hash="$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bit-identity)"
+          echo "macos-arm64: ${hash}"
+          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
+
+  compare:
+    needs: [linux-x64, windows-x64, macos-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare the three hashes
+        shell: bash
+        env:
+          LINUX_HASH: ${{ needs.linux-x64.outputs.hash }}
+          WINDOWS_HASH: ${{ needs.windows-x64.outputs.hash }}
+          MACOS_HASH: ${{ needs.macos-arm64.outputs.hash }}
+        run: |
+          echo "linux-x64:   ${LINUX_HASH}"
+          echo "windows-x64: ${WINDOWS_HASH}"
+          echo "macos-arm64: ${MACOS_HASH}"
+
+          # An empty hash means a job gave no output. That is a failure and never a pass (T-2).
+          for name in LINUX_HASH WINDOWS_HASH MACOS_HASH; do
+            if [ -z "${!name}" ]; then
+              echo "The job for ${name} produced no hash."
+              exit 1
+            fi
+          done
+
+          if [ "${LINUX_HASH}" != "${WINDOWS_HASH}" ] || [ "${LINUX_HASH}" != "${MACOS_HASH}" ]; then
+            echo "The three platforms do not agree. The simulation is not bit-identical (G-9)."
+            exit 1
+          fi
+
+          echo "The three platforms agree on ${LINUX_HASH}."

@@ -4,4 +4,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- The C# compiler API, for the det-lint parse (D-202). A parse tells an identifier from a comment. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The bit-identity command runs the Core determinism types (D-201). Core references nothing back (G-1). -->
+    <ProjectReference Include="../WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
+  </ItemGroup>
 </Project>

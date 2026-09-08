@@ -1,0 +1,23 @@
+# Scans the Core source for the banned symbols of G-2 and G-21 (D-67, D-202).
+# The rules live in WhatYouCarry.Tools, command det-lint. A finding fails the job.
+# One platform is enough: the tool parses source text, and the parse does not depend on the machine.
+name: Determinism lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  det-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Scan the Core source
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --root .
