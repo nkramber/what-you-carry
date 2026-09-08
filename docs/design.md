@@ -20,6 +20,8 @@ Verified 2026-09-07: the .NET LTS pin is .NET 10 LTS (D-173). Godot 4.7 accepts 
 
 2026-09-07 settings correction pass: the Claude Code startup dialog rejected `.claude/settings.json`. D-172 set `attribution.commit` and `attribution.pr` to booleans, and the schema requires strings. D-175 revises D-172 and sets empty strings. F-15 records the refuted claim.
 
+2026-09-08 STE pass: the first run of the PR-2 checker found 77 sentences in the documents that broke a rule, most in the passive voice. PR-2 rewrote each one with the same meaning, and the checker now runs on every PR.
+
 Text rules: this file follows ASD-STE100 (D-139). Tables are exempt from sentence-length counts.
 
 ## 1. Thesis
@@ -86,9 +88,9 @@ Movement verbs are dodge roll, sprint, and jump (D-27). There is no stamina. Dod
 
 ### 3.4 Equipment
 
-Modeled slots: head, chest, legs, feet, amulet, shield (D-18). Two ring slots are not modeled (D-18, D-55). One main weapon is equipped at a time (D-20). Spare weapons ride in the satchel, and a swap is slow and cannot be canceled (D-21). The satchel is small and visible (D-19). Consumables in the satchel go to a quick slot (D-22).
+Modeled slots: head, chest, legs, feet, amulet, shield (D-18). The two ring slots have no model (D-18, D-55). The player equips one main weapon at a time (D-20). Spare weapons ride in the satchel. A swap is slow, and the player cannot cancel it (D-21). The satchel is small and visible (D-19). Consumables in the satchel go to a quick slot (D-22).
 
-Armor gives damage reduction plus weight. Weight slows movement and dodge recovery (D-23). A shield needs a one-handed melee weapon (D-26). Only shields block. Two-handed melee swings cannot be interrupted (D-29). A stagger system exists for the player (F-21).
+Armor gives damage reduction plus weight. Weight slows movement and dodge recovery (D-23). A shield needs a one-handed melee weapon (D-26). Only shields block. Nothing interrupts a two-handed melee swing (D-29). A stagger system exists for the player (F-21).
 
 ### 3.5 Combat
 
@@ -100,7 +102,7 @@ Damage numbers are always on. Bosses show a health bar with a number (D-36). Num
 
 ### 3.6 Amulet and skill tree
 
-Every player always has an amulet. It is never lost (D-34). The tree upgrades it and assigns one active ability and one passive (D-39). The tree unlocks the first orb, a basic active, from the start (D-153). Amulet abilities use cooldowns (D-38). Found amulets are satchel items (D-41). On ascension a found amulet unlocks a skill orb in the tree. A death forfeits the unlock (D-37).
+Every player always has an amulet. The player never loses it (D-34). The tree upgrades it and assigns one active ability and one passive (D-39). The tree unlocks the first orb, a basic active, from the start (D-153). Amulet abilities use cooldowns (D-38). Found amulets are satchel items (D-41). On ascension a found amulet unlocks a skill orb in the tree. A death forfeits the unlock (D-37).
 
 The tree has several shallow branches. Found-amulet orbs gate the branch tips (D-54). Proficiencies only buff (D-35). Respec is free at the hub (D-51). No difficulty modifiers exist in v1. Depth is the only dial (D-53).
 
@@ -142,15 +144,15 @@ Determinism rules (D-69 to D-73, D-77):
 
 - Cross-platform bit identity from day one. CI asserts it on Linux x64, macOS arm64, and Windows x64.
 - float in Core. DetMath replaces `System.Math` transcendentals.
-- The simulation is single-threaded at 60 Hz. One worker generates the next floor.
+- The simulation runs on one thread at 60 Hz. One worker generates the next floor.
 - The intent is one fixed-size record per tick: quantized look deltas, movement, buttons. Core derives the aim ray.
 - Godot physics and navigation never feed the simulation (D-80).
 
 Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 - Pin Godot 4.7.2 .NET and .NET 10 LTS at scaffold time (D-173). Upgrade only by a decision entry.
-- C# only. GDScript is banned. Tools are C#.
-- The editor is never required. C# builds the scenes.
+- C# only. Do not use GDScript. Tools are C#.
+- No step needs the editor. C# builds the scenes.
 - JSON for all content, validated by a schema per type. An absent field is an error.
 - xUnit. Property tests are seed loops. Each failure names its seed.
 - Nullable on, warnings as errors. A hand-written JSONL logger.
@@ -169,7 +171,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 ### 3.14 Process
 
-Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one handoff rewrite (D-121). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests may run at night. Scheduled agents may not (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101).
+Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one handoff rewrite (D-121). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101).
 
 The document protocol (D-118, D-120, D-125, D-129, D-132):
 
@@ -224,7 +226,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-13 | v1 determinism matrix omitted Windows x64, the largest audience and the second dev machine | 2026-09-06 | 🔧 D-71. Binds PR-3 |
 | F-14 | v1 had no v1 scope in numbers | 2026-09-06 | ✅ doc. D-56 |
 | F-15 | The harness default adds a co-author trailer to commits. D-137 forbids it | 2026-09-06 | 🔧 Refuted 2026-09-07: D-172 set booleans, the schema requires strings, and the file was ignored. D-175 revises D-172 and sets empty strings. Codex unverified. The PR-1 attribution scan binds every PR (D-176) |
-| F-16 | The borrowed ste-writing skill carried another project's names and a Python checker | 2026-09-07 | ✅ doc (skills created). 🔧 Checker binds PR-2 |
+| F-16 | The borrowed ste-writing skill carried another project's names and a Python checker | 2026-09-07 | ✅ doc (skills created). ✅ PR-2 holds the C# checker |
 | F-17 | D-97 rewinds five seconds on resume. A quit undoes five seconds | 2026-09-07 | ⏸ Accepted by the owner |
 | F-18 | All music is generated (D-93). Quality is unproven | 2026-09-07 | ❓ Owner ear at each phase gate. Binds PR-50 |
 | F-19 | Night sweeps are scheduled jobs. D-103 forbids scheduled agents | 2026-09-06 | ✅ doc. D-117: tests may run on a schedule, agents may not |
@@ -236,7 +238,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-25 | The SSD, the Apple account, and the Steam account do not exist (D-142) | 2026-09-07 | ⚠ SSD ordered, arrives 2026-09-08 (D-145). Accounts bind PR-51, PR-52 |
 | F-26 | v1 named `HANDOFF.md`, `DECISIONS.md`, and a five-file set in uppercase | 2026-09-07 | ✅ doc. D-129 lowercase, D-132 one design file |
 | F-27 | v1 listed the harness as one unnamed system. Two providers exist | 2026-09-07 | ✅ doc. D-137 names both. Binds the review file format in PR-1 |
-| F-28 | Audit R-1: the PR gate required the STE checker, the lint tool, and the bit-identity job before PR-2 and PR-3 created them | 2026-09-07 | 🔧 D-148. PR-1 adds the CI skeleton. The gate names an absent check with the PR that creates it. Binds PR-1, PR-2, PR-3 |
+| F-28 | Audit R-1: the PR gate required the STE checker, the lint tool, and the bit-identity job before PR-2 and PR-3 created them | 2026-09-07 | 🔧 D-148. PR-1 added the CI skeleton, and PR-2 added `ste-check`. The gate names an absent check with the PR that creates it. Binds PR-3 |
 | F-29 | Audit R-2: four gates needed systems or tools that arrived later: PR-11 bots, PR-12 smoke, PR-22 pose check, PR-27 Tier 3 | 2026-09-07 | 🔧 D-149. Binds PR-7, PR-9, PR-11, PR-12, PR-16, PR-17, PR-18, PR-57, PR-49, and the PR-32 position |
 | F-30 | Audit R-3: seed plus intents did not determine a run. The loadout, tree, and amulet came from outside the seed, and code or content could change under a suspended run | 2026-09-07 | 🔧 D-151. Binds PR-6, PR-31 |
 | F-31 | Audit R-4: three atomic files did not make one atomic save. A crash between writes could duplicate or lose a reward | 2026-09-07 | 🔧 D-152 revises D-94. Binds PR-31 |
@@ -257,11 +259,11 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-46 | D-158 required branch protection, and GitHub returned 403: the feature needs Pro or a public repository, against D-106 | 2026-09-07 | ✅ doc. D-170 defers protection until launch |
 | F-47 | PR #1 review P1-1: a commit body implied that an agent wrote the commits, and T-6 had no stated boundary for a tool name | 2026-09-07 | ✅ doc. D-176 fixes the reading. The commit body is rewritten. Binds PR-1 exit test 6 |
 | F-48 | PR #1 review P1-2: PR-11 created the `night-gate` job and the night job together, so the gate had no result to read on its first run, against G-19 | 2026-09-07 | 🔧 D-177 splits them. PR-58 adds the gate after one night runs. Binds PR-11, PR-58 |
-| F-52 | Two providers picked the same session number on the same day, because each read the handoff before the other wrote it | 2026-09-07 | 🔧 D-187. Fetch and re-read before the handoff commit. The PR-2 checker fails on a duplicate |
+| F-52 | Two providers picked the same session number on the same day, because each read the handoff before the other wrote it | 2026-09-07 | ✅ D-187. Fetch and re-read before the handoff commit. The PR-2 session number check fails on a duplicate |
 | F-53 | One `Revised by` marker made every citation of a partly revised decision stale. Partial revisions carried 33 of 48 citations and caused three rounds of churn | 2026-09-07 | ✅ doc. D-186 splits the marker into `Superseded by` and `Revised in part by`. The D-178 check keys on the first only |
 | F-51 | A grey `review-gate` would stop blocking at launch. GitHub counts a neutral conclusion as a success for a required check, verified 2026-09-07 | 2026-09-07 | 🔧 D-181, D-185. Advisory mode gives neutral. Enforced mode gives failure. The tracked file `.github/review-gate-mode` selects the mode, and the workflow reads it from the base branch |
 | F-50 | Nothing on GitHub stops a merge without a cross-provider review. T-4 and D-101 are rules only, and D-170 leaves `main` unprotected | 2026-09-07 | 🔧 D-179 and D-181, D-185 add the `review-gate` job in PR-1. D-180 makes it a required check at launch. Advisory until then |
-| F-49 | PR #1 review P2-1: six lines cited D-172 or OQ-2 as a current answer after D-173 and D-175 revised them | 2026-09-07 | ✅ doc. All six corrected. 🔧 D-178 adds a reference check to PR-2 |
+| F-49 | PR #1 review P2-1: six lines cited D-172 or OQ-2 as a current answer after D-173 and D-175 revised them | 2026-09-07 | ✅ doc. All six corrected. ✅ D-178. PR-2 holds the reference check |
 | F-54 | A launch agent cannot read an external volume. macOS denied `/Volumes/SSD-1TB/actions-runner/runsvc.sh` with `Operation not permitted`, and the agent exited 126. A launchd probe repeated the denial, and a login shell read the same path correctly, verified 2026-09-07 | 2026-09-07 | ✅ D-193. Full Disk Access for `/bin/bash` and the runner `node` binary. Binds PR-1 and every machine rebuild |
 | F-55 | The Phase 1 roadmap named `WhatYouCarry.sln`, and the .NET 10 SDK creates a `.slnx` file. `dotnet new sln --format` gives `Default: slnx`, and a smoke job on the runner made `Smoke.slnx`, verified 2026-09-07 | 2026-09-07 | ✅ D-194. `WhatYouCarry.slnx`. Godot 4.7.2 accepts it. Binds PR-1 |
 | F-56 | PR #6 review P1-1: the `review-gate` workflow ran the tool from the PR head with `checks: write`, so a PR could change the code that judges it | 2026-09-08 | ✅ D-197. `pull_request_target`, the head as data only. Binds PR-1 and Phase 5 |
@@ -296,7 +298,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 11. **G-11.** No unowned decision. A session that hits an open question files it and stops (D-124).
 12. **G-12.** Ids in this file and in the decision register never change (design-doc-style rule).
 13. **G-13.** No co-author trailer, generation line, or model name in a commit, PR, or comment (T-6).
-14. **G-14.** Every document follows ASD-STE100. The checker runs in the PR gate once PR-2 lands (D-139).
+14. **G-14.** Every document follows ASD-STE100. The `ste-check` job runs the checker in the PR gate (D-139, PR-2).
 15. **G-15.** The Steam Deck at 800p is the readability and performance floor for every UI and render change (D-15).
 16. **G-16.** Every dependency has a decision entry that justifies it.
 17. **G-17.** Every optimization has a profile before it and a measurement after it (D-109).
@@ -311,20 +313,20 @@ Phases are the five milestones of D-136 as revised by D-150. Gate 1 is a foundat
 
 ### Phase 1: Foundations (foundation gate, D-150: CI green on three platforms with a bit-identical end state, docs and PR gate live, no playtest)
 
-**PR-1: Repository scaffold.** 🔧
+**PR-1: Repository scaffold.** ✅ Merged 2026-09-08 as PR #6.
 Create the solution with `WhatYouCarry.Core`, `WhatYouCarry.Game`, `WhatYouCarry.Tools`, and `WhatYouCarry.Tests` (D-108). Pin Godot 4.7.2 .NET and .NET 10 LTS (D-61, D-62, D-173). Create `CLAUDE.md` and `AGENTS.md` as identical pointer files with a test that asserts equality (D-122). Add the GitHub Actions workflow that builds and runs `dotnet test` on Linux x64, macOS arm64, and Windows x64 (D-148). Add a PR template with the gate checklist and the "no change needed because" lines (D-118). The template has a line that names each absent check with the PR that creates it (D-148). Add the `review-gate` job (D-179). It publishes a check run with three conclusions (D-181). The mode file `.github/review-gate-mode` selects the mode, and the workflow reads it from the base branch (D-185). Success means an approved review of the effective head. Failure means a review that does not approve, or a stale head. Grey means no review record yet, and only in advisory mode. The label `review-override` gives success for a PR that changes no code, and the owner adds that label (D-188, D-190). The job is advisory until launch, because GitHub locks branch protection on a private free repository (D-170, D-180). The attribution option is in place (D-175). Needs the external SSD (D-145) and the runner (D-171). No game code.
 Gate: `dotnet build` and `dotnet test` pass on all three platforms, and the `review-gate` job runs on the PR.
 > *In plain English:* this makes the empty project with its four parts and the rules files that every future session reads first. It also adds a check that turns red when a change has no approved review. It adds nothing that plays. It is safe because it changes no behavior.
 
-**PR-2: STE checker.** 🔧
-Port the STE checker to C# as `WhatYouCarry.Tools.SteCheck` (D-130). It flags passive voice, helper verbs, sentence-initial and preposition-led -ing forms, semicolons, contractions, and the 20-word and 25-word limits. Dated records are exempt. Run it in CI on every hand-written `.md` file.
+**PR-2: STE checker.** ✅ PR #10.
+Port the STE checker to C# as `WhatYouCarry.Tools.SteCheck` (D-130). It flags passive voice, helper verbs, sentence-initial and preposition-led -ing forms, semicolons, contractions, and the 20-word and 25-word limits. Dated records are exempt. Run it in CI on every hand-written `.md` file. The same command runs the reference check (D-178, D-186) and the session number check (D-187).
 Gate: the checker passes on itself, on this file, and on the skills. The PR names the absent lint tool and bit-identity job with PR-3 (D-148).
 > *In plain English:* this adds a tool that reads every document and reports sentences that break the text rules. Documents are the project's memory, so the tool guards that memory.
 
 **PR-3: Seeded RNG, DetMath, lint, and the bit-identity CI job.** 🔧
 Implement a seeded RNG with a documented algorithm. Implement DetMath: `Sin`, `Cos`, `Atan2`, `Sqrt`, `Pow`, and friends from polynomial and table methods that use only basic IEEE operations, in float (D-70). Implement the lint tool that scans Core syntax trees for banned symbols (D-67). Add the CI job that runs one seed on Linux x64, macOS arm64, and Windows x64. The job asserts a bit-identical hash of the end state (D-69, D-71). Unit tests cover each DetMath function against a tolerance and against itself across platforms.
 Gate: this PR passes its own lint tool and bit-identity job (D-148), and the lint tool fails a test file that calls `System.Math.Sin`.
-> *In plain English:* different computers give slightly different answers for functions like sine. A bug on a Mac would then be impossible to repeat on a Windows machine. This adds our own math that gives the same answer everywhere, and a check that proves it on every change.
+> *In plain English:* different computers give slightly different answers for functions like sine. A Windows machine then cannot repeat a bug from a Mac. This adds our own math that gives the same answer everywhere, and a check that proves it on every change.
 
 **PR-4: Logger, error context, and assertions.** 🔧
 Implement the JSONL logger with a required field set per context (D-68, D-113). Inside a run the set is seed, floor, tick, subsystem, and entity ids. Outside a run the set is save versions, screen, action, and file paths. The logger throws on an absent required field. Implement the assertion helper that writes a full report and continues where a caller marks it safe (D-112). Define the error types that carry context on rethrow.
@@ -339,7 +341,7 @@ Gate: a content file with an absent field fails the load test with the field nam
 **PR-6: Simulation loop, intent record, recorder, and replay.** 🔧
 Implement the fixed-step loop at 60 Hz (D-73). Define the intent record: quantized yaw and pitch deltas, a movement vector, and button states (D-74, D-77). Define the run record (D-151). Its header holds a format version, a simulation version constant, a content hash, the seed, and an immutable initial state. Length-prefixed, checksummed tick frames follow the header. Implement the recorder that writes the header and appends frames from the first tick (D-97, G-5). Implement the replay that drives the loop from a record and ignores the live bank and tree. Property tests assert three facts over one thousand seeds. A replay reproduces the end-state hash. A torn tail truncates to the last complete frame. A version or content mismatch produces a contextual report.
 Gate: the replay of a recorded run gives the same hash on all three platforms, and a mismatch report names both versions.
-> *In plain English:* the game runs in fixed steps and writes down its start state and every input. Any run can then be played again from that record, which is how every bug becomes repeatable. A record from an older version says so instead of a silent failure.
+> *In plain English:* the game runs in fixed steps and writes down its start state and every input. That record then plays any run again, so every bug becomes repeatable. A record from an older version says so instead of a silent failure.
 
 **PR-7: Voxel world and Core collision.** 🔧
 Implement the voxel grid of one-meter cubes (D-78). Implement Core collision for player and enemy boxes against the grid with swept movement, gravity, ledges, and jump (D-27, D-80). Godot physics has no part in it. Add the player box that reads the intent's movement and jump, so a Core-only run exists before the Game layer (D-149). Property tests assert no tunnel at maximum speed and no fall through a floor block.
@@ -354,7 +356,7 @@ Gate: a recorded run with camera motion replays to the same hash on all three pl
 **PR-9: Procgen v1 and property tests.** 🔧
 Implement floor generation on the grid for one biome (D-6, D-13, D-46, OQ-12). A floor has rooms, corridors with a minimum width for the camera, a spawn point, and a stairwell. Floor size grows with depth. Implement the stairwell transition in Core (D-50, D-149). On arrival, a policy or the player chooses descend or ascend. The next floor generates from the run seed and the floor number. Floor templates are JSON. Property tests run over thousands of seeds per PR and one hundred thousand each night (D-116). They assert four facts: every room is reachable, no rooms overlap, the stairwell is reachable, and the difficulty budget is within tolerance.
 Gate: the night sweep passes on one hundred thousand seeds.
-> *In plain English:* this builds the dungeon floors from a random seed and proves, over huge numbers of seeds, that every floor can be finished.
+> *In plain English:* this builds the dungeon floors from a random seed and proves, over huge numbers of seeds, that a player can finish every floor.
 
 **PR-10: Projectile simulation.** 🔧
 Implement the projectile integrator with fixed-step Euler, swept collision against the grid and entity boxes, gravity scale, lifetime, and spread from weapon data (G-6). Implement the arc solver with DetMath. Add a `projectile` content schema and a test-only definitions file (F-38, D-149). The file holds the slowest arc, the fastest flat shot, the longest lifetime, and the widest spread. Property tests assert three facts. No projectile tunnels through the minimum wall at the maximum velocity. Every projectile ends inside its lifetime. The arc solver reaches a reachable target and reports an unreachable one.
@@ -402,7 +404,7 @@ Gate: the owner approves the first contact sheet.
 **PR-15: Player entity and the first weapon.** 🔧
 Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger, and one sword with windup, active, and recovery frames (D-25, D-27, D-28, D-29, OQ-5). Implement the animation JSON format and the procedural locomotion in Game (D-87). A test asserts that the animation file agrees with the Core time values.
 Gate: the owner confirms the sword feels committed and readable.
-> *In plain English:* you can run, jump, dodge, and swing a sword, and the swing shows its wind-up so an enemy can be read.
+> *In plain English:* you can run, jump, dodge, and swing a sword, and the swing shows its wind-up so you can read an enemy.
 
 **PR-16: First enemy family, AI, and pathfinder.** 🔧
 Implement the 3D grid pathfinder that understands jumps and drops (D-76). Implement one humanoid family with Core AI: target selection, approach, attack, and reload behavior (D-30, D-31, OQ-9). Add the full-clearer bot policy (D-149). Bot runs cover it.
@@ -417,7 +419,7 @@ Gate: a timer-tester bot always dies to the hunter, and a greedy descender rarel
 **PR-18: Stairwell and floor transition.** 🔧
 Implement the stairwell with the untimed descend-or-ascend prompt (D-50, D-140). Implement the floor transition with the next floor generated on a worker during the current floor (D-72). A test asserts the worker output equals a synchronous generation for the same seed. Add the coward bot policy, and extend the smoke session to the stairwell (D-149).
 Gate: the transition shows no frame over the hitch budget on the Deck.
-> *In plain English:* you reach the stairs, choose to go down or leave, and the next floor is already built, so there is no pause.
+> *In plain English:* you reach the stairs, choose to go down or leave, and the next floor already exists, so there is no pause.
 
 **PR-19: HUD and controller navigation.** 🔧
 Build the HUD in C# Control nodes: health, timer, damage numbers, and a boss bar placeholder (D-36, D-90). Numbers must not cover silhouettes (F-24). Build the controller navigation base for every later screen at Deck size (G-15).
@@ -465,7 +467,7 @@ Gate: a bot log confirms every dropped item was on the enemy that dropped it.
 > *In plain English:* you can see the good weapon on the dangerous enemy before you fight, which is the whole point of the title.
 
 **PR-27: Skill points and the death payout.** 🔧
-Implement points per kill with a boss bonus, the run total, and the depth-scaled retained share on death (D-44, D-52, OQ-21). Instrument points per simulated hour by policy in the run log for M-5. Implement the M-5 trial harness (D-154). It uses one thousand fixed seeds, the basic kit and an empty tree as the initial state, and the policy set. Time is simulated ticks over 60 plus a sixty-second hub cost per run start. The statistic has a bootstrap 95 percent interval. A Tier 3 session runs on this PR (D-128), which is why PR-32 precedes it.
+Implement points per kill with a boss bonus, the run total, and the depth-scaled retained share on death (D-44, D-52, OQ-21). Instrument points per simulated hour by policy in the run log for M-5. Implement the M-5 trial harness (D-154). It uses one thousand fixed seeds, the basic kit and an empty tree as the initial state, and the policy set. Time is the tick count over 60 plus a sixty-second hub cost per run start. The statistic has a bootstrap 95 percent interval. A Tier 3 session runs on this PR (D-128), which is why PR-32 precedes it.
 Gate: the M-5 pass condition holds. At every depth the ascend lower bound exceeds the die upper bound, and deep ascend beats shallow repeat.
 > *In plain English:* kills earn points. A death keeps a share that grows with depth, so a quick shallow death never pays better than a real run.
 
@@ -482,7 +484,7 @@ Gate: every node is reachable with a controller alone.
 **PR-30: Hub, bank, and loadout.** 🔧
 Build the hub scene with the bank, the skill shrine, the loadout screen, and the descent entrance (D-9). The loadout screen compares affixed items (D-2, D-47). It always offers the basic kit: a tier-0 sword with no affixes, at no cost, not stored in the bank (D-153).
 Gate: a run started from a loadout loses that loadout on death and banks found gear on ascension. A fresh profile starts a run, and a profile that lost every banked item starts another.
-> *In plain English:* the camp between runs is where you choose what to risk. What you carry down can be lost.
+> *In plain English:* the camp between runs is where you choose what to risk. You can lose what you carry down.
 
 **PR-31: Persistence and replay resume.** 🔧
 Implement the profile file with the tree, the bank, the suspended-run pointer, a schema version, a generation number, migrations, and an atomic write (D-94, D-152). Implement the run record file per PR-6, with a run id that the profile records on completion. Implement suspend anywhere and resume by replay to five seconds before the exit tick (D-97). Resume is exact when the simulation version and content hash match, and floor start with a notice otherwise (D-151). Test a process kill at each write boundary: departure, ascension, death, and migration.
@@ -492,7 +494,7 @@ Gate: a kill of the process mid-floor resumes five seconds earlier. A kill at ev
 **PR-32: LLM play socket and log reader.** 🔧
 This PR precedes PR-27, because D-128 requires Tier 3 play on every economy PR (D-149). Expose the compact state JSON over a socket at one to five decisions per second (D-128). Add the log aggregation that hands outlier runs to a reader. Neither runs unattended (D-117).
 Gate: one weekly session files its findings in the questions register.
-> *In plain English:* a language model can play the game slowly through a text channel to hunt for exploits a robot would not try.
+> *In plain English:* a language model can play the game slowly through a text channel to hunt for exploits that a robot does not try.
 
 **M-4: Tokens per PR.** 🔧
 Record tokens per PR from the harness usage reports for ten PRs. Informs the budget in D-107.
@@ -520,7 +522,7 @@ Gate: a full 15-floor run ends with the ending, and the run time is inside 30 to
 **PR-36 to PR-42: Enemy families two to eight.** 🔧
 One PR per family, humanoid or monster (D-31, D-56, OQ-9). Each family has a silhouette specification before its model, a contact sheet at game zoom, and bot coverage.
 Gate per PR: the family reads as distinct on the contact sheet.
-> *In plain English:* seven more kinds of enemy, each added alone so its shape and its behavior can be judged on their own.
+> *In plain English:* seven more kinds of enemy, each added alone, so the owner can judge its shape and its behavior on their own.
 
 **PR-43 to PR-46: Weapons to twelve.** 🔧
 One PR per weapon class batch: melee, bows, guns, exotics (D-42, D-56, OQ-10). Every weapon is data. Each projectile is distinct in flight on a contact sheet.
@@ -535,7 +537,7 @@ Gate: Tier 3 play finds no dominant affix.
 **PR-48: Destructible props.** 🔧
 Implement props as entities without AI that break (D-79). Walls stay permanent.
 Gate: the pathfinder never re-plans for a prop.
-> *In plain English:* barrels and crates break. Walls do not, so the hunter can never be walled off.
+> *In plain English:* barrels and crates break. Walls do not, so no wall can stop the hunter.
 
 **PR-49: Asset QA gate v2.** 🔧
 Extend the PR-57 tool with the polygon budget, pivot placement, and UV coverage checks (D-135).
@@ -545,7 +547,7 @@ Gate: the tool fails a model over the polygon budget and a model with a bad pivo
 **PR-50: Music.** 🔧
 Implement the sequencer format and render the first tracks with the synthesizer (D-93). The owner's ear is the gate (F-18).
 Gate: the owner approves a hub track and a dungeon track.
-> *In plain English:* music made from recipes. If it does not sound good enough, the decision to generate it is reopened.
+> *In plain English:* music made from recipes. If it does not sound good enough, the decision to generate it opens again.
 
 Tier 4 vision pass at the phase gate (D-133).
 
@@ -554,7 +556,7 @@ Tier 4 vision pass at the phase gate (D-133).
 **PR-51: Export pipeline and notarization.** 🔧
 Set up the Windows, Linux, and macOS universal exports. Sign and notarize the macOS build (D-142, OQ-18). Pre-warm shaders at load.
 Gate: an exported build runs from a clean install on all three platforms.
-> *In plain English:* the game becomes something a player can install, also on a Mac that would otherwise block it.
+> *In plain English:* the game becomes something a player can install, also on a Mac that blocks unsigned software.
 
 **PR-52: Steamworks.** 🔧
 Add achievements and cloud saves with an explicit conflict rule (D-96, OQ-19). Record the dependency (G-16).
@@ -569,7 +571,7 @@ Gate: every option works with a controller.
 **PR-54: Steam Deck verification pass.** 🔧
 Controller glyphs, 800p text sizes, default settings that hit the M-3 target, and the Deck checklist (D-15).
 Gate: the Deck checklist passes.
-> *In plain English:* the game is confirmed to play well on the handheld.
+> *In plain English:* a test confirms that the game plays well on the handheld.
 
 **PR-55: Crash report flow.** 🔧
 Build the UI flow that shows a report after an assertion failure and offers to save the seed and intent record (D-112).
@@ -590,7 +592,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 1. Address every audit finding (D-147). ✅ Done 2026-09-07: D-148 to D-154, F-28 to F-37.
 2. Owner: receive the external SSD and move the checkout to it (D-145).
 3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170.
-4. PR-1, PR-2.
+4. PR-1, PR-2. ✅ PR-1 merged 2026-09-08 as PR #6. ✅ PR-2 is PR #10.
 5. PR-3, PR-4, PR-5.
 6. PR-6, PR-7, PR-8.
 7. PR-9, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).

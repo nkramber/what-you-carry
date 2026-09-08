@@ -1,0 +1,22 @@
+# Runs the STE checker, the reference check, and the session number check on every hand-written .md file (D-130, D-139, D-178, D-187).
+# The rules live in WhatYouCarry.Tools, command ste-check. A finding fails the job. One platform is enough: the checks read text only.
+name: STE check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ste-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Check the documents
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .

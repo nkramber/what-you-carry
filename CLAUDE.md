@@ -67,7 +67,7 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 
 ## Code rules
 
-- C# only. GDScript is banned. Tools are C# (D-64, D-65).
+- C# only, tools included. Do not use GDScript (D-64, D-65).
 - `WhatYouCarry.Core` has no engine dependency (G-1).
 - No `System.Math` transcendentals, no `Vector<T>`, no SIMD, no reflection in Core. Use `DetMath` (G-2).
 - float in Core (D-70). The simulation runs on one thread at 60 Hz (D-72, D-73).
@@ -87,12 +87,13 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 
 ## Build and test commands
 
-The SDK version in `global.json` is required. Run each command from the checkout root.
+The build needs the SDK version in `global.json`. Run each command from the checkout root.
 
 - Build: `dotnet build WhatYouCarry.slnx`
 - Test: `dotnet test WhatYouCarry.slnx --no-build`
 - Godot build check: `Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
+- STE check, the reference check, and the session number check: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .`
 
 The layout is one directory per project at the root. `project.godot` lives in `WhatYouCarry.Game/`, next to its project file. The solution file stays at the root. Each project file names its target framework, because the Godot editor writes `net8.0` into a project file that has none.
 
@@ -109,7 +110,7 @@ A PR merges only when every line holds:
 - [ ] `docs/decisions.md` has every new decision.
 - [ ] `docs/questions.md` has every new question.
 - [ ] `docs/design.md` matches intent.
-- [ ] Any check that does not exist yet is named with the PR that creates it (D-148, G-19).
+- [ ] Each check that does not exist yet has a line that names the PR that creates it (D-148, G-19).
 - [ ] `docs/session-handoff.md` is current.
 - [ ] For each document not changed, the PR says "no change needed because ...".
 - [ ] No attribution anywhere (T-6).

@@ -2,7 +2,7 @@
 
 Status: active register. Owner: Nate. Started 2026-09-06. Written in ASD-STE100.
 
-This file records each owner decision. Each decision has an id (D-#). The numbers never change. A reversed decision stays in this file with a dated note in the "Effect" column. The design doc (`docs/design.md`) is built from these decisions.
+This file records each owner decision. Each decision has an id (D-#). The numbers never change. A reversed decision stays in this file with a dated note in the "Effect" column. These decisions are the source of the design doc (`docs/design.md`).
 
 How to read this file:
 
