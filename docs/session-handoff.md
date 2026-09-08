@@ -17,26 +17,27 @@ Session: PR-1, the repository scaffold. Branch `feat/pr-1-scaffold`.
 - Wrote `ci.yml` with one job per platform (D-71, D-100, D-157, D-189) and `review-gate.yml` on the five event types (D-190).
 - Wrote the PR template with the gate checklist, the absent checks, and the document lines (D-118, D-148).
 - Ran the Godot 4.7.2 editor headless with `--build-solutions` on the Game project. It built, made no solution file, and left the project file unchanged.
-- Ran the tool against this checkout with `origin/main` as the base. It found that the base has no mode file, and it gave a failure that names the file. That is OQ-72.
+- Ran the tool against this checkout with `origin/main` as the base. It found that the base has no mode file, and it gave a failure that names the file. That was OQ-72. The owner chose option (b), and this session put the one-line file on `main` in `4ec9708` on that instruction (D-196). The owner asked first whether a Codex approval plus the override label gives green. It does not: the mode rule runs first, and D-190 keeps code paths out of the override.
 - Added the build and test commands to `CLAUDE.md` and `AGENTS.md` (D-122).
 
 ### State of the build
 
-- `main` is at `546a70a`. The branch `feat/pr-1-scaffold` holds the scaffold commit and this entry.
+- `main` is at `4ec9708`, which holds only the mode file above `546a70a`. The branch `feat/pr-1-scaffold` holds the scaffold commit, the D-196 records, and this entry.
 - `dotnet build WhatYouCarry.slnx` and `dotnet test WhatYouCarry.slnx --no-build` pass on the Mac Mini: 32 tests, 0 failures.
 - PR #6 is open. The first CI run passed on all three platforms, with 32 tests on each. The `review-gate` workflow posted its check run on the head commit, with the OQ-72 failure.
 - `CLAUDE.md` and `AGENTS.md` are byte-identical.
 
 ### In flight
 
-PR-1 is open and waits for a Codex review (T-4). The `review-gate` check on PR-1 is red on the mode-file rule until the owner answers OQ-72. The CI workflow passed its first run on this PR on all three platforms.
+PR #6 is open and waits for a Codex review (T-4). After D-196 the `review-gate` check on PR #6 reads `advisory` from `main` and shows grey until the review record lands. The CI workflow passed its first run on this PR on all three platforms.
 
 ### Traps and gotchas
 
 - The Godot editor writes `TargetFramework` `net8.0` into a project file that has none, and it keeps a `.csproj.old` copy. Each project file names `net10.0` for that reason. Do not move the target framework into `Directory.Build.props`.
 - The Godot SDK knows the configurations `Debug`, `ExportDebug`, and `ExportRelease`. CI builds the default `Debug`. A `--configuration Release` build of the solution is untested.
 - `git cat-file -e <rev>:<path>` exits 128 for an absent path, and not 1. The tool uses `git ls-tree`, which prints nothing and exits 0 for an absent path.
-- The tool reads the mode file from the base branch, so the base must hold it. PR-1 is the one PR where it does not (OQ-72).
+- The tool reads the mode file from the base branch, so the base must hold it. D-196 put it there before PR-1 merged. A repository rebuild must keep that file on the trunk.
+- One commit went to `main` without a PR on the owner instruction (D-196). That is the exception, not the rule (D-126, D-170).
 - A merge of `main` into a PR branch is a commit outside the metadata set, so it moves the effective head and needs a repeat review. A rebase does the same.
 - Git marks its object files read-only. The temp-repository helper clears the attribute before delete, or Windows refuses the delete.
 - `dotnet run` prints the build output to stdout, so the tool writes its result to a file and never to stdout.
@@ -46,11 +47,11 @@ PR-1 is open and waits for a Codex review (T-4). The `review-gate` check on PR-1
 
 ### Open questions that block progress
 
-OQ-72 blocks the PR-1 merge under G-19. OQ-12 remains open for PR-9.
+No open question blocks PR-1. OQ-72 is resolved by D-196. OQ-12 remains open for PR-9.
 
 ### Next concrete action
 
-The owner answers OQ-72 and records the decision. A Codex session reviews PR-1 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-<number>.md`. After the merge, PR-2 starts: the STE checker.
+A Codex session reviews PR #6 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-<number>.md`. After the merge, PR-2 starts: the STE checker.
 
 ## Session 16: 2026-09-07, Claude Code
 
