@@ -2,6 +2,44 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 22: 2026-09-07, Codex
+
+Author: Codex
+Session: PR-10 review. Branch `feat/pr-2-ste-check`.
+
+### What this session did, and why
+
+- Reviewed PR #10 at effective head `3ea5f23` against base and merge base `94aadc5`.
+- Confirmed the provider gate. Claude Code authored the PR, and Codex reviewed it.
+- Found three P2 defects in the sentence splitter and command argument parser.
+- Wrote `docs/reviews/pr-10.md` with the verdict `Changes required`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 61 tests and 0 failures.
+- The repository checker reports 0 findings in 15 files.
+- The Godot 4.7.2 headless build check passes with the installed executable.
+
+### In flight
+
+PR #10 needs the three P2 findings corrected and a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- The checker only treats a colon as a sentence end when whitespace or the line end follows it. The project rule says that every colon ends a sentence.
+- Nested parentheses do not remain one opaque word. The mask pairs the first opening parenthesis with the first closing parenthesis.
+- `ste-check` ignores a trailing argument after a valid `--root` pair and returns the repository result.
+- The review commit is metadata. The review head remains `3ea5f23` under D-184.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-1 to P2-3, add the regression tests, and request a repeat Codex review.
+
 ## Session 21: 2026-09-08, Claude Code
 
 Author: Claude Code
