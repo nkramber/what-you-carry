@@ -2,7 +2,7 @@
 
 Date: 2026-09-08
 
-This file answers `docs/reviews/pr-12.md`. The passes answer the review of head `c2ba592`, and the repeat reviews of heads `1bc665b`, `5316033`, `549c75c`, `60d678e`, and `9ad2a4c`.
+This file answers `docs/reviews/pr-12.md`. The passes answer the review of head `c2ba592`, and the repeat reviews of heads `1bc665b`, `5316033`, `549c75c`, `60d678e`, `9ad2a4c`, and `e30ddfd`.
 
 ## Summary
 
@@ -146,7 +146,10 @@ Correction: the description now holds a table of all six findings and their stat
 - D-207: the Core type allowlist. Resolves OQ-80, and supersedes D-205 and D-206.
 - OQ-80: the whole-namespace approvals. Resolved by D-207.
 - F-67: the randomness source inside the approved namespace, and the import that escaped the allowlist.
+- D-208: the Core member allowlist. Resolves OQ-81, and extends D-207.
+- OQ-81: the member surface of an approved type. Resolved by D-208.
 - F-68: the machine-dependent member behind an approved namespace.
+- F-69: the machine-dependent member of an approved type.
 - F-64 now records all four P2-3 passes.
 
 ## P2-3, fourth pass: the denylist itself was the defect
@@ -247,6 +250,40 @@ Disposition: full merit.
 The description carried a section titled "Four owner decisions this PR needed" that listed D-200 to D-203, while the gate section of the same description named D-200 to D-206. D-204 to D-207 each came from a review finding, and the section omitted them.
 
 Correction: the section now lists every decision of this PR with the finding that produced it. The review also asks not to bind the description to a session number that the next review makes stale, and the description no longer names one.
+
+## P2-9, third pass: an approved type is not an approved surface
+
+Disposition: full merit.
+
+The three triggers reproduce. `new CultureInfo("en-US", useUserOverride: true)`, `string.Intern(v)`, and `string.IsInterned(v)` each compile in Core and gave 0 findings at `e30ddfd`. The review cites the .NET contract for each one, and both citations hold: `UseUserOverride` reads the user settings, and `Intern` writes the process intern pool.
+
+The review states the shape of the defect exactly. D-207 moved the gap from the namespace to the type, and the type still approved its whole surface.
+
+The review also rules out another member denylist, and the evidence supports that. `CultureInfo` holds a second constructor with the same behavior, `new CultureInfo("en-US")`, which no denylist entry for the two-argument form would reach.
+
+This session measured the wide correction before it asked. Core uses six members and two constructors of an outside type. The owner chose the member allowlist with the overload arity (D-208).
+
+The arity closes a second gap that no trigger named. `UInt64.ToString/2` takes a format provider and gives the same text on every machine, and `ToString/0` reads the current culture. The two share a name, so a name-only list would approve both. The same split binds `Parse`, `TryParse`, and `Compare`.
+
+D-208 extends D-207, and D-207 stands: the type list still binds every type name, and the member list binds each member of an approved type.
+
+Two corrections came from a run and not from the finding. A named argument carries a containing type and is not a member of it, so `useUserOverride:` reported a false member finding until the rule read a method, a property, a field, and an event alone. `Object.GetType` also joined the member denylist, so it keeps the `L-REFLECTION` id instead of the wider `L-MEMBER` one.
+
+Regression check: `AMemberOfAnApprovedTypeNeedsItsOwnEntry` covers the three triggers and the one-argument `CultureInfo` constructor. `TheOverloadArityIsPartOfTheEntry` covers `ToString/0` against `ToString/2`. `AnApprovedMemberIsNotAFinding` guards the other side with every member that Core uses and a member of a Core type.
+
+An adversarial run against the real Core tree reported all six planted uses and stayed silent on `CultureInfo.InvariantCulture` and `float.IsNegative` in the same file.
+
+## P2-6, fourth pass: the count, the row, and the volatile values
+
+Disposition: full merit on all three points.
+
+The review names three defects in the description, and each one holds.
+
+- The decision section said that three decisions came from a review, and D-204 to D-207 are four. One row grouped D-205 and D-206, and the count read the rows and not the ids.
+- The P2-6 row said that the description names the current session, and the description names none. The row described a correction that the description no longer contained.
+- The summary named the pass count and the newest review head, and this review made both stale again.
+
+Correction: the decision table lists every id with the finding that produced it, and the sentence above it counts four from the plan and four from reviews. The P2-6 row states the correction that the description holds. The summary names the effective head alone, which the next review does not change unless the head changes.
 
 ## Verification
 

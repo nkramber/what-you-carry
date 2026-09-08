@@ -208,3 +208,9 @@ How to file a question (D-124, D-138):
     - a rule that guesses which members read the machine.
 
     Recommendation: the one allowlist. A ban on three members leaves the same hash behind `Dictionary`, `HashSet`, and any comparer a caller gives. A measurement found one type outside `System` in Core, so the list holds ten entries. Resolved 2026-09-08: D-207, the one allowlist.
+81. **OQ-81. The member surface of an approved type.** Raised 2026-09-08 (PR #12 review P2-9, third pass). Blocks PR-3. The type allowlist approves every member of an approved type, so `new CultureInfo("en-US", useUserOverride: true)`, `string.Intern(v)`, and `string.IsInterned(v)` give no finding. Options:
+    - an allowlist of members with the overload arity.
+    - an allowlist of members by name alone.
+    - member entries for the types that hold both kinds of member.
+
+    Recommendation: the arity form. The name form leaves `value.ToString()` beside the invariant overload that Core uses, and the same gap covers `Parse`, `TryParse`, and `Compare`. The third option needs a judgment about which type holds both kinds of member, and `Int32.Parse` puts `Int32` in that group too. A measurement found six members and two constructors in Core. Resolved 2026-09-08: D-208, the arity form.

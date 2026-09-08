@@ -100,6 +100,7 @@ public static class BannedSymbols
     /// </remarks>
     public static readonly IReadOnlyDictionary<string, BannedName> Members = new Dictionary<string, BannedName>
     {
+        ["System.Object.GetType"] = new("L-REFLECTION", "GetType gives back System.Type, which reads the type at run time. Core is static (G-2)."),
         ["System.Object.GetHashCode"] = new("L-IDENTITY", "The default hash of a reference type is its address, and it changes between runs (G-21)."),
         ["System.String.GetHashCode"] = new("L-IDENTITY", "The string hash takes a new seed in each process, so it changes between runs (G-21)."),
         ["System.Globalization.CultureInfo.CurrentCulture"] = new("L-CLOCK", "The current culture reads the user, not the simulation input. Use InvariantCulture (G-21)."),
@@ -142,6 +143,36 @@ public static class BannedSymbols
 
     /// <summary>The prefix of this project's own namespaces. Core may use any type under it.</summary>
     public const string ProjectNamespacePrefix = "WhatYouCarry.";
+
+    /// <summary>
+    /// Every member of an approved type that Core may use (D-208). An approved type is not an approved surface:
+    /// `String` holds `Intern`, which reads the process intern pool, and `CultureInfo` holds a constructor that
+    /// reads the user settings. A member outside this list is a finding (F-69).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A method entry ends with a slash and the count of its parameters, because two overloads of one name do
+    /// not share one behavior. `UInt64.ToString/2` takes a format provider and gives the same text on every
+    /// machine, and `ToString/0` reads the current culture. A property and a field carry no count.
+    /// </para>
+    /// <para>
+    /// A constructor uses the member name `new`. A member of a type of this project needs no entry.
+    /// </para>
+    /// </remarks>
+    public static readonly IReadOnlySet<string> AllowedMembers = new HashSet<string>
+    {
+        "System.ArgumentOutOfRangeException.new/2",
+        "System.BitConverter.SingleToUInt32Bits/1",
+        "System.Globalization.CultureInfo.InvariantCulture",
+        "System.Int32.MinValue",
+        "System.InvalidOperationException.new/1",
+        "System.Single.IsFinite/1",
+        "System.Single.IsNegative/1",
+        "System.UInt64.ToString/2",
+    };
+
+    /// <summary>The reason that the scan gives for a member outside <see cref="AllowedMembers"/>.</summary>
+    public const string MemberDetail = "Core approves each member it uses outside this project, because an approved type holds members that read the user, the process, or the machine (G-21, G-16, D-208).";
 
     /// <summary>The reason that the scan gives for a type outside <see cref="AllowedTypes"/>.</summary>
     public const string TypeDetail = "Core approves each type it uses outside this project, because a namespace holds machine-dependent types beside the ones Core needs (G-2, G-21, G-16, D-207).";

@@ -1,5 +1,51 @@
 # Session handoff archive
 
+## Session 32: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the PR #12 repeat review. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- The repeat review closed P2-1, P2-2, and P2-4, and it kept P2-3 open with two probes. Both reproduce, so the finding has full merit.
+- `Type.GetEvents()` gave no finding, because `GetEvents` was absent from the member word list. A Core `probe.GetMethods()` gave a false `L-REFLECTION`, because the word matched.
+- No word list can fix both. A Core class that declares `public new string GetType()` compiles, and this session checked that. The list itself was the defect.
+- `CoreSourceScan` now compiles the Core sources with `CSharpCompilation` and reads the semantic model. The rules match the type that owns a symbol, the namespace of that type, and the type a method or property gives back. That last rule catches `object.GetType()`, which belongs to `System.Object` and not to `System.Type`.
+- `BannedSymbols` holds full type names now. The member word list is gone.
+- Two T-2 guards. The compilation checks that `System.Math` and `System.Reflection.Assembly` resolve, because without references every name resolves to nothing and the scan would pass every file. The repository scan reports every compiler error, because a Core file that does not compile resolves no symbol.
+- Corrected the F-# citations. The reflection comments cited F-62, the `Atan2` defect. F-64 is the register entry, and it now records both correction passes. D-202 carries a dated note.
+- Rewrote the lint tests. Each fragment compiles on its own now, so the tests assert real symbol behavior and not an unresolved name.
+- 146 tests pass. The bit-identity hash is unchanged, because this pass changed no Core number.
+
+### State of the build
+
+- `main` is at `86078b8`. The branch holds the two review commits and two correction commits above it.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 146 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- An adversarial Core tree with nine planted uses gave 10 findings, and no finding for a Core `Vector3` in the same file.
+
+### In flight
+
+PR #12 needs a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- A lint that matches words has two failure modes at once, and each fix makes the other worse. Ask the compiler.
+- A semantic scan with no metadata reference resolves nothing and reports nothing. That is a silent pass, so the canary check is not optional.
+- `var` resolves to the type the compiler inferred, so it reports the same use a second time. Skip it.
+- A test fragment that names an undefined type resolves no symbol, so it gives no finding. A lint test must compile, or it passes for the wrong reason.
+- `object.GetType()` belongs to `System.Object`. The owner rule cannot see it, and the rule for the type it gives back can.
+- The scan reads the last name of a dotted chain. `System.Math.Sin` holds three names for one call.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
+
 ## Session 31: 2026-09-08, Codex
 
 Author: Codex

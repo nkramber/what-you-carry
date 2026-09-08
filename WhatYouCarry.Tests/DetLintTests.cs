@@ -299,7 +299,7 @@ public sealed class DetLintTests
     /// </summary>
     [Theory]
     [InlineData("public static object B() => new System.InvalidOperationException(\"x\");")]
-    [InlineData("public static string B(int i) => i.ToString(System.Globalization.CultureInfo.InvariantCulture);")]
+    [InlineData("public static string B(ulong v) => v.ToString(\"x16\", System.Globalization.CultureInfo.InvariantCulture);")]
     [InlineData("public static uint B(float f) => System.BitConverter.SingleToUInt32Bits(f);")]
     [InlineData("public static bool B(float f) => float.IsNegative(f);")]
     [InlineData("public static int[] B() => new int[4];")]
@@ -457,6 +457,73 @@ public sealed class DetLintTests
 
         // An import of System is correct. Its types pass the allowlist of D-206 one at a time.
         Assert.Empty(Scan("using System;\n\npublic static class A { public static int B() => 1; }"));
+    }
+
+    /// <summary>
+    /// An approved type is not an approved surface. `String` holds `Intern`, which reads the process intern
+    /// pool, and `CultureInfo` holds a constructor that reads the user settings (D-208, F-69).
+    /// </summary>
+    [Theory]
+    [InlineData("public static object B() => new System.Globalization.CultureInfo(\"en-US\", useUserOverride: true);")]
+    [InlineData("public static object B() => new System.Globalization.CultureInfo(\"en-US\");")]
+    [InlineData("public static string B(string v) => string.Intern(v);")]
+    [InlineData("public static string? B(string v) => string.IsInterned(v);")]
+    public void AMemberOfAnApprovedTypeNeedsItsOwnEntry(string member)
+    {
+        Assert.Contains(
+            Scan($"public static class A {{ {member} }}"),
+            finding => finding.Rule == "L-MEMBER");
+    }
+
+    /// <summary>
+    /// The entry carries the overload arity, because two overloads of one name do not share one behavior.
+    /// `ToString/2` takes a format provider, and `ToString/0` reads the current culture (D-208, F-69).
+    /// </summary>
+    [Fact]
+    public void TheOverloadArityIsPartOfTheEntry()
+    {
+        LintFinding finding = Assert.Single(Scan("public static class A { public static string B(ulong v) => v.ToString(); }"));
+        Assert.Equal("L-MEMBER", finding.Rule);
+        Assert.Equal("System.UInt64.ToString/0", finding.Symbol);
+
+        // The overload that Core uses names its provider, and it stays clean.
+        Assert.Empty(Scan("public static class A { public static string B(ulong v) => v.ToString(\"x16\", System.Globalization.CultureInfo.InvariantCulture); }"));
+    }
+
+    /// <summary>Every approved member stays legal, and a member of a Core type needs no entry.</summary>
+    [Fact]
+    public void AnApprovedMemberIsNotAFinding()
+    {
+        Assert.Empty(Scan("""
+            namespace WhatYouCarry.Core.Determinism
+            {
+                public static class A
+                {
+                    public static bool B(float f) => float.IsFinite(f) && float.IsNegative(f);
+
+                    public static uint C(float f) => System.BitConverter.SingleToUInt32Bits(f);
+
+                    public static int D() => int.MinValue;
+
+                    public static void E(int i)
+                    {
+                        if (i < 0)
+                        {
+                            throw new System.ArgumentOutOfRangeException(nameof(i), "x");
+                        }
+
+                        throw new System.InvalidOperationException("x");
+                    }
+
+                    public static int F() => Helper.Value;
+                }
+
+                public static class Helper
+                {
+                    public static int Value => 1;
+                }
+            }
+            """));
     }
 
     /// <summary>

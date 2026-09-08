@@ -149,6 +149,14 @@ public static class CoreSourceScan
                     continue;
                 }
 
+                // A constructor names no member on the right of a dot, so the name pass cannot read it. The
+                // CultureInfo constructor reads the user settings, and its type is approved (D-208).
+                if (node is ObjectCreationExpressionSyntax creation)
+                {
+                    AddConstructorFinding(findings, model, creation, path);
+                    continue;
+                }
+
                 // Only the last name of a dotted chain. `System.Math.Sin` holds three names for one call, and the
                 // last one carries the member, so the earlier names would repeat the same finding.
                 if (node is SimpleNameSyntax name && !IsAccessTarget(name))
@@ -273,6 +281,16 @@ public static class CoreSourceScan
             return;
         }
 
+        // An approved type is not an approved surface. String holds Intern, and CultureInfo holds a constructor
+        // that reads the user settings, so each member of an outside type needs its own entry (D-208).
+        // A named argument and a local both carry a containing type, and neither one is a member of it.
+        bool isMember = symbol is IMethodSymbol or IPropertySymbol or IFieldSymbol or IEventSymbol;
+        if (isMember && !namesTheTypeItself && !IsProjectType(owner) && !BannedSymbols.AllowedMembers.Contains(MemberKey(owner, symbol)))
+        {
+            findings.Add(Create(name, path, "L-MEMBER", MemberKey(owner, symbol), BannedSymbols.MemberDetail));
+            return;
+        }
+
         AddProducedTypeFinding(findings, symbol, name, path, used);
     }
 
@@ -318,6 +336,52 @@ public static class CoreSourceScan
         {
             findings.Add(Create(name, path, bannedProducedNamespace.Rule, used, $"{used} gives back {producedName}. {bannedProducedNamespace.Detail}"));
         }
+    }
+
+    /// <summary>
+    /// Adds a finding when a constructor of an approved outside type has no entry in the member allowlist.
+    /// An unapproved type is already a finding from its own name, so this rule stays silent for one.
+    /// </summary>
+    private static void AddConstructorFinding(List<LintFinding> findings, SemanticModel model, ObjectCreationExpressionSyntax creation, string path)
+    {
+        if (model.GetSymbolInfo(creation).Symbol is not IMethodSymbol constructor)
+        {
+            return;
+        }
+
+        INamedTypeSymbol owner = constructor.ContainingType.OriginalDefinition;
+        if (IsProjectType(owner) || !IsApprovedType(owner))
+        {
+            return;
+        }
+
+        string key = MemberKey(owner, constructor);
+        if (!BannedSymbols.AllowedMembers.Contains(key))
+        {
+            findings.Add(Create(creation, path, "L-MEMBER", key, BannedSymbols.MemberDetail));
+        }
+    }
+
+    /// <summary>
+    /// The allowlist key of a member. A method carries the count of its parameters, because two overloads of
+    /// one name do not share one behavior. A constructor uses the name <c>new</c>.
+    /// </summary>
+    private static string MemberKey(INamedTypeSymbol owner, ISymbol symbol)
+    {
+        if (symbol is IMethodSymbol method)
+        {
+            string name = method.MethodKind == MethodKind.Constructor ? "new" : method.Name;
+            return $"{FullName(owner)}.{name}/{method.Parameters.Length}";
+        }
+
+        return $"{FullName(owner)}.{symbol.Name}";
+    }
+
+    /// <summary>Answers whether a type belongs to this project. Core needs no entry for its own members.</summary>
+    private static bool IsProjectType(INamedTypeSymbol type)
+    {
+        return type.ContainingNamespace.IsGlobalNamespace
+            || type.ContainingNamespace.ToDisplayString().StartsWith(BannedSymbols.ProjectNamespacePrefix, StringComparison.Ordinal);
     }
 
     /// <summary>
