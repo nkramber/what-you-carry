@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 18: 2026-09-08, Codex
+
+Author: Codex
+Session: review PR #6. Branch `feat/pr-1-scaffold`.
+
+### What this session did, and why
+
+- Reviewed PR #6 at head `39db1f9` against base and merge base `546a70a`.
+- Confirmed the opposite-provider gate. The PR author is Claude Code, and the reviewer is Codex.
+- Found two P1 defects in the review gate. The workflow runs PR-controlled evaluator code with `checks: write`. A PR author can replace an approved review record in a metadata-only commit.
+- Wrote `docs/reviews/pr-6.md` with the verdict `Changes required`.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx -m:1` passes with 0 warnings and 0 errors.
+- `dotnet test WhatYouCarry.slnx --no-build -m:1` passes with 32 tests and 0 failures.
+- GitHub reports passing Linux, Windows, and macOS CI for PR #6. The custom review-gate check is neutral until the review record approves the head.
+- The Godot command did not run because `Godot` is not on this checkout's command path.
+
+### In flight
+
+PR #6 needs both P1 findings corrected and a repeat review at the new effective head.
+
+### Traps and gotchas
+
+- The review-gate workflow checks out the PR head and runs `WhatYouCarry.Tools` from that head.
+- The effective-head rule excludes `docs/reviews/`, so it does not detect a review-file replacement.
+- PR #6 has GitHub base `546a70a`, while `main` now points to `4ec9708`.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P1-1 and P1-2, then request a repeat review of PR #6.
+
 ## Session 17: 2026-09-07, Claude Code
 
 Author: Claude Code
@@ -387,38 +424,3 @@ No new owner question. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 The owner can merge PR #1. Then complete the SSD and runner actions before starting PR-1.
-
-## Session 8: 2026-09-07, Codex
-
-Author: Codex
-Session: repeat review of PR #1 on `docs/roadmaps`.
-
-### What this session did, and why
-
-- Rechecked PR #1 at effective head `60087b0` against the prior review and the author response.
-- Confirmed fixes for P1-1, P1-2, and P2-1.
-- Added P2-2 to `docs/reviews/pr-1.md` because the Phase 1 header omits PR-58, D-177, and D-178.
-
-### State of the build
-
-- No solution or implementation exists on the reviewed head.
-- The diff check passes. The agent files remain identical. The settings file parses as JSON.
-- The review verdict remains Changes required.
-
-### In flight
-
-PR #1 needs a small roadmap header correction. The review record now names head `60087b0`.
-
-### Traps and gotchas
-
-- The effective head is the newest commit outside `docs/reviews/`.
-- The old findings stay in the review record with fixed dispositions.
-- The Phase 1 sequence includes PR-58, but the roadmap header still states PR-1 to PR-11 only.
-
-### Open questions that block progress
-
-No new owner question. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Correct the Phase 1 roadmap header and request a final repeat review against the new effective head.

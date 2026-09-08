@@ -2,6 +2,41 @@
 
 Entries older than the 10 newest sessions move here from `docs/session-handoff.md` (D-146). Newest first.
 
+## Session 8: 2026-09-07, Codex
+
+Author: Codex
+Session: repeat review of PR #1 on `docs/roadmaps`.
+
+### What this session did, and why
+
+- Rechecked PR #1 at effective head `60087b0` against the prior review and the author response.
+- Confirmed fixes for P1-1, P1-2, and P2-1.
+- Added P2-2 to `docs/reviews/pr-1.md` because the Phase 1 header omits PR-58, D-177, and D-178.
+
+### State of the build
+
+- No solution or implementation exists on the reviewed head.
+- The diff check passes. The agent files remain identical. The settings file parses as JSON.
+- The review verdict remains Changes required.
+
+### In flight
+
+PR #1 needs a small roadmap header correction. The review record now names head `60087b0`.
+
+### Traps and gotchas
+
+- The effective head is the newest commit outside `docs/reviews/`.
+- The old findings stay in the review record with fixed dispositions.
+- The Phase 1 sequence includes PR-58, but the roadmap header still states PR-1 to PR-11 only.
+
+### Open questions that block progress
+
+No new owner question. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct the Phase 1 roadmap header and request a final repeat review against the new effective head.
+
 ## Session 7: 2026-09-07, Claude Code
 
 Author: Claude Code
