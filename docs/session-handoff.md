@@ -2,6 +2,50 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 51: 2026-09-08, Codex
+
+Author: Codex
+Session: second repeat review of PR #15 for PR-4. Branch `feat/pr-4-logging`.
+
+### What this session did, and why
+
+- Re-reviewed PR #15 at effective head `d530f4c` against base and merge base `51b3de7`.
+- Confirmed the provider gate. Claude Code wrote the correction, and Codex reviewed it.
+- Closed P2-3. Four labeled surrogate rows run through five text positions, and both parsing and string reading succeed.
+- Closed P2-5. All three assertion call-site names are reserved, and the trusted copy path writes a complete report.
+- Closed P2-6. D-214, the response, and the primary PR evidence agree on the head, the test total, and the allowlist counts.
+- Added P2-7. Distinct accepted field names with unmatched high and low surrogates both serialize as U+FFFD. The resulting JSON object holds two equal property names, against the no-ambiguity contract of `LogFields` and T-2.
+- Corrected four stale facts in the PR description under D-217, and recorded each edit in `docs/reviews/pr-15.md`.
+- Updated the review verdict to `Changes required` for `d530f4c`.
+
+### State of the build
+
+- `main` and the merge base are at `51b3de7`. The reviewed effective head is `d530f4c`.
+- Remote head: `origin/feat/pr-4-logging` holds the metadata commit for this entry, verified with the session-end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 233 tests and 0 failures.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `d530f4c`. The review gate reflects the prior review until this metadata commit runs it again.
+
+### In flight
+
+PR #15 needs a correction for P2-7, then another repeat review.
+
+### Traps and gotchas
+
+- Replacement is not injective. Two invalid UTF-16 field names can become one valid JSON property name.
+- A parser accepts duplicate JSON property names. Count the parsed properties or reject the input before serialization.
+- The surrogate regression test puts invalid text in a field name, but it does not assert that distinct accepted names stay distinct.
+- D-217 permits a reviewer to correct verified stale facts in the PR description. It does not permit changes to an owner-ticked gate line or to the author's substantive claims.
+
+### Open questions that block progress
+
+No open question blocks the P2-7 correction. The correction can reject invalid UTF-16 in field names or preserve a unique emitted name.
+
+### Next concrete action
+
+Correct P2-7 and add a regression test with distinct unmatched high- and low-surrogate field names. Then request another repeat review.
+
 ## Session 50: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -399,48 +443,3 @@ No new owner question. OQ-81 is resolved by D-208. OQ-12 remains open for PR-9.
 ### Next concrete action
 
 A Codex session re-reviews PR #12 per the repeat review procedure and updates `docs/reviews/pr-12.md` to the new effective head.
-
-## Session 41: 2026-09-08, Codex
-
-Author: Codex
-Session: sixth repeat review of PR #12. Branch `feat/pr-3-determinism`.
-
-### What this session did, and why
-
-- Re-reviewed PR #12 at effective head `e30ddfd` against base and merge base `86078b8`.
-- Confirmed that the provider gate passes. Claude Code wrote the correction, and Codex reviewed it.
-- Confirmed that the original P2-9 triggers now report `L-TYPE`, `L-TYPE`, and `L-CLOCK`.
-- Kept P2-9 open. `CultureInfo` and `String` are approved types, and their other machine-dependent members still pass.
-- A probe used the `CultureInfo` constructor with user overrides. It also used `String.Intern` and `String.IsInterned`.
-- The probe compiled, and `det-lint` reported 0 findings. The .NET contracts confirm that these APIs read user or process state.
-- Kept P2-6 open. The PR description gives the wrong decision count and contains two claims that contradict its current content.
-- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
-
-### State of the build
-
-- `main` and the merge base are at `86078b8`. The reviewed effective head is `e30ddfd`.
-- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 187 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
-- GitHub reports green CI, lint, STE, and bit-identity jobs at `e30ddfd`.
-- The review-gate results stay red because the review verdict stays `Changes required`.
-
-### In flight
-
-PR #12 needs corrections for P2-6 and P2-9, then another repeat review.
-
-### Traps and gotchas
-
-- A type allowlist approves every member of an approved type unless another rule limits the members.
-- `CultureInfo` has the required `InvariantCulture` member and constructors that read user settings.
-- `String.Intern` changes the process intern pool. `String.IsInterned` reads that process state.
-- Volatile pass counts and review heads become stale when the required next review completes.
-
-### Open questions that block progress
-
-No new owner question was filed in this review. The P2-9 correction can require a revision to D-207. OQ-12 remains open for PR-9.
-
-### Next concrete action
-
-Correct P2-6 and P2-9. Add regression tests for the three new triggers, then request another repeat review.

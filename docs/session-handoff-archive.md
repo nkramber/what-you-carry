@@ -1,5 +1,50 @@
 # Session handoff archive
 
+## Session 41: 2026-09-08, Codex
+
+Author: Codex
+Session: sixth repeat review of PR #12. Branch `feat/pr-3-determinism`.
+
+### What this session did, and why
+
+- Re-reviewed PR #12 at effective head `e30ddfd` against base and merge base `86078b8`.
+- Confirmed that the provider gate passes. Claude Code wrote the correction, and Codex reviewed it.
+- Confirmed that the original P2-9 triggers now report `L-TYPE`, `L-TYPE`, and `L-CLOCK`.
+- Kept P2-9 open. `CultureInfo` and `String` are approved types, and their other machine-dependent members still pass.
+- A probe used the `CultureInfo` constructor with user overrides. It also used `String.Intern` and `String.IsInterned`.
+- The probe compiled, and `det-lint` reported 0 findings. The .NET contracts confirm that these APIs read user or process state.
+- Kept P2-6 open. The PR description gives the wrong decision count and contains two claims that contradict its current content.
+- Updated `docs/reviews/pr-12.md` with the changed hash and the new evidence.
+
+### State of the build
+
+- `main` and the merge base are at `86078b8`. The reviewed effective head is `e30ddfd`.
+- Remote head: `origin/feat/pr-3-determinism` at the commit that holds this entry, checked with the session end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 187 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- The local bit-identity hash is `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `e30ddfd`.
+- The review-gate results stay red because the review verdict stays `Changes required`.
+
+### In flight
+
+PR #12 needs corrections for P2-6 and P2-9, then another repeat review.
+
+### Traps and gotchas
+
+- A type allowlist approves every member of an approved type unless another rule limits the members.
+- `CultureInfo` has the required `InvariantCulture` member and constructors that read user settings.
+- `String.Intern` changes the process intern pool. `String.IsInterned` reads that process state.
+- Volatile pass counts and review heads become stale when the required next review completes.
+
+### Open questions that block progress
+
+No new owner question was filed in this review. The P2-9 correction can require a revision to D-207. OQ-12 remains open for PR-9.
+
+### Next concrete action
+
+Correct P2-6 and P2-9. Add regression tests for the three new triggers, then request another repeat review.
+
 ## Session 40: 2026-09-08, Claude Code
 
 Author: Claude Code
