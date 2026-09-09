@@ -380,14 +380,14 @@ Implement the over-the-shoulder camera in Core (D-13, D-75, D-241, D-242, D-245 
 Gate: a recorded run with camera motion replays to the same hash on all three platforms.
 > *In plain English:* the camera is part of the simulation, not decoration, so where you look and where you aim replay exactly.
 
-**PR-9: Procgen v1 and property tests.** 🔧
+**PR-9: Procgen v1 and property tests.** ✅ Merged 2026-09-09 as PR #27.
 Implement floor generation on the grid for one biome, a collapsed deep mine (D-6, D-13, D-46, D-210). A floor is a mine dig plan: a main gallery with side drifts, chambers, shafts and ramps, a spawn point, and a stairwell (D-253). Every tunnel is at least three by three (D-166). The floor size grows with depth, by band, in the floor template (D-252). Chamber kinds are a content type with a weight, and the sum of weights lands inside the budget window (D-167, D-255). The spawn is in the first chamber, and the stairwell is in the farthest one (D-256). Implement the stairwell transition in Core (D-50, D-149). Two button bits at the stairwell carry the choice, so the record replays it (D-257). The next floor generates from the run seed and the floor number. PR-9 carves raw stone and air alone, and PR-59 adds the detail (D-254). Property tests run over thousands of seeds per PR and one hundred thousand each night (D-116). They assert four facts: every chamber is reachable, no chambers overlap, the stairwell is reachable, and the difficulty budget is within tolerance.
 Gate: the night sweep passes on one hundred thousand seeds.
 > *In plain English:* this digs the mine floors from a random seed: galleries, side tunnels, chambers, and shafts, and no two floors look alike. Tests over huge numbers of seeds prove that a player can reach every chamber and the stairs down.
 
 **PR-59: Mine detail pass.** 🔧
-Add the detail that makes the dig plan read as the mine of D-210: collapses that fill dead ends with rubble, pillars in chambers, and the block ids by band (D-254). Floors 1 to 5 take timber beams and planks. Floors 6 to 10 take hewn stone and still water. Floors 11 to 15 take ore veins. A decision before the code says whether still water is solid (D-239). The reachability sweep of PR-9 runs again, so no detail closes a chamber or a tunnel. This entry follows PR-9 in the sequence.
-Gate: the PR-9 property tests pass with the detail on, and every floor of a band uses the blocks of its band.
+Add the detail that makes the dig plan read as the mine of D-210: collapses that fill dead ends with rubble, pillars in chambers, and the block ids by band (D-254, D-259). Floors 1 to 5 take timber beams and planks. Floors 6 to 10 take hewn stone and still water. Floors 11 to 15 take ore veins. Still water is not solid: a pool is one block deep, and a body walks and jumps through it at half pace (D-258, D-261 to D-263). The reachability sweep of PR-9 runs again, so no detail closes a chamber or a tunnel. The simulation version rises, because a floor with other blocks is another simulation (D-260). This entry follows PR-9 in the sequence.
+Gate: the PR-9 property tests pass with the detail on, and every floor of a band uses the blocks of its band. A body in water walks and jumps at half pace.
 > *In plain English:* the bare tunnels gain the look of a mine: fallen rock, timber, cut stone, ore, and water. The tests from before run again, so nothing blocks the way.
 
 **PR-10: Projectile simulation.** 🔧
