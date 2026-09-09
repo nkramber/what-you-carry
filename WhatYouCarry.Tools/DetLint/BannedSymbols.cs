@@ -157,6 +157,7 @@ public static class BannedSymbols
         "System.Globalization.NumberStyles",
         "System.StringComparison",
         "System.Array",
+        "System.UInt32",
     };
 
     /// <summary>The prefix of this project's own namespaces. Core may use any type under it.</summary>
@@ -235,6 +236,12 @@ public static class BannedSymbols
         "System.Array.Length",
         "System.Int64.TryParse/4",
         "System.String.StartsWith/2",
+        "System.UInt32.MaxValue",
+        "System.UInt64.TryParse/4",
+        "System.UInt64.ToString/1",
+        "System.Text.Json.JsonTokenType.StartArray",
+        "System.Text.Json.JsonTokenType.EndArray",
+        "System.Text.Json.JsonTokenType.Null",
     };
 
     /// <summary>The reason that the scan gives for a member outside <see cref="AllowedMembers"/>.</summary>

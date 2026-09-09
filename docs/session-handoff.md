@@ -2,6 +2,103 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 61: 2026-09-09, Codex
+
+Author: Codex
+Session: review PR #19 for the simulation loop, the intent frame, the run record, and the replay. Branch `feat/pr-6-loop-record`.
+
+### What this session did, and why
+
+- Verified PR #19 against `main` at `c11fb41` and reviewed effective head `0850d32`.
+- Confirmed that Session 60 identifies Claude Code as the implementation provider. Codex is the eligible reviewer.
+- Inspected the complete diff, callers, tests, replay contracts, error paths, Core boundary, and Phase 1 documents.
+- Confirmed the intentional bit-identity change from `4d6385bb92454694` to `283aa4b8cd1281be`.
+- Found no blocking defect. Wrote `docs/reviews/pr-19.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `c11fb41`. The reviewed effective head is `0850d32`.
+- The branch held metadata commit `0850d32` before this review. Review commit `1247769` is on the remote branch.
+- `dotnet test` passes with 336 tests and 0 failures.
+- `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
+- `bit-identity` gives `283aa4b8cd1281be`.
+- The Godot 4.7.2 headless build check passes.
+- The local build command stalled without compiler output. The Linux, macOS, and Windows CI build and test jobs pass.
+
+### In flight
+
+PR #19 is open with the verdict `Ready for owner merge` at effective head `0850d32`. The owner can merge it after the review record reaches the remote branch.
+
+### Traps and gotchas
+
+- The effective head is `0850d32` because that commit changes design and roadmap files outside the D-184 metadata set. The later review commits do not change the effective head.
+- The bit-identity value changes on purpose because the sweep replays one fixed record.
+- The simulation version stays at 1 because PR-6 sets its first value.
+
+### Open questions that block progress
+
+None. OQ-99 remains open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #19, or requests a review of a new effective head.
+
+## Session 60: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: PR-6, the simulation loop, the intent frame, the run record, the recorder, and the replay. Branch `feat/pr-6-loop-record`.
+
+### What this session did, and why
+
+- The owner merged PR #18 as `c11fb41`. The handoff named PR-6 as the next action, with two questions before the code.
+- Asked seven owner questions in three batches, and D-224 to D-230 record the answers. OQ-92 to OQ-98 hold the questions.
+- D-224: Core holds a table-driven CRC-32 in `Crc32.cs`. No dependency and no allowlist entry.
+- D-225: the recorder writes through an `IRunRecordSink`, as the logger and the content loader do. Core opens no file.
+- D-226: the design doc said "length-prefixed, checksummed tick frames" in sections 3.9 and 7, and D-162 fixes the frame at 16 bytes. Both lines name the fixed frame now (F-80).
+- D-227: the Phase 1 loop state is the seed, the tick, the yaw and pitch sums in hundredths of a degree, and the buttons. The loop reads no movement byte until PR-7 has collision.
+- D-228: the torn-tail log line names floor 1, because every run starts there and a Phase 1 run never leaves it. PR-31 reads the floor from the state.
+- D-229: the JSON reader gives an empty list and a null as kinds, so the header carries `loadout`, `tree`, and `amulet` from the first record. A list with an item is an error until Phase 3.
+- D-230: 1 type and 6 members enter the allowlist. A removal check proved each one in use.
+- Found one defect outside the new files. The validator message wrote an enum value inside an interpolated string, and the runtime formats one through its metadata. An explicit switch replaces it (F-81), and OQ-99 asks whether `det-lint` gains a rule in its own PR.
+- The bit-identity sweep records and replays one fixed run now, so the three platforms compare the replay (exit test 7). The known answer moved on purpose (G-20).
+- 56 new tests. The total is 336. Opened PR #19.
+
+### State of the build
+
+- `main` is at `c11fb41`, the squash merge of PR #18. This branch holds two commits above it.
+- Remote head: `origin/feat/pr-6-loop-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 336 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 29 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `283aa4b8cd1281be`. PR-6 moved it from `4d6385bb92454694` on purpose, and `BitIdentityKnownAnswer` pins the new value.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #19 is open and it holds this branch. It changes code, so it needs a Codex review with the verdict `Ready for owner merge` at the effective head. No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-5 are merged. PR-6 is open. PR-7 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The bit-identity hash moves in this PR, and that is the point of G-20. A review that sees the new value must confirm it and not restore the old one.
+- The simulation version stays at 1. It is the first value, so there is no bump to confirm. The next Core PR that moves a simulation number raises it to 2.
+- An intent delta is an `int16`, so a yaw near 360 degrees takes two intents in a test. The first draft of `YawWraps` passed 35990 as one delta, and the compiler stopped it.
+- The content error text says "file" now, not "content file", because the run record header goes through the same reader. A test that asserts the old words fails.
+- The validator names a kind with an explicit switch now. A test that asserts the enum name `Number` fails, and one that asserts `number` passes.
+- A Python patch script cannot hold a C# raw string literal inside a Python triple-quoted string. Write the script to a file, or escape the quotation marks.
+- The replayer adds the frame index to an error from the decode or the loop and rethrows the same object. The message then holds the tick, both checksums or both ticks, and the frame.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing: the lint rule for an enum inside an interpolation belongs to its own PR.
+
+### Next concrete action
+
+A Codex session reviews PR #19 per the `pr-review` skill, at the effective head, and writes `docs/reviews/pr-19.md`. The review focus is determinism, replay, errors, and test quality, and it confirms the bit-identity change under G-20.
+
 ## Session 59: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -381,47 +478,3 @@ No open question blocks the P2-7 correction. The correction can reject invalid U
 ### Next concrete action
 
 Correct P2-7 and add a regression test with distinct unmatched high- and low-surrogate field names. Then request another repeat review.
-
-## Session 50: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the PR #15 repeat review, and give the reviewer the PR description. Branch `feat/pr-4-logging`.
-
-### What this session did, and why
-
-- The repeat review closed P2-1, P2-2, and P2-4, and it kept P2-3 open and opened P2-5 and P2-6. All three have full merit.
-- P2-3. The review found that three of four theory rows ran. xUnit takes the display name from the data, two rows of raw surrogate text give one name, and the low-surrogate row never ran. Each row carries a label and a code unit now, and the body builds five shapes for each one.
-- Those rows then failed, and they showed the first fix was incomplete. `JsonDocument.Parse` accepts the `\u` escape of a lone surrogate, and `GetString` on that value throws. The first probe called `Parse` alone, so it passed and hid the rest.
-- `AppendQuoted` writes the replacement character in place of a lone surrogate now. The line parses, and a reader takes the value back with one visible mark (F-73).
-- P2-5. A caller field named `assertFile` stopped the assertion report, because the copy already held that name. This is P2-1 one level out: the first fix reserved the two names the logger writes and left the three the report writes. All five are reserved now, and `CopyWithCallSite` writes the call site on a path that no caller field reaches (F-74).
-- P2-6. D-214 said 8 types and 16 members while the code held 9 and 18. A count of the lists gave the true numbers, and D-214 states them with the totals after them (F-75).
-- The owner asked for a skill change so a reviewer can correct a stale PR description directly. D-217 records it, and the `pr-review` skill gains the rules and a `## Description edits` section in the record (F-76).
-- 7 new tests. The total is 233.
-
-### State of the build
-
-- `main` is at `51b3de7`. The branch holds the PR-4 work, two review commits, and two correction commits.
-- Remote head: `origin/feat/pr-4-logging` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 233 tests and 0 failures.
-- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged.
-
-### In flight
-
-PR #15 needs a repeat review at the new effective head. That review can correct the PR description directly under D-217.
-
-### Traps and gotchas
-
-- Two xUnit theory rows of raw invalid text take one test id, and one row never runs. Give each row a label, and build the text in the body.
-- `JsonDocument.Parse` and `GetString` are two gates. A line can parse and still fail when a reader asks for the value. Assert both.
-- A reserved-name rule needs every name that the code writes. The first pass covered the logger and missed the assertion report.
-- A count in a decision drifts from the code. State the totals, and count the list before you write them.
-- A correction can be incomplete and still pass its first probe. Write the probe against the contract, not against the fix.
-
-### Open questions that block progress
-
-No new owner question. No open question blocks PR-5 to PR-11.
-
-### Next concrete action
-
-A Codex session re-reviews PR #15 per the repeat review procedure, and it updates `docs/reviews/pr-15.md` to the new effective head.

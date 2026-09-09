@@ -1,10 +1,15 @@
+using System;
+using System.Collections.Generic;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Replay;
+using WhatYouCarry.Core.Simulation;
 
 namespace WhatYouCarry.Tools.BitIdentity;
 
 /// <summary>
-/// A fixed run of the RNG and of DetMath, folded into one state hash (D-69, D-71). Two platforms that give the
-/// same hash agree on every bit of both.
+/// A fixed run of the RNG, of DetMath, and of one recorded run through the replay, folded into one state hash
+/// (D-69, D-71). Two platforms that give the same hash agree on every bit of all three.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -31,6 +36,12 @@ public static class BitIdentitySweep
     /// <summary>The width of one side of the Atan2 grid.</summary>
     public const int AtanGridSide = 64;
 
+    /// <summary>The count of frames in the recorded run of the sweep (PR-6 exit test 7).</summary>
+    public const int ReplayFrames = 600;
+
+    /// <summary>The content hash that the sweep record carries. It has no meaning beyond its shape (D-221).</summary>
+    public const string ReplayContentHash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
     /// <summary>
     /// The streams that the sweep reads. The list is explicit, so a new value of <see cref="RngStream"/> leaves
     /// this hash alone until a later change adds it here on purpose.
@@ -50,6 +61,7 @@ public static class BitIdentitySweep
         AddStreams(ref hash);
         AddAngles(ref hash);
         AddRootsAndPowers(ref hash);
+        AddReplay(ref hash);
         return hash;
     }
 
@@ -136,6 +148,49 @@ public static class BitIdentitySweep
             hash.Add(DetMath.Pow(1.5f, exponent));
             hash.Add(DetMath.Pow(-0.75f, exponent));
             hash.Add(DetMath.Pow(2.0f, exponent));
+        }
+    }
+
+    /// <summary>
+    /// Records one run of intents that the seed makes, replays the record, and folds in the end state and the
+    /// checksum of the whole record (PR-6 exit test 7). The three platforms must agree on the frame bytes, the
+    /// header text, the CRC-32, and the loop.
+    /// </summary>
+    private static void AddReplay(ref StateHash hash)
+    {
+        Rng rng = Rng.ForStream(RunSeed, RngStream.Enemy);
+        MemorySink sink = new();
+        RunRecorder recorder = new(sink, RunRecord.NewHeader(ReplayContentHash, RunSeed));
+        for (uint tick = 0; tick < ReplayFrames; tick++)
+        {
+            uint look = rng.NextUInt();
+            uint rest = rng.NextUInt();
+            Intent intent = new(tick, (short)look, (short)(look >> 16), (sbyte)rest, (sbyte)(rest >> 8), (ushort)(rest >> 16));
+            recorder.Record(intent);
+        }
+
+        ReplayResult result = RunReplayer.Replay(sink.Bytes, ReplayContentHash, new JsonlLogger(new RejectingLogSink()));
+        hash.Add(result.Loop.Hash().Value);
+        hash.Add(Crc32.Of(sink.Bytes, 0, sink.Bytes.Count));
+    }
+
+    /// <summary>A sink that keeps the record in memory. The sweep never touches the disk.</summary>
+    private sealed class MemorySink : IRunRecordSink
+    {
+        public List<byte> Bytes { get; } = [];
+
+        public void Append(byte[] bytes)
+        {
+            this.Bytes.AddRange(bytes);
+        }
+    }
+
+    /// <summary>The sweep record has no torn tail, so a log line here is a defect of the sweep and never a line to drop (T-2).</summary>
+    private sealed class RejectingLogSink : ILogSink
+    {
+        public void Write(string line)
+        {
+            throw new InvalidOperationException($"The sweep replay wrote a log line, and its record has no torn tail. The line is {line}");
         }
     }
 }

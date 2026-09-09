@@ -267,8 +267,32 @@ public sealed class ContentTests
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
-        Assert.Contains("Number", error.Message, StringComparison.Ordinal);
-        Assert.Contains("Text", error.Message, StringComparison.Ordinal);
+        Assert.Contains("holds a number value", error.Message, StringComparison.Ordinal);
+        Assert.Contains("needs a text value", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>An empty list and a null are kinds of their own, because the run record header carries both (D-229).</summary>
+    [Fact]
+    public void AnEmptyListAndANullAreKinds()
+    {
+        IReadOnlyList<JsonMember> members = JsonObjectReader.Read("header", Encoding.UTF8.GetBytes("{\"loadout\":[],\"amulet\":null}"));
+
+        Assert.Equal(2, members.Count);
+        Assert.Equal(new JsonMember("loadout", string.Empty, JsonMemberKind.EmptyList), members[0]);
+        Assert.Equal(new JsonMember("amulet", string.Empty, JsonMemberKind.Null), members[1]);
+    }
+
+    /// <summary>A list with an item, a nested object, and a list that the file ends inside are each an error that names the field (D-229).</summary>
+    [Theory]
+    [InlineData("{\"loadout\":[1]}", "with an item")]
+    [InlineData("{\"loadout\":[[]]}", "with an item")]
+    [InlineData("{\"loadout\":{}}", "no Phase 1 type uses")]
+    [InlineData("{\"loadout\":[", "not valid JSON")]
+    public void AListWithAnItemIsAnError(string text, string reason)
+    {
+        ContextException error = Assert.Throws<ContextException>(() => JsonObjectReader.Read("header", Encoding.UTF8.GetBytes(text)));
+        Assert.Contains("header", error.Message, StringComparison.Ordinal);
+        Assert.Contains(reason, error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A floor template with an impossible range is an error, and never a band that covers no floor.</summary>

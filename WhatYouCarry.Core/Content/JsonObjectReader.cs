@@ -91,8 +91,27 @@ public static class JsonObjectReader
                 case JsonTokenType.False:
                     members.Add(new JsonMember(name, "false", JsonMemberKind.Truth));
                     break;
+                case JsonTokenType.StartArray:
+                    // The run record header carries an empty loadout and an empty tree until Phase 3 has the
+                    // types (D-229). A list with an item comes from a later format, and it is an error here and
+                    // never a list that the reader steps over.
+                    if (!reader.Read())
+                    {
+                        throw ContentError.Make(path, name, "holds a list that the file ends inside");
+                    }
+
+                    if (reader.TokenType != JsonTokenType.EndArray)
+                    {
+                        throw ContentError.Make(path, name, "holds a list with an item, and no Phase 1 type reads one");
+                    }
+
+                    members.Add(new JsonMember(name, string.Empty, JsonMemberKind.EmptyList));
+                    break;
+                case JsonTokenType.Null:
+                    members.Add(new JsonMember(name, string.Empty, JsonMemberKind.Null));
+                    break;
                 default:
-                    throw ContentError.Make(path, name, "holds a value that no Phase 1 content type uses");
+                    throw ContentError.Make(path, name, "holds a value that no Phase 1 type uses");
             }
         }
 
@@ -119,4 +138,10 @@ public enum JsonMemberKind
 
     /// <summary>A JSON true or false.</summary>
     Truth = 2,
+
+    /// <summary>A JSON list with no item. The run record header writes one for the loadout and the tree (D-229).</summary>
+    EmptyList = 3,
+
+    /// <summary>A JSON null. The run record header writes one for the amulet (D-229).</summary>
+    Null = 4,
 }

@@ -35,7 +35,7 @@ public static class ContentValidator
             // An absent field is an error, and never a zero (D-92, T-2).
             if (!found)
             {
-                throw ContentError.Make(path, name, "is absent, and this content type requires it");
+                throw ContentError.Make(path, name, "is absent, and this type requires it");
             }
         }
 
@@ -63,7 +63,7 @@ public static class ContentValidator
             // An unknown field means the file and the code disagree about the type, and a silent skip hides it.
             if (!known)
             {
-                throw ContentError.Make(path, member.Name, "is not a field of this content type");
+                throw ContentError.Make(path, member.Name, "is not a field of this type");
             }
         }
     }
@@ -81,12 +81,26 @@ public static class ContentValidator
 
             if (member.Kind != kind)
             {
-                throw ContentError.Make(path, name, $"holds a {member.Kind} value, and this content type needs a {kind} value");
+                throw ContentError.Make(path, name, $"holds a {KindName(member.Kind)} value, and this type needs a {KindName(kind)} value");
             }
 
             return member.Value;
         }
 
-        throw ContentError.Make(path, name, "is absent, and this content type requires it");
+        throw ContentError.Make(path, name, "is absent, and this type requires it");
+    }
+
+    /// <summary>The name of one kind in a message. The switch is explicit, so no reflection reads the enum (G-2).</summary>
+    private static string KindName(JsonMemberKind kind)
+    {
+        switch (kind)
+        {
+            case JsonMemberKind.Text: return "text";
+            case JsonMemberKind.Number: return "number";
+            case JsonMemberKind.Truth: return "true or false";
+            case JsonMemberKind.EmptyList: return "empty list";
+            case JsonMemberKind.Null: return "null";
+            default: return "unknown";
+        }
     }
 }

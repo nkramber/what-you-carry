@@ -1,12 +1,12 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-223. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-230. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
 External facts: none new. The Godot version is in the design header, verified 2026-09-07.
 
-Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner. 2026-09-07, PR-1: a run of the gate against `main` refuted the claim that PR-1 passes its own check with no owner action. D-196 puts the mode file on `main` first. 2026-09-08, the PR #6 review. D-197 moves the gate to `pull_request_target`, and D-198 accepts the review-record risk with a named commit in the output. 2026-09-08, PR-2: the first run of the checker found 77 findings in 15 files, and the PR rewrote each sentence. 2026-09-08, PR-3: a measurement refuted D-161, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 to D-202 answer the `Pow` contract, the location of the bit-identity program, and the compiler API dependency. The review took seven passes on the lint boundary. D-204 to D-208 record the answers. D-204 stops conditional compilation in Core. The boundary then moved from a namespace list to a type list, and to a member list with the overload arity (F-65 to F-69). D-209 gives a review its scope, after the same finding reopened four times (F-70). 2026-09-08, PR-4: five owner questions came before the code, and D-211 to D-216 record the answers. The PR #15 review took three passes on the logger, and F-72 to F-77 record the findings. D-217 lets a review correct a stale fact in the PR description directly. D-218 ratifies the log name and value rule that finding P2-7 produced. 2026-09-08, PR-5: four owner questions came before the code, and D-219 to D-223 record the answers. D-219 applies D-211 to the content bytes, and the review found the hash framing and the `Get` rule that F-78 and F-79 record. 2026-09-08, PR-3: a measurement refuted D-161. Degree 7 on [-pi, pi] reaches 2.5e-4 for sine, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 gives `Pow` an integer exponent, D-201 puts the bit-identity program in `WhatYouCarry.Tools`, and D-202 records the compiler API dependency. Exit test 5 asked for the opposite of D-160, and this pass corrects it (F-61).
+Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner. 2026-09-07, PR-1: a run of the gate against `main` refuted the claim that PR-1 passes its own check with no owner action. D-196 puts the mode file on `main` first. 2026-09-08, the PR #6 review. D-197 moves the gate to `pull_request_target`, and D-198 accepts the review-record risk with a named commit in the output. 2026-09-08, PR-2: the first run of the checker found 77 findings in 15 files, and the PR rewrote each sentence. 2026-09-08, PR-3: a measurement refuted D-161, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 to D-202 answer the `Pow` contract, the location of the bit-identity program, and the compiler API dependency. The review took seven passes on the lint boundary. D-204 to D-208 record the answers. D-204 stops conditional compilation in Core. The boundary then moved from a namespace list to a type list, and to a member list with the overload arity (F-65 to F-69). D-209 gives a review its scope, after the same finding reopened four times (F-70). 2026-09-08, PR-4: five owner questions came before the code, and D-211 to D-216 record the answers. The PR #15 review took three passes on the logger, and F-72 to F-77 record the findings. D-217 lets a review correct a stale fact in the PR description directly. D-218 ratifies the log name and value rule that finding P2-7 produced. 2026-09-08, PR-5: four owner questions came before the code, and D-219 to D-223 record the answers. D-219 applies D-211 to the content bytes, and the review found the hash framing and the `Get` rule that F-78 and F-79 record. 2026-09-09, PR-6: seven owner questions came before the code, and D-224 to D-230 record the answers. D-226 corrects the frame wording of the design doc (F-80), and D-227 sets the Phase 1 loop state. The reader of D-220 gains an empty list and a null (D-229), and F-81 records an enum inside an interpolation. 2026-09-08, PR-3: a measurement refuted D-161. Degree 7 on [-pi, pi] reaches 2.5e-4 for sine, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 gives `Pow` an integer exponent, D-201 puts the bit-identity program in `WhatYouCarry.Tools`, and D-202 records the compiler API dependency. Exit test 5 asked for the opposite of D-160, and this pass corrects it (F-61).
 
 ## 1. Thesis
 
@@ -275,14 +275,18 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-6: Simulation loop, intent record, recorder, and replay
 
+Status: open as PR #19, branch `feat/pr-6-loop-record`.
+
 Scope:
 
-- `Core/Simulation/SimulationLoop.cs`: a fixed step at 60 Hz that advances one tick per intent (D-73). The loop reads no clock.
+- `Core/Determinism/Crc32.cs`: the table-driven CRC-32 of the frame checksum (D-162, D-224).
+- `Core/Simulation/SimulationLoop.cs`: a fixed step at 60 Hz that advances one tick per intent (D-73). The loop reads no clock. The Phase 1 state is the seed, the tick, the look sums, and the buttons (D-227).
 - `Core/Simulation/Intent.cs`: the fixed 16-byte frame of D-162 (D-74, D-77).
 - `Core/Simulation/SimulationVersion.cs`: one constant, initial value 1 (D-151, G-20).
 - `Core/Replay/RunRecord.cs`: one JSON header line, then the fixed frames (D-163). The header holds the format version, the simulation version, the content hash, the seed, and the immutable initial state (D-151). Phase 1 writes an empty loadout, an empty tree, and no amulet assignment in the initial state, because those types do not exist yet. The schema is complete.
+- `Core/Replay/IRunRecordSink.cs`: where the bytes go. Core opens no file (D-225).
 - `Core/Replay/RunRecorder.cs`: writes the header, then appends one checksummed frame per tick from the first tick (D-97, G-5).
-- `Core/Replay/RunReplayer.cs`: reads a record, checks the versions and the content hash, and drives the loop from the frames. It ignores the live bank and tree. A torn tail truncates to the last complete frame (D-152). A mismatch produces a report that names both versions.
+- `Core/Replay/RunReplayer.cs`: reads a record, checks the versions and the content hash, and drives the loop from the frames. It ignores the live bank and tree. A torn tail truncates to the last complete frame, with a log line that names floor 1 (D-152, D-228). A mismatch produces a report that names both versions.
 
 Out of scope: the resume UI, the profile file (PR-31), the five-second rewind (PR-31).
 
@@ -527,6 +531,11 @@ Resolved 2026-09-07:
 - OQ-38 and OQ-39 (D-164 and D-165): the grid limits, the player box, and the jump. PR-7 and PR-9.
 - OQ-40 and OQ-41 (D-166 and D-167): the corridor and the budget. PR-8 and PR-9.
 - OQ-42 (D-168): the validator form. PR-5.
+
+Resolved 2026-09-09:
+
+- OQ-92 to OQ-98 (D-224 to D-230): the CRC-32, the record sink, the frame wording, the loop state, the torn-tail floor, the empty initial state, and the allowlist. PR-6.
+- OQ-99 is open, and it blocks nothing. It asks for a lint rule on an enum inside an interpolation.
 
 Resolved 2026-09-08:
 
