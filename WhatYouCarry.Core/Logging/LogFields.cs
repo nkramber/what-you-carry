@@ -39,6 +39,12 @@ public sealed class LogFields
         this.AddField(name, value.ToString(CultureInfo.InvariantCulture), quoted: false);
     }
 
+    /// <summary>Adds an unsigned whole-number field, such as the run seed of D-159.</summary>
+    public void Add(string name, ulong value)
+    {
+        this.AddField(name, value.ToString(CultureInfo.InvariantCulture), quoted: false);
+    }
+
     /// <summary>Adds a text field, such as a subsystem name or a file path.</summary>
     public void Add(string name, string value)
     {

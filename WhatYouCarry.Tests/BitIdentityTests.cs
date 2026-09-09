@@ -19,7 +19,7 @@ public sealed class BitIdentityTests
     /// A deliberate change to the simulation changes this number. G-20 asks the review to confirm the change and
     /// the version bump that goes with it.
     /// </remarks>
-    private const string ExpectedHash = "4d6385bb92454694";
+    private const string ExpectedHash = "283aa4b8cd1281be";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -103,5 +103,9 @@ public sealed class BitIdentityTests
         {
             Assert.Contains($"RngStream.{stream}", sweep, StringComparison.Ordinal);
         }
+
+        // PR-6 exit test 7: the sweep replays one fixed record, so the three platforms compare the replay too.
+        Assert.Contains("RunReplayer.Replay(", sweep, StringComparison.Ordinal);
+        Assert.Contains("Crc32.Of(", sweep, StringComparison.Ordinal);
     }
 }
