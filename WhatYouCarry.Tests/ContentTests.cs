@@ -437,4 +437,38 @@ public sealed class ContentTests
             Assert.Equal(expected, floor.SizeZ);
         }
     }
+
+    /// <summary>
+    /// The order of the source does not reach the typed lists: two sources with the same files in two orders
+    /// give the chamber kinds and the floors in one order, the ordinal order of the paths, so the budget draw
+    /// digs one floor from one seed on every file system (D-159, G-9; PR #27 automated pass).
+    /// </summary>
+    [Fact]
+    public void TheSourceOrderDoesNotReachTheLists()
+    {
+        MemorySource forward = new MemorySource()
+            .Add("chambers/a.json", ChamberKindText.Replace("\"k\"", "\"a\"", StringComparison.Ordinal))
+            .Add("chambers/b.json", ChamberKindText.Replace("\"k\"", "\"b\"", StringComparison.Ordinal))
+            .Add("floors/a.json", Floor)
+            .Add("floors/b.json", Floor.Replace("\"id\":\"a\"", "\"id\":\"b\"", StringComparison.Ordinal).Replace("\"minDepth\":1,\"maxDepth\":5", "\"minDepth\":6,\"maxDepth\":9", StringComparison.Ordinal))
+            .Add(Strings.FilePath, StringTable);
+        MemorySource backward = new MemorySource()
+            .Add(Strings.FilePath, StringTable)
+            .Add("floors/b.json", Floor.Replace("\"id\":\"a\"", "\"id\":\"b\"", StringComparison.Ordinal).Replace("\"minDepth\":1,\"maxDepth\":5", "\"minDepth\":6,\"maxDepth\":9", StringComparison.Ordinal))
+            .Add("floors/a.json", Floor)
+            .Add("chambers/b.json", ChamberKindText.Replace("\"k\"", "\"b\"", StringComparison.Ordinal))
+            .Add("chambers/a.json", ChamberKindText.Replace("\"k\"", "\"a\"", StringComparison.Ordinal));
+
+        ContentSet first = new ContentLoader(forward).Load();
+        ContentSet second = new ContentLoader(backward).Load();
+        Assert.Equal(first.Hash, second.Hash);
+        Assert.Equal("a", first.Chambers[0].Id);
+        Assert.Equal("b", first.Chambers[1].Id);
+        Assert.Equal("a", second.Chambers[0].Id);
+        Assert.Equal("b", second.Chambers[1].Id);
+        Assert.Equal("a", first.Floors[0].Id);
+        Assert.Equal("b", first.Floors[1].Id);
+        Assert.Equal("a", second.Floors[0].Id);
+        Assert.Equal("b", second.Floors[1].Id);
+    }
 }

@@ -8,8 +8,15 @@ namespace WhatYouCarry.Core.Content;
 /// (D-91, D-92, D-168, D-219). A failure names the file, the field, and the reason (T-2).
 /// </summary>
 /// <remarks>
+/// <para>
 /// The loader opens no file. It takes the bytes from an <see cref="IContentSource"/>, so the Game layer owns
 /// the disk and Core owns the shape (D-211, D-219).
+/// </para>
+/// <para>
+/// The loader sorts the files by path before it reads them, in the ordinal order of the content hash, so every
+/// typed list has one order on every platform. The floor generator draws chamber kinds by index, so a list in
+/// the order of a directory walk would dig another floor from one seed on another file system (D-159, G-9).
+/// </para>
 /// </remarks>
 public sealed class ContentLoader
 {
@@ -34,7 +41,13 @@ public sealed class ContentLoader
     /// <exception cref="ContextException">A file is not valid, or the set has no string table.</exception>
     public ContentSet Load()
     {
-        IReadOnlyList<ContentFile> files = this.source.Read();
+        List<ContentFile> files = [];
+        foreach (ContentFile file in this.source.Read())
+        {
+            files.Add(file);
+        }
+
+        files.Sort(static (first, second) => string.CompareOrdinal(first.Path, second.Path));
         string hash = ContentHash.Of(files);
 
         List<FloorTemplate> floors = [];

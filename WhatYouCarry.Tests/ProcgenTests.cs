@@ -533,7 +533,8 @@ public sealed class ProcgenTests
         Assert.Contains("templates=0", beyond.Message, StringComparison.Ordinal);
         Assert.Contains("seed=1", beyond.Message, StringComparison.Ordinal);
 
-        List<FloorTemplate> doubled = [.. TestWorld.Content.Floors, TestWorld.Content.Floors[0] with { Id = "again" }];
+        // The template that covers floor 1, and not the first of the list: the list is in path order, and that puts the deep band first.
+        List<FloorTemplate> doubled = [.. TestWorld.Content.Floors, FloorGenerator.TemplateFor(1, TestWorld.Content) with { Id = "again" }];
         ContentSet twice = TestWorld.Content with { Floors = doubled };
         ContextException two = Assert.Throws<ContextException>(() => FloorGenerator.Generate(1UL, 1, twice));
         Assert.Contains("templates=2", two.Message, StringComparison.Ordinal);
