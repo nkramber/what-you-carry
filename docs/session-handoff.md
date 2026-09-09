@@ -28,7 +28,7 @@ Session: PR-10, the projectile simulation, the arc solver, and the shot of the a
 
 ### In flight
 
-PR #31 is open and it holds this branch. The automated pass runs on the push, and the author answers each comment. Then a Codex session reviews the PR at the effective head, which is `c214d03` until a substantive push moves it. The review focus is determinism, errors, and test quality (roadmap PR-10). No other PR is open.
+PR #31 is open and it holds this branch. The automated pass approved `c214d03` with no finding, and its CI notice on the absent review record has its reply (D-251). A Codex session reviews the PR at the effective head `c214d03`. The review focus is determinism, errors, and test quality (roadmap PR-10). No other PR is open.
 
 ### Where Phase 1 stands
 
@@ -49,7 +49,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-Read the gitar comments on PR #31 and answer each one per the `pr-review` skill. Then a Codex session reviews PR #31 at the effective head, reads the PR comments into the review, and writes `docs/reviews/pr-31.md`. The review confirms the simulation version 6 and the bit-identity change under G-20.
+A Codex session reviews PR #31 per the `pr-review` skill at the effective head `c214d03`, reads the PR comments and the author reply into the review, and writes `docs/reviews/pr-31.md`. The review confirms the simulation version 6 and the bit-identity change under G-20.
 
 
 ## Session 81: 2026-09-09, Claude Code
