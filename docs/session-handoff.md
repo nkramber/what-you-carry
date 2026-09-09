@@ -2,6 +2,56 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 62: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: record the PR-6 merge, and answer the PR-7 questions before its code. Branch `docs/pr-6-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #19 as `3f7e3c2`, after a Codex review with no finding.
+- Audited every document against the merged state. The registers were complete: D-224 to D-230, OQ-92 to OQ-99, and F-80 and F-81 all landed with the PR.
+- Two status lines were stale. The design doc PR-6 entry and its sequence line said open, and the focused roadmap said open. All three name the merge now.
+- The handoff held eleven entries. Session 61 added its entry and moved none to the archive. This session moved sessions 51 and 52 to the archive, so the file holds ten again (D-146).
+- Asked four owner questions that block the PR-7 code, and D-231 to D-234 record the answers. OQ-100 to OQ-103 hold the questions.
+- D-231: gravity 20, walk 4, sprint 6.5, jump 7. The apex is 1.23 meters, so a jump clears one block and never two (D-165).
+- D-232: the button bits. Bit 0 is jump, bit 1 is sprint, and bits 2 to 7 hold dodge, attack, use, interact, and the two quick slot moves. Bits 8 to 15 are reserved, and a set one is an error.
+- D-233: the movement is strafe and forward, each over 127, rotated by the yaw sum, with the length clamped to 1.
+- D-234: Core uses the frame of Godot. Right-handed, Y up, meters, and forward at yaw zero is minus Z.
+- The roadmap PR-7 scope cites the four decisions, and it names the simulation version rise to 2 (G-20).
+
+### State of the build
+
+- `main` is at `3f7e3c2`, the squash merge of PR #19. This branch holds the document commits above it.
+- Remote head: `origin/docs/pr-6-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 336 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 29 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files. `bit-identity`: `283aa4b8cd1281be`.
+
+### In flight
+
+PR #20 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-6 are merged. PR-7 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- A review session adds an entry and can leave eleven in the handoff. Count the entries at the start of a session, and archive down to ten.
+- PR-7 raises the simulation version to 2 and moves the bit-identity hash, because the state gains a position. `BitIdentityKnownAnswer` pins the number, and the PR updates it on purpose (G-20).
+- The apex of a jump under fixed-step Euler differs from the closed form by a fraction of a tick. Assert the one-block clear and the two-block fail in a test, and never the apex value alone.
+- The movement fraction of -128 clamps to -127, so the two directions have one magnitude.
+- The state hash order of D-160 grows in PR-7. Add the new fields after the five of D-227, so the order test of PR-6 still reads.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #20 with the `review-override` label. Then a new session starts PR-7 on a short branch: the voxel grid, the swept box, the player body, and the five exit tests, under D-164, D-165, and D-231 to D-234.
+
 ## Session 61: 2026-09-09, Codex
 
 Author: Codex
@@ -393,88 +443,3 @@ No open question blocks PR-5 to PR-11.
 ### Next concrete action
 
 Publish the metadata review commit, then verify the review-gate result and leave the owner to merge.
-
-## Session 52: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the second PR #15 repeat review. Branch `feat/pr-4-logging`.
-
-### What this session did, and why
-
-- The review closed P2-3, P2-5, and P2-6, and it opened P2-7. That one has full merit, and the F-73 correction caused it.
-- P2-7. The replacement character stood in place of a lone surrogate everywhere, and a field name took it too. A field named with a lone high surrogate and one named with a lone low surrogate both reached the object as one property name, which is the ambiguity that F-72 removed.
-- The split is the fix. A field name is an identifier that the code writes, and it must reach the line unchanged, so invalid text in one is an error at the add. A value and a message carry content from the run, and those keep the replacement and never throw (F-77).
-- The same pass flattened the add path. `AddField` called `Has`, which put it two levels below the caller, and the new name scan would have made a third. `AddField` calls no method now (D-110).
-- The review used D-217 for the first time. It made four edits to the PR description and recorded each one under `## Description edits`. Every edit is correct, and none changes what the PR says it does.
-- 1 new test. The total is 234.
-
-### State of the build
-
-- `main` is at `51b3de7`. The branch holds the PR-4 work, three review commits, and three correction commits.
-- Remote head: `origin/feat/pr-4-logging` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 234 tests and 0 failures.
-- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged.
-
-### In flight
-
-PR #15 needs a repeat review at the new effective head.
-
-### Traps and gotchas
-
-- A fix for content can break an identifier. The replacement character is right for a message and wrong for a field name, because two names can then reach the object as one.
-- The response file states the name and value split as a Core contract, and no owner decision holds it. The owner can make it a decision.
-- A depth fix and a new check meet. `AddField` was already two levels below its caller, and the name scan would have made a third, so the method calls nothing now.
-- D-217 works. The reviewer corrected four stale facts in the description in the same pass that found P2-7.
-
-### Open questions that block progress
-
-No new owner question. No open question blocks PR-5 to PR-11.
-
-### Next concrete action
-
-A Codex session re-reviews PR #15 per the repeat review procedure, and it updates `docs/reviews/pr-15.md` to the new effective head.
-
-## Session 51: 2026-09-08, Codex
-
-Author: Codex
-Session: second repeat review of PR #15 for PR-4. Branch `feat/pr-4-logging`.
-
-### What this session did, and why
-
-- Re-reviewed PR #15 at effective head `d530f4c` against base and merge base `51b3de7`.
-- Confirmed the provider gate. Claude Code wrote the correction, and Codex reviewed it.
-- Closed P2-3. Four labeled surrogate rows run through five text positions, and both parsing and string reading succeed.
-- Closed P2-5. All three assertion call-site names are reserved, and the trusted copy path writes a complete report.
-- Closed P2-6. D-214, the response, and the primary PR evidence agree on the head, the test total, and the allowlist counts.
-- Added P2-7. Distinct accepted field names with unmatched high and low surrogates both serialize as U+FFFD. The resulting JSON object holds two equal property names, against the no-ambiguity contract of `LogFields` and T-2.
-- Corrected four stale facts in the PR description under D-217, and recorded each edit in `docs/reviews/pr-15.md`.
-- Updated the review verdict to `Changes required` for `d530f4c`.
-
-### State of the build
-
-- `main` and the merge base are at `51b3de7`. The reviewed effective head is `d530f4c`.
-- Remote head: `origin/feat/pr-4-logging` holds the metadata commit for this entry, verified with the session-end gate.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 233 tests and 0 failures.
-- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
-- GitHub reports green CI, lint, STE, and bit-identity jobs at `d530f4c`. The review gate reflects the prior review until this metadata commit runs it again.
-
-### In flight
-
-PR #15 needs a correction for P2-7, then another repeat review.
-
-### Traps and gotchas
-
-- Replacement is not injective. Two invalid UTF-16 field names can become one valid JSON property name.
-- A parser accepts duplicate JSON property names. Count the parsed properties or reject the input before serialization.
-- The surrogate regression test puts invalid text in a field name, but it does not assert that distinct accepted names stay distinct.
-- D-217 permits a reviewer to correct verified stale facts in the PR description. It does not permit changes to an owner-ticked gate line or to the author's substantive claims.
-
-### Open questions that block progress
-
-No open question blocks the P2-7 correction. The correction can reject invalid UTF-16 in field names or preserve a unique emitted name.
-
-### Next concrete action
-
-Correct P2-7 and add a regression test with distinct unmatched high- and low-surrogate field names. Then request another repeat review.
