@@ -49,7 +49,7 @@ public static class BitIdentitySweep
     /// <summary>The content hash that the sweep record carries. It has no meaning beyond its shape (D-221).</summary>
     public const string ReplayContentHash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-    /// <summary>The floors that the sweep digs and folds, one per band of the sweep template (PR-9 exit test 7).</summary>
+    /// <summary>The floors that the sweep digs and folds, one per band of the sweep content (PR-9 exit test 7, PR-59 exit test 4).</summary>
     private static readonly int[] SweptFloors = [1, 2, 3];
 
     /// <summary>Three fixed aim targets around the spawn of the sweep floor, so the assist pulls on some ticks (PR-8 exit test 5).</summary>
@@ -85,19 +85,25 @@ public static class BitIdentitySweep
     }
 
     /// <summary>
-    /// The content set of the sweep: one template that covers floors 1 to 3 on a small grid, and two chamber
-    /// kinds whose weights fill its budget. The hash of the set has no meaning beyond its shape (D-221).
+    /// The content set of the sweep: three templates on a small grid, one per band of D-210 on floors 1, 2, and
+    /// 3, and two chamber kinds whose weights fill the budget. The three swept floors then take every block of
+    /// the detail pass. The hash of the set has no meaning beyond its shape (D-221).
     /// </summary>
     public static ContentSet SweepContent()
     {
-        FloorTemplate floor = new("sweep-mine", 1, 3, 4, 8, 100, "sweep", 32, 12, 32);
+        FloorTemplate[] floors =
+        [
+            new("sweep-working", 1, 1, 4, 8, 100, DetailPass.WorkingMine, 32, 12, 32),
+            new("sweep-older", 2, 2, 4, 8, 100, DetailPass.OlderWorkings, 32, 12, 32),
+            new("sweep-deep", 3, 3, 4, 8, 100, DetailPass.Deep, 32, 12, 32),
+        ];
         ChamberKind[] kinds =
         [
             new("sweep-small", 10, 1, 2, 3, 5),
             new("sweep-large", 25, 2, 3, 5, 8),
         ];
         ProjectileDefinition[] projectiles = [];
-        return new ContentSet(ReplayContentHash, [floor], kinds, projectiles, Strings.FromMembers(Strings.FilePath, []));
+        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, Strings.FromMembers(Strings.FilePath, []));
     }
 
     /// <summary>

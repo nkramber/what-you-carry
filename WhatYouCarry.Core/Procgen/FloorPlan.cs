@@ -10,12 +10,13 @@ namespace WhatYouCarry.Core.Procgen;
 /// </summary>
 /// <param name="Floor">The floor number, from one (D-3).</param>
 /// <param name="Template">The floor template of the band that holds the floor (D-252).</param>
-/// <param name="Grid">The grid, in raw stone and air (D-254).</param>
+/// <param name="Grid">The grid, in the blocks of D-259.</param>
 /// <param name="Spawn">The feet center of the player at tick zero: the center of the anchor cell of the first chamber (D-256).</param>
 /// <param name="Stairwell">The floor cell of the stairwell: the cell with the longest walkable path from the spawn, in the chamber that lies farthest (D-256).</param>
 /// <param name="Chambers">The chambers, in dig order. The first one holds the spawn.</param>
 /// <param name="Shafts">The shafts, in dig order.</param>
-public sealed record FloorPlan(int Floor, FloorTemplate Template, VoxelGrid Grid, Vector3 Spawn, Cell Stairwell, IReadOnlyList<Chamber> Chambers, IReadOnlyList<Shaft> Shafts);
+/// <param name="Detail">The pools, the pillars, and the collapses of the detail pass (D-254).</param>
+public sealed record FloorPlan(int Floor, FloorTemplate Template, VoxelGrid Grid, Vector3 Spawn, Cell Stairwell, IReadOnlyList<Chamber> Chambers, IReadOnlyList<Shaft> Shafts, DetailResult Detail);
 
 /// <summary>
 /// One chamber of a floor (D-253, D-255). Its air fills the rows above <paramref name="FloorRow"/> over every
