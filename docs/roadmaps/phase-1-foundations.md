@@ -370,7 +370,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 5 pass.
 
-Result, 2026-09-09: every exit test passes. The march test walks each segment in one-millimeter steps over one thousand random grids, and it agrees with the march. The bit-identity sweep folds in the camera pose and the aim ray of every tick of its record.
+Result, 2026-09-09: every exit test passes. The march test walks each segment in one-millimeter steps over one thousand random grids, and it agrees with the march. The bit-identity sweep folds in the camera pose and the aim ray of every replayed tick, through an observer of the replay (F-85).
 
 > *In plain English:* the camera is part of the simulation, not decoration, so where you look and where you aim replay exactly on every machine.
 

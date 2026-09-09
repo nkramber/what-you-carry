@@ -60,6 +60,25 @@ public sealed class CameraTests
         return new Vector3((float)(10.0 * Math.Sin(radians)), 2.0f, (float)(-10.0 * Math.Cos(radians)));
     }
 
+    /// <summary>Folds the camera pose and the aim ray of every replayed tick, so a test compares the replay with a live loop tick by tick.</summary>
+    private sealed class ReplayCameraFold : IReplayObserver
+    {
+        private readonly Vector3[] targets;
+        private StateHash hash = StateHash.Start();
+
+        public ReplayCameraFold(Vector3[] targets)
+        {
+            this.targets = targets;
+        }
+
+        public StateHash Hash => this.hash;
+
+        public void AfterTick(SimulationLoop loop)
+        {
+            AddPose(ref this.hash, loop.Camera(), loop.Aim(this.targets));
+        }
+    }
+
     /// <summary>Folds a pose and an aim ray into a hash, so a test compares two runs of a camera in one number.</summary>
     private static void AddPose(ref StateHash hash, CameraPose pose, AimRay aim)
     {
@@ -266,7 +285,8 @@ public sealed class CameraTests
 
     /// <summary>
     /// PR-8 exit test 2. Over one hundred seeds in random grids, two live runs of one record give one hash of
-    /// every camera pose and aim ray, and the replay ends at the same pose and ray. A failure names its seed (D-66).
+    /// every camera pose and aim ray, the replay folds the same hash tick by tick through its observer, and the
+    /// replay ends at the same pose and ray. A failure names its seed (D-66).
     /// </summary>
     [Fact]
     public void AimRayIsDeterministic()
@@ -300,7 +320,9 @@ public sealed class CameraTests
 
             Assert.True(liveHash.Value == twinHash.Value, $"Seed {seed}: two live runs give the aim-ray hashes {liveHash} and {twinHash}.");
 
-            ReplayResult replay = RunReplayer.Replay(sink.Bytes, Hash, grid, spawn, new JsonlLogger(new CollectingSink()));
+            ReplayCameraFold replayed = new(targets);
+            ReplayResult replay = RunReplayer.Replay(sink.Bytes, Hash, grid, spawn, new JsonlLogger(new CollectingSink()), replayed);
+            Assert.True(liveHash.Value == replayed.Hash.Value, $"Seed {seed}: the live aim-ray hash is {liveHash}, and the replay folds {replayed.Hash}.");
             Assert.True(live.Camera() == replay.Loop.Camera(), $"Seed {seed}: the live camera is {live.Camera()}, and the replay camera is {replay.Loop.Camera()}.");
             Assert.True(live.Aim(targets) == replay.Loop.Aim(targets), $"Seed {seed}: the live aim ray is {live.Aim(targets)}, and the replay aim ray is {replay.Loop.Aim(targets)}.");
         }

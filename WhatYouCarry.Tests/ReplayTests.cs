@@ -291,6 +291,36 @@ public sealed class ReplayTests
         Assert.Equal(2, sink.Appends.Count);
     }
 
+    /// <summary>An observer that keeps the tick of the loop after each replayed frame.</summary>
+    private sealed class TickObserver : IReplayObserver
+    {
+        public List<uint> Ticks { get; } = [];
+
+        public void AfterTick(SimulationLoop loop)
+        {
+            this.Ticks.Add(loop.Tick);
+        }
+    }
+
+    /// <summary>The replay calls its observer once after each complete frame, in order, and never for a torn tail or an empty record.</summary>
+    [Fact]
+    public void TheReplayVisitsEveryCompleteFrame()
+    {
+        (byte[] whole, _) = RecordRun(82UL, 6, new Random(9));
+
+        TickObserver all = new();
+        RunReplayer.Replay(whole, Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(new CollectingSink()), all);
+        Assert.Equal(new uint[] { 1, 2, 3, 4, 5, 6 }, all.Ticks);
+
+        TickObserver torn = new();
+        RunReplayer.Replay(whole[..(whole.Length - (Intent.FrameSize / 2))], Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(new CollectingSink()), torn);
+        Assert.Equal(new uint[] { 1, 2, 3, 4, 5 }, torn.Ticks);
+
+        TickObserver none = new();
+        RunReplayer.Replay(RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 3UL)), Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(new CollectingSink()), none);
+        Assert.Empty(none.Ticks);
+    }
+
     /// <summary>A record with a header and no frame is a run at tick zero, and not an error.</summary>
     [Fact]
     public void AHeaderAloneReplaysToTickZero()

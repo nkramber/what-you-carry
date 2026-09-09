@@ -53,6 +53,22 @@ public static class RunReplayer
     /// <exception cref="ContextException">The header is not valid, a version or the content hash does not match this build, the spawn point is inside rock, or a frame fails its checksum, its tick order, or its reserved bits.</exception>
     public static ReplayResult Replay(IReadOnlyList<byte> record, string buildContentHash, VoxelGrid grid, Vector3 spawn, JsonlLogger logger)
     {
+        return Replay(record, buildContentHash, grid, spawn, logger, SilentObserver.Instance);
+    }
+
+    /// <summary>
+    /// The state after every complete frame of the record, with an observer that reads the loop after each
+    /// replayed frame (PR-8 exit test 5).
+    /// </summary>
+    /// <param name="record">The whole record: the header line and the frames.</param>
+    /// <param name="buildContentHash">The hash of the content set that this build loaded (D-163).</param>
+    /// <param name="grid">The grid of the floor (D-236).</param>
+    /// <param name="spawn">The feet center of the player at tick zero (D-236).</param>
+    /// <param name="logger">The logger that takes the torn-tail line.</param>
+    /// <param name="observer">The reader of the loop after each replayed frame.</param>
+    /// <exception cref="ContextException">The header is not valid, a version or the content hash does not match this build, the spawn point is inside rock, or a frame fails its checksum, its tick order, or its reserved bits.</exception>
+    public static ReplayResult Replay(IReadOnlyList<byte> record, string buildContentHash, VoxelGrid grid, Vector3 spawn, JsonlLogger logger, IReplayObserver observer)
+    {
         (RunRecordHeader header, int bodyStart) = RunRecord.ReadHeader(record);
 
         if (header.ContentHash != buildContentHash)
@@ -81,6 +97,8 @@ public static class RunReplayer
                 error.AddContext("frame", ((long)frame).ToString(CultureInfo.InvariantCulture));
                 throw;
             }
+
+            observer.AfterTick(loop);
         }
 
         if (tornBytes != 0)
@@ -105,3 +123,19 @@ public static class RunReplayer
 /// and the count of bytes in a torn tail, which is zero for a whole record.
 /// </summary>
 public sealed record ReplayResult(RunRecordHeader Header, SimulationLoop Loop, int FrameCount, int TornBytes);
+
+/// <summary>The observer of a replay that reads nothing. The overload without an observer uses it.</summary>
+internal sealed class SilentObserver : IReplayObserver
+{
+    /// <summary>The one instance. It holds no state.</summary>
+    public static readonly SilentObserver Instance = new();
+
+    private SilentObserver()
+    {
+    }
+
+    /// <inheritdoc/>
+    public void AfterTick(SimulationLoop loop)
+    {
+    }
+}

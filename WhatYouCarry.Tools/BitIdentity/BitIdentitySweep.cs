@@ -81,9 +81,7 @@ public static class BitIdentitySweep
         AddStreams(ref hash);
         AddAngles(ref hash);
         AddRootsAndPowers(ref hash);
-        IReadOnlyList<Intent> intents = SweepIntents();
-        AddReplay(ref hash, intents);
-        AddCamera(ref hash, intents);
+        AddReplay(ref hash, SweepIntents());
         return hash;
     }
 
@@ -192,10 +190,15 @@ public static class BitIdentitySweep
     }
 
     /// <summary>
-    /// Records the run, replays the record, and folds in the end state and the checksum of the whole record
-    /// (PR-6 exit test 7). The three platforms must agree on the frame bytes, the header text, the CRC-32, the
-    /// loop, and the collision of the body with the fixed grid (PR-7).
+    /// Records the run, replays the record, and folds in the camera pose and the aim ray of every replayed
+    /// tick, the end state, and the checksum of the whole record (PR-6 exit test 7, PR-8 exit test 5). The three
+    /// platforms must agree on the frame bytes, the header text, the CRC-32, the loop, the collision of the body
+    /// with the fixed grid, the ray march of the boom, and the assist pull.
     /// </summary>
+    /// <remarks>
+    /// The camera values come from the loop that replays the record, through <see cref="IReplayObserver"/>, and
+    /// never from a second live run. A replay defect that changes the camera sequence then changes this hash.
+    /// </remarks>
     private static void AddReplay(ref StateHash hash, IReadOnlyList<Intent> intents)
     {
         MemorySink sink = new();
@@ -205,34 +208,11 @@ public static class BitIdentitySweep
             recorder.Record(intent);
         }
 
-        ReplayResult result = RunReplayer.Replay(sink.Bytes, ReplayContentHash, ReplayGrid(), ReplaySpawn, new JsonlLogger(new RejectingLogSink()));
+        CameraFold cameras = new();
+        ReplayResult result = RunReplayer.Replay(sink.Bytes, ReplayContentHash, ReplayGrid(), ReplaySpawn, new JsonlLogger(new RejectingLogSink()), cameras);
+        hash.Add(cameras.Hash.Value);
         hash.Add(result.Loop.Hash().Value);
         hash.Add(Crc32.Of(sink.Bytes, 0, sink.Bytes.Count));
-    }
-
-    /// <summary>
-    /// Runs the same intents live and folds in the camera pose and the aim ray of every tick (PR-8 exit test 5).
-    /// The three platforms must agree on the ray march of the boom and on the assist pull.
-    /// </summary>
-    private static void AddCamera(ref StateHash hash, IReadOnlyList<Intent> intents)
-    {
-        SimulationLoop loop = new(RunSeed, ReplayGrid(), ReplaySpawn);
-        foreach (Intent intent in intents)
-        {
-            loop.Step(intent);
-            CameraPose pose = loop.Camera();
-            hash.Add(pose.Position.X);
-            hash.Add(pose.Position.Y);
-            hash.Add(pose.Position.Z);
-            hash.Add(pose.Forward.X);
-            hash.Add(pose.Forward.Y);
-            hash.Add(pose.Forward.Z);
-
-            AimRay aim = loop.Aim(SweepTargets);
-            hash.Add(aim.Direction.X);
-            hash.Add(aim.Direction.Y);
-            hash.Add(aim.Direction.Z);
-        }
     }
 
     /// <summary>
@@ -263,6 +243,34 @@ public static class BitIdentitySweep
         }
 
         return grid;
+    }
+
+    /// <summary>
+    /// Folds the camera pose and the aim ray of every replayed tick into one hash (PR-8 exit test 5). The replay
+    /// calls it after each frame, so the values come from the replay traversal itself.
+    /// </summary>
+    private sealed class CameraFold : IReplayObserver
+    {
+        private StateHash hash = StateHash.Start();
+
+        /// <summary>The hash of every pose and ray so far.</summary>
+        public StateHash Hash => this.hash;
+
+        public void AfterTick(SimulationLoop loop)
+        {
+            CameraPose pose = loop.Camera();
+            this.hash.Add(pose.Position.X);
+            this.hash.Add(pose.Position.Y);
+            this.hash.Add(pose.Position.Z);
+            this.hash.Add(pose.Forward.X);
+            this.hash.Add(pose.Forward.Y);
+            this.hash.Add(pose.Forward.Z);
+
+            AimRay aim = loop.Aim(SweepTargets);
+            this.hash.Add(aim.Direction.X);
+            this.hash.Add(aim.Direction.Y);
+            this.hash.Add(aim.Direction.Z);
+        }
     }
 
     /// <summary>A sink that keeps the record in memory. The sweep never touches the disk.</summary>

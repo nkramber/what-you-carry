@@ -295,6 +295,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-82 | PR-7: a float position cannot hold an exact contact with a block face. For twelve integer faces below 130, such as x = 16 with the 0.3 half-width and y = 8 with the 1.8 height, `(c - h) + h` is one ulp off, measured 2026-09-09 | 2026-09-09 | ✅ D-235. The sweep stops one skin of 2^-10 meters before a face, and never on it. Binds PR-7, PR-8, PR-10, PR-16 |
 | F-83 | PR-7: D-231 said the apex of a jump is 1.23 meters. That is the closed form. The fixed-step integration at 60 Hz gives 1.17 meters, measured 2026-09-09. The one-block clear and the two-block fail hold | 2026-09-09 | ✅ doc. D-231 Effect corrected. `JumpClearsOneBlock` asserts the two outcomes and never the apex |
 | F-84 | The review-gate workflow job stayed green on a neutral verdict, because a job cannot be neutral by its exit code, and the workflow carries the name "Review gate". The PR rollup of PR #23 read as a pass with no review record, seen 2026-09-09 | 2026-09-09 | ✅ D-251. The job fails on neutral too. The check run keeps its three conclusions |
+| F-85 | PR #23 review P2-1: the bit-identity sweep folded the camera pose and the aim ray from a second live loop and not from the replay, so the three-platform proof of PR-8 exit test 5 did not read the replay traversal | 2026-09-09 | ✅ Corrected in PR-8. The replay takes an `IReplayObserver`, and the sweep folds the camera of every replayed tick through it |
 
 ## 6. Guardrails (the safety contract for every PR)
 
