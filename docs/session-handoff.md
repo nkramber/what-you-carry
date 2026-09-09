@@ -5,40 +5,53 @@ Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end o
 ## Session 59: 2026-09-08, Claude Code
 
 Author: Claude Code
-Session: record the PR-5 merge across the documents. Branch `docs/pr-5-merge-record`.
+Session: record the PR-5 merge, and prepare the documents for a fresh session. Branch `docs/pr-5-merge-record`.
 
 ### What this session did, and why
 
 - The owner merged PR #17 as `e0deb94`, after a Codex review approved the corrected head.
 - Audited every document against the merged state. The registers were complete: D-219 to D-223, OQ-88 to OQ-91, and F-78 and F-79 all landed with the PR.
-- Three lines were stale, and this session corrects each one. The focused roadmap said that PR-5 was open, the design doc marked it open in the marker, and the Phase 1 sequence did not mark it. The correction passes now record the PR-5 outcome.
-- The build on `main` is healthy: 280 tests, 0 lint findings in either rule set, 0 checker findings.
+- Three status lines were stale. The focused roadmap said that PR-5 was open, the design doc marked it open, and the Phase 1 sequence did not mark it. All three name the merge now, and the correction passes record the PR-5 outcome.
+- The owner then asked for a full document check before a fresh session. That check found three defects in the agent files, which are the first files that a session reads.
+- The Godot command in the agent files could not run. The name `Godot` is not on the command path of this machine, and the command needs `/Applications/Godot_mono.app/Contents/MacOS/Godot`.
+- The agent files named no `det-lint` command and no `bit-identity` command, and both are required gates. Both are in the command list now.
+- The PR gate said "the lint tool and the STE checker pass" as one line. It holds one line for each check now, and the `det-lint` line names G-8 and G-21 beside G-2.
+- Added a code rule for the allowlist. A new entry needs a decision, and a session verifies it by removing the entry and running `det-lint`. That check found two dead entries and one live gap in PR-4, and a reading of the list found neither.
+- Ran every command in the agent files word for word. All six pass.
 
 ### State of the build
 
-- `main` is at `e0deb94`, the squash merge of PR #17. This branch holds one commit above it.
+- `main` is at `e0deb94`, the squash merge of PR #17. This branch holds two commits above it.
 - Remote head: `origin/docs/pr-5-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 280 tests and 0 failures.
-- `det-lint` reports 0 findings: Core 0 in 21 files, Game 0 in 0 files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 280 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 21 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files. `bit-identity`: `4d6385bb92454694`.
+- The Godot 4.7.2 headless build check passes with the full path above.
 
 ### In flight
 
-This PR changes only `docs/`, so the `review-override` label covers it (D-190). PR-6 starts after the merge.
+PR #18 is open and it holds this branch. It changes `docs/`, `CLAUDE.md`, and `AGENTS.md`, and every one of those paths is in the eligible set, so the `review-override` label covers it (D-190). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-5 are merged. PR-6 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
 
 ### Traps and gotchas
 
-- PR-6 is the first PR that makes a simulation number, so it is the first one to move the bit-identity hash. G-20 then asks for the simulation version constant, and PR-6 creates it.
-- PR-6 also holds the intent record of D-162 and the run record of D-163. The content hash of PR-5 goes in that header, and `ContentHash.Of` gives it.
-- The Game string rule stays syntactic until a PR writes Game code. The response file of PR #17 states that limit.
+- `dotnet test` runs the STE checker over every document, through `RepositoryDocumentsPass`. A document edit needs the test suite, and the checker alone passes a sentence that the suite rejects.
+- The session number check of D-187 compares the numbers in one file. Fetch the remote and read the handoff again before the entry, because the other provider adds an entry while a session works.
+- `det-lint` reports two counts now. The Game count is 0 files today, because the Game project holds no source file. The string rule has fixture tests until a PR writes Game code.
+- The Game string rule is syntactic. A `Get` call takes an id only when its receiver names the string table, and the PR #17 response states that limit.
+- An allowlist entry needs a removal check. A reading of the list finds neither a dead entry nor a gap.
+- PR-6 is the first PR that makes a simulation number, so it moves the bit-identity hash. `BitIdentityKnownAnswer` pins that number, and the PR updates it on purpose (G-20).
 
 ### Open questions that block progress
 
-No open question blocks PR-6 to PR-11.
+No open question blocks PR-6 to PR-11. OQ-1, OQ-14, and the later ids belong to Phase 2 and beyond.
 
 ### Next concrete action
 
-The owner merges this documentation PR with the `review-override` label. Then a new session starts PR-6: the fixed-step simulation loop, the intent record, the recorder, and the replay (D-73, D-162, D-163, D-151, G-5).
+The owner merges PR #18 with the `review-override` label. Then a new session starts PR-6: the fixed-step loop at 60 Hz, the 16-byte intent frame, the run record, the recorder, and the replay (D-73, D-151, D-162, D-163, G-5). Two questions come before that code. The first is the checksum of D-162, which names CRC32 and no implementation, and the allowlist holds none. The second is whether the recorder writes through a sink, as the logger does under D-211 and the content loader does under D-219.
 
 ## Session 58: 2026-09-08, Codex
 
