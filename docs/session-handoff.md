@@ -15,7 +15,8 @@ Session: record the PR-9 merge, and answer the PR-59 questions before its code. 
 - D-258: still water is not solid. A pool is a one-block depression, and a body walks and jumps through it more slowly. The search reads water as air.
 - D-259: the block ids take the order of D-210: 2 hewn stone, 3 timber beam, 4 ore vein, 5 still water, 6 rubble, 7 plank. D-239 is revised in part.
 - D-260: PR-59 raises the simulation version to 5, because a floor with other blocks is another simulation.
-- D-261 to D-263: the walk and sprint speeds take the factor one half in water. Gravity and the jump velocity take one half too, so the apex stays at one block and the rise takes twice as long. Both factors are Core constants in `PlayerBody`.
+- D-261 to D-263: the walk and sprint speeds take the factor one half in water. The jump velocity takes one half and gravity one quarter, so the apex stays at one block and the rise takes twice as long. The three factors are Core constants in `PlayerBody`.
+- The automated pass on the first push found that the first text of D-262 gave both numbers one factor of one half, which halves the apex. The owner took the correction, one half for the velocity and one quarter for gravity, and F-86 records it. The correction commit answers the pass.
 - The PR-59 roadmap entry holds the ids, the water rules, the version rise, and two new exit tests. The design doc paragraph and gate say the same.
 
 ### State of the build
@@ -36,7 +37,7 @@ PR-1 to PR-9 are merged. PR-59, PR-10, and PR-11 remain, and then M-1, M-2, and 
 
 ### Traps and gotchas
 
-- Water changes the body: `PlayerBody` reads the block of the feet cell on each tick, and a water cell scales the speeds, gravity, and the jump velocity by one half (D-261, D-262). The apex stays at one block, so the reachability search of PR-9 reads water as air and needs no pit rule.
+- Water changes the body: `PlayerBody` reads the block of the feet cell on each tick, and a water cell scales the speeds and the jump velocity by one half and gravity by one quarter (D-261, D-262). The apex stays at one block, so the reachability search of PR-9 reads water as air and needs no pit rule. One factor on both numbers halves the apex (F-86).
 - A wall block of the detail pass replaces rock that borders air and removes no air, so D-166 holds as PR-9 left it. Collapses and pillars remove air, and the PR-9 sweep runs again over the result.
 - PR-59 raises the simulation version to 5 and moves the bit-identity known answer (D-260, G-20). The sweep folds three floors of its own content set, so the detail pass moves the hash on its own.
 - The block ids are part of the grid (D-259). `VoxelGrid.Set` holds the explicit bound of declared ids, and `EveryDeclaredBlockIsAccepted` walks the enum, so a new value fails the test until the bound names it.
