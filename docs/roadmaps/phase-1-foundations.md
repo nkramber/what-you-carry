@@ -1,6 +1,6 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-209. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-216. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
@@ -214,8 +214,9 @@ Gate: exit tests 1 to 8 pass.
 
 Scope:
 
-- `Core/Logging/JsonlLogger.cs`: one JSON object per line, with a required field set per context (D-68, D-113). The run context requires seed, floor, tick, subsystem, and entity ids. The hub context requires save versions, screen, action, and file paths. The logger throws on an absent required field.
-- `Core/Logging/Invariant.cs`: `Assert` that writes a full report and continues where the caller marks the call safe, and throws elsewhere (D-112). The report holds the context, the message, the stack, and the run record path when a run exists.
+- `Core/Logging/ILogSink.cs`: where a finished line goes. Core opens no file (D-211).
+- `Core/Logging/JsonlLogger.cs`: one JSON object per line, with a required field set per context (D-68, D-113). Every line also carries a level and a message (D-212), and `StringBuilder` builds it (D-213). A field name is an identifier, and invalid text in one is an error. A value and a message take the replacement character in place of invalid text (F-73, F-77). The run context requires seed, floor, tick, subsystem, and entity ids. The hub context requires save versions, screen, action, and file paths. The logger throws on an absent required field.
+- `Core/Logging/Invariant.cs`: `Assert` that writes a full report and continues where the caller marks the call safe, and throws elsewhere (D-112). The report holds the context, the message, and the call site that the compiler names (D-215). It walks no stack, because a stack trace changes with the build and the platform.
 - `Core/Logging/ContextException.cs`: an exception type that carries the context and adds to it on each rethrow.
 
 Out of scope: a report viewer, file rotation, the crash report UI (PR-55).

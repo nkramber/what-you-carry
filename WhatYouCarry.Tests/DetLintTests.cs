@@ -353,12 +353,11 @@ public sealed class DetLintTests
     [InlineData("public static void B() => System.Console.WriteLine(\"x\");")]
     [InlineData("public static object? B() => System.AppContext.GetData(\"x\");")]
     [InlineData("public static object B() => new System.Uri(\"http://x\");")]
-    [InlineData("public static object B() => new System.Text.StringBuilder();")]
     [InlineData("public static object B() => System.Linq.Expressions.Expression.Constant(1);")]
     [InlineData("public static object B(string s) => System.Text.Json.JsonDocument.Parse(s);")]
     [InlineData("public static object B() => new System.Collections.ArrayList();")]
     [InlineData("public static object B() => System.Threading.Thread.CurrentThread;")]
-    [InlineData("public static object B() => new System.Collections.Generic.List<int>();")]
+    [InlineData("public static object B() => new System.Text.Rune(65);")]
     [InlineData("public static int B(uint u) => System.Numerics.BitOperations.PopCount(u);")]
     public void AnUnapprovedTypeIsAFinding(string member)
     {
@@ -450,13 +449,14 @@ public sealed class DetLintTests
     public void AnUnapprovedNamespaceImportIsAFinding()
     {
         // The review trigger. The import check read the denylist alone and reported nothing.
-        LintFinding finding = Assert.Single(Scan("using System.Text;\n\npublic static class A { public static int B() => 1; }"));
+        LintFinding finding = Assert.Single(Scan("using System.Threading;\n\npublic static class A { public static int B() => 1; }"));
         Assert.Equal("L-NAMESPACE", finding.Rule);
-        Assert.Equal("System.Text", finding.Symbol);
+        Assert.Equal("System.Threading", finding.Symbol);
         Assert.Equal(1, finding.Line);
 
-        // An import of System is correct. Its types pass the allowlist of D-206 one at a time.
+        // An import of a namespace that holds an approved type is correct. Its types pass one at a time.
         Assert.Empty(Scan("using System;\n\npublic static class A { public static int B() => 1; }"));
+        Assert.Empty(Scan("using System.Text;\n\npublic static class A { public static int B() => 1; }"));
     }
 
     /// <summary>
@@ -521,6 +521,64 @@ public sealed class DetLintTests
                 public static class Helper
                 {
                     public static int Value => 1;
+                }
+            }
+            """));
+    }
+
+    /// <summary>
+    /// A member that the source reaches without a dot is a finding too (F-71). A target-typed `new`, a
+    /// `base` initializer, and an indexer each name a member that the name pass cannot see.
+    /// </summary>
+    [Theory]
+    [InlineData("public static object B() { System.Globalization.CultureInfo c = new(\"en-US\", true); return c; }")]
+    [InlineData("public static object B() { System.Globalization.CultureInfo c = new(\"en-US\"); return c; }")]
+    public void ATargetTypedNewIsAFinding(string member)
+    {
+        LintFinding finding = Assert.Single(Scan($"public static class A {{ {member} }}"));
+        Assert.Equal("L-MEMBER", finding.Rule);
+        Assert.StartsWith("System.Globalization.CultureInfo.new/", finding.Symbol, StringComparison.Ordinal);
+    }
+
+    /// <summary>A base constructor initializer names a member of the base type, and the rule reads it (F-71).</summary>
+    [Fact]
+    public void ABaseConstructorInitializerIsAFinding()
+    {
+        // The allowlist holds System.Exception.new/1 and new/2, and not the form with no argument.
+        Assert.Contains(
+            Scan("public sealed class A : System.Exception { public A() : base() { } }"),
+            finding => finding.Rule == "L-MEMBER" && finding.Symbol == "System.Exception.new/0");
+
+        // The two forms that Core uses stay clean.
+        Assert.Empty(Scan("public sealed class A : System.Exception { public A(string m) : base(m) { } }"));
+        Assert.Empty(Scan("public sealed class A : System.Exception { public A(string m, System.Exception i) : base(m, i) { } }"));
+    }
+
+    /// <summary>Every type and member that PR-4 adds to the list stays clean (D-214).</summary>
+    [Fact]
+    public void TheLoggingSurfaceIsApproved()
+    {
+        Assert.Empty(Scan("""
+            using System.Collections.Generic;
+            using System.Text;
+
+            namespace WhatYouCarry.Core.Logging
+            {
+                public sealed class A
+                {
+                    private readonly List<string> items = [];
+
+                    public string B(IReadOnlyList<long> values, long one, float other, string text)
+                    {
+                        StringBuilder builder = new StringBuilder();
+                        builder.Append('[');
+                        builder.Append(values[0].ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        builder.Append(other.ToString("G9", System.Globalization.CultureInfo.InvariantCulture));
+                        builder.Append(text.Length);
+                        builder.Append(this.items.Count);
+                        this.items.Add(this.items[0]);
+                        return builder.ToString();
+                    }
                 }
             }
             """));
