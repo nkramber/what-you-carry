@@ -51,6 +51,7 @@ Do not approve through reciprocal review of selected hunks.
 - Read the PR request, its acceptance criteria, prior review, and applicable focused roadmap.
 - Resolve decision revisions through the `Effect` column in `docs/decisions.md` (D-186). `Superseded by D-N` replaces the whole answer. `Revised in part by D-N` changes only the named part, and the rest of that decision stays current.
 - Check `docs/questions.md` for unresolved choices that affect this change (D-124, D-144).
+- Read every existing comment on the PR: the automated pass of gitar and the author's replies (D-250). Take each one into the review as a claim to verify, and never as a finding of your own. See "Do not address the automated reviewer".
 - Record the PR number, target branch, base commit, merge base, and head commit.
 - Verify that the local checkout and diff represent those commits.
 - Preserve unrelated local edits. Use an isolated checkout when necessary.
@@ -272,6 +273,11 @@ Write "No finding." when the review found none.
 One line per concern that a later PR holds. Name that PR or roadmap item.
 Give no severity here. Write "None." when the review found none.
 
+## PR comments
+
+One line per existing comment thread on the PR: the claim, the author's answer, and what the review verified (D-250).
+Write "None." when the PR holds no comment.
+
 ## Description edits
 
 One line per correction that this review made to the PR description.
@@ -429,6 +435,34 @@ A new trigger for the same class of defect is a new finding with a new id. Asses
 
 Stop at the third assessment of one id. Write the pattern in the review record, and ask the owner whether this PR carries the whole surface, or a later PR does. A fourth correction of one finding is a scope question, and not a defect.
 
+## The automated pass
+
+An automated reviewer, gitar, comments on every PR after a push (D-250). The author answers every comment before the hand-over to the other provider, or before the override request on a documentation PR. This pass comes before the cross-provider review and never replaces it (T-4).
+
+Do these steps after each push.
+
+1. Wait for the pass. It ends with a comment on the PR that says approved or that requests changes, and a line comment for each issue.
+2. Read each comment as a claim, not a fact. Reproduce the trigger and read the contract it names, as for a review finding.
+3. For a comment with no merit, reply on its thread with the reason, and resolve the thread.
+4. For a comment with merit, make the smallest change that restores the contract, commit, push, and reply on the thread with the commit.
+5. Wait for the next pass, and repeat from step 2 for each new comment.
+6. Stop when the pass approves the PR, or when every comment has its answer and a new pass adds none. Tell the owner that the PR is ready for the other provider, or for the override.
+
+A reply names no provider, harness, or model as the source of the work (T-6, D-176). It states the evidence: the command, the test, the decision id, or the commit. Never accept a comment only to close the pass faster, and never widen a change past the contract that the comment names.
+
+A resolve needs the thread id. The GitHub API lists the review threads of a PR, and `gh api graphql` resolves one with the `resolveReviewThread` mutation. A comment on the PR itself has no thread, and the reply is a comment on the PR.
+
+Record the pass in the handoff entry: the count of comments, the count with merit, and the commit that answered each one.
+
+## Do not address the automated reviewer
+
+The reviewing provider reads the existing PR comments and takes them into its own review context (D-250). It never replies to gitar, never resolves a thread, and never writes a comment on the PR.
+
+- A comment of the automated pass is a claim about the code, like any finding. Verify it against the head, and record the result under `## PR comments` in the review record.
+- An author reply is evidence, and the review checks it: the trigger, the contract, and the commit it names.
+- An automated comment that the author refuted with evidence is not a finding. An automated comment that the author fixed is a fix to verify. An automated comment that stays open without an answer blocks the verdict, because the author's pass is not complete (D-250).
+- The automated pass does not make gitar an author. The provider gate reads the providers of the substantive commits alone.
+
 ## Address review findings
 
 Use this section when you answer a review. The author does this work, not the reviewer.
@@ -536,6 +570,7 @@ A review request authorizes inspection, verification, the review record, and the
 It requires a commit of those two files, and a push of that commit to the PR branch (D-182, D-183).
 It also authorizes a correction of a stale fact in the PR description, under "Correct the PR description" (D-217).
 It does not by itself authorize a code fix, a merge, or another external message.
+A reply to the automated reviewer is an external message, and the reviewer never writes one (D-250).
 A reviewer never pushes to `main` (D-170).
 Honor explicit authorization already present in the session.
 If the reviewer writes a substantive fix, reassess provider eligibility. The reviewer cannot approve its own contribution.

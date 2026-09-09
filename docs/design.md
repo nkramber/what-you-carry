@@ -171,7 +171,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 ### 3.14 Process
 
-Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one handoff rewrite (D-121). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101).
+Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one handoff rewrite (D-121). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250).
 
 The document protocol (D-118, D-120, D-125, D-129, D-132):
 
