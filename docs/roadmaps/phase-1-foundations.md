@@ -1,6 +1,6 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-218. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-223. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
@@ -242,13 +242,17 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-5: Content loader, schemas, and the string table
 
+Status: PR open, 2026-09-08.
+
 Scope:
 
-- `Core/Content/ContentLoader.cs`: reads a content directory, validates each file against the validator for its type, and returns typed records (D-91, D-92). A failure names the file, the field, and the reason. An unknown field is a failure.
+- `Core/Content/IContentSource.cs`: where the bytes come from. Core opens no file (D-219).
+- `Core/Content/JsonObjectReader.cs`: one JSON object into named text values, with `Utf8JsonReader` (D-220).
+- `Core/Content/ContentLoader.cs`: takes the bytes from the source, validates each file against the validator for its type, and returns typed records (D-91, D-92, D-219). A failure names the file, the field, and the reason. An unknown field is a failure.
 - One hand-written C# validator per content type, with a required-field list and an unknown-field check (D-168). Phase 1 types: `floor-template` (PR-9), `projectile` (PR-10), and `strings`.
-- `Core/Content/ContentHash.cs`: SHA-256 over each content file's relative path and bytes in sorted path order, for the run record header (D-151, D-163).
+- `Core/Content/ContentHash.cs`: SHA-256 over each content file's relative path and bytes in sorted path order, for the run record header (D-151, D-163, D-221).
 - `Core/Content/Strings.cs`: the ID-keyed string table from `content/strings/en.json` (D-98). An unknown id throws.
-- A lint rule in DetLint (D-98, G-8): a string literal in the Game project outside a `Strings.Get` call is a finding. An allow list covers node names and paths.
+- A lint rule in DetLint (D-98, G-8, D-222): a string literal in the Game project outside a `Strings.Get` call is a finding. An allow list covers node names and paths. The command reads Core with the determinism rules and Game with the string rule.
 
 Out of scope: any content beyond the three Phase 1 types, localization.
 

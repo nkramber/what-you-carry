@@ -1,0 +1,9 @@
+{
+  "id": "mine-deep",
+  "minDepth": 11,
+  "maxDepth": 15,
+  "roomCountMin": 11,
+  "roomCountMax": 17,
+  "difficultyBudget": 400,
+  "band": "what-the-miners-reached"
+}

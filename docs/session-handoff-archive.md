@@ -1,5 +1,143 @@
 # Session handoff archive
 
+## Session 47: 2026-09-08, Codex
+
+Author: Codex
+Session: review PR #15 for PR-4. Branch `feat/pr-4-logging`.
+
+### What this session did, and why
+
+- Reviewed PR #15 at effective head `41206bb` against base and merge base `51b3de7`.
+- Confirmed the provider gate. Claude Code wrote the substantive change, and Codex reviewed it.
+- Inspected the complete diff, the six exit tests, all changed documents, and the current callers.
+- Added P2-1. Caller fields can add a second `level` or `message` property to the JSON object.
+- Added P2-2. One safe assertion changes the caller fields, so a second safe assertion throws on `assertFile`.
+- Added P2-3. An unpaired surrogate passes the logger and produces JSON that `JsonDocument` rejects.
+- Added P2-4. The JSON write path has nested helper calls beyond the one level that D-110 permits.
+- Wrote `docs/reviews/pr-15.md` with the verdict `Changes required`.
+
+### State of the build
+
+- `main` and the merge base are at `51b3de7`. The reviewed effective head is `41206bb`.
+- Remote head: `origin/feat/pr-4-logging` holds the metadata commit for this entry, verified with the session-end gate.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 219 tests and 0 failures.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs at `41206bb`.
+- Three focused review probes fail and reproduce P2-1, P2-2, and P2-3.
+
+### In flight
+
+PR #15 needs corrections for P2-1 to P2-4, then a repeat Codex review.
+
+### Traps and gotchas
+
+- `LogFields` checks duplicates only inside the caller set. It does not reserve the logger keys.
+- `Invariant.Assert` adds its call-site fields to the object that the caller owns.
+- A JSON control-character check does not cover invalid UTF-16 surrogate sequences.
+- A green broad suite did not cover repeated safe failures or the complete string domain.
+
+### Open questions that block progress
+
+No new owner question. No open question blocks the corrections.
+
+### Next concrete action
+
+Correct P2-1 to P2-4, add regression tests, and request a repeat Codex review.
+
+## Session 46: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: PR-4, the logger, the error context, and the assertions. Branch `feat/pr-4-logging`.
+
+### What this session did, and why
+
+- Started PR-4 after the owner merged PR #14. No open question blocked it, and PR-4 is the first PR with no absent check, so the D-148 clause does not apply.
+- Five owner questions came before the code, and D-211 to D-216 record the answers.
+- D-211: Core builds a line and hands it to an `ILogSink`. Core opens no file, so a disk failure never reaches the simulation thread, and `System.IO` stays out of the allowlist.
+- D-212: every line carries a level and a message beside its context fields. No line carries a wall clock, because the tick is the only time in Core.
+- D-213: `StringBuilder` builds the line, because the escape pass appends one character at a time.
+- D-215: the assertion report names the call site from the compiler, and it walks no stack. A stack trace changes with the build and the platform. This revises the PR-4 scope line, which said "the stack".
+- Wrote `LogLevel`, `LogContextKind`, `ILogSink`, `LogFields`, `ContextException`, `JsonlLogger`, and `Invariant` in `Core/Logging/`.
+- 26 new tests. The total is 219. Exit tests 1 to 6 each have a test, and the JSON tests parse each line with a real parser.
+- D-214 records the allowlist additions: 8 types and 16 members. A removal check proved each one in use. It also found two dead entries in the PR-3 list, `System.Object` and `List.new/0`, and both are gone.
+- The removal check found a live gap. `CultureInfo c = new("en-US", true);` gave no finding, and `new CultureInfo("en-US", true)` gave one, so the P2-9 case was reachable by another spelling. A `base` initializer and an indexer passed the same way (F-71). D-216 closes all three, and the owner chose the fix in this branch over a separate PR.
+- `det-lint` caught one real defect in the new Core code. `context.ToString()` on an enum reads the enum metadata, which G-2 bans. An explicit switch replaces it.
+
+### State of the build
+
+- `main` is at `51b3de7`. This branch holds the PR-4 work above it.
+- Remote head: `origin/feat/pr-4-logging` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 219 tests and 0 failures.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged. PR-4 adds no simulation number.
+
+### In flight
+
+PR-4 waits for a Codex review (T-4). It changes code, so no override applies.
+
+### Traps and gotchas
+
+- The allowlist needs a removal check, and not a reading. Two entries of the PR-3 list were dead, and one gap hid behind a spelling that the rule never read.
+- A dead allowlist entry widens the boundary in silence. Check each new entry by removal before the PR opens.
+- `det-lint` reads the new Core code as it lands. It caught an enum `ToString` in this session, which is reflection under G-2.
+- A collection expression, `[]`, calls no constructor that the source names, so `List.new/0` stayed dead.
+- An xUnit lambda with every path throwing binds to `Func<Task>` and not to `Action`. Name the delegate type.
+- A test that asserts a lint finding breaks when a later PR approves that type. Two such tests moved to a type that stays unapproved.
+
+### Open questions that block progress
+
+No new owner question. OQ-82 to OQ-86 are resolved by D-211 to D-216. No open question blocks PR-5 to PR-11.
+
+### Next concrete action
+
+A Codex session reviews PR-4 per `.claude/skills/pr-review/SKILL.md`, under the scope rules of D-209, and writes `docs/reviews/pr-<number>.md`.
+
+## Session 45: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: record the PR-3 merge across the documents. Branch `docs/pr-3-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #12 as `9e6fd5f`, after a Codex review gave the verdict `Ready for owner merge` at effective head `4d7cb3e`.
+- Audited every document against the merged state. The registers were complete: D-200 to D-209, OQ-73 to OQ-81, and F-60 to F-70 all landed with the PR.
+- Four documents held a stale line, and this session corrects each one.
+- `docs/roadmaps/phase-1-foundations.md`: the PR-3 status line said "opened", and it names the merge commit now. The header cited D-200 to D-203, and it cites D-200 to D-209 now. The correction passes record the PR-3 outcome.
+- `docs/design.md`: the PR-2 and PR-3 markers now name the merge, as the PR-1 marker does. The Phase 1 sequence marks PR-2 and PR-3 as merged.
+- `dotnet test` caught the one defect in this session. `RepositoryDocumentsPass` runs the STE checker over the repository, and a new sentence of 26 words failed it. The sentence is three sentences now. A second sentence failed the same limit later, for the biome entry.
+- The owner answered OQ-12, the last open question of Phase 1 before PR-9. The v1 biome is a collapsed deep mine (D-210). The block set holds seven blocks, and the three depth bands are floors 1 to 5, 6 to 10, and 11 to 15.
+- The biome answer reaches four documents: the decision register, the questions register, the design doc world section and PR-9 entry, and the PR-9 scope in the focused roadmap.
+- D-210 feeds four open questions that a later phase needs: OQ-1 the palette, OQ-61 the silhouettes, OQ-64 the props, and PR-14 the texture generator. The three props of OQ-64 belong in a mine with no change.
+
+### State of the build
+
+- `main` is at `9e6fd5f`, the squash merge of PR #12. This branch holds one commit above it.
+- Remote head: `origin/docs/pr-3-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 193 tests and 0 failures.
+- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
+- GitHub reports green CI, lint, STE, and bit-identity jobs on `main` at `9e6fd5f`.
+
+### In flight
+
+This PR changes only `docs/`, so the `review-override` label covers it (D-190). It carries two concerns, the merge record and the biome decision, and the owner asked for one PR. PR-4 starts after the merge.
+
+### Traps and gotchas
+
+- `RepositoryDocumentsPass` fails the test suite on any STE finding. A document edit needs `dotnet test`, and not the checker alone.
+- A merged PR leaves a status line in two places: the focused roadmap and the design doc. The design doc also holds the Phase 1 sequence, which is a third place.
+- The roadmap header lists the decisions that the file applies. A PR that adds a decision extends that list.
+- Phase 1 has no gate before PR-11. Gate 1 needs the bit-identity job, `dotnet test`, and the night sweep of PR-58.
+
+### Open questions that block progress
+
+No new owner question. D-210 resolves OQ-12, so no open question blocks any PR of Phase 1. PR-4 to PR-11 each have every answer they need.
+
+### Next concrete action
+
+The owner merges this documentation PR with the `review-override` label. Then a new session starts PR-4: the JSONL logger, the error context sets, and the assertion helper (D-68, D-112, D-113). PR-4 is the first PR with no absent check, so the check clause of D-148 does not apply to it.
+
 ## Session 44: 2026-09-08, Codex
 
 Author: Codex

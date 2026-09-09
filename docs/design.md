@@ -288,6 +288,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-75 | PR #15 review P2-6: D-214 said 8 types and 16 members, and it then named `String.this[]` as one more, while the code held 9 types and 18 additions. The response file named no final head, and the PR description named a superseded head, an old test count, and the old member count | 2026-09-08 | ✅ Corrected in PR-4. D-214 states the counts in the code and the totals after them. The response names the final head, and the description names the current revision |
 | F-76 | The PR #12 review reopened its description finding four times, and the PR #15 review reopened one. Each pass cost a whole round trip for a head, a test count, or a sentence that a later commit replaced | 2026-09-08 | ✅ D-217. A review corrects a stale fact in the PR description directly, and it records each edit under `## Description edits`. A wrong claim stays a finding |
 | F-77 | PR #15 review P2-7: the F-73 correction put the replacement character in place of a lone surrogate, and a field name took it too. Two accepted names that differ only in a lone surrogate then reached the object as one property name, which is the ambiguity that F-72 removed | 2026-09-08 | ✅ D-218, which ratifies the correction of PR-4. A field name is an identifier, and a lone surrogate in one is an error at the add. A value and a message carry content from the run, so those keep the replacement and never throw |
+| F-78 | PR #17 review P2-1 and P2-2. The content hash appended each path and each byte sequence with no length, so the path `a` with the bytes `bc` and the path `ab` with the byte `c` gave one hash. A fractional or out-of-range JSON number also raised a `FormatException`, which left Core with no file and no field | 2026-09-08 | ✅ Corrected in PR-5. Each file enters the hash with a length, its path, a length, and its bytes. The reader keeps the number token as text, and the validator names the file, the field, and the reason |
+| F-79 | PR #17 review P2-3: the Game string rule exempted every method named `Get`, so `inventory.Get("You died")` gave no finding. Every type can hold a `Get` method | 2026-09-08 | ✅ Corrected in PR-5. A `Get` call takes an id only when its receiver names the string table. The rule stays syntactic, because the Game project needs the engine assemblies for a symbol read and holds no source file yet |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -352,7 +354,7 @@ Implement the JSONL logger with a required field set per context (D-68, D-113). 
 Gate: a test proves that a log line without its context fails, and that an assertion report contains the seed.
 > *In plain English:* every message the game writes about itself now carries enough facts to replay the moment. A message without those facts is itself an error.
 
-**PR-5: Content loader, schemas, and the string table.** 🔧
+**PR-5: Content loader, schemas, and the string table.** 🔧 PR open.
 Implement the JSON content loader with one schema per content type (D-91, D-92). A load failure names the file, the field, and the reason. A test loads every content file in the repository. Implement the ID-keyed string table, and add a lint rule against inline strings that the player sees (D-98).
 Gate: a content file with an absent field fails the load test with the field name.
 > *In plain English:* every weapon, enemy, and screen text lives in data files with a strict shape. A file with a gap fails loudly instead of a silent zero.
