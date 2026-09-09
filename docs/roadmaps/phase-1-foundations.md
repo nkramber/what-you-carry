@@ -310,6 +310,8 @@ Gate: exit tests 1 to 7 pass.
 
 ### PR-7: Voxel world and Core collision
 
+Status: open as PR #21, branch `feat/pr-7-world-collision`.
+
 Scope:
 
 - `Core/World/VoxelGrid.cs`: a flat array of one-byte block ids, at most 128 by 32 by 128 (D-78, D-164). Solid or air per id, with air and raw stone as the two ids of PR-7 (D-239). The frame is the frame of Godot (D-234). A cell outside the grid is solid (D-237).

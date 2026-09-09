@@ -368,7 +368,7 @@ Implement the fixed-step loop at 60 Hz (D-73). Define the intent record: quantiz
 Gate: the replay of a recorded run gives the same hash on all three platforms, and a mismatch report names both versions.
 > *In plain English:* the game runs in fixed steps and writes down its start state and every input. That record then plays any run again, so every bug becomes repeatable. A record from an older version says so instead of a silent failure.
 
-**PR-7: Voxel world and Core collision.** 🔧
+**PR-7: Voxel world and Core collision.** 🔧 Open as PR #21.
 Implement the voxel grid of one-meter cubes (D-78, D-234). Implement Core collision for player and enemy boxes against the grid with swept movement, gravity, ledges, and jump (D-27, D-80, D-231, D-235 to D-240). Godot physics has no part in it. Add the player box that reads the intent's movement and jump, so a Core-only run exists before the Game layer (D-149). Property tests assert no tunnel at maximum speed and no fall through a floor block.
 Gate: a box that moves at the maximum speed never crosses a solid block.
 > *In plain English:* the dungeon is a grid of blocks. The game itself decides how bodies bump into them, so the result is identical on every machine.
