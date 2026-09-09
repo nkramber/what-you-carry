@@ -2,6 +2,51 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 74: 2026-09-09, Codex
+
+Author: Codex
+Session: re-review PR #23 after the P2-1 correction. Branch `feat/pr-8-camera`.
+
+### What this session did, and why
+
+- Verified the provider gate again. Claude Code supplied the substantive PR-23 changes, and Codex is the eligible reviewer.
+- Compared the new effective head `4e98470` with the prior reviewed head `e6e89aa`. Read the response file, the replay observer, the bit-identity sweep, the related contracts, and all current PR comments and replies.
+- Closed P2-1 as fixed in `4e98470`. `RunReplayer` now calls the observer after each complete frame, and the bit-identity sweep folds camera and aim values from that replay traversal. The second live loop is gone.
+- The later automated suggestion for a null guard has no merit. Nullable references are enabled and warnings are errors, so the observer parameter is non-nullable at the call boundary.
+- Updated `docs/reviews/pr-23.md` with the new effective head and verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `1d8f8bd`. The effective PR-23 head is `4e98470`, and the current metadata tip is `f1af5db`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 426 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings. `bit-identity`: `afed0063a6cf8a50`.
+- The Godot 4.7.2 headless build check passes.
+- The latest GitHub checks pass for CI, bit identity, determinism lint, STE, and Gitar. The review-gate and evaluate results still refer to the prior unapproved review record until this update reaches the PR head.
+- The first test run hit `SocketException (13): Permission denied` in the restricted context. The rerun in the permitted execution context passed.
+
+### In flight
+
+PR #23 is ready for owner merge after this review record reaches the remote PR head. The effective head remains `4e98470` because the commits after it change only review and handoff metadata.
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The review record must name `4e98470`, not the metadata tip `f1af5db`.
+- The bit-identity value changed to `afed0063a6cf8a50` because the camera fold now reads the replay observer. The simulation version stays 3 because no simulation behavior contract changed.
+- The review-gate and evaluate jobs must run again after this review record reaches the PR head.
+- The reviewing provider reads automated comments and author replies into the record and does not reply to or resolve the automated comment (D-250).
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner can merge PR #23 after the remote review-gate check reads `Ready for owner merge` at effective head `4e98470`.
+
 ## Session 73: 2026-09-09, Claude Code
 
 Author: Claude Code
@@ -429,43 +474,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 The owner merges PR #22 with the `review-override` label. Then a new session starts PR-8 on a short branch: the orbit camera, the ray march of the boom, the aim ray, aim assist, and the five exit tests, under D-13, D-14, D-75, D-77, D-88, and D-241 to D-247.
-
-## Session 64: 2026-09-09, Codex
-
-Author: Codex
-Session: review PR-7 for the voxel grid, swept box, and player body. Branch `feat/pr-7-world-collision`.
-
-### What this session did, and why
-
-- Verified PR #21 against `main` at `01e68c3` and reviewed effective head `4207548`.
-- Confirmed that Session 63 identifies Claude Code as the implementation provider. Codex is the eligible reviewer.
-- Inspected the complete implementation, test, tool, and document diff, affected callers, replay paths, Core boundary, and PR-7 contracts.
-- Confirmed the simulation version 2 change and the intentional bit-identity change from `283aa4b8cd1281be` to `e8ef2b1fad938845` under G-20.
-- Found no blocking defect. Wrote `docs/reviews/pr-21.md` with the verdict `Ready for owner merge`.
-
-### State of the build
-
-- `main` is at `01e68c3`. The reviewed effective head is `4207548`.
-- `dotnet build` passes with 0 warnings and 0 errors. `dotnet test` passes with 398 tests and 0 failures.
-- `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
-- `bit-identity` gives `e8ef2b1fad938845`.
-- The Godot 4.7.2 headless build check passes.
-- Remote head: `origin/feat/pr-7-world-collision` at `bd57f34`, which holds the review record and this handoff entry.
-
-### In flight
-
-PR #21 is open with the verdict `Ready for owner merge` at effective head `4207548`. The owner can merge it.
-
-### Traps and gotchas
-
-- PR-7 raises the simulation version and changes the bit-identity value on purpose. Keep both values when the owner merges the PR.
-- The sweep uses a contact skin and runs Y, then X, then Z. A face on a block is contact, not overlap.
-- The loop and replay take the grid and spawn from the caller until PR-9, as D-236 requires.
-
-### Open questions that block progress
-
-None. OQ-99 remains open, and it blocks nothing.
-
-### Next concrete action
-
-The owner can merge PR #21. A new session starts after the owner merges it.

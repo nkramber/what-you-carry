@@ -1,5 +1,45 @@
 # Session handoff archive
 
+## Session 64: 2026-09-09, Codex
+
+Author: Codex
+Session: review PR-7 for the voxel grid, swept box, and player body. Branch `feat/pr-7-world-collision`.
+
+### What this session did, and why
+
+- Verified PR #21 against `main` at `01e68c3` and reviewed effective head `4207548`.
+- Confirmed that Session 63 identifies Claude Code as the implementation provider. Codex is the eligible reviewer.
+- Inspected the complete implementation, test, tool, and document diff, affected callers, replay paths, Core boundary, and PR-7 contracts.
+- Confirmed the simulation version 2 change and the intentional bit-identity change from `283aa4b8cd1281be` to `e8ef2b1fad938845` under G-20.
+- Found no blocking defect. Wrote `docs/reviews/pr-21.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `01e68c3`. The reviewed effective head is `4207548`.
+- `dotnet build` passes with 0 warnings and 0 errors. `dotnet test` passes with 398 tests and 0 failures.
+- `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
+- `bit-identity` gives `e8ef2b1fad938845`.
+- The Godot 4.7.2 headless build check passes.
+- Remote head: `origin/feat/pr-7-world-collision` at `bd57f34`, which holds the review record and this handoff entry.
+
+### In flight
+
+PR #21 is open with the verdict `Ready for owner merge` at effective head `4207548`. The owner can merge it.
+
+### Traps and gotchas
+
+- PR-7 raises the simulation version and changes the bit-identity value on purpose. Keep both values when the owner merges the PR.
+- The sweep uses a contact skin and runs Y, then X, then Z. A face on a block is contact, not overlap.
+- The loop and replay take the grid and spawn from the caller until PR-9, as D-236 requires.
+
+### Open questions that block progress
+
+None. OQ-99 remains open, and it blocks nothing.
+
+### Next concrete action
+
+The owner can merge PR #21. A new session starts after the owner merges it.
+
 ## Session 63: 2026-09-09, Claude Code
 
 Author: Claude Code
