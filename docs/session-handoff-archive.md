@@ -1,5 +1,49 @@
 # Session handoff archive
 
+## Session 70: 2026-09-09, Codex
+
+Author: Codex
+Session: review PR #25 for the review-gate job result. Branch `fix/review-gate-red-on-neutral`.
+
+### What this session did, and why
+
+- Verified PR #25 at effective head `3e15249` against `main` at `a78e759`.
+- Confirmed the provider gate. Session 69 identifies Claude Code as the author, and Codex is the eligible reviewer.
+- Read the complete diff, the workflow boundary, the test, the related documents, and the automated review comment.
+- Found no in-scope defect. The success-only guard fails on neutral, null, and unexpected conclusions, and passes on success.
+- Wrote `docs/reviews/pr-25.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `a78e759`, and the reviewed effective head is `3e15249`.
+- `dotnet build` passes with 0 warnings and 0 errors. `dotnet test` passes with 399 tests and 0 failures.
+- `det-lint` passes with 0 findings. `ste-check` passes with 0 findings. `bit-identity` gives `e8ef2b1fad938845`.
+- The Godot 4.7.2 headless build check passes.
+- GitHub CI, bit identity, determinism lint, STE, evaluate, and Gitar pass at `3e15249`. The `review-gate` check is neutral because the base branch still holds the old workflow (D-197).
+- Remote head: `3451c24` is the review commit, checked after push.
+
+### In flight
+
+PR #25 is open with the verdict `Ready for owner merge` at effective head `3e15249`. The first PR after this merge must prove that the changed workflow makes a neutral check run red (D-251).
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The workflow runs from the base branch. PR #25 cannot exercise its changed workflow on itself (D-197).
+- The review record commit changes only metadata, so the effective head stays `3e15249` (D-184).
+- The handoff now holds ten entries. Session 58 moved to the archive (D-146).
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner can merge PR #25. After the merge, observe the first PR with no review record and confirm that the review-gate job reads red.
+
 ## Session 69: 2026-09-09, Claude Code
 
 Author: Claude Code

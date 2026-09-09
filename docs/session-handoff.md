@@ -2,6 +2,49 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 80: 2026-09-09, Codex
+
+Author: Codex
+Session: review PR-59 as PR #29 at effective head `923e2a4`. Branch `feat/pr-59-detail`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 79 identifies Claude Code as the author of the substantive PR-59 commits, and Codex is the eligible reviewer.
+- Read the complete diff, the PR-59 roadmap entry and exit tests, the affected Core callers, content and validators, reachability, replay version use, bit-identity sweep, decisions, questions, and the PR comments and replies.
+- Found no actionable defect. The detail pass preserves tunnel reachability, the water probe follows D-264, the simulation version rises to 5, and the block set follows D-259.
+- Wrote `docs/reviews/pr-29.md` with the verdict `Ready for owner merge` at effective head `923e2a4`.
+
+### State of the build
+
+- `main` is at `45dbaf5`, the squash merge of PR #28. The reviewed effective head is `923e2a4`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 476 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 54 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `62c5e1d152fe94fe`. The simulation version is 5.
+- The Godot 4.7.2 headless build check passes.
+- GitHub CI, both bit-identity platform jobs and the compare job, determinism lint, STE check, evaluate, and Gitar pass at the PR head. The review-gate result is neutral until the review record exists.
+
+### In flight
+
+PR #29 holds the review record and needs the metadata commit and the session handoff pushed. The owner can merge after the remote review-gate check reads `Ready for owner merge` at effective head `923e2a4`.
+
+### Where Phase 1 stands
+
+PR-1 to PR-9 are merged. PR-59 is open as PR #29. PR-10 and PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The effective head is `923e2a4`, because its design and roadmap changes are substantive under D-184. The handoff and review commits remain metadata commits.
+- The review-gate result is neutral before this review record exists. The metadata commit should trigger the gate again.
+- D-264 revises only the water probe wording of D-262. The half jump velocity, quarter gravity, and one-block apex still apply.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit the review record and handoff entry. Push the branch. Fetch and verify that the remote head has no ahead count and that the review-gate check reads the approved effective head.
+
 ## Session 79: 2026-09-09, Claude Code
 
 Author: Claude Code
@@ -441,47 +484,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A Codex session reviews PR #23 per the `pr-review` skill, at the effective head `e6e89aa`, reads the existing PR comments into the review, and writes `docs/reviews/pr-23.md`. The review focus is determinism, replay, and test quality, and it confirms the simulation version 3 and the bit-identity change under G-20.
-
-## Session 70: 2026-09-09, Codex
-
-Author: Codex
-Session: review PR #25 for the review-gate job result. Branch `fix/review-gate-red-on-neutral`.
-
-### What this session did, and why
-
-- Verified PR #25 at effective head `3e15249` against `main` at `a78e759`.
-- Confirmed the provider gate. Session 69 identifies Claude Code as the author, and Codex is the eligible reviewer.
-- Read the complete diff, the workflow boundary, the test, the related documents, and the automated review comment.
-- Found no in-scope defect. The success-only guard fails on neutral, null, and unexpected conclusions, and passes on success.
-- Wrote `docs/reviews/pr-25.md` with the verdict `Ready for owner merge`.
-
-### State of the build
-
-- `main` is at `a78e759`, and the reviewed effective head is `3e15249`.
-- `dotnet build` passes with 0 warnings and 0 errors. `dotnet test` passes with 399 tests and 0 failures.
-- `det-lint` passes with 0 findings. `ste-check` passes with 0 findings. `bit-identity` gives `e8ef2b1fad938845`.
-- The Godot 4.7.2 headless build check passes.
-- GitHub CI, bit identity, determinism lint, STE, evaluate, and Gitar pass at `3e15249`. The `review-gate` check is neutral because the base branch still holds the old workflow (D-197).
-- Remote head: `3451c24` is the review commit, checked after push.
-
-### In flight
-
-PR #25 is open with the verdict `Ready for owner merge` at effective head `3e15249`. The first PR after this merge must prove that the changed workflow makes a neutral check run red (D-251).
-
-### Where Phase 1 stands
-
-PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The workflow runs from the base branch. PR #25 cannot exercise its changed workflow on itself (D-197).
-- The review record commit changes only metadata, so the effective head stays `3e15249` (D-184).
-- The handoff now holds ten entries. Session 58 moved to the archive (D-146).
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner can merge PR #25. After the merge, observe the first PR with no review record and confirm that the review-gate job reads red.
