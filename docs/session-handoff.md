@@ -22,7 +22,7 @@ Session: review PR #25 for the review-gate job result. Branch `fix/review-gate-r
 - `det-lint` passes with 0 findings. `ste-check` passes with 0 findings. `bit-identity` gives `e8ef2b1fad938845`.
 - The Godot 4.7.2 headless build check passes.
 - GitHub CI, bit identity, determinism lint, STE, evaluate, and Gitar pass at `3e15249`. The `review-gate` check is neutral because the base branch still holds the old workflow (D-197).
-- Remote head: the review commit will be checked after push.
+- Remote head: `ee4b19e` is the review commit, checked after push.
 
 ### In flight
 
