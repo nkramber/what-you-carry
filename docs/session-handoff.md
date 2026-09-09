@@ -17,7 +17,7 @@ Session: re-review PR #23 after the P2-1 correction. Branch `feat/pr-8-camera`.
 
 ### State of the build
 
-- `main` is at `1d8f8bd`. The effective PR-23 head is `4e98470`, and the current metadata tip is `f1af5db`.
+- `main` is at `1d8f8bd`. The effective PR-23 head is `4e98470`, and the current metadata tip is `4d37187`.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 426 tests, 0 failures.
 - `det-lint`: 0 findings. `ste-check`: 0 findings. `bit-identity`: `afed0063a6cf8a50`.
 - The Godot 4.7.2 headless build check passes.
