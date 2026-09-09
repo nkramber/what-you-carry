@@ -292,9 +292,10 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-79 | PR #17 review P2-3: the Game string rule exempted every method named `Get`, so `inventory.Get("You died")` gave no finding. Every type can hold a `Get` method | 2026-09-08 | ✅ Corrected in PR-5. A `Get` call takes an id only when its receiver names the string table. The rule stays syntactic, because the Game project needs the engine assemblies for a symbol read and holds no source file yet |
 | F-80 | PR-6: sections 3.9 and 7 of this file said "length-prefixed, checksummed tick frames", and D-162 fixed the frame at 16 bytes with no length | 2026-09-09 | ✅ D-226. Both lines name the fixed frame now |
 | F-81 | PR-6: the validator message of PR-5 wrote an enum value inside an interpolated string, and the runtime formats one through its metadata. `det-lint` bans `System.Enum` and reads no interpolation | 2026-09-09 | ✅ Corrected in PR-6 with an explicit switch. OQ-99 asks for the lint rule |
-| F-84 | The review-gate workflow job stayed green on a neutral verdict, because a job cannot be neutral by its exit code, and the workflow carries the name "Review gate". The PR rollup of PR #23 read as a pass with no review record, seen 2026-09-09 | 2026-09-09 | ✅ D-251. The job fails on neutral too. The check run keeps its three conclusions |
 | F-82 | PR-7: a float position cannot hold an exact contact with a block face. For twelve integer faces below 130, such as x = 16 with the 0.3 half-width and y = 8 with the 1.8 height, `(c - h) + h` is one ulp off, measured 2026-09-09 | 2026-09-09 | ✅ D-235. The sweep stops one skin of 2^-10 meters before a face, and never on it. Binds PR-7, PR-8, PR-10, PR-16 |
 | F-83 | PR-7: D-231 said the apex of a jump is 1.23 meters. That is the closed form. The fixed-step integration at 60 Hz gives 1.17 meters, measured 2026-09-09. The one-block clear and the two-block fail hold | 2026-09-09 | ✅ doc. D-231 Effect corrected. `JumpClearsOneBlock` asserts the two outcomes and never the apex |
+| F-84 | The review-gate workflow job stayed green on a neutral verdict, because a job cannot be neutral by its exit code, and the workflow carries the name "Review gate". The PR rollup of PR #23 read as a pass with no review record, seen 2026-09-09 | 2026-09-09 | ✅ D-251. The job fails on neutral too. The check run keeps its three conclusions |
+| F-85 | PR #23 review P2-1: the bit-identity sweep folded the camera pose and the aim ray from a second live loop and not from the replay, so the three-platform proof of PR-8 exit test 5 did not read the replay traversal | 2026-09-09 | ✅ Corrected in PR-8. The replay takes an `IReplayObserver`, and the sweep folds the camera of every replayed tick through it |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -374,8 +375,8 @@ Implement the voxel grid of one-meter cubes (D-78, D-234). Implement Core collis
 Gate: a box that moves at the maximum speed never crosses a solid block.
 > *In plain English:* the dungeon is a grid of blocks. The game itself decides how bodies bump into them, so the result is identical on every machine.
 
-**PR-8: Camera as a Core system.** 🔧
-Implement the over-the-shoulder camera in Core (D-13, D-75, D-241, D-242, D-245 to D-247). It integrates the quantized look deltas, sweeps its boom against the grid, and derives the aim ray (D-77, D-88). Aim assist runs here from enemy positions (D-14, D-243, D-244). Property tests assert the camera never enters a solid block and the aim ray is deterministic.
+**PR-8: Camera as a Core system.** 🔧 Open as PR #23.
+Implement the over-the-shoulder camera in Core (D-13, D-75, D-241, D-242, D-245 to D-249). It integrates the quantized look deltas, sweeps its boom against the grid, and derives the aim ray (D-77, D-88). Aim assist runs here from enemy positions (D-14, D-243, D-244). Property tests assert the camera never enters a solid block and the aim ray is deterministic.
 Gate: a recorded run with camera motion replays to the same hash on all three platforms.
 > *In plain English:* the camera is part of the simulation, not decoration, so where you look and where you aim replay exactly.
 

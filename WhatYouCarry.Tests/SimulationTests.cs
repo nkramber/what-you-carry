@@ -117,12 +117,12 @@ public sealed class SimulationTests
         Assert.Throws<ContextException>(() => Intent.Decode(frame, -1));
     }
 
-    /// <summary>The loop runs at 60 Hz, and the simulation version is 2 since PR-7 gave the state a position (D-73, D-151, G-20).</summary>
+    /// <summary>The loop runs at 60 Hz, and the simulation version is 3 since PR-8 changed the pitch clamp (D-73, D-151, G-20).</summary>
     [Fact]
     public void TheConstantsHold()
     {
         Assert.Equal(60, SimulationLoop.TicksPerSecond);
-        Assert.Equal(2, SimulationVersion.Value);
+        Assert.Equal(3, SimulationVersion.Value);
     }
 
     /// <summary>One intent is one tick, and the loop starts at tick zero.</summary>
@@ -164,10 +164,11 @@ public sealed class SimulationTests
         Assert.Equal(35990, loop.Yaw);
     }
 
-    /// <summary>The pitch sum stops at straight up and straight down (D-227).</summary>
+    /// <summary>The pitch sum stops at 80 degrees up and 80 degrees down (D-227, D-241). The camera test of the same name reads the forward vector at the limit.</summary>
     [Fact]
     public void PitchClamps()
     {
+        Assert.Equal(8000, SimulationLoop.PitchLimit);
         SimulationLoop loop = TestWorld.NewLoop(1UL);
         loop.Step(new Intent(0U, 0, 8000, 0, 0, 0));
         loop.Step(new Intent(1U, 0, 8000, 0, 0, 0));

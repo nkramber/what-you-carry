@@ -1,5 +1,304 @@
 # Session handoff archive
 
+## Session 64: 2026-09-09, Codex
+
+Author: Codex
+Session: review PR-7 for the voxel grid, swept box, and player body. Branch `feat/pr-7-world-collision`.
+
+### What this session did, and why
+
+- Verified PR #21 against `main` at `01e68c3` and reviewed effective head `4207548`.
+- Confirmed that Session 63 identifies Claude Code as the implementation provider. Codex is the eligible reviewer.
+- Inspected the complete implementation, test, tool, and document diff, affected callers, replay paths, Core boundary, and PR-7 contracts.
+- Confirmed the simulation version 2 change and the intentional bit-identity change from `283aa4b8cd1281be` to `e8ef2b1fad938845` under G-20.
+- Found no blocking defect. Wrote `docs/reviews/pr-21.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `01e68c3`. The reviewed effective head is `4207548`.
+- `dotnet build` passes with 0 warnings and 0 errors. `dotnet test` passes with 398 tests and 0 failures.
+- `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
+- `bit-identity` gives `e8ef2b1fad938845`.
+- The Godot 4.7.2 headless build check passes.
+- Remote head: `origin/feat/pr-7-world-collision` at `bd57f34`, which holds the review record and this handoff entry.
+
+### In flight
+
+PR #21 is open with the verdict `Ready for owner merge` at effective head `4207548`. The owner can merge it.
+
+### Traps and gotchas
+
+- PR-7 raises the simulation version and changes the bit-identity value on purpose. Keep both values when the owner merges the PR.
+- The sweep uses a contact skin and runs Y, then X, then Z. A face on a block is contact, not overlap.
+- The loop and replay take the grid and spawn from the caller until PR-9, as D-236 requires.
+
+### Open questions that block progress
+
+None. OQ-99 remains open, and it blocks nothing.
+
+### Next concrete action
+
+The owner can merge PR #21. A new session starts after the owner merges it.
+
+## Session 63: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: PR-7, the voxel grid, the swept box, and the player body. Branch `feat/pr-7-world-collision`.
+
+### What this session did, and why
+
+- The owner merged PR #20 as `01e68c3`. The handoff named PR-7 as the next action, under D-164, D-165, and D-231 to D-234.
+- A float check before the code refuted an exact contact on a block face. For twelve integer faces below 130, `(c - h) + h` is one ulp off (F-82). That made the position representation an owner question.
+- Asked six owner questions in two batches, and D-235 to D-240 record the answers. OQ-104 to OQ-109 hold the questions.
+- D-235: float meters, feet center, and a contact skin of 2^-10 meters before every face. The ground is a probe two skins below the feet.
+- D-236: the loop and the replayer take the grid and the spawn point from the caller until PR-9.
+- D-237: a cell outside the grid is solid, and a direct read there is an error.
+- D-238: the intent sets the horizontal velocity on every tick, in the air too.
+- D-239: air and raw stone are the two block ids of PR-7.
+- D-240: no terminal velocity.
+- Wrote `VoxelGrid`, `BlockId`, `Vector3`, `Aabb`, `Axis`, `SweptAabb`, `Button`, and `PlayerBody`. The loop holds the grid and the body, and the hash adds the position and the vertical velocity after the five fields of D-227.
+- The sweep runs Y, then X, then Z, and a test pins the order. It reads every cell in the path, so a move of 20 meters in one tick still stops at the first block.
+- The simulation version is 2, and the bit-identity hash moved from `283aa4b8cd1281be` to `e8ef2b1fad938845` on purpose (G-20).
+- The fixed-step apex of a jump is 1.17 meters, and D-231 said 1.23. D-231 carries the dated correction, and F-83 records it.
+- No allowlist entry. 62 new tests, 398 in total. Opened PR #21.
+
+### State of the build
+
+- `main` is at `01e68c3`, the squash merge of PR #20. This branch holds two commits above it.
+- Remote head: `origin/feat/pr-7-world-collision` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 398 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 37 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `e8ef2b1fad938845`. PR-7 moved it from `283aa4b8cd1281be` on purpose, and `BitIdentityKnownAnswer` pins the new value.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #21 is open and it holds this branch. It changes code, so it needs a Codex review with the verdict `Ready for owner merge` at the effective head. No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-6 are merged. PR-7 is open. PR-8 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The hash moves in this PR, and that is the point of G-20. A review that sees the new value must confirm it and not restore the old one.
+- A float contact cannot sit on a block face. Twelve integer faces below 130 are one ulp off after `(c - h) + h`, at binade edges such as 16 and 128 (F-82). The sweep stops one skin before a face, and a test that asserts a face on the block fails.
+- A box on a face is contact and not overlap. `Overlaps` reads the open interval, and `-Floor(-max) - 1` names the cell below a face that sits on a block boundary.
+- The sweep runs Y first. A diagonal move toward a one-block step falls beside the step and stops at its wall, and the other order lands on top. `TheOrderIsYThenXThenZ` pins it.
+- The fixed-step apex is 1.17 meters and not 1.23. Assert the one-block clear and the two-block fail, and never the apex.
+- The random intent helper masks the buttons to the eight assigned bits. A test that passes a random `ushort` throws on a reserved bit (D-232).
+- The loop constructor takes a grid and a spawn. A test that wrote `new SimulationLoop(seed)` uses `TestWorld.NewLoop(seed)`.
+- The record does not carry the grid. A replay with another grid gives another hash, and the gap closes in PR-9 (D-236).
+- `StateHash` has no `==` operator. Compare `.Value`, or use `Assert.Equal`.
+- The Godot check prints `[ DONE ] dotnet_build_project` on a pass. The shell variable `PIPESTATUS` is a bash name, and zsh reads `pipestatus`, so read the line and not the exit code through a pipe.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #21 per the `pr-review` skill, at the effective head, and writes `docs/reviews/pr-21.md`. The review focus is determinism, the Core boundary, and test quality, and it confirms the simulation version 2 and the bit-identity change under G-20.
+
+## Session 62: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: record the PR-6 merge, and answer the PR-7 questions before its code. Branch `docs/pr-6-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #19 as `3f7e3c2`, after a Codex review with no finding.
+- Audited every document against the merged state. The registers were complete: D-224 to D-230, OQ-92 to OQ-99, and F-80 and F-81 all landed with the PR.
+- Two status lines were stale. The design doc PR-6 entry and its sequence line said open, and the focused roadmap said open. All three name the merge now.
+- The handoff held eleven entries. Session 61 added its entry and moved none to the archive. This session moved sessions 51 and 52 to the archive, so the file holds ten again (D-146).
+- Asked four owner questions that block the PR-7 code, and D-231 to D-234 record the answers. OQ-100 to OQ-103 hold the questions.
+- D-231: gravity 20, walk 4, sprint 6.5, jump 7. The apex is 1.23 meters, so a jump clears one block and never two (D-165).
+- D-232: the button bits. Bit 0 is jump, bit 1 is sprint, and bits 2 to 7 hold dodge, attack, use, interact, and the two quick slot moves. Bits 8 to 15 are reserved, and a set one is an error.
+- D-233: the movement is strafe and forward, each over 127, rotated by the yaw sum, with the length clamped to 1.
+- D-234: Core uses the frame of Godot. Right-handed, Y up, meters, and forward at yaw zero is minus Z.
+- The roadmap PR-7 scope cites the four decisions, and it names the simulation version rise to 2 (G-20).
+
+### State of the build
+
+- `main` is at `3f7e3c2`, the squash merge of PR #19. This branch holds the document commits above it.
+- Remote head: `origin/docs/pr-6-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 336 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 29 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files. `bit-identity`: `283aa4b8cd1281be`.
+
+### In flight
+
+PR #20 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-6 are merged. PR-7 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- A review session adds an entry and can leave eleven in the handoff. Count the entries at the start of a session, and archive down to ten.
+- PR-7 raises the simulation version to 2 and moves the bit-identity hash, because the state gains a position. `BitIdentityKnownAnswer` pins the number, and the PR updates it on purpose (G-20).
+- The apex of a jump under fixed-step Euler differs from the closed form by a fraction of a tick. Assert the one-block clear and the two-block fail in a test, and never the apex value alone.
+- The movement fraction of -128 clamps to -127, so the two directions have one magnitude.
+- The state hash order of D-160 grows in PR-7. Add the new fields after the five of D-227, so the order test of PR-6 still reads.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #20 with the `review-override` label. Then a new session starts PR-7 on a short branch: the voxel grid, the swept box, the player body, and the five exit tests, under D-164, D-165, and D-231 to D-234.
+
+## Session 61: 2026-09-09, Codex
+
+Author: Codex
+Session: review PR #19 for the simulation loop, the intent frame, the run record, and the replay. Branch `feat/pr-6-loop-record`.
+
+### What this session did, and why
+
+- Verified PR #19 against `main` at `c11fb41` and reviewed effective head `0850d32`.
+- Confirmed that Session 60 identifies Claude Code as the implementation provider. Codex is the eligible reviewer.
+- Inspected the complete diff, callers, tests, replay contracts, error paths, Core boundary, and Phase 1 documents.
+- Confirmed the intentional bit-identity change from `4d6385bb92454694` to `283aa4b8cd1281be`.
+- Found no blocking defect. Wrote `docs/reviews/pr-19.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `c11fb41`. The reviewed effective head is `0850d32`.
+- The branch held metadata commit `0850d32` before this review. Review commit `1247769` is on the remote branch.
+- `dotnet test` passes with 336 tests and 0 failures.
+- `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
+- `bit-identity` gives `283aa4b8cd1281be`.
+- The Godot 4.7.2 headless build check passes.
+- The local build command stalled without compiler output. The Linux, macOS, and Windows CI build and test jobs pass.
+
+### In flight
+
+PR #19 is open with the verdict `Ready for owner merge` at effective head `0850d32`. The owner can merge it after the review record reaches the remote branch.
+
+### Traps and gotchas
+
+- The effective head is `0850d32` because that commit changes design and roadmap files outside the D-184 metadata set. The later review commits do not change the effective head.
+- The bit-identity value changes on purpose because the sweep replays one fixed record.
+- The simulation version stays at 1 because PR-6 sets its first value.
+
+### Open questions that block progress
+
+None. OQ-99 remains open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #19, or requests a review of a new effective head.
+
+## Session 60: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: PR-6, the simulation loop, the intent frame, the run record, the recorder, and the replay. Branch `feat/pr-6-loop-record`.
+
+### What this session did, and why
+
+- The owner merged PR #18 as `c11fb41`. The handoff named PR-6 as the next action, with two questions before the code.
+- Asked seven owner questions in three batches, and D-224 to D-230 record the answers. OQ-92 to OQ-98 hold the questions.
+- D-224: Core holds a table-driven CRC-32 in `Crc32.cs`. No dependency and no allowlist entry.
+- D-225: the recorder writes through an `IRunRecordSink`, as the logger and the content loader do. Core opens no file.
+- D-226: the design doc said "length-prefixed, checksummed tick frames" in sections 3.9 and 7, and D-162 fixes the frame at 16 bytes. Both lines name the fixed frame now (F-80).
+- D-227: the Phase 1 loop state is the seed, the tick, the yaw and pitch sums in hundredths of a degree, and the buttons. The loop reads no movement byte until PR-7 has collision.
+- D-228: the torn-tail log line names floor 1, because every run starts there and a Phase 1 run never leaves it. PR-31 reads the floor from the state.
+- D-229: the JSON reader gives an empty list and a null as kinds, so the header carries `loadout`, `tree`, and `amulet` from the first record. A list with an item is an error until Phase 3.
+- D-230: 1 type and 6 members enter the allowlist. A removal check proved each one in use.
+- Found one defect outside the new files. The validator message wrote an enum value inside an interpolated string, and the runtime formats one through its metadata. An explicit switch replaces it (F-81), and OQ-99 asks whether `det-lint` gains a rule in its own PR.
+- The bit-identity sweep records and replays one fixed run now, so the three platforms compare the replay (exit test 7). The known answer moved on purpose (G-20).
+- 56 new tests. The total is 336. Opened PR #19.
+
+### State of the build
+
+- `main` is at `c11fb41`, the squash merge of PR #18. This branch holds two commits above it.
+- Remote head: `origin/feat/pr-6-loop-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 336 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 29 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `283aa4b8cd1281be`. PR-6 moved it from `4d6385bb92454694` on purpose, and `BitIdentityKnownAnswer` pins the new value.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #19 is open and it holds this branch. It changes code, so it needs a Codex review with the verdict `Ready for owner merge` at the effective head. No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-5 are merged. PR-6 is open. PR-7 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The bit-identity hash moves in this PR, and that is the point of G-20. A review that sees the new value must confirm it and not restore the old one.
+- The simulation version stays at 1. It is the first value, so there is no bump to confirm. The next Core PR that moves a simulation number raises it to 2.
+- An intent delta is an `int16`, so a yaw near 360 degrees takes two intents in a test. The first draft of `YawWraps` passed 35990 as one delta, and the compiler stopped it.
+- The content error text says "file" now, not "content file", because the run record header goes through the same reader. A test that asserts the old words fails.
+- The validator names a kind with an explicit switch now. A test that asserts the enum name `Number` fails, and one that asserts `number` passes.
+- A Python patch script cannot hold a C# raw string literal inside a Python triple-quoted string. Write the script to a file, or escape the quotation marks.
+- The replayer adds the frame index to an error from the decode or the loop and rethrows the same object. The message then holds the tick, both checksums or both ticks, and the frame.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing: the lint rule for an enum inside an interpolation belongs to its own PR.
+
+### Next concrete action
+
+A Codex session reviews PR #19 per the `pr-review` skill, at the effective head, and writes `docs/reviews/pr-19.md`. The review focus is determinism, replay, errors, and test quality, and it confirms the bit-identity change under G-20.
+
+## Session 59: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: record the PR-5 merge, and prepare the documents for a fresh session. Branch `docs/pr-5-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #17 as `e0deb94`, after a Codex review approved the corrected head.
+- Audited every document against the merged state. The registers were complete: D-219 to D-223, OQ-88 to OQ-91, and F-78 and F-79 all landed with the PR.
+- Three status lines were stale. The focused roadmap said that PR-5 was open, the design doc marked it open, and the Phase 1 sequence did not mark it. All three name the merge now, and the correction passes record the PR-5 outcome.
+- The owner then asked for a full document check before a fresh session. That check found three defects in the agent files, which are the first files that a session reads.
+- The Godot command in the agent files could not run. The name `Godot` is not on the command path of this machine, and the command needs `/Applications/Godot_mono.app/Contents/MacOS/Godot`.
+- The agent files named no `det-lint` command and no `bit-identity` command, and both are required gates. Both are in the command list now.
+- The PR gate said "the lint tool and the STE checker pass" as one line. It holds one line for each check now, and the `det-lint` line names G-8 and G-21 beside G-2.
+- Added a code rule for the allowlist. A new entry needs a decision, and a session verifies it by removing the entry and running `det-lint`. That check found two dead entries and one live gap in PR-4, and a reading of the list found neither.
+- Ran every command in the agent files word for word. All six pass.
+
+### State of the build
+
+- `main` is at `e0deb94`, the squash merge of PR #17. This branch holds two commits above it.
+- Remote head: `origin/docs/pr-5-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 280 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 21 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files. `bit-identity`: `4d6385bb92454694`.
+- The Godot 4.7.2 headless build check passes with the full path above.
+
+### In flight
+
+PR #18 is open and it holds this branch. It changes `docs/`, `CLAUDE.md`, and `AGENTS.md`, and every one of those paths is in the eligible set, so the `review-override` label covers it (D-190). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-5 are merged. PR-6 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- `dotnet test` runs the STE checker over every document, through `RepositoryDocumentsPass`. A document edit needs the test suite, and the checker alone passes a sentence that the suite rejects.
+- The session number check of D-187 compares the numbers in one file. Fetch the remote and read the handoff again before the entry, because the other provider adds an entry while a session works.
+- `det-lint` reports two counts now. The Game count is 0 files today, because the Game project holds no source file. The string rule has fixture tests until a PR writes Game code.
+- The Game string rule is syntactic. A `Get` call takes an id only when its receiver names the string table, and the PR #17 response states that limit.
+- An allowlist entry needs a removal check. A reading of the list finds neither a dead entry nor a gap.
+- PR-6 is the first PR that makes a simulation number, so it moves the bit-identity hash. `BitIdentityKnownAnswer` pins that number, and the PR updates it on purpose (G-20).
+
+### Open questions that block progress
+
+No open question blocks PR-6 to PR-11. OQ-1, OQ-14, and the later ids belong to Phase 2 and beyond.
+
+### Next concrete action
+
+The owner merges PR #18 with the `review-override` label. Then a new session starts PR-6: the fixed-step loop at 60 Hz, the 16-byte intent frame, the run record, the recorder, and the replay (D-73, D-151, D-162, D-163, G-5). Two questions come before that code. The first is the checksum of D-162, which names CRC32 and no implementation, and the allowlist holds none. The second is whether the recorder writes through a sink, as the logger does under D-211 and the content loader does under D-219.
+
 ## Session 58: 2026-09-08, Codex
 
 Author: Codex
@@ -2258,6 +2557,7 @@ No new question. The session 4 entry lists the open ones.
 ### Next concrete action
 
 Unchanged from session 4. A Codex session reviews PR #1 per `.claude/skills/pr-review/SKILL.md` and writes `docs/reviews/pr-1.md`. On 2026-09-08 the owner mounts the SSD, and a session runs `docs/runbooks/macos-runner.md`.
+
 ## Session 4: 2026-09-07, Claude Code
 
 Author: Claude Code
@@ -2352,6 +2652,7 @@ Nothing is half done. Every audit finding has a decision and a document change.
 ### Next concrete action
 
 The owner said the focused roadmaps begin once the audit findings are addressed (D-147). They are addressed. The next action is `docs/roadmaps/phase-1-foundations.md`: expand PR-1 to PR-11 and M-1 to M-2 with per-PR exit tests, under D-148 and D-149. Load `ste-writing` and `design-doc-style` first. Confirm with the owner that Phase 1 is the first roadmap.
+
 ## Session 2: 2026-09-07, Codex
 
 Author: Codex

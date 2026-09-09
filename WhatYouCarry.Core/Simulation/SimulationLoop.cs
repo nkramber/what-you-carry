@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Globalization;
+using WhatYouCarry.Core.Camera;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
@@ -15,8 +17,8 @@ namespace WhatYouCarry.Core.Simulation;
 /// <para>
 /// The state is the seed, the tick, the yaw and pitch sums in hundredths of a degree, the buttons of the last
 /// intent (D-227), and after them the position and the vertical velocity of the player body (PR-7). The yaw
-/// wraps at a full turn, and the pitch stops at straight up and straight down. PR-8 derives the aim ray from the
-/// two sums (D-77).
+/// wraps at a full turn, and the pitch stops at 80 degrees up and 80 degrees down (D-241). A positive pitch
+/// looks up (D-248). The camera and the aim ray come from the state on demand, and they are not state (D-245).
 /// </para>
 /// <para>
 /// The look deltas apply first, and the body then moves by the yaw sum after them. The grid and the spawn point
@@ -36,8 +38,8 @@ public sealed class SimulationLoop
     /// <summary>One full turn of yaw, in hundredths of a degree.</summary>
     public const int FullTurn = 36000;
 
-    /// <summary>The largest pitch magnitude, in hundredths of a degree: straight up or straight down.</summary>
-    public const int PitchLimit = 9000;
+    /// <summary>The largest pitch magnitude, in hundredths of a degree: 80 degrees up or down (D-241).</summary>
+    public const int PitchLimit = 8000;
 
     /// <summary>A loop at tick zero for one run, with the body at rest at the spawn point.</summary>
     /// <exception cref="ContextException">The player box at the spawn point overlaps a solid cell or reaches past the grid.</exception>
@@ -63,7 +65,7 @@ public sealed class SimulationLoop
     /// <summary>The yaw sum, in hundredths of a degree, from 0 up to but not including <see cref="FullTurn"/>.</summary>
     public int Yaw { get; private set; }
 
-    /// <summary>The pitch sum, in hundredths of a degree, from minus <see cref="PitchLimit"/> to <see cref="PitchLimit"/>.</summary>
+    /// <summary>The pitch sum, in hundredths of a degree, from minus <see cref="PitchLimit"/> to <see cref="PitchLimit"/>. Positive looks up (D-248).</summary>
     public int Pitch { get; private set; }
 
     /// <summary>The buttons of the last intent, as the bit mask of D-162.</summary>
@@ -118,6 +120,24 @@ public sealed class SimulationLoop
         this.Buttons = intent.Buttons;
         this.Body.Step(intent, yaw);
         this.Tick++;
+    }
+
+    /// <summary>The camera pose for the state of this tick (D-245). Every call with one state gives one pose.</summary>
+    public CameraPose Camera()
+    {
+        return OrbitCamera.Place(this.Grid, this.Body.Position, this.Yaw, this.Pitch);
+    }
+
+    /// <summary>
+    /// The aim ray for the state of this tick: the crosshair from the camera, pulled toward a target when the
+    /// last intent set the controller aim bit (D-243, D-244, D-247).
+    /// </summary>
+    /// <param name="targets">The target points, which PR-16 takes from the enemies.</param>
+    public AimRay Aim(IReadOnlyList<Vector3> targets)
+    {
+        CameraPose pose = this.Camera();
+        bool controllerAim = (this.Buttons & Button.ControllerAim) != 0;
+        return AimAssist.Apply(new AimRay(pose.Position, pose.Forward), targets, controllerAim);
     }
 
     /// <summary>

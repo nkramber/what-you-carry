@@ -45,42 +45,6 @@ public sealed class PlayerBodyTests
         }
     }
 
-    /// <summary>
-    /// A random grid: a stone floor, then stone in one quarter of the cells of the five rows above it. The spawn
-    /// is a column with two air cells over the floor, so the body fits. A failure of the search is a defect of
-    /// the test and never a pass.
-    /// </summary>
-    private static (VoxelGrid Grid, Vector3 Spawn) RandomWorld(Random random)
-    {
-        VoxelGrid grid = new(10, 8, 10);
-        for (int x = 0; x < 10; x++)
-        {
-            for (int z = 0; z < 10; z++)
-            {
-                grid.Set(x, 0, z, BlockId.RawStone);
-                for (int y = 1; y <= 5; y++)
-                {
-                    if (random.Next(4) == 0)
-                    {
-                        grid.Set(x, y, z, BlockId.RawStone);
-                    }
-                }
-            }
-        }
-
-        for (int attempt = 0; attempt < 1000; attempt++)
-        {
-            int x = random.Next(10);
-            int z = random.Next(10);
-            if (!grid.IsSolid(x, 1, z) && !grid.IsSolid(x, 2, z))
-            {
-                return (grid, new Vector3(x + 0.5f, 1.0f, z + 0.5f));
-            }
-        }
-
-        throw new InvalidOperationException("No column of the random grid has two air cells over the floor.");
-    }
-
     /// <summary>The constants of D-165, D-231, D-233, and D-235 hold.</summary>
     [Fact]
     public void TheConstantsHold()
@@ -96,7 +60,7 @@ public sealed class PlayerBodyTests
         Assert.Equal(127, PlayerBody.MoveScale);
     }
 
-    /// <summary>The button bits of D-232, one by one, and the two masks.</summary>
+    /// <summary>The button bits of D-232 and D-243, one by one, and the two masks.</summary>
     [Fact]
     public void TheButtonBitsHold()
     {
@@ -108,8 +72,11 @@ public sealed class PlayerBodyTests
         Assert.Equal(0x0020, Button.Interact);
         Assert.Equal(0x0040, Button.QuickSlotNext);
         Assert.Equal(0x0080, Button.QuickSlotPrevious);
-        Assert.Equal(0x00FF, Button.AssignedMask);
-        Assert.Equal(0xFF00, Button.ReservedMask);
+        Assert.Equal(0x0100, Button.ControllerAim);
+        Assert.Equal(0x01FF, Button.AssignedMask);
+        Assert.Equal(0xFE00, Button.ReservedMask);
+        Assert.Equal(0xFFFF, Button.AssignedMask | Button.ReservedMask);
+        Assert.Equal(0, Button.AssignedMask & Button.ReservedMask);
     }
 
     /// <summary>
@@ -213,7 +180,7 @@ public sealed class PlayerBodyTests
         for (int seed = 1; seed <= 1000; seed++)
         {
             Random random = new(seed);
-            (VoxelGrid grid, Vector3 spawn) = RandomWorld(random);
+            (VoxelGrid grid, Vector3 spawn) = TestWorld.RandomWorld(random);
             SimulationLoop loop = new((ulong)seed, grid, spawn);
             for (uint tick = 0; tick < 300; tick++)
             {
@@ -233,7 +200,7 @@ public sealed class PlayerBodyTests
         for (int seed = 1; seed <= 100; seed++)
         {
             Random random = new(seed);
-            (VoxelGrid grid, Vector3 spawn) = RandomWorld(random);
+            (VoxelGrid grid, Vector3 spawn) = TestWorld.RandomWorld(random);
 
             MemorySink sink = new();
             RunRecorder recorder = new(sink, RunRecord.NewHeader(Hash, (ulong)seed));
@@ -257,10 +224,11 @@ public sealed class PlayerBodyTests
         }
     }
 
-    /// <summary>A set reserved bit is an error that names the tick and the buttons, and the tick does not advance (D-232, T-2).</summary>
+    /// <summary>A set reserved bit is an error that names the tick and the buttons, and the tick does not advance (D-232, D-243, T-2).</summary>
     [Theory]
-    [InlineData(0x0100)]
+    [InlineData(0x0200)]
     [InlineData(0x8000)]
+    [InlineData(0xFE00)]
     [InlineData(0xFFFF)]
     public void AReservedButtonBitIsAnError(int buttons)
     {
@@ -280,13 +248,13 @@ public sealed class PlayerBodyTests
     {
         SimulationLoop loop = TestWorld.NewLoop(1UL);
         uint tick = 0;
-        for (int bit = 0; bit < 8; bit++)
+        for (int bit = 0; bit < 9; bit++)
         {
             loop.Step(Move(0, 0, (ushort)(1 << bit), tick++));
         }
 
         loop.Step(Move(0, 0, Button.AssignedMask, tick++));
-        Assert.Equal(9U, loop.Tick);
+        Assert.Equal(10U, loop.Tick);
     }
 
     /// <summary>Forward at yaw zero is minus Z, and strafe is plus X, at the walk speed (D-233, D-234).</summary>

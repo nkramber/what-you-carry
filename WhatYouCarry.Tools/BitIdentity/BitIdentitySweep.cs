@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using WhatYouCarry.Core.Camera;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
@@ -10,8 +11,8 @@ using WhatYouCarry.Core.World;
 namespace WhatYouCarry.Tools.BitIdentity;
 
 /// <summary>
-/// A fixed run of the RNG, of DetMath, and of one recorded run through the replay, folded into one state hash
-/// (D-69, D-71). Two platforms that give the same hash agree on every bit of all three.
+/// A fixed run of the RNG, of DetMath, of one recorded run through the replay, and of the camera over that run,
+/// folded into one state hash (D-69, D-71). Two platforms that give the same hash agree on every bit of all four.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -53,6 +54,14 @@ public static class BitIdentitySweep
     /// <summary>The feet center of the body at tick zero, over the middle of the floor.</summary>
     public static readonly Vector3 ReplaySpawn = new(8.5f, 1.0f, 8.5f);
 
+    /// <summary>Three fixed aim targets in the sweep grid, so the assist pulls on some ticks (PR-8 exit test 5).</summary>
+    private static readonly Vector3[] SweepTargets =
+    [
+        new(4.5f, 2.0f, 4.5f),
+        new(11.5f, 2.5f, 3.5f),
+        new(8.5f, 1.8f, 13.5f),
+    ];
+
     /// <summary>
     /// The streams that the sweep reads. The list is explicit, so a new value of <see cref="RngStream"/> leaves
     /// this hash alone until a later change adds it here on purpose.
@@ -72,7 +81,7 @@ public static class BitIdentitySweep
         AddStreams(ref hash);
         AddAngles(ref hash);
         AddRootsAndPowers(ref hash);
-        AddReplay(ref hash);
+        AddReplay(ref hash, SweepIntents());
         return hash;
     }
 
@@ -162,28 +171,46 @@ public static class BitIdentitySweep
         }
     }
 
-    /// <summary>
-    /// Records one run of intents that the seed makes, replays the record, and folds in the end state and the
-    /// checksum of the whole record (PR-6 exit test 7). The three platforms must agree on the frame bytes, the
-    /// header text, the CRC-32, the loop, and the collision of the body with the fixed grid (PR-7).
-    /// </summary>
-    private static void AddReplay(ref StateHash hash)
+    /// <summary>The intents of the sweep run, which the seed makes. The record and the camera fold read one list.</summary>
+    private static IReadOnlyList<Intent> SweepIntents()
     {
         Rng rng = Rng.ForStream(RunSeed, RngStream.Enemy);
-        MemorySink sink = new();
-        RunRecorder recorder = new(sink, RunRecord.NewHeader(ReplayContentHash, RunSeed));
+        List<Intent> intents = [];
         for (uint tick = 0; tick < ReplayFrames; tick++)
         {
             uint look = rng.NextUInt();
             uint rest = rng.NextUInt();
 
-            // The buttons keep the eight assigned bits alone, because a set reserved bit is an error (D-232).
+            // The buttons keep the assigned bits alone, because a set reserved bit is an error (D-232, D-243).
             ushort buttons = (ushort)((rest >> 16) & Button.AssignedMask);
-            Intent intent = new(tick, (short)look, (short)(look >> 16), (sbyte)rest, (sbyte)(rest >> 8), buttons);
+            intents.Add(new Intent(tick, (short)look, (short)(look >> 16), (sbyte)rest, (sbyte)(rest >> 8), buttons));
+        }
+
+        return intents;
+    }
+
+    /// <summary>
+    /// Records the run, replays the record, and folds in the camera pose and the aim ray of every replayed
+    /// tick, the end state, and the checksum of the whole record (PR-6 exit test 7, PR-8 exit test 5). The three
+    /// platforms must agree on the frame bytes, the header text, the CRC-32, the loop, the collision of the body
+    /// with the fixed grid, the ray march of the boom, and the assist pull.
+    /// </summary>
+    /// <remarks>
+    /// The camera values come from the loop that replays the record, through <see cref="IReplayObserver"/>, and
+    /// never from a second live run. A replay defect that changes the camera sequence then changes this hash.
+    /// </remarks>
+    private static void AddReplay(ref StateHash hash, IReadOnlyList<Intent> intents)
+    {
+        MemorySink sink = new();
+        RunRecorder recorder = new(sink, RunRecord.NewHeader(ReplayContentHash, RunSeed));
+        foreach (Intent intent in intents)
+        {
             recorder.Record(intent);
         }
 
-        ReplayResult result = RunReplayer.Replay(sink.Bytes, ReplayContentHash, ReplayGrid(), ReplaySpawn, new JsonlLogger(new RejectingLogSink()));
+        CameraFold cameras = new();
+        ReplayResult result = RunReplayer.Replay(sink.Bytes, ReplayContentHash, ReplayGrid(), ReplaySpawn, new JsonlLogger(new RejectingLogSink()), cameras);
+        hash.Add(cameras.Hash.Value);
         hash.Add(result.Loop.Hash().Value);
         hash.Add(Crc32.Of(sink.Bytes, 0, sink.Bytes.Count));
     }
@@ -216,6 +243,34 @@ public static class BitIdentitySweep
         }
 
         return grid;
+    }
+
+    /// <summary>
+    /// Folds the camera pose and the aim ray of every replayed tick into one hash (PR-8 exit test 5). The replay
+    /// calls it after each frame, so the values come from the replay traversal itself.
+    /// </summary>
+    private sealed class CameraFold : IReplayObserver
+    {
+        private StateHash hash = StateHash.Start();
+
+        /// <summary>The hash of every pose and ray so far.</summary>
+        public StateHash Hash => this.hash;
+
+        public void AfterTick(SimulationLoop loop)
+        {
+            CameraPose pose = loop.Camera();
+            this.hash.Add(pose.Position.X);
+            this.hash.Add(pose.Position.Y);
+            this.hash.Add(pose.Position.Z);
+            this.hash.Add(pose.Forward.X);
+            this.hash.Add(pose.Forward.Y);
+            this.hash.Add(pose.Forward.Z);
+
+            AimRay aim = loop.Aim(SweepTargets);
+            this.hash.Add(aim.Direction.X);
+            this.hash.Add(aim.Direction.Y);
+            this.hash.Add(aim.Direction.Z);
+        }
     }
 
     /// <summary>A sink that keeps the record in memory. The sweep never touches the disk.</summary>

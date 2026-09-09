@@ -17,10 +17,12 @@ public sealed class BitIdentityTests
     /// </summary>
     /// <remarks>
     /// A deliberate change to the simulation changes this number. G-20 asks the review to confirm the change and
-    /// the version bump that goes with it. PR-6 set `283aa4b8cd1281be`, and PR-7 moved it when the state gained
-    /// a position and the sweep replay gained a grid.
+    /// the version bump that goes with it. PR-6 set `283aa4b8cd1281be`, PR-7 moved it to `e8ef2b1fad938845` when
+    /// the state gained a position, and PR-8 moved it to `92ef27ee175b3e7e` when the pitch clamp changed and the
+    /// sweep gained the camera. The PR #23 review moved it again, because the sweep folds the camera from the
+    /// replay observer now and not from a second live loop (F-85).
     /// </remarks>
-    private const string ExpectedHash = "e8ef2b1fad938845";
+    private const string ExpectedHash = "afed0063a6cf8a50";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -108,5 +110,12 @@ public sealed class BitIdentityTests
         // PR-6 exit test 7: the sweep replays one fixed record, so the three platforms compare the replay too.
         Assert.Contains("RunReplayer.Replay(", sweep, StringComparison.Ordinal);
         Assert.Contains("Crc32.Of(", sweep, StringComparison.Ordinal);
+
+        // PR-8 exit test 5: the sweep folds in the camera pose and the aim ray of every replayed tick, through
+        // the replay observer, and it builds no live loop of its own beside the replay (PR #23 review P2-1).
+        Assert.Contains("loop.Camera()", sweep, StringComparison.Ordinal);
+        Assert.Contains("loop.Aim(", sweep, StringComparison.Ordinal);
+        Assert.Contains(": IReplayObserver", sweep, StringComparison.Ordinal);
+        Assert.DoesNotContain("new SimulationLoop(", sweep, StringComparison.Ordinal);
     }
 }

@@ -10,6 +10,6 @@ namespace WhatYouCarry.Core.Simulation;
 /// </remarks>
 public static class SimulationVersion
 {
-    /// <summary>The current value. PR-6 set it to 1, and PR-7 raised it to 2 when the state gained a position (G-20).</summary>
-    public const int Value = 2;
+    /// <summary>The current value. PR-6 set it to 1, PR-7 raised it to 2 when the state gained a position, and PR-8 raised it to 3 when the pitch clamp changed (G-20).</summary>
+    public const int Value = 3;
 }
