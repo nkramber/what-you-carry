@@ -77,10 +77,12 @@ jobs:
       - name: Fail the job unless the verdict is success
         # A job cannot set a neutral conclusion by its exit code, so the job fails on neutral too. The visible
         # job line then reads red until a review record or a valid override label exists (D-251, F-84).
+        # The guard reads success alone, so a missing or unexpected conclusion fails the job and never passes
+        # it in silence (T-2).
         run: |
           conclusion="$(jq --raw-output '.conclusion' check-run.json)"
           echo "review-gate conclusion: ${conclusion}"
-          if [ "${conclusion}" = "failure" ] || [ "${conclusion}" = "neutral" ]; then
+          if [ "${conclusion}" != "success" ]; then
             jq --raw-output '.output.summary' check-run.json
             exit 1
           fi

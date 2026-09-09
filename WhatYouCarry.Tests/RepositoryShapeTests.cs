@@ -129,15 +129,16 @@ public sealed class RepositoryShapeTests
     }
 
     /// <summary>
-    /// The last step of the review-gate workflow fails the job on a neutral conclusion too, so the visible job
-    /// line reads red with no review record. A job cannot be neutral by its exit code (D-251, F-84).
+    /// The last step of the review-gate workflow passes the job on a success conclusion alone, so a neutral
+    /// verdict, and a missing or unexpected conclusion, read red. A job cannot be neutral by its exit code
+    /// (D-251, F-84, T-2).
     /// </summary>
     [Fact]
     public void ReviewGateJobFailsOnNeutral()
     {
         string workflow = RepositoryRoot.ReadFile(".github/workflows/review-gate.yml");
-        Assert.Contains("if [ \"${conclusion}\" = \"failure\" ] || [ \"${conclusion}\" = \"neutral\" ]; then", workflow, StringComparison.Ordinal);
-        Assert.DoesNotContain("if [ \"${conclusion}\" = \"failure\" ]; then", workflow, StringComparison.Ordinal);
+        Assert.Contains("if [ \"${conclusion}\" != \"success\" ]; then", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"${conclusion}\" = \"failure\"", workflow, StringComparison.Ordinal);
     }
 
     [Fact]

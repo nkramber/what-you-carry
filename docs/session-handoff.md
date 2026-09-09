@@ -11,13 +11,14 @@ Session: make the review-gate job red on a neutral verdict (D-251). Branch `fix/
 
 - The owner saw the "Review gate / evaluate" job green on PR #23 with no review record. The check run was neutral, and the job stayed green because a job cannot be neutral by its exit code (F-84).
 - Asked one owner question with three options, and D-251 records the answer: the job fails on a neutral conclusion too. OQ-119 holds the question. D-181 is revised in part, the job result only.
-- The last step of the workflow exits 1 on `failure` and on `neutral`, and it prints the summary in both cases. `ReviewGateJobFailsOnNeutral` reads the file and fails on the old step.
+- The last step of the workflow exits 1 on every conclusion but `success`, and it prints the summary then. `ReviewGateJobFailsOnNeutral` reads the file and fails on the old step.
+- The automated pass on this PR gave one comment with one finding, with merit: the first guard read the two strings `failure` and `neutral`, so a missing conclusion passed the job green (T-2). The guard reads `success` alone now, in the second commit, and the reply on the thread names it.
 - The design doc, the roadmap, the skill, and the agent files say that the job line reads red on grey. The roadmap PR-1 exit tests gain number 26.
 - The workflow runs from the base branch (D-197), so this PR cannot exercise its own change. The proof runs on the first PR after the merge.
 
 ### State of the build
 
-- `main` is at `a78e759`, the squash merge of PR #24. This branch holds one commit above it.
+- `main` is at `a78e759`, the squash merge of PR #24. This branch holds two commits above it.
 - Remote head: `origin/fix/review-gate-red-on-neutral` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 399 tests, 0 failures.
 - `det-lint`: 0 findings. Core 0 in 37 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
