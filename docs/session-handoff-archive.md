@@ -1,5 +1,49 @@
 # Session handoff archive
 
+## Session 72: 2026-09-09, Codex
+
+Author: Codex
+Session: review PR #23 at effective head `e6e89aa`. Branch `feat/pr-8-camera`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 71 identifies Claude Code as the author of the substantive PR-23 change, and Codex is the eligible reviewer.
+- Read the complete PR diff, the PR description, the Phase 1 PR-8 exit tests, decisions D-241 to D-249, the replay path, the bit-identity sweep, and the existing gitar comment.
+- Found one P2 defect. The bit-identity sweep replays the record for the final state hash, but it folds the camera and aim values from a separate live loop. This does not prove the PR-8 replay exit test.
+- Wrote `docs/reviews/pr-23.md` with the verdict `Changes required` at effective head `e6e89aa`.
+
+### State of the build
+
+- `main` is at `1d8f8bd`. The effective PR-23 head is `e6e89aa`, and the current metadata tip is `2f365cc`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 425 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings. `bit-identity`: `92ef27ee175b3e7e`.
+- The Godot 4.7.2 headless build check passes.
+- GitHub CI, bit identity, determinism lint, STE, and Gitar pass at `2f365cc`. The review-gate check is neutral and evaluate fails until an approved review record exists, as D-251 requires.
+- `git fetch origin` could not update `.git/FETCH_HEAD` because the checkout denied access. `gh pr view` verified the remote head before this review record.
+
+### In flight
+
+PR #23 is open with one P2 finding. The author must make the camera and aim fold read from the replay traversal, then push a substantive revision. A Codex re-review must compare the new effective head and update this same review record.
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks them.
+
+### Traps and gotchas
+
+- The effective head is `e6e89aa`, not the metadata tip `2f365cc`.
+- The review-gate check is neutral until the review record reaches the PR head. The evaluate job fails while the record does not approve the effective head.
+- The camera fold at `WhatYouCarry.Tools/BitIdentity/BitIdentitySweep.cs:219-235` uses a new live loop. The record replay at lines 208-210 does not supply those camera values.
+- The existing gitar comment is recorded in `## PR comments`. The reviewing provider does not reply to or resolve that comment (D-250).
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Correct P2-1 in PR #23. Then run the automated pass, fetch the new effective head, and complete a Codex re-review with the same finding id.
+
 ## Session 71: 2026-09-09, Claude Code
 
 Author: Claude Code

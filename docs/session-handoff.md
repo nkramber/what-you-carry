@@ -2,6 +2,56 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 82: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: PR-10, the projectile simulation, the arc solver, and the shot of the attack bit. Branch `feat/pr-10-projectiles`.
+
+### What this session did, and why
+
+- Started PR-10 from `main` at `4687081`, the squash merge of PR #30, as Session 81 planned. The commit `c214d03` holds the code, the content, the tests, and the roadmap note. PR #31 holds the branch.
+- The projectile schema gains the required field `spreadHundredths` (D-266), with bounds: a speed of at least one, a gravity scale of at least zero, and a spread from 0 to 18000. The two plain definitions gain a spread, and four test-only files hold the extremes of D-149. The ordinal order puts `arrow` first, so it is the Phase 1 shot (D-265).
+- `Core/Projectiles/ProjectileSimulation.cs`: a flat list in flight order. A projectile is a point. Each tick ages it, applies the gravity of D-231 scaled by its definition, and sweeps one segment with the grid ray march of PR-8 and a slab test against the entity boxes. The nearest hit ends it at the point. A projectile never hits the box of its owner.
+- `Core/Projectiles/ArcSolver.cs`: the low-arc direction with DetMath alone, a vertical case, a gravity-free case, and a clear report for a target out of reach.
+- The loop fires the first definition once per press of the attack bit, from the shoulder point toward the first solid cell that the crosshair ray meets within 100 meters (D-267, D-268). `CameraPose` carries the shoulder point now. The loop exposes the ends of the last tick, which is not state. The projectiles end with the floor at a descent.
+- The projectiles join the hash after the run end, in flight order, and the simulation version is 6 (G-20). The sweep content holds one definition with a spread, so the attack bit of the sweep intents fires shots. The known answer moves from `62c5e1d152fe94fe` to `3220e92dcbca55a2`.
+- The six exit tests of the roadmap entry pass, with unit tests for the spread cone, the press edge, the shoulder origin, the segment test, the end of the floor, and the errors. 500 tests in total.
+
+### State of the build
+
+- `main` is at `4687081`, the squash merge of PR #30. This branch holds the PR-10 commit `c214d03` above it, and this entry above that.
+- Remote head: `origin/feat/pr-10-projectiles` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 500 tests, 0 failures, in about three and a half minutes.
+- `det-lint`: 0 findings. Core 0 in 57 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `3220e92dcbca55a2`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #31 is open and it holds this branch. The automated pass runs on the push, and the author answers each comment. Then a Codex session reviews the PR at the effective head, which is `c214d03` until a substantive push moves it. The review focus is determinism, errors, and test quality (roadmap PR-10). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-9 and PR-59 are merged. PR-10 is open as PR #31. PR-11 remains, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The Projectile stream of the run is state that no hash reads: `Rng` exposes no state word. Two loops with one intent stream draw the same values in the same order, so a replay matches, and a hash compare at a tick with no projectile in flight cannot tell a run with shots from one without. `ProjectilesAreDeterministic` compares the hashes while a projectile is up.
+- The random intents of every loop test set the attack bit on some ticks, so every replay test fires shots now. A content set without a projectile definition makes the attack bit an error (D-265).
+- The crosshair ray of the shot is the camera forward without aim assist, because no target exists before PR-16. PR-16 gives the shot the assisted ray.
+- The shot origin is the shoulder point after the first march of D-249, so a shot never starts inside rock. The grid ray march throws on a start inside a solid cell, and a test that fires from inside rock sees that error.
+- A projectile ends at its lifetime with one tick of grace: the end fires when the age passes the lifetime, so a definition of N ticks flies N ticks.
+- The arc solver gives the continuous arc, and the fixed-step flight lands a little short, as the jump of F-83 does. Exit test 3 allows one block.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Read the gitar comments on PR #31 and answer each one per the `pr-review` skill. Then a Codex session reviews PR #31 at the effective head, reads the PR comments into the review, and writes `docs/reviews/pr-31.md`. The review confirms the simulation version 6 and the bit-identity change under G-20.
+
+
 ## Session 81: 2026-09-09, Claude Code
 
 Author: Claude Code
@@ -442,47 +492,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 The automated pass runs on this push. Then a Codex session repeats the review per the repeat procedure, at the effective head `4e98470`, and updates `docs/reviews/pr-23.md` with the status of P2-1 and a new verdict.
-
-## Session 72: 2026-09-09, Codex
-
-Author: Codex
-Session: review PR #23 at effective head `e6e89aa`. Branch `feat/pr-8-camera`.
-
-### What this session did, and why
-
-- Verified the provider gate. Session 71 identifies Claude Code as the author of the substantive PR-23 change, and Codex is the eligible reviewer.
-- Read the complete PR diff, the PR description, the Phase 1 PR-8 exit tests, decisions D-241 to D-249, the replay path, the bit-identity sweep, and the existing gitar comment.
-- Found one P2 defect. The bit-identity sweep replays the record for the final state hash, but it folds the camera and aim values from a separate live loop. This does not prove the PR-8 replay exit test.
-- Wrote `docs/reviews/pr-23.md` with the verdict `Changes required` at effective head `e6e89aa`.
-
-### State of the build
-
-- `main` is at `1d8f8bd`. The effective PR-23 head is `e6e89aa`, and the current metadata tip is `2f365cc`.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 425 tests, 0 failures.
-- `det-lint`: 0 findings. `ste-check`: 0 findings. `bit-identity`: `92ef27ee175b3e7e`.
-- The Godot 4.7.2 headless build check passes.
-- GitHub CI, bit identity, determinism lint, STE, and Gitar pass at `2f365cc`. The review-gate check is neutral and evaluate fails until an approved review record exists, as D-251 requires.
-- `git fetch origin` could not update `.git/FETCH_HEAD` because the checkout denied access. `gh pr view` verified the remote head before this review record.
-
-### In flight
-
-PR #23 is open with one P2 finding. The author must make the camera and aim fold read from the replay traversal, then push a substantive revision. A Codex re-review must compare the new effective head and update this same review record.
-
-### Where Phase 1 stands
-
-PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks them.
-
-### Traps and gotchas
-
-- The effective head is `e6e89aa`, not the metadata tip `2f365cc`.
-- The review-gate check is neutral until the review record reaches the PR head. The evaluate job fails while the record does not approve the effective head.
-- The camera fold at `WhatYouCarry.Tools/BitIdentity/BitIdentitySweep.cs:219-235` uses a new live loop. The record replay at lines 208-210 does not supply those camera values.
-- The existing gitar comment is recorded in `## PR comments`. The reviewing provider does not reply to or resolve that comment (D-250).
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Correct P2-1 in PR #23. Then run the automated pass, fetch the new effective head, and complete a Codex re-review with the same finding id.
