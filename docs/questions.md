@@ -219,3 +219,10 @@ How to file a question (D-124, D-138):
 84. **OQ-84. The log line builder.** Raised 2026-09-08. Blocks PR-4. Options: `StringBuilder`, string concatenation, or a Core buffer. Recommendation: `StringBuilder`. The escape pass appends one character at a time, and a concatenation makes one string per character. Resolved 2026-09-08: D-213.
 85. **OQ-85. The PR-4 allowlist additions.** Raised 2026-09-08. Blocks PR-4. Core needs 8 types and 16 members that D-207 and D-208 do not hold. Options: the whole set, the set without the float field, or the set without the caller attributes. Recommendation: the whole set. A removal check proved every entry in use, and two entries of the PR-3 list proved dead. Resolved 2026-09-08: D-214 and D-215.
 86. **OQ-86. The lint member forms.** Raised 2026-09-08. Blocks PR-4. A target-typed `new`, a `base` initializer, and an indexer each reach a member that the D-208 rule never read, so `CultureInfo c = new("en-US", true);` gave no finding. Options: the fix in this PR, a separate PR, or a record and a later PR. Recommendation: the fix here. A merge gate with a known way around it is worse than a second concern in one PR. Resolved 2026-09-08: D-216.
+87. **OQ-87. The log name and value text rule.** Raised 2026-09-08 (PR #15 finding P2-7). PR-4 shipped a Core contract that no decision held. Options:
+    - keep the split, and record it as a decision.
+    - keep the split, and record no decision.
+    - reject invalid text in a value and a message too.
+    - take the replacement character in a name too, and compare names after the escape.
+
+    Recommendation: keep the split and record it. A name is an identifier, and a value and a message are content from the run. A throw on content loses a crash report at the moment that the owner needs it most. Resolved 2026-09-08: D-218.
