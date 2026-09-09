@@ -32,14 +32,25 @@ public static class DetLintCommand
             return 2;
         }
 
-        IReadOnlyList<string> files = CoreSourceScan.SourceFiles(root);
-        IReadOnlyList<LintFinding> findings = CoreSourceScan.Run(root);
-        foreach (LintFinding finding in findings)
+        // Two rule sets, one command. Core takes the determinism rules, and Game takes the string rule.
+        // The two never mix: Game has an engine dependency, and no player reads a Core string (D-222).
+        IReadOnlyList<string> coreFiles = CoreSourceScan.SourceFiles(root);
+        IReadOnlyList<LintFinding> coreFindings = CoreSourceScan.Run(root);
+        IReadOnlyList<string> gameFiles = GameStringScan.SourceFiles(root);
+        IReadOnlyList<LintFinding> gameFindings = GameStringScan.Run(root);
+
+        foreach (LintFinding finding in coreFindings)
         {
             Console.WriteLine(finding);
         }
 
-        Console.WriteLine($"det-lint: {findings.Count} finding(s) in {files.Count} Core file(s).");
-        return findings.Count == 0 ? 0 : 1;
+        foreach (LintFinding finding in gameFindings)
+        {
+            Console.WriteLine(finding);
+        }
+
+        int total = coreFindings.Count + gameFindings.Count;
+        Console.WriteLine($"det-lint: {total} finding(s). Core {coreFindings.Count} in {coreFiles.Count} file(s), Game {gameFindings.Count} in {gameFiles.Count} file(s).");
+        return total == 0 ? 0 : 1;
     }
 }

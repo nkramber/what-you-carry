@@ -1,0 +1,8 @@
+{
+  "hub.descend": "Descend",
+  "hub.bank": "Bank",
+  "run.ascend": "Ascend",
+  "run.descend": "Descend",
+  "run.timerExpired": "Something heard you.",
+  "error.contentMissing": "The game could not read its content."
+}

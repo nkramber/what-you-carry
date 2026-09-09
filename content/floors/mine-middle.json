@@ -1,0 +1,9 @@
+{
+  "id": "mine-middle",
+  "minDepth": 6,
+  "maxDepth": 10,
+  "roomCountMin": 8,
+  "roomCountMax": 13,
+  "difficultyBudget": 220,
+  "band": "older-workings"
+}

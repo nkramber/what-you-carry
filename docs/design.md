@@ -352,7 +352,7 @@ Implement the JSONL logger with a required field set per context (D-68, D-113). 
 Gate: a test proves that a log line without its context fails, and that an assertion report contains the seed.
 > *In plain English:* every message the game writes about itself now carries enough facts to replay the moment. A message without those facts is itself an error.
 
-**PR-5: Content loader, schemas, and the string table.** 🔧
+**PR-5: Content loader, schemas, and the string table.** 🔧 PR open.
 Implement the JSON content loader with one schema per content type (D-91, D-92). A load failure names the file, the field, and the reason. A test loads every content file in the repository. Implement the ID-keyed string table, and add a lint rule against inline strings that the player sees (D-98).
 Gate: a content file with an absent field fails the load test with the field name.
 > *In plain English:* every weapon, enemy, and screen text lives in data files with a strict shape. A file with a gap fails loudly instead of a silent zero.

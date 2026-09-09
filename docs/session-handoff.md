@@ -2,6 +2,53 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 55: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: PR-5, the content loader, the schemas, the content hash, and the string table. Branch `feat/pr-5-content`.
+
+### What this session did, and why
+
+- Started PR-5 after the owner merged PR #16. Four owner questions came before the code, and D-219 to D-223 record the answers.
+- D-219: Core takes the bytes from an `IContentSource` and opens no file. This applies D-211 one PR later, and it keeps a directory enumeration order out of the content hash.
+- D-220: `Utf8JsonReader` reads the JSON. It uses no serializer and no reflection, and it gives the position that D-92 needs for an error message. A hand-written parser holds the number, escape, and surrogate rules, and PR-4 took three review passes on the escape rules alone.
+- D-221: SHA-256 for the content hash, and FNV-1a stays for the state hash. One needs resistance, and the other needs speed.
+- D-222: one command, two rule sets. `det-lint` reads Core with the determinism rules and Game with the string rule of G-8.
+- D-223 records the allowlist additions: 9 types and 27 members. The lists hold 27 types and 53 members now.
+- Wrote `IContentSource`, `ContentFile`, `JsonObjectReader`, `ContentValidator`, `ContentError`, `ContentHash`, `Strings`, `FloorTemplate`, `ProjectileDefinition`, and `ContentLoader` in `Core/Content/`.
+- Wrote the first content: three floor templates for the three bands of D-210, two projectile definitions, and the string table.
+- Wrote `GameStringScan` in the lint tool, and the command reports the two counts.
+- 36 new tests. The total is 270. Exit tests 1 to 6 each have a test.
+- The tests caught one real defect. A malformed file let `JsonReaderException` out of Core, and that error names no file. Every content failure names the file, the field, and the reason now (D-92, T-2).
+
+### State of the build
+
+- `main` is at `a37f0af`. The branch holds the PR-5 work above it.
+- Remote head: `origin/feat/pr-5-content` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 270 tests and 0 failures.
+- `det-lint` reports 0 findings: Core 0 in 21 files, Game 0 in 0 files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged. PR-5 adds no simulation number.
+
+### In flight
+
+PR-5 waits for a Codex review (T-4). It changes code, so no override applies.
+
+### Traps and gotchas
+
+- A platform reader raises its own error type, and that error names no file. Wrap it, or the file name never reaches the owner.
+- The Game project holds no source file yet, so the Game scan reads nothing on this checkout. The rule has fixture tests, and `LintPassesGame` guards the real directory.
+- The three floor bands must cover floors 1 to 15 with no gap and no overlap. `EveryContentFileLoads` counts each depth.
+- An optional content field needs a default that the record states. `areaCentimetres` is zero when the file omits it.
+- A `Utf8JsonReader` is a ref struct, and it lives inside the try block that catches its error.
+
+### Open questions that block progress
+
+No new owner question. No open question blocks PR-6 to PR-11.
+
+### Next concrete action
+
+A Codex session reviews PR-5 per `.claude/skills/pr-review/SKILL.md`, under the scope rules of D-209, and writes `docs/reviews/pr-<number>.md`.
+
 ## Session 54: 2026-09-08, Claude Code
 
 Author: Claude Code
@@ -394,48 +441,3 @@ No new owner question. OQ-82 to OQ-86 are resolved by D-211 to D-216. No open qu
 ### Next concrete action
 
 A Codex session reviews PR-4 per `.claude/skills/pr-review/SKILL.md`, under the scope rules of D-209, and writes `docs/reviews/pr-<number>.md`.
-
-## Session 45: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: record the PR-3 merge across the documents. Branch `docs/pr-3-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #12 as `9e6fd5f`, after a Codex review gave the verdict `Ready for owner merge` at effective head `4d7cb3e`.
-- Audited every document against the merged state. The registers were complete: D-200 to D-209, OQ-73 to OQ-81, and F-60 to F-70 all landed with the PR.
-- Four documents held a stale line, and this session corrects each one.
-- `docs/roadmaps/phase-1-foundations.md`: the PR-3 status line said "opened", and it names the merge commit now. The header cited D-200 to D-203, and it cites D-200 to D-209 now. The correction passes record the PR-3 outcome.
-- `docs/design.md`: the PR-2 and PR-3 markers now name the merge, as the PR-1 marker does. The Phase 1 sequence marks PR-2 and PR-3 as merged.
-- `dotnet test` caught the one defect in this session. `RepositoryDocumentsPass` runs the STE checker over the repository, and a new sentence of 26 words failed it. The sentence is three sentences now. A second sentence failed the same limit later, for the biome entry.
-- The owner answered OQ-12, the last open question of Phase 1 before PR-9. The v1 biome is a collapsed deep mine (D-210). The block set holds seven blocks, and the three depth bands are floors 1 to 5, 6 to 10, and 11 to 15.
-- The biome answer reaches four documents: the decision register, the questions register, the design doc world section and PR-9 entry, and the PR-9 scope in the focused roadmap.
-- D-210 feeds four open questions that a later phase needs: OQ-1 the palette, OQ-61 the silhouettes, OQ-64 the props, and PR-14 the texture generator. The three props of OQ-64 belong in a mine with no change.
-
-### State of the build
-
-- `main` is at `9e6fd5f`, the squash merge of PR #12. This branch holds one commit above it.
-- Remote head: `origin/docs/pr-3-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 193 tests and 0 failures.
-- `det-lint` reports 0 findings in 4 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
-- GitHub reports green CI, lint, STE, and bit-identity jobs on `main` at `9e6fd5f`.
-
-### In flight
-
-This PR changes only `docs/`, so the `review-override` label covers it (D-190). It carries two concerns, the merge record and the biome decision, and the owner asked for one PR. PR-4 starts after the merge.
-
-### Traps and gotchas
-
-- `RepositoryDocumentsPass` fails the test suite on any STE finding. A document edit needs `dotnet test`, and not the checker alone.
-- A merged PR leaves a status line in two places: the focused roadmap and the design doc. The design doc also holds the Phase 1 sequence, which is a third place.
-- The roadmap header lists the decisions that the file applies. A PR that adds a decision extends that list.
-- Phase 1 has no gate before PR-11. Gate 1 needs the bit-identity job, `dotnet test`, and the night sweep of PR-58.
-
-### Open questions that block progress
-
-No new owner question. D-210 resolves OQ-12, so no open question blocks any PR of Phase 1. PR-4 to PR-11 each have every answer they need.
-
-### Next concrete action
-
-The owner merges this documentation PR with the `review-override` label. Then a new session starts PR-4: the JSONL logger, the error context sets, and the assertion helper (D-68, D-112, D-113). PR-4 is the first PR with no absent check, so the check clause of D-148 does not apply to it.

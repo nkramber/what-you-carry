@@ -1,0 +1,9 @@
+{
+  "id": "mine-upper",
+  "minDepth": 1,
+  "maxDepth": 5,
+  "roomCountMin": 5,
+  "roomCountMax": 9,
+  "difficultyBudget": 100,
+  "band": "working-mine"
+}

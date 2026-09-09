@@ -1,0 +1,8 @@
+{
+  "id": "arrow",
+  "speedCentimetres": 4000,
+  "gravityScalePercent": 100,
+  "lifetimeTicks": 300,
+  "damage": 25,
+  "areaCentimetres": 150
+}
