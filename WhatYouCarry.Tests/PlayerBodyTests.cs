@@ -546,6 +546,16 @@ public sealed class PlayerBodyTests
         Assert.InRange(wetApex, dryApex - 0.1f, dryApex + 0.1f);
         Assert.InRange(wetTicks, (2 * dryTicks) - 1, (2 * dryTicks) + 1);
 
+        // A body held in the air over the pool, with air under its feet, falls under the quarter gravity, and a body over rock under the whole gravity.
+        PlayerBody overWater = new(grid, new Vector3(3.5f, 4.0f, 2.0f));
+        PlayerBody overRock = new(grid, new Vector3(8.5f, 4.0f, 2.0f));
+        Assert.True(overWater.IsInWater());
+        Assert.False(overRock.IsInWater());
+        overWater.Step(Move(0, 0), 0);
+        overRock.Step(Move(0, 0), 0);
+        Assert.Equal(-PlayerBody.Gravity * PlayerBody.WaterGravityFactor * PlayerBody.TickSeconds, overWater.VerticalVelocity);
+        Assert.Equal(-PlayerBody.Gravity * PlayerBody.TickSeconds, overRock.VerticalVelocity);
+
         // A jump toward the edge of the pool lands on the rock at row 1, one block up.
         PlayerBody climber = new(grid, new Vector3(5.5f, 1.0f, 2.0f));
         for (uint tick = 0; tick < 120; tick++)

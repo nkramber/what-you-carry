@@ -17,6 +17,7 @@ Session: PR-59, the mine detail pass, the block ids, and the water rule. Branch 
 - The simulation version is 5 (D-260). The sweep content holds one template per band on floors 1 to 3, and the known answer moves from `036df5c08e2682e3` to `62c5e1d152fe94fe`.
 - The six exit tests of the roadmap entry pass. The reachability sweeps of PR-9 exit test 1 and PR-59 exit test 1 read one dig per seed through a shared report.
 - `TunnelCrossSection` steps over chamber cells, water cells, the cells around a pillar, and the cells around a collapse, because those are not tunnel cells (D-166).
+- The automated pass on `787c851` approved the code with two suggestions and one CI notice. The first suggestion asked for a decision on the water probe, and the owner gave it: D-264 revises D-262 in part, and OQ-132 holds the question. The second asked for a direct assertion of the quarter gravity in the air over water, and the test has it now. The CI notice on the absent review record has no merit (D-251). The correction commit holds the decision, the test, and this note.
 
 ### State of the build
 
@@ -29,7 +30,7 @@ Session: PR-59, the mine detail pass, the block ids, and the water rule. Branch 
 
 ### In flight
 
-PR #29 is open and it holds this branch. The automated pass runs on the push, and the author answers each comment. Then a Codex session reviews the PR at the effective head, which is `787c851` until a substantive push moves it. The review focus is determinism, content, test quality, and replay (roadmap PR-59). No other PR is open.
+PR #29 is open and it holds this branch. The automated pass approved `787c851`, and the correction commit answers its two suggestions. The effective head is that commit, and a Codex session reviews the PR at it. The review focus is determinism, content, test quality, and replay (roadmap PR-59). No other PR is open.
 
 ### Where Phase 1 stands
 
@@ -37,7 +38,7 @@ PR-1 to PR-9 are merged. PR-59 is open as PR #29. PR-10 and PR-11 remain, and th
 
 ### Traps and gotchas
 
-- One reading sits inside the roadmap scope and no decision names it: the water probe holds while the body is in the air over water. D-262 says "while the feet stand in a water cell". A probe of the feet cell alone gives an apex of 1.05 blocks at 1.6 times the ticks, because the quarter gravity goes as soon as the feet rise out of the cell. The review or the owner can ask for a decision.
+- The water probe reads the column under the feet (D-264). A probe of the feet cell alone gives an apex of 1.05 blocks at 1.6 times the ticks, because the quarter gravity goes as soon as the feet rise out of the cell.
 - A collapse must never fill a cell of a walker with a dependent. The first version filled cells of any walker that were dug by that walker alone, and a walker that looped back cut its own path to a chamber it dug earlier. Seed 418 of floor 14 found it.
 - The pillars come last in the detail pass, so no wall block lands on a pillar and no pool opens under one. A pool cell needs air over it and rock under it.
 - The pillars and the pools are cells with their floor row, not columns, because two chambers can stack on one column at two rows.
@@ -50,7 +51,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-Read the gitar comments on PR #29 and answer each one per the `pr-review` skill. Then a Codex session reviews PR #29 at the effective head, reads the PR comments into the review, and writes `docs/reviews/pr-29.md`. The review confirms the simulation version 5 and the bit-identity change under G-20.
+A Codex session reviews PR #29 per the `pr-review` skill at the effective head, reads the PR comments and the author replies into the review, and writes `docs/reviews/pr-29.md`. The review confirms the simulation version 5 and the bit-identity change under G-20.
 
 
 ## Session 78: 2026-09-09, Claude Code
