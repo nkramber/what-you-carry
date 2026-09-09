@@ -77,6 +77,8 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 - Nullable reference types on, warnings as errors (D-68).
 - xUnit. Property tests are seed loops. Each failure names its seed (D-66).
 - Every dependency needs a decision entry (G-16).
+- Core approves each type and member that it uses outside this project, by name and overload arity (D-207, D-208). A new entry needs a decision.
+- Verify each new allowlist entry before the PR opens: remove the entry, run `det-lint`, and check that a finding appears. A dead entry widens the boundary in silence.
 - Every optimization needs a profile before and a measurement after (G-17).
 
 ## Git rules
@@ -91,9 +93,13 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 
 - Build: `dotnet build WhatYouCarry.slnx`
 - Test: `dotnet test WhatYouCarry.slnx --no-build`
-- Godot build check: `Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
-- Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
 - STE check, the reference check, and the session number check: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .`
+- Determinism and string lint: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --root .`
+- Bit identity: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- bit-identity`
+- Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
+- Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
+
+The name `Godot` is not on the command path of this machine, so the check needs the full path above. `det-lint` reads Core with the determinism rules and the Game project with the string rule, and it reports one count for each (D-222). `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone.
 
 The layout is one directory per project at the root. `project.godot` lives in `WhatYouCarry.Game/`, next to its project file. The solution file stays at the root. Each project file names its target framework, because the Godot editor writes `net8.0` into a project file that has none.
 
@@ -104,7 +110,8 @@ A PR merges only when every line holds:
 - [ ] Tests written and green (T-3).
 - [ ] No silent failure. Every error carries context (T-2).
 - [ ] The three-platform bit-identity job is green (G-9).
-- [ ] The lint tool and the STE checker pass (G-2, G-14).
+- [ ] The `det-lint` job is green. It reads Core for the determinism rules and Game for the string rule (G-2, G-8, G-21).
+- [ ] The `ste-check` job is green (G-14).
 - [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
 - [ ] The `review-gate` check is green. Grey means no review record yet. Red means the review does not approve this head (D-179, D-181, D-185).
 - [ ] `docs/decisions.md` has every new decision.

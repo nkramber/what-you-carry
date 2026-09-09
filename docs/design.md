@@ -354,7 +354,7 @@ Implement the JSONL logger with a required field set per context (D-68, D-113). 
 Gate: a test proves that a log line without its context fails, and that an assertion report contains the seed.
 > *In plain English:* every message the game writes about itself now carries enough facts to replay the moment. A message without those facts is itself an error.
 
-**PR-5: Content loader, schemas, and the string table.** 🔧 PR open.
+**PR-5: Content loader, schemas, and the string table.** ✅ Merged 2026-09-08 as PR #17.
 Implement the JSON content loader with one schema per content type (D-91, D-92). A load failure names the file, the field, and the reason. A test loads every content file in the repository. Implement the ID-keyed string table, and add a lint rule against inline strings that the player sees (D-98).
 Gate: a content file with an absent field fails the load test with the field name.
 > *In plain English:* every weapon, enemy, and screen text lives in data files with a strict shape. A file with a gap fails loudly instead of a silent zero.
@@ -614,7 +614,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 2. Owner: receive the external SSD and move the checkout to it (D-145).
 3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170.
 4. PR-1, PR-2. ✅ PR-1 merged 2026-09-08 as PR #6. ✅ PR-2 merged 2026-09-08 as PR #10.
-5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12. ✅ PR-4 merged 2026-09-08 as PR #15.
+5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12. ✅ PR-4 merged 2026-09-08 as PR #15. ✅ PR-5 merged 2026-09-08 as PR #17.
 6. PR-6, PR-7, PR-8.
 7. PR-9, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).
 8. M-1, M-2.
