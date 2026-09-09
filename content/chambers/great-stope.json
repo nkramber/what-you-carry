@@ -1,0 +1,8 @@
+{
+  "id": "great-stope",
+  "weight": 40,
+  "boxCountMin": 3,
+  "boxCountMax": 6,
+  "boxSizeMin": 6,
+  "boxSizeMax": 10
+}

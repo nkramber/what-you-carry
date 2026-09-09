@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.Globalization;
+using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
-using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Simulation;
-using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Core.Replay;
 
@@ -18,23 +17,18 @@ namespace WhatYouCarry.Core.Replay;
 /// D-151 and start the floor fresh. A frame that fails its checksum is an error that names the frame.
 /// </para>
 /// <para>
-/// The caller supplies the grid and the spawn point, because no generator exists before PR-9 (D-236). The
-/// record does not carry them, so two callers with two grids replay two runs from one record until PR-9 derives
-/// both from the seed. The bit-identity sweep and every test build the same grid on each side.
+/// The loop digs every floor from the seed, the floor number, and the content set, so the record and the
+/// content set decide the whole run, and two callers with one record and one content set replay one run
+/// (D-236). The content hash of the header must match the hash of the set that the caller hands over.
 /// </para>
 /// <para>
 /// A torn tail is not an error. A crash can stop a write inside a frame, and the bytes before it are a complete
-/// run up to that tick (D-152). The replay stops at the last complete frame and writes one warning line.
+/// run up to that tick (D-152). The replay stops at the last complete frame and writes one warning line that
+/// names the floor of the state (D-228).
 /// </para>
 /// </remarks>
 public static class RunReplayer
 {
-    /// <summary>
-    /// The floor that the torn-tail line names (D-228). Every run starts at floor 1 (D-3), and a Phase 1 run
-    /// never leaves it. PR-31 reads the floor from the state instead, when the state holds one.
-    /// </summary>
-    public const int Floor = 1;
-
     /// <summary>The subsystem name of the torn-tail line.</summary>
     public const string Subsystem = "replay";
 
@@ -46,14 +40,12 @@ public static class RunReplayer
 
     /// <summary>The state after every complete frame of the record.</summary>
     /// <param name="record">The whole record: the header line and the frames.</param>
-    /// <param name="buildContentHash">The hash of the content set that this build loaded (D-163).</param>
-    /// <param name="grid">The grid of the floor (D-236).</param>
-    /// <param name="spawn">The feet center of the player at tick zero (D-236).</param>
+    /// <param name="content">The content set that this build loaded. Its hash must match the header (D-163).</param>
     /// <param name="logger">The logger that takes the torn-tail line.</param>
-    /// <exception cref="ContextException">The header is not valid, a version or the content hash does not match this build, the spawn point is inside rock, or a frame fails its checksum, its tick order, or its reserved bits.</exception>
-    public static ReplayResult Replay(IReadOnlyList<byte> record, string buildContentHash, VoxelGrid grid, Vector3 spawn, JsonlLogger logger)
+    /// <exception cref="ContextException">The header is not valid, a version or the content hash does not match this build, the content cannot dig a floor, or a frame fails its checksum, its tick order, its reserved bits, or the run end.</exception>
+    public static ReplayResult Replay(IReadOnlyList<byte> record, ContentSet content, JsonlLogger logger)
     {
-        return Replay(record, buildContentHash, grid, spawn, logger, SilentObserver.Instance);
+        return Replay(record, content, logger, SilentObserver.Instance);
     }
 
     /// <summary>
@@ -61,21 +53,19 @@ public static class RunReplayer
     /// replayed frame (PR-8 exit test 5).
     /// </summary>
     /// <param name="record">The whole record: the header line and the frames.</param>
-    /// <param name="buildContentHash">The hash of the content set that this build loaded (D-163).</param>
-    /// <param name="grid">The grid of the floor (D-236).</param>
-    /// <param name="spawn">The feet center of the player at tick zero (D-236).</param>
+    /// <param name="content">The content set that this build loaded. Its hash must match the header (D-163).</param>
     /// <param name="logger">The logger that takes the torn-tail line.</param>
     /// <param name="observer">The reader of the loop after each replayed frame.</param>
-    /// <exception cref="ContextException">The header is not valid, a version or the content hash does not match this build, the spawn point is inside rock, or a frame fails its checksum, its tick order, or its reserved bits.</exception>
-    public static ReplayResult Replay(IReadOnlyList<byte> record, string buildContentHash, VoxelGrid grid, Vector3 spawn, JsonlLogger logger, IReplayObserver observer)
+    /// <exception cref="ContextException">The header is not valid, a version or the content hash does not match this build, the content cannot dig a floor, or a frame fails its checksum, its tick order, its reserved bits, or the run end.</exception>
+    public static ReplayResult Replay(IReadOnlyList<byte> record, ContentSet content, JsonlLogger logger, IReplayObserver observer)
     {
         (RunRecordHeader header, int bodyStart) = RunRecord.ReadHeader(record);
 
-        if (header.ContentHash != buildContentHash)
+        if (header.ContentHash != content.Hash)
         {
-            ContextException mismatch = new($"The run record comes from content hash {header.ContentHash}, and this build loaded content hash {buildContentHash}. A replay is exact only on a match (D-151).");
+            ContextException mismatch = new($"The run record comes from content hash {header.ContentHash}, and this build loaded content hash {content.Hash}. A replay is exact only on a match (D-151).");
             mismatch.AddContext("recordContentHash", header.ContentHash);
-            mismatch.AddContext("buildContentHash", buildContentHash);
+            mismatch.AddContext("buildContentHash", content.Hash);
             throw mismatch;
         }
 
@@ -83,7 +73,7 @@ public static class RunReplayer
         int frameCount = bodyLength / Intent.FrameSize;
         int tornBytes = bodyLength - (frameCount * Intent.FrameSize);
 
-        SimulationLoop loop = new(header.Seed, grid, spawn);
+        SimulationLoop loop = new(header.Seed, content);
         for (int frame = 0; frame < frameCount; frame++)
         {
             try
@@ -105,7 +95,7 @@ public static class RunReplayer
         {
             LogFields fields = new();
             fields.Add("seed", header.Seed);
-            fields.Add("floor", (long)Floor);
+            fields.Add("floor", (long)loop.Floor);
             fields.Add("tick", (long)loop.Tick);
             fields.Add("subsystem", Subsystem);
             long[] entities = [];

@@ -1,0 +1,8 @@
+{
+  "id": "crosscut-junction",
+  "weight": 12,
+  "boxCountMin": 2,
+  "boxCountMax": 3,
+  "boxSizeMin": 3,
+  "boxSizeMax": 5
+}

@@ -1,5 +1,104 @@
 # Session handoff archive
 
+## Session 67: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: record the automated review pass of gitar (D-250), and run its first cycles on PR #23 and on this PR. Branch `docs/gitar-review-pass`.
+
+### What this session did, and why
+
+- The owner added an automated reviewer, gitar, that comments on every PR after a push, and gave the rule for it. D-250 records the rule as an owner instruction.
+- The `pr-review` skill gained two procedures: "The automated pass" for the author, and "Do not address the automated reviewer" for the reviewing provider. The review record skeleton gained a `## PR comments` part, and the scope limits name a reply to gitar as an external message.
+- The agent files gained the "Automated review pass" section and a gate line. Design section 3.14 names the pass.
+- The first pass on PR #23 gave one comment: approved, no issue. PR #23 is ready for the Codex review with no change.
+- The pass on this PR gave one comment with one finding: the register jumps from D-247 to D-250. No merit. D-248 and D-249 live in PR #23, and ids never change, so D-250 stays. The reply on the thread says so, and the thread is resolved. The owner asked for the reply alone and no note in the register.
+- This branch comes from `main`, so it holds neither D-248, nor D-249, nor Session 66. Each of those lands with PR #23.
+
+### State of the build
+
+- `main` is at `9209fb5`, the squash merge of PR #22. This branch holds three document commits above it.
+- Remote head: `origin/docs/gitar-review-pass` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 398 tests, 0 failures, on the code of `main`.
+- `det-lint`: 0 findings. Core 0 in 37 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `e8ef2b1fad938845`, the value of `main`. PR #23 moves it to `92ef27ee175b3e7e`.
+
+### In flight
+
+- PR #24 is open and it holds this branch. It changes documents, skills, and the agent files alone, so the `review-override` label covers it (D-190). The owner added the label before the second commit, so the label needs a new add after the last push.
+- PR #23 is open on `feat/pr-8-camera`, with the effective head `e6d40e0`. It is ready for the Codex review.
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- Two open PRs both add a handoff entry at the top of the file and a decision row after D-247, and the second one to merge needs a merge from `main` first. After this PR merges, merge `main` into `feat/pr-8-camera` and order the entries and the rows by number: Session 68, 67, 66, and D-248, D-249, D-250.
+- The override label is stale after any push outside the metadata set (D-190). Add it after the last push, and not before.
+- gitar posts one comment on the PR with its verdict inside a details block, and one review thread on the line of each finding. The thread has a GraphQL node id, and `addPullRequestReviewThreadReply` answers it. The REST list of pull comments was empty while the pass still ran.
+- A reply to gitar names no provider (T-6). It states the evidence and the commit. A gap or a fact that an open PR explains gets the reply alone, and no note in a register.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner adds the `review-override` label to PR #24 again and merges it. Then merge `main` into `feat/pr-8-camera`, order the entries and the rows by number, and add the Session 68 entry that records the pass on PR #23. A Codex session then reviews PR #23 per the `pr-review` skill, reads the existing PR comments into the review, and never addresses gitar (D-250).
+
+## Session 66: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: PR-8, the orbit camera, the ray march, the aim ray, and aim assist. Branch `feat/pr-8-camera`.
+
+### What this session did, and why
+
+- The owner merged PR #22 as `9209fb5`. The handoff named PR-8 as the next action, under D-241 to D-247.
+- Asked two owner questions in one batch, and D-248 and D-249 record the answers. OQ-117 and OQ-118 hold the questions.
+- D-248: a positive pitch looks up.
+- D-249: the camera runs two marches. The first pulls the shoulder point in at a wall, and the second runs the boom. The shoulder point of D-242 sits inside rock when the player hugs a right wall, and the pivot never does.
+- Wrote `GridRay`, the grid traversal of Amanatides and Woo, with a tie order of X, then Y, then Z. Wrote `CameraPose`, `OrbitCamera`, `AimRay`, and `AimAssist`. `Vector3` gained subtraction, a scale, the dot and cross products, and the length.
+- The loop gives `Camera()` and `Aim(targets)` on demand, and neither is state (D-245). The pitch clamp is 8000 (D-241), and bit 8 is the controller aim flag (D-243).
+- The assist is a spherical interpolation by the strength, with the angle from `Atan2` of the cross length and the dot product, so a small angle stays exact.
+- The simulation version is 3, and the bit-identity hash moved from `e8ef2b1fad938845` to `92ef27ee175b3e7e` on purpose (G-20). The sweep folds in the camera pose and the aim ray of every tick.
+- No allowlist entry. 26 new tests, 424 in total. Opened PR #23.
+
+### State of the build
+
+- `main` is at `9209fb5`, the squash merge of PR #22. This branch holds one commit above it.
+- Remote head: `origin/feat/pr-8-camera` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 424 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 42 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `92ef27ee175b3e7e`. PR-8 moved it from `e8ef2b1fad938845` on purpose, and `BitIdentityKnownAnswer` pins the new value.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #23 is open and it holds this branch. It changes code, so it needs a Codex review with the verdict `Ready for owner merge` at the effective head. No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 is open. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The hash moves in this PR, and that is the point of G-20. A review that sees the new value must confirm it and not restore the old one.
+- The loop hash reads the buttons, so two loops that differ in the controller aim bit alone give two hashes and one camera pose. A test that expects one hash there fails.
+- The march tie order is X, then Y, then Z. A line through a corner visits the cell at the corner, so the march can hit a block that a point sample of the line misses. The fine-walk test allows one millimeter for that.
+- A miss carries the whole segment length as its distance, and a zero-length segment carries zero.
+- The camera range check reads the loop ranges. A yaw of 36000 or a pitch of 8001 is an error, and a test that builds a pose by hand stays inside them.
+- The sweep grid holds one-block steps and two-block pillars, and the boom meets them on many ticks. A change to `ReplayGrid` or to the sweep targets moves the hash.
+- `StateHash` has no `==` operator. The camera tests compare `.Value`.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #23 per the `pr-review` skill, at the effective head, and writes `docs/reviews/pr-23.md`. The review focus is determinism, replay, and test quality, and it confirms the simulation version 3 and the bit-identity change under G-20.
+
 ## Session 65: 2026-09-09, Claude Code
 
 Author: Claude Code

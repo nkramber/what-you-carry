@@ -10,10 +10,9 @@ using Xunit;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The player body and the loop that moves it (D-165, D-231 to D-238; PR-7 exit tests 2 to 5).</summary>
+/// <summary>The player body (D-165, D-231 to D-238; PR-7 exit tests 2 to 5). The motion tests step the body on the flat floor of <see cref="TestWorld"/> with an explicit yaw, and the replay test runs the loop on a dug floor (D-236, PR-9).</summary>
 public sealed class PlayerBodyTests
 {
-    private const string Hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
     private const float Skin = SweptAabb.ContactSkin;
     private const float TickMove = PlayerBody.WalkSpeed * PlayerBody.TickSeconds;
 
@@ -60,7 +59,7 @@ public sealed class PlayerBodyTests
         Assert.Equal(127, PlayerBody.MoveScale);
     }
 
-    /// <summary>The button bits of D-232 and D-243, one by one, and the two masks.</summary>
+    /// <summary>The button bits of D-232, D-243, and D-257, one by one, and the two masks.</summary>
     [Fact]
     public void TheButtonBitsHold()
     {
@@ -73,8 +72,9 @@ public sealed class PlayerBodyTests
         Assert.Equal(0x0040, Button.QuickSlotNext);
         Assert.Equal(0x0080, Button.QuickSlotPrevious);
         Assert.Equal(0x0100, Button.ControllerAim);
-        Assert.Equal(0x01FF, Button.AssignedMask);
-        Assert.Equal(0xFE00, Button.ReservedMask);
+        Assert.Equal(0x0200, Button.Ascend);
+        Assert.Equal(0x03FF, Button.AssignedMask);
+        Assert.Equal(0xFC00, Button.ReservedMask);
         Assert.Equal(0xFFFF, Button.AssignedMask | Button.ReservedMask);
         Assert.Equal(0, Button.AssignedMask & Button.ReservedMask);
     }
@@ -103,14 +103,14 @@ public sealed class PlayerBodyTests
             }
 
             float floorTop = floorRow + 1;
-            SimulationLoop loop = new((ulong)seed, grid, new Vector3(4.5f, floorTop, 4.5f));
+            PlayerBody body = new(grid, new Vector3(4.5f, floorTop, 4.5f));
             for (uint tick = 0; tick < 1000; tick++)
             {
-                loop.Step(SimulationTests.RandomIntent(random, tick));
-                Assert.True(loop.Body.Position.Y >= floorTop, $"Seed {seed}, tick {tick}: the feet are at {loop.Body.Position.Y}, below the floor top {floorTop}.");
+                body.Step(SimulationTests.RandomIntent(random, tick), random.Next(SimulationLoop.FullTurn));
+                Assert.True(body.Position.Y >= floorTop, $"Seed {seed}, tick {tick}: the feet are at {body.Position.Y}, below the floor top {floorTop}.");
             }
 
-            Assert.True(loop.Body.IsOnGround() || loop.Body.Position.Y > floorTop + Skin, $"Seed {seed}: the body is neither on the ground nor above it at {loop.Body.Position}.");
+            Assert.True(body.IsOnGround() || body.Position.Y > floorTop + Skin, $"Seed {seed}: the body is neither on the ground nor above it at {body.Position}.");
         }
     }
 
@@ -141,33 +141,33 @@ public sealed class PlayerBodyTests
         }
 
         // The body walks toward plus X, which is strafe at yaw zero (D-234), and jumps on the first tick.
-        SimulationLoop loop = new(1UL, grid, new Vector3(4.5f, 1.0f, 2.0f));
+        PlayerBody body = new(grid, new Vector3(4.5f, 1.0f, 2.0f));
         float stepTop = 1.0f + stepHeight;
         float highestFeet = 0.0f;
         for (uint tick = 0; tick < 90; tick++)
         {
-            loop.Step(Move(127, 0, tick == 0 ? Button.Jump : (ushort)0, tick));
-            highestFeet = MathF.Max(highestFeet, loop.Body.Position.Y);
+            body.Step(Move(127, 0, tick == 0 ? Button.Jump : (ushort)0, tick), 0);
+            highestFeet = MathF.Max(highestFeet, body.Position.Y);
             if (!lands)
             {
-                Assert.True(loop.Body.Box.Max.X <= 6.0f, $"Tick {tick}: the body passed the two-block step at {loop.Body.Position}.");
+                Assert.True(body.Box.Max.X <= 6.0f, $"Tick {tick}: the body passed the two-block step at {body.Position}.");
             }
         }
 
         if (lands)
         {
-            Assert.InRange(loop.Body.Position.Y, stepTop, stepTop + PlayerBody.GroundProbe);
-            Assert.True(loop.Body.Box.Min.X >= 6.0f, $"The body is at {loop.Body.Position}, and not on the step.");
+            Assert.InRange(body.Position.Y, stepTop, stepTop + PlayerBody.GroundProbe);
+            Assert.True(body.Box.Min.X >= 6.0f, $"The body is at {body.Position}, and not on the step.");
         }
         else
         {
             Assert.True(highestFeet < stepTop, $"The feet reached {highestFeet}, at or above the two-block step top {stepTop}.");
-            Assert.InRange(loop.Body.Position.Y, 1.0f, 1.0f + PlayerBody.GroundProbe);
-            Assert.InRange(loop.Body.Box.Max.X, 6.0f - Skin - 1e-5f, 6.0f - Skin + 1e-5f);
+            Assert.InRange(body.Position.Y, 1.0f, 1.0f + PlayerBody.GroundProbe);
+            Assert.InRange(body.Box.Max.X, 6.0f - Skin - 1e-5f, 6.0f - Skin + 1e-5f);
         }
 
-        Assert.True(loop.Body.IsOnGround());
-        Assert.Equal(0.0f, loop.Body.VerticalVelocity);
+        Assert.True(body.IsOnGround());
+        Assert.Equal(0.0f, body.VerticalVelocity);
     }
 
     /// <summary>
@@ -181,17 +181,17 @@ public sealed class PlayerBodyTests
         {
             Random random = new(seed);
             (VoxelGrid grid, Vector3 spawn) = TestWorld.RandomWorld(random);
-            SimulationLoop loop = new((ulong)seed, grid, spawn);
+            PlayerBody body = new(grid, spawn);
             for (uint tick = 0; tick < 300; tick++)
             {
-                loop.Step(SimulationTests.RandomIntent(random, tick));
-                Assert.False(SweptAabb.Overlaps(grid, loop.Body.Box), $"Seed {seed}, tick {tick}: the body at {loop.Body.Position} overlaps a solid block.");
+                body.Step(SimulationTests.RandomIntent(random, tick), random.Next(SimulationLoop.FullTurn));
+                Assert.False(SweptAabb.Overlaps(grid, body.Box), $"Seed {seed}, tick {tick}: the body at {body.Position} overlaps a solid block.");
             }
         }
     }
 
     /// <summary>
-    /// PR-7 exit test 5. Over one hundred seeds in random grids, a recorded run replays to the live end hash, and
+    /// PR-7 exit test 5. Over one hundred seeds on dug floors, a recorded run replays to the live end hash, and
     /// a second live run of the same intents gives the same hash. A failure names its seed (D-66).
     /// </summary>
     [Fact]
@@ -200,12 +200,11 @@ public sealed class PlayerBodyTests
         for (int seed = 1; seed <= 100; seed++)
         {
             Random random = new(seed);
-            (VoxelGrid grid, Vector3 spawn) = TestWorld.RandomWorld(random);
 
             MemorySink sink = new();
-            RunRecorder recorder = new(sink, RunRecord.NewHeader(Hash, (ulong)seed));
-            SimulationLoop live = new((ulong)seed, grid, spawn);
-            SimulationLoop twin = new((ulong)seed, grid, spawn);
+            RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.Content.Hash, (ulong)seed));
+            SimulationLoop live = TestWorld.NewLoop((ulong)seed);
+            SimulationLoop twin = TestWorld.NewLoop((ulong)seed);
             for (uint tick = 0; tick < 200; tick++)
             {
                 Intent intent = SimulationTests.RandomIntent(random, tick);
@@ -215,7 +214,7 @@ public sealed class PlayerBodyTests
             }
 
             CollectingSink logs = new();
-            ReplayResult replay = RunReplayer.Replay(sink.Bytes, Hash, grid, spawn, new JsonlLogger(logs));
+            ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.Content, new JsonlLogger(logs));
 
             Assert.True(live.Hash().Value == replay.Loop.Hash().Value, $"Seed {seed}: the live hash is {live.Hash()}, and the replay gives {replay.Loop.Hash()}.");
             Assert.True(live.Hash().Value == twin.Hash().Value, $"Seed {seed}: two live runs of one intent stream give {live.Hash()} and {twin.Hash()}.");
@@ -224,11 +223,11 @@ public sealed class PlayerBodyTests
         }
     }
 
-    /// <summary>A set reserved bit is an error that names the tick and the buttons, and the tick does not advance (D-232, D-243, T-2).</summary>
+    /// <summary>A set reserved bit is an error that names the tick and the buttons, and the tick does not advance (D-232, D-243, D-257, T-2).</summary>
     [Theory]
-    [InlineData(0x0200)]
+    [InlineData(0x0400)]
     [InlineData(0x8000)]
-    [InlineData(0xFE00)]
+    [InlineData(0xFC00)]
     [InlineData(0xFFFF)]
     public void AReservedButtonBitIsAnError(int buttons)
     {
@@ -248,117 +247,116 @@ public sealed class PlayerBodyTests
     {
         SimulationLoop loop = TestWorld.NewLoop(1UL);
         uint tick = 0;
-        for (int bit = 0; bit < 9; bit++)
+        for (int bit = 0; bit < 10; bit++)
         {
             loop.Step(Move(0, 0, (ushort)(1 << bit), tick++));
         }
 
         loop.Step(Move(0, 0, Button.AssignedMask, tick++));
-        Assert.Equal(10U, loop.Tick);
+        Assert.Equal(11U, loop.Tick);
     }
 
     /// <summary>Forward at yaw zero is minus Z, and strafe is plus X, at the walk speed (D-233, D-234).</summary>
     [Fact]
     public void ForwardAtYawZeroIsMinusZ()
     {
-        SimulationLoop forward = TestWorld.NewLoop(1UL);
-        forward.Step(Move(0, 127));
-        Assert.Equal(TestWorld.Spawn.X, forward.Body.Position.X);
-        Assert.InRange(forward.Body.Position.Z, TestWorld.Spawn.Z - TickMove - 1e-6f, TestWorld.Spawn.Z - TickMove + 1e-6f);
+        PlayerBody forward = TestWorld.NewBody();
+        forward.Step(Move(0, 127), 0);
+        Assert.Equal(TestWorld.Spawn.X, forward.Position.X);
+        Assert.InRange(forward.Position.Z, TestWorld.Spawn.Z - TickMove - 1e-6f, TestWorld.Spawn.Z - TickMove + 1e-6f);
 
-        SimulationLoop strafe = TestWorld.NewLoop(1UL);
-        strafe.Step(Move(127, 0));
-        Assert.InRange(strafe.Body.Position.X, TestWorld.Spawn.X + TickMove - 1e-6f, TestWorld.Spawn.X + TickMove + 1e-6f);
-        Assert.Equal(TestWorld.Spawn.Z, strafe.Body.Position.Z);
+        PlayerBody strafe = TestWorld.NewBody();
+        strafe.Step(Move(127, 0), 0);
+        Assert.InRange(strafe.Position.X, TestWorld.Spawn.X + TickMove - 1e-6f, TestWorld.Spawn.X + TickMove + 1e-6f);
+        Assert.Equal(TestWorld.Spawn.Z, strafe.Position.Z);
 
-        SimulationLoop backward = TestWorld.NewLoop(1UL);
-        backward.Step(Move(0, -127));
-        Assert.InRange(backward.Body.Position.Z, TestWorld.Spawn.Z + TickMove - 1e-6f, TestWorld.Spawn.Z + TickMove + 1e-6f);
+        PlayerBody backward = TestWorld.NewBody();
+        backward.Step(Move(0, -127), 0);
+        Assert.InRange(backward.Position.Z, TestWorld.Spawn.Z + TickMove - 1e-6f, TestWorld.Spawn.Z + TickMove + 1e-6f);
     }
 
     /// <summary>
     /// The yaw turns counterclockwise seen from above, so forward at 90 degrees is minus X and strafe is minus
-    /// Z (D-234). The look delta of an intent applies before its movement.
+    /// Z (D-234). The loop test of the same name asserts that the look delta of an intent applies before its movement.
     /// </summary>
     [Fact]
     public void ForwardAtNinetyDegreesIsMinusX()
     {
-        SimulationLoop forward = TestWorld.NewLoop(1UL);
-        forward.Step(new Intent(0U, 9000, 0, 0, 127, 0));
-        Assert.Equal(9000, forward.Yaw);
-        Assert.InRange(forward.Body.Position.X, TestWorld.Spawn.X - TickMove - 1e-5f, TestWorld.Spawn.X - TickMove + 1e-5f);
-        Assert.InRange(forward.Body.Position.Z, TestWorld.Spawn.Z - 1e-5f, TestWorld.Spawn.Z + 1e-5f);
+        PlayerBody forward = TestWorld.NewBody();
+        forward.Step(new Intent(0U, 0, 0, 0, 127, 0), 9000);
+        Assert.InRange(forward.Position.X, TestWorld.Spawn.X - TickMove - 1e-5f, TestWorld.Spawn.X - TickMove + 1e-5f);
+        Assert.InRange(forward.Position.Z, TestWorld.Spawn.Z - 1e-5f, TestWorld.Spawn.Z + 1e-5f);
 
-        SimulationLoop strafe = TestWorld.NewLoop(1UL);
-        strafe.Step(new Intent(0U, 9000, 0, 127, 0, 0));
-        Assert.InRange(strafe.Body.Position.Z, TestWorld.Spawn.Z - TickMove - 1e-5f, TestWorld.Spawn.Z - TickMove + 1e-5f);
-        Assert.InRange(strafe.Body.Position.X, TestWorld.Spawn.X - 1e-5f, TestWorld.Spawn.X + 1e-5f);
+        PlayerBody strafe = TestWorld.NewBody();
+        strafe.Step(new Intent(0U, 0, 0, 127, 0, 0), 9000);
+        Assert.InRange(strafe.Position.Z, TestWorld.Spawn.Z - TickMove - 1e-5f, TestWorld.Spawn.Z - TickMove + 1e-5f);
+        Assert.InRange(strafe.Position.X, TestWorld.Spawn.X - 1e-5f, TestWorld.Spawn.X + 1e-5f);
 
-        SimulationLoop half = TestWorld.NewLoop(1UL);
-        half.Step(new Intent(0U, 18000, 0, 0, 127, 0));
-        Assert.InRange(half.Body.Position.Z, TestWorld.Spawn.Z + TickMove - 1e-5f, TestWorld.Spawn.Z + TickMove + 1e-5f);
+        PlayerBody half = TestWorld.NewBody();
+        half.Step(new Intent(0U, 0, 0, 0, 127, 0), 18000);
+        Assert.InRange(half.Position.Z, TestWorld.Spawn.Z + TickMove - 1e-5f, TestWorld.Spawn.Z + TickMove + 1e-5f);
     }
 
     /// <summary>A diagonal moves at the walk speed and not faster, because the pair clamps to a length of one (D-233).</summary>
     [Fact]
     public void ADiagonalIsNotFasterThanAStraightLine()
     {
-        SimulationLoop loop = TestWorld.NewLoop(1UL);
-        loop.Step(Move(127, 127));
+        PlayerBody body = TestWorld.NewBody();
+        body.Step(Move(127, 127), 0);
 
-        float dx = loop.Body.Position.X - TestWorld.Spawn.X;
-        float dz = loop.Body.Position.Z - TestWorld.Spawn.Z;
+        float dx = body.Position.X - TestWorld.Spawn.X;
+        float dz = body.Position.Z - TestWorld.Spawn.Z;
         float moved = MathF.Sqrt((dx * dx) + (dz * dz));
         Assert.InRange(moved, TickMove - 1e-5f, TickMove + 1e-5f);
         Assert.True(dx > 0.0f && dz < 0.0f, $"A diagonal of strafe right and forward moved by ({dx}, {dz}).");
 
         // A pair inside the unit circle keeps its length, so a half push moves at half speed.
-        SimulationLoop half = TestWorld.NewLoop(1UL);
-        half.Step(Move(64, 0));
-        Assert.InRange(half.Body.Position.X - TestWorld.Spawn.X, (64.0f / 127.0f * TickMove) - 1e-6f, (64.0f / 127.0f * TickMove) + 1e-6f);
+        PlayerBody half = TestWorld.NewBody();
+        half.Step(Move(64, 0), 0);
+        Assert.InRange(half.Position.X - TestWorld.Spawn.X, (64.0f / 127.0f * TickMove) - 1e-6f, (64.0f / 127.0f * TickMove) + 1e-6f);
     }
 
     /// <summary>A movement byte of -128 clamps to -127, so both directions have one magnitude (D-233).</summary>
     [Fact]
     public void MinusOneTwentyEightClampsToMinusOneTwentySeven()
     {
-        SimulationLoop left = TestWorld.NewLoop(1UL);
-        left.Step(Move(-128, 0));
-        SimulationLoop right = TestWorld.NewLoop(1UL);
-        right.Step(Move(127, 0));
+        PlayerBody left = TestWorld.NewBody();
+        left.Step(Move(-128, 0), 0);
+        PlayerBody right = TestWorld.NewBody();
+        right.Step(Move(127, 0), 0);
 
-        float leftMove = TestWorld.Spawn.X - left.Body.Position.X;
-        float rightMove = right.Body.Position.X - TestWorld.Spawn.X;
+        float leftMove = TestWorld.Spawn.X - left.Position.X;
+        float rightMove = right.Position.X - TestWorld.Spawn.X;
         Assert.Equal(rightMove, leftMove);
 
-        SimulationLoop back = TestWorld.NewLoop(1UL);
-        back.Step(Move(0, -128));
-        Assert.Equal(rightMove, back.Body.Position.Z - TestWorld.Spawn.Z);
+        PlayerBody back = TestWorld.NewBody();
+        back.Step(Move(0, -128), 0);
+        Assert.Equal(rightMove, back.Position.Z - TestWorld.Spawn.Z);
     }
 
     /// <summary>The sprint bit selects the sprint speed, and sprint is free (D-28, D-231, D-233).</summary>
     [Fact]
     public void TheSprintBitSelectsTheSprintSpeed()
     {
-        SimulationLoop loop = TestWorld.NewLoop(1UL);
-        loop.Step(Move(127, 0, Button.Sprint));
+        PlayerBody body = TestWorld.NewBody();
+        body.Step(Move(127, 0, Button.Sprint), 0);
 
         float expected = PlayerBody.SprintSpeed * PlayerBody.TickSeconds;
-        Assert.InRange(loop.Body.Position.X - TestWorld.Spawn.X, expected - 1e-6f, expected + 1e-6f);
+        Assert.InRange(body.Position.X - TestWorld.Spawn.X, expected - 1e-6f, expected + 1e-6f);
     }
 
     /// <summary>A body at rest keeps its exact position and a vertical velocity of zero, tick after tick.</summary>
     [Fact]
     public void ABodyAtRestKeepsItsPosition()
     {
-        SimulationLoop loop = TestWorld.NewLoop(1UL);
-        Assert.True(loop.Body.IsOnGround());
+        PlayerBody body = TestWorld.NewBody();
+        Assert.True(body.IsOnGround());
         for (uint tick = 0; tick < 100; tick++)
         {
-            loop.Step(Move(0, 0, 0, tick));
-            Assert.Equal(TestWorld.Spawn, loop.Body.Position);
-            Assert.Equal(0.0f, loop.Body.VerticalVelocity);
-            Assert.True(loop.Body.IsOnGround());
+            body.Step(Move(0, 0, 0, tick), 0);
+            Assert.Equal(TestWorld.Spawn, body.Position);
+            Assert.Equal(0.0f, body.VerticalVelocity);
+            Assert.True(body.IsOnGround());
         }
     }
 
@@ -366,48 +364,48 @@ public sealed class PlayerBodyTests
     [Fact]
     public void AFallLandsOnTheFloor()
     {
-        SimulationLoop loop = new(1UL, TestWorld.FlatFloor(), new Vector3(4.5f, 4.0f, 4.5f));
-        Assert.False(loop.Body.IsOnGround());
+        PlayerBody body = new(TestWorld.FlatFloor(), new Vector3(4.5f, 4.0f, 4.5f));
+        Assert.False(body.IsOnGround());
 
         bool fell = false;
         for (uint tick = 0; tick < 120; tick++)
         {
-            loop.Step(Move(0, 0, 0, tick));
-            if (loop.Body.VerticalVelocity < 0.0f)
+            body.Step(Move(0, 0, 0, tick), 0);
+            if (body.VerticalVelocity < 0.0f)
             {
                 fell = true;
             }
         }
 
         Assert.True(fell);
-        Assert.InRange(loop.Body.Position.Y, TestWorld.FloorTop, TestWorld.FloorTop + PlayerBody.GroundProbe);
-        Assert.Equal(0.0f, loop.Body.VerticalVelocity);
-        Assert.True(loop.Body.IsOnGround());
+        Assert.InRange(body.Position.Y, TestWorld.FloorTop, TestWorld.FloorTop + PlayerBody.GroundProbe);
+        Assert.Equal(0.0f, body.VerticalVelocity);
+        Assert.True(body.IsOnGround());
     }
 
     /// <summary>A jump needs the ground. A second press in the air changes nothing, and the body lands again.</summary>
     [Fact]
     public void AJumpNeedsTheGround()
     {
-        SimulationLoop single = TestWorld.NewLoop(1UL);
-        SimulationLoop repeated = TestWorld.NewLoop(1UL);
+        PlayerBody single = TestWorld.NewBody();
+        PlayerBody repeated = TestWorld.NewBody();
         for (uint tick = 0; tick < 60; tick++)
         {
-            single.Step(Move(0, 0, tick == 0 ? Button.Jump : (ushort)0, tick));
-            repeated.Step(Move(0, 0, tick == 0 || tick == 10 ? Button.Jump : (ushort)0, tick));
-            Assert.Equal(single.Body.Position, repeated.Body.Position);
-            Assert.Equal(single.Body.VerticalVelocity, repeated.Body.VerticalVelocity);
+            single.Step(Move(0, 0, tick == 0 ? Button.Jump : (ushort)0, tick), 0);
+            repeated.Step(Move(0, 0, tick == 0 || tick == 10 ? Button.Jump : (ushort)0, tick), 0);
+            Assert.Equal(single.Position, repeated.Position);
+            Assert.Equal(single.VerticalVelocity, repeated.VerticalVelocity);
         }
 
-        Assert.True(single.Body.IsOnGround());
-        Assert.InRange(single.Body.Position.Y, TestWorld.FloorTop, TestWorld.FloorTop + PlayerBody.GroundProbe);
+        Assert.True(single.IsOnGround());
+        Assert.InRange(single.Position.Y, TestWorld.FloorTop, TestWorld.FloorTop + PlayerBody.GroundProbe);
 
         // The first tick of a jump leaves the ground at the jump velocity less one tick of gravity.
-        SimulationLoop first = TestWorld.NewLoop(1UL);
-        first.Step(Move(0, 0, Button.Jump));
-        Assert.Equal(PlayerBody.JumpVelocity - (PlayerBody.Gravity * PlayerBody.TickSeconds), first.Body.VerticalVelocity);
-        Assert.True(first.Body.Position.Y > TestWorld.FloorTop);
-        Assert.False(first.Body.IsOnGround());
+        PlayerBody first = TestWorld.NewBody();
+        first.Step(Move(0, 0, Button.Jump), 0);
+        Assert.Equal(PlayerBody.JumpVelocity - (PlayerBody.Gravity * PlayerBody.TickSeconds), first.VerticalVelocity);
+        Assert.True(first.Position.Y > TestWorld.FloorTop);
+        Assert.False(first.IsOnGround());
     }
 
     /// <summary>A jump under a low ceiling stops at the ceiling with no vertical velocity, and the body falls back.</summary>
@@ -423,20 +421,20 @@ public sealed class PlayerBodyTests
             }
         }
 
-        SimulationLoop loop = new(1UL, grid, TestWorld.Spawn);
-        loop.Step(Move(0, 0, Button.Jump));
-        loop.Step(Move(0, 0, 0, 1U));
+        PlayerBody body = new(grid, TestWorld.Spawn);
+        body.Step(Move(0, 0, Button.Jump), 0);
+        body.Step(Move(0, 0, 0, 1U), 0);
 
         // The head is at feet plus 1.8, and the ceiling face is at 3, so the feet stop at 1.2 less one skin.
-        Assert.InRange(loop.Body.Box.Max.Y, 3.0f - Skin - 1e-5f, 3.0f - Skin + 1e-5f);
-        Assert.Equal(0.0f, loop.Body.VerticalVelocity);
+        Assert.InRange(body.Box.Max.Y, 3.0f - Skin - 1e-5f, 3.0f - Skin + 1e-5f);
+        Assert.Equal(0.0f, body.VerticalVelocity);
 
         for (uint tick = 2; tick < 60; tick++)
         {
-            loop.Step(Move(0, 0, 0, tick));
+            body.Step(Move(0, 0, 0, tick), 0);
         }
 
-        Assert.True(loop.Body.IsOnGround());
+        Assert.True(body.IsOnGround());
     }
 
     /// <summary>A walk into a wall at an angle slides along it: the wall cuts one axis, and the other runs.</summary>
@@ -452,27 +450,27 @@ public sealed class PlayerBodyTests
             }
         }
 
-        SimulationLoop loop = new(1UL, grid, TestWorld.Spawn);
+        PlayerBody body = new(grid, TestWorld.Spawn);
         for (uint tick = 0; tick < 60; tick++)
         {
-            loop.Step(Move(127, 127, 0, tick));
+            body.Step(Move(127, 127, 0, tick), 0);
         }
 
-        Assert.InRange(loop.Body.Box.Max.X, 6.0f - Skin - 1e-5f, 6.0f - Skin + 1e-5f);
-        Assert.True(loop.Body.Position.Z < TestWorld.Spawn.Z - 1.0f, $"The body slid to {loop.Body.Position}, and it should have moved along the wall.");
+        Assert.InRange(body.Box.Max.X, 6.0f - Skin - 1e-5f, 6.0f - Skin + 1e-5f);
+        Assert.True(body.Position.Z < TestWorld.Spawn.Z - 1.0f, $"The body slid to {body.Position}, and it should have moved along the wall.");
     }
 
     /// <summary>The edge of the grid stops a walk, so a body never leaves the world (D-237).</summary>
     [Fact]
     public void TheEdgeOfTheGridStopsAWalk()
     {
-        SimulationLoop loop = TestWorld.NewLoop(1UL);
+        PlayerBody body = TestWorld.NewBody();
         for (uint tick = 0; tick < 120; tick++)
         {
-            loop.Step(Move(127, 0, Button.Sprint, tick));
+            body.Step(Move(127, 0, Button.Sprint, tick), 0);
         }
 
-        Assert.InRange(loop.Body.Box.Max.X, TestWorld.Side - Skin - 1e-5f, TestWorld.Side - Skin + 1e-5f);
+        Assert.InRange(body.Box.Max.X, TestWorld.Side - Skin - 1e-5f, TestWorld.Side - Skin + 1e-5f);
     }
 
     /// <summary>The hash covers the position and the vertical velocity, after the five fields of D-227.</summary>
@@ -490,9 +488,6 @@ public sealed class PlayerBodyTests
         Assert.NotEqual(still.Hash(), jumped.Hash());
         Assert.NotEqual(moved.Hash(), jumped.Hash());
         Assert.Equal(TestWorld.NewLoop(1UL).Hash(), TestWorld.NewLoop(1UL).Hash());
-
-        SimulationLoop elsewhere = new(1UL, TestWorld.FlatFloor(), new Vector3(2.5f, 1.0f, 2.5f));
-        Assert.NotEqual(TestWorld.NewLoop(1UL).Hash(), elsewhere.Hash());
     }
 
     /// <summary>A spawn point inside rock, or past the grid, is an error that names the point (T-2).</summary>
@@ -501,7 +496,7 @@ public sealed class PlayerBodyTests
     {
         VoxelGrid grid = TestWorld.FlatFloor();
 
-        ContextException inRock = Assert.Throws<ContextException>(() => new SimulationLoop(1UL, grid, new Vector3(4.5f, 0.5f, 4.5f)));
+        ContextException inRock = Assert.Throws<ContextException>(() => new PlayerBody(grid, new Vector3(4.5f, 0.5f, 4.5f)));
         Assert.Contains("spawn=", inRock.Message, StringComparison.Ordinal);
 
         Assert.Throws<ContextException>(() => new PlayerBody(grid, new Vector3(7.9f, 1.0f, 4.5f)));

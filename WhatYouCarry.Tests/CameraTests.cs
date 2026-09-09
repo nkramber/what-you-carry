@@ -14,7 +14,6 @@ namespace WhatYouCarry.Tests;
 /// <summary>The orbit camera and aim assist (D-13, D-14, D-75, D-77, D-88, D-241 to D-249; PR-8 exit tests 1 to 4).</summary>
 public sealed class CameraTests
 {
-    private const string Hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
     private const float Sin80 = 0.98480775f;
     private const float Cos80 = 0.17364818f;
 
@@ -152,7 +151,7 @@ public sealed class CameraTests
     [Fact]
     public void PitchClamps()
     {
-        SimulationLoop loop = new(1UL, TestWorld.FlatFloor(16, 16), new Vector3(8.0f, 6.0f, 8.0f));
+        SimulationLoop loop = TestWorld.NewLoop(1UL);
         loop.Step(new Intent(0U, 0, 30000, 0, 0, 0));
         Assert.Equal(SimulationLoop.PitchLimit, loop.Pitch);
         Assert.InRange(loop.Camera().Forward.Y, Sin80 - 1e-5f, Sin80 + 1e-5f);
@@ -199,8 +198,7 @@ public sealed class CameraTests
 
         // The feet at 8.65 put the box face at 8.95, and the shoulder target at 9.25 sits inside the wall.
         Vector3 feet = new(8.65f, 1.0f, 8.0f);
-        SimulationLoop loop = new(1UL, grid, feet);
-        CameraPose pose = loop.Camera();
+        CameraPose pose = OrbitCamera.Place(grid, feet, 0, 0);
 
         // The offset march of 0.6 right and 0.3 up meets the wall 0.35 along X, and it keeps 0.25 of room.
         float along = (0.35f / 0.6f * MathF.Sqrt(0.45f)) - OrbitCamera.CameraRadius;
@@ -260,7 +258,7 @@ public sealed class CameraTests
     }
 
     /// <summary>
-    /// PR-8 exit test 1. Over one thousand seeds in random grids, with random look deltas and movement, the
+    /// PR-8 exit test 1. Over one thousand seeds on dug floors, with random look deltas and movement, the
     /// camera position is never inside a solid block after any tick, and the aim ray starts at the camera.
     /// A failure names its seed (D-66).
     /// </summary>
@@ -270,13 +268,12 @@ public sealed class CameraTests
         for (int seed = 1; seed <= 1000; seed++)
         {
             Random random = new(seed);
-            (VoxelGrid grid, Vector3 spawn) = TestWorld.RandomWorld(random);
-            SimulationLoop loop = new((ulong)seed, grid, spawn);
+            SimulationLoop loop = TestWorld.NewLoop((ulong)seed);
             for (uint tick = 0; tick < 200; tick++)
             {
                 loop.Step(SimulationTests.RandomIntent(random, tick));
                 CameraPose pose = loop.Camera();
-                bool inside = grid.IsSolid((int)MathF.Floor(pose.Position.X), (int)MathF.Floor(pose.Position.Y), (int)MathF.Floor(pose.Position.Z));
+                bool inside = loop.Grid.IsSolid((int)MathF.Floor(pose.Position.X), (int)MathF.Floor(pose.Position.Y), (int)MathF.Floor(pose.Position.Z));
                 Assert.False(inside, $"Seed {seed}, tick {tick}: the camera at {pose.Position} is inside a solid block.");
                 Assert.Equal(pose.Position, loop.Aim(NoTargets).Origin);
             }
@@ -284,7 +281,7 @@ public sealed class CameraTests
     }
 
     /// <summary>
-    /// PR-8 exit test 2. Over one hundred seeds in random grids, two live runs of one record give one hash of
+    /// PR-8 exit test 2. Over one hundred seeds on dug floors, two live runs of one record give one hash of
     /// every camera pose and aim ray, the replay folds the same hash tick by tick through its observer, and the
     /// replay ends at the same pose and ray. A failure names its seed (D-66).
     /// </summary>
@@ -294,18 +291,18 @@ public sealed class CameraTests
         for (int seed = 1; seed <= 100; seed++)
         {
             Random random = new(seed);
-            (VoxelGrid grid, Vector3 spawn) = TestWorld.RandomWorld(random);
+            SimulationLoop live = TestWorld.NewLoop((ulong)seed);
+            SimulationLoop twin = TestWorld.NewLoop((ulong)seed);
+            Vector3 spawn = live.Plan.Spawn;
             Vector3[] targets =
             [
-                new((float)(random.NextDouble() * 10.0), (float)(random.NextDouble() * 6.0), (float)(random.NextDouble() * 10.0)),
-                new((float)(random.NextDouble() * 10.0), (float)(random.NextDouble() * 6.0), (float)(random.NextDouble() * 10.0)),
-                new((float)(random.NextDouble() * 10.0), (float)(random.NextDouble() * 6.0), (float)(random.NextDouble() * 10.0)),
+                spawn + new Vector3((float)(random.NextDouble() * 10.0) - 5.0f, (float)(random.NextDouble() * 3.0), (float)(random.NextDouble() * 10.0) - 5.0f),
+                spawn + new Vector3((float)(random.NextDouble() * 10.0) - 5.0f, (float)(random.NextDouble() * 3.0), (float)(random.NextDouble() * 10.0) - 5.0f),
+                spawn + new Vector3((float)(random.NextDouble() * 10.0) - 5.0f, (float)(random.NextDouble() * 3.0), (float)(random.NextDouble() * 10.0) - 5.0f),
             ];
 
             MemorySink sink = new();
-            RunRecorder recorder = new(sink, RunRecord.NewHeader(Hash, (ulong)seed));
-            SimulationLoop live = new((ulong)seed, grid, spawn);
-            SimulationLoop twin = new((ulong)seed, grid, spawn);
+            RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.Content.Hash, (ulong)seed));
             StateHash liveHash = StateHash.Start();
             StateHash twinHash = StateHash.Start();
             for (uint tick = 0; tick < 200; tick++)
@@ -321,7 +318,7 @@ public sealed class CameraTests
             Assert.True(liveHash.Value == twinHash.Value, $"Seed {seed}: two live runs give the aim-ray hashes {liveHash} and {twinHash}.");
 
             ReplayCameraFold replayed = new(targets);
-            ReplayResult replay = RunReplayer.Replay(sink.Bytes, Hash, grid, spawn, new JsonlLogger(new CollectingSink()), replayed);
+            ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.Content, new JsonlLogger(new CollectingSink()), replayed);
             Assert.True(liveHash.Value == replayed.Hash.Value, $"Seed {seed}: the live aim-ray hash is {liveHash}, and the replay folds {replayed.Hash}.");
             Assert.True(live.Camera() == replay.Loop.Camera(), $"Seed {seed}: the live camera is {live.Camera()}, and the replay camera is {replay.Loop.Camera()}.");
             Assert.True(live.Aim(targets) == replay.Loop.Aim(targets), $"Seed {seed}: the live aim ray is {live.Aim(targets)}, and the replay aim ray is {replay.Loop.Aim(targets)}.");
@@ -374,13 +371,12 @@ public sealed class CameraTests
     [Fact]
     public void TheLoopAimReadsTheLastIntent()
     {
-        VoxelGrid grid = TestWorld.FlatFloor(16, 8);
-        SimulationLoop controller = new(1UL, grid, Feet);
-        SimulationLoop mouse = new(1UL, grid, Feet);
+        SimulationLoop controller = TestWorld.NewLoop(1UL);
+        SimulationLoop mouse = TestWorld.NewLoop(1UL);
         controller.Step(new Intent(0U, 0, 0, 0, 0, Button.ControllerAim));
         mouse.Step(new Intent(0U, 0, 0, 0, 0, 0));
 
-        // The camera looks along minus Z from (8.6, 2.8, 11). A target three degrees to the right sits ahead of it.
+        // The camera looks along minus Z at yaw zero. A target three degrees to the right sits ten meters ahead of it.
         Vector3 camera = controller.Camera().Position;
         Vector3[] targets = [camera + (TargetAt(3.0) - new Vector3(0.0f, 2.0f, 0.0f))];
 

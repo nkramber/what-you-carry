@@ -23,6 +23,10 @@ public sealed class Rng
     private const ulong FinalizerA = 0xBF58476D1CE4E5B9UL;
     private const ulong FinalizerB = 0x94D049BB133111EBUL;
 
+    // The step of the floor number in the seeder input. It is odd, and it is not a small multiple of the
+    // golden-ratio step, so a floor of one subsystem never seeds as the run stream of another.
+    private const ulong FloorGamma = 0xD1B54A32D192ED03UL;
+
     private uint state0;
     private uint state1;
     private uint state2;
@@ -43,6 +47,22 @@ public sealed class Rng
     /// <exception cref="ArgumentOutOfRangeException">The stream is not a value of <see cref="RngStream"/>.</exception>
     public static Rng ForStream(ulong runSeed, RngStream stream)
     {
+        return ForStream(runSeed, stream, 0);
+    }
+
+    /// <summary>
+    /// The stream of one subsystem for one floor of one run (D-159). Floor zero is the stream of the run
+    /// itself, and floors one and up give the floor generator one stream per floor, so floor n comes from the
+    /// run seed and the floor number alone and never from the draws of the floors before it (PR-9).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The stream is not a value of <see cref="RngStream"/>, or the floor is negative.</exception>
+    public static Rng ForStream(ulong runSeed, RngStream stream, int floor)
+    {
+        if (floor < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(floor), $"The floor must be zero or above. The floor is {floor}.");
+        }
+
         // An explicit bound, because Enum.IsDefined reads the enum through reflection, and Core has none (G-2).
         // `EveryDeclaredStreamIsAccepted` walks the declared values, so a new value that passes this bound fails
         // the test until the bound names it.
@@ -53,7 +73,9 @@ public sealed class Rng
 
         // The finalizer spreads every bit of the run seed and the stream id over all 64 bits, so two adjacent
         // stream ids give seeder states that are far apart.
-        ulong seederState = Finalize(runSeed + (((ulong)stream + 1UL) * GoldenGamma));
+        // The floor takes its own odd step, so no floor stream of one subsystem lands on the run stream of
+        // another. `FloorStreamsAreDistinct` walks every pair of the four subsystems and the fifteen floors.
+        ulong seederState = Finalize(runSeed + (((ulong)stream + 1UL) * GoldenGamma) + ((ulong)floor * FloorGamma));
 
         ulong first = NextSeederWord(ref seederState);
         ulong second = NextSeederWord(ref seederState);
