@@ -18,7 +18,7 @@ Session: review PR #19 for the simulation loop, the intent frame, the run record
 ### State of the build
 
 - `main` is at `c11fb41`. The reviewed effective head is `f7bec9f`.
-- The branch tip is the metadata commit `0850d32` before this review commit.
+- The branch held metadata commit `0850d32` before this review. Review commit `1247769` is on the remote branch.
 - `dotnet test` passes with 336 tests and 0 failures.
 - `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
 - `bit-identity` gives `283aa4b8cd1281be`.
