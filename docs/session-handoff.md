@@ -22,7 +22,7 @@ Session: review PR-7 for the voxel grid, swept box, and player body. Branch `fea
 - `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
 - `bit-identity` gives `e8ef2b1fad938845`.
 - The Godot 4.7.2 headless build check passes.
-- Remote head: `origin/feat/pr-7-world-collision` at `723522b`, which holds the review record and this handoff entry.
+- Remote head: `origin/feat/pr-7-world-collision` at `bd57f34`, which holds the review record and this handoff entry.
 
 ### In flight
 
