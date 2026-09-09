@@ -2,6 +2,52 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 68: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: run the automated pass on PR #23, and bring `main` into the branch before the Codex review. Branch `feat/pr-8-camera`.
+
+### What this session did, and why
+
+- The owner set the automated review pass of gitar (D-250), and PR #24 recorded it. The first pass on PR #23 gave one comment: approved, no issue. No change followed.
+- Merged `main` at `a78e759` into this branch, so the reviewer's checkout holds the `pr-review` skill with the gitar rule. The handoff and the register hold both sides in order: Session 67 above Session 66, and D-248, D-249, D-250.
+- The merge conflicted in two files, at the places both branches added to: the top of the handoff and the rows after D-247. The archive merged on its own, because both sides moved Session 56 with one text.
+- This entry makes twelve, so Sessions 58 and 57 move to the archive (D-146).
+- The effective head of PR #23 is the merge commit `32cad0d`, because the merge brings the skill and the agent files. The code of PR-8 is unchanged since `e6d40e0`, and the bit-identity value stands.
+
+### State of the build
+
+- `main` is at `a78e759`, the squash merge of PR #24. This branch holds the PR-8 commit, the merge, and this entry above it.
+- Remote head: `origin/feat/pr-8-camera` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 424 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 42 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `92ef27ee175b3e7e`, as PR-8 set it (G-20).
+
+### In flight
+
+PR #23 is open and it holds this branch. gitar approved the PR-8 head, and the pass runs again on this push. The PR changes code, so it needs a Codex review with the verdict `Ready for owner merge` at the effective head. No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The reviewing provider reads the existing PR comments into the review and never addresses gitar (D-250). The review record gains a `## PR comments` part, and the skill on this branch holds the rule.
+- The effective head is the merge commit `32cad0d` and not `e6d40e0`. The review record names the merge commit.
+- The hash moves in PR-8, and that is the point of G-20. A review that sees `92ef27ee175b3e7e` must confirm it and not restore `e8ef2b1fad938845`.
+- The loop hash reads the buttons, so two loops that differ in the controller aim bit alone give two hashes and one camera pose.
+- The march tie order is X, then Y, then Z, so a line through a corner visits the cell at the corner. The fine-walk test allows one millimeter for that.
+- Two open PRs that both add a handoff entry conflict at the top of the file, and the second one to merge needs a merge from `main` first. Merge before the review, so the review head stands.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #23 per the `pr-review` skill, at the effective head `32cad0d`, reads the existing PR comments into the review, and writes `docs/reviews/pr-23.md`. The review focus is determinism, replay, and test quality, and it confirms the simulation version 3 and the bit-identity change under G-20.
+
 ## Session 67: 2026-09-09, Claude Code
 
 Author: Claude Code
@@ -453,79 +499,3 @@ No open question blocks PR-6 to PR-11. OQ-1, OQ-14, and the later ids belong to 
 ### Next concrete action
 
 The owner merges PR #18 with the `review-override` label. Then a new session starts PR-6: the fixed-step loop at 60 Hz, the 16-byte intent frame, the run record, the recorder, and the replay (D-73, D-151, D-162, D-163, G-5). Two questions come before that code. The first is the checksum of D-162, which names CRC32 and no implementation, and the allowlist holds none. The second is whether the recorder writes through a sink, as the logger does under D-211 and the content loader does under D-219.
-
-## Session 58: 2026-09-08, Codex
-
-Author: Codex
-Session: repeat review PR #17 for PR-5. Branch `feat/pr-5-content`.
-
-### What the session did, and why
-
-- Re-reviewed PR #17 at effective head `7143fd3` against base and merge base `a37f0af`.
-- Confirmed the provider gate. Sessions 55 and 57 identify Claude Code as the author and correction author. Codex is the eligible reviewer.
-- Verified the three fixes. The hash frames each file. The JSON reader keeps number text until validation. The string rule checks the receiver of `Get`.
-- Verified the new regression tests and found no new in-scope defect.
-- Updated `docs/reviews/pr-17.md` with fixed statuses and the verdict `Ready for owner merge`.
-
-### State of the build
-
-- `main` is at `a37f0af`. The reviewed effective head is `7143fd3`.
-- Remote head: `origin/feat/pr-5-content` is `9d99dd0`, verified after the review metadata commit.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 280 tests and 0 failures.
-- `det-lint` reports 0 findings. `ste-check` reports 0 findings. `bit-identity` gives `4d6385bb92454694`.
-- The Godot 4.7.2 headless build check passes. The build, test, comparison, lint, and STE checks pass at `7143fd3`.
-
-### In flight
-
-The repeat-review record is published. The review-gate and evaluate checks pass.
-
-### Traps and gotchas
-
-- The effective head is the correction commit `7143fd3`. Review metadata commits do not change it.
-- The prior review-gate failure named the old effective head. The updated record must name `7143fd3`.
-- The response keeps the syntactic limit of the Game string rule because this PR has no Game source file or engine compilation path.
-
-### Open questions that block progress
-
-No owner question is needed. No open question blocks PR-6 to PR-11.
-
-### Next concrete action
-
-The owner can merge PR #17.
-
-## Session 57: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the PR #17 review. Branch `feat/pr-5-content`.
-
-### What this session did, and why
-
-- Read the three P2 findings in `docs/reviews/pr-17.md`. Each one reproduces, so each one has full merit.
-- P2-1 is the most serious. The content hash appended each path and each byte sequence with no length, so the path `a` with the bytes `bc` and the path `ab` with the byte `c` gave one hash. Two content sets shared one hash, and this hash exists to tell two sets apart. Each file enters the input with a length, its path, a length, and its bytes now (F-78).
-- P2-2. A fractional or out-of-range number raised a `FormatException`, and the catch held `JsonException` alone, so the error left Core with no file and no field. The reader keeps the token text through `ValueSpan` now, and the validator names the file, the field, and the reason. That is the contract that D-220 states (F-78).
-- P2-3. The string rule exempted every method named `Get`, so `inventory.Get("You died")` gave no finding. A `Get` call takes an id only when its receiver names the string table now (F-79).
-- The P2-3 correction stays syntactic, and the response states the limit. The Game project needs the engine assemblies for a symbol read, and it holds no source file yet.
-- 10 new tests. The total is 280.
-
-### State of the build
-
-- `main` is at `a37f0af`. The branch holds the PR-5 work, two review commits, and this correction commit.
-- Remote head: `origin/feat/pr-5-content` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 280 tests and 0 failures.
-- `det-lint` reports 0 findings: Core 0 in 21 files, Game 0 in 0 files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged.
-
-### Traps and gotchas
-
-- A hash over a concatenation needs a boundary for each part. Without a length the path and the bytes run together, and two sets share one input.
-- A platform conversion raises its own error type, and a catch of one type misses another. `GetInt64` raises `FormatException`, and the catch held `JsonException`.
-- A method name is not a method. Every type can hold a `Get`, and the rule needs the receiver.
-- `System.Array` returned to the allowlist. PR-4 left it out because Core used no array member, and the P2-1 correction reads one. That is D-207 working as written.
-
-### Open questions that block progress
-
-No new owner question. No open question blocks PR-6 to PR-11.
-
-### Next concrete action
-
-A Codex session re-reviews PR #17 per the repeat review procedure and updates `docs/reviews/pr-17.md` to the new effective head.
