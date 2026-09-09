@@ -87,6 +87,16 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 - Commit subjects use a conventional prefix: `feat`, `fix`, `docs`, `test`, `chore`.
 - One concern per PR (G-10).
 
+## Automated review pass
+
+An automated reviewer, gitar, comments on every PR after a push (D-250). The author answers every comment before the hand-over to the other provider, or before the override request on a documentation PR.
+
+- A comment with no merit gets a reply with the reason, and the author resolves its thread.
+- A comment with merit gets the change, a commit, a push, and a reply.
+- The PR is ready when gitar approves it, or when every comment has its answer and a new pass adds none. Tell the owner then.
+- The reviewing provider reads the existing PR comments into its review and never addresses gitar.
+- The `pr-review` skill holds both procedures. A reply names no provider, harness, or model as the source of work (T-6).
+
 ## Build and test commands
 
 The build needs the SDK version in `global.json`. Run each command from the checkout root.
@@ -112,6 +122,7 @@ A PR merges only when every line holds:
 - [ ] The three-platform bit-identity job is green (G-9).
 - [ ] The `det-lint` job is green. It reads Core for the determinism rules and Game for the string rule (G-2, G-8, G-21).
 - [ ] The `ste-check` job is green (G-14).
+- [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250).
 - [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
 - [ ] The `review-gate` check is green. Grey means no review record yet. Red means the review does not approve this head (D-179, D-181, D-185).
 - [ ] `docs/decisions.md` has every new decision.
