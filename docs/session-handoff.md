@@ -30,7 +30,7 @@ Session: record the PR-6 merge, and answer the PR-7 questions before its code. B
 
 ### In flight
 
-PR #PRNUMBER is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). No other PR is open.
+PR #20 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). No other PR is open.
 
 ### Where Phase 1 stands
 
@@ -50,7 +50,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-The owner merges PR #PRNUMBER with the `review-override` label. Then a new session starts PR-7 on a short branch: the voxel grid, the swept box, the player body, and the five exit tests, under D-164, D-165, and D-231 to D-234.
+The owner merges PR #20 with the `review-override` label. Then a new session starts PR-7 on a short branch: the voxel grid, the swept box, the player body, and the five exit tests, under D-164, D-165, and D-231 to D-234.
 
 ## Session 61: 2026-09-09, Codex
 
