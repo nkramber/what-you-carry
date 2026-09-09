@@ -7,6 +7,7 @@ using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Procgen;
+using WhatYouCarry.Core.Projectiles;
 using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Core.Simulation;
@@ -19,9 +20,15 @@ namespace WhatYouCarry.Core.Simulation;
 /// <para>
 /// The state is the seed, the tick, the yaw and pitch sums in hundredths of a degree, the buttons of the last
 /// intent (D-227), then the position and the vertical velocity of the player body (PR-7), then the floor number
-/// and the run end (PR-9). The yaw wraps at a full turn, and the pitch stops at 80 degrees up and 80 degrees
-/// down (D-241). A positive pitch looks up (D-248). The camera and the aim ray come from the state on demand,
-/// and they are not state (D-245).
+/// and the run end (PR-9), then the projectiles in flight (PR-10). The yaw wraps at a full turn, and the pitch
+/// stops at 80 degrees up and 80 degrees down (D-241). A positive pitch looks up (D-248). The camera and the
+/// aim ray come from the state on demand, and they are not state (D-245).
+/// </para>
+/// <para>
+/// The attack bit fires the first projectile definition of the content set once per press, from the shoulder
+/// point toward the first solid cell that the crosshair ray meets within <see cref="AimReach"/> meters, or
+/// toward the point of the ray there (D-265, D-267, D-268). The spread of each shot comes from the Projectile
+/// stream of the run (D-159, D-266). The projectiles of a floor end with the floor.
 /// </para>
 /// <para>
 /// The floor comes from the seed, the floor number, and the content set, so the grid and the spawn are inputs
@@ -30,8 +37,8 @@ namespace WhatYouCarry.Core.Simulation;
 /// no intent, because an intent after the end has no tick to run on (T-2).
 /// </para>
 /// <para>
-/// The look deltas apply first, and the body then moves by the yaw sum after them. The stairwell reads the body
-/// after the move. The loop rejects an intent whose tick is not the next one, because a replay that stepped
+/// The look deltas apply first, and the body then moves by the yaw sum after them. The shot and the projectiles
+/// run after the body, and the stairwell reads the body last. The loop rejects an intent whose tick is not the next one, because a replay that stepped
 /// over a frame would diverge in silence, and it rejects a set reserved button bit (T-2, G-5, D-232).
 /// </para>
 /// </remarks>
@@ -49,7 +56,14 @@ public sealed class SimulationLoop
     /// <summary>The floor that every run starts at (D-3).</summary>
     public const int FirstFloor = 1;
 
+    /// <summary>How far the crosshair ray reaches for the target of a shot, in meters (D-268).</summary>
+    public const float AimReach = 100.0f;
+
+    /// <summary>The owner id of the player in the projectile simulation.</summary>
+    public const int PlayerOwner = 0;
+
     private readonly ContentSet content;
+    private readonly Rng projectileRng;
 
     /// <summary>A loop at tick zero for one run, on floor 1 of the seed, with the body at rest at the spawn point.</summary>
     /// <exception cref="ContextException">The content set cannot dig floor 1.</exception>
@@ -59,6 +73,8 @@ public sealed class SimulationLoop
         this.content = content;
         this.Plan = FloorGenerator.Generate(seed, FirstFloor, content);
         this.Body = new PlayerBody(this.Plan.Grid, this.Plan.Spawn);
+        this.Projectiles = new ProjectileSimulation(this.Plan.Grid, content.Projectiles);
+        this.projectileRng = Rng.ForStream(seed, RngStream.Projectile);
     }
 
     /// <summary>The seed of the run. Every random stream of the run derives from it (D-159).</summary>
@@ -72,6 +88,12 @@ public sealed class SimulationLoop
 
     /// <summary>The player body (D-149, D-165). A descent puts a new body at the spawn of the next floor.</summary>
     public PlayerBody Body { get; private set; }
+
+    /// <summary>The projectiles of the floor (G-6). A descent starts an empty simulation on the next floor.</summary>
+    public ProjectileSimulation Projectiles { get; private set; }
+
+    /// <summary>The projectiles that ended on the last tick, in flight order. The Game layer reads the hit points from it. It is not state.</summary>
+    public IReadOnlyList<ProjectileEnd> LastEnds { get; private set; } = [];
 
     /// <summary>The floor number, from one (D-3). The state holds it, and the hash reads it after the body.</summary>
     public int Floor { get; private set; } = FirstFloor;
@@ -143,10 +165,18 @@ public sealed class SimulationLoop
             pitch = -PitchLimit;
         }
 
+        bool attackPressed = (intent.Buttons & Button.Attack) != 0 && (this.Buttons & Button.Attack) == 0;
         this.Yaw = yaw;
         this.Pitch = pitch;
         this.Buttons = intent.Buttons;
         this.Body.Step(intent, yaw);
+        if (attackPressed)
+        {
+            this.FireShot();
+        }
+
+        EntityBox[] boxes = [new EntityBox(PlayerOwner, this.Body.Box)];
+        this.LastEnds = this.Projectiles.Step(boxes);
         this.Tick++;
 
         StairwellAction action = StairwellTransition.Choose(intent.Buttons, this.Body, this.Plan.Stairwell);
@@ -180,8 +210,8 @@ public sealed class SimulationLoop
 
     /// <summary>
     /// The hash of the whole state, in the declared field order (D-160): the five fields of D-227, then the
-    /// position and the vertical velocity of the body, then the floor number and the run end. A new field goes
-    /// after these, so the order of every earlier one stands.
+    /// position and the vertical velocity of the body, then the floor number and the run end, then the
+    /// projectiles in flight order. A new field goes after these, so the order of every earlier one stands.
     /// </summary>
     public StateHash Hash()
     {
@@ -197,7 +227,33 @@ public sealed class SimulationLoop
         hash.Add(this.Body.VerticalVelocity);
         hash.Add(this.Floor);
         hash.Add(this.Ended);
+        this.Projectiles.AddTo(ref hash);
         return hash;
+    }
+
+    /// <summary>
+    /// Fires the first projectile definition of the content set from the shoulder point toward the first solid
+    /// cell that the crosshair ray meets within the aim reach, or toward the point of the ray there (D-265, D-268).
+    /// </summary>
+    /// <exception cref="ContextException">The content set holds no projectile definition.</exception>
+    private void FireShot()
+    {
+        if (this.content.Projectiles.Count == 0)
+        {
+            throw new ContextException("The attack bit fires the first projectile definition of the content set, and the set holds none (D-265).");
+        }
+
+        CameraPose pose = this.Camera();
+        Vector3 reach = pose.Position + (pose.Forward * AimReach);
+        RayHit hit = GridRay.FirstSolid(this.Grid, pose.Position, reach);
+        Vector3 target = hit.Hit ? pose.Position + (pose.Forward * hit.Distance) : reach;
+        Vector3 direction = target - pose.Shoulder;
+        if (direction.Length() == 0.0f)
+        {
+            direction = pose.Forward;
+        }
+
+        this.Projectiles.Fire(0, PlayerOwner, pose.Shoulder, direction, this.projectileRng);
     }
 
     /// <summary>Digs the next floor from the run seed and the next floor number, and puts a body at rest at its spawn (D-257).</summary>
@@ -206,6 +262,7 @@ public sealed class SimulationLoop
         int next = this.Floor + 1;
         this.Plan = FloorGenerator.Generate(this.Seed, next, this.content);
         this.Body = new PlayerBody(this.Plan.Grid, this.Plan.Spawn);
+        this.Projectiles = new ProjectileSimulation(this.Plan.Grid, this.content.Projectiles);
         this.Floor = next;
     }
 }

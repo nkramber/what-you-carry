@@ -22,9 +22,10 @@ public sealed class BitIdentityTests
     /// sweep gained the camera. The PR #23 review moved it to `afed0063a6cf8a50`, because the sweep folds the
     /// camera from the replay observer and not from a second live loop (F-85). PR-9 moved it again when the
     /// state gained the floor number, the sweep gained the floor generator, and the replay moved to a dug floor.
-    /// PR-59 moved it from `036df5c08e2682e3` when the detail pass changed every dug floor (D-260).
+    /// PR-59 moved it from `036df5c08e2682e3` when the detail pass changed every dug floor (D-260). PR-10 moved
+    /// it from `62c5e1d152fe94fe` when the state gained the projectiles and the sweep intents began to fire.
     /// </remarks>
-    private const string ExpectedHash = "62c5e1d152fe94fe";
+    private const string ExpectedHash = "3220e92dcbca55a2";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -123,6 +124,9 @@ public sealed class BitIdentityTests
         // PR-9 exit test 7: the sweep digs floors and folds every block, so the three platforms compare the generator.
         Assert.Contains("FloorGenerator.Generate(", sweep, StringComparison.Ordinal);
         Assert.Contains("plan.Grid.Get(", sweep, StringComparison.Ordinal);
+
+        // PR-10 exit test 5: the sweep content holds a projectile definition, so the attack bit of the sweep intents fires shots.
+        Assert.Contains("new(\"sweep-shot\"", sweep, StringComparison.Ordinal);
 
         // PR-59 exit test 4: the sweep content names every band, so the folded floors hold every block of the detail pass.
         Assert.Contains("DetailPass.WorkingMine", sweep, StringComparison.Ordinal);

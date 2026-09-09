@@ -103,7 +103,7 @@ public sealed class ContentTests
 
         Assert.Equal(3, set.Floors.Count);
         Assert.Equal(8, set.Chambers.Count);
-        Assert.Equal(2, set.Projectiles.Count);
+        Assert.Equal(6, set.Projectiles.Count);
         Assert.True(set.Strings.Count > 0);
         Assert.Equal(64, set.Hash.Length);
 
@@ -470,5 +470,49 @@ public sealed class ContentTests
         Assert.Equal("b", first.Floors[1].Id);
         Assert.Equal("a", second.Floors[0].Id);
         Assert.Equal("b", second.Floors[1].Id);
+    }
+
+    private const string ProjectileText = """
+        {"id":"p","speedCentimetres":4000,"gravityScalePercent":100,"lifetimeTicks":300,"damage":10,"spreadHundredths":100}
+        """;
+
+    /// <summary>Every required field of a projectile definition is required, the spread among them (D-266).</summary>
+    [Theory]
+    [InlineData("id")]
+    [InlineData("speedCentimetres")]
+    [InlineData("gravityScalePercent")]
+    [InlineData("lifetimeTicks")]
+    [InlineData("damage")]
+    [InlineData("spreadHundredths")]
+    public void EveryRequiredProjectileFieldIsRequired(string omitted)
+    {
+        List<JsonMember> members = [];
+        foreach (JsonMember member in JsonObjectReader.Read("projectiles/p.json", Encoding.UTF8.GetBytes(ProjectileText)))
+        {
+            if (member.Name != omitted)
+            {
+                members.Add(member);
+            }
+        }
+
+        ContextException error = Assert.Throws<ContextException>(() => ProjectileDefinition.FromMembers("projectiles/p.json", members));
+        Assert.Contains(omitted, error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A projectile definition outside its bounds is an error that names the field: no speed, a lifting gravity, a spread past a half turn (D-266).</summary>
+    [Theory]
+    [InlineData("\"speedCentimetres\":4000", "\"speedCentimetres\":0", "speedCentimetres")]
+    [InlineData("\"gravityScalePercent\":100", "\"gravityScalePercent\":-1", "gravityScalePercent")]
+    [InlineData("\"spreadHundredths\":100", "\"spreadHundredths\":-1", "spreadHundredths")]
+    [InlineData("\"spreadHundredths\":100", "\"spreadHundredths\":18001", "spreadHundredths")]
+    [InlineData("\"lifetimeTicks\":300", "\"lifetimeTicks\":0", "lifetimeTicks")]
+    public void AProjectileOutsideItsBoundsIsAnError(string from, string to, string field)
+    {
+        string text = ProjectileText.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(ProjectileText, text);
+
+        ContextException error = Assert.Throws<ContextException>(
+            () => ProjectileDefinition.FromMembers("projectiles/p.json", JsonObjectReader.Read("projectiles/p.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
     }
 }

@@ -10,6 +10,6 @@ namespace WhatYouCarry.Core.Simulation;
 /// </remarks>
 public static class SimulationVersion
 {
-    /// <summary>The current value. PR-6 set it to 1, PR-7 raised it to 2 when the state gained a position, PR-8 raised it to 3 when the pitch clamp changed, PR-9 raised it to 4 when the state gained the floor number and the run end, and PR-59 raised it to 5 when the detail pass changed every dug floor (D-260, G-20).</summary>
-    public const int Value = 5;
+    /// <summary>The current value. PR-6 set it to 1, PR-7 raised it to 2 when the state gained a position, PR-8 raised it to 3 when the pitch clamp changed, PR-9 raised it to 4 when the state gained the floor number and the run end, PR-59 raised it to 5 when the detail pass changed every dug floor (D-260), and PR-10 raised it to 6 when the state gained the projectiles (G-20).</summary>
+    public const int Value = 6;
 }

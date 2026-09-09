@@ -228,7 +228,7 @@ public sealed class StairwellTests
         Assert.Equal(StairwellAction.None, StairwellTransition.Choose(Button.Interact, body, new Cell(3, 0, 4)));
     }
 
-    /// <summary>The hash covers the floor number and the run end after the body fields, so two runs that differ there alone give two hashes (D-160, G-20).</summary>
+    /// <summary>The hash covers the floor number and the run end after the body fields and before the projectiles, so two runs that differ there alone give two hashes (D-160, G-20).</summary>
     [Fact]
     public void TheHashCoversTheFloorAndTheEnd()
     {
@@ -261,6 +261,7 @@ public sealed class StairwellTests
         hash.Add(loop.Body.VerticalVelocity);
         hash.Add(floor);
         hash.Add(ended);
+        loop.Projectiles.AddTo(ref hash);
         return hash;
     }
 }
