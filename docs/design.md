@@ -82,7 +82,7 @@ At each stairwell the player ascends or descends (D-50). Ascension costs nothing
 
 ### 3.3 Player
 
-One character. Gear is identity (D-17). The camera is over-the-shoulder and the player controls it (D-13). Aim is free, with aim assist on a controller (D-14). Input targets are keyboard and mouse, controller, and the Steam Deck (D-15). The Deck is the performance floor and the readability floor.
+One character. Gear is identity (D-17). The camera is over-the-shoulder and the player controls it (D-13). Aim is free, with aim assist on a controller (D-14). The intent marks a controller aim on each tick, and the assist pulls the aim ray toward a target inside a cone (D-243, D-244). Core derives the camera on each tick, and its boom sweeps the grid along the line (D-245, D-246). Input targets are keyboard and mouse, controller, and the Steam Deck (D-15). The Deck is the performance floor and the readability floor.
 
 Movement verbs are dodge roll, sprint, and jump (D-27). There is no stamina. Dodge has a cooldown, and armor weight extends it (D-28). Health carries across floors. Potions in the satchel are the only heal (D-24).
 
@@ -368,13 +368,13 @@ Implement the fixed-step loop at 60 Hz (D-73). Define the intent record: quantiz
 Gate: the replay of a recorded run gives the same hash on all three platforms, and a mismatch report names both versions.
 > *In plain English:* the game runs in fixed steps and writes down its start state and every input. That record then plays any run again, so every bug becomes repeatable. A record from an older version says so instead of a silent failure.
 
-**PR-7: Voxel world and Core collision.** 🔧 Open as PR #21.
+**PR-7: Voxel world and Core collision.** ✅ Merged 2026-09-09 as PR #21.
 Implement the voxel grid of one-meter cubes (D-78, D-234). Implement Core collision for player and enemy boxes against the grid with swept movement, gravity, ledges, and jump (D-27, D-80, D-231, D-235 to D-240). Godot physics has no part in it. Add the player box that reads the intent's movement and jump, so a Core-only run exists before the Game layer (D-149). Property tests assert no tunnel at maximum speed and no fall through a floor block.
 Gate: a box that moves at the maximum speed never crosses a solid block.
 > *In plain English:* the dungeon is a grid of blocks. The game itself decides how bodies bump into them, so the result is identical on every machine.
 
 **PR-8: Camera as a Core system.** 🔧
-Implement the over-the-shoulder camera in Core (D-13, D-75). It integrates the quantized look deltas, sweeps its boom against the grid, and derives the aim ray (D-77, D-88). Aim assist runs here from enemy positions (D-14). Property tests assert the camera never enters a solid block and the aim ray is deterministic.
+Implement the over-the-shoulder camera in Core (D-13, D-75, D-241, D-242, D-245 to D-247). It integrates the quantized look deltas, sweeps its boom against the grid, and derives the aim ray (D-77, D-88). Aim assist runs here from enemy positions (D-14, D-243, D-244). Property tests assert the camera never enters a solid block and the aim ray is deterministic.
 Gate: a recorded run with camera motion replays to the same hash on all three platforms.
 > *In plain English:* the camera is part of the simulation, not decoration, so where you look and where you aim replay exactly.
 
@@ -619,7 +619,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170.
 4. PR-1, PR-2. ✅ PR-1 merged 2026-09-08 as PR #6. ✅ PR-2 merged 2026-09-08 as PR #10.
 5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12. ✅ PR-4 merged 2026-09-08 as PR #15. ✅ PR-5 merged 2026-09-08 as PR #17.
-6. PR-6, PR-7, PR-8. ✅ PR-6 merged 2026-09-09 as PR #19.
+6. PR-6, PR-7, PR-8. ✅ PR-6 merged 2026-09-09 as PR #19. ✅ PR-7 merged 2026-09-09 as PR #21.
 7. PR-9, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).
 8. M-1, M-2.
 9. **← GATE 1 (foundation).** Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green.

@@ -1,5 +1,52 @@
 # Session handoff archive
 
+## Session 55: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: PR-5, the content loader, the schemas, the content hash, and the string table. Branch `feat/pr-5-content`.
+
+### What this session did, and why
+
+- Started PR-5 after the owner merged PR #16. Four owner questions came before the code, and D-219 to D-223 record the answers.
+- D-219: Core takes the bytes from an `IContentSource` and opens no file. This applies D-211 one PR later, and it keeps a directory enumeration order out of the content hash.
+- D-220: `Utf8JsonReader` reads the JSON. It uses no serializer and no reflection, and it gives the position that D-92 needs for an error message. A hand-written parser holds the number, escape, and surrogate rules, and PR-4 took three review passes on the escape rules alone.
+- D-221: SHA-256 for the content hash, and FNV-1a stays for the state hash. One needs resistance, and the other needs speed.
+- D-222: one command, two rule sets. `det-lint` reads Core with the determinism rules and Game with the string rule of G-8.
+- D-223 records the allowlist additions: 9 types and 27 members. The lists hold 27 types and 53 members now.
+- Wrote `IContentSource`, `ContentFile`, `JsonObjectReader`, `ContentValidator`, `ContentError`, `ContentHash`, `Strings`, `FloorTemplate`, `ProjectileDefinition`, and `ContentLoader` in `Core/Content/`.
+- Wrote the first content: three floor templates for the three bands of D-210, two projectile definitions, and the string table.
+- Wrote `GameStringScan` in the lint tool, and the command reports the two counts.
+- 36 new tests. The total is 270. Exit tests 1 to 6 each have a test.
+- The tests caught one real defect. A malformed file let `JsonReaderException` out of Core, and that error names no file. Every content failure names the file, the field, and the reason now (D-92, T-2).
+
+### State of the build
+
+- `main` is at `a37f0af`. The branch holds the PR-5 work above it.
+- Remote head: `origin/feat/pr-5-content` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 270 tests and 0 failures.
+- `det-lint` reports 0 findings: Core 0 in 21 files, Game 0 in 0 files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged. PR-5 adds no simulation number.
+
+### In flight
+
+PR-5 waits for a Codex review (T-4). It changes code, so no override applies.
+
+### Traps and gotchas
+
+- A platform reader raises its own error type, and that error names no file. Wrap it, or the file name never reaches the owner.
+- The Game project holds no source file yet, so the Game scan reads nothing on this checkout. The rule has fixture tests, and `LintPassesGame` guards the real directory.
+- The three floor bands must cover floors 1 to 15 with no gap and no overlap. `EveryContentFileLoads` counts each depth.
+- An optional content field needs a default that the record states. `areaCentimetres` is zero when the file omits it.
+- A `Utf8JsonReader` is a ref struct, and it lives inside the try block that catches its error.
+
+### Open questions that block progress
+
+No new owner question. No open question blocks PR-6 to PR-11.
+
+### Next concrete action
+
+A Codex session reviews PR-5 per `.claude/skills/pr-review/SKILL.md`, under the scope rules of D-209, and writes `docs/reviews/pr-<number>.md`.
+
 ## Session 54: 2026-09-08, Claude Code
 
 Author: Claude Code

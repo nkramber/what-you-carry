@@ -2,6 +2,60 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 65: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: record the PR-7 merge, and answer the PR-8 questions before its code. Branch `docs/pr-7-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #21 as `d5f20ce`, after a Codex review with no finding.
+- Audited every document against the merged state. The registers were complete: D-235 to D-240, OQ-104 to OQ-109, and F-82 and F-83 all landed with the PR.
+- Three status lines were stale. The design doc PR-7 entry and its sequence line said open, and the focused roadmap said open. All three name the merge now.
+- The handoff held ten entries, because Session 64 archived one. This entry makes eleven, so Session 55 moves to the archive (D-146).
+- Asked seven owner questions in two batches, and D-241 to D-247 record the answers. OQ-110 to OQ-116 hold the questions.
+- D-241: the pitch limit is plus or minus 80 degrees for the loop and the camera. D-227 is revised in part, the pitch limit only.
+- D-242: the pivot sits 1.5 meters over the feet, the shoulder point is 0.6 right and 0.3 up, and the boom is 3 meters.
+- D-243: bit 8 of the buttons marks a controller aim on that tick. D-232 is revised in part, bit 8 only.
+- D-244: aim assist pulls the ray toward the nearest target inside a 5 degree cone, by half the angle.
+- D-245: Core derives the camera on each tick, and the camera holds no state.
+- D-246: the boom sweep is a ray march along the line, with a camera radius of 0.25 meters.
+- D-247: the aim ray starts at the camera, along the look direction.
+- The roadmap PR-8 scope cites the seven decisions, and it names the simulation version rise to 3 (G-20).
+
+### State of the build
+
+- `main` is at `d5f20ce`, the squash merge of PR #21. This branch holds the document commit above it.
+- Remote head: `origin/docs/pr-7-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 398 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 37 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files. `bit-identity`: `e8ef2b1fad938845`.
+
+### In flight
+
+PR #22 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- PR-8 changes the loop pitch clamp from 9000 to 8000 (D-241). `PitchClamps` in `SimulationTests`, the `PitchLimit` constant, and the D-227 remark in `SimulationLoop` change with it, and the simulation version rises to 3.
+- Bit 8 joins the assigned set (D-243). `Button.AssignedMask` becomes 0x01FF and `Button.ReservedMask` becomes 0xFE00. The random intent helper of the tests and the button mask of the bit-identity sweep follow, or the reserved-bit check throws.
+- The boom sweep is a ray march and not the PR-7 sweep (D-246). The PR-7 sweep runs one axis at a time and follows a staircase, so a diagonal boom through it ends beside the line.
+- The camera holds no state (D-245). The exit test hashes the aim ray and the camera position after a replay, and the loop hash gains no field.
+- The bit-identity hash moves again in PR-8, on purpose, and `BitIdentityKnownAnswer` pins the new value (G-20).
+- The pitch sign is not in any decision. PR-8 states which sign looks up, in the camera remark and in a test.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #22 with the `review-override` label. Then a new session starts PR-8 on a short branch: the orbit camera, the ray march of the boom, the aim ray, aim assist, and the five exit tests, under D-13, D-14, D-75, D-77, D-88, and D-241 to D-247.
+
 ## Session 64: 2026-09-09, Codex
 
 Author: Codex
@@ -416,50 +470,3 @@ No owner question is needed. The author can correct all three findings within th
 ### Next concrete action
 
 The author corrects the three findings and requests a repeat review at the new effective head.
-
-## Session 55: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: PR-5, the content loader, the schemas, the content hash, and the string table. Branch `feat/pr-5-content`.
-
-### What this session did, and why
-
-- Started PR-5 after the owner merged PR #16. Four owner questions came before the code, and D-219 to D-223 record the answers.
-- D-219: Core takes the bytes from an `IContentSource` and opens no file. This applies D-211 one PR later, and it keeps a directory enumeration order out of the content hash.
-- D-220: `Utf8JsonReader` reads the JSON. It uses no serializer and no reflection, and it gives the position that D-92 needs for an error message. A hand-written parser holds the number, escape, and surrogate rules, and PR-4 took three review passes on the escape rules alone.
-- D-221: SHA-256 for the content hash, and FNV-1a stays for the state hash. One needs resistance, and the other needs speed.
-- D-222: one command, two rule sets. `det-lint` reads Core with the determinism rules and Game with the string rule of G-8.
-- D-223 records the allowlist additions: 9 types and 27 members. The lists hold 27 types and 53 members now.
-- Wrote `IContentSource`, `ContentFile`, `JsonObjectReader`, `ContentValidator`, `ContentError`, `ContentHash`, `Strings`, `FloorTemplate`, `ProjectileDefinition`, and `ContentLoader` in `Core/Content/`.
-- Wrote the first content: three floor templates for the three bands of D-210, two projectile definitions, and the string table.
-- Wrote `GameStringScan` in the lint tool, and the command reports the two counts.
-- 36 new tests. The total is 270. Exit tests 1 to 6 each have a test.
-- The tests caught one real defect. A malformed file let `JsonReaderException` out of Core, and that error names no file. Every content failure names the file, the field, and the reason now (D-92, T-2).
-
-### State of the build
-
-- `main` is at `a37f0af`. The branch holds the PR-5 work above it.
-- Remote head: `origin/feat/pr-5-content` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 270 tests and 0 failures.
-- `det-lint` reports 0 findings: Core 0 in 21 files, Game 0 in 0 files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged. PR-5 adds no simulation number.
-
-### In flight
-
-PR-5 waits for a Codex review (T-4). It changes code, so no override applies.
-
-### Traps and gotchas
-
-- A platform reader raises its own error type, and that error names no file. Wrap it, or the file name never reaches the owner.
-- The Game project holds no source file yet, so the Game scan reads nothing on this checkout. The rule has fixture tests, and `LintPassesGame` guards the real directory.
-- The three floor bands must cover floors 1 to 15 with no gap and no overlap. `EveryContentFileLoads` counts each depth.
-- An optional content field needs a default that the record states. `areaCentimetres` is zero when the file omits it.
-- A `Utf8JsonReader` is a ref struct, and it lives inside the try block that catches its error.
-
-### Open questions that block progress
-
-No new owner question. No open question blocks PR-6 to PR-11.
-
-### Next concrete action
-
-A Codex session reviews PR-5 per `.claude/skills/pr-review/SKILL.md`, under the scope rules of D-209, and writes `docs/reviews/pr-<number>.md`.
