@@ -18,14 +18,14 @@ Session: repeat review PR #17 for PR-5. Branch `feat/pr-5-content`.
 ### State of the build
 
 - `main` is at `a37f0af`. The reviewed effective head is `7143fd3`.
-- Remote head: `origin/feat/pr-5-content` is `7143fd3` before the review metadata commit.
+- Remote head: `origin/feat/pr-5-content` is `a8bda38`, verified after the review metadata commit.
 - `dotnet build` passes with 0 warnings. `dotnet test` passes with 280 tests and 0 failures.
 - `det-lint` reports 0 findings. `ste-check` reports 0 findings. `bit-identity` gives `4d6385bb92454694`.
 - The Godot 4.7.2 headless build check passes. The build, test, comparison, lint, and STE checks pass at `7143fd3`.
 
 ### In flight
 
-The repeat-review record needs publication. The review-gate and evaluate checks need a rerun after the metadata commit.
+The repeat-review record is published. The review-gate and evaluate checks pass.
 
 ### Traps and gotchas
 
@@ -39,7 +39,7 @@ No owner question is needed. No open question blocks PR-6 to PR-11.
 
 ### Next concrete action
 
-Commit and push the repeat-review record and handoff, then verify the remote head and the rerun checks.
+The owner can merge PR #17.
 
 ## Session 57: 2026-09-08, Claude Code
 
