@@ -2,6 +2,44 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 59: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: record the PR-5 merge across the documents. Branch `docs/pr-5-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #17 as `e0deb94`, after a Codex review approved the corrected head.
+- Audited every document against the merged state. The registers were complete: D-219 to D-223, OQ-88 to OQ-91, and F-78 and F-79 all landed with the PR.
+- Three lines were stale, and this session corrects each one. The focused roadmap said that PR-5 was open, the design doc marked it open in the marker, and the Phase 1 sequence did not mark it. The correction passes now record the PR-5 outcome.
+- The build on `main` is healthy: 280 tests, 0 lint findings in either rule set, 0 checker findings.
+
+### State of the build
+
+- `main` is at `e0deb94`, the squash merge of PR #17. This branch holds one commit above it.
+- Remote head: `origin/docs/pr-5-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 280 tests and 0 failures.
+- `det-lint` reports 0 findings: Core 0 in 21 files, Game 0 in 0 files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`.
+
+### In flight
+
+This PR changes only `docs/`, so the `review-override` label covers it (D-190). PR-6 starts after the merge.
+
+### Traps and gotchas
+
+- PR-6 is the first PR that makes a simulation number, so it is the first one to move the bit-identity hash. G-20 then asks for the simulation version constant, and PR-6 creates it.
+- PR-6 also holds the intent record of D-162 and the run record of D-163. The content hash of PR-5 goes in that header, and `ContentHash.Of` gives it.
+- The Game string rule stays syntactic until a PR writes Game code. The response file of PR #17 states that limit.
+
+### Open questions that block progress
+
+No open question blocks PR-6 to PR-11.
+
+### Next concrete action
+
+The owner merges this documentation PR with the `review-override` label. Then a new session starts PR-6: the fixed-step simulation loop, the intent record, the recorder, and the replay (D-73, D-162, D-163, D-151, G-5).
+
 ## Session 58: 2026-09-08, Codex
 
 Author: Codex
@@ -374,93 +412,3 @@ No new owner question. No open question blocks PR-5 to PR-11.
 ### Next concrete action
 
 A Codex session re-reviews PR #15 per the repeat review procedure, and it updates `docs/reviews/pr-15.md` to the new effective head.
-
-## Session 49: 2026-09-08, Codex
-
-Author: Codex
-Session: repeat review of PR #15 for PR-4. Branch `feat/pr-4-logging`.
-
-### What this session did, and why
-
-- Re-reviewed PR #15 at effective head `e42a0a8` against base and merge base `51b3de7`.
-- Confirmed the provider gate. Claude Code wrote the corrections, and Codex reviewed them.
-- Closed P2-1. `LogFields` rejects the two logger names before a line exists.
-- Closed P2-2. The assertion report uses a copy, so two safe failures preserve the caller fields.
-- Kept P2-3 open. The encoder correction passes, but xUnit skips one required surrogate row because two rows have one test id.
-- Closed P2-4. `BuildLine` calls two leaf helpers, and the prior nested helpers are absent.
-- Added P2-5. A caller field with an assertion call-site name prevents every report and changes a safe failure to an exception.
-- Added P2-6. D-214, the response, and the PR description disagree about the member count, test count, and final head.
-- Updated `docs/reviews/pr-15.md` with the verdict `Changes required` for `e42a0a8`.
-
-### State of the build
-
-- `main` and the merge base are at `51b3de7`. The reviewed effective head is `e42a0a8`.
-- Remote head: `origin/feat/pr-4-logging` holds the metadata commit for this entry, verified with the session-end gate.
-- `dotnet build` passes with 0 warnings. `dotnet test` reports 226 passes and 0 failures.
-- The test run warns that xUnit skips one duplicate-id surrogate row. The P2-3 regression check is incomplete.
-- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`. The Godot 4.7.2 headless build check passes.
-- GitHub reports green CI, lint, STE, and bit-identity jobs at `e42a0a8`.
-
-### In flight
-
-PR #15 needs corrections for P2-3, P2-5, and P2-6, then another repeat review.
-
-### Traps and gotchas
-
-- xUnit can omit a theory row before execution when two invalid strings produce one display id.
-- The assertion call-site names are logger-owned names, like `level` and `message`.
-- A correction that adds an allowlist member must update the count and every current revision record.
-
-### Open questions that block progress
-
-No new owner question. No open question blocks the corrections.
-
-### Next concrete action
-
-Correct P2-3, P2-5, and P2-6, add the regression checks, and request another repeat Codex review.
-
-## Session 48: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the PR #15 review. Branch `feat/pr-4-logging`.
-
-### What this session did, and why
-
-- Read the four P2 findings in `docs/reviews/pr-15.md`. Each one reproduces, so each one has full merit.
-- The first draft of this entry took the number 47, which the review session already held. The D-187 check caught it, and the entry is 48.
-- This is the first review under D-209. It used the `## Out of scope` section for the Game-layer sink of PR-31 and PR-55 and for the simulation version constant of PR-7, and it gave neither a severity. Both readings are correct.
-- P2-1. A caller field named `level` or `message` gave a line with two properties of one name. `LogFields` now reserves both names and rejects them at the add, so no such line reaches the sink (F-72).
-- P2-2. A safe assertion added its call site to the caller field set, so a second safe assertion threw on the repeated name. A safe assertion promises to continue, and this turned the second one into an exception. The report takes a copy now (F-72).
-- P2-3. A value with an unpaired surrogate gave a line that the parser rejected. The escape pass reads by index, keeps a matched pair as one character, and escapes every other surrogate. A check showed that `JsonDocument.Parse` accepts the escape form, so the fix keeps the value and never throws on a message (F-73).
-- P2-4. The JSON write path ran three helper levels below its operation. `AppendText`, `AppendRaw`, and `HexDigit` are gone, and `BuildLine` calls only leaves (D-110, F-73).
-- The P2-3 fix needs `System.String.this[]` for the one-character lookahead, and the owner approved that entry. D-214 records it.
-- 7 new tests. The total is 226.
-
-### State of the build
-
-- `main` is at `51b3de7`. The branch holds the PR-4 work, the review commit, and this correction commit.
-- Remote head: `origin/feat/pr-4-logging` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 226 tests and 0 failures.
-- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged.
-
-### In flight
-
-PR #15 needs a repeat review at the new effective head.
-
-### Traps and gotchas
-
-- A helper that takes a caller object and adds to it changes that object for every later call. A report takes a copy.
-- The logger writes its own `level` and `message`, so those two names need a rule of their own. A duplicate-name check over the caller fields alone does not reach them.
-- An unpaired surrogate is not text that UTF-8 can hold. A parser rejects the raw form and accepts the `\u` escape form.
-- D-110 counts every level. `BuildLine` to `AppendText` to `AppendQuoted` to `HexDigit` is three, and one is the limit.
-- A patch script that fails part way leaves the file unchanged, and the build then passes on the old code. Read the file after a large scripted edit.
-
-### Open questions that block progress
-
-No new owner question. No open question blocks PR-5 to PR-11.
-
-### Next concrete action
-
-A Codex session re-reviews PR #15 per the repeat review procedure and updates `docs/reviews/pr-15.md` to the new effective head.
