@@ -1,5 +1,44 @@
 # Session handoff archive
 
+## Session 58: 2026-09-08, Codex
+
+Author: Codex
+Session: repeat review PR #17 for PR-5. Branch `feat/pr-5-content`.
+
+### What this session did, and why
+
+- Re-reviewed PR #17 at effective head `7143fd3` against base and merge base `a37f0af`.
+- Confirmed the provider gate. Sessions 55 and 57 identify Claude Code as the author and correction author. Codex is the eligible reviewer.
+- Verified the three fixes. The hash frames each file. The JSON reader keeps number text until validation. The string rule checks the receiver of `Get`.
+- Verified the new regression tests and found no new in-scope defect.
+- Updated `docs/reviews/pr-17.md` with fixed statuses and the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `a37f0af`. The reviewed effective head is `7143fd3`.
+- Remote head: `origin/feat/pr-5-content` is `9d99dd0`, verified after the review metadata commit.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 280 tests and 0 failures.
+- `det-lint` reports 0 findings. `ste-check` reports 0 findings. `bit-identity` gives `4d6385bb92454694`.
+- The Godot 4.7.2 headless build check passes. The build, test, comparison, lint, and STE checks pass at `7143fd3`.
+
+### In flight
+
+The repeat-review record is published. The review-gate and evaluate checks pass.
+
+### Traps and gotchas
+
+- The effective head is the correction commit `7143fd3`. Review metadata commits do not change it.
+- The prior review-gate failure named the old effective head. The updated record must name `7143fd3`.
+- The response keeps the syntactic limit of the Game string rule because this PR has no Game source file or engine compilation path.
+
+### Open questions that block progress
+
+No owner question is needed. No open question blocks PR-6 to PR-11.
+
+### Next concrete action
+
+The owner can merge PR #17.
+
 ## Session 57: 2026-09-08, Claude Code
 
 Author: Claude Code
