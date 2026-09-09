@@ -17,10 +17,10 @@ public sealed class BitIdentityTests
     /// </summary>
     /// <remarks>
     /// A deliberate change to the simulation changes this number. G-20 asks the review to confirm the change and
-    /// the version bump that goes with it. PR-6 set `283aa4b8cd1281be`, and PR-7 moved it when the state gained
-    /// a position and the sweep replay gained a grid.
+    /// the version bump that goes with it. PR-6 set `283aa4b8cd1281be`, PR-7 moved it to `e8ef2b1fad938845` when
+    /// the state gained a position, and PR-8 moved it when the pitch clamp changed and the sweep gained the camera.
     /// </remarks>
-    private const string ExpectedHash = "e8ef2b1fad938845";
+    private const string ExpectedHash = "92ef27ee175b3e7e";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -108,5 +108,9 @@ public sealed class BitIdentityTests
         // PR-6 exit test 7: the sweep replays one fixed record, so the three platforms compare the replay too.
         Assert.Contains("RunReplayer.Replay(", sweep, StringComparison.Ordinal);
         Assert.Contains("Crc32.Of(", sweep, StringComparison.Ordinal);
+
+        // PR-8 exit test 5: the sweep folds in the camera pose and the aim ray of every tick of that record.
+        Assert.Contains("loop.Camera()", sweep, StringComparison.Ordinal);
+        Assert.Contains("loop.Aim(", sweep, StringComparison.Ordinal);
     }
 }

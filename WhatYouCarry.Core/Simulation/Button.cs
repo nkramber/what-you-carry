@@ -1,12 +1,12 @@
 namespace WhatYouCarry.Core.Simulation;
 
 /// <summary>
-/// The bits of the button mask of an intent (D-162, D-232). Bits 8 to 15 are reserved, and a set reserved bit
-/// is an error.
+/// The bits of the button mask of an intent (D-162, D-232, D-243). Bits 9 to 15 are reserved, and a set reserved
+/// bit is an error.
 /// </summary>
 /// <remarks>
 /// The whole list is one decision, so a later PR cites its bit and needs no decision of its own. PR-7 reads
-/// jump and sprint. The other six wait for the PR that owns each action.
+/// jump and sprint, and PR-8 reads the controller aim flag. The other six wait for the PR that owns each action.
 /// </remarks>
 public static class Button
 {
@@ -34,9 +34,12 @@ public static class Button
     /// <summary>Bit 7. The quick slot moves to the previous item (PR-23).</summary>
     public const ushort QuickSlotPrevious = 0x0080;
 
-    /// <summary>The eight assigned bits.</summary>
-    public const ushort AssignedMask = 0x00FF;
+    /// <summary>Bit 8. A controller aims on this tick, so aim assist runs (D-243, PR-8). The Game layer sets it from the device that gave the look input.</summary>
+    public const ushort ControllerAim = 0x0100;
 
-    /// <summary>The eight reserved bits. A set one is an error (D-232).</summary>
-    public const ushort ReservedMask = 0xFF00;
+    /// <summary>The nine assigned bits.</summary>
+    public const ushort AssignedMask = 0x01FF;
+
+    /// <summary>The seven reserved bits. A set one is an error (D-232, D-243).</summary>
+    public const ushort ReservedMask = 0xFE00;
 }

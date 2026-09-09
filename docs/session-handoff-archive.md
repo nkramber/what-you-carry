@@ -1,5 +1,45 @@
 # Session handoff archive
 
+## Session 56: 2026-09-08, Codex
+
+Author: Codex
+Session: review PR #17 for PR-5. Branch `feat/pr-5-content`.
+
+### What the session did, and why
+
+- Reviewed PR #17 at effective head `614ce49` against base and merge base `a37f0af`.
+- Confirmed the provider gate. Session 55 identifies Claude Code as the author, and Codex is the eligible reviewer.
+- Inspected the content source, JSON reader, validators, typed records, content hash, string table, Game string lint rule, tests, content files, and project documents.
+- Found three P2 defects. The content hash has ambiguous file framing. A malformed number can escape without content context. The string lint rule exempts unrelated `Get` methods.
+- Wrote `docs/reviews/pr-17.md` with the findings and the verdict `Changes required`.
+
+### State of the build
+
+- `main` is at `a37f0af`. The reviewed effective head is `614ce49`.
+- Remote head: `origin/feat/pr-5-content` is `ace29d4`, verified after the review commit.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 270 tests and 0 failures.
+- `det-lint` reports 0 findings. `ste-check` reports 0 findings. `bit-identity` gives `4d6385bb92454694`.
+- The Godot 4.7.2 headless build check passes. All applicable GitHub build, test, lint, STE, comparison, and bit-identity checks pass at `614ce49`.
+
+### In flight
+
+PR #17 needs corrections for P2-1, P2-2, and P2-3, followed by a repeat review.
+
+### Traps and gotchas
+
+- Hash each path and byte sequence with unambiguous boundaries. Concatenation alone can give one input to two content sets.
+- `Utf8JsonReader.GetInt64()` can throw `FormatException` for a JSON number that does not fit `Int64`. Catch or avoid that conversion before the contextual error boundary.
+- The string rule must distinguish `Strings.Get` from an unrelated method named `Get`.
+- The Game directory has no source file yet. The fixture rule must still falsify false exemptions.
+
+### Open questions that block progress
+
+No owner question is needed. The author can correct all three findings within the current scope.
+
+### Next concrete action
+
+The author corrects the three findings and requests a repeat review at the new effective head.
+
 ## Session 55: 2026-09-08, Claude Code
 
 Author: Claude Code

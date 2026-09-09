@@ -373,8 +373,8 @@ Implement the voxel grid of one-meter cubes (D-78, D-234). Implement Core collis
 Gate: a box that moves at the maximum speed never crosses a solid block.
 > *In plain English:* the dungeon is a grid of blocks. The game itself decides how bodies bump into them, so the result is identical on every machine.
 
-**PR-8: Camera as a Core system.** 🔧
-Implement the over-the-shoulder camera in Core (D-13, D-75, D-241, D-242, D-245 to D-247). It integrates the quantized look deltas, sweeps its boom against the grid, and derives the aim ray (D-77, D-88). Aim assist runs here from enemy positions (D-14, D-243, D-244). Property tests assert the camera never enters a solid block and the aim ray is deterministic.
+**PR-8: Camera as a Core system.** 🔧 Open as PR #23.
+Implement the over-the-shoulder camera in Core (D-13, D-75, D-241, D-242, D-245 to D-249). It integrates the quantized look deltas, sweeps its boom against the grid, and derives the aim ray (D-77, D-88). Aim assist runs here from enemy positions (D-14, D-243, D-244). Property tests assert the camera never enters a solid block and the aim ray is deterministic.
 Gate: a recorded run with camera motion replays to the same hash on all three platforms.
 > *In plain English:* the camera is part of the simulation, not decoration, so where you look and where you aim replay exactly.
 
