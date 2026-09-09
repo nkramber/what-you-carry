@@ -124,7 +124,7 @@ A PR merges only when every line holds:
 - [ ] The `ste-check` job is green (G-14).
 - [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250).
 - [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
-- [ ] The `review-gate` check is green. Grey means no review record yet. Red means the review does not approve this head (D-179, D-181, D-185).
+- [ ] The `review-gate` check run is green. Grey means no review record yet, and the job line reads red then (D-251). Red means the review does not approve this head (D-179, D-181, D-185).
 - [ ] `docs/decisions.md` has every new decision.
 - [ ] `docs/questions.md` has every new question.
 - [ ] `docs/design.md` matches intent.

@@ -1,6 +1,6 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-247. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-247, and D-250 and D-251. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
@@ -70,12 +70,12 @@ Scope:
 - One path in the code set fails the override, and the message names that path (T-2). The code set is every path outside the eligible set.
 - The label overrides a review file that does not approve. The owner is the only account that merges (D-126).
 - Compute the effective head with one `git log` command that excludes each metadata path by pathspec. Do not use a pipeline that stops early, because its exit status is not reliable.
-- The job publishes a check run named `review-gate` on the PR head commit, through the Checks API (D-181, D-185). A workflow job cannot set a neutral conclusion by its exit code.
+- The job publishes a check run named `review-gate` on the PR head commit, through the Checks API (D-181, D-185). A workflow job cannot set a neutral conclusion by its exit code. The job fails on a `neutral` conclusion too, so the visible job line reads red until a record or a valid label exists (D-251).
 - The conclusions are:
 
 | Condition | `advisory` mode | `enforced` mode | Shows as |
 |---|---|---|---|
-| No review file for the PR number | `neutral` | `failure` | Grey, then red at launch |
+| No review file for the PR number | `neutral` | `failure` | Grey check run and a red job (D-251), then red at launch |
 | Verdict is not `Ready for owner merge` | `failure` | `failure` | Red |
 | The recorded head is not the effective head | `failure` | `failure` | Red |
 | Approved review of the effective head | `success` | `success` | Green |
@@ -119,12 +119,13 @@ Exit tests:
 23. `SolutionIsSlnx` asserts that `WhatYouCarry.slnx` exists, that the repository holds no `.sln` file, and that the solution lists the four projects (D-194).
 24. `ReviewGateRunsOnPullRequestTarget` asserts the `pull_request_target` event, and that no step checks out the PR head (D-197).
 25. `ReviewGateNamesTheCommitThatChangedTheReviewFile` asserts that the output names the commit that last changed the review file, with its subject (D-198).
+26. `ReviewGateJobFailsOnNeutral` asserts that the last step of the workflow exits 1 on a neutral conclusion, added 2026-09-09 (D-251).
 
 Review focus: Core boundary, input and CI boundaries, dependencies, documents.
 
 Check clause: the STE checker, the lint tool, and the bit-identity job do not exist. PR-2 and PR-3 create them. Branch protection does not exist, so `review-gate` is advisory until launch (D-170, D-180). The `review-gate` check does not run on PR-1 itself (D-197, F-58). A throwaway PR against `main` after the merge proves it.
 
-Gate: exit tests 1 to 25 pass.
+Gate: exit tests 1 to 26 pass.
 
 > *In plain English:* this makes the empty project with its four parts. It adds the automatic build on three kinds of computer and the checklist every change must fill in. It also adds a check that turns red when a change has no approved review. It adds nothing that plays.
 
