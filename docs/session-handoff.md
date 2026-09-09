@@ -2,6 +2,52 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 67: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: record the automated review pass of gitar (D-250), and run its first cycles on PR #23 and on this PR. Branch `docs/gitar-review-pass`.
+
+### What this session did, and why
+
+- The owner added an automated reviewer, gitar, that comments on every PR after a push, and gave the rule for it. D-250 records the rule as an owner instruction.
+- The `pr-review` skill gained two procedures: "The automated pass" for the author, and "Do not address the automated reviewer" for the reviewing provider. The review record skeleton gained a `## PR comments` part, and the scope limits name a reply to gitar as an external message.
+- The agent files gained the "Automated review pass" section and a gate line. Design section 3.14 names the pass.
+- The first pass on PR #23 gave one comment: approved, no issue. PR #23 is ready for the Codex review with no change.
+- The pass on this PR gave one comment with one finding: the register jumps from D-247 to D-250. Partial merit. D-248 and D-249 live in PR #23, and ids never change, so D-250 stays. The Effect column of D-250 names the two ids and the PR that holds them, in the commit that holds this entry, and the reply on the thread says so.
+- This branch comes from `main`, so it holds neither D-248, nor D-249, nor Session 66. Each of those lands with PR #23.
+
+### State of the build
+
+- `main` is at `9209fb5`, the squash merge of PR #22. This branch holds three document commits above it.
+- Remote head: `origin/docs/gitar-review-pass` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 398 tests, 0 failures, on the code of `main`.
+- `det-lint`: 0 findings. Core 0 in 37 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `e8ef2b1fad938845`, the value of `main`. PR #23 moves it to `92ef27ee175b3e7e`.
+
+### In flight
+
+- PR #24 is open and it holds this branch. It changes documents, skills, and the agent files alone, so the `review-override` label covers it (D-190). The owner added the label before the second commit, so the label needs a new add after the last push.
+- PR #23 is open on `feat/pr-8-camera`, with the effective head `e6d40e0`. It is ready for the Codex review.
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- Two open PRs both add a handoff entry at the top of the file and a decision row after D-247, and the second one to merge needs a merge from `main` first. After this PR merges, merge `main` into `feat/pr-8-camera` and order the entries and the rows by number: Session 68, 67, 66, and D-248, D-249, D-250.
+- The override label is stale after any push outside the metadata set (D-190). Add it after the last push, and not before.
+- gitar posts one comment on the PR with its verdict inside a details block, and one review thread on the line of each finding. The thread has a GraphQL node id, and `addPullRequestReviewThreadReply` answers it. The REST list of pull comments was empty while the pass still ran.
+- A reply to gitar names no provider (T-6). It states the evidence and the commit.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner adds the `review-override` label to PR #24 again and merges it. Then merge `main` into `feat/pr-8-camera`, order the entries and the rows by number, and add the Session 68 entry that records the pass on PR #23. A Codex session then reviews PR #23 per the `pr-review` skill, reads the existing PR comments into the review, and never addresses gitar (D-250).
+
 ## Session 65: 2026-09-09, Claude Code
 
 Author: Claude Code
@@ -430,43 +476,3 @@ No new owner question. No open question blocks PR-6 to PR-11.
 ### Next concrete action
 
 A Codex session re-reviews PR #17 per the repeat review procedure and updates `docs/reviews/pr-17.md` to the new effective head.
-
-## Session 56: 2026-09-08, Codex
-
-Author: Codex
-Session: review PR #17 for PR-5. Branch `feat/pr-5-content`.
-
-### What the session did, and why
-
-- Reviewed PR #17 at effective head `614ce49` against base and merge base `a37f0af`.
-- Confirmed the provider gate. Session 55 identifies Claude Code as the author, and Codex is the eligible reviewer.
-- Inspected the content source, JSON reader, validators, typed records, content hash, string table, Game string lint rule, tests, content files, and project documents.
-- Found three P2 defects. The content hash has ambiguous file framing. A malformed number can escape without content context. The string lint rule exempts unrelated `Get` methods.
-- Wrote `docs/reviews/pr-17.md` with the findings and the verdict `Changes required`.
-
-### State of the build
-
-- `main` is at `a37f0af`. The reviewed effective head is `614ce49`.
-- Remote head: `origin/feat/pr-5-content` is `ace29d4`, verified after the review commit.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 270 tests and 0 failures.
-- `det-lint` reports 0 findings. `ste-check` reports 0 findings. `bit-identity` gives `4d6385bb92454694`.
-- The Godot 4.7.2 headless build check passes. All applicable GitHub build, test, lint, STE, comparison, and bit-identity checks pass at `614ce49`.
-
-### In flight
-
-PR #17 needs corrections for P2-1, P2-2, and P2-3, followed by a repeat review.
-
-### Traps and gotchas
-
-- Hash each path and byte sequence with unambiguous boundaries. Concatenation alone can give one input to two content sets.
-- `Utf8JsonReader.GetInt64()` can throw `FormatException` for a JSON number that does not fit `Int64`. Catch or avoid that conversion before the contextual error boundary.
-- The string rule must distinguish `Strings.Get` from an unrelated method named `Get`.
-- The Game directory has no source file yet. The fixture rule must still falsify false exemptions.
-
-### Open questions that block progress
-
-No owner question is needed. The author can correct all three findings within the current scope.
-
-### Next concrete action
-
-The author corrects the three findings and requests a repeat review at the new effective head.
