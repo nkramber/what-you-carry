@@ -1,5 +1,46 @@
 # Session handoff archive
 
+## Session 54: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: record the PR-4 merge across the documents. Branch `docs/pr-4-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #15 as `1749463`, after a Codex review approved effective head `94afeea`.
+- Audited every document against the merged state. The registers were complete: D-211 to D-217, OQ-82 to OQ-86, and F-71 to F-77 all landed with the PR.
+- The owner then answered the one open item of PR-4. D-218 ratifies the log name and value rule, and OQ-87 records the question.
+- Three lines were stale, and this session corrects each one. The focused roadmap had no status line for PR-4, and its header cited D-200 to D-216 while the PR added D-217. The design doc marked PR-4 as open, in the marker and in the Phase 1 sequence.
+- The correction passes of the roadmap now record the PR-4 outcome: five owner questions before the code, three review passes on the logger, and the description rule of D-217.
+- The build on `main` is healthy: 234 tests, 0 lint findings, 0 checker findings.
+
+### State of the build
+
+- `main` is at `1749463`, the squash merge of PR #15. This branch holds one commit above it.
+- Remote head: `origin/docs/pr-4-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 234 tests and 0 failures.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`.
+
+### In flight
+
+This PR changes only `docs/`, so the `review-override` label covers it (D-190). PR-5 starts after the merge.
+
+### Traps and gotchas
+
+- The owner ratified the PR-4 name and value rule as D-218. A field name is an identifier and must hold valid text. A value and a message take the replacement character, because a throw on content loses a crash report at the moment that the owner needs it most.
+- D-218 reaches the registers and the two plan documents in this PR. The code comments cite F-77, and F-77 cites D-218, so this PR changes no code and keeps the override.
+- PR-5 needs owner answers before its code. The content loader reads files, and D-211 kept `System.IO` out of Core for the logger. The loader also needs a JSON reader and SHA-256, and the D-207 list holds neither. The lint rule of G-8 also reads the Game project, and the tool reads Core alone today.
+- A merged PR leaves a status line in three places: the focused roadmap, the design doc marker, and the Phase 1 sequence.
+
+### Open questions that block progress
+
+No open question blocks PR-5 from starting. Four questions come before its code, and the next session files them.
+
+### Next concrete action
+
+The owner merges this documentation PR with the `review-override` label. It carries the merge record and D-218, and the owner asked for one PR. Then a new session starts PR-5: the content loader, the schemas, the content hash, and the string table (D-91, D-92, D-98, D-163, D-168).
+
 ## Session 53: 2026-09-08, Codex
 
 Author: Codex
