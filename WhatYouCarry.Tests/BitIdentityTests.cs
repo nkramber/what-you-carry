@@ -17,9 +17,10 @@ public sealed class BitIdentityTests
     /// </summary>
     /// <remarks>
     /// A deliberate change to the simulation changes this number. G-20 asks the review to confirm the change and
-    /// the version bump that goes with it.
+    /// the version bump that goes with it. PR-6 set `283aa4b8cd1281be`, and PR-7 moved it when the state gained
+    /// a position and the sweep replay gained a grid.
     /// </remarks>
-    private const string ExpectedHash = "283aa4b8cd1281be";
+    private const string ExpectedHash = "e8ef2b1fad938845";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

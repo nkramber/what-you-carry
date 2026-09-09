@@ -6,7 +6,7 @@ using Xunit;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The CRC-32, the intent frame, and the fixed-step loop (D-73, D-162, D-224, D-227; PR-6).</summary>
+/// <summary>The CRC-32, the intent frame, and the fixed-step loop (D-73, D-162, D-224, D-227; PR-6). The loop tests run on the flat floor of <see cref="TestWorld"/> (PR-7).</summary>
 public sealed class SimulationTests
 {
     /// <summary>The check value of the CRC-32 standard: the text "123456789" gives 0xCBF43926.</summary>
@@ -117,19 +117,19 @@ public sealed class SimulationTests
         Assert.Throws<ContextException>(() => Intent.Decode(frame, -1));
     }
 
-    /// <summary>The loop runs at 60 Hz, and the first simulation version is 1 (D-73, D-151).</summary>
+    /// <summary>The loop runs at 60 Hz, and the simulation version is 2 since PR-7 gave the state a position (D-73, D-151, G-20).</summary>
     [Fact]
     public void TheConstantsHold()
     {
         Assert.Equal(60, SimulationLoop.TicksPerSecond);
-        Assert.Equal(1, SimulationVersion.Value);
+        Assert.Equal(2, SimulationVersion.Value);
     }
 
     /// <summary>One intent is one tick, and the loop starts at tick zero.</summary>
     [Fact]
     public void OneIntentIsOneTick()
     {
-        SimulationLoop loop = new(1UL);
+        SimulationLoop loop = TestWorld.NewLoop(1UL);
         Assert.Equal(0U, loop.Tick);
         loop.Step(new Intent(0U, 0, 0, 0, 0, 0));
         loop.Step(new Intent(1U, 0, 0, 0, 0, 0));
@@ -140,7 +140,7 @@ public sealed class SimulationTests
     [Fact]
     public void AnIntentOutOfOrderIsAnError()
     {
-        SimulationLoop loop = new(1UL);
+        SimulationLoop loop = TestWorld.NewLoop(1UL);
         loop.Step(new Intent(0U, 0, 0, 0, 0, 0));
 
         ContextException error = Assert.Throws<ContextException>(() => loop.Step(new Intent(5U, 0, 0, 0, 0, 0)));
@@ -154,7 +154,7 @@ public sealed class SimulationTests
     public void YawWraps()
     {
         // A delta is an int16, so a turn near 360 degrees takes two intents.
-        SimulationLoop loop = new(1UL);
+        SimulationLoop loop = TestWorld.NewLoop(1UL);
         loop.Step(new Intent(0U, 30000, 0, 0, 0, 0));
         loop.Step(new Intent(1U, 5990, 0, 0, 0, 0));
         Assert.Equal(35990, loop.Yaw);
@@ -168,7 +168,7 @@ public sealed class SimulationTests
     [Fact]
     public void PitchClamps()
     {
-        SimulationLoop loop = new(1UL);
+        SimulationLoop loop = TestWorld.NewLoop(1UL);
         loop.Step(new Intent(0U, 0, 8000, 0, 0, 0));
         loop.Step(new Intent(1U, 0, 8000, 0, 0, 0));
         Assert.Equal(SimulationLoop.PitchLimit, loop.Pitch);
@@ -180,8 +180,8 @@ public sealed class SimulationTests
     [Fact]
     public void ButtonsFollowTheLastIntent()
     {
-        SimulationLoop pressed = new(1UL);
-        SimulationLoop released = new(1UL);
+        SimulationLoop pressed = TestWorld.NewLoop(1UL);
+        SimulationLoop released = TestWorld.NewLoop(1UL);
         pressed.Step(new Intent(0U, 0, 0, 0, 0, 0x0004));
         released.Step(new Intent(0U, 0, 0, 0, 0, 0));
 
@@ -193,13 +193,16 @@ public sealed class SimulationTests
     [Fact]
     public void TheHashCoversTheSeed()
     {
-        SimulationLoop first = new(1UL);
-        SimulationLoop second = new(2UL);
+        SimulationLoop first = TestWorld.NewLoop(1UL);
+        SimulationLoop second = TestWorld.NewLoop(2UL);
         Assert.NotEqual(first.Hash(), second.Hash());
-        Assert.Equal(first.Hash(), new SimulationLoop(1UL).Hash());
+        Assert.Equal(first.Hash(), TestWorld.NewLoop(1UL).Hash());
     }
 
-    /// <summary>A random intent for one tick. The tests and the replay tests share it.</summary>
+    /// <summary>
+    /// A random intent for one tick. The tests, the replay tests, and the body tests share it. The buttons keep
+    /// the eight assigned bits, because a set reserved bit is an error (D-232).
+    /// </summary>
     public static Intent RandomIntent(Random random, uint tick)
     {
         return new Intent(
@@ -208,6 +211,6 @@ public sealed class SimulationTests
             (short)random.Next(short.MinValue, short.MaxValue + 1),
             (sbyte)random.Next(sbyte.MinValue, sbyte.MaxValue + 1),
             (sbyte)random.Next(sbyte.MinValue, sbyte.MaxValue + 1),
-            (ushort)random.Next(0, ushort.MaxValue + 1));
+            (ushort)random.Next(0, Button.AssignedMask + 1));
     }
 }

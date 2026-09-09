@@ -1,6 +1,9 @@
 using System.Globalization;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Physics;
+using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Core.Simulation;
 
@@ -10,15 +13,19 @@ namespace WhatYouCarry.Core.Simulation;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The Phase 1 state is the seed, the tick, the yaw and pitch sums in hundredths of a degree, and the buttons of
-/// the last intent (D-227). The yaw wraps at a full turn, and the pitch stops at straight up and straight down.
-/// PR-7 adds the world, and PR-8 derives the aim ray from the two sums (D-77). The movement bytes of an intent
-/// wait for the world, because a position needs collision, so this loop reads neither one yet.
+/// The state is the seed, the tick, the yaw and pitch sums in hundredths of a degree, the buttons of the last
+/// intent (D-227), and after them the position and the vertical velocity of the player body (PR-7). The yaw
+/// wraps at a full turn, and the pitch stops at straight up and straight down. PR-8 derives the aim ray from the
+/// two sums (D-77).
 /// </para>
 /// <para>
-/// Every field is an integer, so the hash is the same on every platform by construction. The loop rejects an
-/// intent whose tick is not the next one, because a replay that stepped over a frame would diverge in silence
-/// (T-2, G-5).
+/// The look deltas apply first, and the body then moves by the yaw sum after them. The grid and the spawn point
+/// come from the caller, because no generator exists before PR-9 (D-236). The grid is an input like the content
+/// and not state, so the hash reads the body and not the blocks.
+/// </para>
+/// <para>
+/// The loop rejects an intent whose tick is not the next one, because a replay that stepped over a frame would
+/// diverge in silence, and it rejects a set reserved button bit (T-2, G-5, D-232).
 /// </para>
 /// </remarks>
 public sealed class SimulationLoop
@@ -32,14 +39,23 @@ public sealed class SimulationLoop
     /// <summary>The largest pitch magnitude, in hundredths of a degree: straight up or straight down.</summary>
     public const int PitchLimit = 9000;
 
-    /// <summary>A loop at tick zero for one run.</summary>
-    public SimulationLoop(ulong seed)
+    /// <summary>A loop at tick zero for one run, with the body at rest at the spawn point.</summary>
+    /// <exception cref="ContextException">The player box at the spawn point overlaps a solid cell or reaches past the grid.</exception>
+    public SimulationLoop(ulong seed, VoxelGrid grid, Vector3 spawn)
     {
         this.Seed = seed;
+        this.Grid = grid;
+        this.Body = new PlayerBody(grid, spawn);
     }
 
     /// <summary>The seed of the run. Every random stream of the run derives from it (D-159).</summary>
     public ulong Seed { get; }
+
+    /// <summary>The grid of the floor (D-78, D-236).</summary>
+    public VoxelGrid Grid { get; }
+
+    /// <summary>The player body (D-149, D-165).</summary>
+    public PlayerBody Body { get; }
 
     /// <summary>The count of ticks that ran, which is also the tick of the next intent.</summary>
     public uint Tick { get; private set; }
@@ -54,7 +70,7 @@ public sealed class SimulationLoop
     public ushort Buttons { get; private set; }
 
     /// <summary>Runs one tick with one intent.</summary>
-    /// <exception cref="ContextException">The intent is not for the next tick, or the tick counter is full.</exception>
+    /// <exception cref="ContextException">The intent is not for the next tick, the tick counter is full, or the intent sets a reserved button bit.</exception>
     public void Step(Intent intent)
     {
         if (intent.Tick != this.Tick)
@@ -69,6 +85,16 @@ public sealed class SimulationLoop
         if (this.Tick == uint.MaxValue)
         {
             throw new ContextException($"The tick counter is full at {this.Tick}, and the loop cannot run another tick.");
+        }
+
+        // A reserved bit comes from a build that assigned it, and this build cannot read it (D-232).
+        if ((intent.Buttons & Button.ReservedMask) != 0)
+        {
+            string buttons = "0x" + ((ulong)intent.Buttons).ToString("x4", CultureInfo.InvariantCulture);
+            ContextException reserved = new($"The intent at tick {intent.Tick} sets a reserved button bit. The buttons are {buttons}, and bits 8 to 15 are reserved (D-232).");
+            reserved.AddContext("tick", ((long)intent.Tick).ToString(CultureInfo.InvariantCulture));
+            reserved.AddContext("buttons", buttons);
+            throw reserved;
         }
 
         int yaw = (this.Yaw + intent.YawDelta) % FullTurn;
@@ -90,10 +116,15 @@ public sealed class SimulationLoop
         this.Yaw = yaw;
         this.Pitch = pitch;
         this.Buttons = intent.Buttons;
+        this.Body.Step(intent, yaw);
         this.Tick++;
     }
 
-    /// <summary>The hash of the whole state, in the declared field order (D-160).</summary>
+    /// <summary>
+    /// The hash of the whole state, in the declared field order (D-160): the five fields of D-227, then the
+    /// position and the vertical velocity of the body. A new field goes after these, so the order of every
+    /// earlier one stands.
+    /// </summary>
     public StateHash Hash()
     {
         StateHash hash = StateHash.Start();
@@ -102,6 +133,10 @@ public sealed class SimulationLoop
         hash.Add(this.Yaw);
         hash.Add(this.Pitch);
         hash.Add((uint)this.Buttons);
+        hash.Add(this.Body.Position.X);
+        hash.Add(this.Body.Position.Y);
+        hash.Add(this.Body.Position.Z);
+        hash.Add(this.Body.VerticalVelocity);
         return hash;
     }
 }

@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Tools.BitIdentity;
 
@@ -41,6 +43,15 @@ public static class BitIdentitySweep
 
     /// <summary>The content hash that the sweep record carries. It has no meaning beyond its shape (D-221).</summary>
     public const string ReplayContentHash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+    /// <summary>The side of the sweep grid, in blocks.</summary>
+    public const int ReplayGridSide = 16;
+
+    /// <summary>The height of the sweep grid, in blocks.</summary>
+    public const int ReplayGridHeight = 8;
+
+    /// <summary>The feet center of the body at tick zero, over the middle of the floor.</summary>
+    public static readonly Vector3 ReplaySpawn = new(8.5f, 1.0f, 8.5f);
 
     /// <summary>
     /// The streams that the sweep reads. The list is explicit, so a new value of <see cref="RngStream"/> leaves
@@ -154,7 +165,7 @@ public static class BitIdentitySweep
     /// <summary>
     /// Records one run of intents that the seed makes, replays the record, and folds in the end state and the
     /// checksum of the whole record (PR-6 exit test 7). The three platforms must agree on the frame bytes, the
-    /// header text, the CRC-32, and the loop.
+    /// header text, the CRC-32, the loop, and the collision of the body with the fixed grid (PR-7).
     /// </summary>
     private static void AddReplay(ref StateHash hash)
     {
@@ -165,13 +176,46 @@ public static class BitIdentitySweep
         {
             uint look = rng.NextUInt();
             uint rest = rng.NextUInt();
-            Intent intent = new(tick, (short)look, (short)(look >> 16), (sbyte)rest, (sbyte)(rest >> 8), (ushort)(rest >> 16));
+
+            // The buttons keep the eight assigned bits alone, because a set reserved bit is an error (D-232).
+            ushort buttons = (ushort)((rest >> 16) & Button.AssignedMask);
+            Intent intent = new(tick, (short)look, (short)(look >> 16), (sbyte)rest, (sbyte)(rest >> 8), buttons);
             recorder.Record(intent);
         }
 
-        ReplayResult result = RunReplayer.Replay(sink.Bytes, ReplayContentHash, new JsonlLogger(new RejectingLogSink()));
+        ReplayResult result = RunReplayer.Replay(sink.Bytes, ReplayContentHash, ReplayGrid(), ReplaySpawn, new JsonlLogger(new RejectingLogSink()));
         hash.Add(result.Loop.Hash().Value);
         hash.Add(Crc32.Of(sink.Bytes, 0, sink.Bytes.Count));
+    }
+
+    /// <summary>
+    /// The fixed grid of the sweep replay: a stone floor, a scatter of one-block steps, and a scatter of
+    /// two-block pillars, from two fixed patterns. The body walks, jumps onto the steps, and stops at the
+    /// pillars. The two patterns leave the spawn column clear.
+    /// </summary>
+    public static VoxelGrid ReplayGrid()
+    {
+        VoxelGrid grid = new(ReplayGridSide, ReplayGridHeight, ReplayGridSide);
+        for (int x = 0; x < ReplayGridSide; x++)
+        {
+            for (int z = 0; z < ReplayGridSide; z++)
+            {
+                grid.Set(x, 0, z, BlockId.RawStone);
+
+                if (((x * 7) + (z * 3)) % 5 == 1)
+                {
+                    grid.Set(x, 1, z, BlockId.RawStone);
+                }
+
+                if (((x * 3) + (z * 5)) % 11 == 2)
+                {
+                    grid.Set(x, 1, z, BlockId.RawStone);
+                    grid.Set(x, 2, z, BlockId.RawStone);
+                }
+            }
+        }
+
+        return grid;
     }
 
     /// <summary>A sink that keeps the record in memory. The sweep never touches the disk.</summary>
