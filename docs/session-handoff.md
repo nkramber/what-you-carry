@@ -9,7 +9,7 @@ Session: review PR #19 for the simulation loop, the intent frame, the run record
 
 ### What this session did, and why
 
-- Verified PR #19 against `main` at `c11fb41` and reviewed effective head `f7bec9f`.
+- Verified PR #19 against `main` at `c11fb41` and reviewed effective head `0850d32`.
 - Confirmed that Session 60 identifies Claude Code as the implementation provider. Codex is the eligible reviewer.
 - Inspected the complete diff, callers, tests, replay contracts, error paths, Core boundary, and Phase 1 documents.
 - Confirmed the intentional bit-identity change from `4d6385bb92454694` to `283aa4b8cd1281be`.
@@ -17,7 +17,7 @@ Session: review PR #19 for the simulation loop, the intent frame, the run record
 
 ### State of the build
 
-- `main` is at `c11fb41`. The reviewed effective head is `f7bec9f`.
+- `main` is at `c11fb41`. The reviewed effective head is `0850d32`.
 - The branch held metadata commit `0850d32` before this review. Review commit `1247769` is on the remote branch.
 - `dotnet test` passes with 336 tests and 0 failures.
 - `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
@@ -27,11 +27,11 @@ Session: review PR #19 for the simulation loop, the intent frame, the run record
 
 ### In flight
 
-PR #19 is open with the verdict `Ready for owner merge` at effective head `f7bec9f`. The owner can merge it after the review record reaches the remote branch.
+PR #19 is open with the verdict `Ready for owner merge` at effective head `0850d32`. The owner can merge it after the review record reaches the remote branch.
 
 ### Traps and gotchas
 
-- The implementation head is `f7bec9f`. The later metadata commits do not change the effective head.
+- The effective head is `0850d32` because that commit changes design and roadmap files outside the D-184 metadata set. The later review commits do not change the effective head.
 - The bit-identity value changes on purpose because the sweep replays one fixed record.
 - The simulation version stays at 1 because PR-6 sets its first value.
 
