@@ -378,13 +378,13 @@ Result, 2026-09-09: every exit test passes. The march test walks each segment in
 
 Scope:
 
-- `content/floors/*.json`: each floor template gains `sizeX`, `sizeY`, and `sizeZ`, one size per band (D-252). The three bands of D-210 are floors 1 to 5 at 48 by 12 by 48, floors 6 to 10 at 72 by 16 by 72, and floors 11 to 15 at 96 by 20 by 96. The validator rejects a size past D-164. The room count range and the difficulty budget stand (D-167).
+- `content/floors/*.json`: each floor template gains `sizeX`, `sizeY`, and `sizeZ`, one size per band (D-252). The working mine of floors 1 to 5 is 48 by 12 by 48. The older workings of floors 6 to 10 are 72 by 16 by 72. The deep of floors 11 to 15 is 96 by 20 by 96. The validator rejects a size past D-164. The room count range and the difficulty budget stand (D-167).
 - `content/chambers/*.json`: a new content type, one file per chamber kind, with an id, a weight, a box count range, and a box size range (D-255). One validator, with an explicit field list (D-168).
-- `Core/Procgen/FloorGenerator.cs`: the mine dig plan (D-253). A seeded random walk lays a main gallery and side drifts that jitter, slope by one-block steps, and branch. A chamber is a union of overlapping boxes, smoothed by a cellular pass, with pillars left standing. Shafts and ramps join levels. Every tunnel is carved with a brush of at least three by three, so D-166 holds by construction. The generator draws chamber kinds until the sum of weights lands inside the budget window (D-167). It reads the Procgen stream of D-159 alone, and it steps in integers, so it is deterministic by construction.
+- `Core/Procgen/FloorGenerator.cs`: the mine dig plan (D-253). A seeded random walk lays a main gallery and side drifts that jitter, slope by one-block steps, and branch. A chamber is a union of boxes that overlap, smoothed by a cellular pass, with pillars left standing. Shafts and ramps join levels. The generator carves every tunnel with a brush of at least three by three, so D-166 holds by construction. The generator draws chamber kinds until the sum of weights lands inside the budget window (D-167). It reads the Procgen stream of D-159 alone, and it steps in integers, so it is deterministic by construction.
 - The spawn is a standing cell at the center of the first chamber. The stairwell is one cell in the chamber with the longest walkable path from the spawn (D-256).
 - `Core/Procgen/Reachability.cs`: a search over walkable cells. A cell is walkable with two air blocks above it. A move is a step of at most one block up, or any drop (D-165). It gives the path lengths that place the stairwell.
 - `Core/Simulation/StairwellTransition.cs`: at the stairwell, the interact bit descends and bit 9 ascends (D-257). Descend generates floor n+1 from the run seed and the floor number. Ascend ends the run (D-50, D-149). The loop state gains the floor number, and the hash reads it after the fields of PR-7 (G-20).
-- The loop and the replayer derive the grid and the spawn from the seed, the floor number, and the content set, which closes the gap of D-236. The replay takes the content set in place of a grid and a spawn.
+- The loop and the replayer derive the grid and the spawn from the seed, the floor number, and the content set. That closes the gap of D-236. The replay takes the content set in place of a grid and a spawn.
 - PR-9 carves raw stone and air alone. The detail pass and the other block ids of D-210 are PR-59 (D-254).
 
 Out of scope: the detail pass (PR-59), enemies, loot, the timer, the second biome.
@@ -398,7 +398,7 @@ Exit tests:
 5. `TunnelCrossSection` asserts that every tunnel cell sits inside an air cross-section three blocks wide and three blocks high (D-166).
 6. `FloorSizeGrowsWithDepth` asserts floor 15 is larger than floor 1 for the same seed (D-252).
 7. `GenerationIsDeterministic` asserts one grid hash for one seed, and the `bit-identity` job asserts it on three platforms.
-8. `DescendAdvancesFloor` asserts that the interact bit at the stairwell generates floor n+1 from the same run seed, that bit 9 ends the run, and that a replay reproduces both (D-257).
+8. `DescendAdvancesFloor` asserts that the interact bit at the stairwell generates floor n+1 from the same run seed. It asserts that bit 9 ends the run, and that a replay reproduces both (D-257).
 
 Review focus: determinism, content, replay, test quality.
 
