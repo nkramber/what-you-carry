@@ -128,6 +128,19 @@ public sealed class RepositoryShapeTests
         Assert.Contains("det-lint --root .", workflow, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// The last step of the review-gate workflow passes the job on a success conclusion alone, so a neutral
+    /// verdict, and a missing or unexpected conclusion, read red. A job cannot be neutral by its exit code
+    /// (D-251, F-84, T-2).
+    /// </summary>
+    [Fact]
+    public void ReviewGateJobFailsOnNeutral()
+    {
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/review-gate.yml");
+        Assert.Contains("if [ \"${conclusion}\" != \"success\" ]; then", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"${conclusion}\" = \"failure\"", workflow, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void ReviewGateModeFileHoldsAdvisory()
     {

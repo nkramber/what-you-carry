@@ -394,7 +394,7 @@ The check has three states. Read the color before you start:
 
 | Color | Meaning | What to do |
 |---|---|---|
-| Grey | No review record exists for this PR. | Write one. This is the normal state before a review. |
+| Grey | No review record exists for this PR. The job line reads red (D-251). | Write one. This is the normal state before a review. |
 | Red | A review record exists, and it does not approve this head. | Read the findings. The author corrects them. |
 | Green | An approved review covers the effective head. | The owner may merge (D-102, D-126). |
 
