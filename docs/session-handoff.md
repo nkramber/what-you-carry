@@ -13,7 +13,7 @@ Session: record the automated review pass of gitar (D-250), and run its first cy
 - The `pr-review` skill gained two procedures: "The automated pass" for the author, and "Do not address the automated reviewer" for the reviewing provider. The review record skeleton gained a `## PR comments` part, and the scope limits name a reply to gitar as an external message.
 - The agent files gained the "Automated review pass" section and a gate line. Design section 3.14 names the pass.
 - The first pass on PR #23 gave one comment: approved, no issue. PR #23 is ready for the Codex review with no change.
-- The pass on this PR gave one comment with one finding: the register jumps from D-247 to D-250. Partial merit. D-248 and D-249 live in PR #23, and ids never change, so D-250 stays. The Effect column of D-250 names the two ids and the PR that holds them, in the commit that holds this entry, and the reply on the thread says so.
+- The pass on this PR gave one comment with one finding: the register jumps from D-247 to D-250. No merit. D-248 and D-249 live in PR #23, and ids never change, so D-250 stays. The reply on the thread says so, and the thread is resolved. The owner asked for the reply alone and no note in the register.
 - This branch comes from `main`, so it holds neither D-248, nor D-249, nor Session 66. Each of those lands with PR #23.
 
 ### State of the build
@@ -38,7 +38,7 @@ PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then 
 - Two open PRs both add a handoff entry at the top of the file and a decision row after D-247, and the second one to merge needs a merge from `main` first. After this PR merges, merge `main` into `feat/pr-8-camera` and order the entries and the rows by number: Session 68, 67, 66, and D-248, D-249, D-250.
 - The override label is stale after any push outside the metadata set (D-190). Add it after the last push, and not before.
 - gitar posts one comment on the PR with its verdict inside a details block, and one review thread on the line of each finding. The thread has a GraphQL node id, and `addPullRequestReviewThreadReply` answers it. The REST list of pull comments was empty while the pass still ran.
-- A reply to gitar names no provider (T-6). It states the evidence and the commit.
+- A reply to gitar names no provider (T-6). It states the evidence and the commit. A gap or a fact that an open PR explains gets the reply alone, and no note in a register.
 
 ### Open questions that block progress
 
