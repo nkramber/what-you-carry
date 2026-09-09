@@ -33,12 +33,27 @@ public static class GameStringScan
     public const string StringsType = "Strings";
 
     /// <summary>
+    /// The receiver names that stand for the string table. A `Get` call takes an id and not a text only when
+    /// its receiver is one of these (D-222, F-79).
+    /// </summary>
+    /// <remarks>
+    /// The rule reads the syntax. The Game project has an engine dependency, so a compilation of it needs the
+    /// engine assemblies, and the project holds no source file yet. The PR that first writes Game code can add
+    /// a symbol read, and this list holds the boundary until then.
+    /// </remarks>
+    public static readonly IReadOnlySet<string> StringTableReceivers = new HashSet<string>
+    {
+        "Strings",
+        "strings",
+    };
+
+    /// <summary>
     /// The method names whose string arguments name a thing in the engine, and not a thing a player reads.
-    /// A new name joins this list with a test.
+    /// A new name joins this list with a test. `Get` is absent, because any type can hold a `Get` method, and
+    /// <see cref="StringTableReceivers"/> covers the one call that takes an id (F-79).
     /// </summary>
     public static readonly IReadOnlySet<string> AllowedStringPositions = new HashSet<string>
     {
-        "Get",
         "GetNode",
         "GetNodeOrNull",
         "FindChild",
@@ -143,10 +158,20 @@ public static class GameStringScan
 
             if (above is InvocationExpressionSyntax invocation)
             {
-                string name = invocation.Expression is MemberAccessExpressionSyntax access
-                    ? access.Name.Identifier.ValueText
-                    : invocation.Expression.ToString();
-                return AllowedStringPositions.Contains(name);
+                if (invocation.Expression is not MemberAccessExpressionSyntax access)
+                {
+                    return AllowedStringPositions.Contains(invocation.Expression.ToString());
+                }
+
+                // A `Get` call takes an id only when its receiver names the string table. Any type can hold a
+                // `Get` method, and `inventory.Get("You died")` carries a text that a player reads (F-79).
+                if (access.Name.Identifier.ValueText == StringsGet)
+                {
+                    return access.Expression is SimpleNameSyntax receiver && StringTableReceivers.Contains(receiver.Identifier.ValueText)
+                        || access.Expression is MemberAccessExpressionSyntax inner && StringTableReceivers.Contains(inner.Name.Identifier.ValueText);
+                }
+
+                return AllowedStringPositions.Contains(access.Name.Identifier.ValueText);
             }
 
             if (above is StatementSyntax or MemberDeclarationSyntax)

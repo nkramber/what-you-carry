@@ -84,12 +84,31 @@ public sealed class GameStringScanTests
         Assert.DoesNotContain(GameStringScan.SourceFiles(root), path => path.Contains(".godot", StringComparison.Ordinal));
     }
 
-    /// <summary>Every allowed position is a name that the engine reads, and `Get` is the table call.</summary>
+    /// <summary>
+    /// The engine list holds no `Get`, because any type can hold a `Get` method. The receiver list covers the
+    /// one call that takes an id (F-79).
+    /// </summary>
     [Fact]
-    public void TheAllowedPositionsAreEngineNames()
+    public void TheEngineListHoldsNoGet()
     {
-        Assert.Contains(GameStringScan.StringsGet, GameStringScan.AllowedStringPositions);
+        Assert.DoesNotContain(GameStringScan.StringsGet, GameStringScan.AllowedStringPositions);
         Assert.Contains("GetNode", GameStringScan.AllowedStringPositions);
+        Assert.Contains("Strings", GameStringScan.StringTableReceivers);
+    }
+
+    /// <summary>
+    /// A `Get` call takes an id only when its receiver names the string table. Any other `Get` can carry a text
+    /// that a player reads (F-79).
+    /// </summary>
+    [Theory]
+    [InlineData("public string A(Bag inventory) => inventory.Get(\"You died\");", 1)]
+    [InlineData("public string A(Bag bag) => bag.Get(\"Ascend\");", 1)]
+    [InlineData("public string A(Strings strings) => strings.Get(\"hub.descend\");", 0)]
+    [InlineData("public string A() => Strings.Get(\"hub.descend\");", 0)]
+    [InlineData("public string A(Content c) => c.Strings.Get(\"hub.descend\");", 0)]
+    public void OnlyTheStringTableReceiverExemptsAGet(string member, int expected)
+    {
+        Assert.Equal(expected, Scan($"public sealed class Screen {{ {member} }}").Count);
     }
 
     private static IReadOnlyList<LintFinding> Scan(string source)

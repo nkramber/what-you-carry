@@ -154,6 +154,53 @@ public sealed class ContentTests
         Assert.NotEqual(first, new ContentLoader(renamed).Load().Hash);
     }
 
+    /// <summary>
+    /// Each file enters the hash with its lengths, so no two content sets share one input. Without them the
+    /// path `a` with the bytes `bc` and the path `ab` with the byte `c` both give `abc` (F-78).
+    /// </summary>
+    [Fact]
+    public void TheHashFramesEachFile()
+    {
+        // The review trigger. Both sets gave one hash before the lengths.
+        string first = ContentHash.Of([new ContentFile("a", Encoding.UTF8.GetBytes("bc"))]);
+        string second = ContentHash.Of([new ContentFile("ab", Encoding.UTF8.GetBytes("c"))]);
+        Assert.NotEqual(first, second);
+
+        // A boundary that moves between two files gives another hash too.
+        string third = ContentHash.Of([new ContentFile("a", Encoding.UTF8.GetBytes("b")), new ContentFile("c", Encoding.UTF8.GetBytes("d"))]);
+        string fourth = ContentHash.Of([new ContentFile("a", Encoding.UTF8.GetBytes("bc")), new ContentFile("d", [])]);
+        Assert.NotEqual(third, fourth);
+
+        // An empty file still counts, and it changes the hash.
+        Assert.NotEqual(
+            ContentHash.Of([new ContentFile("a", Encoding.UTF8.GetBytes("b"))]),
+            ContentHash.Of([new ContentFile("a", Encoding.UTF8.GetBytes("b")), new ContentFile("b", [])]));
+    }
+
+    /// <summary>
+    /// A number that no whole number holds carries the file, the field, and the reason. The reader keeps the
+    /// token text, and the validator owns the shape (D-220, D-92, F-78).
+    /// </summary>
+    [Theory]
+    [InlineData("1.5")]
+    [InlineData("99999999999999999999")]
+    [InlineData("-99999999999999999999")]
+    [InlineData("1e400")]
+    public void ANumberThatNoWholeNumberHoldsNamesTheField(string number)
+    {
+        string text = Floor.Replace("\"minDepth\":1", $"\"minDepth\":{number}", StringComparison.Ordinal);
+
+        // The reader keeps the text, so it raises no error of its own.
+        IReadOnlyList<JsonMember> members = JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(text));
+        Assert.Equal(number, ContentValidator.Value("floors/a.json", members, "minDepth", JsonMemberKind.Number));
+
+        // The validator names the file, the field, and the reason.
+        ContextException error = Assert.Throws<ContextException>(() => FloorTemplate.FromMembers("floors/a.json", members));
+        Assert.Contains("floors/a.json", error.Message, StringComparison.Ordinal);
+        Assert.Contains("minDepth", error.Message, StringComparison.Ordinal);
+        Assert.Contains("whole number", error.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>Two files of one path make the order matter, and the hash must not depend on it (T-2).</summary>
     [Fact]
     public void ARepeatedContentPathIsAnError()

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using System.Text.Json;
 
 namespace WhatYouCarry.Core.Content;
@@ -79,7 +80,10 @@ public static class JsonObjectReader
                     members.Add(new JsonMember(name, reader.GetString() ?? string.Empty, JsonMemberKind.Text));
                     break;
                 case JsonTokenType.Number:
-                    members.Add(new JsonMember(name, reader.GetInt64().ToString(System.Globalization.CultureInfo.InvariantCulture), JsonMemberKind.Number));
+                    // The token text, and not a conversion. `GetInt64` throws its own error for a fractional or
+                    // an out-of-range number, and that error names no file. The validator owns the number shape,
+                    // and it reports the file and the field when the text does not fit (D-220, D-92, F-78).
+                    members.Add(new JsonMember(name, Encoding.UTF8.GetString(reader.ValueSpan), JsonMemberKind.Number));
                     break;
                 case JsonTokenType.True:
                     members.Add(new JsonMember(name, "true", JsonMemberKind.Truth));

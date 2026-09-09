@@ -21,6 +21,9 @@ namespace WhatYouCarry.Core.Content;
 /// </remarks>
 public static class ContentHash
 {
+    /// <summary>The count of bytes that each length takes in the hash input.</summary>
+    private const int LengthBytes = 8;
+
     /// <summary>The hash of one content set, as 64 lowercase hexadecimal digits.</summary>
     /// <exception cref="Logging.ContextException">Two files share one path.</exception>
     public static string Of(IReadOnlyList<ContentFile> files)
@@ -42,14 +45,20 @@ public static class ContentHash
             }
         }
 
+        // Each file enters the input as a length, its path, a length, and its bytes. Without the two lengths
+        // the path 'a' with the bytes 'bc' and the path 'ab' with the byte 'c' both give 'abc', and two content
+        // sets then share one hash (F-78).
         List<byte> input = [];
         foreach (ContentFile file in sorted)
         {
-            foreach (byte part in Encoding.UTF8.GetBytes(file.Path))
+            byte[] path = Encoding.UTF8.GetBytes(file.Path);
+            AppendLength(input, path.Length);
+            foreach (byte part in path)
             {
                 input.Add(part);
             }
 
+            AppendLength(input, file.Bytes.Count);
             foreach (byte part in file.Bytes)
             {
                 input.Add(part);
@@ -64,5 +73,14 @@ public static class ContentHash
         }
 
         return text.ToString();
+    }
+
+    /// <summary>Appends one length as eight bytes, most significant first, so every file has a clear boundary.</summary>
+    private static void AppendLength(List<byte> input, int length)
+    {
+        for (int shift = (LengthBytes - 1) * 8; shift >= 0; shift -= 8)
+        {
+            input.Add((byte)((long)length >> shift));
+        }
     }
 }

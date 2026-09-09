@@ -156,6 +156,7 @@ public static class BannedSymbols
         "System.Security.Cryptography.SHA256",
         "System.Globalization.NumberStyles",
         "System.StringComparison",
+        "System.Array",
     };
 
     /// <summary>The prefix of this project's own namespaces. Core may use any type under it.</summary>
@@ -210,10 +211,12 @@ public static class BannedSymbols
         "System.Collections.Generic.List.ToArray/0",
         "System.Text.Encoding.UTF8",
         "System.Text.Encoding.GetBytes/1",
+        "System.Text.Encoding.GetString/1",
         "System.Security.Cryptography.SHA256.HashData/1",
         "System.Text.Json.Utf8JsonReader.new/2",
         "System.Text.Json.Utf8JsonReader.Read/0",
         "System.Text.Json.Utf8JsonReader.TokenType",
+        "System.Text.Json.Utf8JsonReader.ValueSpan",
         "System.Text.Json.Utf8JsonReader.GetString/0",
         "System.Text.Json.Utf8JsonReader.GetInt64/0",
         "System.Text.Json.JsonReaderOptions.new/0",
@@ -229,6 +232,7 @@ public static class BannedSymbols
         "System.Text.Json.JsonException.Message",
         "System.Globalization.NumberStyles.Integer",
         "System.StringComparison.Ordinal",
+        "System.Array.Length",
         "System.Int64.TryParse/4",
         "System.String.StartsWith/2",
     };
