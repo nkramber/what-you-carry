@@ -2,6 +2,51 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 69: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: make the review-gate job red on a neutral verdict (D-251). Branch `fix/review-gate-red-on-neutral`.
+
+### What this session did, and why
+
+- The owner saw the "Review gate / evaluate" job green on PR #23 with no review record. The check run was neutral, and the job stayed green because a job cannot be neutral by its exit code (F-84).
+- Asked one owner question with three options, and D-251 records the answer: the job fails on a neutral conclusion too. OQ-119 holds the question. D-181 is revised in part, the job result only.
+- The last step of the workflow exits 1 on `failure` and on `neutral`, and it prints the summary in both cases. `ReviewGateJobFailsOnNeutral` reads the file and fails on the old step.
+- The design doc, the roadmap, the skill, and the agent files say that the job line reads red on grey. The roadmap PR-1 exit tests gain number 26.
+- The workflow runs from the base branch (D-197), so this PR cannot exercise its own change. The proof runs on the first PR after the merge.
+
+### State of the build
+
+- `main` is at `a78e759`, the squash merge of PR #24. This branch holds one commit above it.
+- Remote head: `origin/fix/review-gate-red-on-neutral` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 399 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 37 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `e8ef2b1fad938845`, the value of `main`. PR #23 moves it to `92ef27ee175b3e7e`.
+
+### In flight
+
+- PR #25 is open and it holds this branch. It changes `.github/`, so it needs the automated pass and then a Codex review with the verdict `Ready for owner merge` at the effective head.
+- PR #23 is open on `feat/pr-8-camera`, ready for the Codex review at the effective head `32cad0d`.
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 is open as PR #23. PR-9 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- Two open PRs again: this one and PR #23. Both append at the handoff top, the register end, the questions end, and the findings table. The second one to merge needs a merge from `main` first, and the handoff then holds more than ten entries, so the oldest move to the archive until ten stay.
+- The workflow file on a PR comes from the base branch, so a PR that changes the workflow sees the old behavior on itself. Read the first run after the merge.
+- A documentation PR with a valid override label stays green, because the override gives `success` and not `neutral`. A stale label after a push turns red, as on PR #24.
+- The reviewing provider reads the existing PR comments into the review and never addresses gitar (D-250).
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The automated pass runs on PR #25. Then a Codex session reviews PR #25 per the `pr-review` skill and writes `docs/reviews/pr-25.md`, with the review focus on the CI boundary and test quality. PR #23 waits for its own Codex review. The second PR to merge takes a merge from `main` first.
+
 ## Session 67: 2026-09-09, Claude Code
 
 Author: Claude Code
@@ -439,40 +484,3 @@ No owner question is needed. No open question blocks PR-6 to PR-11.
 ### Next concrete action
 
 The owner can merge PR #17.
-
-## Session 57: 2026-09-08, Claude Code
-
-Author: Claude Code
-Session: answer the PR #17 review. Branch `feat/pr-5-content`.
-
-### What this session did, and why
-
-- Read the three P2 findings in `docs/reviews/pr-17.md`. Each one reproduces, so each one has full merit.
-- P2-1 is the most serious. The content hash appended each path and each byte sequence with no length, so the path `a` with the bytes `bc` and the path `ab` with the byte `c` gave one hash. Two content sets shared one hash, and this hash exists to tell two sets apart. Each file enters the input with a length, its path, a length, and its bytes now (F-78).
-- P2-2. A fractional or out-of-range number raised a `FormatException`, and the catch held `JsonException` alone, so the error left Core with no file and no field. The reader keeps the token text through `ValueSpan` now, and the validator names the file, the field, and the reason. That is the contract that D-220 states (F-78).
-- P2-3. The string rule exempted every method named `Get`, so `inventory.Get("You died")` gave no finding. A `Get` call takes an id only when its receiver names the string table now (F-79).
-- The P2-3 correction stays syntactic, and the response states the limit. The Game project needs the engine assemblies for a symbol read, and it holds no source file yet.
-- 10 new tests. The total is 280.
-
-### State of the build
-
-- `main` is at `a37f0af`. The branch holds the PR-5 work, two review commits, and this correction commit.
-- Remote head: `origin/feat/pr-5-content` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build` passes with 0 warnings. `dotnet test` passes with 280 tests and 0 failures.
-- `det-lint` reports 0 findings: Core 0 in 21 files, Game 0 in 0 files. `ste-check` reports 0 findings in 15 files.
-- `bit-identity` gives `4d6385bb92454694`, unchanged.
-
-### Traps and gotchas
-
-- A hash over a concatenation needs a boundary for each part. Without a length the path and the bytes run together, and two sets share one input.
-- A platform conversion raises its own error type, and a catch of one type misses another. `GetInt64` raises `FormatException`, and the catch held `JsonException`.
-- A method name is not a method. Every type can hold a `Get`, and the rule needs the receiver.
-- `System.Array` returned to the allowlist. PR-4 left it out because Core used no array member, and the P2-1 correction reads one. That is D-207 working as written.
-
-### Open questions that block progress
-
-No new owner question. No open question blocks PR-6 to PR-11.
-
-### Next concrete action
-
-A Codex session re-reviews PR #17 per the repeat review procedure and updates `docs/reviews/pr-17.md` to the new effective head.

@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 57: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the PR #17 review. Branch `feat/pr-5-content`.
+
+### What this session did, and why
+
+- Read the three P2 findings in `docs/reviews/pr-17.md`. Each one reproduces, so each one has full merit.
+- P2-1 is the most serious. The content hash appended each path and each byte sequence with no length, so the path `a` with the bytes `bc` and the path `ab` with the byte `c` gave one hash. Two content sets shared one hash, and this hash exists to tell two sets apart. Each file enters the input with a length, its path, a length, and its bytes now (F-78).
+- P2-2. A fractional or out-of-range number raised a `FormatException`, and the catch held `JsonException` alone, so the error left Core with no file and no field. The reader keeps the token text through `ValueSpan` now, and the validator names the file, the field, and the reason. That is the contract that D-220 states (F-78).
+- P2-3. The string rule exempted every method named `Get`, so `inventory.Get("You died")` gave no finding. A `Get` call takes an id only when its receiver names the string table now (F-79).
+- The P2-3 correction stays syntactic, and the response states the limit. The Game project needs the engine assemblies for a symbol read, and it holds no source file yet.
+- 10 new tests. The total is 280.
+
+### State of the build
+
+- `main` is at `a37f0af`. The branch holds the PR-5 work, two review commits, and this correction commit.
+- Remote head: `origin/feat/pr-5-content` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 280 tests and 0 failures.
+- `det-lint` reports 0 findings: Core 0 in 21 files, Game 0 in 0 files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged.
+
+### Traps and gotchas
+
+- A hash over a concatenation needs a boundary for each part. Without a length the path and the bytes run together, and two sets share one input.
+- A platform conversion raises its own error type, and a catch of one type misses another. `GetInt64` raises `FormatException`, and the catch held `JsonException`.
+- A method name is not a method. Every type can hold a `Get`, and the rule needs the receiver.
+- `System.Array` returned to the allowlist. PR-4 left it out because Core used no array member, and the P2-1 correction reads one. That is D-207 working as written.
+
+### Open questions that block progress
+
+No new owner question. No open question blocks PR-6 to PR-11.
+
+### Next concrete action
+
+A Codex session re-reviews PR #17 per the repeat review procedure and updates `docs/reviews/pr-17.md` to the new effective head.
+
 ## Session 56: 2026-09-08, Codex
 
 Author: Codex
