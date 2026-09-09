@@ -347,7 +347,7 @@ Implement the seeded RNG as xoshiro128** streams, one per subsystem, seeded by S
 Gate: this PR passes its own lint tool and bit-identity job (D-148), and the lint tool fails a test file that calls `System.Math.Sin`.
 > *In plain English:* different computers give slightly different answers for functions like sine. A Windows machine then cannot repeat a bug from a Mac. This adds our own math that gives the same answer everywhere, and a check that proves it on every change.
 
-**PR-4: Logger, error context, and assertions.** 🔧 PR open.
+**PR-4: Logger, error context, and assertions.** ✅ Merged 2026-09-08 as PR #15.
 Implement the JSONL logger with a required field set per context (D-68, D-113). Inside a run the set is seed, floor, tick, subsystem, and entity ids. Outside a run the set is save versions, screen, action, and file paths. The logger throws on an absent required field. Implement the assertion helper that writes a full report and continues where a caller marks it safe (D-112). The report names the call site from the compiler, and it walks no stack (D-215). A field name is an identifier, and invalid text in one is an error. A value and a message carry content from the run, and the writer puts the replacement character in place of invalid text there (F-73, F-77). Core hands each line to a sink, and it opens no file (D-211). Every line carries a level and a message (D-212). Define the error types that carry context on rethrow.
 Gate: a test proves that a log line without its context fails, and that an assertion report contains the seed.
 > *In plain English:* every message the game writes about itself now carries enough facts to replay the moment. A message without those facts is itself an error.
@@ -612,7 +612,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 2. Owner: receive the external SSD and move the checkout to it (D-145).
 3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170.
 4. PR-1, PR-2. ✅ PR-1 merged 2026-09-08 as PR #6. ✅ PR-2 merged 2026-09-08 as PR #10.
-5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12.
+5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12. ✅ PR-4 merged 2026-09-08 as PR #15.
 6. PR-6, PR-7, PR-8.
 7. PR-9, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).
 8. M-1, M-2.
