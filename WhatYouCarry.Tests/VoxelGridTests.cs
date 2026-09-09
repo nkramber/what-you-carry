@@ -141,17 +141,41 @@ public sealed class VoxelGridTests
         }
     }
 
-    /// <summary>The ids of D-239 hold, and an id that no PR declared is an error that names it (T-2).</summary>
+    /// <summary>The ids of D-239 and D-259 hold, and an id that no PR declared is an error that names it (T-2).</summary>
     [Fact]
     public void AnUnknownBlockIdIsAnError()
     {
         Assert.Equal(0, (int)BlockId.Air);
         Assert.Equal(1, (int)BlockId.RawStone);
+        Assert.Equal(2, (int)BlockId.HewnStone);
+        Assert.Equal(3, (int)BlockId.TimberBeam);
+        Assert.Equal(4, (int)BlockId.OreVein);
+        Assert.Equal(5, (int)BlockId.StillWater);
+        Assert.Equal(6, (int)BlockId.Rubble);
+        Assert.Equal(7, (int)BlockId.Plank);
 
         VoxelGrid grid = new(1, 1, 1);
-        ContextException error = Assert.Throws<ContextException>(() => grid.Set(0, 0, 0, (BlockId)2));
-        Assert.Contains("block=2", error.Message, StringComparison.Ordinal);
+        ContextException error = Assert.Throws<ContextException>(() => grid.Set(0, 0, 0, (BlockId)8));
+        Assert.Contains("block=8", error.Message, StringComparison.Ordinal);
+        Assert.Throws<ContextException>(() => grid.Set(0, 0, 0, (BlockId)255));
         Assert.Equal(BlockId.Air, grid.Get(0, 0, 0));
+    }
+
+    /// <summary>PR-59 exit test 3. Every declared id has a solid rule: air and still water let a body through, and every other block stops it (D-239, D-258).</summary>
+    [Fact]
+    public void EveryBlockIdIsDeclared()
+    {
+        VoxelGrid grid = new(1, 1, 1);
+        foreach (BlockId block in Enum.GetValues<BlockId>())
+        {
+            grid.Set(0, 0, 0, block);
+            bool passable = block == BlockId.Air || block == BlockId.StillWater;
+            Assert.Equal(!passable, grid.IsSolid(0, 0, 0));
+            Assert.Equal(!passable, VoxelGrid.IsSolidBlock(block));
+            Assert.Equal(!passable, grid.IsAnySolid(0, 0, 0, 0, 0, 0));
+        }
+
+        Assert.Throws<ContextException>(() => grid.Set(0, 0, 0, (BlockId)8));
     }
 
     /// <summary>The range query reads every cell of the range, treats the outside as solid, and holds no cell for an empty range.</summary>

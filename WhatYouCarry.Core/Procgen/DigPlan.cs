@@ -25,6 +25,11 @@ namespace WhatYouCarry.Core.Procgen;
 /// three hole in a chamber floor whose ring of chamber floor stays, over air that the plan dug before.
 /// </para>
 /// <para>
+/// The plan keeps, for the detail pass, which walker dug each air cell and which walkers have a dependent: a
+/// chamber, a drift, or a later walker on their trail. A collapse fills the end of a walker with no dependent,
+/// in cells that walker alone dug, so no path to a chamber goes with it (D-253).
+/// </para>
+/// <para>
 /// Every draw comes from the one Procgen stream of the floor, in program order, so one seed gives one plan
 /// (D-159). Every number is an integer.
 /// </para>
@@ -75,9 +80,16 @@ public sealed class DigPlan
     private readonly List<Chamber> chambers = [];
     private readonly List<Shaft> shafts = [];
     private readonly int[] chamberOf;
+    private readonly int[] dugBy;
     private readonly List<Cell> trail = [];
     private readonly List<DigJob> jobs = [];
+    private readonly List<DeadEnd> deadEnds = [];
+    private readonly List<bool> hasDependent = [];
+    private readonly List<int> trailJobs = [];
     private int nextJob;
+
+    // The mark of a cell that two walkers dug, or a chamber, in the dug-by map. A job mark is the job index plus one.
+    private const int Shared = -1;
 
     /// <summary>A plan that digs one chamber per kind, in order, on the canvas.</summary>
     public DigPlan(Rng rng, DigCanvas canvas, IReadOnlyList<ChamberKind> kinds)
@@ -86,6 +98,7 @@ public sealed class DigPlan
         this.canvas = canvas;
         this.kinds = kinds;
         this.chamberOf = new int[canvas.Grid.SizeX * canvas.Grid.SizeY * canvas.Grid.SizeZ];
+        this.dugBy = new int[this.chamberOf.Length];
     }
 
     /// <summary>The chambers dug so far, in dig order.</summary>
@@ -93,6 +106,24 @@ public sealed class DigPlan
 
     /// <summary>The shafts dug so far, in dig order.</summary>
     public IReadOnlyList<Shaft> Shafts => this.shafts;
+
+    /// <summary>The walkers that ended in rock, with the cell and the brush radius of their last stamp. The detail pass fills them with rubble.</summary>
+    public IReadOnlyList<DeadEnd> DeadEnds => this.deadEnds;
+
+    /// <summary>Answers whether one walker alone dug the air cell, and no chamber holds it. The detail pass fills such a cell of a dead end.</summary>
+    public bool IsDugByJobAlone(int x, int y, int z, int job)
+    {
+        return this.dugBy[this.Index(x, y, z)] == job + 1;
+    }
+
+    /// <summary>
+    /// Answers whether anything depends on the cells of a walker: it dug a chamber, it started a drift, or a later
+    /// walker started from its trail. A collapse never touches such a walker, so no path to a chamber goes.
+    /// </summary>
+    public bool HasDependent(int job)
+    {
+        return this.hasDependent[job];
+    }
 
     /// <summary>Digs the first chamber at a random anchor away from the shell, and queues the gallery from it.</summary>
     /// <exception cref="ContextException">No anchor of <see cref="MaxFirstChamberTries"/> takes the first chamber.</exception>
@@ -114,9 +145,9 @@ public sealed class DigPlan
             }
 
             Cell start = new(anchor.X, floorRow, anchor.Z);
-            this.trail.Add(start);
+            this.AddTrail(start, -1);
             int direction = this.rng.NextInt(4);
-            this.jobs.Add(new DigJob(start, StepX(direction), StepZ(direction), GalleryRadius, this.canvas.Grid.SizeX + this.canvas.Grid.SizeZ, 0));
+            this.AddJob(new DigJob(start, StepX(direction), StepZ(direction), GalleryRadius, this.canvas.Grid.SizeX + this.canvas.Grid.SizeZ, 0), -1);
             return;
         }
 
@@ -142,15 +173,16 @@ public sealed class DigPlan
 
             if (this.nextJob >= this.jobs.Count)
             {
-                Cell start = this.trail[this.rng.NextInt(this.trail.Count)];
+                int trailIndex = this.rng.NextInt(this.trail.Count);
                 int direction = this.rng.NextInt(4);
-                this.jobs.Add(new DigJob(start, StepX(direction), StepZ(direction), DriftRadius, this.DriftLength(), 0));
+                this.AddJob(new DigJob(this.trail[trailIndex], StepX(direction), StepZ(direction), DriftRadius, this.DriftLength(), 0), this.trailJobs[trailIndex]);
             }
 
             DigJob job = this.jobs[this.nextJob];
+            int jobIndex = this.nextJob;
             this.nextJob++;
             jobCount++;
-            this.RunJob(job);
+            this.RunJob(job, jobIndex);
         }
     }
 
@@ -193,6 +225,24 @@ public sealed class DigPlan
         return unit;
     }
 
+    /// <summary>Queues a job, and marks the walker whose trail it starts from as one with a dependent.</summary>
+    private void AddJob(DigJob job, int parentJob)
+    {
+        this.jobs.Add(job);
+        this.hasDependent.Add(false);
+        if (parentJob >= 0)
+        {
+            this.hasDependent[parentJob] = true;
+        }
+    }
+
+    /// <summary>Adds a walker position to the trail, with the walker that stood there.</summary>
+    private void AddTrail(Cell position, int jobIndex)
+    {
+        this.trail.Add(position);
+        this.trailJobs.Add(jobIndex);
+    }
+
     /// <summary>The length of one drift, in steps.</summary>
     private int DriftLength()
     {
@@ -205,8 +255,8 @@ public sealed class DigPlan
         return 6 + this.rng.NextInt(9);
     }
 
-    /// <summary>Walks one job to its length, or until the walker is stuck, or until every chamber is dug.</summary>
-    private void RunJob(DigJob job)
+    /// <summary>Walks one job to its length, or until the walker is stuck, or until every chamber is dug. A walker that ends in rock leaves a dead end.</summary>
+    private void RunJob(DigJob job, int jobIndex)
     {
         Cell position = job.Start;
         int directionX = job.DirectionX;
@@ -227,27 +277,31 @@ public sealed class DigPlan
                 directionZ = turnedZ;
             }
 
-            if (stamped && this.rng.NextInt(RampChance) == 0 && this.TryDigRamp(position, directionX, directionZ, job.Radius, out Cell afterRamp))
+            if (stamped && this.rng.NextInt(RampChance) == 0 && this.TryDigRamp(position, directionX, directionZ, job.Radius, jobIndex, out Cell afterRamp))
             {
                 position = afterRamp;
-                this.trail.Add(position);
+                this.AddTrail(position, jobIndex);
                 continue;
             }
 
-            if (!this.TryDigStep(position, ref directionX, ref directionZ, job.Radius, out Cell next))
+            if (!this.TryDigStep(position, ref directionX, ref directionZ, job.Radius, jobIndex, out Cell next))
             {
-                return;
+                break;
             }
 
             position = next;
             stamped = true;
-            this.trail.Add(position);
+            this.AddTrail(position, jobIndex);
 
             untilChamber--;
             if (untilChamber <= 0)
             {
                 bool dug = this.TryDigChamber(new Column(position.X, position.Z), position.Y);
                 untilChamber = dug ? this.ChamberSpacing() : 3;
+                if (dug)
+                {
+                    this.hasDependent[jobIndex] = true;
+                }
             }
 
             if (job.Depth < MaxBranchDepth && this.rng.NextInt(BranchChance) == 0)
@@ -255,8 +309,14 @@ public sealed class DigPlan
                 bool left = this.rng.NextInt(2) == 0;
                 int branchX = left ? -directionZ : directionZ;
                 int branchZ = left ? directionX : -directionX;
-                this.jobs.Add(new DigJob(position, branchX, branchZ, DriftRadius, this.DriftLength(), job.Depth + 1));
+                this.AddJob(new DigJob(position, branchX, branchZ, DriftRadius, this.DriftLength(), job.Depth + 1), jobIndex);
             }
+        }
+
+        // The walker ended where it stands, in a stamp of its own or in a chamber. A chamber cell is never a dead end.
+        if (stamped && this.chamberOf[this.Index(position.X, position.Y + 1, position.Z)] == 0)
+        {
+            this.deadEnds.Add(new DeadEnd(position, job.Radius, jobIndex));
         }
     }
 
@@ -264,7 +324,7 @@ public sealed class DigPlan
     /// Digs one flat step in the facing direction, or after a turn when the facing direction is blocked: left,
     /// then right, then back. Gives false when every direction is blocked.
     /// </summary>
-    private bool TryDigStep(Cell position, ref int directionX, ref int directionZ, int radius, out Cell next)
+    private bool TryDigStep(Cell position, ref int directionX, ref int directionZ, int radius, int jobIndex, out Cell next)
     {
         int[] quarterTurns = [0, 1, 3, 2];
         foreach (int quarter in quarterTurns)
@@ -275,6 +335,7 @@ public sealed class DigPlan
             List<DigColumn> unit = Stamp(center, position.Y, radius, TunnelHeight);
             if (this.canvas.CanCarve(unit))
             {
+                this.MarkDug(unit, jobIndex);
                 this.canvas.Carve(unit);
                 directionX = stepX;
                 directionZ = stepZ;
@@ -293,7 +354,7 @@ public sealed class DigPlan
     /// then stands in a landing that has the shape of a flat stamp, so the next step or ramp meets the new floor
     /// row alone and leaves no gap.
     /// </summary>
-    private bool TryDigRamp(Cell position, int directionX, int directionZ, int radius, out Cell after)
+    private bool TryDigRamp(Cell position, int directionX, int directionZ, int radius, int jobIndex, out Cell after)
     {
         int length = RampLengthMin + this.rng.NextInt(RampLengthMax - RampLengthMin + 1);
         int stepY = this.rng.NextInt(2) == 0 ? -1 : 1;
@@ -332,6 +393,7 @@ public sealed class DigPlan
             return false;
         }
 
+        this.MarkDug(unit, jobIndex);
         this.canvas.Carve(unit);
         after = new Cell(position.X + (directionX * landingCenter), endRow, position.Z + (directionZ * landingCenter));
         return true;
@@ -373,6 +435,7 @@ public sealed class DigPlan
             for (int row = floorRow + 1; row <= floorRow + height; row++)
             {
                 this.chamberOf[this.Index(column.X, row, column.Z)] = index + 1;
+                this.dugBy[this.Index(column.X, row, column.Z)] = Shared;
             }
         }
 
@@ -442,12 +505,38 @@ public sealed class DigPlan
         return true;
     }
 
+    /// <summary>
+    /// Marks the air of a unit with the walker that digs it, before the carve. A cell that was air before, from
+    /// another walker or a chamber, becomes shared, so no collapse ever fills it.
+    /// </summary>
+    private void MarkDug(IReadOnlyList<DigColumn> unit, int jobIndex)
+    {
+        foreach (DigColumn column in unit)
+        {
+            for (int row = column.Floor + 1; row <= column.Floor + column.Height; row++)
+            {
+                int index = this.Index(column.X, row, column.Z);
+                if (!this.canvas.IsAir(column.X, row, column.Z))
+                {
+                    this.dugBy[index] = jobIndex + 1;
+                }
+                else if (this.dugBy[index] != jobIndex + 1)
+                {
+                    this.dugBy[index] = Shared;
+                }
+            }
+        }
+    }
+
     /// <summary>The array index of one cell: x fastest, then z, then y, as the grid stores it.</summary>
     private int Index(int x, int y, int z)
     {
         return x + (this.canvas.Grid.SizeX * (z + (this.canvas.Grid.SizeZ * y)));
     }
 }
+
+/// <summary>The end of a walker in rock: the cell it stood on, the radius of its brush, and its job index.</summary>
+public readonly record struct DeadEnd(Cell End, int Radius, int Job);
 
 /// <summary>One walker: where it starts, which axis direction it faces, its brush radius, its length in steps, and its drift generation.</summary>
 public readonly record struct DigJob(Cell Start, int DirectionX, int DirectionZ, int Radius, int Length, int Depth);

@@ -16,9 +16,10 @@ namespace WhatYouCarry.Core.Procgen;
 /// <para>
 /// The template is the one whose depth range holds the floor number. The size of the grid comes from it, the
 /// chamber kinds come from the budget draw, and the <see cref="DigPlan"/> digs the chambers, the tunnels, the
-/// ramps, and the shafts. The spawn is the center of the anchor cell of the first chamber. The stairwell is the
-/// floor cell with the longest walkable path from the spawn, in the chamber whose nearest floor cell lies
-/// farthest (D-256).
+/// ramps, and the shafts. The <see cref="DetailPass"/> then adds the blocks of the band, the pools, the pillars,
+/// and the collapses (D-254). The spawn is the center of the anchor cell of the first chamber. The stairwell is
+/// the floor cell with the longest walkable path from the spawn after the detail, in the chamber whose nearest
+/// floor cell lies farthest (D-256).
 /// </para>
 /// <para>
 /// The generator confirms its own construction: every chamber has a reachable floor cell, or the floor is an
@@ -80,17 +81,19 @@ public static class FloorGenerator
         IReadOnlyList<ChamberKind> kinds = ChamberBudget.Draw(rng, template, content.Chambers);
 
         VoxelGrid grid = new(template.SizeX, template.SizeY, template.SizeZ);
-        DigPlan plan = new(rng, new DigCanvas(grid), kinds);
+        DigCanvas canvas = new(grid);
+        DigPlan plan = new(rng, canvas, kinds);
         plan.DigFirstChamber();
         plan.DigUntilComplete();
         plan.DigShafts();
+        DetailResult detail = DetailPass.Apply(rng, canvas, template, plan);
 
         Chamber first = plan.Chambers[0];
         Cell spawnCell = new(first.Anchor.X, first.FloorRow, first.Anchor.Z);
         Reachability reach = Reachability.From(grid, spawnCell);
         Cell stairwell = FarthestChamberCell(plan.Chambers, grid, reach);
         Vector3 spawn = new(first.Anchor.X + 0.5f, first.FloorRow + 1.0f, first.Anchor.Z + 0.5f);
-        return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Shafts);
+        return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Shafts, detail);
     }
 
     /// <summary>

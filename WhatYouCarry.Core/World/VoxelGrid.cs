@@ -15,7 +15,8 @@ namespace WhatYouCarry.Core.World;
 /// <para>
 /// A cell outside the grid is solid for collision, so the edge of the world is a wall and a body can never leave
 /// the grid (D-237). A direct read outside the grid is still an error, because an absent block is not a block
-/// (T-2). Only <see cref="IsSolid"/> treats the outside as rock.
+/// (T-2). Only <see cref="IsSolid"/> treats the outside as rock. Every block but air and still water is solid
+/// (D-239, D-258).
 /// </para>
 /// </remarks>
 public sealed class VoxelGrid
@@ -77,9 +78,9 @@ public sealed class VoxelGrid
         // An explicit bound, because Enum.IsDefined reads the enum through reflection, and Core has none (G-2).
         // `EveryDeclaredBlockIsAccepted` walks the declared values, so a new value fails the test until this
         // bound names it.
-        if (block != BlockId.Air && block != BlockId.RawStone)
+        if (block < BlockId.Air || block > BlockId.Plank)
         {
-            ContextException error = new($"The block id {(int)block} is not a declared block. The declared ids are 0 for air and 1 for raw stone (D-239).");
+            ContextException error = new($"The block id {(int)block} is not a declared block. The declared ids are 0 to 7, from air to plank (D-239, D-259).");
             error.AddContext("block", ((long)block).ToString(CultureInfo.InvariantCulture));
             throw error;
         }
@@ -88,8 +89,8 @@ public sealed class VoxelGrid
     }
 
     /// <summary>
-    /// Answers whether a body stops at the cell. Every block but air is solid, and every cell outside the grid is
-    /// solid, so the edge of the world is a wall (D-237).
+    /// Answers whether a body stops at the cell. Every block but air and still water is solid, and every cell
+    /// outside the grid is solid, so the edge of the world is a wall (D-237, D-258).
     /// </summary>
     public bool IsSolid(int x, int y, int z)
     {
@@ -98,7 +99,18 @@ public sealed class VoxelGrid
             return true;
         }
 
-        return this.blocks[this.Index(x, y, z)] != (byte)BlockId.Air;
+        return IsSolidBlock(this.blocks[this.Index(x, y, z)]);
+    }
+
+    /// <summary>Answers whether a body stops at a block: every block but air and still water (D-239, D-258).</summary>
+    public static bool IsSolidBlock(BlockId block)
+    {
+        return IsSolidBlock((byte)block);
+    }
+
+    private static bool IsSolidBlock(byte block)
+    {
+        return block != (byte)BlockId.Air && block != (byte)BlockId.StillWater;
     }
 
     /// <summary>
@@ -123,7 +135,7 @@ public sealed class VoxelGrid
             {
                 for (int x = lowX; x <= highX; x++)
                 {
-                    if (this.blocks[this.Index(x, y, z)] != (byte)BlockId.Air)
+                    if (IsSolidBlock(this.blocks[this.Index(x, y, z)]))
                     {
                         return true;
                     }

@@ -508,6 +508,76 @@ public sealed class PlayerBodyTests
         Assert.Equal(new Vector3(0.0f, 1.0f, 0.0f), touching.Box.Min);
     }
 
+    /// <summary>
+    /// PR-59 exit test 5. A body with its feet in still water walks at half speed, and a jump from water clears one
+    /// block and reaches its apex in twice the ticks of a jump on land (D-258, D-261, D-262).
+    /// </summary>
+    [Fact]
+    public void WaterSlowsTheWalkAndTheJump()
+    {
+        Assert.Equal(0.5f, PlayerBody.WaterSpeedFactor);
+        Assert.Equal(0.5f, PlayerBody.WaterJumpFactor);
+        Assert.Equal(0.25f, PlayerBody.WaterGravityFactor);
+
+        // A floor at row 1 over rock, with a pool of still water at row 1 from x = 2 to x = 5.
+        VoxelGrid grid = new(12, 8, 4);
+        for (int x = 0; x < 12; x++)
+        {
+            for (int z = 0; z < 4; z++)
+            {
+                grid.Set(x, 0, z, BlockId.RawStone);
+                grid.Set(x, 1, z, x >= 2 && x <= 5 ? BlockId.StillWater : BlockId.RawStone);
+            }
+        }
+
+        PlayerBody wet = new(grid, new Vector3(3.5f, 1.0f, 2.0f));
+        Assert.True(wet.IsInWater());
+        Assert.True(wet.IsOnGround());
+        wet.Step(Move(127, 0), 0);
+        Assert.InRange(wet.Position.X - 3.5f, (TickMove * 0.5f) - 1e-6f, (TickMove * 0.5f) + 1e-6f);
+
+        PlayerBody dry = new(grid, new Vector3(8.5f, 2.0f, 2.0f));
+        Assert.False(dry.IsInWater());
+        Assert.InRange(dry.Position.X + TickMove, 8.5f + TickMove - 1e-6f, 8.5f + TickMove + 1e-6f);
+
+        (float wetApex, int wetTicks) = Apex(new PlayerBody(grid, new Vector3(3.5f, 1.0f, 2.0f)));
+        (float dryApex, int dryTicks) = Apex(new PlayerBody(grid, new Vector3(8.5f, 2.0f, 2.0f)));
+        Assert.True(wetApex >= 1.0f, $"The jump from water rose {wetApex}, less than one block.");
+        Assert.InRange(wetApex, dryApex - 0.1f, dryApex + 0.1f);
+        Assert.InRange(wetTicks, (2 * dryTicks) - 1, (2 * dryTicks) + 1);
+
+        // A jump toward the edge of the pool lands on the rock at row 1, one block up.
+        PlayerBody climber = new(grid, new Vector3(5.5f, 1.0f, 2.0f));
+        for (uint tick = 0; tick < 120; tick++)
+        {
+            bool airborne = !climber.IsOnGround() && climber.Position.Y >= 2.0f;
+            climber.Step(Move(airborne ? (sbyte)127 : (sbyte)0, 0, tick == 0 ? Button.Jump : (ushort)0, tick), 0);
+        }
+
+        Assert.True(climber.IsOnGround());
+        Assert.InRange(climber.Position.Y, 2.0f, 2.0f + PlayerBody.GroundProbe);
+        Assert.False(climber.IsInWater());
+    }
+
+    /// <summary>The height of a jump in place over the start, and the tick of the apex.</summary>
+    private static (float Height, int Ticks) Apex(PlayerBody body)
+    {
+        float start = body.Position.Y;
+        float highest = 0.0f;
+        int apexTick = 0;
+        for (uint tick = 0; tick < 120; tick++)
+        {
+            body.Step(Move(0, 0, tick == 0 ? Button.Jump : (ushort)0, tick), 0);
+            if (body.Position.Y - start > highest)
+            {
+                highest = body.Position.Y - start;
+                apexTick = (int)tick + 1;
+            }
+        }
+
+        return (highest, apexTick);
+    }
+
     /// <summary>The box of a body is 0.6 by 1.8 by 0.6 meters around the feet center (D-165).</summary>
     [Fact]
     public void TheBoxSurroundsTheFeetCenter()

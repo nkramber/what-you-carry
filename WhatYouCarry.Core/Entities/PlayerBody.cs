@@ -23,6 +23,14 @@ namespace WhatYouCarry.Core.Entities;
 /// probe of the grid and not a stored flag, so the state holds nothing that the position does not already
 /// say. A jump needs the ground, and a jump clears one block and never two (D-231, D-165).
 /// </para>
+/// <para>
+/// While the feet stand in a still water cell, the walk and the sprint take half their speed, the jump velocity
+/// takes one half, and gravity takes one quarter, so the apex of a jump stays at one block and the rise takes
+/// twice as long (D-258, D-261, D-262). The probe reads the column of the feet at the start of the tick, and it
+/// holds while the body is in the air over the water, because a jump that lost the quarter gravity as soon as
+/// the feet rose out of the cell would end below one block. A body that steps off a ledge over a pool falls
+/// slowly into it for the same reason.
+/// </para>
 /// </remarks>
 public sealed class PlayerBody
 {
@@ -52,6 +60,15 @@ public sealed class PlayerBody
 
     /// <summary>The largest magnitude of a movement byte. A byte of -128 clamps to -127 (D-233).</summary>
     public const int MoveScale = 127;
+
+    /// <summary>The factor on the walk and the sprint speed while the feet stand in water (D-261).</summary>
+    public const float WaterSpeedFactor = 0.5f;
+
+    /// <summary>The factor on the jump velocity while the feet stand in water (D-262).</summary>
+    public const float WaterJumpFactor = 0.5f;
+
+    /// <summary>The factor on gravity while the feet stand in water, the square of the jump factor, so the apex stays at one block (D-262).</summary>
+    public const float WaterGravityFactor = 0.25f;
 
     // Hundredths of a degree to radians. The yaw sum stays below 36000, so the angle stays far below the
     // DetMath limit.
@@ -98,21 +115,51 @@ public sealed class PlayerBody
     }
 
     /// <summary>
+    /// Answers whether the feet cell holds still water, or the body is in the air over still water: the first
+    /// block at or under the feet cell that is not air is still water (D-258). A column outside the grid holds none.
+    /// </summary>
+    public bool IsInWater()
+    {
+        int x = (int)DetMath.Floor(this.Position.X);
+        int z = (int)DetMath.Floor(this.Position.Z);
+        for (int y = (int)DetMath.Floor(this.Position.Y); y >= 0; y--)
+        {
+            if (!this.grid.Contains(x, y, z))
+            {
+                return false;
+            }
+
+            BlockId block = this.grid.Get(x, y, z);
+            if (block != BlockId.Air)
+            {
+                return block == BlockId.StillWater;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Runs one tick. The jump comes first, then gravity, then the horizontal velocity of the intent, and then
-    /// one sweep with the whole displacement.
+    /// one sweep with the whole displacement. Water scales the three at the start of the tick (D-261, D-262).
     /// </summary>
     /// <param name="intent">The intent of the tick.</param>
     /// <param name="yaw">The yaw sum of the loop after the intent, in hundredths of a degree (D-227).</param>
     public void Step(Intent intent, int yaw)
     {
+        bool inWater = this.IsInWater();
+        float jumpFactor = inWater ? WaterJumpFactor : 1.0f;
+        float gravityFactor = inWater ? WaterGravityFactor : 1.0f;
+        float speedFactor = inWater ? WaterSpeedFactor : 1.0f;
+
         if ((intent.Buttons & Button.Jump) != 0 && this.IsOnGround())
         {
-            this.VerticalVelocity = JumpVelocity;
+            this.VerticalVelocity = JumpVelocity * jumpFactor;
         }
 
-        this.VerticalVelocity -= Gravity * TickSeconds;
+        this.VerticalVelocity -= Gravity * gravityFactor * TickSeconds;
 
-        Vector3 horizontal = HorizontalVelocity(intent, yaw);
+        Vector3 horizontal = HorizontalVelocity(intent, yaw) * speedFactor;
         Vector3 delta = new(horizontal.X * TickSeconds, this.VerticalVelocity * TickSeconds, horizontal.Z * TickSeconds);
 
         SweepResult result = SweptAabb.Sweep(this.grid, this.Box, delta);

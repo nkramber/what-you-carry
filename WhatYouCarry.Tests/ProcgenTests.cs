@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Entities;
@@ -94,40 +95,64 @@ public sealed class ProcgenTests
     }
 
     /// <summary>
-    /// PR-9 exit test 1. Over five thousand seeds per PR and one hundred thousand each night, across every band,
-    /// every floor cell of every chamber that still has its floor is reachable from the spawn, the spawn holds the
-    /// player box, and every shaft lands on a reachable floor. A failure names its seed and its floor (D-66, D-116).
+    /// The one sweep of five thousand seeds per PR and one hundred thousand each night that PR-9 exit test 1
+    /// and PR-59 exit test 1 both read (D-116). It digs each floor once and keeps one failure list per test, so
+    /// the two tests cost one dig per seed. The seeds cover every band in turn.
     /// </summary>
-    [Fact]
-    public void EveryChamberReachable()
+    private static readonly Lazy<SweepReport> ReachabilitySweep = new(RunReachabilitySweep);
+
+    private sealed record SweepReport(IReadOnlyList<string> ChamberFailures, IReadOnlyList<string> DetailFailures, int Pillars, int Pools, int Collapses);
+
+    private static SweepReport RunReachabilitySweep()
     {
         int seeds = SweepSeeds(ReachabilitySeedsPerPr, ReachabilitySeedsPerNight);
+        List<string> chamberFailures = [];
+        List<string> detailFailures = [];
+        int pillars = 0;
+        int pools = 0;
+        int collapses = 0;
         for (int seed = 1; seed <= seeds; seed++)
         {
             FloorPlan plan = Plan(seed);
             string context = $"Seed {seed}, floor {plan.Floor}";
             PlayerBody body = new(plan.Grid, plan.Spawn);
-            Assert.True(body.IsOnGround(), $"{context}: the body at the spawn {plan.Spawn} is not on the ground.");
+            if (!body.IsOnGround())
+            {
+                chamberFailures.Add($"{context}: the body at the spawn {plan.Spawn} is not on the ground.");
+            }
 
             Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
-            Assert.True(plan.Chambers.Count > 0, $"{context}: the floor has no chamber.");
+            if (plan.Chambers.Count == 0)
+            {
+                chamberFailures.Add($"{context}: the floor has no chamber.");
+            }
+
             foreach (Chamber chamber in plan.Chambers)
             {
                 int floorCells = 0;
                 foreach (Column column in chamber.Footprint)
                 {
                     Cell cell = new(column.X, chamber.FloorRow, column.Z);
-                    if (!plan.Grid.IsSolid(cell.X, cell.Y, cell.Z))
+                    if (!plan.Grid.IsSolid(cell.X, cell.Y, cell.Z) || plan.Detail.Pillars.Contains(cell))
                     {
                         continue;
                     }
 
                     floorCells++;
-                    Assert.True(Reachability.IsFloor(plan.Grid, cell), $"{context}: the chamber {chamber.Index} cell {cell} has rock over it.");
-                    Assert.True(reach.IsReachable(cell), $"{context}: the chamber {chamber.Index} cell {cell} is not reachable from the spawn {reach.Start}.");
+                    if (!Reachability.IsFloor(plan.Grid, cell))
+                    {
+                        chamberFailures.Add($"{context}: the chamber {chamber.Index} cell {cell} has rock over it.");
+                    }
+                    else if (!reach.IsReachable(cell))
+                    {
+                        chamberFailures.Add($"{context}: the chamber {chamber.Index} cell {cell} is not reachable from the spawn {reach.Start}.");
+                    }
                 }
 
-                Assert.True(floorCells > 0, $"{context}: the chamber {chamber.Index} has no floor cell left.");
+                if (floorCells == 0)
+                {
+                    chamberFailures.Add($"{context}: the chamber {chamber.Index} has no floor cell left.");
+                }
             }
 
             foreach (Shaft shaft in plan.Shafts)
@@ -139,9 +164,68 @@ public sealed class ProcgenTests
                     floorRow--;
                 }
 
-                Assert.True(reach.IsReachable(new Cell(landing.X, floorRow, landing.Z)), $"{context}: the shaft at {shaft.Center} lands on an unreachable floor at row {floorRow}.");
+                if (!reach.IsReachable(new Cell(landing.X, floorRow, landing.Z)))
+                {
+                    chamberFailures.Add($"{context}: the shaft at {shaft.Center} lands on an unreachable floor at row {floorRow}.");
+                }
+            }
+
+            pillars += plan.Detail.Pillars.Count;
+            pools += plan.Detail.Pools.Count;
+            collapses += plan.Detail.Collapses.Count;
+            BlockId pillarBlock = DetailPass.PillarBlock(plan.Template.Band);
+            foreach (Cell pillar in plan.Detail.Pillars)
+            {
+                if (plan.Grid.Get(pillar.X, pillar.Y + 1, pillar.Z) != pillarBlock || !plan.Grid.IsSolid(pillar.X, pillar.Y, pillar.Z))
+                {
+                    detailFailures.Add($"{context}: the pillar at {pillar} is not a {pillarBlock} column on rock.");
+                }
+            }
+
+            foreach (Cell pool in plan.Detail.Pools)
+            {
+                if (plan.Grid.Get(pool.X, pool.Y, pool.Z) != BlockId.StillWater || !plan.Grid.IsSolid(pool.X, pool.Y - 1, pool.Z))
+                {
+                    detailFailures.Add($"{context}: the pool cell {pool} is not still water over rock.");
+                }
+            }
+
+            foreach (Cell rubble in plan.Detail.Collapses)
+            {
+                if (plan.Grid.Get(rubble.X, rubble.Y, rubble.Z) != BlockId.Rubble)
+                {
+                    detailFailures.Add($"{context}: the collapse cell {rubble} is not rubble.");
+                }
             }
         }
+
+        return new SweepReport(chamberFailures, detailFailures, pillars, pools, collapses);
+    }
+
+    /// <summary>
+    /// PR-9 exit test 1. Over five thousand seeds per PR and one hundred thousand each night, across every band,
+    /// every floor cell of every chamber that still has its floor is reachable from the spawn, the spawn holds the
+    /// player box, and every shaft lands on a reachable floor. A failure names its seed and its floor (D-66, D-116).
+    /// </summary>
+    [Fact]
+    public void EveryChamberReachable()
+    {
+        SweepReport report = ReachabilitySweep.Value;
+        Assert.True(report.ChamberFailures.Count == 0, string.Join("\n", report.ChamberFailures.Take(10)));
+    }
+
+    /// <summary>
+    /// PR-59 exit test 1. Over the same seeds, the reachability of PR-9 holds with the detail on, every pillar
+    /// stands on rock inside its chamber, every pool is still water over rock, and every rubble cell is rubble.
+    /// The sweep places some of each. A failure names its seed and its floor (D-66, D-116).
+    /// </summary>
+    [Fact]
+    public void DetailKeepsEveryChamberReachable()
+    {
+        SweepReport report = ReachabilitySweep.Value;
+        Assert.True(report.ChamberFailures.Count == 0, string.Join("\n", report.ChamberFailures.Take(10)));
+        Assert.True(report.DetailFailures.Count == 0, string.Join("\n", report.DetailFailures.Take(10)));
+        Assert.True(report.Pillars > 0 && report.Pools > 0 && report.Collapses > 0, $"The sweep placed {report.Pillars} pillars, {report.Pools} pools, and {report.Collapses} rubble cells.");
     }
 
     /// <summary>PR-9 exit test 2. Over one thousand seeds, no two chambers share a block, and every chamber block is air.</summary>
@@ -157,7 +241,8 @@ public sealed class ProcgenTests
                 foreach (Cell cell in chamber.AirCells())
                 {
                     Assert.True(taken.Add(cell), $"Seed {seed}, floor {plan.Floor}: the cell {cell} lies in chamber {chamber.Index} and in an earlier chamber.");
-                    Assert.False(plan.Grid.IsSolid(cell.X, cell.Y, cell.Z), $"Seed {seed}, floor {plan.Floor}: the chamber {chamber.Index} cell {cell} is rock.");
+                    bool pillar = plan.Detail.Pillars.Contains(new Cell(cell.X, chamber.FloorRow, cell.Z));
+                    Assert.True(pillar || !plan.Grid.IsSolid(cell.X, cell.Y, cell.Z), $"Seed {seed}, floor {plan.Floor}: the chamber {chamber.Index} cell {cell} is rock.");
                 }
             }
         }
@@ -232,7 +317,11 @@ public sealed class ProcgenTests
         }
     }
 
-    /// <summary>PR-9 exit test 5. Over one thousand seeds, every air cell sits inside an air cross-section three blocks wide and three blocks high (D-166).</summary>
+    /// <summary>
+    /// PR-9 exit test 5. Over one thousand seeds, every tunnel air cell sits inside an air cross-section three
+    /// blocks wide and three blocks high (D-166). A chamber cell beside a pillar and a cell of a collapsed dead
+    /// end are not tunnel cells, so the check steps over them (PR-59).
+    /// </summary>
     [Fact]
     public void TunnelCrossSection()
     {
@@ -240,13 +329,51 @@ public sealed class ProcgenTests
         {
             FloorPlan plan = Plan(seed);
             VoxelGrid grid = plan.Grid;
+            HashSet<Cell> outside = [];
+            foreach (Chamber chamber in plan.Chambers)
+            {
+                foreach (Cell cell in chamber.AirCells())
+                {
+                    outside.Add(cell);
+                }
+            }
+
+            foreach (Cell cell in plan.Detail.Collapses)
+            {
+                for (int dz = -DigPlan.GalleryRadius; dz <= DigPlan.GalleryRadius; dz++)
+                {
+                    for (int dx = -DigPlan.GalleryRadius; dx <= DigPlan.GalleryRadius; dx++)
+                    {
+                        for (int dy = -DigPlan.TunnelHeight; dy <= DigPlan.TunnelHeight; dy++)
+                        {
+                            outside.Add(new Cell(cell.X + dx, cell.Y + dy, cell.Z + dz));
+                        }
+                    }
+                }
+            }
+
+            // A pillar cuts the windows of the cells around it, and a pool cell is water under chamber air.
+            foreach (Cell pillar in plan.Detail.Pillars)
+            {
+                for (int dz = -2; dz <= 2; dz++)
+                {
+                    for (int dx = -2; dx <= 2; dx++)
+                    {
+                        for (int y = 0; y < grid.SizeY; y++)
+                        {
+                            outside.Add(new Cell(pillar.X + dx, y, pillar.Z + dz));
+                        }
+                    }
+                }
+            }
+
             for (int y = 0; y < grid.SizeY; y++)
             {
                 for (int z = 0; z < grid.SizeZ; z++)
                 {
                     for (int x = 0; x < grid.SizeX; x++)
                     {
-                        if (!grid.IsSolid(x, y, z))
+                        if (!grid.IsSolid(x, y, z) && grid.Get(x, y, z) != BlockId.StillWater && !outside.Contains(new Cell(x, y, z)))
                         {
                             Assert.True(HasCrossSection(grid, x, y, z), $"Seed {seed}, floor {plan.Floor}: the air cell ({x}, {y}, {z}) has no three by three window of air.");
                         }
@@ -254,6 +381,117 @@ public sealed class ProcgenTests
                 }
             }
         }
+    }
+
+    /// <summary>PR-59 exit test 2. A floor of each band holds the blocks of its band and none of another band. Rubble and raw stone belong to every band (D-210, D-259).</summary>
+    [Fact]
+    public void EveryBandUsesItsBlocks()
+    {
+        for (int seed = 1; seed <= 100; seed++)
+        {
+            foreach (FloorTemplate template in TestWorld.Content.Floors)
+            {
+                FloorPlan plan = FloorGenerator.Generate((ulong)seed, (int)template.MinDepth, TestWorld.Content);
+                int[] counts = new int[8];
+                for (int y = 0; y < plan.Grid.SizeY; y++)
+                {
+                    for (int z = 0; z < plan.Grid.SizeZ; z++)
+                    {
+                        for (int x = 0; x < plan.Grid.SizeX; x++)
+                        {
+                            counts[(int)plan.Grid.Get(x, y, z)]++;
+                        }
+                    }
+                }
+
+                string context = $"Seed {seed}, band '{template.Band}'";
+                bool working = template.Band == DetailPass.WorkingMine;
+                bool older = template.Band == DetailPass.OlderWorkings;
+                bool deep = template.Band == DetailPass.Deep;
+                Assert.True(working || older || deep, $"{context}: the band is not one of D-210.");
+                Assert.True((counts[(int)BlockId.TimberBeam] > 0) == working, $"{context}: {counts[(int)BlockId.TimberBeam]} timber beams.");
+                Assert.True((counts[(int)BlockId.Plank] > 0) == working, $"{context}: {counts[(int)BlockId.Plank]} planks.");
+                Assert.True((counts[(int)BlockId.HewnStone] > 0) == older, $"{context}: {counts[(int)BlockId.HewnStone]} hewn stone.");
+                Assert.True((counts[(int)BlockId.StillWater] > 0) == older || (older && plan.Detail.Pools.Count == 0), $"{context}: {counts[(int)BlockId.StillWater]} water.");
+                Assert.True((counts[(int)BlockId.OreVein] > 0) == deep, $"{context}: {counts[(int)BlockId.OreVein]} ore veins.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// PR-59 exit test 4. One seed and one floor give one grid with the detail on, twice over, and the bit-identity
+    /// sweep folds a floor of each band, so the three platforms assert the same.
+    /// </summary>
+    [Fact]
+    public void DetailIsDeterministic()
+    {
+        for (int seed = 1; seed <= 30; seed++)
+        {
+            FloorPlan first = Plan(seed);
+            FloorPlan second = Plan(seed);
+            Assert.True(GridHash(first.Grid).Value == GridHash(second.Grid).Value, $"Seed {seed}, floor {first.Floor}: two digs with the detail on give two grids.");
+            Assert.Equal(first.Detail.Pools.Count, second.Detail.Pools.Count);
+            Assert.Equal(first.Detail.Pillars.Count, second.Detail.Pillars.Count);
+            Assert.Equal(first.Detail.Collapses.Count, second.Detail.Collapses.Count);
+            Assert.Equal(first.Stairwell, second.Stairwell);
+        }
+
+        ContentSet sweep = WhatYouCarry.Tools.BitIdentity.BitIdentitySweep.SweepContent();
+        Assert.Equal(3, sweep.Floors.Count);
+    }
+
+    /// <summary>
+    /// PR-59 exit test 6. Over one thousand seeds, every water cell has a reachable dry floor cell beside it, one
+    /// block up, so the search that reads water as air holds for a body (D-258).
+    /// </summary>
+    [Fact]
+    public void EveryPoolHasAWayOut()
+    {
+        int poolsSeen = 0;
+        for (int seed = 1; seed <= PropertySeeds; seed++)
+        {
+            FloorPlan plan = Plan(seed);
+            if (plan.Detail.Pools.Count == 0)
+            {
+                continue;
+            }
+
+            Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
+            foreach (Cell pool in plan.Detail.Pools)
+            {
+                poolsSeen++;
+                int row = pool.Y;
+                Cell below = new(pool.X, row - 1, pool.Z);
+                Assert.True(Reachability.IsFloor(plan.Grid, below), $"Seed {seed}, floor {plan.Floor}: the pool cell {pool} has no floor under its water.");
+                Assert.True(reach.IsReachable(below), $"Seed {seed}, floor {plan.Floor}: the floor under the pool cell {pool} is not reachable.");
+
+                bool wayOut = false;
+                Column[] neighbors = [new(pool.X + 1, pool.Z), new(pool.X - 1, pool.Z), new(pool.X, pool.Z + 1), new(pool.X, pool.Z - 1)];
+                foreach (Column neighbor in neighbors)
+                {
+                    Cell floor = new(neighbor.X, row, neighbor.Z);
+                    if (plan.Grid.Get(floor.X, floor.Y, floor.Z) != BlockId.StillWater && Reachability.IsFloor(plan.Grid, floor) && reach.IsReachable(floor))
+                    {
+                        wayOut = true;
+                    }
+                }
+
+                Assert.True(wayOut, $"Seed {seed}, floor {plan.Floor}: the pool cell {pool} has no dry floor cell beside it.");
+            }
+        }
+
+        Assert.True(poolsSeen > 0, "The sweep saw no pool.");
+    }
+
+    /// <summary>A template of a band that D-210 does not name is an error that names the band (T-2).</summary>
+    [Fact]
+    public void AnUnknownBandIsAnError()
+    {
+        FloorTemplate odd = FloorGenerator.TemplateFor(1, TestWorld.Content) with { Id = "odd", Band = "sunlit-meadow" };
+        List<FloorTemplate> floors = [odd];
+        ContentSet content = TestWorld.Content with { Floors = floors };
+        ContextException error = Assert.Throws<ContextException>(() => FloorGenerator.Generate(1UL, 1, content));
+        Assert.Contains("band=sunlit-meadow", error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>PR-9 exit test 6. Floor 15 is larger than floor 1 for one seed, and each band carries its size (D-252).</summary>
