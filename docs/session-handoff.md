@@ -2,6 +2,47 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 61: 2026-09-09, Codex
+
+Author: Codex
+Session: review PR #19 for the simulation loop, the intent frame, the run record, and the replay. Branch `feat/pr-6-loop-record`.
+
+### What this session did, and why
+
+- Verified PR #19 against `main` at `c11fb41` and reviewed effective head `f7bec9f`.
+- Confirmed that Session 60 identifies Claude Code as the implementation provider. Codex is the eligible reviewer.
+- Inspected the complete diff, callers, tests, replay contracts, error paths, Core boundary, and Phase 1 documents.
+- Confirmed the intentional bit-identity change from `4d6385bb92454694` to `283aa4b8cd1281be`.
+- Found no blocking defect. Wrote `docs/reviews/pr-19.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `c11fb41`. The reviewed effective head is `f7bec9f`.
+- The branch tip is the metadata commit `0850d32` before this review commit.
+- `dotnet test` passes with 336 tests and 0 failures.
+- `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
+- `bit-identity` gives `283aa4b8cd1281be`.
+- The Godot 4.7.2 headless build check passes.
+- The local build command stalled without compiler output. The Linux, macOS, and Windows CI build and test jobs pass.
+
+### In flight
+
+PR #19 is open with the verdict `Ready for owner merge` at effective head `f7bec9f`. The owner can merge it after the review record reaches the remote branch.
+
+### Traps and gotchas
+
+- The implementation head is `f7bec9f`. The later metadata commits do not change the effective head.
+- The bit-identity value changes on purpose because the sweep replays one fixed record.
+- The simulation version stays at 1 because PR-6 sets its first value.
+
+### Open questions that block progress
+
+None. OQ-99 remains open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #19, or requests a review of a new effective head.
+
 ## Session 60: 2026-09-09, Claude Code
 
 Author: Claude Code
