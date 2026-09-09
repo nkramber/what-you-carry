@@ -18,7 +18,7 @@ Session: repeat review PR #17 for PR-5. Branch `feat/pr-5-content`.
 ### State of the build
 
 - `main` is at `a37f0af`. The reviewed effective head is `7143fd3`.
-- Remote head: `origin/feat/pr-5-content` is `a8bda38`, verified after the review metadata commit.
+- Remote head: `origin/feat/pr-5-content` is `9d99dd0`, verified after the review metadata commit.
 - `dotnet build` passes with 0 warnings. `dotnet test` passes with 280 tests and 0 failures.
 - `det-lint` reports 0 findings. `ste-check` reports 0 findings. `bit-identity` gives `4d6385bb92454694`.
 - The Godot 4.7.2 headless build check passes. The build, test, comparison, lint, and STE checks pass at `7143fd3`.
