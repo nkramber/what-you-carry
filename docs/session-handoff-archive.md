@@ -1,5 +1,49 @@
 # Session handoff archive
 
+## Session 50: 2026-09-08, Claude Code
+
+Author: Claude Code
+Session: answer the PR #15 repeat review, and give the reviewer the PR description. Branch `feat/pr-4-logging`.
+
+### What this session did, and why
+
+- The repeat review closed P2-1, P2-2, and P2-4, and it kept P2-3 open and opened P2-5 and P2-6. All three have full merit.
+- P2-3. The review found that three of four theory rows ran. xUnit takes the display name from the data, two rows of raw surrogate text give one name, and the low-surrogate row never ran. Each row carries a label and a code unit now, and the body builds five shapes for each one.
+- Those rows then failed, and they showed the first fix was incomplete. `JsonDocument.Parse` accepts the `\u` escape of a lone surrogate, and `GetString` on that value throws. The first probe called `Parse` alone, so it passed and hid the rest.
+- `AppendQuoted` writes the replacement character in place of a lone surrogate now. The line parses, and a reader takes the value back with one visible mark (F-73).
+- P2-5. A caller field named `assertFile` stopped the assertion report, because the copy already held that name. This is P2-1 one level out: the first fix reserved the two names the logger writes and left the three the report writes. All five are reserved now, and `CopyWithCallSite` writes the call site on a path that no caller field reaches (F-74).
+- P2-6. D-214 said 8 types and 16 members while the code held 9 and 18. A count of the lists gave the true numbers, and D-214 states them with the totals after them (F-75).
+- The owner asked for a skill change so a reviewer can correct a stale PR description directly. D-217 records it, and the `pr-review` skill gains the rules and a `## Description edits` section in the record (F-76).
+- 7 new tests. The total is 233.
+
+### State of the build
+
+- `main` is at `51b3de7`. The branch holds the PR-4 work, two review commits, and two correction commits.
+- Remote head: `origin/feat/pr-4-logging` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build` passes with 0 warnings. `dotnet test` passes with 233 tests and 0 failures.
+- `det-lint` reports 0 findings in 11 Core files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` gives `4d6385bb92454694`, unchanged.
+
+### In flight
+
+PR #15 needs a repeat review at the new effective head. That review can correct the PR description directly under D-217.
+
+### Traps and gotchas
+
+- Two xUnit theory rows of raw invalid text take one test id, and one row never runs. Give each row a label, and build the text in the body.
+- `JsonDocument.Parse` and `GetString` are two gates. A line can parse and still fail when a reader asks for the value. Assert both.
+- A reserved-name rule needs every name that the code writes. The first pass covered the logger and missed the assertion report.
+- A count in a decision drifts from the code. State the totals, and count the list before you write them.
+- A correction can be incomplete and still pass its first probe. Write the probe against the contract, not against the fix.
+
+### Open questions that block progress
+
+No new owner question. No open question blocks PR-5 to PR-11.
+
+### Next concrete action
+
+A Codex session re-reviews PR #15 per the repeat review procedure, and it updates `docs/reviews/pr-15.md` to the new effective head.
+
 ## Session 49: 2026-09-08, Codex
 
 Author: Codex

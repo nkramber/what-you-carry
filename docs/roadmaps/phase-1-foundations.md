@@ -275,6 +275,8 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-6: Simulation loop, intent record, recorder, and replay
 
+Status: open as PR #19, branch `feat/pr-6-loop-record`.
+
 Scope:
 
 - `Core/Determinism/Crc32.cs`: the table-driven CRC-32 of the frame checksum (D-162, D-224).

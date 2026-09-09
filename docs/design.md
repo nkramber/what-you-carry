@@ -361,7 +361,7 @@ Implement the JSON content loader with one schema per content type (D-91, D-92).
 Gate: a content file with an absent field fails the load test with the field name.
 > *In plain English:* every weapon, enemy, and screen text lives in data files with a strict shape. A file with a gap fails loudly instead of a silent zero.
 
-**PR-6: Simulation loop, intent record, recorder, and replay.** 🔧
+**PR-6: Simulation loop, intent record, recorder, and replay.** 🔧 Open as PR #19.
 Implement the fixed-step loop at 60 Hz (D-73). Define the intent record: quantized yaw and pitch deltas, a movement vector, and button states (D-74, D-77). Define the run record (D-151). Its header holds a format version, a simulation version constant, a content hash, the seed, and an immutable initial state. The fixed 16-byte checksummed tick frames of D-162 follow the header (D-226). Implement the recorder that writes the header and appends frames from the first tick (D-97, G-5). Implement the replay that drives the loop from a record and ignores the live bank and tree. Property tests assert three facts over one thousand seeds. A replay reproduces the end-state hash. A torn tail truncates to the last complete frame. A version or content mismatch produces a contextual report.
 Gate: the replay of a recorded run gives the same hash on all three platforms, and a mismatch report names both versions.
 > *In plain English:* the game runs in fixed steps and writes down its start state and every input. That record then plays any run again, so every bug becomes repeatable. A record from an older version says so instead of a silent failure.
@@ -617,7 +617,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170.
 4. PR-1, PR-2. ✅ PR-1 merged 2026-09-08 as PR #6. ✅ PR-2 merged 2026-09-08 as PR #10.
 5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12. ✅ PR-4 merged 2026-09-08 as PR #15. ✅ PR-5 merged 2026-09-08 as PR #17.
-6. PR-6, PR-7, PR-8.
+6. PR-6, PR-7, PR-8. 🔧 PR-6 open as PR #19.
 7. PR-9, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).
 8. M-1, M-2.
 9. **← GATE 1 (foundation).** Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green.
