@@ -8,7 +8,7 @@ using Xunit;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The run record, the recorder, and the replay (D-97, D-151, D-152, D-163; PR-6 exit tests 1 to 6).</summary>
+/// <summary>The run record, the recorder, and the replay (D-97, D-151, D-152, D-163; PR-6 exit tests 1 to 6). The loops run on the flat floor of <see cref="TestWorld"/> (D-236, PR-7).</summary>
 public sealed class ReplayTests
 {
     private const string Hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -51,7 +51,7 @@ public sealed class ReplayTests
     {
         MemorySink sink = new();
         RunRecorder recorder = new(sink, RunRecord.NewHeader(Hash, seed));
-        SimulationLoop live = new(seed);
+        SimulationLoop live = new(seed, TestWorld.FlatFloor(), TestWorld.Spawn);
         for (uint tick = 0; tick < frames; tick++)
         {
             Intent intent = SimulationTests.RandomIntent(random, tick);
@@ -73,7 +73,7 @@ public sealed class ReplayTests
             (byte[] record, string liveHash) = RecordRun((ulong)seed * 0x9E3779B97F4A7C15UL, frames, random);
 
             CollectingSink logs = new();
-            ReplayResult result = RunReplayer.Replay(record, Hash, new JsonlLogger(logs));
+            ReplayResult result = RunReplayer.Replay(record, Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(logs));
 
             Assert.True(liveHash == result.Loop.Hash().ToString(), $"Seed {seed}: the live hash is {liveHash}, and the replay gives {result.Loop.Hash()}.");
             Assert.True(frames == result.FrameCount, $"Seed {seed}: {frames} frames, and the replay ran {result.FrameCount}.");
@@ -90,7 +90,7 @@ public sealed class ReplayTests
         byte[] torn = whole[..(whole.Length - (Intent.FrameSize / 2))];
 
         CollectingSink logs = new();
-        ReplayResult result = RunReplayer.Replay(torn, Hash, new JsonlLogger(logs));
+        ReplayResult result = RunReplayer.Replay(torn, Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(logs));
 
         Assert.Equal(4, result.FrameCount);
         Assert.Equal(4U, result.Loop.Tick);
@@ -114,7 +114,7 @@ public sealed class ReplayTests
         byte[] torn = new byte[whole.Length + 3];
         whole.CopyTo(torn, 0);
 
-        ReplayResult result = RunReplayer.Replay(torn, Hash, new JsonlLogger(new CollectingSink()));
+        ReplayResult result = RunReplayer.Replay(torn, Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(new CollectingSink()));
         Assert.Equal(liveHash, result.Loop.Hash().ToString());
         Assert.Equal(3, result.TornBytes);
     }
@@ -127,7 +127,7 @@ public sealed class ReplayTests
         int headerLength = record.Length - (6 * Intent.FrameSize);
         record[headerLength + (2 * Intent.FrameSize) + 9] ^= 0x10;
 
-        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, Hash, new JsonlLogger(new CollectingSink())));
+        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(new CollectingSink())));
         Assert.Contains("frame=2", error.Message, StringComparison.Ordinal);
         Assert.Contains("storedChecksum", error.Message, StringComparison.Ordinal);
     }
@@ -141,7 +141,7 @@ public sealed class ReplayTests
         sink.Append(new Intent(0U, 0, 0, 0, 0, 0).Encode());
         sink.Append(new Intent(2U, 0, 0, 0, 0, 0).Encode());
 
-        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(sink.Record(), Hash, new JsonlLogger(new CollectingSink())));
+        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(sink.Record(), Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(new CollectingSink())));
         Assert.Contains("frame=1", error.Message, StringComparison.Ordinal);
         Assert.Contains("intentTick=2", error.Message, StringComparison.Ordinal);
     }
@@ -152,7 +152,7 @@ public sealed class ReplayTests
     {
         byte[] record = RunRecord.WriteHeader(new RunRecordHeader(RunRecord.FormatVersion, SimulationVersion.Value + 1, Hash, 1UL));
 
-        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, Hash, new JsonlLogger(new CollectingSink())));
+        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(new CollectingSink())));
         Assert.Contains($"recordSimulationVersion={SimulationVersion.Value + 1}", error.Message, StringComparison.Ordinal);
         Assert.Contains($"buildSimulationVersion={SimulationVersion.Value}", error.Message, StringComparison.Ordinal);
     }
@@ -175,7 +175,7 @@ public sealed class ReplayTests
     {
         (byte[] record, _) = RecordRun(81UL, 3, new Random(8));
 
-        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, OtherHash, new JsonlLogger(new CollectingSink())));
+        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, OtherHash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(new CollectingSink())));
         Assert.Contains($"recordContentHash={Hash}", error.Message, StringComparison.Ordinal);
         Assert.Contains($"buildContentHash={OtherHash}", error.Message, StringComparison.Ordinal);
     }
@@ -194,11 +194,11 @@ public sealed class ReplayTests
         Assert.Equal((byte)'\n', line[^1]);
     }
 
-    /// <summary>The header text, byte for byte. A change here is a change to the format version (D-163).</summary>
+    /// <summary>The header text, byte for byte. A change to the shape is a change to the format version, and the simulation version moves on its own (D-163, G-20).</summary>
     [Fact]
     public void HeaderText()
     {
-        string expected = "{\"formatVersion\":1,\"simulationVersion\":1,\"contentHash\":\"" + Hash + "\",\"seed\":42,\"loadout\":[],\"tree\":[],\"amulet\":null}\n";
+        string expected = "{\"formatVersion\":1,\"simulationVersion\":" + SimulationVersion.Value + ",\"contentHash\":\"" + Hash + "\",\"seed\":42,\"loadout\":[],\"tree\":[],\"amulet\":null}\n";
         Assert.Equal(expected, Encoding.UTF8.GetString(RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 42UL))));
     }
 
@@ -296,7 +296,7 @@ public sealed class ReplayTests
     public void AHeaderAloneReplaysToTickZero()
     {
         byte[] record = RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 3UL));
-        ReplayResult result = RunReplayer.Replay(record, Hash, new JsonlLogger(new CollectingSink()));
+        ReplayResult result = RunReplayer.Replay(record, Hash, TestWorld.FlatFloor(), TestWorld.Spawn, new JsonlLogger(new CollectingSink()));
         Assert.Equal(0U, result.Loop.Tick);
         Assert.Equal(0, result.FrameCount);
         Assert.Equal(3UL, result.Header.Seed);

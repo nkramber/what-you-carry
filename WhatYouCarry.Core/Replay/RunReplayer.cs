@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Core.Replay;
 
@@ -14,6 +16,11 @@ namespace WhatYouCarry.Core.Replay;
 /// <para>
 /// A version or content mismatch is an error that names both values, so the caller can show the notice of
 /// D-151 and start the floor fresh. A frame that fails its checksum is an error that names the frame.
+/// </para>
+/// <para>
+/// The caller supplies the grid and the spawn point, because no generator exists before PR-9 (D-236). The
+/// record does not carry them, so two callers with two grids replay two runs from one record until PR-9 derives
+/// both from the seed. The bit-identity sweep and every test build the same grid on each side.
 /// </para>
 /// <para>
 /// A torn tail is not an error. A crash can stop a write inside a frame, and the bytes before it are a complete
@@ -40,9 +47,11 @@ public static class RunReplayer
     /// <summary>The state after every complete frame of the record.</summary>
     /// <param name="record">The whole record: the header line and the frames.</param>
     /// <param name="buildContentHash">The hash of the content set that this build loaded (D-163).</param>
+    /// <param name="grid">The grid of the floor (D-236).</param>
+    /// <param name="spawn">The feet center of the player at tick zero (D-236).</param>
     /// <param name="logger">The logger that takes the torn-tail line.</param>
-    /// <exception cref="ContextException">The header is not valid, a version or the content hash does not match this build, or a frame fails its checksum or its tick order.</exception>
-    public static ReplayResult Replay(IReadOnlyList<byte> record, string buildContentHash, JsonlLogger logger)
+    /// <exception cref="ContextException">The header is not valid, a version or the content hash does not match this build, the spawn point is inside rock, or a frame fails its checksum, its tick order, or its reserved bits.</exception>
+    public static ReplayResult Replay(IReadOnlyList<byte> record, string buildContentHash, VoxelGrid grid, Vector3 spawn, JsonlLogger logger)
     {
         (RunRecordHeader header, int bodyStart) = RunRecord.ReadHeader(record);
 
@@ -58,7 +67,7 @@ public static class RunReplayer
         int frameCount = bodyLength / Intent.FrameSize;
         int tornBytes = bodyLength - (frameCount * Intent.FrameSize);
 
-        SimulationLoop loop = new(header.Seed);
+        SimulationLoop loop = new(header.Seed, grid, spawn);
         for (int frame = 0; frame < frameCount; frame++)
         {
             try

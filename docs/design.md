@@ -138,7 +138,7 @@ A C# synthesizer generates all audio from parameter files, music included (D-89,
 
 ### 3.12 Architecture
 
-Two projects hold the game: `WhatYouCarry.Core` and `WhatYouCarry.Game` (D-108). Core is a pure C# library with no engine dependency. It owns the simulation, collision, pathfinding, projectiles, camera, items, economy, and saves. Game is a thin Godot layer for render, audio, and input. Tools and Tests are separate projects. Core uses the frame of Godot: right-handed, Y up, meters, and forward at yaw zero is minus Z (D-234).
+Two projects hold the game: `WhatYouCarry.Core` and `WhatYouCarry.Game` (D-108). Core is a pure C# library with no engine dependency. It owns the simulation, collision, pathfinding, projectiles, camera, items, economy, and saves. Game is a thin Godot layer for render, audio, and input. Tools and Tests are separate projects. Core uses the frame of Godot: right-handed, Y up, meters, and forward at yaw zero is minus Z (D-234). A body is a box that Core sweeps against the grid, one axis at a time (D-165). A contact stops one skin before a block face, and the edge of the grid is a wall (D-235, D-237).
 
 Determinism rules (D-69 to D-73, D-77):
 
@@ -292,6 +292,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-79 | PR #17 review P2-3: the Game string rule exempted every method named `Get`, so `inventory.Get("You died")` gave no finding. Every type can hold a `Get` method | 2026-09-08 | ✅ Corrected in PR-5. A `Get` call takes an id only when its receiver names the string table. The rule stays syntactic, because the Game project needs the engine assemblies for a symbol read and holds no source file yet |
 | F-80 | PR-6: sections 3.9 and 7 of this file said "length-prefixed, checksummed tick frames", and D-162 fixed the frame at 16 bytes with no length | 2026-09-09 | ✅ D-226. Both lines name the fixed frame now |
 | F-81 | PR-6: the validator message of PR-5 wrote an enum value inside an interpolated string, and the runtime formats one through its metadata. `det-lint` bans `System.Enum` and reads no interpolation | 2026-09-09 | ✅ Corrected in PR-6 with an explicit switch. OQ-99 asks for the lint rule |
+| F-82 | PR-7: a float position cannot hold an exact contact with a block face. For twelve integer faces below 130, such as x = 16 with the 0.3 half-width and y = 8 with the 1.8 height, `(c - h) + h` is one ulp off, measured 2026-09-09 | 2026-09-09 | ✅ D-235. The sweep stops one skin of 2^-10 meters before a face, and never on it. Binds PR-7, PR-8, PR-10, PR-16 |
+| F-83 | PR-7: D-231 said the apex of a jump is 1.23 meters. That is the closed form. The fixed-step integration at 60 Hz gives 1.17 meters, measured 2026-09-09. The one-block clear and the two-block fail hold | 2026-09-09 | ✅ doc. D-231 Effect corrected. `JumpClearsOneBlock` asserts the two outcomes and never the apex |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -366,8 +368,8 @@ Implement the fixed-step loop at 60 Hz (D-73). Define the intent record: quantiz
 Gate: the replay of a recorded run gives the same hash on all three platforms, and a mismatch report names both versions.
 > *In plain English:* the game runs in fixed steps and writes down its start state and every input. That record then plays any run again, so every bug becomes repeatable. A record from an older version says so instead of a silent failure.
 
-**PR-7: Voxel world and Core collision.** 🔧
-Implement the voxel grid of one-meter cubes (D-78, D-234). Implement Core collision for player and enemy boxes against the grid with swept movement, gravity, ledges, and jump (D-27, D-80, D-231). Godot physics has no part in it. Add the player box that reads the intent's movement and jump, so a Core-only run exists before the Game layer (D-149). Property tests assert no tunnel at maximum speed and no fall through a floor block.
+**PR-7: Voxel world and Core collision.** 🔧 Open as PR #21.
+Implement the voxel grid of one-meter cubes (D-78, D-234). Implement Core collision for player and enemy boxes against the grid with swept movement, gravity, ledges, and jump (D-27, D-80, D-231, D-235 to D-240). Godot physics has no part in it. Add the player box that reads the intent's movement and jump, so a Core-only run exists before the Game layer (D-149). Property tests assert no tunnel at maximum speed and no fall through a floor block.
 Gate: a box that moves at the maximum speed never crosses a solid block.
 > *In plain English:* the dungeon is a grid of blocks. The game itself decides how bodies bump into them, so the result is identical on every machine.
 
