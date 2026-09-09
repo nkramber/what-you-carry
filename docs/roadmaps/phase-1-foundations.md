@@ -1,12 +1,12 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-251. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, PR-59, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-257. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
 External facts: none new. The Godot version is in the design header, verified 2026-09-07.
 
-Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner. 2026-09-07, PR-1: a run of the gate against `main` refuted the claim that PR-1 passes its own check with no owner action. D-196 puts the mode file on `main` first. 2026-09-08, the PR #6 review. D-197 moves the gate to `pull_request_target`, and D-198 accepts the review-record risk with a named commit in the output. 2026-09-08, PR-2: the first run of the checker found 77 findings in 15 files, and the PR rewrote each sentence. 2026-09-08, PR-3: a measurement refuted D-161, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 to D-202 answer the `Pow` contract, the location of the bit-identity program, and the compiler API dependency. The review took seven passes on the lint boundary. D-204 to D-208 record the answers. D-204 stops conditional compilation in Core. The boundary then moved from a namespace list to a type list, and to a member list with the overload arity (F-65 to F-69). D-209 gives a review its scope, after the same finding reopened four times (F-70). 2026-09-08, PR-4: five owner questions came before the code, and D-211 to D-216 record the answers. The PR #15 review took three passes on the logger, and F-72 to F-77 record the findings. D-217 lets a review correct a stale fact in the PR description directly. D-218 ratifies the log name and value rule that finding P2-7 produced. 2026-09-08, PR-5: four owner questions came before the code, and D-219 to D-223 record the answers. D-219 applies D-211 to the content bytes, and the review found the hash framing and the `Get` rule that F-78 and F-79 record. 2026-09-09, PR-6: seven owner questions came before the code, and D-224 to D-230 record the answers. D-226 corrects the frame wording of the design doc (F-80), and D-227 sets the Phase 1 loop state. The reader of D-220 gains an empty list and a null (D-229), and F-81 records an enum inside an interpolation. 2026-09-09, the PR-6 merge: four owner questions came before the PR-7 code. D-231 to D-234 record the motion constants, the button bits, the movement mapping, and the coordinate frame. 2026-09-09, PR-7: six more owner questions came before the code, and D-235 to D-240 record the answers. A float check refuted an exact contact on a block face (F-82), and the sweep stops one skin before it (D-235). The fixed-step apex is 1.17 meters and not the 1.23 meters of the closed form (F-83). 2026-09-09, the PR-7 merge: seven owner questions came before the PR-8 code. D-241 to D-247 record the pitch limit, the camera geometry, the controller aim flag, and the assist shape. They also record the camera state, the boom sweep, and the aim ray origin. D-241 revises the pitch limit of D-227, and D-243 assigns bit 8 of D-232. 2026-09-09, PR-8: two more owner questions came before the code, and D-248 and D-249 record the pitch sign and the shoulder march. 2026-09-08, PR-3: a measurement refuted D-161. Degree 7 on [-pi, pi] reaches 2.5e-4 for sine, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 gives `Pow` an integer exponent, D-201 puts the bit-identity program in `WhatYouCarry.Tools`, and D-202 records the compiler API dependency. Exit test 5 asked for the opposite of D-160, and this pass corrects it (F-61).
+Correction passes: 2026-09-07, the PR #1 review. D-176 to D-178 correct the attribution reading, the night gate bootstrap, and six superseded references. D-179 to D-181 add the `review-gate` job to PR-1. D-181 revises D-179, D-184 revises the effective head, and D-185 revises the mode source. PR-58 is new, and it holds the night gate. D-189 puts the SDK on the CI runner through `actions/setup-dotnet`. D-190 adds the override label to the `review-gate` job. D-194 sets the solution format after a smoke run on the runner. 2026-09-07, PR-1: a run of the gate against `main` refuted the claim that PR-1 passes its own check with no owner action. D-196 puts the mode file on `main` first. 2026-09-08, the PR #6 review. D-197 moves the gate to `pull_request_target`, and D-198 accepts the review-record risk with a named commit in the output. 2026-09-08, PR-2: the first run of the checker found 77 findings in 15 files, and the PR rewrote each sentence. 2026-09-08, PR-3: a measurement refuted D-161, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 to D-202 answer the `Pow` contract, the location of the bit-identity program, and the compiler API dependency. The review took seven passes on the lint boundary. D-204 to D-208 record the answers. D-204 stops conditional compilation in Core. The boundary then moved from a namespace list to a type list, and to a member list with the overload arity (F-65 to F-69). D-209 gives a review its scope, after the same finding reopened four times (F-70). 2026-09-08, PR-4: five owner questions came before the code, and D-211 to D-216 record the answers. The PR #15 review took three passes on the logger, and F-72 to F-77 record the findings. D-217 lets a review correct a stale fact in the PR description directly. D-218 ratifies the log name and value rule that finding P2-7 produced. 2026-09-08, PR-5: four owner questions came before the code, and D-219 to D-223 record the answers. D-219 applies D-211 to the content bytes, and the review found the hash framing and the `Get` rule that F-78 and F-79 record. 2026-09-09, PR-6: seven owner questions came before the code, and D-224 to D-230 record the answers. D-226 corrects the frame wording of the design doc (F-80), and D-227 sets the Phase 1 loop state. The reader of D-220 gains an empty list and a null (D-229), and F-81 records an enum inside an interpolation. 2026-09-09, the PR-6 merge: four owner questions came before the PR-7 code. D-231 to D-234 record the motion constants, the button bits, the movement mapping, and the coordinate frame. 2026-09-09, PR-7: six more owner questions came before the code, and D-235 to D-240 record the answers. A float check refuted an exact contact on a block face (F-82), and the sweep stops one skin before it (D-235). The fixed-step apex is 1.17 meters and not the 1.23 meters of the closed form (F-83). 2026-09-09, the PR-7 merge: seven owner questions came before the PR-8 code. D-241 to D-247 record the pitch limit, the camera geometry, the controller aim flag, and the assist shape. They also record the camera state, the boom sweep, and the aim ray origin. D-241 revises the pitch limit of D-227, and D-243 assigns bit 8 of D-232. 2026-09-09, PR-8: two more owner questions came before the code, and D-248 and D-249 record the pitch sign and the shoulder march. 2026-09-09, the PR #23 review: the bit-identity sweep folded the camera from a second live loop, and the replay gained an observer (F-85). 2026-09-09, the PR-8 merge: six owner questions came before the PR-9 code, and D-252 to D-257 record the answers. The owner asked for a floor far more random, varied, and detailed than rectangles, and D-253 sets the mine dig plan. D-254 splits the work into PR-9 and a new PR-59, and D-257 assigns bit 9 of D-232. 2026-09-08, PR-3: a measurement refuted D-161. Degree 7 on [-pi, pi] reaches 2.5e-4 for sine, and D-203 folds to [-pi/4, pi/4] instead (F-60). D-200 gives `Pow` an integer exponent, D-201 puts the bit-identity program in `WhatYouCarry.Tools`, and D-202 records the compiler API dependency. Exit test 5 asked for the opposite of D-160, and this pass corrects it (F-61).
 
 ## 1. Thesis
 
@@ -344,7 +344,7 @@ Result, 2026-09-09: every exit test passes. The sweep test drives the box at up 
 
 ### PR-8: Camera as a Core system
 
-Status: open as PR #23, branch `feat/pr-8-camera`.
+Status: merged 2026-09-09 as PR #23, commit `a3bdf20`.
 
 Scope:
 
@@ -378,31 +378,61 @@ Result, 2026-09-09: every exit test passes. The march test walks each segment in
 
 Scope:
 
-- `content/floors/*.json`: floor templates with size by depth and room count ranges (D-6, D-46). Each names a corridor cross-section of at least 3 by 3 (D-166) and a difficulty budget with room weights (D-167). The biome is the collapsed deep mine of D-210. Its three depth bands are floors 1 to 5, 6 to 10, and 11 to 15.
-- `Core/Procgen/FloorGenerator.cs`: rooms and corridors on the grid, a spawn point, and a stairwell, from the run seed and the floor number (D-78).
-- `Core/Procgen/Reachability.cs`: a search over walkable cells. A cell is walkable with two air blocks above it. A move is a step of at most one block up, or any drop (D-165).
-- `Core/Simulation/StairwellTransition.cs`: on arrival at the stairwell, a policy or the player chooses descend or ascend. Descend generates the next floor. Ascend ends the run (D-50, D-149).
+- `content/floors/*.json`: each floor template gains `sizeX`, `sizeY`, and `sizeZ`, one size per band (D-252). The working mine of floors 1 to 5 is 48 by 12 by 48. The older workings of floors 6 to 10 are 72 by 16 by 72. The deep of floors 11 to 15 is 96 by 20 by 96. The validator rejects a size past D-164. The room count range and the difficulty budget stand (D-167).
+- `content/chambers/*.json`: a new content type, one file per chamber kind, with an id, a weight, a box count range, and a box size range (D-255). One validator, with an explicit field list (D-168).
+- `Core/Procgen/FloorGenerator.cs`: the mine dig plan (D-253). A seeded random walk lays a main gallery and side drifts that jitter, slope by one-block steps, and branch. A chamber is a union of boxes that overlap, smoothed by a cellular pass, with pillars left standing. Shafts and ramps join levels. The generator carves every tunnel with a brush of at least three by three, so D-166 holds by construction. The generator draws chamber kinds until the sum of weights lands inside the budget window (D-167). It reads the Procgen stream of D-159 alone, and it steps in integers, so it is deterministic by construction.
+- The spawn is a standing cell at the center of the first chamber. The stairwell is one cell in the chamber with the longest walkable path from the spawn (D-256).
+- `Core/Procgen/Reachability.cs`: a search over walkable cells. A cell is walkable with two air blocks above it. A move is a step of at most one block up, or any drop (D-165). It gives the path lengths that place the stairwell.
+- `Core/Simulation/StairwellTransition.cs`: at the stairwell, the interact bit descends and bit 9 ascends (D-257). Descend generates floor n+1 from the run seed and the floor number. Ascend ends the run (D-50, D-149). The loop state gains the floor number, and the hash reads it after the fields of PR-7 (G-20).
+- The loop and the replayer derive the grid and the spawn from the seed, the floor number, and the content set. That closes the gap of D-236. The replay takes the content set in place of a grid and a spawn.
+- PR-9 carves raw stone and air alone. The detail pass and the other block ids of D-210 are PR-59 (D-254).
 
-Out of scope: enemies, loot, the timer, the second biome.
+Out of scope: the detail pass (PR-59), enemies, loot, the timer, the second biome.
 
 Exit tests:
 
-1. `EveryRoomReachable` over five thousand seeds per PR and one hundred thousand each night: every room is reachable from the spawn (D-116).
-2. `NoRoomOverlap` asserts no two rooms share a block.
-3. `StairwellReachable` asserts a path from the spawn to the stairwell.
-4. `BudgetWithinTolerance` asserts the sum of room weights within 10 percent of the floor budget (D-167).
-5. `CorridorCrossSection` asserts every corridor cell has three blocks of width and height (D-166).
-6. `FloorSizeGrowsWithDepth` asserts floor 15 is larger than floor 1 for the same seed.
+1. `EveryChamberReachable` over five thousand seeds per PR and one hundred thousand each night: every chamber is reachable from the spawn (D-116).
+2. `NoChamberOverlap` asserts no two chambers share a block.
+3. `StairwellReachable` asserts a path from the spawn to the stairwell, and that no chamber lies farther (D-256).
+4. `BudgetWithinTolerance` asserts the sum of chamber weights within 10 percent of the floor budget (D-167).
+5. `TunnelCrossSection` asserts that every tunnel cell sits inside an air cross-section three blocks wide and three blocks high (D-166).
+6. `FloorSizeGrowsWithDepth` asserts floor 15 is larger than floor 1 for the same seed (D-252).
 7. `GenerationIsDeterministic` asserts one grid hash for one seed, and the `bit-identity` job asserts it on three platforms.
-8. `DescendAdvancesFloor` asserts that a descend at the stairwell generates floor n+1 from the same run seed, and that an ascend ends the run.
+8. `DescendAdvancesFloor` asserts that the interact bit at the stairwell generates floor n+1 from the same run seed. It asserts that bit 9 ends the run, and that a replay reproduces both (D-257).
 
-Review focus: determinism, content, test quality.
+Review focus: determinism, content, replay, test quality.
 
 Check clause: none.
 
 Gate: exit tests 1 to 8 pass, and the night sweep passes on one hundred thousand seeds.
 
-> *In plain English:* this builds the dungeon floors from a random seed. Tests over huge numbers of seeds prove that a player can finish every floor, and that the stairs lead to the next one.
+> *In plain English:* this digs the mine floors from a random seed: galleries, side tunnels, chambers, and shafts, and no two floors look alike. Tests over huge numbers of seeds prove that a player can reach every chamber and the stairs down.
+
+### PR-59: Mine detail pass
+
+Scope:
+
+- Collapses that fill dead ends with rubble, and pillars inside chambers (D-253, D-254).
+- The block ids of D-210 beyond air and raw stone: hewn stone, timber beam, ore vein, still water, rubble, and plank. A decision before the code says whether still water is solid (D-239, D-254).
+- The blocks by band. Floors 1 to 5 take timber beams and planks on the walls of the working mine. Floors 6 to 10 take hewn stone and still water in the older workings. Floors 11 to 15 take ore veins in the deep.
+- The reachability sweep of PR-9 runs again with the detail on, so no detail closes a chamber or a tunnel.
+
+Out of scope: props (PR-48), the mesher (PR-13), enemies.
+
+Exit tests:
+
+1. `DetailKeepsEveryChamberReachable` over five thousand seeds: the PR-9 reachability holds with the detail on.
+2. `EveryBandUsesItsBlocks` asserts that a floor of each band holds the blocks of its band and none of another band.
+3. `EveryBlockIdIsDeclared` asserts that the grid rejects an id outside the declared set, and that every declared id has a solid rule (D-239).
+4. `DetailIsDeterministic` asserts one grid hash for one seed with the detail on, and the `bit-identity` job asserts it on three platforms.
+
+Review focus: determinism, content, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 4 pass.
+
+> *In plain English:* the bare tunnels gain the look of a mine: fallen rock, timber, cut stone, ore, and water. The tests from before run again, so nothing blocks the way.
 
 ### PR-10: Projectile simulation
 
@@ -507,23 +537,24 @@ One person owns the program. Items run one at a time in this order. Each PR open
 3. ✅ PR-1 merged 2026-09-08 as PR #6.
 4. ✅ PR-2 is PR #10.
 5. ✅ OQ-33 to OQ-35 answered 2026-09-07: D-159 to D-161.
-6. PR-3.
-7. PR-4.
+6. ✅ PR-3 merged 2026-09-08 as PR #12.
+7. ✅ PR-4 merged 2026-09-08 as PR #15.
 8. ✅ OQ-42 answered 2026-09-07: D-168.
-9. PR-5.
+9. ✅ PR-5 merged 2026-09-08 as PR #17.
 10. ✅ OQ-36 and OQ-37 answered 2026-09-07: D-162 and D-163.
-11. PR-6.
+11. ✅ PR-6 merged 2026-09-09 as PR #19.
 12. ✅ OQ-38 and OQ-39 answered 2026-09-07: D-164 and D-165.
-13. PR-7.
-14. PR-8.
-15. Owner: answer OQ-12. ✅ OQ-40 and OQ-41 answered 2026-09-07: D-166 and D-167.
+13. ✅ PR-7 merged 2026-09-09 as PR #21.
+14. ✅ PR-8 merged 2026-09-09 as PR #23.
+15. ✅ OQ-12 answered 2026-09-08: D-210. ✅ OQ-40 and OQ-41 answered 2026-09-07: D-166 and D-167. ✅ OQ-120 to OQ-125 answered 2026-09-09: D-252 to D-257.
 16. PR-9.
-17. PR-10.
-18. PR-11.
-19. One scheduled night runs on the runner (D-177).
-20. PR-58.
-21. M-1 table complete. M-2 table complete.
-22. **← GATE 1 (foundation).** Every exit test in this file passes. The bit-identity job, `dotnet test`, and the night sweep are green. The owner signs the gate in `docs/decisions.md`.
+17. PR-59.
+18. PR-10.
+19. PR-11.
+20. One scheduled night runs on the runner (D-177).
+21. PR-58.
+22. M-1 table complete. M-2 table complete.
+23. **← GATE 1 (foundation).** Every exit test in this file passes. The bit-identity job, `dotnet test`, and the night sweep are green. The owner signs the gate in `docs/decisions.md`.
 
 ## 6. Open questions
 
@@ -531,7 +562,7 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 1. Each 
 
 Open:
 
-- OQ-12: the biome. Blocks PR-9.
+- None. OQ-99 is open, and it blocks nothing.
 - OQ-2 resolved 2026-09-07 by D-173: .NET 10 LTS. D-173 revises D-169.
 - OQ-16 resolved 2026-09-07 by D-175: the attribution option is in the repository. D-175 revises D-172.
 
@@ -553,6 +584,8 @@ Resolved 2026-09-09:
 - OQ-104 to OQ-109 (D-235 to D-240): the body position and the contact skin, the world input, the grid edge, air control, the block ids, and the terminal velocity. PR-7.
 - OQ-110 to OQ-116 (D-241 to D-247): the pitch limit, the camera geometry, the controller aim flag, the assist shape, the camera state, the boom sweep, and the aim ray origin. PR-8.
 - OQ-117 and OQ-118 (D-248 and D-249): the pitch sign and the shoulder march. PR-8.
+- OQ-119 (D-251): the visible review gate line. The fix PR #25.
+- OQ-120 to OQ-125 (D-252 to D-257): the floor size, the room shape, the PR-9 split, the chamber templates, the spawn and the stairwell, and the stairwell choice. PR-9 and PR-59.
 
 Resolved 2026-09-08:
 
@@ -560,3 +593,4 @@ Resolved 2026-09-08:
 - OQ-74 (D-201): the location of the bit-identity program. `WhatYouCarry.Tools`. PR-3.
 - OQ-75 (D-202): the parser of the lint tool. The C# compiler API. PR-3.
 - OQ-76 (D-203): the conflict inside D-161. A fold to [-pi/4, pi/4] and a quadrant. PR-3.
+- OQ-12 (D-210): the biome is a collapsed deep mine. PR-9 and PR-59.
