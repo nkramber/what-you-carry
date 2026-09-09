@@ -16,6 +16,9 @@ public sealed class ContentLoader
     /// <summary>The directory that holds every floor template.</summary>
     public const string FloorDirectory = "floors/";
 
+    /// <summary>The directory that holds every chamber kind (D-255).</summary>
+    public const string ChamberDirectory = "chambers/";
+
     /// <summary>The directory that holds every projectile definition.</summary>
     public const string ProjectileDirectory = "projectiles/";
 
@@ -35,6 +38,7 @@ public sealed class ContentLoader
         string hash = ContentHash.Of(files);
 
         List<FloorTemplate> floors = [];
+        List<ChamberKind> chambers = [];
         List<ProjectileDefinition> projectiles = [];
         Strings? strings = null;
 
@@ -49,6 +53,10 @@ public sealed class ContentLoader
             else if (file.Path.StartsWith(FloorDirectory, System.StringComparison.Ordinal))
             {
                 floors.Add(FloorTemplate.FromMembers(file.Path, members));
+            }
+            else if (file.Path.StartsWith(ChamberDirectory, System.StringComparison.Ordinal))
+            {
+                chambers.Add(ChamberKind.FromMembers(file.Path, members));
             }
             else if (file.Path.StartsWith(ProjectileDirectory, System.StringComparison.Ordinal))
             {
@@ -68,12 +76,12 @@ public sealed class ContentLoader
             throw error;
         }
 
-        CheckUniqueIds(floors, projectiles);
-        return new ContentSet(hash, floors, projectiles, strings);
+        CheckUniqueIds(floors, chambers, projectiles);
+        return new ContentSet(hash, floors, chambers, projectiles, strings);
     }
 
     /// <summary>Two records of one type must not share an id, because a lookup would then take either one.</summary>
-    private static void CheckUniqueIds(List<FloorTemplate> floors, List<ProjectileDefinition> projectiles)
+    private static void CheckUniqueIds(List<FloorTemplate> floors, List<ChamberKind> chambers, List<ProjectileDefinition> projectiles)
     {
         for (int index = 0; index < floors.Count; index++)
         {
@@ -82,6 +90,17 @@ public sealed class ContentLoader
                 if (floors[index].Id == floors[other].Id)
                 {
                     throw ContentError.Make(ContentLoader.FloorDirectory, floors[index].Id, "is the id of two floor templates");
+                }
+            }
+        }
+
+        for (int index = 0; index < chambers.Count; index++)
+        {
+            for (int other = index + 1; other < chambers.Count; other++)
+            {
+                if (chambers[index].Id == chambers[other].Id)
+                {
+                    throw ContentError.Make(ContentLoader.ChamberDirectory, chambers[index].Id, "is the id of two chamber kinds");
                 }
             }
         }
@@ -100,4 +119,4 @@ public sealed class ContentLoader
 }
 
 /// <summary>Every record of one content set, and the hash that the run record header carries (D-151, D-163).</summary>
-public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ProjectileDefinition> Projectiles, Strings Strings);
+public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, Strings Strings);

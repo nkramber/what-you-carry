@@ -6,7 +6,7 @@ using Xunit;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The CRC-32, the intent frame, and the fixed-step loop (D-73, D-162, D-224, D-227; PR-6). The loop tests run on the flat floor of <see cref="TestWorld"/> (PR-7).</summary>
+/// <summary>The CRC-32, the intent frame, and the fixed-step loop (D-73, D-162, D-224, D-227; PR-6). The loop tests run on floor 1 of the seed, which <see cref="TestWorld"/> digs from the repository content (PR-9).</summary>
 public sealed class SimulationTests
 {
     /// <summary>The check value of the CRC-32 standard: the text "123456789" gives 0xCBF43926.</summary>
@@ -122,7 +122,7 @@ public sealed class SimulationTests
     public void TheConstantsHold()
     {
         Assert.Equal(60, SimulationLoop.TicksPerSecond);
-        Assert.Equal(3, SimulationVersion.Value);
+        Assert.Equal(4, SimulationVersion.Value);
     }
 
     /// <summary>One intent is one tick, and the loop starts at tick zero.</summary>
@@ -202,7 +202,7 @@ public sealed class SimulationTests
 
     /// <summary>
     /// A random intent for one tick. The tests, the replay tests, and the body tests share it. The buttons keep
-    /// the eight assigned bits, because a set reserved bit is an error (D-232).
+    /// the ten assigned bits, because a set reserved bit is an error (D-232, D-257).
     /// </summary>
     public static Intent RandomIntent(Random random, uint tick)
     {

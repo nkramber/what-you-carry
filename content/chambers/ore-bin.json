@@ -1,0 +1,8 @@
+{
+  "id": "ore-bin",
+  "weight": 24,
+  "boxCountMin": 2,
+  "boxCountMax": 3,
+  "boxSizeMin": 5,
+  "boxSizeMax": 8
+}

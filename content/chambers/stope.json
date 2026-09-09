@@ -1,0 +1,8 @@
+{
+  "id": "stope",
+  "weight": 16,
+  "boxCountMin": 2,
+  "boxCountMax": 4,
+  "boxSizeMin": 4,
+  "boxSizeMax": 7
+}

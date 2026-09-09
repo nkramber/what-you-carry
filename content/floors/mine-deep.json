@@ -5,5 +5,8 @@
   "roomCountMin": 11,
   "roomCountMax": 17,
   "difficultyBudget": 400,
-  "band": "what-the-miners-reached"
+  "band": "what-the-miners-reached",
+  "sizeX": 96,
+  "sizeY": 20,
+  "sizeZ": 96
 }

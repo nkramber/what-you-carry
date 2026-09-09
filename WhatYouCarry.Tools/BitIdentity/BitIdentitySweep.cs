@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using WhatYouCarry.Core.Camera;
+using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
+using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Core.World;
@@ -11,14 +13,16 @@ using WhatYouCarry.Core.World;
 namespace WhatYouCarry.Tools.BitIdentity;
 
 /// <summary>
-/// A fixed run of the RNG, of DetMath, of one recorded run through the replay, and of the camera over that run,
-/// folded into one state hash (D-69, D-71). Two platforms that give the same hash agree on every bit of all four.
+/// A fixed run of the RNG, of DetMath, of the floor generator, of one recorded run through the replay, and of
+/// the camera over that run, folded into one state hash (D-69, D-71). Two platforms that give the same hash
+/// agree on every bit of all five.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Every number here is a constant of this file, so the sweep takes no input and needs no content. The hash
-/// changes only when this file changes or when Core changes its numbers. The `bit-identity` CI job runs it on
-/// Linux x64, Windows x64, and macOS arm64 and compares the three results.
+/// Every number here is a constant of this file, so the sweep takes no input and reads no content file. The
+/// content set of the sweep is a floor template and two chamber kinds that this file declares. The hash changes
+/// only when this file changes or when Core changes its numbers. The `bit-identity` CI job runs it on Linux
+/// x64, Windows x64, and macOS arm64 and compares the three results.
 /// </para>
 /// <para>
 /// A change to the hash is a change to the simulation. A deliberate one updates
@@ -45,21 +49,15 @@ public static class BitIdentitySweep
     /// <summary>The content hash that the sweep record carries. It has no meaning beyond its shape (D-221).</summary>
     public const string ReplayContentHash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-    /// <summary>The side of the sweep grid, in blocks.</summary>
-    public const int ReplayGridSide = 16;
+    /// <summary>The floors that the sweep digs and folds, one per band of the sweep template (PR-9 exit test 7).</summary>
+    private static readonly int[] SweptFloors = [1, 2, 3];
 
-    /// <summary>The height of the sweep grid, in blocks.</summary>
-    public const int ReplayGridHeight = 8;
-
-    /// <summary>The feet center of the body at tick zero, over the middle of the floor.</summary>
-    public static readonly Vector3 ReplaySpawn = new(8.5f, 1.0f, 8.5f);
-
-    /// <summary>Three fixed aim targets in the sweep grid, so the assist pulls on some ticks (PR-8 exit test 5).</summary>
-    private static readonly Vector3[] SweepTargets =
+    /// <summary>Three fixed aim targets around the spawn of the sweep floor, so the assist pulls on some ticks (PR-8 exit test 5).</summary>
+    private static readonly Vector3[] TargetOffsets =
     [
-        new(4.5f, 2.0f, 4.5f),
-        new(11.5f, 2.5f, 3.5f),
-        new(8.5f, 1.8f, 13.5f),
+        new(-3.0f, 1.0f, -3.0f),
+        new(2.5f, 1.5f, -4.0f),
+        new(0.5f, 0.8f, 3.5f),
     ];
 
     /// <summary>
@@ -81,8 +79,58 @@ public static class BitIdentitySweep
         AddStreams(ref hash);
         AddAngles(ref hash);
         AddRootsAndPowers(ref hash);
-        AddReplay(ref hash, SweepIntents());
+        AddFloors(ref hash, SweepContent());
+        AddReplay(ref hash, SweepIntents(), SweepContent());
         return hash;
+    }
+
+    /// <summary>
+    /// The content set of the sweep: one template that covers floors 1 to 3 on a small grid, and two chamber
+    /// kinds whose weights fill its budget. The hash of the set has no meaning beyond its shape (D-221).
+    /// </summary>
+    public static ContentSet SweepContent()
+    {
+        FloorTemplate floor = new("sweep-mine", 1, 3, 4, 8, 100, "sweep", 32, 12, 32);
+        ChamberKind[] kinds =
+        [
+            new("sweep-small", 10, 1, 2, 3, 5),
+            new("sweep-large", 25, 2, 3, 5, 8),
+        ];
+        ProjectileDefinition[] projectiles = [];
+        return new ContentSet(ReplayContentHash, [floor], kinds, projectiles, Strings.FromMembers(Strings.FilePath, []));
+    }
+
+    /// <summary>
+    /// Digs each swept floor and folds every block, the spawn, the stairwell, and the chamber count (PR-9 exit
+    /// test 7). The three platforms must agree on every draw of the budget, every stamp of the walk, and every
+    /// cell of the reachability search that places the stairwell.
+    /// </summary>
+    private static void AddFloors(ref StateHash hash, ContentSet content)
+    {
+        foreach (int floor in SweptFloors)
+        {
+            FloorPlan plan = FloorGenerator.Generate(RunSeed, floor, content);
+            hash.Add(plan.Floor);
+            for (int y = 0; y < plan.Grid.SizeY; y++)
+            {
+                for (int z = 0; z < plan.Grid.SizeZ; z++)
+                {
+                    for (int x = 0; x < plan.Grid.SizeX; x++)
+                    {
+                        hash.Add((byte)plan.Grid.Get(x, y, z));
+                    }
+                }
+            }
+
+            hash.Add(plan.Spawn.X);
+            hash.Add(plan.Spawn.Y);
+            hash.Add(plan.Spawn.Z);
+            hash.Add(plan.Stairwell.X);
+            hash.Add(plan.Stairwell.Y);
+            hash.Add(plan.Stairwell.Z);
+            hash.Add(plan.Chambers.Count);
+            hash.Add(plan.Shafts.Count);
+        }
     }
 
     /// <summary>Draws from each stream in turn: the raw word, the float, and a bounded integer.</summary>
@@ -182,7 +230,8 @@ public static class BitIdentitySweep
             uint rest = rng.NextUInt();
 
             // The buttons keep the assigned bits alone, because a set reserved bit is an error (D-232, D-243).
-            ushort buttons = (ushort)((rest >> 16) & Button.AssignedMask);
+            // The stairwell bits stay clear, so the sweep run stays on floor 1 and never ends (D-257).
+            ushort buttons = (ushort)((rest >> 16) & Button.AssignedMask & ~(Button.Interact | Button.Ascend));
             intents.Add(new Intent(tick, (short)look, (short)(look >> 16), (sbyte)rest, (sbyte)(rest >> 8), buttons));
         }
 
@@ -190,16 +239,16 @@ public static class BitIdentitySweep
     }
 
     /// <summary>
-    /// Records the run, replays the record, and folds in the camera pose and the aim ray of every replayed
-    /// tick, the end state, and the checksum of the whole record (PR-6 exit test 7, PR-8 exit test 5). The three
-    /// platforms must agree on the frame bytes, the header text, the CRC-32, the loop, the collision of the body
-    /// with the fixed grid, the ray march of the boom, and the assist pull.
+    /// Records the run, replays the record on floor 1 of the sweep seed, and folds in the camera pose and the
+    /// aim ray of every replayed tick, the end state, and the checksum of the whole record (PR-6 exit test 7,
+    /// PR-8 exit test 5). The three platforms must agree on the frame bytes, the header text, the CRC-32, the
+    /// loop, the collision of the body with the dug floor, the ray march of the boom, and the assist pull.
     /// </summary>
     /// <remarks>
     /// The camera values come from the loop that replays the record, through <see cref="IReplayObserver"/>, and
     /// never from a second live run. A replay defect that changes the camera sequence then changes this hash.
     /// </remarks>
-    private static void AddReplay(ref StateHash hash, IReadOnlyList<Intent> intents)
+    private static void AddReplay(ref StateHash hash, IReadOnlyList<Intent> intents, ContentSet content)
     {
         MemorySink sink = new();
         RunRecorder recorder = new(sink, RunRecord.NewHeader(ReplayContentHash, RunSeed));
@@ -209,45 +258,16 @@ public static class BitIdentitySweep
         }
 
         CameraFold cameras = new();
-        ReplayResult result = RunReplayer.Replay(sink.Bytes, ReplayContentHash, ReplayGrid(), ReplaySpawn, new JsonlLogger(new RejectingLogSink()), cameras);
+        ReplayResult result = RunReplayer.Replay(sink.Bytes, content, new JsonlLogger(new RejectingLogSink()), cameras);
         hash.Add(cameras.Hash.Value);
         hash.Add(result.Loop.Hash().Value);
         hash.Add(Crc32.Of(sink.Bytes, 0, sink.Bytes.Count));
     }
 
     /// <summary>
-    /// The fixed grid of the sweep replay: a stone floor, a scatter of one-block steps, and a scatter of
-    /// two-block pillars, from two fixed patterns. The body walks, jumps onto the steps, and stops at the
-    /// pillars. The two patterns leave the spawn column clear.
-    /// </summary>
-    public static VoxelGrid ReplayGrid()
-    {
-        VoxelGrid grid = new(ReplayGridSide, ReplayGridHeight, ReplayGridSide);
-        for (int x = 0; x < ReplayGridSide; x++)
-        {
-            for (int z = 0; z < ReplayGridSide; z++)
-            {
-                grid.Set(x, 0, z, BlockId.RawStone);
-
-                if (((x * 7) + (z * 3)) % 5 == 1)
-                {
-                    grid.Set(x, 1, z, BlockId.RawStone);
-                }
-
-                if (((x * 3) + (z * 5)) % 11 == 2)
-                {
-                    grid.Set(x, 1, z, BlockId.RawStone);
-                    grid.Set(x, 2, z, BlockId.RawStone);
-                }
-            }
-        }
-
-        return grid;
-    }
-
-    /// <summary>
     /// Folds the camera pose and the aim ray of every replayed tick into one hash (PR-8 exit test 5). The replay
-    /// calls it after each frame, so the values come from the replay traversal itself.
+    /// calls it after each frame, so the values come from the replay traversal itself. The targets sit at fixed
+    /// offsets from the spawn of the floor, so the assist has something to pull toward.
     /// </summary>
     private sealed class CameraFold : IReplayObserver
     {
@@ -266,7 +286,13 @@ public static class BitIdentitySweep
             this.hash.Add(pose.Forward.Y);
             this.hash.Add(pose.Forward.Z);
 
-            AimRay aim = loop.Aim(SweepTargets);
+            Vector3[] targets = new Vector3[TargetOffsets.Length];
+            for (int index = 0; index < TargetOffsets.Length; index++)
+            {
+                targets[index] = loop.Plan.Spawn + TargetOffsets[index];
+            }
+
+            AimRay aim = loop.Aim(targets);
             this.hash.Add(aim.Direction.X);
             this.hash.Add(aim.Direction.Y);
             this.hash.Add(aim.Direction.Z);

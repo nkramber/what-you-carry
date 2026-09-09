@@ -116,6 +116,67 @@ public sealed class RngTests
         Assert.Equal(0, sameAsOther);
     }
 
+    /// <summary>
+    /// Floor zero is the run stream, and floors one to fifteen of every subsystem give sixty streams that stay
+    /// apart from each other and from the four run streams: no first sixteen outputs match at any position (D-159, PR-9).
+    /// </summary>
+    [Fact]
+    public void FloorStreamsAreDistinct()
+    {
+        const int floors = 15;
+        const int draws = 16;
+        RngStream[] streams = [RngStream.Procgen, RngStream.Loot, RngStream.Enemy, RngStream.Projectile];
+
+        Rng run = Rng.ForStream(31UL, RngStream.Loot);
+        Rng zero = Rng.ForStream(31UL, RngStream.Loot, 0);
+        for (int draw = 0; draw < draws; draw++)
+        {
+            Assert.Equal(run.NextUInt(), zero.NextUInt());
+        }
+
+        List<uint[]> outputs = [];
+        foreach (RngStream stream in streams)
+        {
+            for (int floor = 0; floor <= floors; floor++)
+            {
+                Rng rng = Rng.ForStream(31UL, stream, floor);
+                uint[] values = new uint[draws];
+                for (int draw = 0; draw < draws; draw++)
+                {
+                    values[draw] = rng.NextUInt();
+                }
+
+                outputs.Add(values);
+            }
+        }
+
+        for (int first = 0; first < outputs.Count; first++)
+        {
+            for (int second = first + 1; second < outputs.Count; second++)
+            {
+                int matches = 0;
+                for (int draw = 0; draw < draws; draw++)
+                {
+                    if (outputs[first][draw] == outputs[second][draw])
+                    {
+                        matches++;
+                    }
+                }
+
+                Assert.True(matches == 0, $"Streams {first} and {second} share {matches} of the first {draws} outputs.");
+            }
+        }
+    }
+
+    /// <summary>A negative floor is an error with its value in the message (T-2).</summary>
+    [Fact]
+    public void ANegativeFloorIsAnError()
+    {
+        ArgumentOutOfRangeException error = Assert.Throws<ArgumentOutOfRangeException>(
+            () => Rng.ForStream(1UL, RngStream.Procgen, -1));
+        Assert.Contains("-1", error.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>The bound check accepts every declared stream, so a new value cannot pass the bound in silence.</summary>
     [Fact]
     public void EveryDeclaredStreamIsAccepted()

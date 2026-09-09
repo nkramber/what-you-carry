@@ -19,10 +19,11 @@ public sealed class BitIdentityTests
     /// A deliberate change to the simulation changes this number. G-20 asks the review to confirm the change and
     /// the version bump that goes with it. PR-6 set `283aa4b8cd1281be`, PR-7 moved it to `e8ef2b1fad938845` when
     /// the state gained a position, and PR-8 moved it to `92ef27ee175b3e7e` when the pitch clamp changed and the
-    /// sweep gained the camera. The PR #23 review moved it again, because the sweep folds the camera from the
-    /// replay observer now and not from a second live loop (F-85).
+    /// sweep gained the camera. The PR #23 review moved it to `afed0063a6cf8a50`, because the sweep folds the
+    /// camera from the replay observer and not from a second live loop (F-85). PR-9 moved it again when the
+    /// state gained the floor number, the sweep gained the floor generator, and the replay moved to a dug floor.
     /// </remarks>
-    private const string ExpectedHash = "afed0063a6cf8a50";
+    private const string ExpectedHash = "036df5c08e2682e3";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -117,5 +118,9 @@ public sealed class BitIdentityTests
         Assert.Contains("loop.Aim(", sweep, StringComparison.Ordinal);
         Assert.Contains(": IReplayObserver", sweep, StringComparison.Ordinal);
         Assert.DoesNotContain("new SimulationLoop(", sweep, StringComparison.Ordinal);
+
+        // PR-9 exit test 7: the sweep digs floors and folds every block, so the three platforms compare the generator.
+        Assert.Contains("FloorGenerator.Generate(", sweep, StringComparison.Ordinal);
+        Assert.Contains("plan.Grid.Get(", sweep, StringComparison.Ordinal);
     }
 }

@@ -1,0 +1,8 @@
+{
+  "id": "cavern",
+  "weight": 32,
+  "boxCountMin": 3,
+  "boxCountMax": 5,
+  "boxSizeMin": 5,
+  "boxSizeMax": 9
+}

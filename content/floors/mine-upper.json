@@ -5,5 +5,8 @@
   "roomCountMin": 5,
   "roomCountMax": 9,
   "difficultyBudget": 100,
-  "band": "working-mine"
+  "band": "working-mine",
+  "sizeX": 48,
+  "sizeY": 12,
+  "sizeZ": 48
 }

@@ -1,0 +1,8 @@
+{
+  "id": "lamp-room",
+  "weight": 8,
+  "boxCountMin": 1,
+  "boxCountMax": 1,
+  "boxSizeMin": 3,
+  "boxSizeMax": 5
+}

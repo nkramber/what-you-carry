@@ -1,11 +1,16 @@
 using System;
+using WhatYouCarry.Core.Content;
+using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The grids and the spawn points that the loop tests share (D-236): a flat stone floor under open air, and a random world.</summary>
+/// <summary>
+/// The worlds that the tests share: the repository content that the loop digs its floors from (D-236, PR-9), a
+/// flat stone floor under open air for the body tests, and a random world for the collision sweeps.
+/// </summary>
 internal static class TestWorld
 {
     /// <summary>The side of the flat floor, in blocks.</summary>
@@ -19,6 +24,9 @@ internal static class TestWorld
 
     /// <summary>The feet center over the middle of the floor.</summary>
     public static readonly Vector3 Spawn = new(4.5f, FloorTop, 4.5f);
+
+    /// <summary>The content set of this checkout, loaded once. Every loop test digs its floors from it.</summary>
+    public static readonly ContentSet Content = new ContentLoader(new RepositoryContentSource()).Load();
 
     /// <summary>A grid with one row of stone at the bottom and air above it.</summary>
     public static VoxelGrid FlatFloor()
@@ -77,9 +85,15 @@ internal static class TestWorld
         throw new InvalidOperationException("No column of the random grid has two air cells over the floor.");
     }
 
-    /// <summary>A loop at tick zero on the flat floor.</summary>
+    /// <summary>A loop at tick zero on floor 1 of the seed, dug from the repository content.</summary>
     public static SimulationLoop NewLoop(ulong seed)
     {
-        return new SimulationLoop(seed, FlatFloor(), Spawn);
+        return new SimulationLoop(seed, Content);
+    }
+
+    /// <summary>A body at rest at the spawn of the flat floor.</summary>
+    public static PlayerBody NewBody()
+    {
+        return new PlayerBody(FlatFloor(), Spawn);
     }
 }

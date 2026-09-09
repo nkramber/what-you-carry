@@ -26,7 +26,11 @@ public sealed class ContentTests
     }
 
     private const string Floor = """
-        {"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine"}
+        {"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48}
+        """;
+
+    private const string ChamberKindText = """
+        {"id":"k","weight":10,"boxCountMin":1,"boxCountMax":3,"boxSizeMin":3,"boxSizeMax":6}
         """;
 
     private const string StringTable = """
@@ -42,7 +46,7 @@ public sealed class ContentTests
     public void AbsentFieldNamesField()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"band":"working-mine"}""")
+            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -60,6 +64,9 @@ public sealed class ContentTests
     [InlineData("roomCountMax")]
     [InlineData("difficultyBudget")]
     [InlineData("band")]
+    [InlineData("sizeX")]
+    [InlineData("sizeY")]
+    [InlineData("sizeZ")]
     public void EveryRequiredFloorFieldIsRequired(string omitted)
     {
         List<JsonMember> members = [];
@@ -80,7 +87,7 @@ public sealed class ContentTests
     public void UnknownFieldFails()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","extra":1}""")
+            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"extra":1}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -95,6 +102,7 @@ public sealed class ContentTests
         ContentSet set = new ContentLoader(new RepositoryContentSource()).Load();
 
         Assert.Equal(3, set.Floors.Count);
+        Assert.Equal(8, set.Chambers.Count);
         Assert.Equal(2, set.Projectiles.Count);
         Assert.True(set.Strings.Count > 0);
         Assert.Equal(64, set.Hash.Length);
@@ -263,7 +271,7 @@ public sealed class ContentTests
     public void AFieldOfTheWrongKindIsAnError()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":1,"minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine"}""")
+            .Add("floors/a.json", """{"id":1,"minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -330,19 +338,103 @@ public sealed class ContentTests
         }
     }
 
-    /// <summary>The content source of this checkout, which reads the real `content/` directory.</summary>
-    private sealed class RepositoryContentSource : IContentSource
+    /// <summary>Every required field of a chamber kind is required, one at a time (D-255).</summary>
+    [Theory]
+    [InlineData("id")]
+    [InlineData("weight")]
+    [InlineData("boxCountMin")]
+    [InlineData("boxCountMax")]
+    [InlineData("boxSizeMin")]
+    [InlineData("boxSizeMax")]
+    public void EveryRequiredChamberKindFieldIsRequired(string omitted)
     {
-        public IReadOnlyList<ContentFile> Read()
+        List<JsonMember> members = [];
+        foreach (JsonMember member in JsonObjectReader.Read("chambers/k.json", Encoding.UTF8.GetBytes(ChamberKindText)))
         {
-            string root = Path.Combine(RepositoryRoot.Find(), "content");
-            List<ContentFile> files = [];
-            foreach (string file in Directory.EnumerateFiles(root, "*.json", SearchOption.AllDirectories))
+            if (member.Name != omitted)
             {
-                files.Add(new ContentFile(Path.GetRelativePath(root, file).Replace('\\', '/'), File.ReadAllBytes(file)));
+                members.Add(member);
             }
+        }
 
-            return files;
+        ContextException error = Assert.Throws<ContextException>(() => ChamberKind.FromMembers("chambers/k.json", members));
+        Assert.Contains(omitted, error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A chamber kind outside its bounds is an error that names the field: a weight below one, a box side below the tunnel width, a range upside down (D-166, D-255).</summary>
+    [Theory]
+    [InlineData("\"weight\":10", "\"weight\":0", "weight")]
+    [InlineData("\"boxCountMin\":1", "\"boxCountMin\":0", "boxCountMin")]
+    [InlineData("\"boxCountMin\":1", "\"boxCountMin\":4", "boxCountMin")]
+    [InlineData("\"boxCountMax\":3", "\"boxCountMax\":9", "boxCountMax")]
+    [InlineData("\"boxSizeMin\":3", "\"boxSizeMin\":2", "boxSizeMin")]
+    [InlineData("\"boxSizeMin\":3", "\"boxSizeMin\":7", "boxSizeMin")]
+    [InlineData("\"boxSizeMax\":6", "\"boxSizeMax\":17", "boxSizeMax")]
+    public void AChamberKindOutsideItsBoundsIsAnError(string from, string to, string field)
+    {
+        string text = ChamberKindText.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(ChamberKindText, text);
+
+        ContextException error = Assert.Throws<ContextException>(
+            () => ChamberKind.FromMembers("chambers/k.json", JsonObjectReader.Read("chambers/k.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A floor size past the grid limit, or below the smallest floor the dig plan can carve, is an error that names the axis (D-164, D-252).</summary>
+    [Theory]
+    [InlineData("\"sizeX\":48", "\"sizeX\":23", "sizeX")]
+    [InlineData("\"sizeX\":48", "\"sizeX\":129", "sizeX")]
+    [InlineData("\"sizeY\":12", "\"sizeY\":6", "sizeY")]
+    [InlineData("\"sizeY\":12", "\"sizeY\":33", "sizeY")]
+    [InlineData("\"sizeZ\":48", "\"sizeZ\":0", "sizeZ")]
+    [InlineData("\"difficultyBudget\":100", "\"difficultyBudget\":9", "difficultyBudget")]
+    public void AFloorSizeOutsideItsBoundsIsAnError(string from, string to, string field)
+    {
+        string text = Floor.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(Floor, text);
+
+        ContextException error = Assert.Throws<ContextException>(
+            () => FloorTemplate.FromMembers("floors/a.json", JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Two chamber kinds with one id are an error, because the draw would take either one.</summary>
+    [Fact]
+    public void ARepeatedChamberIdIsAnError()
+    {
+        MemorySource source = Valid()
+            .Add("chambers/k.json", ChamberKindText)
+            .Add("chambers/other.json", ChamberKindText);
+
+        ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
+        Assert.Contains("two chamber kinds", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>The chamber kinds of the checkout load with their weights, and the floors carry their sizes by band (D-252, D-255).</summary>
+    [Fact]
+    public void TheChamberKindsAndFloorSizesLoad()
+    {
+        ContentSet set = TestWorld.Content;
+
+        long lightest = long.MaxValue;
+        long heaviest = 0;
+        foreach (ChamberKind kind in set.Chambers)
+        {
+            lightest = Math.Min(lightest, kind.Weight);
+            heaviest = Math.Max(heaviest, kind.Weight);
+            Assert.True(kind.BoxSizeMin >= ChamberKind.SmallestBoxSide, $"The kind '{kind.Id}' has a box side of {kind.BoxSizeMin}, below the tunnel width.");
+        }
+
+        Assert.Equal(8, lightest);
+        Assert.Equal(40, heaviest);
+
+        foreach (FloorTemplate floor in set.Floors)
+        {
+            int expected = floor.MinDepth == 1 ? 48 : floor.MinDepth == 6 ? 72 : 96;
+            int expectedHeight = floor.MinDepth == 1 ? 12 : floor.MinDepth == 6 ? 16 : 20;
+            Assert.Equal(expected, floor.SizeX);
+            Assert.Equal(expectedHeight, floor.SizeY);
+            Assert.Equal(expected, floor.SizeZ);
         }
     }
 }
