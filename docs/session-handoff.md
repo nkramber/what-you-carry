@@ -29,7 +29,7 @@ Session: record the PR-9 merge, and answer the PR-59 questions before its code. 
 
 ### In flight
 
-PR #28 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). The label goes on after the last push. The automated pass runs on the push, and the author answers each comment before the override request. No other PR is open.
+PR #28 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). The automated pass approved `930b659`, every comment has its answer, and the label is on. The owner asked that the session apply the label itself from now on, after the last push and the pass. No other PR is open.
 
 ### Where Phase 1 stands
 
@@ -42,7 +42,7 @@ PR-1 to PR-9 are merged. PR-59, PR-10, and PR-11 remain, and then M-1, M-2, and 
 - PR-59 raises the simulation version to 5 and moves the bit-identity known answer (D-260, G-20). The sweep folds three floors of its own content set, so the detail pass moves the hash on its own.
 - The block ids are part of the grid (D-259). `VoxelGrid.Set` holds the explicit bound of declared ids, and `EveryDeclaredBlockIsAccepted` walks the enum, so a new value fails the test until the bound names it.
 - The typed lists of a content set are in ordinal path order, so `Floors[0]` is the deep band. A test that needs the template of a floor asks `FloorGenerator.TemplateFor`.
-- The override label goes stale on any push outside the metadata set (D-190). The owner removes and adds it again after the last push.
+- The override label goes stale on any push outside the metadata set (D-190). The session applies it after the last push and the automated pass, and adds it again after a later push.
 
 ### Open questions that block progress
 
@@ -50,7 +50,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-The owner adds the `review-override` label to PR #28 after the automated pass and merges it. Then a new session starts PR-59 on a short branch: the block ids of D-259 in `BlockId` and the grid bound, the water rule in `PlayerBody`, the detail pass with collapses, pillars, and the blocks by band, the simulation version 5, and the six exit tests, under D-210, D-239, D-253, D-254, and D-258 to D-263.
+The owner merges PR #28. Then a new session starts PR-59 on a short branch: the block ids of D-259 in `BlockId` and the grid bound, the water rule in `PlayerBody`, the detail pass with collapses, pillars, and the blocks by band, the simulation version 5, and the six exit tests, under D-210, D-239, D-253, D-254, and D-258 to D-263.
 
 
 ## Session 77: 2026-09-09, Codex
@@ -188,7 +188,7 @@ PR-1 to PR-8 are merged. PR-9, PR-59, PR-10, and PR-11 remain, and then M-1, M-2
 
 - The process since PR #23: gitar comments on every PR after a push (D-250). Answer every comment before the hand-over or the override request. A comment with no merit gets a reply and a resolve. A comment with merit gets the change, a push, and a reply. A comment on the PR body has no thread, so its reply is a PR comment. Tell the owner when the PR is ready for the other provider or for the override.
 - The "Review gate / evaluate" job line reads red until an approved review record covers the effective head (D-251). That is the design and not a failure to fix.
-- The override label goes stale on any push outside the metadata set (D-190). The owner removes and adds it again after the last push.
+- The override label goes stale on any push outside the metadata set (D-190). The session applies it after the last push and the automated pass, and adds it again after a later push.
 - Two open PRs that both add a handoff entry conflict at the top of the file, at the end of the register, at the end of the questions, and in the findings table. The second one to merge takes a merge from `main` first. Rebuild the handoff and the archive from the union of the entries, by number, with ten in the handoff and each entry once.
 - The effective head is the newest commit outside the metadata set, and a merge from `main` moves it. The review record names that commit.
 - PR-9 changes the loop state: the floor number joins the hash after the fields of PR-7, so the simulation version rises to 4 and the bit-identity hash moves (G-20). The replayer then takes the content set in place of the grid and the spawn, which closes D-236.
