@@ -22,11 +22,11 @@ Session: review PR-7 for the voxel grid, swept box, and player body. Branch `fea
 - `det-lint` passes with 0 findings. `ste-check` passes with 0 findings.
 - `bit-identity` gives `e8ef2b1fad938845`.
 - The Godot 4.7.2 headless build check passes.
-- The remote branch needs the review record and this handoff entry.
+- Remote head: `origin/feat/pr-7-world-collision` at `723522b`, which holds the review record and this handoff entry.
 
 ### In flight
 
-PR #21 is open with the verdict `Ready for owner merge` at effective head `4207548`. The owner can merge it after the review commit reaches the remote branch.
+PR #21 is open with the verdict `Ready for owner merge` at effective head `4207548`. The owner can merge it.
 
 ### Traps and gotchas
 
@@ -40,7 +40,7 @@ None. OQ-99 remains open, and it blocks nothing.
 
 ### Next concrete action
 
-Push the review commit, fetch the remote, and verify that the branch has no unpushed commits and that PR #21 still points to the reviewed effective head.
+The owner can merge PR #21. A new session starts after the owner merges it.
 
 ## Session 63: 2026-09-09, Claude Code
 
