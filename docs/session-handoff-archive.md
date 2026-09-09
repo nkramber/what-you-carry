@@ -1,5 +1,59 @@
 # Session handoff archive
 
+## Session 65: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: record the PR-7 merge, and answer the PR-8 questions before its code. Branch `docs/pr-7-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #21 as `d5f20ce`, after a Codex review with no finding.
+- Audited every document against the merged state. The registers were complete: D-235 to D-240, OQ-104 to OQ-109, and F-82 and F-83 all landed with the PR.
+- Three status lines were stale. The design doc PR-7 entry and its sequence line said open, and the focused roadmap said open. All three name the merge now.
+- The handoff held ten entries, because Session 64 archived one. This entry makes eleven, so Session 55 moves to the archive (D-146).
+- Asked seven owner questions in two batches, and D-241 to D-247 record the answers. OQ-110 to OQ-116 hold the questions.
+- D-241: the pitch limit is plus or minus 80 degrees for the loop and the camera. D-227 is revised in part, the pitch limit only.
+- D-242: the pivot sits 1.5 meters over the feet, the shoulder point is 0.6 right and 0.3 up, and the boom is 3 meters.
+- D-243: bit 8 of the buttons marks a controller aim on that tick. D-232 is revised in part, bit 8 only.
+- D-244: aim assist pulls the ray toward the nearest target inside a 5 degree cone, by half the angle.
+- D-245: Core derives the camera on each tick, and the camera holds no state.
+- D-246: the boom sweep is a ray march along the line, with a camera radius of 0.25 meters.
+- D-247: the aim ray starts at the camera, along the look direction.
+- The roadmap PR-8 scope cites the seven decisions, and it names the simulation version rise to 3 (G-20).
+
+### State of the build
+
+- `main` is at `d5f20ce`, the squash merge of PR #21. This branch holds the document commit above it.
+- Remote head: `origin/docs/pr-7-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 398 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 37 files, Game 0 in 0 files.
+- `ste-check`: 0 findings in 15 files. `bit-identity`: `e8ef2b1fad938845`.
+
+### In flight
+
+PR #22 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-7 are merged. PR-8 to PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- PR-8 changes the loop pitch clamp from 9000 to 8000 (D-241). `PitchClamps` in `SimulationTests`, the `PitchLimit` constant, and the D-227 remark in `SimulationLoop` change with it, and the simulation version rises to 3.
+- Bit 8 joins the assigned set (D-243). `Button.AssignedMask` becomes 0x01FF and `Button.ReservedMask` becomes 0xFE00. The random intent helper of the tests and the button mask of the bit-identity sweep follow, or the reserved-bit check throws.
+- The boom sweep is a ray march and not the PR-7 sweep (D-246). The PR-7 sweep runs one axis at a time and follows a staircase, so a diagonal boom through it ends beside the line.
+- The camera holds no state (D-245). The exit test hashes the aim ray and the camera position after a replay, and the loop hash gains no field.
+- The bit-identity hash moves again in PR-8, on purpose, and `BitIdentityKnownAnswer` pins the new value (G-20).
+- The pitch sign is not in any decision. PR-8 states which sign looks up, in the camera remark and in a test.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #22 with the `review-override` label. Then a new session starts PR-8 on a short branch: the orbit camera, the ray march of the boom, the aim ray, aim assist, and the five exit tests, under D-13, D-14, D-75, D-77, D-88, and D-241 to D-247.
+
 ## Session 64: 2026-09-09, Codex
 
 Author: Codex
