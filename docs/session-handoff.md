@@ -20,7 +20,7 @@ Session: answer the PR #40 review. Branch `feat/pr-58-night-gate`.
 
 - `main` is at `a2799f2`, the squash merge of PR #39. This branch holds the PR-58 commit, the byte-order-mark fix, the documents commit `2253e53`, the review commit `3e964a2`, and the correction that holds this entry above them.
 - Remote head: `origin/feat/pr-58-night-gate` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 533 tests, 0 failures.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 532 tests, 0 failures.
 - `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
 - `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
 
