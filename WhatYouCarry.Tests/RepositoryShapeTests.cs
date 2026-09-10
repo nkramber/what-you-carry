@@ -157,6 +157,20 @@ public sealed class RepositoryShapeTests
         Assert.Contains("02:00 Central Standard Time", workflow, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void NightWorkflowKeepsTheLogsOfAFailedNight()
+    {
+        // D-280: a failed night uploads its bot logs as a run artifact, on failure alone, and a night without logs says so.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        int upload = workflow.IndexOf("uses: actions/upload-artifact@v4", StringComparison.Ordinal);
+        Assert.True(upload > 0, "The night workflow has no upload-artifact step.");
+        string step = workflow[workflow.LastIndexOf("- name:", upload, StringComparison.Ordinal)..];
+        Assert.Contains("if: failure()", step, StringComparison.Ordinal);
+        Assert.Contains("path: bot-logs", step, StringComparison.Ordinal);
+        Assert.Contains("if-no-files-found: warn", step, StringComparison.Ordinal);
+        Assert.True(upload > workflow.IndexOf("Greedy descender, five thousand seeds", StringComparison.Ordinal), "The upload step comes before the bot steps.");
+    }
+
     /// <summary>
     /// The last step of the review-gate workflow passes the job on a success conclusion alone, so a neutral
     /// verdict, and a missing or unexpected conclusion, read red. A job cannot be neutral by its exit code
