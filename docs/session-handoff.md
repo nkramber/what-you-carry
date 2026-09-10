@@ -21,7 +21,8 @@ Session: repeat review PR #40 at effective head `d943cb3`. Branch `feat/pr-58-ni
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 532 tests, 0 failures, 0 skips.
 - `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`.
 - The Godot 4.7.2 headless build passes. The real `night-gate` probe passes against `origin/night-results` at `2026-09-10T22:00:00Z`.
-- The review commit is `0d10eba`. Gitar, det-lint, night-gate, STE check, and review-gate pass. CI, bit identity, and bots remain pending and are unverified.
+- The review commit is `0d10eba`. Its Gitar, det-lint, night-gate, STE check, and review-gate checks passed. The metadata tip is now `48ede21`, and its fresh checks are pending after the metadata push.
+- Remote head: `origin/feat/pr-58-night-gate` at `48ede21`, checked after the push. The checkout has no ahead count.
 
 ### In flight
 
