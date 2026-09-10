@@ -13,6 +13,7 @@ using Xunit;
 namespace WhatYouCarry.Tests;
 
 /// <summary>The bot policies, the run, the runner command, and the night record (D-115, D-127, D-270 to D-273; PR-11 exit tests 1 to 4 and 7).</summary>
+[Collection(ConsoleCollection.Name)]
 public sealed class BotTests
 {
     /// <summary>A fixture policy that stands still and promises progress, so its run reads softlock.</summary>

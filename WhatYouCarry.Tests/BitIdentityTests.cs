@@ -8,6 +8,7 @@ using Xunit;
 namespace WhatYouCarry.Tests;
 
 /// <summary>The bit-identity sweep and its command (D-69, D-71, D-201; PR-3 exit test 8).</summary>
+[Collection(ConsoleCollection.Name)]
 public sealed class BitIdentityTests
 {
     /// <summary>
