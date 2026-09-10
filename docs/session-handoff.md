@@ -15,7 +15,8 @@ Session: PR-11, the bot harness, the two policies, the runner, and the night wor
 - `Tools/BotRunner/`: `bot-run` loads the content of the checkout, plays a seed range with a policy, and writes two log lines per run through the PR-4 logger into one file per run. It exits nonzero on a crash, or a softlock on a policy that promises progress. `night-record` writes the record of D-273.
 - `.github/workflows/bots.yml` plays one hundred seeds per policy on every PR. `.github/workflows/night.yml` runs the scheduled night on the macOS runner at 03:00 UTC: five thousand seeds per policy, the reachability sweeps at one hundred thousand seeds, and the record on the orphan branch `night-results`, whatever the outcome.
 - The stairwell test drives the greedy descender until it asks for the stairwell choice, instead of a walker of its own.
-- Exit tests 1 to 4 and 7 pass among 517 tests. A local run of the PR job gave one hundred budget ends for the walker and one hundred bottom ends for the descender, with zero crashes.
+- Exit tests 1 to 4 and 7 pass among 517 tests. A local run of the PR job gave one hundred budget ends for the walker and one hundred bottom ends for the descender, with zero crashes. The bots job passed on the push too.
+- The automated pass on `8a7367f` found two edges with merit. A broken build left no binary for `night-record`, so the branch would keep a stale record: the publish step writes the failure record in shell when the file is absent now. The seed loop could wrap at the largest seed: the loop runs by the count of seeds now, with a bound of one million. Commit `0536f7e` holds both, with a test for the ranges.
 
 ### State of the build
 
@@ -28,7 +29,7 @@ Session: PR-11, the bot harness, the two policies, the runner, and the night wor
 
 ### In flight
 
-PR #34 is open and it holds this branch. The automated pass and the new bots job run on the push, and the author answers each comment. Then a Codex session reviews the PR at the effective head, which is `8a7367f` until a substantive push moves it. The review focus is determinism, errors, input and CI boundaries, and test quality (roadmap PR-11). No other PR is open.
+PR #34 is open and it holds this branch. The automated pass approved `8a7367f` with two edges, and `0536f7e` answers both, so the effective head is `0536f7e`. A Codex session reviews the PR at it. The review focus is determinism, errors, input and CI boundaries, and test quality (roadmap PR-11). No other PR is open.
 
 ### Where Phase 1 stands
 
@@ -49,7 +50,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-Read the gitar comments on PR #34 and answer each one per the `pr-review` skill. Then a Codex session reviews PR #34 at the effective head, reads the PR comments into the review, and writes `docs/reviews/pr-34.md`. The review confirms the bit-identity change under G-20 and the workflow permissions under the input and CI boundaries.
+A Codex session reviews PR #34 per the `pr-review` skill at the effective head `0536f7e`, reads the PR comments and the author replies into the review, and writes `docs/reviews/pr-34.md`. The review confirms the bit-identity change under G-20 and the workflow permissions under the input and CI boundaries.
 
 
 ## Session 88: 2026-09-10, Claude Code
