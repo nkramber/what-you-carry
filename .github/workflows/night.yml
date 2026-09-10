@@ -1,7 +1,9 @@
 # The scheduled night on the self-hosted macOS runner (D-115, D-116, D-117, D-157, D-177; PR-11 exit tests 6 and 7).
 # Five thousand bot runs per policy, and the reachability sweep of PR-9 at one hundred thousand seeds. The last
-# step writes night.json with the commit, the end time, and the status, whatever the outcome, and commits it to
-# the orphan branch night-results, which holds that one file (D-273). PR-58 adds the gate that reads it.
+# two steps write night.json with the commit, the end time, and the status, whatever the outcome, and commit it
+# to the orphan branch night-results, which holds that one file (D-273). When the build itself fails, the
+# publish step writes the failure record in shell, so the branch never keeps a stale success. PR-58 adds the
+# gate that reads it.
 name: Night
 
 on:
@@ -38,6 +40,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # A broken build leaves no binary for night-record, so the shell writes the failure record itself.
+          if [ ! -f "${RUNNER_TEMP}/night.json" ]; then
+            printf '{"commit":"%s","endedAt":"%s","status":"failure"}\n' "${GITHUB_SHA}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${RUNNER_TEMP}/night.json"
+          fi
           work="${RUNNER_TEMP}/night-results"
           rm -rf "$work"
           git worktree add --detach "$work" HEAD

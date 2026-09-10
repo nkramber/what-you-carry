@@ -30,6 +30,9 @@ public static class BotRunCommand
     public const string FloorsReachedName = "floorsReached";
     public const string ErrorName = "error";
 
+    /// <summary>The largest count of seeds in one command. The night runs five thousand, and a range past this is a typo.</summary>
+    public const ulong LargestSpan = 1000000;
+
     private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender> --seeds <from>-<to> --output <directory> --root <checkout>";
 
     public static int Run(string[] args)
@@ -73,13 +76,22 @@ public static class BotRunCommand
             return 2;
         }
 
+        if (to - from >= LargestSpan)
+        {
+            Console.Error.WriteLine($"The seed range '{seeds}' holds more than {LargestSpan} seeds. {Usage}");
+            return 2;
+        }
+
         ContentSet content = new ContentLoader(new DirectoryContentSource(Path.Combine(root, "content"))).Load();
         Directory.CreateDirectory(output);
 
         int[] counts = new int[4];
         bool promises = false;
-        for (ulong seed = from; seed <= to; seed++)
+        // The count and not the seed drives the loop, so a range that ends at the largest seed cannot wrap.
+        ulong span = to - from + 1;
+        for (ulong offset = 0; offset < span; offset++)
         {
+            ulong seed = from + offset;
             IBotPolicy bot = CreatePolicy(policy, seed, content);
             promises = bot.PromisesProgress;
             BotRunResult result = BotRun.Play(bot, seed, content);

@@ -220,6 +220,11 @@ public sealed class BotTests
             ContextException error = Assert.Throws<ContextException>(() => BotRunCommand.CreatePolicy("sleeper", 1UL, TestWorld.Content));
             Assert.Contains("policy=sleeper", error.Message, StringComparison.Ordinal);
             Assert.Equal(2, Program.Main(["bot-run", "--policy", RandomWalker.PolicyName, "--seeds", "5-1", "--output", output, "--root", RepositoryRoot.Find()]));
+
+            // A range that ends at the largest seed, or one past the largest span, is refused before any run (PR #34 automated pass).
+            Assert.Equal(2, Program.Main(["bot-run", "--policy", RandomWalker.PolicyName, "--seeds", "0-18446744073709551615", "--output", output, "--root", RepositoryRoot.Find()]));
+            Assert.Equal(2, Program.Main(["bot-run", "--policy", RandomWalker.PolicyName, "--seeds", "1-1000001", "--output", output, "--root", RepositoryRoot.Find()]));
+            Assert.Empty(Directory.GetFiles(output));
             Assert.Equal(2, Program.Main(["bot-run", "--policy", RandomWalker.PolicyName, "--seeds", "1-1", "--output", output]));
             Assert.Equal(2, Program.Main(["bot-run", "--policy"]));
         }
