@@ -1,4 +1,5 @@
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 
 namespace WhatYouCarry.Core.Projectiles;
@@ -25,8 +26,31 @@ public static class ArcSolver
     /// <summary>The low-arc direction from one point to another for one speed and one gravity, or the report that the target is out of reach.</summary>
     /// <param name="speed">The launch speed, in meters per second, above zero.</param>
     /// <param name="gravity">The downward acceleration, in meters per second squared, zero or above.</param>
+    /// <exception cref="ContextException">The speed is not finite or not above zero, the gravity is not finite or below zero, or a point is not finite.</exception>
     public static ArcSolution Solve(float speed, float gravity, Vector3 from, Vector3 to)
     {
+        if (!float.IsFinite(speed) || speed <= 0.0f)
+        {
+            ContextException error = new($"The arc solver needs a finite speed above zero, and the speed is {speed}.");
+            error.AddContext("speed", speed.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+            throw error;
+        }
+
+        if (!float.IsFinite(gravity) || gravity < 0.0f)
+        {
+            ContextException error = new($"The arc solver needs a finite gravity of zero or above, and the gravity is {gravity}.");
+            error.AddContext("gravity", gravity.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+            throw error;
+        }
+
+        if (!IsFinite(from) || !IsFinite(to))
+        {
+            ContextException error = new($"The arc solver needs two finite points, and the points are {from} and {to}.");
+            error.AddContext("from", from.ToString());
+            error.AddContext("to", to.ToString());
+            throw error;
+        }
+
         Vector3 offset = to - from;
         float horizontal = DetMath.Sqrt((offset.X * offset.X) + (offset.Z * offset.Z));
         float height = offset.Y;
@@ -58,6 +82,12 @@ public static class ArcSolver
         float sinAngle = DetMath.Sin(angle);
         Vector3 direction = new(offset.X / horizontal * cosAngle, sinAngle, offset.Z / horizontal * cosAngle);
         return new ArcSolution(true, direction);
+    }
+
+    /// <summary>Answers whether every component of a point is finite.</summary>
+    private static bool IsFinite(Vector3 point)
+    {
+        return float.IsFinite(point.X) && float.IsFinite(point.Y) && float.IsFinite(point.Z);
     }
 }
 

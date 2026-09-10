@@ -23,9 +23,10 @@ public sealed class BitIdentityTests
     /// camera from the replay observer and not from a second live loop (F-85). PR-9 moved it again when the
     /// state gained the floor number, the sweep gained the floor generator, and the replay moved to a dug floor.
     /// PR-59 moved it from `036df5c08e2682e3` when the detail pass changed every dug floor (D-260). PR-10 moved
-    /// it from `62c5e1d152fe94fe` when the state gained the projectiles and the sweep intents began to fire.
+    /// it from `62c5e1d152fe94fe` when the state gained the projectiles and the sweep intents began to fire, and
+    /// the PR #31 review moved it again when the spread draw became one angle and one roll inside the cone (F-87).
     /// </remarks>
-    private const string ExpectedHash = "3220e92dcbca55a2";
+    private const string ExpectedHash = "d8943df12fefcbee";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

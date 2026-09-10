@@ -265,6 +265,24 @@ public sealed class ProjectileTests
         Assert.False(ArcSolver.Solve(speed, 0.0f, origin, origin).Reachable);
     }
 
+    /// <summary>A speed of zero or below, a gravity below zero, or a value that is not finite is an error that names it, and never a direction (T-2; PR #31 review P2-2).</summary>
+    [Theory]
+    [InlineData(0.0f, 10.0f, "speed")]
+    [InlineData(-5.0f, 10.0f, "speed")]
+    [InlineData(float.NaN, 10.0f, "speed")]
+    [InlineData(float.PositiveInfinity, 10.0f, "speed")]
+    [InlineData(20.0f, -1.0f, "gravity")]
+    [InlineData(20.0f, float.NaN, "gravity")]
+    public void ArcSolverRejectsABadSpeedOrGravity(float speed, float gravity, string field)
+    {
+        Vector3 origin = new(0.0f, 0.0f, 0.0f);
+        ContextException error = Assert.Throws<ContextException>(() => ArcSolver.Solve(speed, gravity, origin, new Vector3(0.0f, 5.0f, 0.0f)));
+        Assert.Contains($"{field}=", error.Message, StringComparison.Ordinal);
+
+        ContextException point = Assert.Throws<ContextException>(() => ArcSolver.Solve(20.0f, 10.0f, origin, new Vector3(float.NaN, 0.0f, 0.0f)));
+        Assert.Contains("to=", point.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// PR-10 exit test 5. A run with shots on a dug floor replays to the live end hash, and a run without shots
     /// gives another hash. The bit-identity sweep fires shots on its own, so the three platforms assert the same.
@@ -343,35 +361,49 @@ public sealed class ProjectileTests
         Assert.Equal(ProjectileEndKind.Grid, Assert.Single(ownEnds).Kind);
     }
 
-    /// <summary>The spread stays inside the cone of the definition, spreads at all, and a zero spread keeps the direction exactly (D-266).</summary>
+    /// <summary>
+    /// The spread never leaves the cone of the definition, along any axis and at the boundary draw, it spreads
+    /// at all, and a zero spread keeps the direction exactly (D-266; PR #31 review P2-1).
+    /// </summary>
     [Fact]
     public void SpreadStaysInsideTheCone()
     {
         VoxelGrid grid = TestWorld.FlatFloor(64, 30);
-        ProjectileSimulation simulation = Simulation(grid);
-        Rng spread = Rng.ForStream(5UL, RngStream.Projectile);
-        Vector3 axis = new(0.0f, 0.0f, -1.0f);
         int wide = Index("test-wide-spread");
+        double halfAngle = Definition("test-wide-spread").SpreadHundredths / 100.0;
+        Vector3[] axes =
+        [
+            new(0.0f, 0.0f, -1.0f),
+            new(1.0f, 0.0f, 0.0f),
+            new(0.0f, 1.0f, 0.0f),
+            new(0.0f, -1.0f, 0.0f),
+            new(3.0f, 4.0f, -5.0f),
+        ];
+
         double widest = 0.0;
-        for (int shot = 0; shot < 1000; shot++)
+        foreach (Vector3 axis in axes)
         {
-            simulation.Fire(wide, Source, new Vector3(32.0f, 15.0f, 32.0f), axis, spread);
+            ProjectileSimulation simulation = Simulation(grid);
+            Rng spread = Rng.ForStream(5UL, RngStream.Projectile);
+            for (int shot = 0; shot < 1000; shot++)
+            {
+                simulation.Fire(wide, Source, new Vector3(32.0f, 15.0f, 32.0f), axis, spread);
+            }
+
+            foreach (Projectile projectile in simulation.Live)
+            {
+                double degrees = DegreesBetween(projectile.Velocity, axis);
+                widest = Math.Max(widest, degrees);
+                Assert.True(degrees <= halfAngle + 0.01, $"A shot along {axis} spread by {degrees} degrees, past the half angle {halfAngle}.");
+                Assert.InRange(projectile.Velocity.Length(), 39.99f, 40.01f);
+            }
         }
 
-        foreach (Projectile projectile in simulation.Live)
-        {
-            double degrees = DegreesBetween(projectile.Velocity, axis);
-            widest = Math.Max(widest, degrees);
-
-            // A yaw offset and a pitch offset of at most 15 degrees each stay inside 22 degrees together.
-            Assert.True(degrees <= 22.0, $"A shot spread by {degrees} degrees, past the cone.");
-            Assert.InRange(projectile.Velocity.Length(), 39.99f, 40.01f);
-        }
-
-        Assert.True(widest > 10.0, $"The widest of one thousand shots spread {widest} degrees.");
+        Assert.True(widest > halfAngle - 1.0, $"The widest of five thousand shots spread {widest} degrees, well inside the half angle {halfAngle}.");
+        Assert.True(widest <= halfAngle + 0.01, $"The widest shot spread {widest} degrees.");
 
         ProjectileSimulation exact = Simulation(grid);
-        exact.Fire(Index("test-fast-flat"), Source, new Vector3(32.0f, 15.0f, 32.0f), new Vector3(3.0f, 0.0f, -4.0f), spread);
+        exact.Fire(Index("test-fast-flat"), Source, new Vector3(32.0f, 15.0f, 32.0f), new Vector3(3.0f, 0.0f, -4.0f), Rng.ForStream(5UL, RngStream.Projectile));
         Assert.Equal(new Vector3(180.0f, 0.0f, -240.0f), exact.Live[0].Velocity);
     }
 

@@ -53,7 +53,8 @@ public sealed class ProjectileSimulation
 
     /// <summary>
     /// Fires one projectile of a definition from a point along a direction, with the spread of the definition
-    /// drawn from the stream: one yaw offset and one pitch offset, each uniform inside the half angle (D-266).
+    /// drawn from the stream: an angle from the direction, uniform from zero to the half angle, and a roll
+    /// around the direction, uniform over a full turn, so every shot stays inside the cone (D-266).
     /// </summary>
     /// <exception cref="ContextException">The definition index is outside the list, or the direction has no length.</exception>
     public void Fire(int definition, int owner, Vector3 origin, Vector3 direction, Rng rng)
@@ -78,9 +79,9 @@ public sealed class ProjectileSimulation
         Vector3 unit = direction * (1.0f / length);
         if (shape.SpreadHundredths > 0)
         {
-            int yawOffset = rng.NextInt((2 * shape.SpreadHundredths) + 1) - shape.SpreadHundredths;
-            int pitchOffset = rng.NextInt((2 * shape.SpreadHundredths) + 1) - shape.SpreadHundredths;
-            unit = Turn(unit, yawOffset * RadiansPerHundredth, pitchOffset * RadiansPerHundredth);
+            int angle = rng.NextInt(shape.SpreadHundredths + 1);
+            int roll = rng.NextInt(36000);
+            unit = Turn(unit, angle * RadiansPerHundredth, roll * RadiansPerHundredth);
         }
 
         float speed = shape.SpeedCentimetres / 100.0f;
@@ -213,18 +214,19 @@ public sealed class ProjectileSimulation
     }
 
     /// <summary>
-    /// Turns a unit direction by a yaw offset and a pitch offset, in radians. The yaw turns counterclockwise seen
-    /// from above, and a positive pitch lifts the direction (D-234, D-248). A vertical direction takes yaw zero.
+    /// Turns a unit direction away from itself by an angle, toward a roll around itself, in radians. The two
+    /// sides of the cone come from the cross products with the world up, or with the world right when the
+    /// direction is vertical, so the roll runs around the direction and the angle stays exact (D-266).
     /// </summary>
-    private static Vector3 Turn(Vector3 unit, float yawOffset, float pitchOffset)
+    private static Vector3 Turn(Vector3 unit, float angle, float roll)
     {
-        float horizontal = DetMath.Sqrt((unit.X * unit.X) + (unit.Z * unit.Z));
-        float yaw = horizontal == 0.0f ? 0.0f : DetMath.Atan2(-unit.X, -unit.Z);
-        float pitch = DetMath.Atan2(unit.Y, horizontal);
-        float newYaw = yaw + yawOffset;
-        float newPitch = DetMath.Clamp(pitch + pitchOffset, -DetMath.HalfPi, DetMath.HalfPi);
+        Vector3 axis = unit.Y > 0.999f || unit.Y < -0.999f ? new Vector3(1.0f, 0.0f, 0.0f) : new Vector3(0.0f, 1.0f, 0.0f);
+        Vector3 side = Vector3.Cross(unit, axis);
+        side *= 1.0f / side.Length();
+        Vector3 lift = Vector3.Cross(side, unit);
 
-        float cosPitch = DetMath.Cos(newPitch);
-        return new Vector3(-DetMath.Sin(newYaw) * cosPitch, DetMath.Sin(newPitch), -DetMath.Cos(newYaw) * cosPitch);
+        float sinAngle = DetMath.Sin(angle);
+        Vector3 across = (side * DetMath.Cos(roll)) + (lift * DetMath.Sin(roll));
+        return (unit * DetMath.Cos(angle)) + (across * sinAngle);
     }
 }
