@@ -17,7 +17,7 @@ Session: repeat review PR #31 at effective head `1b58d3a`. Branch `feat/pr-10-pr
 
 ### State of the build
 
-- `main` is at `4687081`, the squash merge of PR #30. The PR effective head is `1b58d3a`. The remote tip before this review record update is `33dfb2a`.
+- `main` is at `4687081`, the squash merge of PR #30. The PR effective head is `1b58d3a`. The remote tip before this review record update was `33dfb2a`. The review record was published in `e5cb108`.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 506 tests, 0 failures.
 - `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
 - `bit-identity`: `d8943df12fefcbee`. The simulation version is 6.
@@ -40,7 +40,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-Commit the updated review record and this handoff entry together. Push them, fetch, verify that the branch has no ahead count, and check that the review-gate result approves effective head `1b58d3a`.
+The review record and this handoff entry are published in `e5cb108`. Fetch, verify that the branch has no ahead count, and check that the review-gate result approves effective head `1b58d3a`.
 
 ## Session 84: 2026-09-09, Claude Code
 
