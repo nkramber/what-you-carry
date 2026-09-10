@@ -88,6 +88,60 @@ public sealed class ReviewGateRulesTests
         Assert.Equal(ReviewGateResult.Success, result.Conclusion);
     }
 
+    /// <summary>A section whose heading starts with the words of the Verdict heading is another section, so a history of earlier verdicts above it does not change the verdict (D-269, F-89).</summary>
+    [Fact]
+    public void ReviewGateReadsTheExactVerdictHeading()
+    {
+        string text = ReviewFixture.Text(Head, "Ready for owner merge")
+            .Replace("## Verdict\n", "## Verdict history\n\nThe first pass gave the verdict Changes required for an earlier head.\n\n## Verdict\n", StringComparison.Ordinal);
+        ReviewGateResult result = ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: text));
+        Assert.Equal(ReviewGateResult.Success, result.Conclusion);
+
+        string history = ReviewFixture.Text(Head, "Ready for owner merge")
+            .Replace("## Verdict\n", "## Earlier verdicts\n\nChanges required at first.\n\n## Verdict\n", StringComparison.Ordinal);
+        Assert.Equal(ReviewGateResult.Success, ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: history)).Conclusion);
+    }
+
+    /// <summary>A Verdict section that names two verdicts is an error that names both, and never the first one (D-269, F-89).</summary>
+    [Fact]
+    public void ReviewGateFailsOnTwoVerdictNames()
+    {
+        string text = ReviewFixture.Text(Head, "Ready for owner merge")
+            .Replace("## Verdict\n", "## Verdict\n\nPrevious verdict: **Changes required** for an earlier head.\n", StringComparison.Ordinal);
+        ReviewGateResult result = ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: text));
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains("names 2 verdicts", result.Summary, StringComparison.Ordinal);
+        Assert.Contains("Changes required, Ready for owner merge", result.Summary, StringComparison.Ordinal);
+        Assert.Contains("D-269", result.Summary, StringComparison.Ordinal);
+
+        string reversed = ReviewFixture.Text(Head, "Changes required")
+            .Replace("One sentence of reason.", "The author asked for Ready for owner merge, and the evidence says no.", StringComparison.Ordinal);
+        Assert.Equal(ReviewGateResult.Failure, ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: reversed)).Conclusion);
+        Assert.Contains("names 2 verdicts", ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: reversed)).Summary, StringComparison.Ordinal);
+    }
+
+    /// <summary>Every review record of the repository parses with one head and one verdict name, so a reviewer sees a second name locally before the push (D-269).</summary>
+    [Fact]
+    public void EveryRepositoryReviewRecordHoldsOneVerdict()
+    {
+        string root = System.IO.Path.Combine(RepositoryRoot.Find(), "docs", "reviews");
+        int records = 0;
+        foreach (string file in System.IO.Directory.EnumerateFiles(root, "pr-*.md"))
+        {
+            if (file.EndsWith("-response.md", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            records++;
+            ReviewRecord? record = ReviewRecord.TryParse(System.IO.File.ReadAllText(file), out string error);
+            Assert.True(record is not null, $"{System.IO.Path.GetFileName(file)}: {error}");
+            Assert.Contains(record!.Verdict, ReviewRecord.VerdictNames);
+        }
+
+        Assert.True(records >= 10, $"The repository holds {records} review records.");
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

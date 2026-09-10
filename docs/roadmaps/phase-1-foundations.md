@@ -1,6 +1,6 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, PR-59, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-268. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, PR-59, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, and D-200 to D-269. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
