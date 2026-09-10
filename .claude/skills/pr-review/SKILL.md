@@ -419,11 +419,12 @@ Do these steps in order after the author revises the PR.
 7. Add any new finding with the next index in its severity.
 8. Update the Identity list to the new effective head.
 9. Update the Verification section with the commands that ran on the new head.
-10. Write the verdict against the new head.
+10. Write the verdict against the new head. Keep one verdict name in the Verdict section (D-269).
 11. Commit the review record and the handoff entry together, then run the session end gate (D-182, D-183, D-199).
 
 Edit the existing `docs/reviews/pr-<number>.md`. Do not create a second file for the same PR.
 Do not delete the prior verdict. Replace it, and keep each finding and its history.
+Put the earlier verdict in a section above the Verdict section, under a heading that starts with another word, such as `## Earlier verdicts`. The gate reads the section under the exact heading `## Verdict`, and it fails a section that names two verdicts (D-269). `dotnet test` reads every review record the same way, so run it before the push.
 Close a finding only when the evidence establishes the fix or an owner decision resolves it.
 Record any required check that still waits for a result.
 
