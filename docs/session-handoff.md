@@ -2,6 +2,48 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 93: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: record the PR-11 merge, and file the PR-58 questions before its code. Branch `docs/pr-11-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #34 as `7487473` at 12:43 UTC, after the Codex repeat review of Session 92. The design doc PR-11 entry reads merged, the roadmap PR-11 entry has its status line, and the sequence marks item 19. The correction note records F-90.
+- Exit tests 1 to 5 and 7 of PR-11 passed before the merge. Exit test 6 reads the first scheduled night, and the roadmap status line says so.
+- Read the PR-58 entry for the questions that its code needs. The record of D-273 holds no event, and a hand run of the night workflow writes the same record, so the gate cannot tell a scheduled night from a hand run. The roadmap says nothing about the commit that a record names. OQ-142 and OQ-143 hold the two questions, each with a recommendation, and the session picked no default (D-124).
+- No owner answer arrived, so `docs/decisions.md` did not change.
+- Session 83 moved to the archive.
+
+### State of the build
+
+- `main` is at `7487473`, the squash merge of PR #34. This branch holds the document commit above it, and this entry above that.
+- Remote head: `origin/docs/pr-11-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- The push checks on `7487473` passed: CI on the three platforms, bit identity, bots, determinism lint, and STE check.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures. No code changed.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The runner `mac-mini-m4` is online, from `/Volumes/SSD-1TB/actions-runner` on this machine. The branch `night-results` does not exist yet, and no night has run.
+
+### In flight
+
+This PR holds the merge record and the two questions. It changes no code, so the `review-override` label covers it (D-188, D-190). The first scheduled night runs at 03:00 UTC on 2026-09-11 on the runner, and it writes `night.json` to `night-results`. No other PR is open. PR-1 to PR-11 and PR-59 are merged. One scheduled night runs, then PR-58 opens, and M-1 and M-2 reach Gate 1. The M-1 table has no rows yet, and M-2 starts with the first night.
+
+### Traps and gotchas
+
+- A hand run of the night workflow writes the same record as a scheduled night, at the commit of the branch it runs on. Wait for the scheduled night, so that the first record is one that the PR-58 gate reads, whatever the answers to OQ-142 and OQ-143.
+- The publish step of the night adds a worktree and an orphan branch inside the checkout of the runner, and the runner keeps that checkout between jobs. No second night has run yet. If a later night fails at the publish step, read `git worktree list` and `git branch` in the runner checkout first.
+- The night workflow has `contents: write` and force-pushes `night-results` (D-273). Nothing else pushes there.
+- The `review-override` label goes on after the last push and after the automated pass.
+
+### Open questions that block progress
+
+OQ-142 and OQ-143 block PR-58. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner answers OQ-142 and OQ-143, and a session records the answers as the next D-# ids. After the first scheduled night writes `night.json` to `night-results`, a session opens PR-58 from `main`, and its exit test 7 reads the real record. The same session starts the M-2 table with the duration of the first night.
+
 ## Session 92: 2026-09-10, Codex
 
 Author: Codex
@@ -399,43 +441,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 The owner can merge PR #31 after the remote review-gate check reads `Ready for owner merge` at the effective head `1b58d3a`.
-
-
-## Session 83: 2026-09-09, Codex
-
-Author: Codex
-Session: review PR #31 at effective head `c214d03`. Branch `feat/pr-10-projectiles`.
-
-### What this session did, and why
-
-- Verified the provider gate. Session 82 identifies Claude Code as the author of PR-10, and Codex is the eligible reviewer.
-- Read the complete PR diff, the PR-10 roadmap entry and exit tests, the affected Core callers, the content validator, the replay hash, the bit-identity sweep, the decisions, the questions, and the PR comments and author reply.
-- Found two P2 findings. The spread code samples a square of yaw and pitch offsets, so a shot can leave the declared cone. `ArcSolver` accepts zero or negative physics inputs without a contextual error.
-- Wrote `docs/reviews/pr-31.md` with the verdict `Changes required` for effective head `c214d03`.
-
-### State of the build
-
-- `main` is at `4687081`, the squash merge of PR #30. The PR tip is `b48cc71`, with metadata commits `ec76f0e` and `b48cc71` after effective head `c214d03`.
-- `dotnet build`: pass. `dotnet test`: 500 tests, 0 failures.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `3220e92dcbca55a2`. The simulation version is 6.
-- The Godot 4.7.2 headless build check passes.
-- GitHub CI has passing bit-identity, compare, CI, determinism lint, STE, and Gitar checks. The review-gate evaluate job fails because the review file was absent before this session. The review record now names the two required corrections.
-
-### In flight
-
-PR #31 needs the two findings corrected and a new cross-provider review at the new effective head. The review record and this handoff entry are pushed at `b15c784`.
-
-### Traps and gotchas
-
-- The effective head is `c214d03`, not the PR tip, because the two later commits change only the metadata paths allowed by D-184.
-- The spread test permits 22 degrees for a 15-degree definition. That threshold hides the square-sampling defect.
-- The handoff records the one-tick lifetime grace described by the implementation. This review did not raise it because the prior session treats it as intentional and the projectile age remains within the lifetime.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The author corrects P2-1 and P2-2, runs the full gates, and asks for a repeat review. The repeat review keeps the finding ids and updates the same review record to the new effective head.
