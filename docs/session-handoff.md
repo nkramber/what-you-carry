@@ -2,6 +2,44 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 103: 2026-09-10, Codex
+
+Author: Codex
+Session: repeat review PR #40 at effective head `d943cb3`. Branch `feat/pr-58-night-gate`.
+
+### What this session did, and why
+
+- Recomputed the PR identity. The base and merge base are `a2799f2`. The effective head is `d943cb3`. The tip `bcb934e` changes review and handoff metadata only.
+- Verified the cross-provider gate. Claude Code authored the substantive PR change and its correction. Codex is the eligible reviewer.
+- Reproduced P1-1 at the correction boundary. A planted checkout record fails when the remote has no branch. A branch without `night.json` is absent. A remote failure record wins over the planted success record. An unreachable remote reports an error.
+- Verified the adjacent byte-order-mark parser case, command exit cases, workflow shape test, full-history checkout, and the remote-read path. P1-1 has full merit at the prior head and is corrected at `d943cb3`.
+- Updated `docs/reviews/pr-40.md` with the finding disposition and the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `a2799f2`. The PR branch is at `bcb934e` before this review commit. The effective implementation head is `d943cb3`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 532 tests, 0 failures, 0 skips.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`.
+- The Godot 4.7.2 headless build passes. The real `night-gate` probe passes against `origin/night-results` at `2026-09-10T22:00:00Z`.
+- The remote PR checks at `bcb934e` pass except `evaluate`, which still reads the prior `Changes required` record. The review commit triggers a fresh review-gate run.
+
+### In flight
+
+PR #40 waits for the review-gate check to read this record at the effective head. No other PR is open.
+
+### Traps and gotchas
+
+- The review record must name `d943cb3`, not the metadata tip. The metadata set is `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184).
+- The real-remote probe first failed because the sandbox could not resolve `github.com`. The approved retry passed. Treat the first result as an execution-context failure.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit and push the review record and this handoff entry. Fetch the remote and verify that the review-gate check reads `Ready for owner merge` at `d943cb3`.
+
 ## Session 102: 2026-09-10, Claude Code
 
 Author: Claude Code
@@ -361,45 +399,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A session fills the M-1 table in the Phase 1 roadmap from the push runs on `main` for the ten merged PRs since PR-3, one row per PR with the CI job durations per platform (D-276). After the first scheduled night, a session opens PR-58 from `main`.
-
-## Session 93: 2026-09-10, Claude Code
-
-Author: Claude Code
-Session: record the PR-11 merge, and file the PR-58 questions before its code. Branch `docs/pr-11-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #34 as `7487473` at 12:43 UTC, after the Codex repeat review of Session 92. The design doc PR-11 entry reads merged, the roadmap PR-11 entry has its status line, and the sequence marks item 19. The correction note records F-90.
-- Exit tests 1 to 5 and 7 of PR-11 passed before the merge. Exit test 6 reads the first scheduled night, and the roadmap status line says so.
-- Read the PR-58 entry for the questions that its code needs. The record of D-273 holds no event, and a hand run of the night workflow writes the same record, so the gate cannot tell a scheduled night from a hand run. The roadmap says nothing about the commit that a record names. OQ-142 and OQ-143 hold the two questions, each with a recommendation, and the session picked no default (D-124).
-- No owner answer arrived, so `docs/decisions.md` did not change.
-- Session 83 moved to the archive.
-
-### State of the build
-
-- `main` is at `7487473`, the squash merge of PR #34. This branch holds the document commit above it, and this entry above that.
-- Remote head: `origin/docs/pr-11-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- The push checks on `7487473` passed: CI on the three platforms, bit identity, bots, determinism lint, and STE check.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures. No code changed.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-- The runner `mac-mini-m4` is online, from `/Volumes/SSD-1TB/actions-runner` on this machine. The branch `night-results` does not exist yet, and no night has run.
-
-### In flight
-
-This PR holds the merge record and the two questions. It changes no code, so the `review-override` label covers it (D-188, D-190). The first scheduled night runs at 03:00 UTC on 2026-09-11 on the runner, and it writes `night.json` to `night-results`. No other PR is open. PR-1 to PR-11 and PR-59 are merged. One scheduled night runs, then PR-58 opens, and M-1 and M-2 reach Gate 1. The M-1 table has no rows yet, and M-2 starts with the first night.
-
-### Traps and gotchas
-
-- A hand run of the night workflow writes the same record as a scheduled night, at the commit of the branch it runs on. Wait for the scheduled night, so that the first record is one that the PR-58 gate reads, whatever the answers to OQ-142 and OQ-143.
-- The publish step of the night adds a worktree and an orphan branch inside the checkout of the runner, and the runner keeps that checkout between jobs. No second night has run yet. If a later night fails at the publish step, read `git worktree list` and `git branch` in the runner checkout first.
-- The night workflow has `contents: write` and force-pushes `night-results` (D-273). Nothing else pushes there.
-- The `review-override` label goes on after the last push and after the automated pass.
-
-### Open questions that block progress
-
-OQ-142 and OQ-143 block PR-58. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner answers OQ-142 and OQ-143, and a session records the answers as the next D-# ids. After the first scheduled night writes `night.json` to `night-results`, a session opens PR-58 from `main`, and its exit test 7 reads the real record. The same session starts the M-2 table with the duration of the first night.
