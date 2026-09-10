@@ -55,6 +55,7 @@ Session: answer the PR #31 review. Branch `feat/pr-10-projectiles`.
 - The sweep hash moved from `3220e92dcbca55a2` to `d8943df12fefcbee`, because every shot of the sweep turns another way. The simulation version stays 6, because it rose in this PR already (G-20).
 - `SpreadStaysInsideTheCone` reads the half angle from the definition over five axes, and `ArcSolverRejectsABadSpeedOrGravity` covers seven bad inputs. 506 tests in total.
 - F-87 and F-88 record the findings, and `docs/reviews/pr-31-response.md` records the dispositions.
+- The repeat review approved `1b58d3a`, and the gate still read "Changes required": the record held a previous-verdict line above the new verdict, and the gate takes the first verdict name after the heading. With the owner's choice, this session moved that line into a "Verdict history" section above the Verdict section. The verdict text is as the reviewer wrote it, and the gate output names the editing commit (D-198).
 
 ### State of the build
 
@@ -66,7 +67,7 @@ Session: answer the PR #31 review. Branch `feat/pr-10-projectiles`.
 
 ### In flight
 
-PR #31 is open and it holds this branch. The automated pass runs on this push, and then a Codex repeat review at the effective head `1b58d3a` updates the same review record. No other PR is open.
+PR #31 is open and it holds this branch. The repeat review approved the effective head `1b58d3a`, and the record reads that verdict after the format edit. No other PR is open.
 
 ### Where Phase 1 stands
 
@@ -74,7 +75,8 @@ PR-1 to PR-9 and PR-59 are merged. PR-10 is open as PR #31. PR-11 remains, and t
 
 ### Traps and gotchas
 
-- The effective head is `1b58d3a`. The review record still names `c214d03`, and the repeat review updates the head and the verdict together.
+- The effective head is `1b58d3a`, and the review record names it with the verdict `Ready for owner merge`.
+- The review gate reads the first verdict name after the Verdict heading. A note that names an earlier verdict belongs above that heading, never inside the section.
 - The sweep hash moved without a version change, because the version rose in this PR already. A review that sees `d8943df12fefcbee` must confirm it and not restore `3220e92dcbca55a2`.
 - The spread is uniform in the angle from the axis and not in the solid angle of the cone, so shots gather near the axis less than a uniform disc would. D-266 names the half angle alone.
 - The cone sides come from the world up, or from the world right for a vertical direction, so a direction within 2.6 degrees of vertical takes the second axis. The angle from the axis is exact either way.
@@ -86,7 +88,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-The automated pass runs on this push. Then a Codex session repeats the review per the repeat procedure, at the effective head `1b58d3a`, and updates `docs/reviews/pr-31.md` with the status of P2-1 and P2-2 and a new verdict.
+The owner can merge PR #31 after the remote review-gate check reads `Ready for owner merge` at the effective head `1b58d3a`.
 
 
 ## Session 83: 2026-09-09, Codex
