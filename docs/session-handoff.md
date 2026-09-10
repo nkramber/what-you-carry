@@ -25,13 +25,13 @@ Session: review PR #32 at effective head `60bdb17`. Branch `fix/review-gate-one-
 
 ### In flight
 
-The review record and this handoff entry need a metadata commit and push. The owner can merge after the remote review-gate check reads `Ready for owner merge` at effective head `60bdb17` and all platform checks pass.
+The review record and this handoff entry are pushed in `5adec71`. The owner can merge after all platform checks pass; the remote review-gate check already reads `Ready for owner merge` at effective head `60bdb17`.
 
 ### Traps and gotchas
 
 - The effective head is `60bdb17`, not the remote tip after the review metadata commit. D-184 excludes only the review and handoff paths.
 - The parser counts verdict names in the full Verdict section. The review skill now requires the reason to name no other verdict (D-269).
-- The review-gate check was expected to fail before this review record existed. A metadata push must trigger a new result.
+- The review-gate check failed once because the record used a literal marker before its heading. Commit `5adec71` removes that marker, and the new evaluate and review-gate checks pass.
 
 ### Open questions that block progress
 
@@ -39,7 +39,7 @@ None. OQ-99 remains open, and it blocks nothing.
 
 ### Next concrete action
 
-Commit `docs/reviews/pr-32.md`, this handoff entry, and the archived Session 77 entry. Push, fetch, and verify the remote head and review-gate result.
+Wait for the pending platform checks. Then the owner can merge PR #32.
 
 ## Session 86: 2026-09-10, Claude Code
 
