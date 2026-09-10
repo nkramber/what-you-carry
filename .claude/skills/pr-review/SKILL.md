@@ -424,7 +424,7 @@ Do these steps in order after the author revises the PR.
 
 Edit the existing `docs/reviews/pr-<number>.md`. Do not create a second file for the same PR.
 Do not delete the prior verdict. Replace it, and keep each finding and its history.
-Put the earlier verdict in a section above the Verdict section, under a heading that starts with another word, such as `## Earlier verdicts`. The gate reads the section under the exact heading `## Verdict`, and it fails a section that names two verdicts (D-269). `dotnet test` reads every review record the same way, so run it before the push.
+Put the earlier verdict in a section above the Verdict section, under a heading that starts with another word, such as `## Earlier verdicts`. The gate reads the section under the exact heading `## Verdict`, and it fails a section that names two verdicts (D-269). The count reads the prose too, so the reason after the verdict names no other verdict: write "the earlier findings are fixed" and not "the changes required are done". `dotnet test` reads every review record the same way, so run it before the push.
 Close a finding only when the evidence establishes the fix or an owner decision resolves it.
 Record any required check that still waits for a result.
 

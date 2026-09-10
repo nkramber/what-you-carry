@@ -35,7 +35,7 @@ PR-1 to PR-10 and PR-59 are merged. PR-11 remains, and then M-1, M-2, and PR-58 
 
 ### Traps and gotchas
 
-- The gate now fails a review record whose Verdict section names two verdicts, and it names both. A repeat review keeps one name there and puts the earlier verdict in a section such as `## Earlier verdicts`, above it.
+- The gate now fails a review record whose Verdict section names two verdicts, and it names both. A repeat review keeps one name there and puts the earlier verdict in a section such as `## Earlier verdicts`, above it. The count reads the prose too, so the reason after the verdict names no other verdict. The automated pass raised that edge, and the skill says it now.
 - The gate parses `docs/reviews/pr-31.md` with the heading `## Earlier verdicts` that the format edits gave it, and the repository test reads every record, so a record that breaks the rule fails `dotnet test` on every branch.
 - The effective head is `7a388f6`. This PR changes no Core file, so the bit-identity hash stands.
 - The PR-10 merge record and the PR-11 questions are still to do: the design doc PR-10 entry, the roadmap status line, and the sequence item 18.
