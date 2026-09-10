@@ -2,6 +2,180 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 92: 2026-09-10, Codex
+
+Author: Codex
+Session: repeat review PR-34 at effective head `4e1ea9e`. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Verified the provider gate. Sessions 89 and 91 identify Claude Code as the author of the PR-34 change and its correction. Codex is the eligible reviewer.
+- Recomputed the effective head. `4e1ea9e` is the newest substantive commit. Later commits change only review and handoff metadata.
+- Read the correction diff, the response record, the PR comments and replies, the PR-11 roadmap, the console collection, and the affected tests.
+- Closed P1-1. Three independent full test runs pass 518 tests with no failure or skip. The collection serializes all four console-touching test classes, and the shape test scans every test directory.
+- Updated `docs/reviews/pr-34.md` with the fixed finding and the verdict `Ready for owner merge` at effective head `4e1ea9e`.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. The effective PR-34 head is `4e1ea9e`.
+- Remote head: `origin/feat/pr-11-bots` is `945004a`, pending the final metadata verification push.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures, 0 skips, three times in a row.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 needs this repeat-review record pushed. The substantive CI checks pass. The evaluate and review-gate checks must rerun after this metadata commit.
+
+### Traps and gotchas
+
+- The effective head is `4e1ea9e`, not the current metadata tip. D-184 excludes the review and session handoff paths.
+- P1-1 stays fixed only while new tests that touch the process console carry the `Console` collection. The shape test enforces this for files under the test directories.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit the repeat-review record and this handoff entry. Push the branch. Fetch and verify the remote head and the review-gate result.
+
+## Session 91: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: answer the PR #34 review. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Read the one P1 finding in `docs/reviews/pr-34.md`. Full merit: the bot tests call a command that writes its summary to the process console, and the bit-identity command test captures that console, so a full run could read the wrong line.
+- Every test class that calls a command or redirects the console carries `[Collection(ConsoleCollection.Name)]` now, so xUnit runs the four one after another. `ConsoleCollectionTests.EveryConsoleTestIsInTheCollection` reads every test source and fails on a class that touches the console outside the collection.
+- Three full runs with `-m:1` on the correction: 518 passed, 0 failed, 0 skipped, each time.
+- F-90 records the finding, and `docs/reviews/pr-34-response.md` records the disposition. The correction is `f6ca5f6`, and `4e1ea9e` answers the automated pass on it: the shape test scans every test directory.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. This branch holds the PR-11 commit `8a7367f`, the correction `0536f7e`, the review commits, the correction `f6ca5f6`, and this entry above them.
+- Remote head: `origin/feat/pr-11-bots` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures, three times in a row.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+
+### In flight
+
+PR #34 is open and it holds this branch. The automated pass approved `f6ca5f6` with one suggestion, and `4e1ea9e` answers it, so the effective head is `4e1ea9e`. A Codex repeat review at that head updates the same review record. No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-10 and PR-59 are merged. PR-11 is open as PR #34. After its merge, one scheduled night runs on its own, then PR-58 opens, and M-1 and M-2 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The effective head is `4e1ea9e`. The review record still names `0536f7e`, and the repeat review updates the head and the verdict together, with one verdict name in the Verdict section (D-269).
+- A test that calls a command of the Tools project, or redirects the console, goes in the console collection, or the shape test fails.
+- xUnit runs the classes of one collection one after another, so the console collection takes a little longer than the parallel run of four classes. The full suite still takes under three and a half minutes.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session repeats the review per the repeat procedure, at the effective head `4e1ea9e`, and updates `docs/reviews/pr-34.md` with the status of P1-1 and a new verdict.
+
+
+## Session 90: 2026-09-10, Codex
+
+Author: Codex
+Session: review PR-34 at effective head `0536f7e`. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 89 identifies Claude Code as the author of the substantive PR-34 change. Codex is the eligible reviewer.
+- Recomputed the effective head. `8a7367f` holds the implementation, and `0536f7e` is the newest substantive commit. Later commits change only handoff metadata.
+- Read the complete diff, the PR-11 roadmap entry and exit tests, the affected Core callers, the runner and workflows, the bit-identity sweep, the applicable decisions and questions, and every PR comment and author reply.
+- Found P1-1. The new bot tests call commands that write to the process-global console while the existing bit-identity test captures that console. The full 517-test run failed 1 test because it captured bot output instead of the hash.
+- Wrote `docs/reviews/pr-34.md` with the verdict `Changes required` at effective head `0536f7e`.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. The effective PR-34 head is `0536f7e`.
+- Remote head: `origin/feat/pr-11-bots` is `00e4c623700cefa035e94a5aed1672bd4300b7e3`, with no ahead count after the review commit.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 517 tests, 0 failures, 0 skipped.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 needs a correction for P1-1. No other PR is open.
+
+### Traps and gotchas
+
+- The effective head is `0536f7e`, not the remote metadata tip. D-184 excludes the review and session handoff paths.
+- The review-gate check is neutral until this review record reaches the PR head. The check must rerun after the push.
+- The scheduled night workflow has `contents: write` so it can force-push the single `night.json` record to `night-results` under D-273.
+- The focused bot and bit-identity tests passed once, but the full suite reproduced the console race. A focused pass does not close P1-1.
+
+### Open questions that block progress
+
+P1-1 blocks PR #34. OQ-99 is open, and it blocks no other work.
+
+### Next concrete action
+
+Commit the review record and this handoff entry. Push the branch. The author must serialize or remove the console race, then request a repeat review at the new effective head.
+
+## Session 89: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: PR-11, the bot harness, the two policies, the runner, and the night workflow. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Started PR-11 from `main` at `d3093cf`, the squash merge of PR #33, as Session 88 planned. The commit `8a7367f` holds the code, the workflows, the tests, and the roadmap note. PR #34 holds the branch.
+- `RngStream.Bot` is the fifth value of D-159 (D-272). The bound of `Rng.ForStream` names it, and the sweep draws from it, so the known answer moves from `d8943df12fefcbee` to `6ec00e90c1c85cdb`. No simulation number changed, so the version stays 6.
+- `Core/Bots/`: `IBotPolicy` with a name, a promise of progress, and one intent per tick. `RandomWalker` holds one movement, one yaw rate, and one jump choice for up to sixty ticks, then draws again. `GreedyDescender` walks the reachability path to the stairwell with the jump in place of PR-9 exit test 8, descends at every stairwell, and ascends at the deepest floor of the content. `BotRun.Play` plays one run to one of the four end states of D-270 with the budgets of D-271, and a crash carries the exception text.
+- `Tools/BotRunner/`: `bot-run` loads the content of the checkout, plays a seed range with a policy, and writes two log lines per run through the PR-4 logger into one file per run. It exits nonzero on a crash, or a softlock on a policy that promises progress. `night-record` writes the record of D-273.
+- `.github/workflows/bots.yml` plays one hundred seeds per policy on every PR. `.github/workflows/night.yml` runs the scheduled night on the macOS runner at 03:00 UTC: five thousand seeds per policy, the reachability sweeps at one hundred thousand seeds, and the record on the orphan branch `night-results`, whatever the outcome.
+- The stairwell test drives the greedy descender until it asks for the stairwell choice, instead of a walker of its own.
+- Exit tests 1 to 4 and 7 pass among 517 tests. A local run of the PR job gave one hundred budget ends for the walker and one hundred bottom ends for the descender, with zero crashes. The bots job passed on the push too.
+- The automated pass on `8a7367f` found two edges with merit. A broken build left no binary for `night-record`, so the branch would keep a stale record: the publish step writes the failure record in shell when the file is absent now. The seed loop could wrap at the largest seed: the loop runs by the count of seeds now, with a bound of one million. Commit `0536f7e` holds both, with a test for the ranges.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. This branch holds the PR-11 commit `8a7367f` above it, and this entry above that.
+- Remote head: `origin/feat/pr-11-bots` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 517 tests, 0 failures, in under five minutes. The hundred-seed descent takes about thirty seconds of it.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 is open and it holds this branch. The automated pass approved `8a7367f` with two edges, and `0536f7e` answers both, so the effective head is `0536f7e`. A Codex session reviews the PR at it. The review focus is determinism, errors, input and CI boundaries, and test quality (roadmap PR-11). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-11 and PR-59 are merged or open. After the PR-11 merge, one scheduled night runs on its own, then PR-58 opens, and M-1 and M-2 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The night workflow pushes to the branch `night-results` with `contents: write`. The first scheduled night at 03:00 UTC after the merge makes the first record, and `workflow_dispatch` runs one by hand. The runner needs the `night-results` branch to accept a force push.
+- A bot policy holds state that is not simulation state. The record holds the intents, so a replay needs no policy.
+- A descender run takes about a quarter of a second, and a walker run about a tenth. Five thousand of each is about thirty minutes of the night, before the sweep.
+- The random walker never sets the stairwell bits, so it never descends and its run ends by budget at 36000 ticks.
+- `BotRun.Play` catches every exception, because the harness must run the next seed and the log must hold the fault (D-270). No other Core code catches without a rethrow.
+- `RngTests.FloorStreamsAreDistinct` and `RngStreamsDiffer` list the four simulation streams by name. The Bot stream joins the sweep, and the bit-identity test walks the enum, so a sixth stream fails that test until the sweep names it.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #34 per the `pr-review` skill at the effective head `0536f7e`, reads the PR comments and the author replies into the review, and writes `docs/reviews/pr-34.md`. The review confirms the bit-identity change under G-20 and the workflow permissions under the input and CI boundaries.
+
+
 ## Session 88: 2026-09-10, Claude Code
 
 Author: Claude Code
@@ -265,196 +439,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 The author corrects P2-1 and P2-2, runs the full gates, and asks for a repeat review. The repeat review keeps the finding ids and updates the same review record to the new effective head.
-
-## Session 82: 2026-09-09, Claude Code
-
-Author: Claude Code
-Session: PR-10, the projectile simulation, the arc solver, and the shot of the attack bit. Branch `feat/pr-10-projectiles`.
-
-### What this session did, and why
-
-- Started PR-10 from `main` at `4687081`, the squash merge of PR #30, as Session 81 planned. The commit `c214d03` holds the code, the content, the tests, and the roadmap note. PR #31 holds the branch.
-- The projectile schema gains the required field `spreadHundredths` (D-266), with bounds: a speed of at least one, a gravity scale of at least zero, and a spread from 0 to 18000. The two plain definitions gain a spread, and four test-only files hold the extremes of D-149. The ordinal order puts `arrow` first, so it is the Phase 1 shot (D-265).
-- `Core/Projectiles/ProjectileSimulation.cs`: a flat list in flight order. A projectile is a point. Each tick ages it, applies the gravity of D-231 scaled by its definition, and sweeps one segment with the grid ray march of PR-8 and a slab test against the entity boxes. The nearest hit ends it at the point. A projectile never hits the box of its owner.
-- `Core/Projectiles/ArcSolver.cs`: the low-arc direction with DetMath alone, a vertical case, a gravity-free case, and a clear report for a target out of reach.
-- The loop fires the first definition once per press of the attack bit, from the shoulder point toward the first solid cell that the crosshair ray meets within 100 meters (D-267, D-268). `CameraPose` carries the shoulder point now. The loop exposes the ends of the last tick, which is not state. The projectiles end with the floor at a descent.
-- The projectiles join the hash after the run end, in flight order, and the simulation version is 6 (G-20). The sweep content holds one definition with a spread, so the attack bit of the sweep intents fires shots. The known answer moves from `62c5e1d152fe94fe` to `3220e92dcbca55a2`.
-- The six exit tests of the roadmap entry pass, with unit tests for the spread cone, the press edge, the shoulder origin, the segment test, the end of the floor, and the errors. 500 tests in total.
-
-### State of the build
-
-- `main` is at `4687081`, the squash merge of PR #30. This branch holds the PR-10 commit `c214d03` above it, and this entry above that.
-- Remote head: `origin/feat/pr-10-projectiles` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 500 tests, 0 failures, in about three and a half minutes.
-- `det-lint`: 0 findings. Core 0 in 57 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `3220e92dcbca55a2`. The simulation version is 6.
-- The Godot 4.7.2 headless build check passes.
-
-### In flight
-
-PR #31 is open and it holds this branch. The automated pass approved `c214d03` with no finding, and its CI notice on the absent review record has its reply (D-251). A Codex session reviews the PR at the effective head `c214d03`. The review focus is determinism, errors, and test quality (roadmap PR-10). No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-9 and PR-59 are merged. PR-10 is open as PR #31. PR-11 remains, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The Projectile stream of the run is state that no hash reads: `Rng` exposes no state word. Two loops with one intent stream draw the same values in the same order, so a replay matches, and a hash compare at a tick with no projectile in flight cannot tell a run with shots from one without. `ProjectilesAreDeterministic` compares the hashes while a projectile is up.
-- The random intents of every loop test set the attack bit on some ticks, so every replay test fires shots now. A content set without a projectile definition makes the attack bit an error (D-265).
-- The crosshair ray of the shot is the camera forward without aim assist, because no target exists before PR-16. PR-16 gives the shot the assisted ray.
-- The shot origin is the shoulder point after the first march of D-249, so a shot never starts inside rock. The grid ray march throws on a start inside a solid cell, and a test that fires from inside rock sees that error.
-- A projectile ends at its lifetime with one tick of grace: the end fires when the age passes the lifetime, so a definition of N ticks flies N ticks.
-- The arc solver gives the continuous arc, and the fixed-step flight lands a little short, as the jump of F-83 does. Exit test 3 allows one block.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #31 per the `pr-review` skill at the effective head `c214d03`, reads the PR comments and the author reply into the review, and writes `docs/reviews/pr-31.md`. The review confirms the simulation version 6 and the bit-identity change under G-20.
-
-
-## Session 81: 2026-09-09, Claude Code
-
-Author: Claude Code
-Session: record the PR-59 merge, and answer the PR-10 questions before its code. Branch `docs/pr-59-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #29 as `5ae0a24`, after a Codex review with no finding at the effective head `923e2a4` (Session 80).
-- The design doc PR-59 entry reads merged, the roadmap PR-59 entry has its status line, and the sequence marks item 17.
-- Asked four owner questions in one batch, and D-265 to D-268 record the answers. OQ-133 to OQ-136 hold the questions.
-- D-265: until PR-15 gives the loadout a weapon, the attack bit fires the first projectile definition of the content set, in ordinal path order.
-- D-266: the projectile schema gains the required field `spreadHundredths`, the half angle of the spread cone in hundredths of a degree. The Projectile stream draws the spread of each shot.
-- D-267: a shot fires once per press of the attack bit: a tick where the bit is set and was clear on the tick before.
-- D-268: a shot starts at the shoulder point of D-242 and flies toward the first solid cell the aim ray meets within 100 meters, or the point of the ray at 100 meters.
-- The PR-10 roadmap entry holds the four files of the test-only set, the spread field, the shot rules, and the projectile state in the hash with the simulation version 6. The design doc paragraph says the same.
-
-### State of the build
-
-- `main` is at `5ae0a24`, the squash merge of PR #29. This branch holds the document commit above it, and this entry above that.
-- Remote head: `origin/docs/pr-59-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 476 tests, 0 failures, as PR #29 left them. No code changed.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `62c5e1d152fe94fe`. The simulation version is 5.
-
-### In flight
-
-PR #30 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). The session applies the label after the automated pass, when every comment has its answer. No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-9 and PR-59 are merged. PR-10 and PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- PR-10 changes the loop state: the live projectiles join the hash after the run end, in flight order, so the simulation version rises to 6 and the bit-identity hash moves (G-20). The sweep intents set the attack bit on some ticks already, so the sweep fires shots on its own once the loop reads the bit.
-- PR-10 changes the projectile schema: `spreadHundredths` joins the required list, the two existing files gain a value, and the content hash of the test set moves.
-- The first projectile definition of the content set is the first in ordinal path order, so the file names of the test-only set decide which one the attack bit fires (D-265).
-- The aim ray march for the shot target reads the grid with `GridRay`, as the boom sweep does. A ray that meets no solid cell within 100 meters ends at the point of the ray at 100 meters (D-268).
-- A shot that starts at the shoulder point can start inside rock when the player hugs a right wall (OQ-118). D-249 marches the shoulder offset first, and the shot origin takes that marched point.
-- The override label goes stale on any push outside the metadata set (D-190). The session applies it after the last push and the automated pass, and adds it again after a later push.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges PR #30. Then a new session starts PR-10 on a short branch: the spread field, the four test-only definitions, the projectile simulation, the arc solver, the shot from the attack bit, the projectiles in the hash with the simulation version 6, and the six exit tests, under D-159, D-231, D-242, D-247, and D-265 to D-268.
-
-
-## Session 80: 2026-09-09, Codex
-
-Author: Codex
-Session: review PR-59 as PR #29 at effective head `923e2a4`. Branch `feat/pr-59-detail`.
-
-### What this session did, and why
-
-- Verified the provider gate. Session 79 identifies Claude Code as the author of the substantive PR-59 commits, and Codex is the eligible reviewer.
-- Read the complete diff, the PR-59 roadmap entry and exit tests, the affected Core callers, content and validators, reachability, replay version use, bit-identity sweep, decisions, questions, and the PR comments and replies.
-- Found no actionable defect. The detail pass preserves tunnel reachability, the water probe follows D-264, the simulation version rises to 5, and the block set follows D-259.
-- Wrote `docs/reviews/pr-29.md` with the verdict `Ready for owner merge` at effective head `923e2a4`.
-
-### State of the build
-
-- `main` is at `45dbaf5`, the squash merge of PR #28. The reviewed effective head is `923e2a4`.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 476 tests, 0 failures.
-- `det-lint`: 0 findings. Core 0 in 54 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `62c5e1d152fe94fe`. The simulation version is 5.
-- The Godot 4.7.2 headless build check passes.
-- GitHub CI, both bit-identity platform jobs and the compare job, determinism lint, STE check, evaluate, and Gitar pass at the PR head. The review-gate result is neutral until the review record exists.
-
-### In flight
-
-PR #29 holds the review record and needs the metadata commit and the session handoff pushed. The owner can merge after the remote review-gate check reads `Ready for owner merge` at effective head `923e2a4`.
-
-### Where Phase 1 stands
-
-PR-1 to PR-9 are merged. PR-59 is open as PR #29. PR-10 and PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The effective head is `923e2a4`, because its design and roadmap changes are substantive under D-184. The handoff and review commits remain metadata commits.
-- The review-gate result is neutral before this review record exists. The metadata commit should trigger the gate again.
-- D-264 revises only the water probe wording of D-262. The half jump velocity, quarter gravity, and one-block apex still apply.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Commit the review record and handoff entry. Push the branch. Fetch and verify that the remote head has no ahead count and that the review-gate check reads the approved effective head.
-## Session 79: 2026-09-09, Claude Code
-
-Author: Claude Code
-Session: PR-59, the mine detail pass, the block ids, and the water rule. Branch `feat/pr-59-detail`.
-
-### What this session did, and why
-
-- Started PR-59 from `main` at `45dbaf5`, the squash merge of PR #28, as Session 78 planned. The commit `787c851` holds the code, the tests, and the roadmap note. PR #29 holds the branch.
-- `BlockId` declares 2 hewn stone, 3 timber beam, 4 ore vein, 5 still water, 6 rubble, and 7 plank (D-259). The grid bound accepts 0 to 7, and `IsSolid` lets air and still water through (D-258).
-- `Core/Procgen/DetailPass.cs` runs after the shafts and before the stairwell, in this order: collapses, pools, walls, pillars. A collapse fills the last stamp of a walker with no dependent, in cells that walker alone dug, with a rubble heap one to three rows high. A pool is a rectangle of two or three cells a side in a chamber of at least twelve cells, over rock, with a dry floor cell beside every pool cell. A wall block replaces rock that borders air with rock over it, by band. A pillar is one column with dry chamber floor on all eight sides, one try per twenty cells.
-- `DigPlan` records which walker dug each air cell, which walkers have a dependent (a chamber, a drift, or a later walker on their trail), and where each walker ended.
-- `PlayerBody` scales the speeds and the jump velocity by one half and gravity by one quarter while the column under the feet is water: the feet in a water cell, or the body in the air over water (D-261, D-262).
-- The simulation version is 5 (D-260). The sweep content holds one template per band on floors 1 to 3, and the known answer moves from `036df5c08e2682e3` to `62c5e1d152fe94fe`.
-- The six exit tests of the roadmap entry pass. The reachability sweeps of PR-9 exit test 1 and PR-59 exit test 1 read one dig per seed through a shared report.
-- `TunnelCrossSection` steps over chamber cells, water cells, the cells around a pillar, and the cells around a collapse, because those are not tunnel cells (D-166).
-- The automated pass on `787c851` approved the code with two suggestions and one CI notice. The first suggestion asked for a decision on the water probe, and the owner gave it: D-264 revises D-262 in part, and OQ-132 holds the question. The second asked for a direct assertion of the quarter gravity in the air over water, and the test has it now. The CI notice on the absent review record has no merit (D-251). The correction commit holds the decision, the test, and this note.
-
-### State of the build
-
-- `main` is at `45dbaf5`, the squash merge of PR #28. This branch holds the PR-59 commit `787c851` above it, and this entry above that.
-- Remote head: `origin/feat/pr-59-detail` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 476 tests, 0 failures. The suite takes about three minutes, and the shared reachability sweep takes most of it.
-- `det-lint`: 0 findings. Core 0 in 54 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `62c5e1d152fe94fe`. The simulation version is 5.
-- The Godot 4.7.2 headless build check passes.
-
-### In flight
-
-PR #29 is open and it holds this branch. The automated pass approved `787c851`, and the correction commit answers its two suggestions. The effective head is that commit, and a Codex session reviews the PR at it. The review focus is determinism, content, test quality, and replay (roadmap PR-59). No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-9 are merged. PR-59 is open as PR #29. PR-10 and PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The water probe reads the column under the feet (D-264). A probe of the feet cell alone gives an apex of 1.05 blocks at 1.6 times the ticks, because the quarter gravity goes as soon as the feet rise out of the cell.
-- A collapse must never fill a cell of a walker with a dependent. The first version filled cells of any walker that were dug by that walker alone, and a walker that looped back cut its own path to a chamber it dug earlier. Seed 418 of floor 14 found it.
-- The pillars come last in the detail pass, so no wall block lands on a pillar and no pool opens under one. A pool cell needs air over it and rock under it.
-- The pillars and the pools are cells with their floor row, not columns, because two chambers can stack on one column at two rows.
-- The typed lists of a content set are in ordinal path order, so `Floors[0]` is the deep band. A test that needs the template of a floor asks `FloorGenerator.TemplateFor`.
-- The override label goes stale on any push outside the metadata set (D-190). The session applies it after the last push and the automated pass, and adds it again after a later push.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #29 per the `pr-review` skill at the effective head, reads the PR comments and the author replies into the review, and writes `docs/reviews/pr-29.md`. The review confirms the simulation version 5 and the bit-identity change under G-20.

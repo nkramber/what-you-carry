@@ -66,7 +66,7 @@ public sealed class Rng
         // An explicit bound, because Enum.IsDefined reads the enum through reflection, and Core has none (G-2).
         // `EveryDeclaredStreamIsAccepted` walks the declared values, so a new value that passes this bound fails
         // the test until the bound names it.
-        if (stream < RngStream.Procgen || stream > RngStream.Projectile)
+        if (stream < RngStream.Procgen || stream > RngStream.Bot)
         {
             throw new ArgumentOutOfRangeException(nameof(stream), $"The stream must be a value of RngStream. The value is {(int)stream}.");
         }

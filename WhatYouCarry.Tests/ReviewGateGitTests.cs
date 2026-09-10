@@ -9,6 +9,7 @@ using Xunit;
 namespace WhatYouCarry.Tests;
 
 /// <summary>The review gate against real commits: the effective head, the mode source, and the command output.</summary>
+[Collection(ConsoleCollection.Name)]
 public sealed class ReviewGateGitTests
 {
     private const int PullRequestNumber = 7;

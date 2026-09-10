@@ -1,0 +1,26 @@
+# Plays one hundred headless bot runs per policy on every PR (D-115, D-127; PR-11 exit test 5). A crash, or a
+# softlock on the greedy descender, fails the job. The night workflow plays the long runs (D-177).
+name: Bots
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  bots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
+      - name: Random walker, one hundred seeds
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy random-walker --seeds 1-100 --output bot-logs --root .
+      - name: Greedy descender, one hundred seeds
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy greedy-descender --seeds 1-100 --output bot-logs --root .

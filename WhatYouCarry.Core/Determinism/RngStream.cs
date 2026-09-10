@@ -22,4 +22,7 @@ public enum RngStream
 
     /// <summary>Projectiles: the spread of a shot.</summary>
     Projectile = 3,
+
+    /// <summary>Bots: the choices of a bot policy, outside the simulation (D-272).</summary>
+    Bot = 4,
 }

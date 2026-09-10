@@ -1,0 +1,58 @@
+# The scheduled night on the self-hosted macOS runner (D-115, D-116, D-117, D-157, D-177; PR-11 exit tests 6 and 7).
+# Five thousand bot runs per policy, and the reachability sweep of PR-9 at one hundred thousand seeds. The last
+# two steps write night.json with the commit, the end time, and the status, whatever the outcome, and commit it
+# to the orphan branch night-results, which holds that one file (D-273). When the build itself fails, the
+# publish step writes the failure record in shell, so the branch never keeps a stale success. PR-58 adds the
+# gate that reads it.
+name: Night
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  night:
+    runs-on: [self-hosted, macos-arm64-self-hosted]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Random walker, five thousand seeds
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy random-walker --seeds 1-5000 --output bot-logs --root .
+      - name: Greedy descender, five thousand seeds
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy greedy-descender --seeds 1-5000 --output bot-logs --root .
+      - name: Reachability sweep, one hundred thousand seeds
+        env:
+          WYC_NIGHT_SWEEP: "1"
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "FullyQualifiedName~EveryChamberReachable|FullyQualifiedName~DetailKeepsEveryChamberReachable"
+      - name: Write the night record
+        if: always()
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-record --commit "${GITHUB_SHA}" --status "${{ job.status }}" --output "${RUNNER_TEMP}/night.json"
+      - name: Publish the night record
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A broken build leaves no binary for night-record, so the shell writes the failure record itself.
+          if [ ! -f "${RUNNER_TEMP}/night.json" ]; then
+            printf '{"commit":"%s","endedAt":"%s","status":"failure"}\n' "${GITHUB_SHA}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${RUNNER_TEMP}/night.json"
+          fi
+          work="${RUNNER_TEMP}/night-results"
+          rm -rf "$work"
+          git worktree add --detach "$work" HEAD
+          cd "$work"
+          git checkout --orphan night-results
+          git rm -rfq .
+          cp "${RUNNER_TEMP}/night.json" night.json
+          git config user.name "night job"
+          git config user.email "night-job@users.noreply.github.com"
+          git add night.json
+          git commit -qm "night: ${GITHUB_SHA} ${{ job.status }}"
+          git push --force origin night-results

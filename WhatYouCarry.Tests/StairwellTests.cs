@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
@@ -41,64 +42,29 @@ public sealed class StairwellTests
     /// <summary>The floor cell under the feet center of a body.</summary>
     private static Cell FloorCellOf(PlayerBody body)
     {
-        return new Cell(
-            (int)MathF.Floor(body.Position.X),
-            (int)MathF.Floor(body.Position.Y - PlayerBody.GroundProbe),
-            (int)MathF.Floor(body.Position.Z));
-    }
-
-    /// <summary>The movement byte that moves the body toward a point on one axis, at the walk speed or less when the point is nearer than one tick of walk.</summary>
-    private static sbyte Toward(float delta)
-    {
-        float perTick = PlayerBody.WalkSpeed * PlayerBody.TickSeconds;
-        float fraction = Math.Clamp(delta / perTick, -1.0f, 1.0f);
-        return (sbyte)MathF.Round(fraction * PlayerBody.MoveScale);
+        return GreedyDescender.FloorCellOf(body);
     }
 
     /// <summary>
-    /// Drives the loop along the walkable path from its body to a floor cell, and records each intent. A step
-    /// up is a jump in place, then a move once the feet clear the step (D-165). A drop is a walk off the edge.
+    /// Drives the loop with the greedy descender, and records each intent, until the policy asks for the
+    /// stairwell choice. The test then presses the bits itself, so the stairwell rules stay under its control.
     /// </summary>
     private static void WalkTo(SimulationLoop loop, Cell target, RunRecorder recorder, string context)
     {
-        Reachability reach = Reachability.From(loop.Grid, FloorCellOf(loop.Body));
-        IReadOnlyList<Cell> path = reach.PathTo(target);
+        GreedyDescender policy = new(TestWorld.Content);
         int ticks = 0;
-        for (int index = 1; index < path.Count; index++)
+        while (true)
         {
-            Cell next = path[index];
-            bool stepUp = next.Y == path[index - 1].Y + 1;
-            while (true)
+            Assert.True(ticks++ < MaxWalkTicks, $"{context}: the walk to {target} passed {MaxWalkTicks} ticks, with the body at {loop.Body.Position}.");
+            Intent intent = policy.Next(loop);
+            if ((intent.Buttons & (Button.Interact | Button.Ascend)) != 0)
             {
-                Assert.True(ticks++ < MaxWalkTicks, $"{context}: the walk to {target} passed {MaxWalkTicks} ticks at waypoint {index} of {path.Count}, toward {next}, with the body at {loop.Body.Position}.");
-
-                Vector3 position = loop.Body.Position;
-                float deltaX = next.X + 0.5f - position.X;
-                float deltaZ = next.Z + 0.5f - position.Z;
-                bool centered = MathF.Abs(deltaX) < 0.02f && MathF.Abs(deltaZ) < 0.02f;
-                if (centered && loop.Body.IsOnGround() && FloorCellOf(loop.Body) == next)
-                {
-                    break;
-                }
-
-                Intent intent;
-                if (stepUp && loop.Body.IsOnGround() && FloorCellOf(loop.Body).Y < next.Y)
-                {
-                    intent = new Intent(loop.Tick, 0, 0, 0, 0, Button.Jump);
-                }
-                else if (stepUp && !loop.Body.IsOnGround() && position.Y < next.Y + 1.0f)
-                {
-                    intent = new Intent(loop.Tick, 0, 0, 0, 0, 0);
-                }
-                else
-                {
-                    // Forward at yaw zero is minus Z, so a positive Z delta is a move backward (D-234).
-                    intent = new Intent(loop.Tick, 0, 0, Toward(deltaX), (sbyte)(-Toward(deltaZ)), 0);
-                }
-
-                recorder.Record(intent);
-                loop.Step(intent);
+                Assert.Equal(target, FloorCellOf(loop.Body));
+                return;
             }
+
+            recorder.Record(intent);
+            loop.Step(intent);
         }
     }
 
