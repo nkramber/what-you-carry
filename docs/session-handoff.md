@@ -21,7 +21,7 @@ Session: repeat review PR #40 at effective head `d943cb3`. Branch `feat/pr-58-ni
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 532 tests, 0 failures, 0 skips.
 - `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`.
 - The Godot 4.7.2 headless build passes. The real `night-gate` probe passes against `origin/night-results` at `2026-09-10T22:00:00Z`.
-- The remote PR checks at `bcb934e` pass except `evaluate`, which still reads the prior `Changes required` record. The review commit triggers a fresh review-gate run.
+- The review commit is `0d10eba`. Gitar, det-lint, night-gate, STE check, and review-gate pass. CI, bit identity, and bots remain pending and are unverified.
 
 ### In flight
 
@@ -38,7 +38,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-Commit and push the review record and this handoff entry. Fetch the remote and verify that the review-gate check reads `Ready for owner merge` at `d943cb3`.
+The owner can merge after the pending CI, bit identity, and bots checks pass. The review-gate check reads `Ready for owner merge` at `d943cb3`.
 
 ## Session 102: 2026-09-10, Claude Code
 
