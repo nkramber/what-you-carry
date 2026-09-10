@@ -63,8 +63,13 @@ public sealed class DigPlan
     /// <summary>The count of drift generations under the gallery. A drift at this depth starts no drift.</summary>
     public const int MaxBranchDepth = 3;
 
-    /// <summary>The count of jobs before a floor that still lacks a chamber is an error.</summary>
-    public const int MaxJobs = 400;
+    /// <summary>
+    /// The count of jobs before a floor that still lacks a chamber is an error (D-279). The first night measured the
+    /// tail on 2026-09-10: of 75000 floors, three needed 615, 1661, and 2817 jobs, and the rest under 300, because
+    /// the last chamber of a crowded floor finds room only after many walkers end at once (F-92). The cap is three
+    /// and a half times that largest need, so a floor past it is a defect and not the tail.
+    /// </summary>
+    public const int MaxJobs = 10000;
 
     /// <summary>The count of anchors tried for the first chamber before the floor is an error.</summary>
     public const int MaxFirstChamberTries = 100;
@@ -156,9 +161,9 @@ public sealed class DigPlan
         throw error;
     }
 
-    /// <summary>Runs dig jobs until every chamber is dug.</summary>
+    /// <summary>Runs dig jobs until every chamber is dug, and gives the count of jobs it ran.</summary>
     /// <exception cref="ContextException"><see cref="MaxJobs"/> jobs ran and a chamber is still not dug.</exception>
-    public void DigUntilComplete()
+    public int DigUntilComplete()
     {
         int jobCount = 0;
         while (this.chambers.Count < this.kinds.Count)
@@ -184,6 +189,8 @@ public sealed class DigPlan
             jobCount++;
             this.RunJob(job, jobIndex);
         }
+
+        return jobCount;
     }
 
     /// <summary>Tries one shaft per chamber, at a random column of a random chamber each time.</summary>

@@ -1,5 +1,125 @@
 # Session handoff archive
 
+## Session 89: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: PR-11, the bot harness, the two policies, the runner, and the night workflow. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Started PR-11 from `main` at `d3093cf`, the squash merge of PR #33, as Session 88 planned. The commit `8a7367f` holds the code, the workflows, the tests, and the roadmap note. PR #34 holds the branch.
+- `RngStream.Bot` is the fifth value of D-159 (D-272). The bound of `Rng.ForStream` names it, and the sweep draws from it, so the known answer moves from `d8943df12fefcbee` to `6ec00e90c1c85cdb`. No simulation number changed, so the version stays 6.
+- `Core/Bots/`: `IBotPolicy` with a name, a promise of progress, and one intent per tick. `RandomWalker` holds one movement, one yaw rate, and one jump choice for up to sixty ticks, then draws again. `GreedyDescender` walks the reachability path to the stairwell with the jump in place of PR-9 exit test 8, descends at every stairwell, and ascends at the deepest floor of the content. `BotRun.Play` plays one run to one of the four end states of D-270 with the budgets of D-271, and a crash carries the exception text.
+- `Tools/BotRunner/`: `bot-run` loads the content of the checkout, plays a seed range with a policy, and writes two log lines per run through the PR-4 logger into one file per run. It exits nonzero on a crash, or a softlock on a policy that promises progress. `night-record` writes the record of D-273.
+- `.github/workflows/bots.yml` plays one hundred seeds per policy on every PR. `.github/workflows/night.yml` runs the scheduled night on the macOS runner at 03:00 UTC: five thousand seeds per policy, the reachability sweeps at one hundred thousand seeds, and the record on the orphan branch `night-results`, whatever the outcome.
+- The stairwell test drives the greedy descender until it asks for the stairwell choice, instead of a walker of its own.
+- Exit tests 1 to 4 and 7 pass among 517 tests. A local run of the PR job gave one hundred budget ends for the walker and one hundred bottom ends for the descender, with zero crashes. The bots job passed on the push too.
+- The automated pass on `8a7367f` found two edges with merit. A broken build left no binary for `night-record`, so the branch would keep a stale record: the publish step writes the failure record in shell when the file is absent now. The seed loop could wrap at the largest seed: the loop runs by the count of seeds now, with a bound of one million. Commit `0536f7e` holds both, with a test for the ranges.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. This branch holds the PR-11 commit `8a7367f` above it, and this entry above that.
+- Remote head: `origin/feat/pr-11-bots` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 517 tests, 0 failures, in under five minutes. The hundred-seed descent takes about thirty seconds of it.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 is open and it holds this branch. The automated pass approved `8a7367f` with two edges, and `0536f7e` answers both, so the effective head is `0536f7e`. A Codex session reviews the PR at it. The review focus is determinism, errors, input and CI boundaries, and test quality (roadmap PR-11). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-11 and PR-59 are merged or open. After the PR-11 merge, one scheduled night runs on its own, then PR-58 opens, and M-1 and M-2 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The night workflow pushes to the branch `night-results` with `contents: write`. The first scheduled night at 03:00 UTC after the merge makes the first record, and `workflow_dispatch` runs one by hand. The runner needs the `night-results` branch to accept a force push.
+- A bot policy holds state that is not simulation state. The record holds the intents, so a replay needs no policy.
+- A descender run takes about a quarter of a second, and a walker run about a tenth. Five thousand of each is about thirty minutes of the night, before the sweep.
+- The random walker never sets the stairwell bits, so it never descends and its run ends by budget at 36000 ticks.
+- `BotRun.Play` catches every exception, because the harness must run the next seed and the log must hold the fault (D-270). No other Core code catches without a rethrow.
+- `RngTests.FloorStreamsAreDistinct` and `RngStreamsDiffer` list the four simulation streams by name. The Bot stream joins the sweep, and the bit-identity test walks the enum, so a sixth stream fails that test until the sweep names it.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #34 per the `pr-review` skill at the effective head `0536f7e`, reads the PR comments and the author replies into the review, and writes `docs/reviews/pr-34.md`. The review confirms the bit-identity change under G-20 and the workflow permissions under the input and CI boundaries.
+
+## Session 88: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: the PR-11 merge record and the PR-58 questions. Branch `docs/pr-11-merge-record`.
+
+### What this session did, and why
+
+- Recorded the PR-11 merge and filed the two PR-58 questions.
+- The owner had not answered the questions when this session ended.
+
+### State of the build
+
+- `main` was at `7487473`. The document branch held the merge record and the handoff entry.
+- The build, tests, determinism lint, and STE check passed.
+
+### In flight
+
+The first scheduled night and the answers to OQ-142 and OQ-143 were in flight.
+
+### Traps and gotchas
+
+The night publish step uses an orphan branch and a worktree in the runner checkout.
+
+### Open questions that block progress
+
+OQ-142 and OQ-143 blocked PR-58.
+
+### Next concrete action
+
+Record the owner answers, then wait for the first night record before opening PR-58.
+
+## Session 87: 2026-09-10, Codex
+
+Author: Codex
+Session: review PR #32 at effective head `60bdb17`. Branch `fix/review-gate-one-verdict`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 86 identifies Claude Code as the author of the substantive PR-32 change. Codex is the eligible reviewer.
+- Recomputed the effective head. `7a388f6` holds the implementation, and `60bdb17` is the newest substantive commit because the skill file lies outside the metadata set of D-184. Later commits change only review and handoff metadata.
+- Read the complete diff, the review-gate callers and tests, D-269, OQ-137, the roadmap, the PR comments and author replies, and the current remote checks.
+- Found no actionable defect. Wrote `docs/reviews/pr-32.md` with the verdict `Ready for owner merge` at effective head `60bdb17`.
+
+### State of the build
+
+- `main` is at `1ce78c6`, the squash merge of PR #31. The effective PR-32 head is `60bdb17`.
+- Local build and test pass. `dotnet build` reports 0 warnings and 0 errors. `dotnet test` reports 509 tests and 0 failures.
+- `det-lint` reports 0 findings in 57 Core files and 0 Game files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` returns `d8943df12fefcbee`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+- The code, lint, STE, Gitar, and Windows checks pass. The review-gate check waits for the review record, and the macOS checks were pending before the metadata push.
+
+### In flight
+
+The review record and this handoff entry are pushed in `5adec71`. The owner can merge after all platform checks pass; the remote review-gate check already reads `Ready for owner merge` at effective head `60bdb17`.
+
+### Traps and gotchas
+
+- The effective head is `60bdb17`, not the remote tip after the review metadata commit. D-184 excludes only the review and handoff paths.
+- The parser counts verdict names in the full Verdict section. The review skill now requires the reason to name no other verdict (D-269).
+- The review-gate check failed once because the record used a literal marker before its heading. Commit `5adec71` removes that marker, and the new evaluate and review-gate checks pass.
+
+### Open questions that block progress
+
+None. OQ-99 remains open, and it blocks nothing.
+
+### Next concrete action
+
+Wait for the pending platform checks. Then the owner can merge PR #32.
+
 ## Session 86: 2026-09-10, Claude Code
 
 Author: Claude Code
