@@ -571,7 +571,7 @@ The CI job grew at PR-9, with the reachability sweep of five thousand seeds, and
 
 ### M-2: Night sweep wall time
 
-Procedure: after PR-11, read the night job duration for seven nights. Record them in a table in this file. If a night exceeds six hours, file a question on the run counts in D-115 and D-116. The seven nights are scheduled nights, and a note beside the table records the hand run of 2026-09-10 (D-278).
+Procedure: after PR-11, read the night job duration for seven nights. Record them in a table in this file. If a night exceeds six hours, file a question on the run counts in D-115 and D-116. The table counts the seven scheduled nights, and a note beside it records the hand run of 2026-09-10 (D-278).
 
 ## 5. Sequence
 
