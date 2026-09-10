@@ -2,6 +2,46 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 85: 2026-09-09, Codex
+
+Author: Codex
+Session: repeat review PR #31 at effective head `1b58d3a`. Branch `feat/pr-10-projectiles`.
+
+### What this session did, and why
+
+- Recomputed the effective head. The fix commit `1b58d3a` changes Core code, tests, and the design record. Later commits change only review, handoff, and archive metadata.
+- Read the author response, the new diff, the full changed source and tests, the roadmap, the decisions, the questions, the PR comments, and the current checks.
+- Verified P2-1 fixed in `1b58d3a`. The spread now samples one angle and one roll, and the test checks five axes against the exact half angle.
+- Verified P2-2 fixed in `1b58d3a`. The arc solver rejects invalid and non-finite speed, gravity, and point inputs with context.
+- Updated `docs/reviews/pr-31.md` with both findings marked fixed and the verdict `Ready for owner merge` at effective head `1b58d3a`.
+
+### State of the build
+
+- `main` is at `4687081`, the squash merge of PR #30. The PR effective head is `1b58d3a`. The remote tip before this review record update is `33dfb2a`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 506 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `d8943df12fefcbee`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes after the sandbox permission failure is rerun in the required execution context.
+- Current GitHub checks pass for bit identity, compare, CI, determinism lint, STE, and Gitar. The review-gate evaluate job fails on the old verdict and must rerun after this record update.
+
+### In flight
+
+PR #31 is ready for owner merge after the updated review record reaches the remote branch and the review-gate check reads the new verdict. No other PR is open.
+
+### Traps and gotchas
+
+- The effective head is `1b58d3a`, not the remote metadata tip. D-184 excludes the review, session handoff, and archive paths only.
+- The spread is uniform in the angle, not in the solid angle. D-266 names the half angle, so this is valid.
+- The sweep hash is `d8943df12fefcbee`. Do not restore the prior hash `3220e92dcbca55a2`.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit the updated review record and this handoff entry together. Push them, fetch, verify that the branch has no ahead count, and check that the review-gate result approves effective head `1b58d3a`.
+
 ## Session 84: 2026-09-09, Claude Code
 
 Author: Claude Code
@@ -428,61 +468,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A Codex session reviews PR #27 per the `pr-review` skill, at the effective head `bd1366e`, reads the PR comments and the author replies into the review, and writes `docs/reviews/pr-27.md`. The review confirms the simulation version 4 and the bit-identity change under G-20.
-
-
-## Session 75: 2026-09-09, Claude Code
-
-Author: Claude Code
-Session: record the PR-8 merge, and answer the PR-9 questions before its code. Branch `docs/pr-8-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #23 as `a3bdf20`, after a Codex review with one P2 finding, the correction `4e98470`, and a repeat review with the verdict `Ready for owner merge` (Sessions 72 to 74).
-- Audited every document against the merged state. The registers were complete: D-248 to D-251, OQ-117 to OQ-119, F-82 to F-85, and the review records `pr-23.md`, `pr-23-response.md`, and `pr-25.md` all sit on `main`.
-- Four stale places are corrected. The design doc PR-8 entry and its sequence line said open, and the roadmap said open. The roadmap sequence had no mark for PR-3 to PR-8, and its open questions still listed OQ-12, which D-210 resolved on 2026-09-08.
-- Asked six owner questions in three batches, and D-252 to D-257 record the answers. OQ-120 to OQ-125 hold the questions.
-- D-252: the floor size per band in the floor template: 48 by 12 by 48, 72 by 16 by 72, and 96 by 20 by 96.
-- D-253: a floor is a mine dig plan: a main gallery, side drifts, chambers as smoothed box unions with pillars, shafts and ramps, and collapses. Every tunnel takes a brush of at least three by three. The owner asked for a floor far more random, varied, and detailed than rectangles, whatever the implications.
-- D-254: PR-9 carves raw stone and air with the exit tests, and a new PR-59 adds the detail and the D-210 block ids. D-239 is revised in part.
-- D-255: chamber kinds are a content type, `content/chambers/*.json`, with an id, a weight, a box count range, and a box size range.
-- D-256: the spawn is in the first chamber, and the stairwell is in the chamber with the longest walkable path.
-- D-257: at the stairwell, the interact bit descends and bit 9 ascends, so the record carries the choice. D-232 is revised in part.
-- The design doc and the roadmap hold the rewritten PR-9 entry and the new PR-59 entry, with chambers and tunnels in place of rooms and corridors. The roadmap sequence places PR-59 after PR-9.
-
-### State of the build
-
-- `main` is at `a3bdf20`, the squash merge of PR #23. This branch holds the document commit above it.
-- Remote head: `origin/docs/pr-8-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 426 tests, 0 failures.
-- `det-lint`: 0 findings. Core 0 in 43 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `afed0063a6cf8a50`. The simulation version is 3.
-
-### In flight
-
-PR #26 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). The label goes on after the last push, because a later push makes it stale. No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-8 are merged. PR-9, PR-59, PR-10, and PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The process since PR #23: gitar comments on every PR after a push (D-250). Answer every comment before the hand-over or the override request. A comment with no merit gets a reply and a resolve. A comment with merit gets the change, a push, and a reply. A comment on the PR body has no thread, so its reply is a PR comment. Tell the owner when the PR is ready for the other provider or for the override.
-- The "Review gate / evaluate" job line reads red until an approved review record covers the effective head (D-251). That is the design and not a failure to fix.
-- The override label goes stale on any push outside the metadata set (D-190). The session applies it after the last push and the automated pass, and adds it again after a later push.
-- Two open PRs that both add a handoff entry conflict at the top of the file, at the end of the register, at the end of the questions, and in the findings table. The second one to merge takes a merge from `main` first. Rebuild the handoff and the archive from the union of the entries, by number, with ten in the handoff and each entry once.
-- The effective head is the newest commit outside the metadata set, and a merge from `main` moves it. The review record names that commit.
-- PR-9 changes the loop state: the floor number joins the hash after the fields of PR-7, so the simulation version rises to 4 and the bit-identity hash moves (G-20). The replayer then takes the content set in place of the grid and the spawn, which closes D-236.
-- PR-9 adds bit 9 to `Button` and the masks: `AssignedMask` becomes 0x03FF and `ReservedMask` becomes 0xFC00. The random intent helper of the tests and the sweep mask follow.
-- PR-9 changes the floor template schema. `sizeX`, `sizeY`, and `sizeZ` join the required list, the three content files gain them, and the content hash of the test set moves.
-- The generator and the reachability search step in integers over the Procgen stream (D-159), and no DetMath call is needed for the carving.
-- The PR template still lacks the gitar gate line of D-250. PR-9 adds it as the next code PR, in `.github/pull_request_template.md`.
-- `StateHash` has no `==` operator. Compare `.Value`.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner adds the `review-override` label to PR #26 after the automated pass and merges it. Then a new session starts PR-9 on a short branch: the floor sizes and the chamber templates as content, the dig plan generator, the reachability search, the stairwell transition with the two bits, the loop floor number with the simulation version 4, and the eight exit tests, under D-159, D-164 to D-167, D-210, D-236, and D-252 to D-257. The session settles the field names of the chamber template in its validator, and it files a question only when a choice changes a contract.
