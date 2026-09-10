@@ -25,8 +25,9 @@ public sealed class BitIdentityTests
     /// PR-59 moved it from `036df5c08e2682e3` when the detail pass changed every dug floor (D-260). PR-10 moved
     /// it from `62c5e1d152fe94fe` when the state gained the projectiles and the sweep intents began to fire, and
     /// the PR #31 review moved it again when the spread draw became one angle and one roll inside the cone (F-87).
+    /// PR-11 moved it from `d8943df12fefcbee` when the sweep gained the Bot stream (D-272).
     /// </remarks>
-    private const string ExpectedHash = "d8943df12fefcbee";
+    private const string ExpectedHash = "6ec00e90c1c85cdb";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

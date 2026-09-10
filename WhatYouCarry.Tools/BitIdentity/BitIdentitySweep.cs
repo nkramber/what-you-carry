@@ -70,6 +70,7 @@ public static class BitIdentitySweep
         RngStream.Loot,
         RngStream.Enemy,
         RngStream.Projectile,
+        RngStream.Bot,
     ];
 
     /// <summary>The hash of the whole sweep.</summary>
