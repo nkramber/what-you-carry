@@ -67,7 +67,8 @@ public static class NightRecordCommand
             return 2;
         }
 
-        File.WriteAllText(output, Build(commit, DateTime.UtcNow, status), Encoding.UTF8);
+        // UTF-8 without the byte-order mark: Encoding.UTF8 writes one, and the record is one JSON object from its first byte.
+        File.WriteAllText(output, Build(commit, DateTime.UtcNow, status), new UTF8Encoding(false));
         Console.Out.WriteLine($"night-record: {output} holds commit {commit} with status {status}.");
         return 0;
     }
