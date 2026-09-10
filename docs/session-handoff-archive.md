@@ -1,5 +1,36 @@
 # Session handoff archive
 
+## Session 88: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: the PR-11 merge record and the PR-58 questions. Branch `docs/pr-11-merge-record`.
+
+### What this session did, and why
+
+- Recorded the PR-11 merge and filed the two PR-58 questions.
+- The owner had not answered the questions when this session ended.
+
+### State of the build
+
+- `main` was at `7487473`. The document branch held the merge record and the handoff entry.
+- The build, tests, determinism lint, and STE check passed.
+
+### In flight
+
+The first scheduled night and the answers to OQ-142 and OQ-143 were in flight.
+
+### Traps and gotchas
+
+The night publish step uses an orphan branch and a worktree in the runner checkout.
+
+### Open questions that block progress
+
+OQ-142 and OQ-143 blocked PR-58.
+
+### Next concrete action
+
+Record the owner answers, then wait for the first night record before opening PR-58.
+
 ## Session 87: 2026-09-10, Codex
 
 Author: Codex
