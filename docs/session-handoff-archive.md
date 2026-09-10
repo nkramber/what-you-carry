@@ -1,5 +1,53 @@
 # Session handoff archive
 
+## Session 84: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: answer the PR #31 review. Branch `feat/pr-10-projectiles`.
+
+### What this session did, and why
+
+- Read the two P2 findings in `docs/reviews/pr-31.md`. Both have full merit.
+- P2-1: the spread drew a yaw offset and a pitch offset, so a shot could leave the cone of D-266 by up to 6 degrees at the corner. The draw is one angle from the direction and one roll around it now, so every shot stays inside the half angle. The draw count per shot stays two.
+- P2-2: the arc solver took a speed of zero, a negative gravity, or a value that is not finite. It rejects each with a context error now (T-2).
+- The sweep hash moved from `3220e92dcbca55a2` to `d8943df12fefcbee`, because every shot of the sweep turns another way. The simulation version stays 6, because it rose in this PR already (G-20).
+- `SpreadStaysInsideTheCone` reads the half angle from the definition over five axes, and `ArcSolverRejectsABadSpeedOrGravity` covers seven bad inputs. 506 tests in total.
+- F-87 and F-88 record the findings, and `docs/reviews/pr-31-response.md` records the dispositions.
+- The repeat review approved `1b58d3a`, and the gate still read "Changes required": the record held a previous-verdict line above the new verdict, and the gate takes the first verdict name after the heading. With the owner's choice, this session moved that line into an "Earlier verdicts" section above the Verdict section. A first try named that section "Verdict history", and the gate read it as the Verdict section, because the parser matches the heading text as a prefix. The verdict text is as the reviewer wrote it, and the gate output names the editing commit (D-198).
+
+### State of the build
+
+- `main` is at `4687081`, the squash merge of PR #30. This branch holds the PR-10 commit `c214d03`, the review commits, the correction `1b58d3a`, and this entry above them.
+- Remote head: `origin/feat/pr-10-projectiles` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 506 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 57 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `d8943df12fefcbee`. The simulation version is 6.
+
+### In flight
+
+PR #31 is open and it holds this branch. The repeat review approved the effective head `1b58d3a`, and the record reads that verdict after the format edit. No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-9 and PR-59 are merged. PR-10 is open as PR #31. PR-11 remains, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The effective head is `1b58d3a`, and the review record names it with the verdict `Ready for owner merge`.
+- The review gate reads the first verdict name after the first heading that starts with "## Verdict", so a section named "Verdict history" counts as the Verdict section. A note that names an earlier verdict belongs in a section whose heading starts with another word, above the Verdict section. A follow-up PR makes the parser match the exact heading and refuse a section with two verdict names.
+- The sweep hash moved without a version change, because the version rose in this PR already. A review that sees `d8943df12fefcbee` must confirm it and not restore `3220e92dcbca55a2`.
+- The spread is uniform in the angle from the axis and not in the solid angle of the cone, so shots gather near the axis less than a uniform disc would. D-266 names the half angle alone.
+- The cone sides come from the world up, or from the world right for a vertical direction, so a direction within 2.6 degrees of vertical takes the second axis. The angle from the axis is exact either way.
+- The reviewing provider reads the existing PR comments and author replies into the review and never addresses gitar (D-250).
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner can merge PR #31 after the remote review-gate check reads `Ready for owner merge` at the effective head `1b58d3a`.
+
 ## Session 83: 2026-09-09, Codex
 
 Author: Codex
