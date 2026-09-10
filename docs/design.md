@@ -258,7 +258,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-45 | D-152 changed the save files, and no item names which files cloud saves sync | 2026-09-07 | ❓ OQ-71. Binds PR-52 |
 | F-46 | D-158 required branch protection, and GitHub returned 403: the feature needs Pro or a public repository, against D-106 | 2026-09-07 | ✅ doc. D-170 defers protection until launch |
 | F-47 | PR #1 review P1-1: a commit body implied that an agent wrote the commits, and T-6 had no stated boundary for a tool name | 2026-09-07 | ✅ doc. D-176 fixes the reading. The commit body is rewritten. Binds PR-1 exit test 6 |
-| F-48 | PR #1 review P1-2: PR-11 created the `night-gate` job and the night job together, so the gate had no result to read on its first run, against G-19 | 2026-09-07 | 🔧 D-177 splits them. PR-58 adds the gate after one night runs. Binds PR-11, PR-58 |
+| F-48 | PR #1 review P1-2: PR-11 created the `night-gate` job and the night job together, so the gate had no result to read on its first run, against G-19 | 2026-09-07 | ✅ D-177 splits them. PR-11 merged as PR #34, two nights ran by hand, and PR-58 merged 2026-09-10 as PR #40 with the gate green on its own PR (G-19) |
 | F-52 | Two providers picked the same session number on the same day, because each read the handoff before the other wrote it | 2026-09-07 | ✅ D-187. Fetch and re-read before the handoff commit. The PR-2 session number check fails on a duplicate |
 | F-53 | One `Revised by` marker made every citation of a partly revised decision stale. Partial revisions carried 33 of 48 citations and caused three rounds of churn | 2026-09-07 | ✅ doc. D-186 splits the marker into `Superseded by` and `Revised in part by`. The D-178 check keys on the first only |
 | F-51 | A grey `review-gate` would stop blocking at launch. GitHub counts a neutral conclusion as a success for a required check, verified 2026-09-07 | 2026-09-07 | 🔧 D-181, D-185. Advisory mode gives neutral. Enforced mode gives failure. The tracked file `.github/review-gate-mode` selects the mode, and the workflow reads it from the base branch |
@@ -408,7 +408,7 @@ Implement the headless runner at one hundred times speed and the first two polic
 Gate: ten thousand night runs of the two policies complete with zero crashes and zero softlocks.
 > *In plain English:* simple robots play thousands of runs every night without graphics. They find crashes and dead ends before a person ever sees them.
 
-**PR-58: Night gate.** 🔧
+**PR-58: Night gate.** ✅ Merged 2026-09-10 as PR #40.
 Add the `night-gate` job to the PR workflow. It reads the result record that the PR-11 night job publishes (D-177). The gate passes only on a success record from a night in the last 48 hours, whatever event ran it (D-274). An absent, malformed, stale, cancelled, or failed record fails the gate, and so does a record whose commit is not on the base branch (D-115, D-275, T-2). The message names the case, the commit, and the time. This entry follows PR-11 in the sequence, after one night runs, scheduled or by hand (G-19, D-278).
 Gate: the job fails each of the six bad records and passes on the real night record.
 > *In plain English:* every merge now needs a green night from the robots. A missing or old result stops the merge, so nobody can merge on silence.
@@ -417,7 +417,7 @@ Gate: the job fails each of the six bad records and passes on the real night rec
 Record the wall time of each CI job per platform for ten PRs. Binds the seed counts in D-116 if a PR job exceeds ten minutes.
 
 **M-2: Night sweep wall time.** 🔧
-Record the night sweep duration on the Mac Mini for one week. Binds the night run counts in D-115 and D-116.
+Record the night sweep duration for seven nights: the six hand runs of 2026-09-10 and the first scheduled night of 2026-09-11 (D-283). Binds the night run counts in D-115 and D-116.
 
 ### Phase 2: First playable (gate: the owner plays one floor with the timer, the hunter, and a stairwell, D-57)
 
@@ -635,9 +635,9 @@ One person owns the program. Items run one at a time in this order. The list cha
 4. PR-1, PR-2. ✅ PR-1 merged 2026-09-08 as PR #6. ✅ PR-2 merged 2026-09-08 as PR #10.
 5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12. ✅ PR-4 merged 2026-09-08 as PR #15. ✅ PR-5 merged 2026-09-08 as PR #17.
 6. PR-6, PR-7, PR-8. ✅ PR-6 merged 2026-09-09 as PR #19. ✅ PR-7 merged 2026-09-09 as PR #21. ✅ PR-8 merged 2026-09-09 as PR #23.
-7. PR-9, PR-59, PR-10, PR-11. One night runs, scheduled or by hand, then PR-58 (D-177, D-278).
-8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277).
-9. **← GATE 1 (foundation).** Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green.
+7. PR-9, PR-59, PR-10, PR-11. One night runs, scheduled or by hand, then PR-58 (D-177, D-278). ✅ PR-9 merged 2026-09-09 as PR #27. ✅ PR-59 merged 2026-09-09 as PR #29. ✅ PR-10 merged 2026-09-10 as PR #31. ✅ PR-11 merged 2026-09-10 as PR #34. ✅ Two nights ran by hand 2026-09-10. ✅ PR-58 merged 2026-09-10 as PR #40.
+8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). M-2 counts seven nights of 2026-09-10 and 2026-09-11 (D-283).
+9. **← GATE 1 (foundation).** Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14.
 11. PR-15, PR-16, PR-17, PR-18.
 12. PR-19, PR-20.
