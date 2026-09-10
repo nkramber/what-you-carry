@@ -27,7 +27,7 @@ Session: harden the review gate against a second verdict name (D-269). Branch `f
 
 ### In flight
 
-PR #32 is open and it holds this branch. It changes the tools, so it needs the automated pass and a Codex review at the effective head `7a388f6`. The merge record of PR-10 and the PR-11 questions come in the next session, after this fix or beside it. No other PR is open.
+PR #32 is open and it holds this branch. It changes the tools, so it needs a Codex review at the effective head `60bdb17`, the skill edit that answered the automated pass. The pass approved `7a388f6` with one suggestion, and every comment has its answer. The merge record of PR-10 and the PR-11 questions come in the next session, after this fix or beside it. No other PR is open.
 
 ### Where Phase 1 stands
 
@@ -37,7 +37,7 @@ PR-1 to PR-10 and PR-59 are merged. PR-11 remains, and then M-1, M-2, and PR-58 
 
 - The gate now fails a review record whose Verdict section names two verdicts, and it names both. A repeat review keeps one name there and puts the earlier verdict in a section such as `## Earlier verdicts`, above it. The count reads the prose too, so the reason after the verdict names no other verdict. The automated pass raised that edge, and the skill says it now.
 - The gate parses `docs/reviews/pr-31.md` with the heading `## Earlier verdicts` that the format edits gave it, and the repository test reads every record, so a record that breaks the rule fails `dotnet test` on every branch.
-- The effective head is `7a388f6`. This PR changes no Core file, so the bit-identity hash stands.
+- The effective head is `60bdb17`, because the skill file lies outside the metadata set of D-190. This PR changes no Core file, so the bit-identity hash stands.
 - The PR-10 merge record and the PR-11 questions are still to do: the design doc PR-10 entry, the roadmap status line, and the sequence item 18.
 
 ### Open questions that block progress
@@ -46,7 +46,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-Read the gitar comments on PR #32 and answer each one per the `pr-review` skill. Then a Codex session reviews PR #32 at the effective head `7a388f6` and writes `docs/reviews/pr-32.md`. In parallel or after, a session records the PR-10 merge and asks the PR-11 questions before its code.
+A Codex session reviews PR #32 per the `pr-review` skill at the effective head `60bdb17`, reads the PR comments and the author reply into the review, and writes `docs/reviews/pr-32.md`. In parallel or after, a session records the PR-10 merge and asks the PR-11 questions before its code.
 
 
 ## Session 85: 2026-09-09, Codex
