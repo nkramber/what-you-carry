@@ -1,5 +1,55 @@
 # Session handoff archive
 
+## Session 89: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: PR-11, the bot harness, the two policies, the runner, and the night workflow. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Started PR-11 from `main` at `d3093cf`, the squash merge of PR #33, as Session 88 planned. The commit `8a7367f` holds the code, the workflows, the tests, and the roadmap note. PR #34 holds the branch.
+- `RngStream.Bot` is the fifth value of D-159 (D-272). The bound of `Rng.ForStream` names it, and the sweep draws from it, so the known answer moves from `d8943df12fefcbee` to `6ec00e90c1c85cdb`. No simulation number changed, so the version stays 6.
+- `Core/Bots/`: `IBotPolicy` with a name, a promise of progress, and one intent per tick. `RandomWalker` holds one movement, one yaw rate, and one jump choice for up to sixty ticks, then draws again. `GreedyDescender` walks the reachability path to the stairwell with the jump in place of PR-9 exit test 8, descends at every stairwell, and ascends at the deepest floor of the content. `BotRun.Play` plays one run to one of the four end states of D-270 with the budgets of D-271, and a crash carries the exception text.
+- `Tools/BotRunner/`: `bot-run` loads the content of the checkout, plays a seed range with a policy, and writes two log lines per run through the PR-4 logger into one file per run. It exits nonzero on a crash, or a softlock on a policy that promises progress. `night-record` writes the record of D-273.
+- `.github/workflows/bots.yml` plays one hundred seeds per policy on every PR. `.github/workflows/night.yml` runs the scheduled night on the macOS runner at 03:00 UTC: five thousand seeds per policy, the reachability sweeps at one hundred thousand seeds, and the record on the orphan branch `night-results`, whatever the outcome.
+- The stairwell test drives the greedy descender until it asks for the stairwell choice, instead of a walker of its own.
+- Exit tests 1 to 4 and 7 pass among 517 tests. A local run of the PR job gave one hundred budget ends for the walker and one hundred bottom ends for the descender, with zero crashes. The bots job passed on the push too.
+- The automated pass on `8a7367f` found two edges with merit. A broken build left no binary for `night-record`, so the branch would keep a stale record: the publish step writes the failure record in shell when the file is absent now. The seed loop could wrap at the largest seed: the loop runs by the count of seeds now, with a bound of one million. Commit `0536f7e` holds both, with a test for the ranges.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. This branch holds the PR-11 commit `8a7367f` above it, and this entry above that.
+- Remote head: `origin/feat/pr-11-bots` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 517 tests, 0 failures, in under five minutes. The hundred-seed descent takes about thirty seconds of it.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 is open and it holds this branch. The automated pass approved `8a7367f` with two edges, and `0536f7e` answers both, so the effective head is `0536f7e`. A Codex session reviews the PR at it. The review focus is determinism, errors, input and CI boundaries, and test quality (roadmap PR-11). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-11 and PR-59 are merged or open. After the PR-11 merge, one scheduled night runs on its own, then PR-58 opens, and M-1 and M-2 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The night workflow pushes to the branch `night-results` with `contents: write`. The first scheduled night at 03:00 UTC after the merge makes the first record, and `workflow_dispatch` runs one by hand. The runner needs the `night-results` branch to accept a force push.
+- A bot policy holds state that is not simulation state. The record holds the intents, so a replay needs no policy.
+- A descender run takes about a quarter of a second, and a walker run about a tenth. Five thousand of each is about thirty minutes of the night, before the sweep.
+- The random walker never sets the stairwell bits, so it never descends and its run ends by budget at 36000 ticks.
+- `BotRun.Play` catches every exception, because the harness must run the next seed and the log must hold the fault (D-270). No other Core code catches without a rethrow.
+- `RngTests.FloorStreamsAreDistinct` and `RngStreamsDiffer` list the four simulation streams by name. The Bot stream joins the sweep, and the bit-identity test walks the enum, so a sixth stream fails that test until the sweep names it.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #34 per the `pr-review` skill at the effective head `0536f7e`, reads the PR comments and the author replies into the review, and writes `docs/reviews/pr-34.md`. The review confirms the bit-identity change under G-20 and the workflow permissions under the input and CI boundaries.
+
 ## Session 88: 2026-09-10, Claude Code
 
 Author: Claude Code
