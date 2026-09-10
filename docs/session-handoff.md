@@ -2,6 +2,56 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 89: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: PR-11, the bot harness, the two policies, the runner, and the night workflow. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Started PR-11 from `main` at `d3093cf`, the squash merge of PR #33, as Session 88 planned. The commit `8a7367f` holds the code, the workflows, the tests, and the roadmap note. PR #34 holds the branch.
+- `RngStream.Bot` is the fifth value of D-159 (D-272). The bound of `Rng.ForStream` names it, and the sweep draws from it, so the known answer moves from `d8943df12fefcbee` to `6ec00e90c1c85cdb`. No simulation number changed, so the version stays 6.
+- `Core/Bots/`: `IBotPolicy` with a name, a promise of progress, and one intent per tick. `RandomWalker` holds one movement, one yaw rate, and one jump choice for up to sixty ticks, then draws again. `GreedyDescender` walks the reachability path to the stairwell with the jump in place of PR-9 exit test 8, descends at every stairwell, and ascends at the deepest floor of the content. `BotRun.Play` plays one run to one of the four end states of D-270 with the budgets of D-271, and a crash carries the exception text.
+- `Tools/BotRunner/`: `bot-run` loads the content of the checkout, plays a seed range with a policy, and writes two log lines per run through the PR-4 logger into one file per run. It exits nonzero on a crash, or a softlock on a policy that promises progress. `night-record` writes the record of D-273.
+- `.github/workflows/bots.yml` plays one hundred seeds per policy on every PR. `.github/workflows/night.yml` runs the scheduled night on the macOS runner at 03:00 UTC: five thousand seeds per policy, the reachability sweeps at one hundred thousand seeds, and the record on the orphan branch `night-results`, whatever the outcome.
+- The stairwell test drives the greedy descender until it asks for the stairwell choice, instead of a walker of its own.
+- Exit tests 1 to 4 and 7 pass among 517 tests. A local run of the PR job gave one hundred budget ends for the walker and one hundred bottom ends for the descender, with zero crashes.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. This branch holds the PR-11 commit `8a7367f` above it, and this entry above that.
+- Remote head: `origin/feat/pr-11-bots` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 517 tests, 0 failures, in under five minutes. The hundred-seed descent takes about thirty seconds of it.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 is open and it holds this branch. The automated pass and the new bots job run on the push, and the author answers each comment. Then a Codex session reviews the PR at the effective head, which is `8a7367f` until a substantive push moves it. The review focus is determinism, errors, input and CI boundaries, and test quality (roadmap PR-11). No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-11 and PR-59 are merged or open. After the PR-11 merge, one scheduled night runs on its own, then PR-58 opens, and M-1 and M-2 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The night workflow pushes to the branch `night-results` with `contents: write`. The first scheduled night at 03:00 UTC after the merge makes the first record, and `workflow_dispatch` runs one by hand. The runner needs the `night-results` branch to accept a force push.
+- A bot policy holds state that is not simulation state. The record holds the intents, so a replay needs no policy.
+- A descender run takes about a quarter of a second, and a walker run about a tenth. Five thousand of each is about thirty minutes of the night, before the sweep.
+- The random walker never sets the stairwell bits, so it never descends and its run ends by budget at 36000 ticks.
+- `BotRun.Play` catches every exception, because the harness must run the next seed and the log must hold the fault (D-270). No other Core code catches without a rethrow.
+- `RngTests.FloorStreamsAreDistinct` and `RngStreamsDiffer` list the four simulation streams by name. The Bot stream joins the sweep, and the bit-identity test walks the enum, so a sixth stream fails that test until the sweep names it.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Read the gitar comments on PR #34 and answer each one per the `pr-review` skill. Then a Codex session reviews PR #34 at the effective head, reads the PR comments into the review, and writes `docs/reviews/pr-34.md`. The review confirms the bit-identity change under G-20 and the workflow permissions under the input and CI boundaries.
+
+
 ## Session 88: 2026-09-10, Claude Code
 
 Author: Claude Code
@@ -408,53 +458,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 Commit the review record and handoff entry. Push the branch. Fetch and verify that the remote head has no ahead count and that the review-gate check reads the approved effective head.
-## Session 79: 2026-09-09, Claude Code
-
-Author: Claude Code
-Session: PR-59, the mine detail pass, the block ids, and the water rule. Branch `feat/pr-59-detail`.
-
-### What this session did, and why
-
-- Started PR-59 from `main` at `45dbaf5`, the squash merge of PR #28, as Session 78 planned. The commit `787c851` holds the code, the tests, and the roadmap note. PR #29 holds the branch.
-- `BlockId` declares 2 hewn stone, 3 timber beam, 4 ore vein, 5 still water, 6 rubble, and 7 plank (D-259). The grid bound accepts 0 to 7, and `IsSolid` lets air and still water through (D-258).
-- `Core/Procgen/DetailPass.cs` runs after the shafts and before the stairwell, in this order: collapses, pools, walls, pillars. A collapse fills the last stamp of a walker with no dependent, in cells that walker alone dug, with a rubble heap one to three rows high. A pool is a rectangle of two or three cells a side in a chamber of at least twelve cells, over rock, with a dry floor cell beside every pool cell. A wall block replaces rock that borders air with rock over it, by band. A pillar is one column with dry chamber floor on all eight sides, one try per twenty cells.
-- `DigPlan` records which walker dug each air cell, which walkers have a dependent (a chamber, a drift, or a later walker on their trail), and where each walker ended.
-- `PlayerBody` scales the speeds and the jump velocity by one half and gravity by one quarter while the column under the feet is water: the feet in a water cell, or the body in the air over water (D-261, D-262).
-- The simulation version is 5 (D-260). The sweep content holds one template per band on floors 1 to 3, and the known answer moves from `036df5c08e2682e3` to `62c5e1d152fe94fe`.
-- The six exit tests of the roadmap entry pass. The reachability sweeps of PR-9 exit test 1 and PR-59 exit test 1 read one dig per seed through a shared report.
-- `TunnelCrossSection` steps over chamber cells, water cells, the cells around a pillar, and the cells around a collapse, because those are not tunnel cells (D-166).
-- The automated pass on `787c851` approved the code with two suggestions and one CI notice. The first suggestion asked for a decision on the water probe, and the owner gave it: D-264 revises D-262 in part, and OQ-132 holds the question. The second asked for a direct assertion of the quarter gravity in the air over water, and the test has it now. The CI notice on the absent review record has no merit (D-251). The correction commit holds the decision, the test, and this note.
-
-### State of the build
-
-- `main` is at `45dbaf5`, the squash merge of PR #28. This branch holds the PR-59 commit `787c851` above it, and this entry above that.
-- Remote head: `origin/feat/pr-59-detail` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 476 tests, 0 failures. The suite takes about three minutes, and the shared reachability sweep takes most of it.
-- `det-lint`: 0 findings. Core 0 in 54 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `62c5e1d152fe94fe`. The simulation version is 5.
-- The Godot 4.7.2 headless build check passes.
-
-### In flight
-
-PR #29 is open and it holds this branch. The automated pass approved `787c851`, and the correction commit answers its two suggestions. The effective head is that commit, and a Codex session reviews the PR at it. The review focus is determinism, content, test quality, and replay (roadmap PR-59). No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-9 are merged. PR-59 is open as PR #29. PR-10 and PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The water probe reads the column under the feet (D-264). A probe of the feet cell alone gives an apex of 1.05 blocks at 1.6 times the ticks, because the quarter gravity goes as soon as the feet rise out of the cell.
-- A collapse must never fill a cell of a walker with a dependent. The first version filled cells of any walker that were dug by that walker alone, and a walker that looped back cut its own path to a chamber it dug earlier. Seed 418 of floor 14 found it.
-- The pillars come last in the detail pass, so no wall block lands on a pillar and no pool opens under one. A pool cell needs air over it and rock under it.
-- The pillars and the pools are cells with their floor row, not columns, because two chambers can stack on one column at two rows.
-- The typed lists of a content set are in ordinal path order, so `Floors[0]` is the deep band. A test that needs the template of a floor asks `FloorGenerator.TemplateFor`.
-- The override label goes stale on any push outside the metadata set (D-190). The session applies it after the last push and the automated pass, and adds it again after a later push.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #29 per the `pr-review` skill at the effective head, reads the PR comments and the author replies into the review, and writes `docs/reviews/pr-29.md`. The review confirms the simulation version 5 and the bit-identity change under G-20.
