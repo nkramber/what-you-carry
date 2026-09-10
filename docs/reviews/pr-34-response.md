@@ -6,7 +6,7 @@ Date: 2026-09-10
 
 - PR: 34
 - Reviewed head: `0536f7e`
-- Response head: `f6ca5f6`
+- Response head: `4e1ea9e`
 - Branch: `feat/pr-11-bots`
 
 ## Push check
@@ -29,4 +29,4 @@ F-90 records the finding. No new decision and no new question.
 
 ## Final head
 
-The effective head is `f6ca5f6`, which holds the collection, the shape test, and F-90. The commit after it holds this response and the Session 91 handoff entry.
+The correction `f6ca5f6` holds the collection, the shape test, and F-90. The automated pass then asked the shape test to scan every test directory, and `4e1ea9e` does, so the effective head is `4e1ea9e`. The commits between hold this response and the Session 91 handoff entry.

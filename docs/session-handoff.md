@@ -12,7 +12,7 @@ Session: answer the PR #34 review. Branch `feat/pr-11-bots`.
 - Read the one P1 finding in `docs/reviews/pr-34.md`. Full merit: the bot tests call a command that writes its summary to the process console, and the bit-identity command test captures that console, so a full run could read the wrong line.
 - Every test class that calls a command or redirects the console carries `[Collection(ConsoleCollection.Name)]` now, so xUnit runs the four one after another. `ConsoleCollectionTests.EveryConsoleTestIsInTheCollection` reads every test source and fails on a class that touches the console outside the collection.
 - Three full runs with `-m:1` on the correction: 518 passed, 0 failed, 0 skipped, each time.
-- F-90 records the finding, and `docs/reviews/pr-34-response.md` records the disposition. The correction is `f6ca5f6`.
+- F-90 records the finding, and `docs/reviews/pr-34-response.md` records the disposition. The correction is `f6ca5f6`, and `4e1ea9e` answers the automated pass on it: the shape test scans every test directory.
 
 ### State of the build
 
@@ -24,7 +24,7 @@ Session: answer the PR #34 review. Branch `feat/pr-11-bots`.
 
 ### In flight
 
-PR #34 is open and it holds this branch. The automated pass runs on this push, and then a Codex repeat review at the effective head `f6ca5f6` updates the same review record. No other PR is open.
+PR #34 is open and it holds this branch. The automated pass approved `f6ca5f6` with one suggestion, and `4e1ea9e` answers it, so the effective head is `4e1ea9e`. A Codex repeat review at that head updates the same review record. No other PR is open.
 
 ### Where Phase 1 stands
 
@@ -32,7 +32,7 @@ PR-1 to PR-10 and PR-59 are merged. PR-11 is open as PR #34. After its merge, on
 
 ### Traps and gotchas
 
-- The effective head is `f6ca5f6`. The review record still names `0536f7e`, and the repeat review updates the head and the verdict together, with one verdict name in the Verdict section (D-269).
+- The effective head is `4e1ea9e`. The review record still names `0536f7e`, and the repeat review updates the head and the verdict together, with one verdict name in the Verdict section (D-269).
 - A test that calls a command of the Tools project, or redirects the console, goes in the console collection, or the shape test fails.
 - xUnit runs the classes of one collection one after another, so the console collection takes a little longer than the parallel run of four classes. The full suite still takes under three and a half minutes.
 
@@ -42,7 +42,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-The automated pass runs on this push. Then a Codex session repeats the review per the repeat procedure, at the effective head `f6ca5f6`, and updates `docs/reviews/pr-34.md` with the status of P1-1 and a new verdict.
+A Codex session repeats the review per the repeat procedure, at the effective head `4e1ea9e`, and updates `docs/reviews/pr-34.md` with the status of P1-1 and a new verdict.
 
 
 ## Session 90: 2026-09-10, Codex
