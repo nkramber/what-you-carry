@@ -1,7 +1,9 @@
-# The night gate (D-115, D-177, D-274, D-275; PR-58). It fetches the one record that the night job publishes to
-# the branch night-results (D-273) and fails the PR on an absent, malformed, stale, foreign, cancelled, or
-# failed record. The rules live in WhatYouCarry.Tools, command night-gate. This file only gathers the inputs.
-# The checkout holds the full history, so the tool can ask git whether the record commit is on the base branch.
+# The night gate (D-115, D-177, D-274, D-275; PR-58). The command fetches the branch night-results of the remote
+# and reads the one record that the night job publishes there (D-273), from git and never from the working tree,
+# so a pull request cannot carry its own record (PR #40 review P1-1). It fails the PR on an absent, malformed,
+# stale, foreign, cancelled, or failed record. The rules live in WhatYouCarry.Tools, command night-gate. This
+# file only gathers the inputs. The checkout holds the full history, so the tool can ask git whether the record
+# commit is on the base branch.
 name: Night gate
 
 on:
@@ -20,14 +22,5 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      - name: Fetch the night record
-        # An absent branch is a gate failure that the tool names, so this step reports it and goes on.
-        run: |
-          if git fetch --quiet origin night-results; then
-            git show FETCH_HEAD:night.json > night.json
-            echo "record: $(cat night.json)"
-          else
-            echo "The branch night-results is absent on origin. The gate reads an absent record."
-          fi
-      - name: Evaluate the record
-        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- night-gate --record night.json --root "$GITHUB_WORKSPACE" --base "origin/${{ github.base_ref }}" --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      - name: Fetch and evaluate the night record
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- night-gate --root "$GITHUB_WORKSPACE" --remote origin --base "origin/${{ github.base_ref }}" --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"

@@ -32,7 +32,7 @@ public static class NightGateRules
     {
         if (facts.RecordText is null)
         {
-            return new NightGateResult(false, AbsentCase, "The night record is absent: no night.json came from the branch night-results. No night has published a record yet, or the fetch found no branch.");
+            return new NightGateResult(false, AbsentCase, $"The night record is absent: {facts.AbsentReason}. No night.json reached the gate from the branch night-results.");
         }
 
         if (facts.Record is null)

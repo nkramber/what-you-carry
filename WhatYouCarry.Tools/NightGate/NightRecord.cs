@@ -17,6 +17,12 @@ public static class NightRecordParser
     /// <summary>Returns the record, or null with the reason in <paramref name="error"/> when the text is not a record.</summary>
     public static NightRecord? TryParse(string text, out string error)
     {
+        // The records of the first two nights start with a byte-order mark, from the writer before its correction.
+        if (text.Length > 0 && text[0] == '\uFEFF')
+        {
+            text = text[1..];
+        }
+
         JsonDocument document;
         try
         {

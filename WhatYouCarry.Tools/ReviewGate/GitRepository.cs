@@ -93,6 +93,20 @@ public sealed class GitRepository
         return result.ExitCode == 0;
     }
 
+    /// <summary>True when the remote has the branch. git exits 2 when no ref matches, and any other failure is an error (T-2).</summary>
+    public bool HasRemoteBranch(string remote, string branch)
+    {
+        GitResult result = Execute(["ls-remote", "--exit-code", "--heads", remote, branch]);
+        result.ThrowUnless(0, 2);
+        return result.ExitCode == 0;
+    }
+
+    /// <summary>Fetches one branch of a remote into FETCH_HEAD. Any failure is an error with the command and stderr (T-2).</summary>
+    public void Fetch(string remote, string branch)
+    {
+        Run(["fetch", "--quiet", remote, branch]);
+    }
+
     /// <summary>True when the commit is the revision or an ancestor of it. git exits 1 when it is not.</summary>
     public bool IsAncestor(string commit, string revision)
     {

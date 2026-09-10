@@ -10,14 +10,14 @@ using Xunit;
 namespace WhatYouCarry.Tests;
 
 /// <summary>
-/// PR-58 exit tests 1 to 6 and 8: the night gate rules over fixture records, the commit check over real
-/// commits, and the exit codes of the command (D-115, D-177, D-274, D-275).
+/// PR-58 exit tests 1 to 6 and 8: the night gate rules over fixture records, the commit check and the remote
+/// read over real repositories, and the exit codes of the command (D-115, D-177, D-274, D-275).
 /// </summary>
 [Collection(ConsoleCollection.Name)]
 public sealed class NightGateTests
 {
     private const string Commit = "0123456789abcdef0123456789abcdef01234567";
-    private const string BaseRef = "main";
+    private const string BaseRef = "origin/main";
     private static readonly DateTimeOffset Now = DateTimeOffset.Parse("2026-09-11T12:00:00Z", CultureInfo.InvariantCulture);
 
     /// <summary>PR-58 exit test 1. A failure record fails the gate.</summary>
@@ -129,67 +129,120 @@ public sealed class NightGateTests
     [Fact]
     public void NightGateFailsOnForeignCommit()
     {
-        using var repo = new TemporaryGitRepository();
-        string onMain = repo.Commit("feat: on main", Files(("a.txt", "a")));
-        repo.CreateBranch("feature");
-        string onFeature = repo.Commit("feat: on feature", Files(("b.txt", "b")));
-        string directory = TempDirectory();
-        try
-        {
-            string path = Path.Combine(directory, "night.json");
+        using var remote = new TemporaryGitRepository();
+        string onMain = remote.Commit("feat: on main", Files(("a.txt", "a")));
+        remote.CreateBranch("feature");
+        string onFeature = remote.Commit("feat: on feature", Files(("b.txt", "b")));
+        remote.Git(["checkout", "-q", "main"]);
+        using TemporaryGitRepository local = CloneOf(remote);
 
-            File.WriteAllText(path, Record(Now.AddHours(-1), "success", onFeature));
-            NightGateResult foreign = NightGateRules.Evaluate(NightGateFacts.Gather(path, repo.Path, BaseRef, Now));
-            Assert.False(foreign.Passes);
-            Assert.Equal(NightGateRules.ForeignCase, foreign.Case);
-            Assert.Contains(onFeature, foreign.Message, StringComparison.Ordinal);
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", onFeature)));
+        NightGateResult foreign = NightGateRules.Evaluate(NightGateFacts.Gather(local.Path, "origin", BaseRef, Now));
+        Assert.False(foreign.Passes);
+        Assert.Equal(NightGateRules.ForeignCase, foreign.Case);
+        Assert.Contains(onFeature, foreign.Message, StringComparison.Ordinal);
 
-            File.WriteAllText(path, Record(Now.AddHours(-1), "success", "ffffffffffffffffffffffffffffffffffffffff"));
-            NightGateResult unknown = NightGateRules.Evaluate(NightGateFacts.Gather(path, repo.Path, BaseRef, Now));
-            Assert.False(unknown.Passes);
-            Assert.Equal(NightGateRules.ForeignCase, unknown.Case);
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", "ffffffffffffffffffffffffffffffffffffffff")));
+        NightGateResult unknown = NightGateRules.Evaluate(NightGateFacts.Gather(local.Path, "origin", BaseRef, Now));
+        Assert.False(unknown.Passes);
+        Assert.Equal(NightGateRules.ForeignCase, unknown.Case);
 
-            File.WriteAllText(path, Record(Now.AddHours(-1), "success", onMain));
-            NightGateResult green = NightGateRules.Evaluate(NightGateFacts.Gather(path, repo.Path, BaseRef, Now));
-            Assert.True(green.Passes);
-            Assert.Contains(onMain, green.Message, StringComparison.Ordinal);
-
-            NightGateResult absent = NightGateRules.Evaluate(NightGateFacts.Gather(Path.Combine(directory, "none.json"), repo.Path, BaseRef, Now));
-            Assert.Equal(NightGateRules.AbsentCase, absent.Case);
-        }
-        finally
-        {
-            Directory.Delete(directory, recursive: true);
-        }
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", onMain)));
+        NightGateResult green = NightGateRules.Evaluate(NightGateFacts.Gather(local.Path, "origin", BaseRef, Now));
+        Assert.True(green.Passes);
+        Assert.Contains(onMain, green.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>The command exits 0 on a pass, 1 on a failure, and 2 on a wrong option or time.</summary>
+    /// <summary>
+    /// PR #40 review P1-1. The gate reads the record from the branch of the remote and never from the working
+    /// tree of the checkout, so a pull request that carries a fresh success record still meets the absent case.
+    /// A branch without the file is absent too, a record on the branch wins over the planted file, and a remote
+    /// that git cannot reach is an error that names it, not an absent record (T-2).
+    /// </summary>
+    [Fact]
+    public void NightGateReadsTheRecordFromTheRemoteAndNeverFromTheCheckout()
+    {
+        using var remote = new TemporaryGitRepository();
+        string onMain = remote.Commit("feat: on main", Files(("a.txt", "a")));
+        using TemporaryGitRepository local = CloneOf(remote);
+        File.WriteAllText(Path.Combine(local.Path, "night.json"), Record(Now.AddHours(-1), "success", onMain));
+
+        NightGateResult absent = NightGateRules.Evaluate(NightGateFacts.Gather(local.Path, "origin", BaseRef, Now));
+        Assert.False(absent.Passes);
+        Assert.Equal(NightGateRules.AbsentCase, absent.Case);
+        Assert.Contains("has no branch night-results", absent.Message, StringComparison.Ordinal);
+
+        PublishNight(remote, ("other.txt", "not the record"));
+        NightGateResult noFile = NightGateRules.Evaluate(NightGateFacts.Gather(local.Path, "origin", BaseRef, Now));
+        Assert.False(noFile.Passes);
+        Assert.Equal(NightGateRules.AbsentCase, noFile.Case);
+        Assert.Contains("holds no night.json", noFile.Message, StringComparison.Ordinal);
+
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "failure", onMain)));
+        NightGateResult failed = NightGateRules.Evaluate(NightGateFacts.Gather(local.Path, "origin", BaseRef, Now));
+        Assert.False(failed.Passes);
+        Assert.Equal(NightGateRules.FailedCase, failed.Case);
+
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => NightGateFacts.Gather(local.Path, "nowhere", BaseRef, Now));
+        Assert.Contains("nowhere", error.Message, StringComparison.Ordinal);
+        Assert.Contains("ls-remote", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>The records of the first two nights start with a byte-order mark, and the parser reads them.</summary>
+    [Fact]
+    public void NightRecordParserAcceptsAByteOrderMark()
+    {
+        NightRecord? record = NightRecordParser.TryParse("\uFEFF" + Record(Now.AddHours(-1), "success"), out string error);
+
+        Assert.True(record is not null, error);
+        Assert.Equal(Commit, record!.Commit);
+        Assert.Equal("success", record.Status);
+    }
+
+    /// <summary>The command exits 0 on a pass, 1 on a failure, and 2 on a wrong option or time. A planted record in the checkout changes nothing.</summary>
     [Fact]
     public void NightGateCommandReportsEachExitCode()
     {
-        using var repo = new TemporaryGitRepository();
-        string onMain = repo.Commit("feat: on main", Files(("a.txt", "a")));
-        string directory = TempDirectory();
-        try
+        using var remote = new TemporaryGitRepository();
+        string onMain = remote.Commit("feat: on main", Files(("a.txt", "a")));
+        using TemporaryGitRepository local = CloneOf(remote);
+        File.WriteAllText(Path.Combine(local.Path, "night.json"), Record(Now.AddHours(-1), "success", onMain));
+        string[] tail = ["--root", local.Path, "--remote", "origin", "--base", BaseRef, "--now", "2026-09-11T12:00:00Z"];
+
+        Assert.Equal(1, Program.Main(["night-gate", .. tail]));
+
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", onMain)));
+        Assert.Equal(0, Program.Main(["night-gate", .. tail]));
+
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "failure", onMain)));
+        Assert.Equal(1, Program.Main(["night-gate", .. tail]));
+
+        Assert.Equal(2, Program.Main(["night-gate", "--root", local.Path, "--remote", "origin", "--base", BaseRef]));
+        Assert.Equal(2, Program.Main(["night-gate", "--root", local.Path, "--remote", "origin", "--base", BaseRef, "--now", "yesterday"]));
+        Assert.Equal(2, Program.Main(["night-gate", "--root"]));
+    }
+
+    /// <summary>A checkout with the remote added and fetched, so the base ref of the tests exists in it.</summary>
+    private static TemporaryGitRepository CloneOf(TemporaryGitRepository remote)
+    {
+        var local = new TemporaryGitRepository();
+        local.Git(["remote", "add", "origin", remote.Path]);
+        local.Git(["fetch", "-q", "origin"]);
+        return local;
+    }
+
+    /// <summary>Publishes the files as the one commit of the orphan branch night-results of the remote, as the night job does (D-273).</summary>
+    private static void PublishNight(TemporaryGitRepository remote, params (string Path, string Content)[] files)
+    {
+        if (remote.Git(["branch", "--list", NightGateFacts.RecordBranch]).Trim().Length > 0)
         {
-            string path = Path.Combine(directory, "night.json");
-            string[] tail = ["--root", repo.Path, "--base", BaseRef, "--now", "2026-09-11T12:00:00Z"];
-
-            File.WriteAllText(path, Record(Now.AddHours(-1), "success", onMain));
-            Assert.Equal(0, Program.Main(["night-gate", "--record", path, .. tail]));
-
-            File.WriteAllText(path, Record(Now.AddHours(-1), "failure", onMain));
-            Assert.Equal(1, Program.Main(["night-gate", "--record", path, .. tail]));
-
-            Assert.Equal(1, Program.Main(["night-gate", "--record", Path.Combine(directory, "none.json"), .. tail]));
-            Assert.Equal(2, Program.Main(["night-gate", "--record", path, "--root", repo.Path, "--base", BaseRef]));
-            Assert.Equal(2, Program.Main(["night-gate", "--record", path, "--root", repo.Path, "--base", BaseRef, "--now", "yesterday"]));
-            Assert.Equal(2, Program.Main(["night-gate", "--record"]));
+            remote.Git(["branch", "-q", "-D", NightGateFacts.RecordBranch]);
         }
-        finally
-        {
-            Directory.Delete(directory, recursive: true);
-        }
+
+        remote.Git(["checkout", "-q", "--orphan", NightGateFacts.RecordBranch]);
+        remote.Git(["rm", "-rfq", "--ignore-unmatch", "."]);
+        remote.Commit("night", Files(files));
+        remote.Git(["checkout", "-q", "main"]);
     }
 
     private static NightGateFacts Facts(string? text, bool? commitOnBase)
@@ -208,6 +261,7 @@ public sealed class NightGateTests
         return new NightGateFacts
         {
             RecordText = text,
+            AbsentReason = text is null ? "the remote 'origin' has no branch night-results" : null,
             Record = record,
             ParseError = parseError,
             CommitOnBase = commitOnBase,
@@ -232,10 +286,4 @@ public sealed class NightGateTests
         return result;
     }
 
-    private static string TempDirectory()
-    {
-        string directory = Path.Combine(Path.GetTempPath(), "wyc-night-gate-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(directory);
-        return directory;
-    }
 }

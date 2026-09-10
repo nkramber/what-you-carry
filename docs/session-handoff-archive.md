@@ -1,5 +1,44 @@
 # Session handoff archive
 
+## Session 92: 2026-09-10, Codex
+
+Author: Codex
+Session: repeat review PR-34 at effective head `4e1ea9e`. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Verified the provider gate. Sessions 89 and 91 identify Claude Code as the author of the PR-34 change and its correction. Codex is the eligible reviewer.
+- Recomputed the effective head. `4e1ea9e` is the newest substantive commit. Later commits change only review and handoff metadata.
+- Read the correction diff, the response record, the PR comments and replies, the PR-11 roadmap, the console collection, and the affected tests.
+- Closed P1-1. Three independent full test runs pass 518 tests with no failure or skip. The collection serializes all four console-touching test classes, and the shape test scans every test directory.
+- Updated `docs/reviews/pr-34.md` with the fixed finding and the verdict `Ready for owner merge` at effective head `4e1ea9e`.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. The effective PR-34 head is `4e1ea9e`.
+- Remote head: `origin/feat/pr-11-bots` is `945004a`, pending the final metadata verification push.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures, 0 skips, three times in a row.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 needs this repeat-review record pushed. The substantive CI checks pass. The evaluate and review-gate checks must rerun after this metadata commit.
+
+### Traps and gotchas
+
+- The effective head is `4e1ea9e`, not the current metadata tip. D-184 excludes the review and session handoff paths.
+- P1-1 stays fixed only while new tests that touch the process console carry the `Console` collection. The shape test enforces this for files under the test directories.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit the repeat-review record and this handoff entry. Push the branch. Fetch and verify the remote head and the review-gate result.
+
 ## Session 91: 2026-09-10, Claude Code
 
 Author: Claude Code
