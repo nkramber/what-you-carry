@@ -1,5 +1,45 @@
 # Session handoff archive
 
+## Session 82: 2026-09-09, Claude Code
+
+Author: Claude Code
+Session: PR-10, the projectile simulation, the arc solver, and the shot of the attack bit. Branch `feat/pr-10-projectiles`.
+
+### What this session did, and why
+
+- Started PR-10 from `main` at `4687081` and added the projectile simulation, arc solver, attack-bit shot, tests, content, and roadmap note.
+- The projectile spread, shot origin, fire timing, replay state, and simulation version 6 follow D-265 to D-268 and G-20.
+- The six PR-10 exit tests pass, with 500 tests in total.
+
+### State of the build
+
+- `main` is at `4687081`. The PR-10 implementation commit is `c214d03`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 500 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings. The Godot 4.7.2 headless build check passes.
+- `bit-identity`: `3220e92dcbca55a2`. The simulation version is 6.
+
+### In flight
+
+PR #31 is open. A Codex session reviews the PR at the effective head.
+
+### Where Phase 1 stands
+
+PR-1 to PR-9 and PR-59 are merged. PR-10 is open. PR-11 remains, followed by M-1, M-2, and PR-58.
+
+### Traps and gotchas
+
+- The Projectile stream is not part of the loop state hash. A replay comparison must include a tick with a projectile in flight.
+- The shot starts at the marched shoulder point. A shot from inside rock reports an error.
+- The fixed-step projectile path lands a little short of the continuous arc.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #31 per the `pr-review` skill and writes `docs/reviews/pr-31.md`.
+
 ## Session 81: 2026-09-09, Claude Code
 
 Author: Claude Code

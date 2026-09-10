@@ -2,6 +2,44 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 92: 2026-09-10, Codex
+
+Author: Codex
+Session: repeat review PR-34 at effective head `4e1ea9e`. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Verified the provider gate. Sessions 89 and 91 identify Claude Code as the author of the PR-34 change and its correction. Codex is the eligible reviewer.
+- Recomputed the effective head. `4e1ea9e` is the newest substantive commit. Later commits change only review and handoff metadata.
+- Read the correction diff, the response record, the PR comments and replies, the PR-11 roadmap, the console collection, and the affected tests.
+- Closed P1-1. Three independent full test runs pass 518 tests with no failure or skip. The collection serializes all four console-touching test classes, and the shape test scans every test directory.
+- Updated `docs/reviews/pr-34.md` with the fixed finding and the verdict `Ready for owner merge` at effective head `4e1ea9e`.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. The effective PR-34 head is `4e1ea9e`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures, 0 skips, three times in a row.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 needs this repeat-review record pushed. The substantive CI checks pass. The evaluate and review-gate checks must rerun after this metadata commit.
+
+### Traps and gotchas
+
+- The effective head is `4e1ea9e`, not the current metadata tip. D-184 excludes the review and session handoff paths.
+- P1-1 stays fixed only while new tests that touch the process console carry the `Console` collection. The shape test enforces this for files under the test directories.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit the repeat-review record and this handoff entry. Push the branch. Fetch and verify the remote head and the review-gate result.
+
 ## Session 91: 2026-09-10, Claude Code
 
 Author: Claude Code
@@ -400,52 +438,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 The author corrects P2-1 and P2-2, runs the full gates, and asks for a repeat review. The repeat review keeps the finding ids and updates the same review record to the new effective head.
-
-## Session 82: 2026-09-09, Claude Code
-
-Author: Claude Code
-Session: PR-10, the projectile simulation, the arc solver, and the shot of the attack bit. Branch `feat/pr-10-projectiles`.
-
-### What this session did, and why
-
-- Started PR-10 from `main` at `4687081`, the squash merge of PR #30, as Session 81 planned. The commit `c214d03` holds the code, the content, the tests, and the roadmap note. PR #31 holds the branch.
-- The projectile schema gains the required field `spreadHundredths` (D-266), with bounds: a speed of at least one, a gravity scale of at least zero, and a spread from 0 to 18000. The two plain definitions gain a spread, and four test-only files hold the extremes of D-149. The ordinal order puts `arrow` first, so it is the Phase 1 shot (D-265).
-- `Core/Projectiles/ProjectileSimulation.cs`: a flat list in flight order. A projectile is a point. Each tick ages it, applies the gravity of D-231 scaled by its definition, and sweeps one segment with the grid ray march of PR-8 and a slab test against the entity boxes. The nearest hit ends it at the point. A projectile never hits the box of its owner.
-- `Core/Projectiles/ArcSolver.cs`: the low-arc direction with DetMath alone, a vertical case, a gravity-free case, and a clear report for a target out of reach.
-- The loop fires the first definition once per press of the attack bit, from the shoulder point toward the first solid cell that the crosshair ray meets within 100 meters (D-267, D-268). `CameraPose` carries the shoulder point now. The loop exposes the ends of the last tick, which is not state. The projectiles end with the floor at a descent.
-- The projectiles join the hash after the run end, in flight order, and the simulation version is 6 (G-20). The sweep content holds one definition with a spread, so the attack bit of the sweep intents fires shots. The known answer moves from `62c5e1d152fe94fe` to `3220e92dcbca55a2`.
-- The six exit tests of the roadmap entry pass, with unit tests for the spread cone, the press edge, the shoulder origin, the segment test, the end of the floor, and the errors. 500 tests in total.
-
-### State of the build
-
-- `main` is at `4687081`, the squash merge of PR #30. This branch holds the PR-10 commit `c214d03` above it, and this entry above that.
-- Remote head: `origin/feat/pr-10-projectiles` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 500 tests, 0 failures, in about three and a half minutes.
-- `det-lint`: 0 findings. Core 0 in 57 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `3220e92dcbca55a2`. The simulation version is 6.
-- The Godot 4.7.2 headless build check passes.
-
-### In flight
-
-PR #31 is open and it holds this branch. The automated pass approved `c214d03` with no finding, and its CI notice on the absent review record has its reply (D-251). A Codex session reviews the PR at the effective head `c214d03`. The review focus is determinism, errors, and test quality (roadmap PR-10). No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-9 and PR-59 are merged. PR-10 is open as PR #31. PR-11 remains, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The Projectile stream of the run is state that no hash reads: `Rng` exposes no state word. Two loops with one intent stream draw the same values in the same order, so a replay matches, and a hash compare at a tick with no projectile in flight cannot tell a run with shots from one without. `ProjectilesAreDeterministic` compares the hashes while a projectile is up.
-- The random intents of every loop test set the attack bit on some ticks, so every replay test fires shots now. A content set without a projectile definition makes the attack bit an error (D-265).
-- The crosshair ray of the shot is the camera forward without aim assist, because no target exists before PR-16. PR-16 gives the shot the assisted ray.
-- The shot origin is the shoulder point after the first march of D-249, so a shot never starts inside rock. The grid ray march throws on a start inside a solid cell, and a test that fires from inside rock sees that error.
-- A projectile ends at its lifetime with one tick of grace: the end fires when the age passes the lifetime, so a definition of N ticks flies N ticks.
-- The arc solver gives the continuous arc, and the fixed-step flight lands a little short, as the jump of F-83 does. Exit test 3 allows one block.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #31 per the `pr-review` skill at the effective head `c214d03`, reads the PR comments and the author reply into the review, and writes `docs/reviews/pr-31.md`. The review confirms the simulation version 6 and the bit-identity change under G-20.
