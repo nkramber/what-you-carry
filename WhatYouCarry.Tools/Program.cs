@@ -2,6 +2,7 @@ using System;
 using WhatYouCarry.Tools.BitIdentity;
 using WhatYouCarry.Tools.BotRunner;
 using WhatYouCarry.Tools.DetLint;
+using WhatYouCarry.Tools.NightGate;
 using WhatYouCarry.Tools.ReviewGate;
 using WhatYouCarry.Tools.SteCheck;
 
@@ -9,7 +10,7 @@ namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check, det-lint, bit-identity, bot-run, night-record.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check, det-lint, bit-identity, bot-run, night-record, night-gate.";
 
     public static int Main(string[] args)
     {
@@ -35,6 +36,8 @@ public static class Program
                 return BotRunCommand.Run(commandArgs);
             case "night-record":
                 return NightRecordCommand.Run(commandArgs);
+            case "night-gate":
+                return NightGateCommand.Run(commandArgs);
             default:
                 Console.Error.WriteLine($"Unknown command '{command}'. {Usage}");
                 return 2;

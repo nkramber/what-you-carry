@@ -128,6 +128,23 @@ public sealed class RepositoryShapeTests
         Assert.Contains("det-lint --root .", workflow, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void NightGateWorkflowFetchesTheRecordWithFullHistory()
+    {
+        // D-273, D-275, PR-58: one job on Linux, the full history for the ancestry check, the record from the
+        // branch night-results, and the base branch of the PR as the revision the commit must be on.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night-gate.yml");
+        Dictionary<string, string> runsOnByJob = WorkflowText.RunsOnByJob(workflow);
+        KeyValuePair<string, string> job = Assert.Single(runsOnByJob);
+        Assert.Equal("night-gate", job.Key);
+        Assert.Equal("ubuntu-latest", job.Value);
+        Assert.Contains("\n  pull_request:\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("fetch-depth: 0", workflow, StringComparison.Ordinal);
+        Assert.Contains("git fetch --quiet origin night-results", workflow, StringComparison.Ordinal);
+        Assert.Contains("night-gate --record night.json", workflow, StringComparison.Ordinal);
+        Assert.Contains("--base \"origin/${{ github.base_ref }}\"", workflow, StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// The last step of the review-gate workflow passes the job on a success conclusion alone, so a neutral
     /// verdict, and a missing or unexpected conclusion, read red. A job cannot be neutral by its exit code
