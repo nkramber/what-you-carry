@@ -1,5 +1,45 @@
 # Session handoff archive
 
+## Session 85: 2026-09-09, Codex
+
+Author: Codex
+Session: repeat review PR #31 at effective head `1b58d3a`. Branch `feat/pr-10-projectiles`.
+
+### What this session did, and why
+
+- Recomputed the effective head. The fix commit `1b58d3a` changes Core code, tests, and the design record. Later commits change only review, handoff, and archive metadata.
+- Read the author response, the new diff, the full changed source and tests, the roadmap, the decisions, the questions, the PR comments, and the current checks.
+- Verified P2-1 fixed in `1b58d3a`. The spread now samples one angle and one roll, and the test checks five axes against the exact half angle.
+- Verified P2-2 fixed in `1b58d3a`. The arc solver rejects invalid and non-finite speed, gravity, and point inputs with context.
+- Updated `docs/reviews/pr-31.md` with both findings marked fixed and the verdict `Ready for owner merge` at effective head `1b58d3a`.
+
+### State of the build
+
+- `main` is at `4687081`, the squash merge of PR #30. The PR effective head is `1b58d3a`. The remote tip before this review record update was `33dfb2a`. The review record was published in `e5cb108`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 506 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `d8943df12fefcbee`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes after the sandbox permission failure is rerun in the required execution context.
+- Current GitHub checks pass for bit identity, compare, CI, determinism lint, STE, and Gitar. The review-gate evaluate job fails on the old verdict and must rerun after this record update.
+
+### In flight
+
+PR #31 is ready for owner merge after the updated review record reaches the remote branch and the review-gate check reads the new verdict. No other PR is open.
+
+### Traps and gotchas
+
+- The effective head is `1b58d3a`, not the remote metadata tip. D-184 excludes the review, session handoff, and archive paths only.
+- The spread is uniform in the angle, not in the solid angle. D-266 names the half angle, so this is valid.
+- The sweep hash is `d8943df12fefcbee`. Do not restore the prior hash `3220e92dcbca55a2`.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The review record and this handoff entry are published in `e5cb108`. Fetch, verify that the branch has no ahead count, and check that the review-gate result approves effective head `1b58d3a`.
+
 ## Session 84: 2026-09-09, Claude Code
 
 Author: Claude Code

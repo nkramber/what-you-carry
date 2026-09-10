@@ -301,6 +301,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-88 | PR #31 review P2-2: the arc solver took a speed of zero, a negative gravity, or a value that is not finite, and gave a direction that claimed to reach the target | 2026-09-09 | ✅ Corrected in PR-10 before the merge. The solver rejects each with a context error (T-2) |
 | F-89 | The review gate read the first verdict name after the first text match of the Verdict heading. The repeat review of PR #31 kept a previous-verdict line inside the section, and a history section named "Verdict history" matched the heading as a prefix, so the gate read "Changes required" twice for an approved head, seen 2026-09-10 | 2026-09-10 | ✅ D-269. The gate reads the section under the exact heading, fails two names, and names both. A repository test and the review skill hold the rule |
 | F-90 | PR #34 review P1-1: the bot tests called a command that writes to the process console while the bit-identity command test captured that console, so one full run of the suite failed on the timing of the two classes | 2026-09-10 | ✅ Corrected in PR-11 before the merge. Every test class that touches the console is in one xUnit collection, and a shape test keeps a new one in it |
+| F-91 | M-1: the Windows CI job of PR-10 took 601 seconds on the push run of `main`, one second over the ten-minute bound of the M-1 procedure, measured 2026-09-10. The same job of PR-11 took 574 seconds | 2026-09-10 | ✅ D-277 keeps the 5000 PR seeds of D-116. The bound reads again at Gate 1, and a job past eleven minutes files a new question |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -410,7 +411,7 @@ Add the `night-gate` job to the PR workflow. It reads the result record that the
 Gate: the job fails each of the five bad records and passes on the real night record.
 > *In plain English:* every merge now needs a green night from the robots. A missing or old result stops the merge, so nobody can merge on silence.
 
-**M-1: CI wall time per PR.** 🔧
+**M-1: CI wall time per PR.** ✅ Table complete 2026-09-10 in the Phase 1 roadmap (D-276). One job exceeded ten minutes by one second, and D-277 keeps the seed counts (F-91).
 Record the wall time of each CI job per platform for ten PRs. Binds the seed counts in D-116 if a PR job exceeds ten minutes.
 
 **M-2: Night sweep wall time.** 🔧
@@ -633,7 +634,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12. ✅ PR-4 merged 2026-09-08 as PR #15. ✅ PR-5 merged 2026-09-08 as PR #17.
 6. PR-6, PR-7, PR-8. ✅ PR-6 merged 2026-09-09 as PR #19. ✅ PR-7 merged 2026-09-09 as PR #21. ✅ PR-8 merged 2026-09-09 as PR #23.
 7. PR-9, PR-59, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).
-8. M-1, M-2. M-1 fills before PR-58 (D-276).
+8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277).
 9. **← GATE 1 (foundation).** Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green.
 10. PR-12, PR-13, PR-57, PR-14.
 11. PR-15, PR-16, PR-17, PR-18.
