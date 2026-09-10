@@ -85,6 +85,36 @@ public sealed class GitRepository
         return output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
+    /// <summary>True when the checkout holds the commit. git exits 1 for an absent object and 128 for an absent name, and both mean no.</summary>
+    public bool HasCommit(string sha)
+    {
+        GitResult result = Execute(["cat-file", "-e", $"{sha}^{{commit}}"]);
+        result.ThrowUnless(0, 1, 128);
+        return result.ExitCode == 0;
+    }
+
+    /// <summary>True when the remote has the branch. git exits 2 when no ref matches, and any other failure is an error (T-2).</summary>
+    public bool HasRemoteBranch(string remote, string branch)
+    {
+        GitResult result = Execute(["ls-remote", "--exit-code", "--heads", remote, branch]);
+        result.ThrowUnless(0, 2);
+        return result.ExitCode == 0;
+    }
+
+    /// <summary>Fetches one branch of a remote into FETCH_HEAD. Any failure is an error with the command and stderr (T-2).</summary>
+    public void Fetch(string remote, string branch)
+    {
+        Run(["fetch", "--quiet", remote, branch]);
+    }
+
+    /// <summary>True when the commit is the revision or an ancestor of it. git exits 1 when it is not.</summary>
+    public bool IsAncestor(string commit, string revision)
+    {
+        GitResult result = Execute(["merge-base", "--is-ancestor", commit, revision]);
+        result.ThrowUnless(0, 1);
+        return result.ExitCode == 0;
+    }
+
     /// <summary>Runs git and returns stdout. Throws when git exits with a nonzero code.</summary>
     public string Run(IReadOnlyList<string> args)
     {
@@ -119,7 +149,13 @@ public sealed class GitRepository
     {
         public void ThrowIfFailed()
         {
-            if (ExitCode != 0)
+            ThrowUnless(0);
+        }
+
+        /// <summary>Throws with the command, the exit code, and stderr when the exit code is not one of the given codes (T-2).</summary>
+        public void ThrowUnless(params int[] allowedExitCodes)
+        {
+            if (Array.IndexOf(allowedExitCodes, ExitCode) < 0)
             {
                 throw new InvalidOperationException(
                     $"'git {Command}' exited {ExitCode} in '{Path}'. stderr: {StandardError.Trim()}");

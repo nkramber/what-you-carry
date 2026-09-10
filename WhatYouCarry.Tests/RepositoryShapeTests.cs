@@ -128,6 +128,25 @@ public sealed class RepositoryShapeTests
         Assert.Contains("det-lint --root .", workflow, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void NightGateWorkflowFetchesTheRecordWithFullHistory()
+    {
+        // D-273, D-275, PR-58: one job on Linux, the full history for the ancestry check, the record from the
+        // branch night-results through the tool, and the base branch of the PR as the revision the commit must
+        // be on. No shell step writes or reads a night.json in the checkout (PR #40 review P1-1).
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night-gate.yml");
+        Dictionary<string, string> runsOnByJob = WorkflowText.RunsOnByJob(workflow);
+        KeyValuePair<string, string> job = Assert.Single(runsOnByJob);
+        Assert.Equal("night-gate", job.Key);
+        Assert.Equal("ubuntu-latest", job.Value);
+        Assert.Contains("\n  pull_request:\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("fetch-depth: 0", workflow, StringComparison.Ordinal);
+        Assert.Contains("night-gate --root \"$GITHUB_WORKSPACE\" --remote origin", workflow, StringComparison.Ordinal);
+        Assert.Contains("--base \"origin/${{ github.base_ref }}\"", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("night.json", workflow.Replace("night.json in the checkout", string.Empty), StringComparison.Ordinal);
+        Assert.DoesNotContain("git fetch", workflow, StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// The last step of the review-gate workflow passes the job on a success conclusion alone, so a neutral
     /// verdict, and a missing or unexpected conclusion, read red. A job cannot be neutral by its exit code

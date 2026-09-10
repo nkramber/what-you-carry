@@ -303,6 +303,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-90 | PR #34 review P1-1: the bot tests called a command that writes to the process console while the bit-identity command test captured that console, so one full run of the suite failed on the timing of the two classes | 2026-09-10 | ✅ Corrected in PR-11 before the merge. Every test class that touches the console is in one xUnit collection, and a shape test keeps a new one in it |
 | F-91 | M-1: the Windows CI job of PR-10 took 601 seconds on the push run of `main`, one second over the ten-minute bound of the M-1 procedure, measured 2026-09-10. The same job of PR-11 took 574 seconds | 2026-09-10 | ✅ D-277 keeps the 5000 PR seeds of D-116. The bound reads again at Gate 1, and a job past eleven minutes files a new question |
 | F-92 | The first night, run 34499677095 by hand on 2026-09-10: three of five thousand greedy descender runs crashed, because the dig plan ran its 400 jobs and a chamber stayed in rock, on seed 2170 floor 10, seed 3000 floor 4, and seed 4786 floor 10. With the cap lifted the floors need 2817, 1661, and 615 jobs, and ordinary floors under 300 | 2026-09-10 | ✅ D-279 raises the cap to 10000, with the three floors as a regression test. The PR sweep digs one floor per seed and never met them, and the bots dig all fifteen |
+| F-93 | PR #40 review P1-1: the `night-gate` workflow read `night.json` from the PR checkout when the fetch of `night-results` failed, so a PR could carry a fresh success record and pass the gate with no night | 2026-09-10 | ✅ Corrected in PR-58 before the merge. The command fetches the branch itself and reads the record from git, never from the working tree. A git failure other than an absent branch is an error that names the command |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -408,8 +409,8 @@ Gate: ten thousand night runs of the two policies complete with zero crashes and
 > *In plain English:* simple robots play thousands of runs every night without graphics. They find crashes and dead ends before a person ever sees them.
 
 **PR-58: Night gate.** 🔧
-Add the `night-gate` job to the PR workflow. It reads the result record that the PR-11 night job publishes (D-177). The gate passes only on a success record from a night in the last 48 hours, whatever event ran it (D-274). An absent, stale, cancelled, or failed record fails the gate, and so does a record whose commit is not on the base branch (D-115, D-275, T-2). The message names the case, the commit, and the time. This entry follows PR-11 in the sequence, after one night runs, scheduled or by hand (G-19, D-278).
-Gate: the job fails each of the five bad records and passes on the real night record.
+Add the `night-gate` job to the PR workflow. It reads the result record that the PR-11 night job publishes (D-177). The gate passes only on a success record from a night in the last 48 hours, whatever event ran it (D-274). An absent, malformed, stale, cancelled, or failed record fails the gate, and so does a record whose commit is not on the base branch (D-115, D-275, T-2). The message names the case, the commit, and the time. This entry follows PR-11 in the sequence, after one night runs, scheduled or by hand (G-19, D-278).
+Gate: the job fails each of the six bad records and passes on the real night record.
 > *In plain English:* every merge now needs a green night from the robots. A missing or old result stops the merge, so nobody can merge on silence.
 
 **M-1: CI wall time per PR.** ✅ Table complete 2026-09-10 in the Phase 1 roadmap (D-276). One job exceeded ten minutes by one second, and D-277 keeps the seed counts (F-91).

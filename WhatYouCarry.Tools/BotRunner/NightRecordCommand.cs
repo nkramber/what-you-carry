@@ -7,8 +7,8 @@ namespace WhatYouCarry.Tools.BotRunner;
 
 /// <summary>
 /// <c>night-record --commit &lt;sha&gt; --status &lt;success|failure|cancelled&gt; --output &lt;file&gt;</c>. Writes the
-/// record of one scheduled night: the commit it tested, the end time, and the status (D-177, D-273). The night
-/// job commits the file to the branch <c>night-results</c>, and the gate of PR-58 reads it.
+/// record of one night, scheduled or by hand: the commit it tested, the end time, and the status (D-177, D-273,
+/// D-274). The night job commits the file to the branch <c>night-results</c>, and the <c>night-gate</c> command reads it.
 /// </summary>
 public static class NightRecordCommand
 {
@@ -67,7 +67,8 @@ public static class NightRecordCommand
             return 2;
         }
 
-        File.WriteAllText(output, Build(commit, DateTime.UtcNow, status), Encoding.UTF8);
+        // UTF-8 without the byte-order mark: Encoding.UTF8 writes one, and the record is one JSON object from its first byte.
+        File.WriteAllText(output, Build(commit, DateTime.UtcNow, status), new UTF8Encoding(false));
         Console.Out.WriteLine($"night-record: {output} holds commit {commit} with status {status}.");
         return 0;
     }
@@ -79,7 +80,8 @@ public static class NightRecordCommand
         return $"{{\"{CommitName}\":\"{commit}\",\"{EndedAtName}\":\"{time}\",\"{StatusName}\":\"{status}\"}}\n";
     }
 
-    private static bool IsHash(string text)
+    /// <summary>True when the text is 40 lowercase hexadecimal digits, the form of a commit in the record.</summary>
+    public static bool IsHash(string text)
     {
         if (text.Length != 40)
         {

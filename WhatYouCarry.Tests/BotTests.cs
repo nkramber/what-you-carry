@@ -162,6 +162,8 @@ public sealed class BotTests
             DateTime before = DateTime.UtcNow.AddSeconds(-1);
             Assert.Equal(0, Program.Main(["night-record", "--commit", commit, "--status", "success", "--output", file]));
 
+            // The file starts with the object, not a byte-order mark, so a reader that takes bytes sees JSON from the first byte.
+            Assert.Equal((byte)'{', File.ReadAllBytes(file)[0]);
             using JsonDocument record = JsonDocument.Parse(File.ReadAllText(file));
             Assert.Equal(commit, record.RootElement.GetProperty(NightRecordCommand.CommitName).GetString());
             Assert.Equal("success", record.RootElement.GetProperty(NightRecordCommand.StatusName).GetString());

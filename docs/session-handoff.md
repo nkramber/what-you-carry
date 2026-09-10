@@ -2,6 +2,163 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 103: 2026-09-10, Codex
+
+Author: Codex
+Session: repeat review PR #40 at effective head `d943cb3`. Branch `feat/pr-58-night-gate`.
+
+### What this session did, and why
+
+- Recomputed the PR identity. The base and merge base are `a2799f2`. The effective head is `d943cb3`. The tip `bcb934e` changes review and handoff metadata only.
+- Verified the cross-provider gate. Claude Code authored the substantive PR change and its correction. Codex is the eligible reviewer.
+- Reproduced P1-1 at the correction boundary. A planted checkout record fails when the remote has no branch. A branch without `night.json` is absent. A remote failure record wins over the planted success record. An unreachable remote reports an error.
+- Verified the adjacent byte-order-mark parser case, command exit cases, workflow shape test, full-history checkout, and the remote-read path. P1-1 has full merit at the prior head and is corrected at `d943cb3`.
+- Updated `docs/reviews/pr-40.md` with the finding disposition and the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` is at `a2799f2`. The PR branch is at `bcb934e` before this review commit. The effective implementation head is `d943cb3`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 532 tests, 0 failures, 0 skips.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`.
+- The Godot 4.7.2 headless build passes. The real `night-gate` probe passes against `origin/night-results` at `2026-09-10T22:00:00Z`.
+- The review commit is `0d10eba`. Its Gitar, det-lint, night-gate, STE check, and review-gate checks passed. The metadata tip is now `48ede21`, and its fresh checks are pending after the metadata push.
+- Remote head: `origin/feat/pr-58-night-gate` at `48ede21`, checked after the push. The checkout has no ahead count.
+
+### In flight
+
+PR #40 waits for the review-gate check to read this record at the effective head. No other PR is open.
+
+### Traps and gotchas
+
+- The review record must name `d943cb3`, not the metadata tip. The metadata set is `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184).
+- The real-remote probe first failed because the sandbox could not resolve `github.com`. The approved retry passed. Treat the first result as an execution-context failure.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner can merge after the pending CI, bit identity, and bots checks pass. The review-gate check reads `Ready for owner merge` at `d943cb3`.
+
+## Session 102: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: answer the PR #40 review. Branch `feat/pr-58-night-gate`.
+
+### What this session did, and why
+
+- Read the one P1 finding in `docs/reviews/pr-40.md`. Full merit: the fetch step of the workflow left a `night.json` from the PR checkout in place when the fetch failed, and the command read it, so a PR could carry a fresh success record and pass the gate with no night.
+- The fetch is in the tool now. `NightGateFacts.Gather` takes the checkout, the remote, the base ref, and the time. It asks the remote for the branch with `ls-remote --exit-code`, fetches it, and reads `night.json` from `FETCH_HEAD` through git, never from the working tree. An absent branch or an absent file is the absent case with the reason, and any other git failure throws with the command (T-2). The workflow has no shell step.
+- The parser accepts a leading byte-order mark, because the two records on `night-results` carry one and git does not strip it.
+- `NightGateReadsTheRecordFromTheRemoteAndNeverFromTheCheckout` plants a fresh success record in the checkout and asserts the absent case, the reason of a branch without the file, the win of the branch record over the planted file, and the error of an unreachable remote. The exit code test plants the file too. The tests use one temporary repository as the remote of another.
+- F-93 records the finding, and `docs/reviews/pr-40-response.md` records the disposition. The tool ran against the real remote from this checkout: pass, at `a2799f2`.
+- Session 92 moved to the archive.
+
+### State of the build
+
+- `main` is at `a2799f2`, the squash merge of PR #39. This branch holds the PR-58 commit, the byte-order-mark fix, the documents commit `2253e53`, the review commit `3e964a2`, and the correction that holds this entry above them.
+- Remote head: `origin/feat/pr-58-night-gate` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 532 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+
+### In flight
+
+PR #40 waits for the automated pass on the correction, then a Codex repeat review at the effective head, which is the correction commit. No other PR is open.
+
+### Traps and gotchas
+
+- The effective head is the correction commit, because it changes code, the register, and the roadmap. The review record still names `2253e53`, and the repeat review updates the head and the verdict together, with one verdict name in the Verdict section (D-269).
+- The night gate reads the record through git. A test of it needs a remote with the orphan branch, and `PublishNight` in the tests makes one from a temporary repository.
+- `git ls-remote --exit-code` exits 2 for no matching ref. Every other nonzero exit is an error, and the tool throws. The job then fails with the git message and not with a gate case.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session repeats the review per the repeat procedure at the effective head, verifies P1-1 against its trigger and the regression test, and updates `docs/reviews/pr-40.md` with the status of P1-1 and a new verdict.
+
+## Session 101: 2026-09-10, Codex
+
+Author: Codex
+Session: review PR #40, the night gate. Branch `feat/pr-58-night-gate`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 100 identifies Claude Code as the provider of the substantive PR-40 change. Codex is the eligible reviewer.
+- Verified the base, merge base, effective head `2253e53`, complete diff, PR-58 scope, exit tests, decisions, and all PR comments and replies.
+- Found P1-1. The workflow catches every fetch failure as an absent record but leaves a `night.json` from the pull request checkout in place. A pull request can then supply a fresh success record and bypass the absent-record gate.
+- Wrote `docs/reviews/pr-40.md` with the verdict `Changes required` for effective head `2253e53`.
+
+### State of the build
+
+- `main` is at `a2799f2`, the squash merge of PR #39. The effective PR-40 head is `2253e53`.
+- Remote checks at the PR head passed for CI, bit identity, bots, det-lint, STE check, night-gate, and Gitar. The review-gate check was neutral before the review record existed.
+- `git diff --check` passed. A local serial build and test retry hit a stuck execution-context process after an earlier parallel file-copy contention and was cancelled. The remote checks are the revision-specific build and test evidence.
+
+### In flight
+
+PR #40 needs the workflow correction for P1-1 and a repeat review at the new effective head. No other PR is open.
+
+### Traps and gotchas
+
+- The fetch step must not read a file from the pull request checkout when `night-results` is absent or the fetch fails. Use a temporary path or remove the checkout file before the fetch.
+- The review record names the effective head `2253e53`, not the metadata tip rule in a future review commit (D-184).
+
+### Open questions that block progress
+
+P1-1 blocks PR #40. OQ-99 is open, and it blocks no other work.
+
+### Next concrete action
+
+Correct the `night-gate` workflow so only a successfully fetched `night-results` record can reach the command. Add the missing workflow regression test, push, and request a repeat review.
+
+## Session 100: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: the second night by hand, and PR-58, the night gate. Branch `feat/pr-58-night-gate`.
+
+### What this session did, and why
+
+- The owner merged PR #39 as `a2799f2`. Started the night by hand on `main` at 19:00 UTC under D-281: run 34517749543, 63 minutes, success. The record on `night-results` names `a2799f2` and ended at 2026-09-10T20:03:22Z.
+- PR-58 from `main` at `a2799f2`. `Tools/NightGate/` holds the parser, the facts, the rules, and the command `night-gate`. The rules read the cases in order: absent, malformed, stale, foreign, cancelled, failed, pass. The command exits 0, 1, or 2, and every failure line names the case, the commit, and the time (D-274, D-275).
+- The workflow `night-gate.yml` runs one job on Linux with the full history, fetches `night-results`, and passes the record and the base ref to the command. An absent branch reads as an absent record.
+- `GitRepository` gains `HasCommit` and `IsAncestor`, each with the exit codes that git documents for a no. `night-record` writes no byte-order mark now, and PR-11 exit test 7 asserts the first byte.
+- Exit tests 1 to 6 and 8 pass among 530 tests, with the malformed case, the exit codes, and a workflow shape test beside them. Exit test 7 is the job on this PR. The agent files gain the `night-gate` line of the PR gate.
+- The roadmap PR-58 entry holds the scope notes, and the design doc names the malformed case. The M-2 section holds the note of the second hand run.
+- Session 90 moved to the archive.
+
+### State of the build
+
+- `main` is at `a2799f2`, the squash merge of PR #39. This branch holds the PR-58 commit, the byte-order-mark fix, and the documents commit above them, and this entry is in the documents commit.
+- Remote head: `origin/feat/pr-58-night-gate` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 530 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+- The branch `night-results` holds the record of the second hand run.
+
+### In flight
+
+PR-58 is open as the PR that holds this branch. A Codex session reviews it at the effective head, which is the documents commit, because it changes the roadmap and the design doc. After the merge, the night logs PR of D-280 opens from the local branch `chore/night-logs-artifact`, then M-2 collects seven scheduled nights, then Gate 1.
+
+### Traps and gotchas
+
+- The `night-gate` job fails every PR within 48 hours of a red or missing night, a documentation PR too. A hand run on `main` restores it (D-274, D-278).
+- The record commit must be on the base branch (D-275). A hand run on a feature branch writes a record that fails every PR to `main`.
+- The effective head of this PR is the documents commit, not the code commit, because the roadmap and the design doc lie outside the metadata set (D-184).
+- The night holds the one Mac runner for its whole run, so the macOS CI jobs of every open PR wait for it.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR-58 per the `pr-review` skill at the effective head, with the focus on errors, CI boundaries, and test quality. It confirms the job passed on the PR against the real record (exit test 7, G-19).
+
 ## Session 99: 2026-09-10, Claude Code
 
 Author: Claude Code
@@ -243,168 +400,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A session fills the M-1 table in the Phase 1 roadmap from the push runs on `main` for the ten merged PRs since PR-3, one row per PR with the CI job durations per platform (D-276). After the first scheduled night, a session opens PR-58 from `main`.
-
-## Session 93: 2026-09-10, Claude Code
-
-Author: Claude Code
-Session: record the PR-11 merge, and file the PR-58 questions before its code. Branch `docs/pr-11-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #34 as `7487473` at 12:43 UTC, after the Codex repeat review of Session 92. The design doc PR-11 entry reads merged, the roadmap PR-11 entry has its status line, and the sequence marks item 19. The correction note records F-90.
-- Exit tests 1 to 5 and 7 of PR-11 passed before the merge. Exit test 6 reads the first scheduled night, and the roadmap status line says so.
-- Read the PR-58 entry for the questions that its code needs. The record of D-273 holds no event, and a hand run of the night workflow writes the same record, so the gate cannot tell a scheduled night from a hand run. The roadmap says nothing about the commit that a record names. OQ-142 and OQ-143 hold the two questions, each with a recommendation, and the session picked no default (D-124).
-- No owner answer arrived, so `docs/decisions.md` did not change.
-- Session 83 moved to the archive.
-
-### State of the build
-
-- `main` is at `7487473`, the squash merge of PR #34. This branch holds the document commit above it, and this entry above that.
-- Remote head: `origin/docs/pr-11-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- The push checks on `7487473` passed: CI on the three platforms, bit identity, bots, determinism lint, and STE check.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures. No code changed.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-- The runner `mac-mini-m4` is online, from `/Volumes/SSD-1TB/actions-runner` on this machine. The branch `night-results` does not exist yet, and no night has run.
-
-### In flight
-
-This PR holds the merge record and the two questions. It changes no code, so the `review-override` label covers it (D-188, D-190). The first scheduled night runs at 03:00 UTC on 2026-09-11 on the runner, and it writes `night.json` to `night-results`. No other PR is open. PR-1 to PR-11 and PR-59 are merged. One scheduled night runs, then PR-58 opens, and M-1 and M-2 reach Gate 1. The M-1 table has no rows yet, and M-2 starts with the first night.
-
-### Traps and gotchas
-
-- A hand run of the night workflow writes the same record as a scheduled night, at the commit of the branch it runs on. Wait for the scheduled night, so that the first record is one that the PR-58 gate reads, whatever the answers to OQ-142 and OQ-143.
-- The publish step of the night adds a worktree and an orphan branch inside the checkout of the runner, and the runner keeps that checkout between jobs. No second night has run yet. If a later night fails at the publish step, read `git worktree list` and `git branch` in the runner checkout first.
-- The night workflow has `contents: write` and force-pushes `night-results` (D-273). Nothing else pushes there.
-- The `review-override` label goes on after the last push and after the automated pass.
-
-### Open questions that block progress
-
-OQ-142 and OQ-143 block PR-58. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner answers OQ-142 and OQ-143, and a session records the answers as the next D-# ids. After the first scheduled night writes `night.json` to `night-results`, a session opens PR-58 from `main`, and its exit test 7 reads the real record. The same session starts the M-2 table with the duration of the first night.
-
-## Session 92: 2026-09-10, Codex
-
-Author: Codex
-Session: repeat review PR-34 at effective head `4e1ea9e`. Branch `feat/pr-11-bots`.
-
-### What this session did, and why
-
-- Verified the provider gate. Sessions 89 and 91 identify Claude Code as the author of the PR-34 change and its correction. Codex is the eligible reviewer.
-- Recomputed the effective head. `4e1ea9e` is the newest substantive commit. Later commits change only review and handoff metadata.
-- Read the correction diff, the response record, the PR comments and replies, the PR-11 roadmap, the console collection, and the affected tests.
-- Closed P1-1. Three independent full test runs pass 518 tests with no failure or skip. The collection serializes all four console-touching test classes, and the shape test scans every test directory.
-- Updated `docs/reviews/pr-34.md` with the fixed finding and the verdict `Ready for owner merge` at effective head `4e1ea9e`.
-
-### State of the build
-
-- `main` is at `d3093cf`, the squash merge of PR #33. The effective PR-34 head is `4e1ea9e`.
-- Remote head: `origin/feat/pr-11-bots` is `945004a`, pending the final metadata verification push.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures, 0 skips, three times in a row.
-- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-- The Godot 4.7.2 headless build check passes.
-
-### In flight
-
-PR #34 needs this repeat-review record pushed. The substantive CI checks pass. The evaluate and review-gate checks must rerun after this metadata commit.
-
-### Traps and gotchas
-
-- The effective head is `4e1ea9e`, not the current metadata tip. D-184 excludes the review and session handoff paths.
-- P1-1 stays fixed only while new tests that touch the process console carry the `Console` collection. The shape test enforces this for files under the test directories.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Commit the repeat-review record and this handoff entry. Push the branch. Fetch and verify the remote head and the review-gate result.
-
-## Session 91: 2026-09-10, Claude Code
-
-Author: Claude Code
-Session: answer the PR #34 review. Branch `feat/pr-11-bots`.
-
-### What this session did, and why
-
-- Read the one P1 finding in `docs/reviews/pr-34.md`. Full merit: the bot tests call a command that writes its summary to the process console, and the bit-identity command test captures that console, so a full run could read the wrong line.
-- Every test class that calls a command or redirects the console carries `[Collection(ConsoleCollection.Name)]` now, so xUnit runs the four one after another. `ConsoleCollectionTests.EveryConsoleTestIsInTheCollection` reads every test source and fails on a class that touches the console outside the collection.
-- Three full runs with `-m:1` on the correction: 518 passed, 0 failed, 0 skipped, each time.
-- F-90 records the finding, and `docs/reviews/pr-34-response.md` records the disposition. The correction is `f6ca5f6`, and `4e1ea9e` answers the automated pass on it: the shape test scans every test directory.
-
-### State of the build
-
-- `main` is at `d3093cf`, the squash merge of PR #33. This branch holds the PR-11 commit `8a7367f`, the correction `0536f7e`, the review commits, the correction `f6ca5f6`, and this entry above them.
-- Remote head: `origin/feat/pr-11-bots` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures, three times in a row.
-- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-
-### In flight
-
-PR #34 is open and it holds this branch. The automated pass approved `f6ca5f6` with one suggestion, and `4e1ea9e` answers it, so the effective head is `4e1ea9e`. A Codex repeat review at that head updates the same review record. No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-10 and PR-59 are merged. PR-11 is open as PR #34. After its merge, one scheduled night runs on its own, then PR-58 opens, and M-1 and M-2 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The effective head is `4e1ea9e`. The review record still names `0536f7e`, and the repeat review updates the head and the verdict together, with one verdict name in the Verdict section (D-269).
-- A test that calls a command of the Tools project, or redirects the console, goes in the console collection, or the shape test fails.
-- xUnit runs the classes of one collection one after another, so the console collection takes a little longer than the parallel run of four classes. The full suite still takes under three and a half minutes.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session repeats the review per the repeat procedure, at the effective head `4e1ea9e`, and updates `docs/reviews/pr-34.md` with the status of P1-1 and a new verdict.
-
-
-## Session 90: 2026-09-10, Codex
-
-Author: Codex
-Session: review PR-34 at effective head `0536f7e`. Branch `feat/pr-11-bots`.
-
-### What this session did, and why
-
-- Verified the provider gate. Session 89 identifies Claude Code as the author of the substantive PR-34 change. Codex is the eligible reviewer.
-- Recomputed the effective head. `8a7367f` holds the implementation, and `0536f7e` is the newest substantive commit. Later commits change only handoff metadata.
-- Read the complete diff, the PR-11 roadmap entry and exit tests, the affected Core callers, the runner and workflows, the bit-identity sweep, the applicable decisions and questions, and every PR comment and author reply.
-- Found P1-1. The new bot tests call commands that write to the process-global console while the existing bit-identity test captures that console. The full 517-test run failed 1 test because it captured bot output instead of the hash.
-- Wrote `docs/reviews/pr-34.md` with the verdict `Changes required` at effective head `0536f7e`.
-
-### State of the build
-
-- `main` is at `d3093cf`, the squash merge of PR #33. The effective PR-34 head is `0536f7e`.
-- Remote head: `origin/feat/pr-11-bots` is `00e4c623700cefa035e94a5aed1672bd4300b7e3`, with no ahead count after the review commit.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 517 tests, 0 failures, 0 skipped.
-- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-- The Godot 4.7.2 headless build check passes.
-
-### In flight
-
-PR #34 needs a correction for P1-1. No other PR is open.
-
-### Traps and gotchas
-
-- The effective head is `0536f7e`, not the remote metadata tip. D-184 excludes the review and session handoff paths.
-- The review-gate check is neutral until this review record reaches the PR head. The check must rerun after the push.
-- The scheduled night workflow has `contents: write` so it can force-push the single `night.json` record to `night-results` under D-273.
-- The focused bot and bit-identity tests passed once, but the full suite reproduced the console race. A focused pass does not close P1-1.
-
-### Open questions that block progress
-
-P1-1 blocks PR #34. OQ-99 is open, and it blocks no other work.
-
-### Next concrete action
-
-Commit the review record and this handoff entry. Push the branch. The author must serialize or remove the console race, then request a repeat review at the new effective head.
