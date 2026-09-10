@@ -2,6 +2,46 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 96: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: record the first night by hand (D-278), and start that night. Branch `docs/night-by-hand`.
+
+### What this session did, and why
+
+- The owner merged PR #37 as `fb080ca`, then asked for a one-time hand run of the night, so that PR-58 opens before the first scheduled night. OQ-146 holds the question, and D-278 records the answer. D-274 is revised in part, the sequence wait only, and its gate rule stands.
+- Started the night workflow on `main` at `fb080ca` by `workflow_dispatch` at 16:03 UTC. The run is 34499677095. It writes `night.json` to `night-results` whatever its outcome.
+- Sequence item 20 reads "scheduled or by hand" in the roadmap and the design doc, and so does the PR-58 entry. The M-2 procedure counts the seven scheduled nights, with a note beside the table for the hand run.
+- Session 86 moved to the archive.
+
+### State of the build
+
+- `main` is at `fb080ca`, the squash merge of PR #37. This branch holds the document commit above it, and this entry above that.
+- Remote head: `origin/docs/night-by-hand` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures. No code changed.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The night run 34499677095 was in progress on the runner `mac-mini-m4` when this entry was written. The branch `night-results` appears when its publish step runs.
+
+### In flight
+
+The night run on `main`. This PR holds D-278 and changes no code, so the `review-override` label covers it (D-188, D-190). No other PR is open. The scheduled night still runs at 03:00 UTC on 2026-09-11 and overwrites the record.
+
+### Traps and gotchas
+
+- The night record names the commit it ran on, `fb080ca`. The PR-58 gate checks that the record commit is on the base branch (D-275), and a later merge to `main` keeps it there.
+- A failed hand run leaves a failure record. No gate reads it yet, so it blocks nothing, and the scheduled night overwrites it. Read the run log before a second hand run.
+- The night runs on this Mac, and the reachability sweep of one hundred thousand seeds is the long step. The M-2 bound is six hours.
+- The publish step makes a worktree and an orphan branch in the runner checkout. The scheduled night tomorrow is the second run on that checkout, and its publish step is the one to watch.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+When the night run ends, read `night.json` on `night-results`. On a success record, open PR-58 from `main` per the roadmap entry, D-274, and D-275, and note the hand run duration beside the M-2 table. On a failure record, read the run log and correct the cause in a PR before the next hand run.
+
 ## Session 95: 2026-09-10, Claude Code
 
 Author: Claude Code
@@ -388,49 +428,3 @@ None. OQ-99 remains open, and it blocks nothing.
 ### Next concrete action
 
 Wait for the pending platform checks. Then the owner can merge PR #32.
-
-## Session 86: 2026-09-10, Claude Code
-
-Author: Claude Code
-Session: harden the review gate against a second verdict name (D-269). Branch `fix/review-gate-one-verdict`.
-
-### What this session did, and why
-
-- The owner merged PR #31 as `1ce78c6`, after a Codex repeat review with the verdict `Ready for owner merge` at the effective head `1b58d3a` (Session 85).
-- The gate read that record as "Changes required" twice: the record kept a previous-verdict line inside the Verdict section, and the gate took the first verdict name after the first text match of the heading, so a history section named "Verdict history" matched as a prefix. Two format edits of the record by the author, with the owner's choice and a PR comment, let the gate read the approval.
-- The owner asked how to stop that and chose three layers. The commit `7a388f6` holds them. PR #32 holds the branch.
-- `ReviewRecord.FindVerdict` reads the section under the line that is exactly `## Verdict`, up to the next heading, and it fails a section with two verdict names with a message that names both in document order (D-269, F-89).
-- `EveryRepositoryReviewRecordHoldsOneVerdict` parses every review record of the checkout, so a reviewer sees a second name in `dotnet test` before the push. Two more tests cover the prefix match and the two names.
-- The `pr-review` skill repeat procedure keeps one verdict name in the Verdict section and puts an earlier verdict under a heading that starts with another word.
-- D-269 records the rule, OQ-137 the question, and F-89 the finding.
-
-### State of the build
-
-- `main` is at `1ce78c6`, the squash merge of PR #31. This branch holds the fix commit `7a388f6` above it, and this entry above that.
-- Remote head: `origin/fix/review-gate-one-verdict` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 509 tests, 0 failures.
-- `det-lint`: 0 findings. Core 0 in 57 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `d8943df12fefcbee`, as PR #31 left it. No Core change. The simulation version is 6.
-
-### In flight
-
-PR #32 is open and it holds this branch. It changes the tools, so it needs a Codex review at the effective head `60bdb17`, the skill edit that answered the automated pass. The pass approved `7a388f6` with one suggestion, and every comment has its answer. The merge record of PR-10 and the PR-11 questions come in the next session, after this fix or beside it. No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-10 and PR-59 are merged. PR-11 remains, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The gate now fails a review record whose Verdict section names two verdicts, and it names both. A repeat review keeps one name there and puts the earlier verdict in a section such as `## Earlier verdicts`, above it. The count reads the prose too, so the reason after the verdict names no other verdict. The automated pass raised that edge, and the skill says it now.
-- The gate parses `docs/reviews/pr-31.md` with the heading `## Earlier verdicts` that the format edits gave it, and the repository test reads every record, so a record that breaks the rule fails `dotnet test` on every branch.
-- The effective head is `60bdb17`, because the skill file lies outside the metadata set of D-190. This PR changes no Core file, so the bit-identity hash stands.
-- The PR-10 merge record and the PR-11 questions are still to do: the design doc PR-10 entry, the roadmap status line, and the sequence item 18.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #32 per the `pr-review` skill at the effective head `60bdb17`, reads the PR comments and the author reply into the review, and writes `docs/reviews/pr-32.md`. In parallel or after, a session records the PR-10 merge and asks the PR-11 questions before its code.
