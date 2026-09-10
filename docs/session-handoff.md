@@ -18,6 +18,7 @@ Session: repeat review PR-34 at effective head `4e1ea9e`. Branch `feat/pr-11-bot
 ### State of the build
 
 - `main` is at `d3093cf`, the squash merge of PR #33. The effective PR-34 head is `4e1ea9e`.
+- Remote head: `origin/feat/pr-11-bots` is `945004a`, pending the final metadata verification push.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures, 0 skips, three times in a row.
 - `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
 - `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
