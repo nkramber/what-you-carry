@@ -394,13 +394,13 @@ Add the detail that makes the dig plan read as the mine of D-210: collapses that
 Gate: the PR-9 property tests pass with the detail on, and every floor of a band uses the blocks of its band. A body in water walks and jumps at half pace.
 > *In plain English:* the bare tunnels gain the look of a mine: fallen rock, timber, cut stone, ore, and water. The tests from before run again, so nothing blocks the way.
 
-**PR-10: Projectile simulation.** 🔧
+**PR-10: Projectile simulation.** ✅ Merged 2026-09-10 as PR #31.
 Implement the projectile integrator with fixed-step Euler, swept collision against the grid and entity boxes, gravity scale, lifetime, and spread from weapon data (G-6, D-266). Implement the arc solver with DetMath. Add a `projectile` content schema and a test-only definitions file (F-38, D-149). Until PR-15 gives the loadout a weapon, the attack bit fires the first definition of the content set once per press (D-265, D-267). A shot starts at the shoulder point and flies toward the aim hit (D-268). The file holds the slowest arc, the fastest flat shot, the longest lifetime, and the widest spread. Property tests assert three facts. No projectile tunnels through the minimum wall at the maximum velocity. Every projectile ends inside its lifetime. The arc solver reaches a reachable target and reports an unreachable one.
 Gate: the projectile property tests pass over the test-only definitions. PR-24 and PR-43 to PR-46 rerun them over the real roster.
 > *In plain English:* bullets and arrows are real objects that fly, drop, and can miss. Tests prove a fast bullet never passes through a wall.
 
 **PR-11: Bot harness (Tier 2).** 🔧
-Implement the headless runner at one hundred times speed and the first two policies: random walker and greedy descender (D-127, D-149). Later PRs add a policy with the system it exercises: full-clearer with PR-16, timer-tester with PR-17, coward with PR-18. Each run writes a structured run log with the policy name, seed, and end state. Add a few hundred runs to the PR job and ten thousand to the night job (D-115). The night job publishes a result record. PR-58 adds the gate that reads it (D-177).
+Implement the headless runner at one hundred times speed and the first two policies: random walker and greedy descender (D-127, D-149). Later PRs add a policy with the system it exercises: full-clearer with PR-16, timer-tester with PR-17, coward with PR-18. Each run writes a structured run log with the policy name, seed, and end state. Add a few hundred runs to the PR job and ten thousand to the night job (D-115). The night job publishes a result record. PR-58 adds the gate that reads it (D-177). The runs end as bottom, budget, softlock, or crash, and the night job writes its record to the branch `night-results` (D-270 to D-273).
 Gate: ten thousand night runs of the two policies complete with zero crashes and zero softlocks.
 > *In plain English:* simple robots play thousands of runs every night without graphics. They find crashes and dead ends before a person ever sees them.
 

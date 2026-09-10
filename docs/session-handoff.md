@@ -2,6 +2,56 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 88: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: record the PR-10 merge, and answer the PR-11 questions before its code. Branch `docs/pr-10-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #31 as `1ce78c6` after the Codex repeat review, and PR #32 as `a3091c9` after a Codex review with no finding (Session 87). PR #32 hardened the review gate under D-269.
+- The design doc PR-10 entry reads merged, the roadmap PR-10 entry has its status line, and the sequence marks item 18. The roadmap correction note records F-87 and F-88.
+- Asked four owner questions in one batch, and D-270 to D-273 record the answers. OQ-138 to OQ-141 hold the questions.
+- D-270: four run end states: `bottom`, `budget`, `softlock`, and `crash`. The random walker ends by budget, and the zero-softlock test of the night reads the greedy descender. D-149 is revised in part.
+- D-271: 18000 ticks per floor for the descender, and 36000 ticks per wander for the walker, as Core constants.
+- D-272: `RngStream.Bot` is the fifth value of D-159, at the end.
+- D-273: the night job commits `night.json` to the orphan branch `night-results`, and PR-58 reads it with one fetch.
+- The PR-11 roadmap entry holds the four rules and the night sweep of PR-9, and exit test 6 reads the descender.
+
+### State of the build
+
+- `main` is at `a3091c9`, the squash merge of PR #32. This branch holds the document commit above it, and this entry above that.
+- Remote head: `origin/docs/pr-10-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 509 tests, 0 failures, as PR #32 left them. No code changed.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `d8943df12fefcbee`. The simulation version is 6.
+
+### In flight
+
+PR #33 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). The session applies the label after the automated pass, when every comment has its answer. No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-10 and PR-59 are merged. PR-11 remains, and then one scheduled night, PR-58, M-1, and M-2 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- PR-11 adds `RngStream.Bot`: the bound in `Rng.ForStream` names `Projectile` as the last value, so the bound moves with the enum, and `EveryDeclaredStreamIsAccepted` fails until it does. The bit-identity sweep lists its streams by name, so the new value moves no hash.
+- The greedy descender walks the reachability path with a step-up jump in place, as `StairwellTests.WalkTo` does. That walker moves from the tests into a Core policy, and the test then reads the policy.
+- At floor 15 the descender ascends, because floor 16 has no template (D-3, D-252). The `bottom` state is that ascent.
+- The night job runs on the self-hosted macOS runner and needs write permission on contents to push `night.json` (D-273). The runner label is `macos-arm64-self-hosted` (D-157).
+- The run log of a bot run goes through the JSONL logger of PR-4 into a file that the runner opens. Core opens no file, so the sink lives in the Tools project (D-211).
+- The override label goes stale on any push outside the metadata set (D-190). The session applies it after the last push and the automated pass, and adds it again after a later push.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #33. Then a new session starts PR-11 on a short branch: the Bot stream, the two policies in Core, the runner command in Tools with the run log and the four end states, the PR job at one hundred seeds per policy, the scheduled night job with the record on `night-results`, and the seven exit tests, under D-115, D-117, D-127, D-149, D-157, D-177, and D-270 to D-273.
+
+
 ## Session 87: 2026-09-10, Codex
 
 Author: Codex
@@ -408,54 +458,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A Codex session reviews PR #29 per the `pr-review` skill at the effective head, reads the PR comments and the author replies into the review, and writes `docs/reviews/pr-29.md`. The review confirms the simulation version 5 and the bit-identity change under G-20.
-
-
-## Session 78: 2026-09-09, Claude Code
-
-Author: Claude Code
-Session: record the PR-9 merge, and answer the PR-59 questions before its code. Branch `docs/pr-9-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #27 as `336fe4e`, after a Codex review with no finding at the effective head `bd1366e` (Session 77).
-- The design doc PR-9 entry reads merged, the roadmap PR-9 entry has its status line, and the sequence marks item 16.
-- Asked six owner questions in two batches, and D-258 to D-263 record the answers. OQ-126 to OQ-131 hold the questions.
-- D-258: still water is not solid. A pool is a one-block depression, and a body walks and jumps through it more slowly. The search reads water as air.
-- D-259: the block ids take the order of D-210: 2 hewn stone, 3 timber beam, 4 ore vein, 5 still water, 6 rubble, 7 plank. D-239 is revised in part.
-- D-260: PR-59 raises the simulation version to 5, because a floor with other blocks is another simulation.
-- D-261 to D-263: the walk and sprint speeds take the factor one half in water. The jump velocity takes one half and gravity one quarter, so the apex stays at one block and the rise takes twice as long. The three factors are Core constants in `PlayerBody`.
-- The automated pass on the first push found that the first text of D-262 gave both numbers one factor of one half, which halves the apex. The owner took the correction, one half for the velocity and one quarter for gravity, and F-86 records it. The correction commit answers the pass.
-- The PR-59 roadmap entry holds the ids, the water rules, the version rise, and two new exit tests. The design doc paragraph and gate say the same.
-
-### State of the build
-
-- `main` is at `336fe4e`, the squash merge of PR #27. This branch holds the document commit above it, and this entry above that.
-- Remote head: `origin/docs/pr-9-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 469 tests, 0 failures, as PR #27 left them. No code changed.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `036df5c08e2682e3`. The simulation version is 4.
-
-### In flight
-
-PR #28 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). The automated pass approved `930b659`, every comment has its answer, and the label is on. The owner asked that the session apply the label itself from now on, after the last push and the pass. No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-9 are merged. PR-59, PR-10, and PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- Water changes the body: `PlayerBody` reads the block of the feet cell on each tick, and a water cell scales the speeds and the jump velocity by one half and gravity by one quarter (D-261, D-262). The apex stays at one block, so the reachability search of PR-9 reads water as air and needs no pit rule. One factor on both numbers halves the apex (F-86).
-- A wall block of the detail pass replaces rock that borders air and removes no air, so D-166 holds as PR-9 left it. Collapses and pillars remove air, and the PR-9 sweep runs again over the result.
-- PR-59 raises the simulation version to 5 and moves the bit-identity known answer (D-260, G-20). The sweep folds three floors of its own content set, so the detail pass moves the hash on its own.
-- The block ids are part of the grid (D-259). `VoxelGrid.Set` holds the explicit bound of declared ids, and `EveryDeclaredBlockIsAccepted` walks the enum, so a new value fails the test until the bound names it.
-- The typed lists of a content set are in ordinal path order, so `Floors[0]` is the deep band. A test that needs the template of a floor asks `FloorGenerator.TemplateFor`.
-- The override label goes stale on any push outside the metadata set (D-190). The session applies it after the last push and the automated pass, and adds it again after a later push.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges PR #28. Then a new session starts PR-59 on a short branch: the block ids of D-259 in `BlockId` and the grid bound, the water rule in `PlayerBody`, the detail pass with collapses, pillars, and the blocks by band, the simulation version 5, and the six exit tests, under D-210, D-239, D-253, D-254, and D-258 to D-263.
