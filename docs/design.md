@@ -406,8 +406,8 @@ Gate: ten thousand night runs of the two policies complete with zero crashes and
 > *In plain English:* simple robots play thousands of runs every night without graphics. They find crashes and dead ends before a person ever sees them.
 
 **PR-58: Night gate.** 🔧
-Add the `night-gate` job to the PR workflow. It reads the result record that the PR-11 night job publishes (D-177). The gate passes only on a success record from a scheduled night in the last 48 hours. An absent, stale, cancelled, or failed record fails the gate, and the message names the case (D-115, T-2). This entry follows PR-11 in the sequence, after one scheduled night runs (G-19).
-Gate: the job fails each of the four bad records and passes on the real night record.
+Add the `night-gate` job to the PR workflow. It reads the result record that the PR-11 night job publishes (D-177). The gate passes only on a success record from a night in the last 48 hours, whatever event ran it (D-274). An absent, stale, cancelled, or failed record fails the gate, and so does a record whose commit is not on the base branch (D-115, D-275, T-2). The message names the case, the commit, and the time. This entry follows PR-11 in the sequence, after one scheduled night runs (G-19).
+Gate: the job fails each of the five bad records and passes on the real night record.
 > *In plain English:* every merge now needs a green night from the robots. A missing or old result stops the merge, so nobody can merge on silence.
 
 **M-1: CI wall time per PR.** 🔧
@@ -633,7 +633,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12. ✅ PR-4 merged 2026-09-08 as PR #15. ✅ PR-5 merged 2026-09-08 as PR #17.
 6. PR-6, PR-7, PR-8. ✅ PR-6 merged 2026-09-09 as PR #19. ✅ PR-7 merged 2026-09-09 as PR #21. ✅ PR-8 merged 2026-09-09 as PR #23.
 7. PR-9, PR-59, PR-10, PR-11. One scheduled night runs, then PR-58 (D-177).
-8. M-1, M-2.
+8. M-1, M-2. M-1 fills before PR-58 (D-276).
 9. **← GATE 1 (foundation).** Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green.
 10. PR-12, PR-13, PR-57, PR-14.
 11. PR-15, PR-16, PR-17, PR-18.
