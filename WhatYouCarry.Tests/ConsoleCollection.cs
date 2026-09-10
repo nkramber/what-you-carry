@@ -29,7 +29,7 @@ public sealed class ConsoleCollectionTests
         string root = Path.Combine(RepositoryRoot.Find(), "WhatYouCarry.Tests");
         string[] marks = ["Console.SetOut(", "Console.SetError(", "Program.Main(", "Command.Run("];
         int inCollection = 0;
-        foreach (string file in Directory.EnumerateFiles(root, "*Tests.cs"))
+        foreach (string file in Directory.EnumerateFiles(root, "*Tests.cs", SearchOption.AllDirectories))
         {
             string text = File.ReadAllText(file);
             bool touches = false;
