@@ -1,5 +1,46 @@
 # Session handoff archive
 
+## Session 90: 2026-09-10, Codex
+
+Author: Codex
+Session: review PR-34 at effective head `0536f7e`. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 89 identifies Claude Code as the author of the substantive PR-34 change. Codex is the eligible reviewer.
+- Recomputed the effective head. `8a7367f` holds the implementation, and `0536f7e` is the newest substantive commit. Later commits change only handoff metadata.
+- Read the complete diff, the PR-11 roadmap entry and exit tests, the affected Core callers, the runner and workflows, the bit-identity sweep, the applicable decisions and questions, and every PR comment and author reply.
+- Found P1-1. The new bot tests call commands that write to the process-global console while the existing bit-identity test captures that console. The full 517-test run failed 1 test because it captured bot output instead of the hash.
+- Wrote `docs/reviews/pr-34.md` with the verdict `Changes required` at effective head `0536f7e`.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. The effective PR-34 head is `0536f7e`.
+- Remote head: `origin/feat/pr-11-bots` is `00e4c623700cefa035e94a5aed1672bd4300b7e3`, with no ahead count after the review commit.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 517 tests, 0 failures, 0 skipped.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 needs a correction for P1-1. No other PR is open.
+
+### Traps and gotchas
+
+- The effective head is `0536f7e`, not the remote metadata tip. D-184 excludes the review and session handoff paths.
+- The review-gate check is neutral until this review record reaches the PR head. The check must rerun after the push.
+- The scheduled night workflow has `contents: write` so it can force-push the single `night.json` record to `night-results` under D-273.
+- The focused bot and bit-identity tests passed once, but the full suite reproduced the console race. A focused pass does not close P1-1.
+
+### Open questions that block progress
+
+P1-1 blocks PR #34. OQ-99 is open, and it blocks no other work.
+
+### Next concrete action
+
+Commit the review record and this handoff entry. Push the branch. The author must serialize or remove the console race, then request a repeat review at the new effective head.
+
 ## Session 89: 2026-09-10, Claude Code
 
 Author: Claude Code

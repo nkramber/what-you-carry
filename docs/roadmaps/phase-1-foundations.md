@@ -483,7 +483,7 @@ Gate: exit tests 1 to 6 pass over the test-only definitions.
 
 ### PR-11: Bot harness (Tier 2)
 
-Status: merged 2026-09-10 as PR #34, commit `7487473`. Exit tests 1 to 5 and 7 passed before the merge, and exit test 6 reads the first scheduled night.
+Status: merged 2026-09-10 as PR #34, commit `7487473`. Exit tests 1 to 5 and 7 passed before the merge. Exit test 6 passed on the second hand run of 2026-09-10 (D-278, D-281): ten thousand runs, zero crashes, and zero softlocks on the greedy descender.
 
 Scope:
 
@@ -521,9 +521,16 @@ Scope:
 
 - A `night-gate` job in the PR workflow. It reads the result record that the PR-11 night job publishes (D-177).
 - The gate passes only on a success record from a night that ended in the last 48 hours, whatever event ran the night (D-274).
-- The gate fails on an absent record, a stale record, a cancelled record, and a failed record (D-115, D-177). It also fails a record whose commit is not on the base branch of the PR (D-275). The job fetches the base branch and runs one ancestry check.
+- The gate fails on an absent record, a malformed record, a stale record, a cancelled record, and a failed record (D-115, D-177, T-2). It also fails a record whose commit is not on the base branch of the PR (D-275). The job fetches the base branch and runs one ancestry check.
 - Each failure message names the case, the record commit, and the record time (T-2, D-113).
 - This PR opens only after one night runs, scheduled or by hand, so a real record exists for the gate to read (G-19, D-278).
+- `Tools/NightGate/`: `NightRecordParser` reads `night.json` into a record and names the absent or wrong field (T-2). `NightGateFacts` reads the file once and asks git whether the commit is on the base branch. `NightGateRules` applies the cases with no I/O, in this order: absent, malformed, stale, foreign, cancelled, failed, pass. `NightGateCommand` exits 0 on a pass, 1 on a failure, and 2 on a wrong option.
+- A record that is not a record fails as malformed, a sixth case under T-2, because a pass on unreadable text is a silent failure.
+- The workflow `night-gate.yml` holds one job on Linux. It checks out the full history for the ancestry check and fetches `night-results`. It passes the record, the checkout, the base ref, and the time to the command. An absent branch reads as an absent record, and the step says so.
+- `GitRepository` gains `HasCommit` and `IsAncestor`. Each allows the exit codes that git documents for a no, and throws on any other (T-2).
+- `night-record` writes the file without a byte-order mark now. `File.WriteAllText` with `Encoding.UTF8` wrote one, and a reader of bytes saw a mark before the object. PR-11 exit test 7 asserts the first byte.
+- The PR gate of the agent files gains the `night-gate` line.
+- Beyond the exit tests: `NightGateFailsOnMalformedRecord`, `NightGateCommandReportsEachExitCode`, and the shape test `NightGateWorkflowFetchesTheRecordWithFullHistory`.
 
 Out of scope: the night job itself (PR-11), the Tier 3 policies (PR-16 to PR-18).
 
@@ -574,6 +581,8 @@ The CI job grew at PR-9, with the reachability sweep of five thousand seeds, and
 Procedure: after PR-11, read the night job duration for seven nights. Record them in a table in this file. If a night exceeds six hours, file a question on the run counts in D-115 and D-116. The table counts the seven scheduled nights, and a note beside it records the hand run of 2026-09-10 (D-278).
 
 Hand run 1, 2026-09-10: run 34499677095 at `fb080ca`, 31 minutes, failure at the greedy descender step (F-92). The reachability sweep did not run.
+
+Hand run 2, 2026-09-10: run 34517749543 at `a2799f2`, 63 minutes, success (D-281). The record ended at 2026-09-10T20:03:22Z.
 
 ## 5. Sequence
 

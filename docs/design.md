@@ -408,8 +408,8 @@ Gate: ten thousand night runs of the two policies complete with zero crashes and
 > *In plain English:* simple robots play thousands of runs every night without graphics. They find crashes and dead ends before a person ever sees them.
 
 **PR-58: Night gate.** 🔧
-Add the `night-gate` job to the PR workflow. It reads the result record that the PR-11 night job publishes (D-177). The gate passes only on a success record from a night in the last 48 hours, whatever event ran it (D-274). An absent, stale, cancelled, or failed record fails the gate, and so does a record whose commit is not on the base branch (D-115, D-275, T-2). The message names the case, the commit, and the time. This entry follows PR-11 in the sequence, after one night runs, scheduled or by hand (G-19, D-278).
-Gate: the job fails each of the five bad records and passes on the real night record.
+Add the `night-gate` job to the PR workflow. It reads the result record that the PR-11 night job publishes (D-177). The gate passes only on a success record from a night in the last 48 hours, whatever event ran it (D-274). An absent, malformed, stale, cancelled, or failed record fails the gate, and so does a record whose commit is not on the base branch (D-115, D-275, T-2). The message names the case, the commit, and the time. This entry follows PR-11 in the sequence, after one night runs, scheduled or by hand (G-19, D-278).
+Gate: the job fails each of the six bad records and passes on the real night record.
 > *In plain English:* every merge now needs a green night from the robots. A missing or old result stops the merge, so nobody can merge on silence.
 
 **M-1: CI wall time per PR.** ✅ Table complete 2026-09-10 in the Phase 1 roadmap (D-276). One job exceeded ten minutes by one second, and D-277 keeps the seed counts (F-91).
