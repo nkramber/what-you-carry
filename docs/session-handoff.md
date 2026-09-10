@@ -25,7 +25,7 @@ Session: review PR #31 at effective head `c214d03`. Branch `feat/pr-10-projectil
 
 ### In flight
 
-PR #31 needs the two findings corrected and a new cross-provider review at the new effective head. The review record and this handoff entry are local until the owner permits the metadata push.
+PR #31 needs the two findings corrected and a new cross-provider review at the new effective head. The review record and this handoff entry are pushed at `b15c784`.
 
 ### Traps and gotchas
 
