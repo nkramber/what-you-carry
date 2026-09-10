@@ -14,10 +14,11 @@ Session: record the PR-58 decisions and the M-1 timing. Branch `docs/pr-58-decis
 - D-275: the gate checks the time and the commit. A record whose commit is not on the base branch of the PR fails, and the roadmap PR-58 entry gains exit test 8 for it. Exit test 6 names the commit in every failure message.
 - D-276: the M-1 table fills before PR-58. The next PR holds the table.
 - Session 84 moved to the archive.
+- The automated pass asked for the resolved Phase 1 questions grouped under the heading of their date, and `2ce994f` does. The list under the 2026-09-08 heading held later resolutions too.
 
 ### State of the build
 
-- `main` is at `1dc7e42`, the squash merge of PR #35. This branch holds the document commit above it, and this entry above that.
+- `main` is at `1dc7e42`, the squash merge of PR #35. This branch holds the document commit above it, this entry above that, and the correction `2ce994f` above the entry.
 - Remote head: `origin/docs/pr-58-decisions` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures. No code changed.
 - `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
