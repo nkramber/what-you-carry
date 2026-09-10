@@ -3,5 +3,6 @@
   "speedCentimetres": 12000,
   "gravityScalePercent": 20,
   "lifetimeTicks": 300,
-  "damage": 80
+  "damage": 80,
+  "spreadHundredths": 30
 }

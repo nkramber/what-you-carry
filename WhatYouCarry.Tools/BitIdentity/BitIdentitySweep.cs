@@ -86,8 +86,9 @@ public static class BitIdentitySweep
 
     /// <summary>
     /// The content set of the sweep: three templates on a small grid, one per band of D-210 on floors 1, 2, and
-    /// 3, and two chamber kinds whose weights fill the budget. The three swept floors then take every block of
-    /// the detail pass. The hash of the set has no meaning beyond its shape (D-221).
+    /// 3, two chamber kinds whose weights fill the budget, and one projectile definition with a spread, which
+    /// the attack bit of the sweep intents fires (D-265). The three swept floors then take every block of the
+    /// detail pass. The hash of the set has no meaning beyond its shape (D-221).
     /// </summary>
     public static ContentSet SweepContent()
     {
@@ -102,7 +103,10 @@ public static class BitIdentitySweep
             new("sweep-small", 10, 1, 2, 3, 5),
             new("sweep-large", 25, 2, 3, 5, 8),
         ];
-        ProjectileDefinition[] projectiles = [];
+        ProjectileDefinition[] projectiles =
+        [
+            new("sweep-shot", 4000, 100, 300, 1, 0, 200),
+        ];
         return new ContentSet(ReplayContentHash, floors, kinds, projectiles, Strings.FromMembers(Strings.FilePath, []));
     }
 

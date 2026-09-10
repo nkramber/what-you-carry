@@ -1,0 +1,8 @@
+{
+  "id": "test-slow-arc",
+  "speedCentimetres": 1500,
+  "gravityScalePercent": 300,
+  "lifetimeTicks": 600,
+  "damage": 1,
+  "spreadHundredths": 0
+}

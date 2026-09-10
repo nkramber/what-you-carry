@@ -1,9 +1,8 @@
 {
-  "id": "arrow",
+  "id": "test-wide-spread",
   "speedCentimetres": 4000,
   "gravityScalePercent": 100,
   "lifetimeTicks": 300,
-  "damage": 25,
-  "areaCentimetres": 150,
-  "spreadHundredths": 100
+  "damage": 1,
+  "spreadHundredths": 1500
 }

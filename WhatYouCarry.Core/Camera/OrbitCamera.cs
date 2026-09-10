@@ -8,7 +8,8 @@ namespace WhatYouCarry.Core.Camera;
 
 /// <summary>
 /// The over-the-shoulder camera (D-13, D-75). It reads the yaw and pitch sums of the loop, sweeps its boom
-/// against the grid, and gives the pose that the aim ray starts from (D-77, D-88, D-247).
+/// against the grid, and gives the pose that the aim ray starts from (D-77, D-88, D-247). The pose carries the
+/// shoulder point too, which is where a shot starts (D-268).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -77,7 +78,7 @@ public static class OrbitCamera
         Vector3 pivot = feet + new Vector3(0.0f, PivotHeight, 0.0f);
         Vector3 shoulder = PullIn(grid, pivot, pivot + (right * ShoulderRight) + (up * ShoulderUp));
         Vector3 position = PullIn(grid, shoulder, shoulder - (forward * BoomLength));
-        return new CameraPose(position, forward, right, up);
+        return new CameraPose(position, forward, right, up, shoulder);
     }
 
     /// <summary>

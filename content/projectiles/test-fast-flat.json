@@ -1,0 +1,8 @@
+{
+  "id": "test-fast-flat",
+  "speedCentimetres": 30000,
+  "gravityScalePercent": 0,
+  "lifetimeTicks": 120,
+  "damage": 1,
+  "spreadHundredths": 0
+}

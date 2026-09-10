@@ -456,7 +456,9 @@ Scope:
 - `Core/Projectiles/ProjectileSimulation.cs`: a flat array of projectiles, fixed-step Euler integration, gravity scale, lifetime, spread, and swept collision against the grid and entity boxes (G-6). No spatial partition (D-109).
 - `Core/Projectiles/ArcSolver.cs`: the launch angle for a target under gravity, with DetMath only. It reports an unreachable target.
 - The attack bit fires the first projectile definition of the content set, once per press, until PR-15 gives the loadout a weapon (D-265, D-267). A shot starts at the shoulder point and flies toward the first solid cell that the aim ray meets within 100 meters (D-268). When the ray meets none, the shot flies toward the point of the ray at 100 meters.
-- The projectiles are state: the loop hash reads each live projectile after the run end, in flight order, and the simulation version rises to 6 (D-160, G-20).
+- The projectiles are state: the loop hash reads each live projectile after the run end, in flight order, and the simulation version rises to 6 (D-160, G-20). The projectiles of a floor end with the floor.
+- A projectile is a point, and its tick is one segment: the grid ray march of PR-8 finds the first solid cell on it, and a slab test finds each entity box. A projectile never hits the box of its owner. The loop exposes the ends of the last tick, which is not state, for the hit effects of PR-15.
+- The crosshair ray of the shot is the camera forward without aim assist, because no target exists before PR-16. The Projectile stream of the run draws the spread of each shot in intent order, so a replay draws the same values.
 
 Out of scope: damage, hit effects, enemy use, render trails.
 
