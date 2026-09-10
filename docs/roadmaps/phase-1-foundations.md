@@ -612,6 +612,9 @@ Resolved 2026-09-09:
 - OQ-117 and OQ-118 (D-248 and D-249): the pitch sign and the shoulder march. PR-8.
 - OQ-119 (D-251): the visible review gate line. The fix PR #25.
 - OQ-120 to OQ-125 (D-252 to D-257): the floor size, the room shape, the PR-9 split, the chamber templates, the spawn and the stairwell, and the stairwell choice. PR-9 and PR-59.
+- OQ-126 to OQ-131 (D-258 to D-263): still water, the block ids, the version for a layout change, and the water speed, jump, and constants. PR-59.
+- OQ-132 (D-264): the water probe reads the column under the feet. PR-59.
+- OQ-133 to OQ-136 (D-265 to D-268): the Phase 1 shot, the spread field, the fire timing, and the shot origin. PR-10.
 
 Resolved 2026-09-08:
 
@@ -620,8 +623,8 @@ Resolved 2026-09-08:
 - OQ-75 (D-202): the parser of the lint tool. The C# compiler API. PR-3.
 - OQ-76 (D-203): the conflict inside D-161. A fold to [-pi/4, pi/4] and a quadrant. PR-3.
 - OQ-12 (D-210): the biome is a collapsed deep mine. PR-9 and PR-59.
-- OQ-126 to OQ-131 (D-258 to D-263): still water, the block ids, the version for a layout change, and the water speed, jump, and constants. PR-59.
-- OQ-132 (D-264): the water probe reads the column under the feet. PR-59.
-- OQ-133 to OQ-136 (D-265 to D-268): the Phase 1 shot, the spread field, the fire timing, and the shot origin. PR-10.
+
+Resolved 2026-09-10:
+
 - OQ-138 to OQ-141 (D-270 to D-273): the run end states, the tick budgets, the bot stream, and the night record. PR-11 and PR-58.
 - OQ-142 to OQ-144 (D-274 to D-276): the night event, the night commit, and the M-1 timing. PR-58 and M-1.
