@@ -2,6 +2,46 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 90: 2026-09-10, Codex
+
+Author: Codex
+Session: review PR-34 at effective head `0536f7e`. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 89 identifies Claude Code as the author of the substantive PR-34 change. Codex is the eligible reviewer.
+- Recomputed the effective head. `8a7367f` holds the implementation, and `0536f7e` is the newest substantive commit. Later commits change only handoff metadata.
+- Read the complete diff, the PR-11 roadmap entry and exit tests, the affected Core callers, the runner and workflows, the bit-identity sweep, the applicable decisions and questions, and every PR comment and author reply.
+- Found P1-1. The new bot tests call commands that write to the process-global console while the existing bit-identity test captures that console. The full 517-test run failed 1 test because it captured bot output instead of the hash.
+- Wrote `docs/reviews/pr-34.md` with the verdict `Changes required` at effective head `0536f7e`.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. The effective PR-34 head is `0536f7e`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 517 tests, 0 failures, 0 skipped.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #34 needs a correction for P1-1. No other PR is open.
+
+### Traps and gotchas
+
+- The effective head is `0536f7e`, not the remote metadata tip. D-184 excludes the review and session handoff paths.
+- The review-gate check is neutral until this review record reaches the PR head. The check must rerun after the push.
+- The scheduled night workflow has `contents: write` so it can force-push the single `night.json` record to `night-results` under D-273.
+- The focused bot and bit-identity tests passed once, but the full suite reproduced the console race. A focused pass does not close P1-1.
+
+### Open questions that block progress
+
+P1-1 blocks PR #34. OQ-99 is open, and it blocks no other work.
+
+### Next concrete action
+
+Commit the review record and this handoff entry. Push the branch. The author must serialize or remove the console race, then request a repeat review at the new effective head.
+
 ## Session 89: 2026-09-10, Claude Code
 
 Author: Claude Code
@@ -415,47 +455,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 The owner merges PR #30. Then a new session starts PR-10 on a short branch: the spread field, the four test-only definitions, the projectile simulation, the arc solver, the shot from the attack bit, the projectiles in the hash with the simulation version 6, and the six exit tests, under D-159, D-231, D-242, D-247, and D-265 to D-268.
-
-
-## Session 80: 2026-09-09, Codex
-
-Author: Codex
-Session: review PR-59 as PR #29 at effective head `923e2a4`. Branch `feat/pr-59-detail`.
-
-### What this session did, and why
-
-- Verified the provider gate. Session 79 identifies Claude Code as the author of the substantive PR-59 commits, and Codex is the eligible reviewer.
-- Read the complete diff, the PR-59 roadmap entry and exit tests, the affected Core callers, content and validators, reachability, replay version use, bit-identity sweep, decisions, questions, and the PR comments and replies.
-- Found no actionable defect. The detail pass preserves tunnel reachability, the water probe follows D-264, the simulation version rises to 5, and the block set follows D-259.
-- Wrote `docs/reviews/pr-29.md` with the verdict `Ready for owner merge` at effective head `923e2a4`.
-
-### State of the build
-
-- `main` is at `45dbaf5`, the squash merge of PR #28. The reviewed effective head is `923e2a4`.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 476 tests, 0 failures.
-- `det-lint`: 0 findings. Core 0 in 54 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `62c5e1d152fe94fe`. The simulation version is 5.
-- The Godot 4.7.2 headless build check passes.
-- GitHub CI, both bit-identity platform jobs and the compare job, determinism lint, STE check, evaluate, and Gitar pass at the PR head. The review-gate result is neutral until the review record exists.
-
-### In flight
-
-PR #29 holds the review record and needs the metadata commit and the session handoff pushed. The owner can merge after the remote review-gate check reads `Ready for owner merge` at effective head `923e2a4`.
-
-### Where Phase 1 stands
-
-PR-1 to PR-9 are merged. PR-59 is open as PR #29. PR-10 and PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- The effective head is `923e2a4`, because its design and roadmap changes are substantive under D-184. The handoff and review commits remain metadata commits.
-- The review-gate result is neutral before this review record exists. The metadata commit should trigger the gate again.
-- D-264 revises only the water probe wording of D-262. The half jump velocity, quarter gravity, and one-block apex still apply.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Commit the review record and handoff entry. Push the branch. Fetch and verify that the remote head has no ahead count and that the review-gate check reads the approved effective head.
