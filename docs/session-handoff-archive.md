@@ -1,5 +1,44 @@
 # Session handoff archive
 
+## Session 87: 2026-09-10, Codex
+
+Author: Codex
+Session: review PR #32 at effective head `60bdb17`. Branch `fix/review-gate-one-verdict`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 86 identifies Claude Code as the author of the substantive PR-32 change. Codex is the eligible reviewer.
+- Recomputed the effective head. `7a388f6` holds the implementation, and `60bdb17` is the newest substantive commit because the skill file lies outside the metadata set of D-184. Later commits change only review and handoff metadata.
+- Read the complete diff, the review-gate callers and tests, D-269, OQ-137, the roadmap, the PR comments and author replies, and the current remote checks.
+- Found no actionable defect. Wrote `docs/reviews/pr-32.md` with the verdict `Ready for owner merge` at effective head `60bdb17`.
+
+### State of the build
+
+- `main` is at `1ce78c6`, the squash merge of PR #31. The effective PR-32 head is `60bdb17`.
+- Local build and test pass. `dotnet build` reports 0 warnings and 0 errors. `dotnet test` reports 509 tests and 0 failures.
+- `det-lint` reports 0 findings in 57 Core files and 0 Game files. `ste-check` reports 0 findings in 15 files.
+- `bit-identity` returns `d8943df12fefcbee`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+- The code, lint, STE, Gitar, and Windows checks pass. The review-gate check waits for the review record, and the macOS checks were pending before the metadata push.
+
+### In flight
+
+The review record and this handoff entry are pushed in `5adec71`. The owner can merge after all platform checks pass; the remote review-gate check already reads `Ready for owner merge` at effective head `60bdb17`.
+
+### Traps and gotchas
+
+- The effective head is `60bdb17`, not the remote tip after the review metadata commit. D-184 excludes only the review and handoff paths.
+- The parser counts verdict names in the full Verdict section. The review skill now requires the reason to name no other verdict (D-269).
+- The review-gate check failed once because the record used a literal marker before its heading. Commit `5adec71` removes that marker, and the new evaluate and review-gate checks pass.
+
+### Open questions that block progress
+
+None. OQ-99 remains open, and it blocks nothing.
+
+### Next concrete action
+
+Wait for the pending platform checks. Then the owner can merge PR #32.
+
 ## Session 86: 2026-09-10, Claude Code
 
 Author: Claude Code
