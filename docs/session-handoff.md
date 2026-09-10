@@ -2,6 +2,49 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 91: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: answer the PR #34 review. Branch `feat/pr-11-bots`.
+
+### What this session did, and why
+
+- Read the one P1 finding in `docs/reviews/pr-34.md`. Full merit: the bot tests call a command that writes its summary to the process console, and the bit-identity command test captures that console, so a full run could read the wrong line.
+- Every test class that calls a command or redirects the console carries `[Collection(ConsoleCollection.Name)]` now, so xUnit runs the four one after another. `ConsoleCollectionTests.EveryConsoleTestIsInTheCollection` reads every test source and fails on a class that touches the console outside the collection.
+- Three full runs with `-m:1` on the correction: 518 passed, 0 failed, 0 skipped, each time.
+- F-90 records the finding, and `docs/reviews/pr-34-response.md` records the disposition. The correction is `f6ca5f6`.
+
+### State of the build
+
+- `main` is at `d3093cf`, the squash merge of PR #33. This branch holds the PR-11 commit `8a7367f`, the correction `0536f7e`, the review commits, the correction `f6ca5f6`, and this entry above them.
+- Remote head: `origin/feat/pr-11-bots` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures, three times in a row.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+
+### In flight
+
+PR #34 is open and it holds this branch. The automated pass runs on this push, and then a Codex repeat review at the effective head `f6ca5f6` updates the same review record. No other PR is open.
+
+### Where Phase 1 stands
+
+PR-1 to PR-10 and PR-59 are merged. PR-11 is open as PR #34. After its merge, one scheduled night runs on its own, then PR-58 opens, and M-1 and M-2 reach Gate 1. No open question blocks any of them.
+
+### Traps and gotchas
+
+- The effective head is `f6ca5f6`. The review record still names `0536f7e`, and the repeat review updates the head and the verdict together, with one verdict name in the Verdict section (D-269).
+- A test that calls a command of the Tools project, or redirects the console, goes in the console collection, or the shape test fails.
+- xUnit runs the classes of one collection one after another, so the console collection takes a little longer than the parallel run of four classes. The full suite still takes under three and a half minutes.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The automated pass runs on this push. Then a Codex session repeats the review per the repeat procedure, at the effective head `f6ca5f6`, and updates `docs/reviews/pr-34.md` with the status of P1-1 and a new verdict.
+
+
 ## Session 90: 2026-09-10, Codex
 
 Author: Codex
@@ -406,53 +449,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A Codex session reviews PR #31 per the `pr-review` skill at the effective head `c214d03`, reads the PR comments and the author reply into the review, and writes `docs/reviews/pr-31.md`. The review confirms the simulation version 6 and the bit-identity change under G-20.
-
-
-## Session 81: 2026-09-09, Claude Code
-
-Author: Claude Code
-Session: record the PR-59 merge, and answer the PR-10 questions before its code. Branch `docs/pr-59-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #29 as `5ae0a24`, after a Codex review with no finding at the effective head `923e2a4` (Session 80).
-- The design doc PR-59 entry reads merged, the roadmap PR-59 entry has its status line, and the sequence marks item 17.
-- Asked four owner questions in one batch, and D-265 to D-268 record the answers. OQ-133 to OQ-136 hold the questions.
-- D-265: until PR-15 gives the loadout a weapon, the attack bit fires the first projectile definition of the content set, in ordinal path order.
-- D-266: the projectile schema gains the required field `spreadHundredths`, the half angle of the spread cone in hundredths of a degree. The Projectile stream draws the spread of each shot.
-- D-267: a shot fires once per press of the attack bit: a tick where the bit is set and was clear on the tick before.
-- D-268: a shot starts at the shoulder point of D-242 and flies toward the first solid cell the aim ray meets within 100 meters, or the point of the ray at 100 meters.
-- The PR-10 roadmap entry holds the four files of the test-only set, the spread field, the shot rules, and the projectile state in the hash with the simulation version 6. The design doc paragraph says the same.
-
-### State of the build
-
-- `main` is at `5ae0a24`, the squash merge of PR #29. This branch holds the document commit above it, and this entry above that.
-- Remote head: `origin/docs/pr-59-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 476 tests, 0 failures, as PR #29 left them. No code changed.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `62c5e1d152fe94fe`. The simulation version is 5.
-
-### In flight
-
-PR #30 is open and it holds this branch. It changes `docs/` alone, so the `review-override` label covers it (D-190). The session applies the label after the automated pass, when every comment has its answer. No other PR is open.
-
-### Where Phase 1 stands
-
-PR-1 to PR-9 and PR-59 are merged. PR-10 and PR-11 remain, and then M-1, M-2, and PR-58 reach Gate 1. No open question blocks any of them.
-
-### Traps and gotchas
-
-- PR-10 changes the loop state: the live projectiles join the hash after the run end, in flight order, so the simulation version rises to 6 and the bit-identity hash moves (G-20). The sweep intents set the attack bit on some ticks already, so the sweep fires shots on its own once the loop reads the bit.
-- PR-10 changes the projectile schema: `spreadHundredths` joins the required list, the two existing files gain a value, and the content hash of the test set moves.
-- The first projectile definition of the content set is the first in ordinal path order, so the file names of the test-only set decide which one the attack bit fires (D-265).
-- The aim ray march for the shot target reads the grid with `GridRay`, as the boom sweep does. A ray that meets no solid cell within 100 meters ends at the point of the ray at 100 meters (D-268).
-- A shot that starts at the shoulder point can start inside rock when the player hugs a right wall (OQ-118). D-249 marches the shoulder offset first, and the shot origin takes that marched point.
-- The override label goes stale on any push outside the metadata set (D-190). The session applies it after the last push and the automated pass, and adds it again after a later push.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges PR #30. Then a new session starts PR-10 on a short branch: the spread field, the four test-only definitions, the projectile simulation, the arc solver, the shot from the attack bit, the projectiles in the hash with the simulation version 6, and the six exit tests, under D-159, D-231, D-242, D-247, and D-265 to D-268.
