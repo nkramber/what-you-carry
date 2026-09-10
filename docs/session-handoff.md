@@ -55,7 +55,7 @@ Session: answer the PR #31 review. Branch `feat/pr-10-projectiles`.
 - The sweep hash moved from `3220e92dcbca55a2` to `d8943df12fefcbee`, because every shot of the sweep turns another way. The simulation version stays 6, because it rose in this PR already (G-20).
 - `SpreadStaysInsideTheCone` reads the half angle from the definition over five axes, and `ArcSolverRejectsABadSpeedOrGravity` covers seven bad inputs. 506 tests in total.
 - F-87 and F-88 record the findings, and `docs/reviews/pr-31-response.md` records the dispositions.
-- The repeat review approved `1b58d3a`, and the gate still read "Changes required": the record held a previous-verdict line above the new verdict, and the gate takes the first verdict name after the heading. With the owner's choice, this session moved that line into a "Verdict history" section above the Verdict section. The verdict text is as the reviewer wrote it, and the gate output names the editing commit (D-198).
+- The repeat review approved `1b58d3a`, and the gate still read "Changes required": the record held a previous-verdict line above the new verdict, and the gate takes the first verdict name after the heading. With the owner's choice, this session moved that line into an "Earlier verdicts" section above the Verdict section. A first try named that section "Verdict history", and the gate read it as the Verdict section, because the parser matches the heading text as a prefix. The verdict text is as the reviewer wrote it, and the gate output names the editing commit (D-198).
 
 ### State of the build
 
@@ -76,7 +76,7 @@ PR-1 to PR-9 and PR-59 are merged. PR-10 is open as PR #31. PR-11 remains, and t
 ### Traps and gotchas
 
 - The effective head is `1b58d3a`, and the review record names it with the verdict `Ready for owner merge`.
-- The review gate reads the first verdict name after the Verdict heading. A note that names an earlier verdict belongs above that heading, never inside the section.
+- The review gate reads the first verdict name after the first heading that starts with "## Verdict", so a section named "Verdict history" counts as the Verdict section. A note that names an earlier verdict belongs in a section whose heading starts with another word, above the Verdict section. A follow-up PR makes the parser match the exact heading and refuse a section with two verdict names.
 - The sweep hash moved without a version change, because the version rose in this PR already. A review that sees `d8943df12fefcbee` must confirm it and not restore `3220e92dcbca55a2`.
 - The spread is uniform in the angle from the axis and not in the solid angle of the cone, so shots gather near the axis less than a uniform disc would. D-266 names the half angle alone.
 - The cone sides come from the world up, or from the world right for a vertical direction, so a direction within 2.6 degrees of vertical takes the second axis. The angle from the axis is exact either way.
