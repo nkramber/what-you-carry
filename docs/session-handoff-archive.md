@@ -1,5 +1,60 @@
 # Session handoff archive
 
+## Session 115: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: put the state of the nights in the documents before a fresh session, which listens for the first scheduled night. Branch `docs/night-state-for-gate-1`.
+
+### What this session did, and why
+
+- The owner merged PR #43 as `557568a` and PR #44 as `57bc164`. The night keeps the logs of a failed run (D-280), and the cron reads `7 8 * * *`, which is 08:07 UTC and 02:07 Central Standard Time (D-284, D-285).
+- The M-2 table holds the rows of hand runs 3 to 6: 59, 65, 63, and 68 minutes, all green. Only the row of the first scheduled night is missing.
+- OQ-154 is open: the Gate 1 sign-off, after the first scheduled night passes on its own (D-283). The next session resolves it with the owner and records the sign-off as the next decision.
+- No scheduled night has ever fired. The 03:00 UTC run of 2026-09-11 never came (F-94), and the 08:07 UTC line has not had its first chance yet.
+- Session 105 moved to the archive.
+
+### State of the build
+
+- `main` is at `57bc164`, the squash merge of PR #44. This branch holds the document commit above it, and this entry above that.
+- Remote head: `origin/docs/night-state-for-gate-1` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 535 tests, 0 failures. No code changed.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The record on `night-results` is the success of hand run 6 at `5455e5d`, ended 02:21 UTC on 2026-09-11. The night gate turns red on every PR at 02:21 UTC on 2026-09-13 unless a night refreshes it.
+- No PR is open.
+
+### In flight
+
+The first scheduled night, at 08:07 UTC on 2026-09-11. It takes about 65 minutes. Read it with these commands:
+
+- `gh run list --workflow=night.yml --event schedule --limit 1 --json databaseId,status,conclusion,createdAt`: an empty list means the schedule has not fired.
+- `gh api repos/nkramber/what-you-carry/actions/runs/<id> --jq '.run_started_at, .updated_at'`: the minutes of the row come from these two times, because the jobs API gives null times for the self-hosted job.
+- `git fetch origin night-results && git show FETCH_HEAD:night.json`: the record, with the commit, the end time, and the status.
+
+### Traps and gotchas
+
+- GitHub delays or drops a schedule at the start of an hour under load, and this repository has never seen a schedule run. If no run exists by 09:00 UTC, that is a new question for the owner, and not a repeat of F-94: name what the runner and the workflow page show.
+- The Mac runner takes a queued PR job only when no night is queued. A PR opened while the night runs waits about an hour for its macOS jobs.
+- The record of `night-record` on `main` writes no byte-order mark since PR-58, and the gate reads the older records with one through git.
+- The next ids are D-286, OQ-155, F-95, and Session 116. The scratchpad of the last session is gone: the M-2 rows above are the only copy of the hand run times, and the Gate 1 edit list below is the only copy of the plan.
+- A docs-only PR takes the `review-override` label after its last push and the automated pass, and the review gate reads green then (D-188, D-190).
+
+### Open questions that block progress
+
+OQ-154 blocks Phase 2 until the owner signs Gate 1. OQ-47 blocks PR-12, and the register holds a full recommendation. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+When the scheduled night passes, ask the owner two things in one batch: the Gate 1 sign-off, and the answer to OQ-47. Then one docs PR, the Gate 1 record, with these edits:
+
+1. The M-2 table: the row `Scheduled night 1, 2026-09-11`, the run id, the commit, the minutes, and the status. Below it: `Status: table complete 2026-09-11, seven nights (D-283).` The design doc M-2 entry reads ✅ with the same words.
+2. `docs/decisions.md`: D-286, the Gate 1 sign-off in the words of the owner. Resolves OQ-154. Applies D-150 and D-283. The next decision holds the answer to OQ-47.
+3. The Phase 1 roadmap: the status header reads `focused roadmap, complete`, sequence item 22 reads ✅ for M-2, item 23 reads ✅ signed with the D-# id, the correction note gains a dated sentence, and the open questions list moves OQ-154 to a resolved line.
+4. The design doc: sequence item 8 reads ✅ for M-2, item 9 reads ✅ signed with the D-# id, and the Phase 1 heading gains the sign-off.
+5. Session 116 handoff entry.
+
+After the merge, Phase 2 starts: a session opens PR-12 from `main` per the Phase 2 roadmap entry and the answer to OQ-47.
+
 ## Session 114: 2026-09-11, Codex
 
 Author: Codex
