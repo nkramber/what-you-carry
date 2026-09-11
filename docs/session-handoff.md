@@ -2,6 +2,41 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 106: 2026-09-11, Codex
+
+Author: Codex
+Session: review PR #42 at effective head `b616357`.
+
+### What this session did, and why
+
+- Verified the base, merge base, effective head, complete diff, D-284, the Phase 1 roadmap, the workflow, the shape test, the handoff files, the agent files, and every PR comment.
+- The cron reads `0 8 * * *`. The shape test checks the cron, the hand trigger, and the 02:00 Central Standard Time comment. No finding remains.
+- The metadata commit adds `docs/reviews/pr-42.md` and this entry. The effective head stays `b616357` under D-184.
+
+### State of the build
+
+- `main` is at `5455e5d`. The effective implementation head is `b616357`. The PR metadata tip is `43157e6` before this review commit.
+- `dotnet build`: 0 warnings, 0 errors. The focused shape test passes. The full local suite did not complete after the test runner socket error and an approved retry that produced no output.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`. The Godot 4.7.2 headless build passes.
+- Remote Linux and Windows checks, bit identity, bots, det-lint, night-gate, STE check, and Gitar pass. The macOS CI job remains pending. The review-gate check waits for this record.
+
+### In flight
+
+The review record and this handoff entry need one metadata commit and a push. The owner must wait for the pending macOS CI result and the review-gate result.
+
+### Traps and gotchas
+
+- The effective head is `b616357`, not the metadata tip. Only the review and handoff paths are metadata under D-184.
+- The first local test run failed on a socket permission error. The approved full-suite retry did not complete. Treat both as execution-context results.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit and push the review record and this handoff entry. Then wait for the macOS CI and review-gate results before the owner merges.
+
 ## Session 105: 2026-09-11, Claude Code
 
 Author: Claude Code
