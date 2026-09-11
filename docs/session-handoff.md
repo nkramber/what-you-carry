@@ -17,7 +17,7 @@ Session: review PR #49 at effective head `91d1b6f`.
 ### State of the build
 
 - `main` and the merge base are `e1cf847`. The effective implementation head is `91d1b6f`. The current branch tip before this session is `dfdc68e`, which holds metadata only.
-- The focused Game, input, render, smoke, and shape tests pass with 41 tests. The remote three-platform CI and smoke checks pass on the effective head.
+- The focused Game, input, render, smoke, and shape tests pass with 41 tests. The remote three-platform CI and smoke checks pass on the effective head. Gitar passes, while `evaluate` and `review-gate` fail for the recorded `Changes required` verdict.
 - Local det-lint, STE check, bit identity, Godot editor build, and the headless smoke session pass. Local `dotnet build` did not complete after more than 80 seconds without output.
 
 ### In flight
