@@ -164,7 +164,9 @@ public sealed class RepositoryShapeTests
         string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
         int upload = workflow.IndexOf("uses: actions/upload-artifact@v4", StringComparison.Ordinal);
         Assert.True(upload > 0, "The night workflow has no upload-artifact step.");
-        string step = workflow[workflow.LastIndexOf("- name:", upload, StringComparison.Ordinal)..];
+        int stepStart = workflow.LastIndexOf("- name:", upload, StringComparison.Ordinal);
+        int nextStep = workflow.IndexOf("- name:", upload, StringComparison.Ordinal);
+        string step = nextStep < 0 ? workflow[stepStart..] : workflow[stepStart..nextStep];
         Assert.Contains("if: failure()", step, StringComparison.Ordinal);
         Assert.Contains("path: bot-logs", step, StringComparison.Ordinal);
         Assert.Contains("if-no-files-found: warn", step, StringComparison.Ordinal);
