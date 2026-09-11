@@ -1,5 +1,166 @@
 # Session handoff archive
 
+## Session 98: 2026-09-10, Codex
+
+Author: Codex
+Session: review PR #39 at effective head `0685c4e`. Branch `fix/dig-plan-job-budget`.
+
+### What this session did, and why
+
+- Reviewed the measured dig-plan cap fix for F-92 under D-253 and D-279.
+- Verified the exact PR base, merge base, substantive head, provider gate, complete diff, caller, regression tests, decisions, roadmap, and automated pass.
+- Added `docs/reviews/pr-39.md`. The review found no issue and records `Ready for owner merge` for effective head `0685c4e`.
+
+### State of the build
+
+- `main` is at `736e466`. The PR branch is at metadata tip `90ab13e`, with effective head `0685c4e`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 520 tests, 0 failures, 0 skips.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #39 waits for the owner to confirm the pending remote checks and merge it. After the merge, run the second night by hand on `main` under D-281.
+
+### Traps and gotchas
+
+- The first local test attempt failed before test execution because VSTest could not bind its local socket. The elevated retry passed.
+- The PR review-gate result was neutral before this review record existed. GitHub API access failed during the final status refresh, so the complete remote status remains unverified.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner confirms the remote checks and merges PR #39. Then run the second night by hand on `main` and read its `night.json` record.
+
+## Session 97: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: the first night failed on the dig job cap, and this fix raises the cap on the measurement (F-92, D-279). Branch `fix/dig-plan-job-budget`.
+
+### What this session did, and why
+
+- The hand-run night 34499677095 on `fb080ca` failed at the greedy descender step at 16:34 UTC: bottom 4997, crash 3 of 5000, and the record on `night-results` reads failure. The reachability sweep did not run.
+- Reproduced the three crashes locally in ten parallel chunks of 500 seeds. Each is the same fault: the dig plan ran its 400 jobs and a chamber stayed in rock, on seed 2170 floor 10, seed 3000 floor 4, and seed 4786 floor 10. The PR sweep digs floor 11, 1, and 2 for those seeds, so it never met them.
+- Measured with the cap lifted: the three floors need 2817, 1661, and 615 jobs. Of 5000 sweep floors, 4969 finish inside 25 jobs, and the largest other need is 208. The three floors generate, play to bottom, and hold 0.033 to 0.036 air against a normal mean of 0.040 to 0.052, so the extra jobs were walkers with no room.
+- Asked three owner questions in one batch. D-279 sets `DigPlan.MaxJobs` to 10000, D-280 uploads the bot logs of a failed night as a run artifact, and D-281 runs a second night by hand after this fix merges. OQ-147 to OQ-149 hold them.
+- `DigUntilComplete` gives the job count now, and `DigPlanJobCapTests` digs the three floors and fails on the old cap. F-92 is in the register, and the M-2 section holds the note of the first hand run.
+- The bit-identity hash stays `6ec00e90c1c85cdb`, because no floor that dug inside 400 jobs changes. The simulation version stays 6 for the same reason.
+- Session 87 moved to the archive.
+
+### State of the build
+
+- `main` is at `736e466`, the squash merge of PR #38. This branch holds the fix commit above it, and this entry above that.
+- Remote head: `origin/fix/dig-plan-job-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 520 tests, 0 failures.
+- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The branch `night-results` holds one record: `fb080ca`, 16:34:28 UTC, failure. PR-58 is written on the local branch `feat/pr-58-night-gate` at `d6f7c6b` above `fb080ca`, with 528 tests green, and it waits for a success record.
+
+### In flight
+
+This PR, the fix of F-92. A Codex review comes next. After the merge, a second hand run of the night (D-281), then PR-58 opens from `main` with the local branch rebased, then the night logs PR of D-280. No other PR is open.
+
+### Traps and gotchas
+
+- The night runs on the one Mac runner, so the macOS CI jobs of every open PR wait for it. A hand run at daytime holds them for about half an hour, and a green run with the sweep takes longer.
+- The runner checkout cleans the bot logs at the next job. Until D-280 lands, reproduce a failed night locally: ten parallel `bot-run` chunks of 500 seeds take about three minutes.
+- The sweep digs one floor per seed, `1 + seed % 15`, and the bots dig all fifteen floors of a seed, so the bots cover floors the sweep never digs.
+- The record of `night-record` starts with a byte-order mark, because `File.WriteAllText` with `Encoding.UTF8` writes one. `File.ReadAllText` strips it, so the gate of PR-58 reads it, and the PR-58 branch corrects the writer.
+- `DigUntilComplete` returns the job count. A caller that ignores it compiles, so the regression test is the only reader.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews this PR per the `pr-review` skill: the cap, the measurement, the regression test, and the hash claim. After the merge, start the night by hand on `main` (D-281), and when its record reads success, open PR-58 from the rebased local branch.
+
+## Session 96: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: record the first night by hand (D-278), and start that night. Branch `docs/night-by-hand`.
+
+### What this session did, and why
+
+- The owner merged PR #37 as `fb080ca`, then asked for a one-time hand run of the night, so that PR-58 opens before the first scheduled night. OQ-146 holds the question, and D-278 records the answer. D-274 is revised in part, the sequence wait only, and its gate rule stands.
+- Started the night workflow on `main` at `fb080ca` by `workflow_dispatch` at 16:03 UTC. The run is 34499677095. It writes `night.json` to `night-results` whatever its outcome.
+- Sequence item 20 reads "scheduled or by hand" in the roadmap and the design doc, and so does the PR-58 entry. The M-2 procedure counts the seven scheduled nights, with a note beside the table for the hand run.
+- Session 86 moved to the archive.
+
+### State of the build
+
+- `main` is at `fb080ca`, the squash merge of PR #37. This branch holds the document commit above it, and this entry above that.
+- Remote head: `origin/docs/night-by-hand` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures. No code changed.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The night run 34499677095 was in progress on the runner `mac-mini-m4` when this entry was written. The branch `night-results` appears when its publish step runs.
+
+### In flight
+
+The night run on `main`. This PR holds D-278 and changes no code, so the `review-override` label covers it (D-188, D-190). No other PR is open. The scheduled night still runs at 03:00 UTC on 2026-09-11 and overwrites the record.
+
+### Traps and gotchas
+
+- The night record names the commit it ran on, `fb080ca`. The PR-58 gate checks that the record commit is on the base branch (D-275), and a later merge to `main` keeps it there.
+- A failed hand run leaves a failure record. No gate reads it yet, so it blocks nothing, and the scheduled night overwrites it. Read the run log before a second hand run.
+- The night runs on this Mac, and the reachability sweep of one hundred thousand seeds is the long step. The M-2 bound is six hours.
+- The publish step makes a worktree and an orphan branch in the runner checkout. The scheduled night tomorrow is the second run on that checkout, and its publish step is the one to watch.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+When the night run ends, read `night.json` on `night-results`. On a success record, open PR-58 from `main` per the roadmap entry, D-274, and D-275, and note the hand run duration beside the M-2 table. On a failure record, read the run log and correct the cause in a PR before the next hand run.
+
+## Session 95: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: the M-1 table, and the seed count decision. Branch `docs/m-1-table`.
+
+### What this session did, and why
+
+- The owner merged PR #36 as `0ba348c`. D-276 lets the M-1 table fill before PR-58, and the ten Phase 1 PRs since PR-3 merged, so the table is complete in the Phase 1 roadmap.
+- The rows read the push run on `main` of the squash-merge commit of each PR, first attempt, in seconds per job. The CI job grew at PR-9 with the reachability sweep, and again at PR-10 and PR-11.
+- The Windows CI job of PR-10 took 601 seconds, one second over the ten-minute bound of the M-1 procedure. F-91 records the measurement, OQ-145 holds the question, and D-277 keeps the 5000 PR seeds of D-116. The bound reads again at Gate 1.
+- The design doc M-1 entry reads complete. Sequence item 22 marks M-1 in the roadmap, and item 8 marks it in the design doc.
+- Session 85 moved to the archive.
+
+### State of the build
+
+- `main` is at `0ba348c`, the squash merge of PR #36. This branch holds the document commit above it, and this entry above that.
+- Remote head: `origin/docs/m-1-table` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures. No code changed.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- No night has run. The branch `night-results` does not exist yet.
+
+### In flight
+
+This PR holds the M-1 table and D-277. It changes no code, so the `review-override` label covers it (D-188, D-190). The first scheduled night runs at 03:00 UTC on 2026-09-11. No other PR is open. After the night, PR-58 opens, and M-2 starts with the first night duration. Then Gate 1.
+
+### Traps and gotchas
+
+- The M-1 rows come from the push runs on `main`, not the pull request runs. A PR runs its jobs on every push, so a PR has many runs, and the push run on `main` is one per PR.
+- The M-1 numbers are job durations from the start of the job to its end, as the workflow API reports them. The queue time before the job is not in the number.
+- A job past eleven minutes files a new question on D-116 (D-277). The Windows CI job is the one to watch, at 574 to 601 seconds on the last two PRs.
+- The M-2 table has no rows until the first night. The night duration comes from the same API, on the night workflow run.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+After the first scheduled night writes `night.json` to `night-results`, a session opens PR-58 from `main` per the roadmap entry, D-274, and D-275. The same session starts the M-2 table with the duration of that night.
+
 ## Session 94: 2026-09-10, Claude Code
 
 Author: Claude Code

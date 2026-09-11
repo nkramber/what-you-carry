@@ -147,6 +147,16 @@ public sealed class RepositoryShapeTests
         Assert.DoesNotContain("git fetch", workflow, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void NightWorkflowRunsAtTwoCentralStandardTime()
+    {
+        // D-284: the night runs at 08:00 UTC, which is 02:00 Central Standard Time, and by hand on demand.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        Assert.Contains("- cron: \"0 8 * * *\"", workflow, StringComparison.Ordinal);
+        Assert.Contains("workflow_dispatch:", workflow, StringComparison.Ordinal);
+        Assert.Contains("02:00 Central Standard Time", workflow, StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// The last step of the review-gate workflow passes the job on a success conclusion alone, so a neutral
     /// verdict, and a missing or unexpected conclusion, read red. A job cannot be neutral by its exit code
