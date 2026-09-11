@@ -2,6 +2,47 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 129: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-12 as PR #49 and bring every document up to date, in the same run as Sessions 125 and 127. Branch `docs/pr-12-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #49 as `9313358` at 20:41 UTC, with the verdict `Ready for owner merge` for `066ce0e`. OQ-157 and OQ-158 stayed open at the merge, so `main` holds the two sensitivity constants of the recommendation and the `actions/cache` step with no decision entry yet.
+- `docs/design.md` marks PR-12 merged in the roadmap entry and in sequence item 10. The Phase 2 roadmap gains the status line of PR-12, the mark in sequence item 2, and the new state of OQ-157 and OQ-158 in section 6.
+- `docs/questions.md` gains a dated addendum on OQ-157 and on OQ-158: the merge came with both open.
+- `CLAUDE.md` and `AGENTS.md` gain the `smoke` job in the PR gate.
+- Session 119 moved to the archive.
+
+### State of the build
+
+- `main` is at `9313358`, the squash merge of PR #49. On that commit the smoke workflow, bit identity, and CI on the three platforms passed.
+- Remote head: `origin/docs/pr-12-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `ste-check`: 0 findings in 15 files. `dotnet test`: 584 tests, 0 failures. No code changed. `bit-identity`: `6ec00e90c1c85cdb`.
+- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone, with the `review-override` label after the automated pass. The owner answers OQ-157 and OQ-158 in `docs/decisions.md` as the next two ids. If the OQ-157 answer differs from the recommendation, a PR changes `MouseHundredthsPerPixel` and `StickHundredthsPerTick` in `IntentBuilder.cs` and the tests that read them.
+
+### Traps and gotchas
+
+- `dotnet test` with no filter runs `SmokeSessionPasses`, which starts the Godot build at the path that `CLAUDE.md` names, or the one that `WYC_GODOT` names. The three CI jobs filter the Smoke category out, and the smoke workflow runs it.
+- A `dotnet test --no-build` after a build of the Game project alone reads a stale copy of the Game assembly in the test output. Build the solution before a test of a Game change.
+- The full local suite takes about three and a half minutes on this Mac. A run with a two-minute timeout reads as a stall.
+- The Windows CI suite took 9 min 27 s on PR #49, near the ten-minute bound of the M-1 procedure (OQ-145).
+- The engine reports the two shift keys as one key and the two control keys as one key. Block, throwable, reload, satchel, and amulet from D-289 have no button bit yet.
+- The next ids are D-291, OQ-159, F-96, and Session 130.
+
+### Open questions that block progress
+
+OQ-43 and OQ-49 block PR-13. OQ-157 and OQ-158 are open on `main` and block nothing, and OQ-158 needs its decision entry under G-16. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. The owner answers OQ-157 and OQ-158, then OQ-43 and OQ-49. A session then opens PR-13 from `main` per the Phase 2 roadmap: the Blockbench loader and the greedy mesher.
+
 ## Session 128: 2026-09-11, Codex
 
 Author: Codex
@@ -350,41 +391,3 @@ OQ-154 blocks Phase 2 until the owner signs Gate 1. OQ-47 blocks PR-12. OQ-99 is
 ### Next concrete action
 
 The owner merges PR #46 before 17:21 UTC. Then the disable and the enable run, and a watch reads the 17:21 UTC night. When it passes, the Gate 1 record follows the edit list of Session 115, with D-288 for the sign-off, the row of the 17:21 UTC night, and F-95 at ✅. A PR returns the cron to 08:07 UTC.
-
-## Session 119: 2026-09-11, Codex
-
-Author: Codex
-Session: repeat review PR #46 at effective head `eebb605`. Branch `chore/night-schedule-reset`.
-
-### What this session did, and why
-
-- Read `docs/reviews/pr-46-response.md` and checked the provider gate again. The substantive correction is from Claude Code, so Codex remains eligible.
-- Verified the new effective head `eebb605`, the diff since `862fd4c`, the correction trigger, the handoff archive rotation, the workflow, and every PR comment.
-- P2-1 is fixed. The shape test now asserts `08:07 UTC, which is 02:07 Central Standard Time`. The prior `09:07 UTC` trigger and a removed return phrase fail the test, and the branch suite passes.
-- The automated pass approved the correction and reported the handoff rotation issue. Session 118 moved Sessions 108 and 107 to the archive, and the review verified ten current handoff entries.
-- Updated `docs/reviews/pr-46.md` with the fixed finding and the verdict `Ready for owner merge` for `eebb605`.
-
-### State of the build
-
-- `main` and the merge base are `095ce5e`. The effective implementation head is `eebb605`. The review metadata tip is this commit after publication.
-- `dotnet build`: 0 warnings, 0 errors. The repository-shape suite passes 14 tests, 0 failures, and 0 skips.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`. The Godot 4.7.2 headless build passes.
-- Remote CI, bots, bit identity on all platforms, night-gate, STE check, det-lint, and Gitar pass at `eebb605`. The evaluate and review-gate checks failed because the prior review record still held `862fd4c` and `Changes required`. They must refresh after this review record is pushed.
-
-### In flight
-
-The repeat-review record and this handoff entry need a commit and push. After the fresh review-gate result passes, the owner can merge before the schedule-test deadline or wait for the next slot.
-
-### Traps and gotchas
-
-- The effective head is `eebb605`, not this metadata tip. It is the test correction commit under D-184.
-- The review-gate result that reads the old record is stale by design. Do not treat it as a product failure.
-- OQ-154 still blocks Phase 2 until the first scheduled night passes and Gate 1 is signed.
-
-### Open questions that block progress
-
-OQ-154 blocks Phase 2. OQ-47 blocks PR-12. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Commit and push the updated review record and this entry. Then verify the fresh review-gate result and the remote head.
