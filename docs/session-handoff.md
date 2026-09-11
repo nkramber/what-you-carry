@@ -17,7 +17,7 @@ Session: record the merge of PR-12 as PR #49 and bring every document up to date
 
 ### State of the build
 
-- `main` is at `9313358`, the squash merge of PR #49. On that commit the smoke workflow and bit identity passed. CI was in progress at the time of this entry, behind the smoke job on the macOS runner.
+- `main` is at `9313358`, the squash merge of PR #49. On that commit the smoke workflow, bit identity, and CI on the three platforms passed.
 - Remote head: `origin/docs/pr-12-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `ste-check`: 0 findings in 15 files. `dotnet test`: 584 tests, 0 failures. No code changed. `bit-identity`: `6ec00e90c1c85cdb`.
 - The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
