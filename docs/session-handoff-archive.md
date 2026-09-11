@@ -1,5 +1,45 @@
 # Session handoff archive
 
+## Session 99: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: correct the head field of the PR #39 review record, one time (D-282). Branch `fix/dig-plan-job-budget`.
+
+### What this session did, and why
+
+- The review record of Session 98 named the fix commit `0685c4e` as the effective head, and the gate refused it. The effective head was `90ab13e`, because that commit adds entries to the decisions, design, questions, and roadmap files, which lie outside the metadata set (D-184). The hand-over of Session 97 gave the wrong head, and the review followed it.
+- The owner chose an author correction over a repeat review, one time. OQ-150 holds the question, and D-282 records the answer.
+- The register commit `34cbc39768611d795fb656b6fa6d65a17432931e` holds D-282 and OQ-150, and this commit sets the head field of the record to it and adds a dated note above the Verdict section. This commit changes the record and the two handoff files alone, so the effective head stays `34cbc39768611d795fb656b6fa6d65a17432931e`.
+- Ran the review-gate command locally against the head of this commit before the push: conclusion success.
+- Session 89 moved to the archive.
+
+### State of the build
+
+- `main` is at `736e466`, the squash merge of PR #38. This branch holds the fix `0685c4e`, the registers commit `90ab13e`, the review commit `ac5f8d9`, the register commit `34cbc39768611d795fb656b6fa6d65a17432931e`, and this entry above them.
+- Remote head: `origin/fix/dig-plan-job-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 520 tests, 0 failures. No code changed in this session.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The branch `night-results` holds the failure record of the first night at `fb080ca`.
+
+### In flight
+
+PR #39 waits for the gate to read this head, then for the owner merge. After the merge, the second night by hand on `main` (D-281), then PR-58 from the local branch `feat/pr-58-night-gate` at `32dcbcb`, then the night logs PR of D-280 from the local branch `chore/night-logs-artifact` at `5bef2c8`.
+
+### Traps and gotchas
+
+- The metadata set of D-184 is `docs/reviews/` and the two handoff files alone. A commit that adds a D-#, an F-#, an OQ-#, or a roadmap line moves the effective head. Name the hash that the gate rule gives at every hand-over: the newest commit in the range outside those three paths.
+- A decision that a PR itself needs goes in a commit before the review record commit, so the record can name it. The record commit then changes the metadata paths alone.
+- D-282 is one time. On every other PR the reviewer owns the review record, and a wrong head field takes a repeat review.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #39 when the review-gate check reads green on this head. Then a session starts the night by hand on `main` (D-281), reads `night.json` on `night-results`, and opens PR-58 on a success record.
+
 ## Session 98: 2026-09-10, Codex
 
 Author: Codex

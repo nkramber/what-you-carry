@@ -2,6 +2,45 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 109: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: the night logs of D-280. Branch `chore/night-logs-artifact`.
+
+### What this session did, and why
+
+- The owner merged PR #42, so the cron of the night reads 08:00 UTC on `main` now (D-284). This PR adds the one step of D-280 to the night workflow: on a failed step, `actions/upload-artifact@v4` keeps the `bot-logs` directory as a run artifact, and a night without logs says so with a warning instead of a silent pass.
+- `NightWorkflowKeepsTheLogsOfAFailedNight` reads the workflow and asserts the step, its `failure()` condition, its path, its missing-files rule, and its place after the bot steps.
+- D-280 is the dependency entry of the action (G-16).
+- Hand runs 3 to 6 passed in 59, 65, 63, and 68 minutes, so six hand runs ran on 2026-09-10 and five passed. The record on `night-results` is the success of hand run 6 at `5455e5d`.
+- Session 99 moved to the archive.
+
+### State of the build
+
+- `main` is at `f19fe2e`, the squash merge of PR #42. This branch holds the workflow commit above it, and this entry above that.
+- Remote head: `origin/chore/night-logs-artifact` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 534 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+
+### In flight
+
+This PR. The 03:00 UTC cron of 2026-09-11 did not fire by 04:00 UTC, while the runner was free and the old line still stood on `main`. The next chance is 08:00 UTC on the new cron, and a watch reads its result. After it passes, a session adds the five rows to the M-2 table and the owner signs Gate 1 (D-283).
+
+### Traps and gotchas
+
+- The upload step runs on `failure()` alone. A cancelled night keeps no logs, and a green night keeps none, by design.
+- A change to the cron on `main` takes effect when GitHub reads the new file. GitHub delays or drops a schedule at the top of the hour under load, and the 03:00 UTC run of 2026-09-11 did not come. A cron off the top of the hour is the documented cure.
+- The Mac runner takes a queued PR job only when no night is queued, as the six hand runs showed: five macOS jobs waited through two nights. Expect a PR's macOS job to wait for a whole night when one is queued.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews this PR per the `pr-review` skill: the step, its condition, and the shape test. After the first scheduled night passes, a session records M-2 and the Gate 1 sign-off.
+
 ## Session 108: 2026-09-11, Codex
 
 Author: Codex
@@ -345,43 +384,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A Codex session reviews PR-58 per the `pr-review` skill at the effective head, with the focus on errors, CI boundaries, and test quality. It confirms the job passed on the PR against the real record (exit test 7, G-19).
-
-## Session 99: 2026-09-10, Claude Code
-
-Author: Claude Code
-Session: correct the head field of the PR #39 review record, one time (D-282). Branch `fix/dig-plan-job-budget`.
-
-### What this session did, and why
-
-- The review record of Session 98 named the fix commit `0685c4e` as the effective head, and the gate refused it. The effective head was `90ab13e`, because that commit adds entries to the decisions, design, questions, and roadmap files, which lie outside the metadata set (D-184). The hand-over of Session 97 gave the wrong head, and the review followed it.
-- The owner chose an author correction over a repeat review, one time. OQ-150 holds the question, and D-282 records the answer.
-- The register commit `34cbc39768611d795fb656b6fa6d65a17432931e` holds D-282 and OQ-150, and this commit sets the head field of the record to it and adds a dated note above the Verdict section. This commit changes the record and the two handoff files alone, so the effective head stays `34cbc39768611d795fb656b6fa6d65a17432931e`.
-- Ran the review-gate command locally against the head of this commit before the push: conclusion success.
-- Session 89 moved to the archive.
-
-### State of the build
-
-- `main` is at `736e466`, the squash merge of PR #38. This branch holds the fix `0685c4e`, the registers commit `90ab13e`, the review commit `ac5f8d9`, the register commit `34cbc39768611d795fb656b6fa6d65a17432931e`, and this entry above them.
-- Remote head: `origin/fix/dig-plan-job-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 520 tests, 0 failures. No code changed in this session.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-- The branch `night-results` holds the failure record of the first night at `fb080ca`.
-
-### In flight
-
-PR #39 waits for the gate to read this head, then for the owner merge. After the merge, the second night by hand on `main` (D-281), then PR-58 from the local branch `feat/pr-58-night-gate` at `32dcbcb`, then the night logs PR of D-280 from the local branch `chore/night-logs-artifact` at `5bef2c8`.
-
-### Traps and gotchas
-
-- The metadata set of D-184 is `docs/reviews/` and the two handoff files alone. A commit that adds a D-#, an F-#, an OQ-#, or a roadmap line moves the effective head. Name the hash that the gate rule gives at every hand-over: the newest commit in the range outside those three paths.
-- A decision that a PR itself needs goes in a commit before the review record commit, so the record can name it. The record commit then changes the metadata paths alone.
-- D-282 is one time. On every other PR the reviewer owns the review record, and a wrong head field takes a repeat review.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges PR #39 when the review-gate check reads green on this head. Then a session starts the night by hand on `main` (D-281), reads `night.json` on `night-results`, and opens PR-58 on a success record.
