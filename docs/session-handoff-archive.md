@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 98: 2026-09-10, Codex
+
+Author: Codex
+Session: review PR #39 at effective head `0685c4e`. Branch `fix/dig-plan-job-budget`.
+
+### What this session did, and why
+
+- Reviewed the measured dig-plan cap fix for F-92 under D-253 and D-279.
+- Verified the exact PR base, merge base, substantive head, provider gate, complete diff, caller, regression tests, decisions, roadmap, and automated pass.
+- Added `docs/reviews/pr-39.md`. The review found no issue and records `Ready for owner merge` for effective head `0685c4e`.
+
+### State of the build
+
+- `main` is at `736e466`. The PR branch is at metadata tip `90ab13e`, with effective head `0685c4e`.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 520 tests, 0 failures, 0 skips.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The Godot 4.7.2 headless build check passes.
+
+### In flight
+
+PR #39 waits for the owner to confirm the pending remote checks and merge it. After the merge, run the second night by hand on `main` under D-281.
+
+### Traps and gotchas
+
+- The first local test attempt failed before test execution because VSTest could not bind its local socket. The elevated retry passed.
+- The PR review-gate result was neutral before this review record existed. GitHub API access failed during the final status refresh, so the complete remote status remains unverified.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner confirms the remote checks and merges PR #39. Then run the second night by hand on `main` and read its `night.json` record.
+
 ## Session 97: 2026-09-10, Claude Code
 
 Author: Claude Code

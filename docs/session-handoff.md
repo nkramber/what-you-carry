@@ -2,6 +2,42 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 108: 2026-09-11, Codex
+
+Author: Codex
+Session: repeat review PR #42 at effective head `b616357`.
+
+### What this session did, and why
+
+- Read the response file and checked the provider gate again.
+- The new commits change review and handoff metadata only. The effective head stays `b616357` under D-184.
+- The macOS CI job now passes. The response file records 533 passed tests on the effective head. The focused shape test passes again.
+- The earlier `Blocked` verdict is replaced with `Ready for owner merge`. No finding is open.
+- Session 98 moved to the archive.
+
+### State of the build
+
+- `main` is at `5455e5d`. The effective implementation head is `b616357`. The PR tip before this review commit is `bc7c457`.
+- The focused shape test passes. The response file records 533 passed tests, 0 failures, and 0 skips on the effective head.
+- Remote Linux, Windows, and macOS CI, bit identity, bots, det-lint, night-gate, STE check, and Gitar pass. The review-gate check waits for this updated record.
+
+### In flight
+
+The repeat review record and this handoff entry need one metadata commit and a push. The owner can merge after the review-gate check passes on this record.
+
+### Traps and gotchas
+
+- The effective head is `b616357`, not the metadata tip. The new diff contains only paths in the D-184 metadata set.
+- The review-gate failure at the prior tip named the old `Blocked` verdict. It did not report a product failure.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit and push the repeat review record and this handoff entry. Then wait for the review-gate result before the owner merges.
+
 ## Session 107: 2026-09-11, Claude Code
 
 Author: Claude Code
@@ -349,39 +385,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 The owner merges PR #39 when the review-gate check reads green on this head. Then a session starts the night by hand on `main` (D-281), reads `night.json` on `night-results`, and opens PR-58 on a success record.
-
-## Session 98: 2026-09-10, Codex
-
-Author: Codex
-Session: review PR #39 at effective head `0685c4e`. Branch `fix/dig-plan-job-budget`.
-
-### What this session did, and why
-
-- Reviewed the measured dig-plan cap fix for F-92 under D-253 and D-279.
-- Verified the exact PR base, merge base, substantive head, provider gate, complete diff, caller, regression tests, decisions, roadmap, and automated pass.
-- Added `docs/reviews/pr-39.md`. The review found no issue and records `Ready for owner merge` for effective head `0685c4e`.
-
-### State of the build
-
-- `main` is at `736e466`. The PR branch is at metadata tip `90ab13e`, with effective head `0685c4e`.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 520 tests, 0 failures, 0 skips.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-- The Godot 4.7.2 headless build check passes.
-
-### In flight
-
-PR #39 waits for the owner to confirm the pending remote checks and merge it. After the merge, run the second night by hand on `main` under D-281.
-
-### Traps and gotchas
-
-- The first local test attempt failed before test execution because VSTest could not bind its local socket. The elevated retry passed.
-- The PR review-gate result was neutral before this review record existed. GitHub API access failed during the final status refresh, so the complete remote status remains unverified.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner confirms the remote checks and merges PR #39. Then run the second night by hand on `main` and read its `night.json` record.
