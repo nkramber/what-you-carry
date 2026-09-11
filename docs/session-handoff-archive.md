@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 104: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: record the PR-58 merge, the Gate 1 timing, and the night time. Branch `docs/pr-58-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #40 as `5bdef87`. The design doc PR-58 entry reads merged, F-48 reads done, the roadmap entry has its status line, and the sequences mark items 20 to 22 and the gate condition.
+- Asked one owner question on the Gate 1 timing, and the owner answered with two of their own: why seven scheduled nights, and what is playable today. Answered both. The runs are deterministic on one machine, so a scheduled night adds no measurement, and nothing renders before PR-12.
+- D-283: four more nights run by hand today, the M-2 table counts the six hand runs and the first scheduled night, and Gate 1 signs on 2026-09-11 after that night passes on its own. OQ-151 holds the question. D-278 is revised in part, the M-2 count only.
+- D-284: the night runs at 08:00 UTC, which is 02:00 Central Standard Time. OQ-152 holds the question. D-278 is revised in part, the time only. The workflow change comes in a PR of its own.
+- Started the four hand runs at 22:06 UTC, one after another, from a script that dispatches the next when the previous ends, so the PR jobs queued between them still reach the runner. The M-2 section holds the two rows.
+
+### State of the build
+
+- `main` is at `5bdef87`. This session holds the document commit above it.
+- The night gate is live on every PR. The record on `night-results` is the success of hand run 2 at `a2799f2` until the next night overwrites it.
+
+### In flight
+
+The four hand runs and the two workflow PRs were in flight. The cron stayed at 03:00 UTC until the night-time PR merged.
+
+### Traps and gotchas
+
+- A macOS CI job queued during a hand run waits for that run, up to about an hour.
+- Gate 1 signs after the first scheduled night passes on its own.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Open the night-time PR from `main`, then open the night-logs PR.
+
 ## Session 103: 2026-09-10, Codex
 
 Author: Codex
