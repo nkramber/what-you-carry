@@ -2,6 +2,42 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 126: 2026-09-11, Codex
+
+Author: Codex
+Session: review PR #49 at effective head `91d1b6f`.
+
+### What this session did, and why
+
+- Verified the provider gate. The substantive PR work came from Claude Code, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the handoff, the project rules, the design, the relevant decisions and questions, the Phase 2 roadmap, the complete PR diff, the affected Core callers, and every PR comment.
+- Found P2-1. A held controller stick overrides a later mouse look event, so the input frame can set the controller aim bit for the wrong device.
+- Added `docs/reviews/pr-49.md` with a `Changes required` verdict for the effective head.
+
+### State of the build
+
+- `main` and the merge base are `e1cf847`. The effective implementation head is `91d1b6f`. The current branch tip before this session is `dfdc68e`, which holds metadata only.
+- The focused Game, input, render, smoke, and shape tests pass with 41 tests. The remote three-platform CI and smoke checks pass on the effective head.
+- Local det-lint, STE check, bit identity, Godot editor build, and the headless smoke session pass. Local `dotnet build` did not complete after more than 80 seconds without output.
+
+### In flight
+
+PR #49 needs the P2-1 correction and a regression test. OQ-158 also needs an owner decision before merge. The review-gate check must refresh after the review record reaches the PR head.
+
+### Traps and gotchas
+
+- The effective head is `91d1b6f`, not the metadata tip.
+- `InputReader.Read` checks the current stick after mouse input has set the flag false. A held stick can therefore override the last mouse event.
+- The first `dotnet build` attempt produced no output for more than 80 seconds. Remote CI gives the build evidence for this head.
+
+### Open questions that block progress
+
+OQ-158 blocks PR #49 under G-16. OQ-157 remains open and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open and blocks nothing.
+
+### Next concrete action
+
+The author corrects the input-device state and adds the regression test. Then the author pushes the fix, and a later review checks the new effective head.
+
 ## Session 125: 2026-09-11, Claude Code
 
 Author: Claude Code
