@@ -586,8 +586,12 @@ Procedure: read the night job duration for seven nights: the six hand runs of 20
 |---|---|---|---|---|
 | Hand run 1, 2026-09-10 | 34499677095 | `fb080ca` | 31 | failure at the greedy descender step (F-92), no sweep |
 | Hand run 2, 2026-09-10 | 34517749543 | `a2799f2` | 63 | success (D-281) |
+| Hand run 3, 2026-09-10 | 34535746438 | `5bdef87` | 59 | success (D-283) |
+| Hand run 4, 2026-09-10 | 34540553095 | `5bdef87` | 65 | success (D-283) |
+| Hand run 5, 2026-09-11 | 34545348109 | `5455e5d` | 63 | success (D-283) |
+| Hand run 6, 2026-09-11 | 34549824032 | `5455e5d` | 68 | success (D-283) |
 
-Four more hand runs started at 22:06 UTC on 2026-09-10, one after another (D-283). The Gate 1 record adds their rows and the row of the first scheduled night.
+The row of the first scheduled night follows when it runs, at 08:07 UTC on 2026-09-11 (D-283, D-285). The table is complete then. The longest night so far took 68 minutes against the six-hour bound.
 
 ## 5. Sequence
 
@@ -623,7 +627,8 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 1. Each 
 
 Open:
 
-- None. OQ-99 is open, and it blocks nothing.
+- OQ-154 blocks Phase 2: the Gate 1 sign-off, after the first scheduled night. Raised 2026-09-11.
+- OQ-99 is open, and it blocks nothing.
 - OQ-2 resolved 2026-09-07 by D-173: .NET 10 LTS. D-173 revises D-169.
 - OQ-16 resolved 2026-09-07 by D-175: the attribution option is in the repository. D-175 revises D-172.
 
