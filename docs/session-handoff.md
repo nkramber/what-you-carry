@@ -2,6 +2,41 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 110: 2026-09-11, Codex
+
+Author: Codex
+Session: review PR #43 at effective head `d89338c`. Branch `chore/night-logs-artifact`.
+
+### What this session did, and why
+
+- Verified the base, merge base, effective head, provider gate, complete diff, D-280, the PR-11 night contract, the workflow, the shape test, the handoff files, and every PR comment.
+- Gitar's step-slice comment is answered at `d89338c`. The slice now ends at the next step name.
+- Found P2-1. The shape test checks that the upload follows the greedy descender, but it does not check that it follows the reachability sweep.
+- Added `docs/reviews/pr-43.md`. The verdict is `Changes required` for `d89338c`.
+
+### State of the build
+
+- `main` and the merge base are `f19fe2e`. The effective implementation head is `d89338c`.
+- Remote Linux, Windows, macOS, bots, det-lint, STE check, night-gate, and Gitar pass. The evaluate and review-gate results were unavailable because the review file did not exist before this session.
+- Local det-lint, STE check, bit identity, and Godot build pass. The local build did not complete, and the local test runner stopped on a VSTest socket permission error. These are execution-context results.
+
+### In flight
+
+PR #43 needs the shape-test order correction, a regression check, a fresh push, and a repeat review.
+
+### Traps and gotchas
+
+- The upload step must follow the reachability sweep as well as the two bot runs. Checking only the greedy-descender step does not prove the full order.
+- The review record names `d89338c`, not a later metadata tip, under D-184.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The author corrects P2-1 and pushes the shape test, review response, and handoff. A Codex session repeats the review at the new effective head.
+
 ## Session 109: 2026-09-11, Claude Code
 
 Author: Claude Code
@@ -341,46 +376,3 @@ P1-1 blocks PR #40. OQ-99 is open, and it blocks no other work.
 ### Next concrete action
 
 Correct the `night-gate` workflow so only a successfully fetched `night-results` record can reach the command. Add the missing workflow regression test, push, and request a repeat review.
-
-## Session 100: 2026-09-10, Claude Code
-
-Author: Claude Code
-Session: the second night by hand, and PR-58, the night gate. Branch `feat/pr-58-night-gate`.
-
-### What this session did, and why
-
-- The owner merged PR #39 as `a2799f2`. Started the night by hand on `main` at 19:00 UTC under D-281: run 34517749543, 63 minutes, success. The record on `night-results` names `a2799f2` and ended at 2026-09-10T20:03:22Z.
-- PR-58 from `main` at `a2799f2`. `Tools/NightGate/` holds the parser, the facts, the rules, and the command `night-gate`. The rules read the cases in order: absent, malformed, stale, foreign, cancelled, failed, pass. The command exits 0, 1, or 2, and every failure line names the case, the commit, and the time (D-274, D-275).
-- The workflow `night-gate.yml` runs one job on Linux with the full history, fetches `night-results`, and passes the record and the base ref to the command. An absent branch reads as an absent record.
-- `GitRepository` gains `HasCommit` and `IsAncestor`, each with the exit codes that git documents for a no. `night-record` writes no byte-order mark now, and PR-11 exit test 7 asserts the first byte.
-- Exit tests 1 to 6 and 8 pass among 530 tests, with the malformed case, the exit codes, and a workflow shape test beside them. Exit test 7 is the job on this PR. The agent files gain the `night-gate` line of the PR gate.
-- The roadmap PR-58 entry holds the scope notes, and the design doc names the malformed case. The M-2 section holds the note of the second hand run.
-- Session 90 moved to the archive.
-
-### State of the build
-
-- `main` is at `a2799f2`, the squash merge of PR #39. This branch holds the PR-58 commit, the byte-order-mark fix, and the documents commit above them, and this entry is in the documents commit.
-- Remote head: `origin/feat/pr-58-night-gate` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 530 tests, 0 failures.
-- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
-- The branch `night-results` holds the record of the second hand run.
-
-### In flight
-
-PR-58 is open as the PR that holds this branch. A Codex session reviews it at the effective head, which is the documents commit, because it changes the roadmap and the design doc. After the merge, the night logs PR of D-280 opens from the local branch `chore/night-logs-artifact`, then M-2 collects seven scheduled nights, then Gate 1.
-
-### Traps and gotchas
-
-- The `night-gate` job fails every PR within 48 hours of a red or missing night, a documentation PR too. A hand run on `main` restores it (D-274, D-278).
-- The record commit must be on the base branch (D-275). A hand run on a feature branch writes a record that fails every PR to `main`.
-- The effective head of this PR is the documents commit, not the code commit, because the roadmap and the design doc lie outside the metadata set (D-184).
-- The night holds the one Mac runner for its whole run, so the macOS CI jobs of every open PR wait for it.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR-58 per the `pr-review` skill at the effective head, with the focus on errors, CI boundaries, and test quality. It confirms the job passed on the PR against the real record (exit test 7, G-19).
