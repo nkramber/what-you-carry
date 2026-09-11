@@ -15,7 +15,7 @@ Session: review PR #42 at effective head `b616357`.
 
 ### State of the build
 
-- `main` is at `5455e5d`. The effective implementation head is `b616357`. The PR metadata tip is `bf17077` after this review commit.
+- `main` is at `5455e5d`. The effective implementation head is `b616357`. The PR metadata tip is `b9a5d5d` after this review commit.
 - `dotnet build`: 0 warnings, 0 errors. The focused shape test passes. The full local suite did not complete after the test runner socket error and an approved retry that produced no output.
 - `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`. The Godot 4.7.2 headless build passes.
 - Remote Linux and Windows checks, bit identity, bots, det-lint, night-gate, STE check, and Gitar pass. The macOS CI job remains pending. The review-gate check waits for this record.
