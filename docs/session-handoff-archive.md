@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 118: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: answer the PR #46 review, in the same run as Session 116. Branch `chore/night-schedule-reset`.
+
+### What this session did, and why
+
+- Read P2-1 in `docs/reviews/pr-46.md`. Full merit: the shape test asserted `02:07 Central Standard Time` and not the 08:07 UTC return time, while the PR description and Session 116 said that it did. A workflow comment with the return time changed to 09:07 UTC passed the test.
+- The review asked for an assertion on `08:07 UTC`. That text alone passes on the same trigger, because the F-95 sentence of the comment holds `08:07 UTC` too. The test asserts `08:07 UTC, which is 02:07 Central Standard Time` instead. The trigger fails it, and so does a comment with the return time removed.
+- `docs/reviews/pr-46-response.md` records the disposition. No new id.
+- The automated pass on the review commit left one comment, with merit: Session 117 entered the handoff without an archive move, so the file held 11 entries (D-146). Sessions 108 and 107 moved to the archive with this entry, and the file holds the 10 newest entries. The reply on the thread names this commit.
+- This run wrote Session 116 before the review. Session 117 came above it while the run continued, so this entry is a new one at the top, and Session 116 stays as the review read it.
+
+### State of the build
+
+- `main` is at `095ce5e`. This branch holds the work commit `862fd4c`, the Session 116 entry `d8ee1dd`, the review commit `c76d54a`, and the correction that holds this entry above them.
+- Remote head: `origin/chore/night-schedule-reset` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. The repository shape suite: 14 tests, 0 failures. `ste-check`: 0 findings in 15 files. The full suite ran 535 tests with 0 failures on `862fd4c`, and CI runs it on this head.
+- `det-lint`: 0 findings. `bit-identity`: `6ec00e90c1c85cdb`. Core did not change.
+
+### In flight
+
+This PR waits for the automated pass on the correction, then a Codex repeat review at the effective head, which is the correction commit. The owner merge must land before 15:21 UTC for the test to run today, and the disable and the enable follow the merge.
+
+### Traps and gotchas
+
+- The effective head is the correction commit, because it changes a test. The review record names `862fd4c`, and the repeat review updates the head and the verdict together (D-269).
+- A merge or an enable after 15:21 UTC moves the first test to 15:21 UTC on 2026-09-12 (D-286).
+- The traps of Session 116 stand: the third-miss deadline at 16:15 UTC, the two PRs after the pass, and the next ids D-287, OQ-156, and F-96. The next session number is 119.
+
+### Open questions that block progress
+
+OQ-154 blocks Phase 2 until the owner signs Gate 1. OQ-47 blocks PR-12. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session repeats the review per the repeat procedure at the effective head, verifies P2-1 against its trigger and the regression case, and updates `docs/reviews/pr-46.md` with the status of P2-1 and a new verdict.
+
 ## Session 117: 2026-09-11, Codex
 
 Author: Codex

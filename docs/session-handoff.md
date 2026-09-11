@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 128: 2026-09-11, Codex
+
+Author: Codex
+Session: re-review PR #49 at effective head `066ce0e`.
+
+### What this session did, and why
+
+- Verified the provider gate. The substantive PR work and the P2-1 correction came from Claude Code, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the prior review, the response, the complete correction diff, the roadmap, the affected input callers, the tests, and every PR comment.
+- P2-1 has full merit at `91d1b6f`. The correction at `066ce0e` tracks the latest look event instead of the held stick state.
+- The regression test fails on the old behavior and passes on the correction. No finding remains at the new effective head.
+- Updated `docs/reviews/pr-49.md` with the earlier verdict and the current `Ready for owner merge` verdict.
+
+### State of the build
+
+- `main` and the merge base are `e1cf847`. The effective implementation head is `066ce0e`. Review and handoff metadata commits remain outside the effective diff.
+- The focused reader suite passes 8 tests, and the focused smoke test passes. The author reports 584 full-suite tests with 0 failures, and remote Linux, Windows, and macOS CI pass.
+- Local det-lint, STE check, bit identity, Godot editor build, and the smoke session pass. The local full build and full test commands did not complete in this execution context after more than 60 seconds without output.
+
+### In flight
+
+The repeat review record needs a commit and push. The review-gate and evaluate checks must refresh against the new `Ready for owner merge` verdict. OQ-158 still blocks the merge.
+
+### Traps and gotchas
+
+- The effective head is `066ce0e`, not a later metadata commit.
+- A held stick keeps controller look state until a new mouse or stick event names a device.
+- A full local test command may stall after the Godot project build. Use the focused tests and remote full-suite evidence.
+
+### Open questions that block progress
+
+OQ-158 blocks PR #49 under G-16. OQ-157 remains open and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open and blocks nothing.
+
+### Next concrete action
+
+Commit and push this repeat review and handoff. Then verify the remote head and the refreshed review-gate result.
+
 ## Session 127: 2026-09-11, Claude Code
 
 Author: Claude Code
@@ -351,41 +388,3 @@ OQ-154 blocks Phase 2. OQ-47 blocks PR-12. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 Commit and push the updated review record and this entry. Then verify the fresh review-gate result and the remote head.
-
-## Session 118: 2026-09-11, Claude Code
-
-Author: Claude Code
-Session: answer the PR #46 review, in the same run as Session 116. Branch `chore/night-schedule-reset`.
-
-### What this session did, and why
-
-- Read P2-1 in `docs/reviews/pr-46.md`. Full merit: the shape test asserted `02:07 Central Standard Time` and not the 08:07 UTC return time, while the PR description and Session 116 said that it did. A workflow comment with the return time changed to 09:07 UTC passed the test.
-- The review asked for an assertion on `08:07 UTC`. That text alone passes on the same trigger, because the F-95 sentence of the comment holds `08:07 UTC` too. The test asserts `08:07 UTC, which is 02:07 Central Standard Time` instead. The trigger fails it, and so does a comment with the return time removed.
-- `docs/reviews/pr-46-response.md` records the disposition. No new id.
-- The automated pass on the review commit left one comment, with merit: Session 117 entered the handoff without an archive move, so the file held 11 entries (D-146). Sessions 108 and 107 moved to the archive with this entry, and the file holds the 10 newest entries. The reply on the thread names this commit.
-- This run wrote Session 116 before the review. Session 117 came above it while the run continued, so this entry is a new one at the top, and Session 116 stays as the review read it.
-
-### State of the build
-
-- `main` is at `095ce5e`. This branch holds the work commit `862fd4c`, the Session 116 entry `d8ee1dd`, the review commit `c76d54a`, and the correction that holds this entry above them.
-- Remote head: `origin/chore/night-schedule-reset` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. The repository shape suite: 14 tests, 0 failures. `ste-check`: 0 findings in 15 files. The full suite ran 535 tests with 0 failures on `862fd4c`, and CI runs it on this head.
-- `det-lint`: 0 findings. `bit-identity`: `6ec00e90c1c85cdb`. Core did not change.
-
-### In flight
-
-This PR waits for the automated pass on the correction, then a Codex repeat review at the effective head, which is the correction commit. The owner merge must land before 15:21 UTC for the test to run today, and the disable and the enable follow the merge.
-
-### Traps and gotchas
-
-- The effective head is the correction commit, because it changes a test. The review record names `862fd4c`, and the repeat review updates the head and the verdict together (D-269).
-- A merge or an enable after 15:21 UTC moves the first test to 15:21 UTC on 2026-09-12 (D-286).
-- The traps of Session 116 stand: the third-miss deadline at 16:15 UTC, the two PRs after the pass, and the next ids D-287, OQ-156, and F-96. The next session number is 119.
-
-### Open questions that block progress
-
-OQ-154 blocks Phase 2 until the owner signs Gate 1. OQ-47 blocks PR-12. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session repeats the review per the repeat procedure at the effective head, verifies P2-1 against its trigger and the regression case, and updates `docs/reviews/pr-46.md` with the status of P2-1 and a new verdict.
