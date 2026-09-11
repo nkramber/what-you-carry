@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, and M-3. It applies D-149, D-150, D-157, and D-159 to D-168. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, and D-289. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -43,7 +43,7 @@ Each entry has: scope, out of scope, exit tests, review focus, the check clause,
 Scope:
 
 - `WhatYouCarry.Game/Main.cs`: the root node built in C# (D-63). It owns one Core simulation, steps it at 60 Hz from the engine's fixed process, and interpolates render positions between the last two ticks (D-73).
-- `WhatYouCarry.Game/Input/IntentBuilder.cs`: reads keyboard, mouse, and controller each tick, applies sensitivity and curves, and writes one intent frame (D-15, D-77, D-162). The bindings and curve defaults come from OQ-47.
+- `WhatYouCarry.Game/Input/IntentBuilder.cs`: reads keyboard, mouse, and controller each tick, applies sensitivity and curves, and writes one intent frame (D-15, D-77, D-162). The bindings and curve defaults come from D-289.
 - `WhatYouCarry.Game/Smoke/SmokeSession.cs`: a command-line flag `--smoke` (D-114, D-149). It boots, starts a run from seed 1, plays a fixed intent script of one thousand ticks, and quits. The exit code is 0 only when the log has no error.
 - CI: a job `smoke` on each platform that downloads the pinned Godot .NET binary, caches it, and runs the smoke session headless.
 - A placeholder box for the player and a flat colored floor, so movement is visible before PR-13.
@@ -330,9 +330,9 @@ Procedure: on a Steam Deck (OQ-50), run the PR-13 build and then the PR-18 build
 
 ## 5. Sequence
 
-One person owns the program. Items run one at a time in this order. Gate 1 must pass first.
+One person owns the program. Items run one at a time in this order. Gate 1 signed 2026-09-11 (D-288).
 
-1. Owner: answer OQ-47.
+1. ✅ OQ-47 answered 2026-09-11: D-289.
 2. PR-12.
 3. Owner: answer OQ-43 and OQ-49.
 4. PR-13.
@@ -370,7 +370,10 @@ Open:
 - OQ-44: the transition hitch budget. Blocks PR-18.
 - OQ-45: the animation keyframe format. Blocks PR-15.
 - OQ-46: the initial combat numbers. Blocks PR-15.
-- OQ-47: default bindings and curves. Blocks PR-12.
 - OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-49: the wall fade approach. Blocks PR-13.
 - OQ-50: a Steam Deck unit for M-3. Blocks M-3.
+
+Resolved 2026-09-11:
+
+- OQ-47 (D-289): default bindings and curves. PR-12.
