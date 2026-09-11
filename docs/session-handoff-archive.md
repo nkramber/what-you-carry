@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 112: 2026-09-11, Codex
+
+Author: Codex
+Session: repeat review PR #43 at effective head `e63c35b`. Branch `chore/night-logs-artifact`.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-43-response.md` and checked the provider gate again.
+- Verified the new effective head `e63c35b` and the diff since `d89338c`. The workflow did not change. The test now checks the upload step after the walker, descender, and reachability sweep.
+- Reproduced the original trigger with the new mutation test. The focused repository-shape suite passes 14 tests, with no failures or skips.
+- Updated `docs/reviews/pr-43.md`. P2-1 is fixed in `e63c35b`, and the verdict is `Ready for owner merge` after the fresh review gate passes.
+
+### State of the build
+
+- `main` and the merge base are `f19fe2e`. The effective implementation head is `e63c35b`.
+- Local det-lint, STE check, bit identity, focused tests, and Godot build pass. The local full suite did not complete after 30 seconds with no output. The author reports 535 tests, 0 failures, and remote platform jobs pass.
+- The evaluate and review-gate jobs still read the prior review verdict. They must run again after this review record is pushed.
+
+### In flight
+
+The repeat-review record and this handoff entry need a push. Then the fresh review-gate result must pass before merge.
+
+### Traps and gotchas
+
+- The workflow commit remains `8ea990f`. The new effective head is the test correction `e63c35b`, not a metadata tip.
+- The review gate failed before this update because the record still held the prior verdict. That is a stale metadata result, not a product failure.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Push the repeat-review record and handoff. Refresh the review-gate result and confirm the owner can merge when all required checks pass.
+
 ## Session 111: 2026-09-11, Claude Code
 
 Author: Claude Code

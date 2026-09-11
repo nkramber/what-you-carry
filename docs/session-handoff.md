@@ -2,6 +2,46 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 122: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: return the night to 08:07 UTC (D-286, D-288, D-290), in the same run as Sessions 116, 118, 120, and 121. Branch `chore/night-back-to-0807`.
+
+### What this session did, and why
+
+- The owner merged PR #47 as `b700296` at 17:02 UTC. Gate 1 is signed (D-288), and Phase 2 can start.
+- The cron of `night.yml` reads `7 8 * * *` again, which is 02:07 Central Standard Time. The comment names D-288 and corrects the text of PR #46: the 08:07 UTC run of 2026-09-11 started 4 h 40 min late, at 12:47 UTC (F-95).
+- `NightWorkflowRunsAtTwoCentralStandardTime` replaces `NightWorkflowRunsAtTheScheduleTestTime`. It asserts the line, the hand trigger, the phrase `08:07 UTC, which is 02:07 Central Standard Time`, and both finding ids. It fails on the `21 17 * * *` workflow of `main`.
+- No new decision: D-286 bound the return to the first scheduled pass, D-288 holds the words of the owner, and D-290 sends the return through this PR with a Codex review.
+- Session 112 moved to the archive.
+
+### State of the build
+
+- `main` is at `b700296`, the squash merge of PR #47. The cron on `main` reads `21 17 * * *` until this PR merges. This branch holds the work commit above it, and this entry above that.
+- Remote head: `origin/chore/night-back-to-0807` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 535 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+
+### In flight
+
+This PR needs the automated pass, a Codex review, and the owner merge before 08:07 UTC on 2026-09-12. The 17:21 UTC scheduled run of 2026-09-11 stays (D-290). It can start hours late, and it holds the Mac runner for about an hour.
+
+### Traps and gotchas
+
+- A merge after 08:07 UTC on 2026-09-12 leaves the night of that day at 17:21 UTC.
+- A schedule run here can start hours after its cron. Do not read a miss from one hour of silence (F-95).
+- D-286 turned the workflow off and on for the test slot alone. This return has no such step.
+- The next ids are D-291, OQ-157, F-96, and Session 123.
+
+### Open questions that block progress
+
+None blocks PR-12. OQ-43 and OQ-49 block PR-13. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews this PR per the `pr-review` skill: the cron line, the comment, and the shape test. The owner merges it before 08:07 UTC on 2026-09-12. After that, a session opens PR-12 from `main` per the Phase 2 roadmap and D-289.
+
 ## Session 121: 2026-09-11, Claude Code
 
 Author: Claude Code
@@ -363,38 +403,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A Codex session reviews this PR per the `pr-review` skill: the cron line, the comment, and the shape test. The owner merges it when the review allows.
-
-## Session 112: 2026-09-11, Codex
-
-Author: Codex
-Session: repeat review PR #43 at effective head `e63c35b`. Branch `chore/night-logs-artifact`.
-
-### What this session did, and why
-
-- Read `docs/reviews/pr-43-response.md` and checked the provider gate again.
-- Verified the new effective head `e63c35b` and the diff since `d89338c`. The workflow did not change. The test now checks the upload step after the walker, descender, and reachability sweep.
-- Reproduced the original trigger with the new mutation test. The focused repository-shape suite passes 14 tests, with no failures or skips.
-- Updated `docs/reviews/pr-43.md`. P2-1 is fixed in `e63c35b`, and the verdict is `Ready for owner merge` after the fresh review gate passes.
-
-### State of the build
-
-- `main` and the merge base are `f19fe2e`. The effective implementation head is `e63c35b`.
-- Local det-lint, STE check, bit identity, focused tests, and Godot build pass. The local full suite did not complete after 30 seconds with no output. The author reports 535 tests, 0 failures, and remote platform jobs pass.
-- The evaluate and review-gate jobs still read the prior review verdict. They must run again after this review record is pushed.
-
-### In flight
-
-The repeat-review record and this handoff entry need a push. Then the fresh review-gate result must pass before merge.
-
-### Traps and gotchas
-
-- The workflow commit remains `8ea990f`. The new effective head is the test correction `e63c35b`, not a metadata tip.
-- The review gate failed before this update because the record still held the prior verdict. That is a stale metadata result, not a product failure.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Push the repeat-review record and handoff. Refresh the review-gate result and confirm the owner can merge when all required checks pass.
