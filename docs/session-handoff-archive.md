@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 105: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: the night time of D-284. Branch `chore/night-time`.
+
+### What this session did, and why
+
+- The owner merged PR #41 as `5455e5d`. This PR moves the cron of the night workflow to `0 8 * * *`, which is 08:00 UTC and 02:00 Central Standard Time (D-284). The comment in the workflow names the time and the summer shift to 03:00 Central Daylight Time.
+- `NightWorkflowRunsAtTwoCentralStandardTime` reads the workflow and asserts the cron, the hand trigger, and the comment.
+- Hand run 3 passed in 59 minutes at `5bdef87`, and its record is on `night-results`. Hand run 4 started at 23:05 UTC. The dispatcher starts runs 5 and 6 in turn.
+- Session 95 moved to the archive.
+
+### State of the build
+
+- `main` is at `5455e5d`, the squash merge of PR #41. This branch holds the workflow commit above it, and this entry above that.
+- Remote head: `origin/chore/night-time` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 533 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+
+### In flight
+
+This PR, then the night logs PR of D-280 from the local branch `chore/night-logs-artifact` at `0e71413`. Hand runs 4 to 6 hold the Mac runner in turns until about 02:15 UTC. The old cron fires at 03:00 UTC if this PR merges after that time, and the new one at 08:00 UTC otherwise. Either is the first scheduled night of D-283.
+
+### Traps and gotchas
+
+- The cron of GitHub reads UTC alone. The 08:00 UTC line is 02:00 Central Standard Time and 03:00 Central Daylight Time. A line that follows the local clock all year needs two cron lines and a guard step.
+- The effective head of this PR is the workflow commit. This entry is a metadata commit.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews this PR per the `pr-review` skill: the cron line, the comment, and the shape test. After the merge, the night logs PR opens. On 2026-09-11, after the first scheduled night, a session adds the five rows to the M-2 table and the owner signs Gate 1.
+
 ## Session 104: 2026-09-10, Claude Code
 
 Author: Claude Code
