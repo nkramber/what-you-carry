@@ -12,7 +12,7 @@ Session: answer the PR #42 review. Branch `chore/night-time`.
 - Read `docs/reviews/pr-42.md`. No finding. The verdict is `Blocked` on two pieces of evidence: the macOS CI job, and the full suite, which the reviewer's sandbox could not run.
 - `docs/reviews/pr-42-response.md` states where each stands. The macOS jobs of this branch are queued behind hand run 5 of D-283, which holds the Mac runner until about 01:15 UTC, and they run before hand run 6. The Linux and Windows CI jobs ran the full suite on this branch and passed, and the author ran it on the effective head: 533 passed.
 - No code changed. The effective head stays `b616357`.
-- Session 96 moved to the archive.
+- Sessions 96 and 97 moved to the archive. The file held eleven entries, because the review entry above came without a rotation, and D-146 keeps ten.
 
 ### State of the build
 
@@ -385,47 +385,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 The owner confirms the remote checks and merges PR #39. Then run the second night by hand on `main` and read its `night.json` record.
-
-## Session 97: 2026-09-10, Claude Code
-
-Author: Claude Code
-Session: the first night failed on the dig job cap, and this fix raises the cap on the measurement (F-92, D-279). Branch `fix/dig-plan-job-budget`.
-
-### What this session did, and why
-
-- The hand-run night 34499677095 on `fb080ca` failed at the greedy descender step at 16:34 UTC: bottom 4997, crash 3 of 5000, and the record on `night-results` reads failure. The reachability sweep did not run.
-- Reproduced the three crashes locally in ten parallel chunks of 500 seeds. Each is the same fault: the dig plan ran its 400 jobs and a chamber stayed in rock, on seed 2170 floor 10, seed 3000 floor 4, and seed 4786 floor 10. The PR sweep digs floor 11, 1, and 2 for those seeds, so it never met them.
-- Measured with the cap lifted: the three floors need 2817, 1661, and 615 jobs. Of 5000 sweep floors, 4969 finish inside 25 jobs, and the largest other need is 208. The three floors generate, play to bottom, and hold 0.033 to 0.036 air against a normal mean of 0.040 to 0.052, so the extra jobs were walkers with no room.
-- Asked three owner questions in one batch. D-279 sets `DigPlan.MaxJobs` to 10000, D-280 uploads the bot logs of a failed night as a run artifact, and D-281 runs a second night by hand after this fix merges. OQ-147 to OQ-149 hold them.
-- `DigUntilComplete` gives the job count now, and `DigPlanJobCapTests` digs the three floors and fails on the old cap. F-92 is in the register, and the M-2 section holds the note of the first hand run.
-- The bit-identity hash stays `6ec00e90c1c85cdb`, because no floor that dug inside 400 jobs changes. The simulation version stays 6 for the same reason.
-- Session 87 moved to the archive.
-
-### State of the build
-
-- `main` is at `736e466`, the squash merge of PR #38. This branch holds the fix commit above it, and this entry above that.
-- Remote head: `origin/fix/dig-plan-job-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 520 tests, 0 failures.
-- `det-lint`: 0 findings. Core 0 in 61 files, Game 0 in 0 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-- The branch `night-results` holds one record: `fb080ca`, 16:34:28 UTC, failure. PR-58 is written on the local branch `feat/pr-58-night-gate` at `d6f7c6b` above `fb080ca`, with 528 tests green, and it waits for a success record.
-
-### In flight
-
-This PR, the fix of F-92. A Codex review comes next. After the merge, a second hand run of the night (D-281), then PR-58 opens from `main` with the local branch rebased, then the night logs PR of D-280. No other PR is open.
-
-### Traps and gotchas
-
-- The night runs on the one Mac runner, so the macOS CI jobs of every open PR wait for it. A hand run at daytime holds them for about half an hour, and a green run with the sweep takes longer.
-- The runner checkout cleans the bot logs at the next job. Until D-280 lands, reproduce a failed night locally: ten parallel `bot-run` chunks of 500 seeds take about three minutes.
-- The sweep digs one floor per seed, `1 + seed % 15`, and the bots dig all fifteen floors of a seed, so the bots cover floors the sweep never digs.
-- The record of `night-record` starts with a byte-order mark, because `File.WriteAllText` with `Encoding.UTF8` writes one. `File.ReadAllText` strips it, so the gate of PR-58 reads it, and the PR-58 branch corrects the writer.
-- `DigUntilComplete` returns the job count. A caller that ignores it compiles, so the regression test is the only reader.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews this PR per the `pr-review` skill: the cap, the measurement, the regression test, and the hash claim. After the merge, start the night by hand on `main` (D-281), and when its record reads success, open PR-58 from the rebased local branch.
