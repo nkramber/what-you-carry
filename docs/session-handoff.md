@@ -23,7 +23,7 @@ Session: repeat review PR #42 at effective head `b616357`.
 
 ### In flight
 
-The repeat review record and this handoff entry need one metadata commit and a push. The owner can merge after the review-gate check passes on this record.
+The repeat review record and this handoff entry are pushed. The review-gate check passes on this record. Duplicate platform jobs from the metadata push remain pending.
 
 ### Traps and gotchas
 
@@ -36,7 +36,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-Commit and push the repeat review record and this handoff entry. Then wait for the review-gate result before the owner merges.
+The owner can merge after the pending duplicate platform jobs complete.
 
 ## Session 107: 2026-09-11, Claude Code
 
