@@ -2,6 +2,45 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 111: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: answer the PR #43 review. Branch `chore/night-logs-artifact`.
+
+### What this session did, and why
+
+- Read the one P2 finding in `docs/reviews/pr-43.md`. Full merit: the shape test compared the upload step with the greedy-descender step alone, so a step moved to a place before the sweep passed the test while a failed sweep ran with no upload.
+- `UploadStepDefect` reads a workflow text and names the first defect: no action, a wrong condition, a wrong path, a wrong missing-files rule, or a place before any of the three bot steps. `NightWorkflowUploadStepMustFollowEveryBotStep` moves the step before the sweep and before the walker in the real workflow text with `MoveStepBefore`, and asserts the name of each defect. The workflow did not change.
+- `docs/reviews/pr-43-response.md` records the disposition. No new id.
+- Session 101 moved to the archive.
+- PR #44, the night minute of D-285, is open beside this PR with its own Session 110 entry. The review entry of this branch is Session 110 too, so the second PR to merge renumbers at its rebase, and the entry that renumbers says so (D-187).
+
+### State of the build
+
+- `main` is at `f19fe2e`, the squash merge of PR #42. This branch holds the workflow commit `8ea990f`, the Session 109 entry, the slice fix `d89338c`, the three review commits, and the correction that holds this entry above them.
+- Remote head: `origin/chore/night-logs-artifact` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 535 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+- No scheduled night has fired yet. The next chance is 08:00 UTC on the line of `main`, or 08:07 UTC once PR #44 merges.
+
+### In flight
+
+PR #43 waits for the automated pass on the correction, then a Codex repeat review at the effective head, which is the correction commit. PR #44 waits for its Codex review. The night watch reads the first scheduled run.
+
+### Traps and gotchas
+
+- The effective head is the correction commit, because it changes a test. The review record still names `d89338c`, and the repeat review updates the head and the verdict together, with one verdict name in the Verdict section (D-269).
+- Two open branches each carry a Session 110 heading, one a review entry and one an author entry. The session-number check of the STE checker fails `main` on two headings with one number, so the rebase of the second PR renumbers before the push.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session repeats the review per the repeat procedure at the effective head, verifies P2-1 against its trigger and the regression case, and updates `docs/reviews/pr-43.md` with the status of P2-1 and a new verdict.
+
 ## Session 110: 2026-09-11, Codex
 
 Author: Codex
@@ -341,38 +380,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A Codex session repeats the review per the repeat procedure at the effective head, verifies P1-1 against its trigger and the regression test, and updates `docs/reviews/pr-40.md` with the status of P1-1 and a new verdict.
-
-## Session 101: 2026-09-10, Codex
-
-Author: Codex
-Session: review PR #40, the night gate. Branch `feat/pr-58-night-gate`.
-
-### What this session did, and why
-
-- Verified the provider gate. Session 100 identifies Claude Code as the provider of the substantive PR-40 change. Codex is the eligible reviewer.
-- Verified the base, merge base, effective head `2253e53`, complete diff, PR-58 scope, exit tests, decisions, and all PR comments and replies.
-- Found P1-1. The workflow catches every fetch failure as an absent record but leaves a `night.json` from the pull request checkout in place. A pull request can then supply a fresh success record and bypass the absent-record gate.
-- Wrote `docs/reviews/pr-40.md` with the verdict `Changes required` for effective head `2253e53`.
-
-### State of the build
-
-- `main` is at `a2799f2`, the squash merge of PR #39. The effective PR-40 head is `2253e53`.
-- Remote checks at the PR head passed for CI, bit identity, bots, det-lint, STE check, night-gate, and Gitar. The review-gate check was neutral before the review record existed.
-- `git diff --check` passed. A local serial build and test retry hit a stuck execution-context process after an earlier parallel file-copy contention and was cancelled. The remote checks are the revision-specific build and test evidence.
-
-### In flight
-
-PR #40 needs the workflow correction for P1-1 and a repeat review at the new effective head. No other PR is open.
-
-### Traps and gotchas
-
-- The fetch step must not read a file from the pull request checkout when `night-results` is absent or the fetch fails. Use a temporary path or remove the checkout file before the fetch.
-- The review record names the effective head `2253e53`, not the metadata tip rule in a future review commit (D-184).
-
-### Open questions that block progress
-
-P1-1 blocks PR #40. OQ-99 is open, and it blocks no other work.
-
-### Next concrete action
-
-Correct the `night-gate` workflow so only a successfully fetched `night-results` record can reach the command. Add the missing workflow regression test, push, and request a repeat review.

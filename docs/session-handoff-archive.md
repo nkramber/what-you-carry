@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 101: 2026-09-10, Codex
+
+Author: Codex
+Session: review PR #40, the night gate. Branch `feat/pr-58-night-gate`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 100 identifies Claude Code as the provider of the substantive PR-40 change. Codex is the eligible reviewer.
+- Verified the base, merge base, effective head `2253e53`, complete diff, PR-58 scope, exit tests, decisions, and all PR comments and replies.
+- Found P1-1. The workflow catches every fetch failure as an absent record but leaves a `night.json` from the pull request checkout in place. A pull request can then supply a fresh success record and bypass the absent-record gate.
+- Wrote `docs/reviews/pr-40.md` with the verdict `Changes required` for effective head `2253e53`.
+
+### State of the build
+
+- `main` is at `a2799f2`, the squash merge of PR #39. The effective PR-40 head is `2253e53`.
+- Remote checks at the PR head passed for CI, bit identity, bots, det-lint, STE check, night-gate, and Gitar. The review-gate check was neutral before the review record existed.
+- `git diff --check` passed. A local serial build and test retry hit a stuck execution-context process after an earlier parallel file-copy contention and was cancelled. The remote checks are the revision-specific build and test evidence.
+
+### In flight
+
+PR #40 needs the workflow correction for P1-1 and a repeat review at the new effective head. No other PR is open.
+
+### Traps and gotchas
+
+- The fetch step must not read a file from the pull request checkout when `night-results` is absent or the fetch fails. Use a temporary path or remove the checkout file before the fetch.
+- The review record names the effective head `2253e53`, not the metadata tip rule in a future review commit (D-184).
+
+### Open questions that block progress
+
+P1-1 blocks PR #40. OQ-99 is open, and it blocks no other work.
+
+### Next concrete action
+
+Correct the `night-gate` workflow so only a successfully fetched `night-results` record can reach the command. Add the missing workflow regression test, push, and request a repeat review.
+
 ## Session 100: 2026-09-10, Claude Code
 
 Author: Claude Code
