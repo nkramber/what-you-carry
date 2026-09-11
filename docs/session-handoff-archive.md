@@ -1,5 +1,79 @@
 # Session handoff archive
 
+## Session 108: 2026-09-11, Codex
+
+Author: Codex
+Session: repeat review PR #42 at effective head `b616357`.
+
+### What this session did, and why
+
+- Read the response file and checked the provider gate again.
+- The new commits change review and handoff metadata only. The effective head stays `b616357` under D-184.
+- The macOS CI job now passes. The response file records 533 passed tests on the effective head. The focused shape test passes again.
+- The earlier `Blocked` verdict is replaced with `Ready for owner merge`. No finding is open.
+- Session 98 moved to the archive.
+
+### State of the build
+
+- `main` is at `5455e5d`. The effective implementation head is `b616357`. The PR tip before this review commit is `bc7c457`.
+- The focused shape test passes. The response file records 533 passed tests, 0 failures, and 0 skips on the effective head.
+- Remote Linux, Windows, and macOS CI, bit identity, bots, det-lint, night-gate, STE check, and Gitar pass. The review-gate check waits for this updated record.
+
+### In flight
+
+The repeat review record and this handoff entry are pushed. The review-gate check passes on this record. Duplicate platform jobs from the metadata push remain pending.
+
+### Traps and gotchas
+
+- The effective head is `b616357`, not the metadata tip. The new diff contains only paths in the D-184 metadata set.
+- The review-gate failure at the prior tip named the old `Blocked` verdict. It did not report a product failure.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner can merge after the pending duplicate platform jobs complete.
+
+## Session 107: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: answer the PR #42 review. Branch `chore/night-time`.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-42.md`. No finding. The verdict is `Blocked` on two pieces of evidence: the macOS CI job, and the full suite, which the reviewer's sandbox could not run.
+- `docs/reviews/pr-42-response.md` states where each stands. The macOS jobs of this branch are queued behind hand run 5 of D-283, which holds the Mac runner until about 01:15 UTC, and they run before hand run 6. The Linux and Windows CI jobs ran the full suite on this branch and passed, and the author ran it on the effective head: 533 passed.
+- No code changed. The effective head stays `b616357`.
+- Sessions 96 and 97 moved to the archive. The file held eleven entries, because the review entry above came without a rotation, and D-146 keeps ten.
+
+### State of the build
+
+- `main` is at `5455e5d`, the squash merge of PR #41. This branch holds the workflow commit `b616357`, the Session 105 entry, the three review commits, and this metadata commit above them.
+- Remote head: `origin/chore/night-time` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 533 tests, 0 failures, on the effective head before the push of Session 105.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+- Hand runs 3 and 4 passed in 59 and 64 minutes. Hand run 5 is on its sweep step, and run 6 follows it.
+
+### In flight
+
+PR #42 waits for its macOS jobs, then for a Codex repeat review that reads them and sets the verdict at the effective head `b616357`. Then the night logs PR of D-280 opens from the local branch `chore/night-logs-artifact` at `0e71413`. No other PR is open.
+
+### Traps and gotchas
+
+- A `Blocked` verdict on pending evidence needs a repeat review after the evidence lands, and the author never sets the verdict. The response file names the evidence so the repeat review finds it in one place.
+- Every push to a PR during the hand runs queues a macOS job behind the current night. The queue runs in creation order, so a job pushed before the next dispatch runs before that night.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+When the macOS jobs of PR #42 pass, a Codex session repeats the review per the repeat procedure, reads the macOS result and the response file, and updates `docs/reviews/pr-42.md` with a new verdict at `b616357`.
+
 ## Session 106: 2026-09-11, Codex
 
 Author: Codex

@@ -157,7 +157,7 @@ public sealed class RepositoryShapeTests
         Assert.Contains("workflow_dispatch:", workflow, StringComparison.Ordinal);
         Assert.Contains("15:21 UTC for one test of the schedule", workflow, StringComparison.Ordinal);
         Assert.Contains("(F-94, F-95)", workflow, StringComparison.Ordinal);
-        Assert.Contains("02:07 Central Standard Time", workflow, StringComparison.Ordinal);
+        Assert.Contains("08:07 UTC, which is 02:07 Central Standard Time", workflow, StringComparison.Ordinal);
     }
 
     [Fact]
