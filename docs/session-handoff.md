@@ -2,6 +2,41 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 124: 2026-09-11, Codex
+
+Author: Codex
+Session: re-review PR #48 at effective head `4786cfa`. Branch `chore/night-back-to-0807`.
+
+### What this session did, and why
+
+- Verified that the effective head remains `4786cfa`. The later commits change only review and handoff metadata under D-184.
+- Read the prior review, the complete implementation diff, all PR comments, D-286, D-288, D-290, F-94, F-95, the Phase 1 roadmap, and the changed workflow and shape test.
+- No finding remains. The required Linux, Windows, and macOS CI jobs, three-platform bit identity, bots, det-lint, STE check, night-gate, and Gitar pass.
+- Updated `docs/reviews/pr-48.md` with the earlier `Blocked` verdict and the current `Ready for owner merge` verdict.
+
+### State of the build
+
+- `main` and the merge base are `b700296`. The effective implementation head is `4786cfa`. The current metadata tip is `ccabf74` before this re-review commit.
+- The prior local build and focused suite passed. The local full test run did not complete after 120 seconds with no output. Remote platform CI passed the full suite.
+- Evaluate and review-gate failed only because the prior review record held `Blocked`. They must refresh after this re-review record reaches the PR head.
+
+### In flight
+
+The re-review record and this handoff entry need a commit and push. The fresh review-gate result must pass against `Ready for owner merge`.
+
+### Traps and gotchas
+
+- The effective head is `4786cfa`, not the metadata tip.
+- The prior blocked result was correct while Windows CI was pending. The current verdict can approve only after all required platform checks pass.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit and push the re-review record and handoff entry. Fetch the remote. Confirm that the remote has no ahead count and that the fresh review-gate result passes.
+
 ## Session 123: 2026-09-11, Codex
 
 Author: Codex
@@ -366,38 +401,3 @@ When the scheduled night passes, ask the owner two things in one batch: the Gate
 5. Session 116 handoff entry.
 
 After the merge, Phase 2 starts: a session opens PR-12 from `main` per the Phase 2 roadmap entry and the answer to OQ-47.
-
-## Session 114: 2026-09-11, Codex
-
-Author: Codex
-Session: review PR #44 at effective head `0bfafbd`. Branch `chore/night-minute`.
-
-### What this session did, and why
-
-- Verified the provider gate. Session 113 identifies Claude Code as the author of the substantive PR-44 change. Codex is the eligible reviewer.
-- Verified the base, merge base, effective head, complete diff, D-284, D-285, F-94, the Phase 1 roadmap, and every PR comment.
-- The workflow runs at `7 8 * * *`, the shape test checks the line and F-94, and the changed registers and handoff agree with the decision.
-- The focused repository-shape suite passes 14 tests. The review found no defect and wrote `docs/reviews/pr-44.md` with the verdict `Ready for owner merge`.
-
-### State of the build
-
-- `main` and the merge base are `557568a`. The effective implementation head is `0bfafbd`. The metadata tip is `838c544`.
-- Local det-lint, STE check, bit identity, and the Godot headless build pass. The focused suite passes 14 tests with 0 failures and 0 skips.
-- The local full build and full test run did not complete in the execution context. Remote platform builds and tests, bit identity, bots, det-lint, STE check, night-gate, and Gitar pass on the PR tip.
-
-### In flight
-
-The review record and this handoff entry are pushed. The fresh review-gate result must pass at effective head `0bfafbd` before the owner merges.
-
-### Traps and gotchas
-
-- The effective head is `0bfafbd`, not the handoff-only tip `838c544` (D-184).
-- The current review-gate failure is the expected missing-record state. It is not a product failure. The gate must rerun after `docs/reviews/pr-44.md` reaches the PR.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Wait for the fresh checks. Verify that the remote has no ahead count, and confirm that the fresh review-gate result passes.

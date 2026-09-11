@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 114: 2026-09-11, Codex
+
+Author: Codex
+Session: review PR #44 at effective head `0bfafbd`. Branch `chore/night-minute`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 113 identifies Claude Code as the author of the substantive PR-44 change. Codex is the eligible reviewer.
+- Verified the base, merge base, effective head, complete diff, D-284, D-285, F-94, the Phase 1 roadmap, and every PR comment.
+- The workflow runs at `7 8 * * *`, the shape test checks the line and F-94, and the changed registers and handoff agree with the decision.
+- The focused repository-shape suite passes 14 tests. The review found no defect and wrote `docs/reviews/pr-44.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` and the merge base are `557568a`. The effective implementation head is `0bfafbd`. The metadata tip is `838c544`.
+- Local det-lint, STE check, bit identity, and the Godot headless build pass. The focused suite passes 14 tests with 0 failures and 0 skips.
+- The local full build and full test run did not complete in the execution context. Remote platform builds and tests, bit identity, bots, det-lint, STE check, night-gate, and Gitar pass on the PR tip.
+
+### In flight
+
+The review record and this handoff entry are pushed. The fresh review-gate result must pass at effective head `0bfafbd` before the owner merges.
+
+### Traps and gotchas
+
+- The effective head is `0bfafbd`, not the handoff-only tip `838c544` (D-184).
+- The current review-gate failure is the expected missing-record state. It is not a product failure. The gate must rerun after `docs/reviews/pr-44.md` reaches the PR.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Wait for the fresh checks. Verify that the remote has no ahead count, and confirm that the fresh review-gate result passes.
+
 ## Session 113: 2026-09-11, Claude Code
 
 Author: Claude Code
