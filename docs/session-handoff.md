@@ -2,6 +2,47 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 104: 2026-09-10, Claude Code
+
+Author: Claude Code
+Session: record the PR-58 merge, the Gate 1 timing, and the night time. Branch `docs/pr-58-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #40 as `5bdef87`. The design doc PR-58 entry reads merged, F-48 reads done, the roadmap entry has its status line, and the sequences mark items 20 to 22 and the gate condition.
+- Asked one owner question on the Gate 1 timing, and the owner answered with two of their own: why seven scheduled nights, and what is playable today. Answered both. The runs are deterministic on one machine, so a scheduled night adds no measurement, and nothing renders before PR-12.
+- D-283: four more nights run by hand today, the M-2 table counts the six hand runs and the first scheduled night, and Gate 1 signs on 2026-09-11 after that night passes on its own. OQ-151 holds the question. D-278 is revised in part, the M-2 count only.
+- D-284: the night runs at 08:00 UTC, which is 02:00 Central Standard Time. OQ-152 holds the question. D-278 is revised in part, the time only. The workflow change comes in a PR of its own.
+- Started the four hand runs at 22:06 UTC, one after another, from a script that dispatches the next when the previous ends, so the PR jobs queued between them still reach the runner. The M-2 section holds a table with the two rows so far.
+- Session 94 moved to the archive.
+
+### State of the build
+
+- `main` is at `5bdef87`, the squash merge of PR #40. This branch holds the document commit above it, and this entry above that.
+- Remote head: `origin/docs/pr-58-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 532 tests, 0 failures. No code changed.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
+- The night gate is live on every PR. The record on `night-results` is the success of hand run 2 at `a2799f2` until the next night overwrites it.
+
+### In flight
+
+This PR changes no code, so the `review-override` label covers it (D-188, D-190). The four hand runs hold the Mac runner in turns until about 02:30 UTC on 2026-09-11. Two workflow PRs follow from prepared local branches: the night time of D-284, then the night logs of D-280 on `chore/night-logs-artifact` at `0e71413`. The cron stays at 03:00 UTC until the night time PR merges.
+
+### Traps and gotchas
+
+- A macOS CI job queued during a hand run waits for that run, up to about an hour. The script dispatches the next night only after the previous one ends, so the queued PR jobs run between them.
+- The M-2 rows of the four hand runs and the scheduled night come from the runs API: `run_started_at` to `updated_at`. The jobs API gave null times for the self-hosted job.
+- Gate 1 signs in `docs/decisions.md` by the owner, after the first scheduled night passes on its own. The night gate on the PRs reads the same record.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+After this PR merges, open the night time PR from `main`: the cron `0 8 * * *` with a comment that names 02:00 Central Standard Time, and a shape test (D-284). Then the night logs PR. On 2026-09-11, after the first scheduled night, a session adds the five rows to the M-2 table and the owner signs Gate 1 in the register.
+
 ## Session 103: 2026-09-10, Codex
 
 Author: Codex
@@ -359,44 +400,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 After the first scheduled night writes `night.json` to `night-results`, a session opens PR-58 from `main` per the roadmap entry, D-274, and D-275. The same session starts the M-2 table with the duration of that night.
-
-## Session 94: 2026-09-10, Claude Code
-
-Author: Claude Code
-Session: record the PR-58 decisions and the M-1 timing. Branch `docs/pr-58-decisions`.
-
-### What this session did, and why
-
-- The owner merged PR #35 as `1dc7e42`. Asked the two PR-58 questions and one on the M-1 timing in one batch, and D-274 to D-276 record the answers. OQ-144 holds the third question.
-- D-274: any night record counts for the gate of PR-58, whatever event ran the night. The gate rule in the design doc and the roadmap reads "night" now, and the sequence still waits for one scheduled night before PR-58 opens (G-19).
-- D-275: the gate checks the time and the commit. A record whose commit is not on the base branch of the PR fails, and the roadmap PR-58 entry gains exit test 8 for it. Exit test 6 names the commit in every failure message.
-- D-276: the M-1 table fills before PR-58. The next PR holds the table.
-- Session 84 moved to the archive.
-- The automated pass asked for the resolved Phase 1 questions grouped under the heading of their date, and `2ce994f` does. The list under the 2026-09-08 heading held later resolutions too.
-
-### State of the build
-
-- `main` is at `1dc7e42`, the squash merge of PR #35. This branch holds the document commit above it, this entry above that, and the correction `2ce994f` above the entry.
-- Remote head: `origin/docs/pr-58-decisions` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 518 tests, 0 failures. No code changed.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-- No night has run. The branch `night-results` does not exist yet.
-
-### In flight
-
-This PR holds the three decisions. It changes no code, so the `review-override` label covers it (D-188, D-190). The M-1 table comes in the next PR (D-276). The first scheduled night runs at 03:00 UTC on 2026-09-11. No other PR is open.
-
-### Traps and gotchas
-
-- The PR-58 job needs the base branch for the ancestry check of D-275. A checkout of depth one does not hold it, so the job fetches the base ref before the check.
-- A hand run of the night counts for the gate now (D-274), at the commit of the branch it runs on. The commit check of D-275 fails a record from a feature branch, so a hand run belongs on `main`.
-- The PR-58 exit tests are eight now, and the design doc gate names five bad records.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A session fills the M-1 table in the Phase 1 roadmap from the push runs on `main` for the ten merged PRs since PR-3, one row per PR with the CI job durations per platform (D-276). After the first scheduled night, a session opens PR-58 from `main`.
