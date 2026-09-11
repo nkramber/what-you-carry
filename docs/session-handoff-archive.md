@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 110: 2026-09-11, Codex
+
+Author: Codex
+Session: review PR #43 at effective head `d89338c`. Branch `chore/night-logs-artifact`.
+
+### What this session did, and why
+
+- Verified the base, merge base, effective head, provider gate, complete diff, D-280, the PR-11 night contract, the workflow, the shape test, the handoff files, and every PR comment.
+- Gitar's step-slice comment is answered at `d89338c`. The slice now ends at the next step name.
+- Found P2-1. The shape test checks that the upload follows the greedy descender, but it does not check that it follows the reachability sweep.
+- Added `docs/reviews/pr-43.md`. The verdict is `Changes required` for `d89338c`.
+
+### State of the build
+
+- `main` and the merge base are `f19fe2e`. The effective implementation head is `d89338c`.
+- Remote Linux, Windows, macOS, bots, det-lint, STE check, night-gate, and Gitar pass. The evaluate and review-gate results were unavailable because the review file did not exist before this session.
+- Local det-lint, STE check, bit identity, and Godot build pass. The local build did not complete, and the local test runner stopped on a VSTest socket permission error. These are execution-context results.
+
+### In flight
+
+PR #43 needs the shape-test order correction, a regression check, a fresh push, and a repeat review.
+
+### Traps and gotchas
+
+- The upload step must follow the reachability sweep as well as the two bot runs. Checking only the greedy-descender step does not prove the full order.
+- The review record names `d89338c`, not a later metadata tip, under D-184.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The author corrects P2-1 and pushes the shape test, review response, and handoff. A Codex session repeats the review at the new effective head.
+
 ## Session 109: 2026-09-11, Claude Code
 
 Author: Claude Code

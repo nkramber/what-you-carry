@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 120: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: move the PR #46 test slot to 17:21 UTC with no repeat review (D-286, D-287), in the same run as Sessions 116 and 118. Branch `chore/night-schedule-reset`.
+
+### What this session did, and why
+
+- The 15:21 UTC slot passed before a merge. The owner moved the test to 17:21 UTC, which is 12:21 Central Daylight Time, and waived the Codex repeat review of the swap.
+- The swap commit changes the cron to `21 17 * * *`, the matching strings of `NightWorkflowRunsAtTheScheduleTestTime`, and the times in D-286, OQ-154, OQ-155, F-95, and the Phase 1 roadmap. The shape test fails on the 15:21 UTC workflow.
+- The `review-override` label cannot turn the gate green here, because the gate fails the label on a PR that changes a workflow or a test (D-190). D-287 records the owner waiver: the author sets the head field of `docs/reviews/pr-46.md` to the swap commit, with a dated note, one time, as D-282 did for PR #39.
+- Session 110 moved to the archive.
+
+### State of the build
+
+- `main` is at `095ce5e`. The effective head is the swap commit. The commit above it holds the head correction, this entry, and the archive move, all metadata (D-184).
+- Remote head: `origin/chore/night-schedule-reset` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. The repository shape suite: 14 tests, 0 failures. `ste-check`: 0 findings in 15 files. The full suite ran 535 tests with 0 failures on `862fd4c`, and CI runs it on this head.
+
+### In flight
+
+This PR waits for the checks and the automated pass on the new head, then the owner merge before 17:21 UTC. After the merge, `gh workflow disable night.yml` and then `gh workflow enable night.yml` run, and a watch reads the 17:21 UTC night.
+
+### Traps and gotchas
+
+- A merge or an enable after 17:21 UTC moves the first test to 17:21 UTC on 2026-09-12 (D-286).
+- If no run of the schedule event exists by 18:15 UTC, that is a third miss. Stop and ask the owner.
+- The handoff entries of Sessions 116 to 119 and the review record name 15:21 UTC. They are dated records, and D-286 names the move.
+- The next ids are D-288, OQ-156, F-96, and Session 121. The Gate 1 sign-off is D-288 now.
+
+### Open questions that block progress
+
+OQ-154 blocks Phase 2 until the owner signs Gate 1. OQ-47 blocks PR-12. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #46 before 17:21 UTC. Then the disable and the enable run, and a watch reads the 17:21 UTC night. When it passes, the Gate 1 record follows the edit list of Session 115, with D-288 for the sign-off, the row of the 17:21 UTC night, and F-95 at ✅. A PR returns the cron to 08:07 UTC.
+
 ## Session 119: 2026-09-11, Codex
 
 Author: Codex
@@ -360,38 +397,3 @@ None. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 A Codex session repeats the review per the repeat procedure at the effective head, verifies P2-1 against its trigger and the regression case, and updates `docs/reviews/pr-43.md` with the status of P2-1 and a new verdict.
-
-## Session 110: 2026-09-11, Codex
-
-Author: Codex
-Session: review PR #43 at effective head `d89338c`. Branch `chore/night-logs-artifact`.
-
-### What this session did, and why
-
-- Verified the base, merge base, effective head, provider gate, complete diff, D-280, the PR-11 night contract, the workflow, the shape test, the handoff files, and every PR comment.
-- Gitar's step-slice comment is answered at `d89338c`. The slice now ends at the next step name.
-- Found P2-1. The shape test checks that the upload follows the greedy descender, but it does not check that it follows the reachability sweep.
-- Added `docs/reviews/pr-43.md`. The verdict is `Changes required` for `d89338c`.
-
-### State of the build
-
-- `main` and the merge base are `f19fe2e`. The effective implementation head is `d89338c`.
-- Remote Linux, Windows, macOS, bots, det-lint, STE check, night-gate, and Gitar pass. The evaluate and review-gate results were unavailable because the review file did not exist before this session.
-- Local det-lint, STE check, bit identity, and Godot build pass. The local build did not complete, and the local test runner stopped on a VSTest socket permission error. These are execution-context results.
-
-### In flight
-
-PR #43 needs the shape-test order correction, a regression check, a fresh push, and a repeat review.
-
-### Traps and gotchas
-
-- The upload step must follow the reachability sweep as well as the two bot runs. Checking only the greedy-descender step does not prove the full order.
-- The review record names `d89338c`, not a later metadata tip, under D-184.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The author corrects P2-1 and pushes the shape test, review response, and handoff. A Codex session repeats the review at the new effective head.
