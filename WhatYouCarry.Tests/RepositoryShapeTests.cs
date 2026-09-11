@@ -150,12 +150,12 @@ public sealed class RepositoryShapeTests
     [Fact]
     public void NightWorkflowRunsAtTheScheduleTestTime()
     {
-        // D-286: the night runs at 15:21 UTC for one test of the schedule, and by hand on demand. The comment names both runs that
+        // D-286: the night runs at 17:21 UTC for one test of the schedule, and by hand on demand. The comment names both runs that
         // never came (F-94, F-95) and the return to 08:07 UTC, which is 02:07 Central Standard Time (D-284, D-285).
         string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
-        Assert.Contains("- cron: \"21 15 * * *\"", workflow, StringComparison.Ordinal);
+        Assert.Contains("- cron: \"21 17 * * *\"", workflow, StringComparison.Ordinal);
         Assert.Contains("workflow_dispatch:", workflow, StringComparison.Ordinal);
-        Assert.Contains("15:21 UTC for one test of the schedule", workflow, StringComparison.Ordinal);
+        Assert.Contains("17:21 UTC for one test of the schedule", workflow, StringComparison.Ordinal);
         Assert.Contains("(F-94, F-95)", workflow, StringComparison.Ordinal);
         Assert.Contains("08:07 UTC, which is 02:07 Central Standard Time", workflow, StringComparison.Ordinal);
     }
