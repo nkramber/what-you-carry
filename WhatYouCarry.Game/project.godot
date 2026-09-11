@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="What You Carry"
+run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
 [dotnet]
 
 project/assembly_name="WhatYouCarry.Game"
+
+[physics]
+
+common/physics_ticks_per_second=60

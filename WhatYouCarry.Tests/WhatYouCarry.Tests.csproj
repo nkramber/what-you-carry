@@ -11,6 +11,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
+    <!-- The Game project, for the pure input and render logic of PR-12. A test calls no engine method. -->
+    <ProjectReference Include="../WhatYouCarry.Game/WhatYouCarry.Game.csproj" />
     <ProjectReference Include="../WhatYouCarry.Tools/WhatYouCarry.Tools.csproj" />
   </ItemGroup>
 </Project>

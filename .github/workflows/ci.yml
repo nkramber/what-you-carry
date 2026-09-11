@@ -1,5 +1,6 @@
 # Build and test on three platforms (D-71, D-100, D-148). One job per platform.
 # The SDK comes from actions/setup-dotnet and global.json on every platform (D-189).
+# The test of the Smoke category starts the engine, and these jobs hold none, so the smoke workflow runs it (PR-12).
 name: CI
 
 on:
@@ -21,7 +22,7 @@ jobs:
       - name: Build
         run: dotnet build WhatYouCarry.slnx
       - name: Test
-        run: dotnet test WhatYouCarry.slnx --no-build
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category!=Smoke"
 
   windows-x64:
     runs-on: windows-latest
@@ -33,7 +34,7 @@ jobs:
       - name: Build
         run: dotnet build WhatYouCarry.slnx
       - name: Test
-        run: dotnet test WhatYouCarry.slnx --no-build
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category!=Smoke"
 
   macos-arm64:
     runs-on: [self-hosted, macos-arm64-self-hosted]
@@ -45,4 +46,4 @@ jobs:
       - name: Build
         run: dotnet build WhatYouCarry.slnx
       - name: Test
-        run: dotnet test WhatYouCarry.slnx --no-build
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category!=Smoke"

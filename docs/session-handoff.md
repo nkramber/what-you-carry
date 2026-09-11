@@ -2,6 +2,167 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 128: 2026-09-11, Codex
+
+Author: Codex
+Session: re-review PR #49 at effective head `066ce0e`.
+
+### What this session did, and why
+
+- Verified the provider gate. The substantive PR work and the P2-1 correction came from Claude Code, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the prior review, the response, the complete correction diff, the roadmap, the affected input callers, the tests, and every PR comment.
+- P2-1 has full merit at `91d1b6f`. The correction at `066ce0e` tracks the latest look event instead of the held stick state.
+- The regression test fails on the old behavior and passes on the correction. No finding remains at the new effective head.
+- Updated `docs/reviews/pr-49.md` with the earlier verdict and the current `Ready for owner merge` verdict.
+
+### State of the build
+
+- `main` and the merge base are `e1cf847`. The effective implementation head is `066ce0e`. Review and handoff metadata commits remain outside the effective diff.
+- The focused reader suite passes 8 tests, and the focused smoke test passes. The author reports 584 full-suite tests with 0 failures, and remote Linux, Windows, and macOS CI pass.
+- Local det-lint, STE check, bit identity, Godot editor build, and the smoke session pass. The local full build and full test commands did not complete in this execution context after more than 60 seconds without output.
+
+### In flight
+
+The repeat review record needs a commit and push. The review-gate and evaluate checks must refresh against the new `Ready for owner merge` verdict. OQ-158 still blocks the merge.
+
+### Traps and gotchas
+
+- The effective head is `066ce0e`, not a later metadata commit.
+- A held stick keeps controller look state until a new mouse or stick event names a device.
+- A full local test command may stall after the Godot project build. Use the focused tests and remote full-suite evidence.
+
+### Open questions that block progress
+
+OQ-158 blocks PR #49 under G-16. OQ-157 remains open and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open and blocks nothing.
+
+### Next concrete action
+
+Commit and push this repeat review and handoff. Then verify the remote head and the refreshed review-gate result.
+
+## Session 127: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: answer the PR #49 review, P2-1 (D-243), in the same run as Session 125. Branch `feat/pr-12-game-skeleton`.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-49.md` at the reviewed head `91d1b6f`. P2-1 has full merit: `Read` set the controller flag from the held stick on each tick, so a later mouse event lost the look device.
+- The look device now follows the latest look event (D-243). `Main` hands the mouse motion and the joypad motion events to the reader as plain values, `AddLookStickMotion` names the controller on a look axis event past the dead zone, and `Read` reads the deflection alone.
+- The reader polls through `IInputPoll`: `EnginePoll` over the engine, and a test poll in `InputReaderTests`, the two callers of D-111. Eight reader tests pin the device transitions and every D-289 binding with a bit. The regression test fails on the old line, 1 failed and 7 passed, and passes on the correction.
+- `docs/reviews/pr-49-response.md` records the disposition, the correction, and the regression check.
+- Sessions 117 and 116 moved to the archive, because the file held eleven entries.
+
+### State of the build
+
+- `main` is at `e1cf847`. The effective head is the correction commit, the one commit above the review commits `42bd504`, `307f025`, and `735f7fd`.
+- Remote head: `origin/feat/pr-12-game-skeleton` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 584 tests, 0 failures, with the smoke test on the local Godot build.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 11 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. Core did not change.
+
+### In flight
+
+PR #49 needs a repeat Codex review of the correction, the owner answers to OQ-157 and OQ-158, and the owner merge. The automated pass runs again on the push.
+
+### Traps and gotchas
+
+- A `dotnet test --no-build` after a build of the Game project alone reads the stale copy of the Game assembly in the test output. Build the solution before a test of a Game change.
+- A stick moved past the dead zone and released keeps the look with the controller until the mouse moves, because the release event is inside the dead zone.
+- The effective head is the correction commit, not a later metadata commit.
+- The next ids are D-291, OQ-159, F-96, and Session 128.
+
+### Open questions that block progress
+
+OQ-158 blocks the merge of this PR (G-16). OQ-157 binds the two constants and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The automated pass, then a Codex session reviews the correction per the repeat review procedure of the `pr-review` skill and sets the verdict for the new effective head. The owner answers OQ-157 and OQ-158, and merges.
+
+## Session 126: 2026-09-11, Codex
+
+Author: Codex
+Session: review PR #49 at effective head `91d1b6f`.
+
+### What this session did, and why
+
+- Verified the provider gate. The substantive PR work came from Claude Code, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the handoff, the project rules, the design, the relevant decisions and questions, the Phase 2 roadmap, the complete PR diff, the affected Core callers, and every PR comment.
+- Found P2-1. A held controller stick overrides a later mouse look event, so the input frame can set the controller aim bit for the wrong device.
+- Added `docs/reviews/pr-49.md` with a `Changes required` verdict for the effective head.
+
+### State of the build
+
+- `main` and the merge base are `e1cf847`. The effective implementation head is `91d1b6f`. The current branch tip before this session is `dfdc68e`, which holds metadata only.
+- The focused Game, input, render, smoke, and shape tests pass with 41 tests. The remote three-platform CI and smoke checks pass on the effective head. Gitar passes, while `evaluate` and `review-gate` fail for the recorded `Changes required` verdict.
+- Local det-lint, STE check, bit identity, Godot editor build, and the headless smoke session pass. Local `dotnet build` did not complete after more than 80 seconds without output.
+
+### In flight
+
+PR #49 needs the P2-1 correction and a regression test. OQ-158 also needs an owner decision before merge. The review-gate check must refresh after the review record reaches the PR head.
+
+### Traps and gotchas
+
+- The effective head is `91d1b6f`, not the metadata tip.
+- `InputReader.Read` checks the current stick after mouse input has set the flag false. A held stick can therefore override the last mouse event.
+- The first `dotnet build` attempt produced no output for more than 80 seconds. Remote CI gives the build evidence for this head.
+
+### Open questions that block progress
+
+OQ-158 blocks PR #49 under G-16. OQ-157 remains open and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open and blocks nothing.
+
+### Next concrete action
+
+The author corrects the input-device state and adds the regression test. Then the author pushes the fix, and a later review checks the new effective head.
+
+## Session 125: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: PR-12, the Game skeleton and input (D-63, D-73, D-77, D-114, D-149, D-289). Branch `feat/pr-12-game-skeleton`.
+
+### What this session did, and why
+
+- PR #48 merged as `e1cf847` at 17:38 UTC, and Gate 1 is signed (D-288), so PR-12 opened from `main` per the Phase 2 roadmap.
+- `WhatYouCarry.Game/Main.cs` is the root node, and `Main.tscn` is the one text scene (D-63). It steps one `SimulationLoop` per physics frame at 60 Hz, and `project.godot` pins the physics tick at 60. It draws the player box and the camera between the last two ticks with the interpolation fraction of the engine (D-73, D-245).
+- `Input/IntentBuilder.cs` holds the pure logic: the linear mouse, the cubic stick curve with the 15 percent dead zone (D-289), a carry of the fraction between ticks, and the controller aim bit from the device of the look (D-243). `Input/InputReader.cs` reads the engine once per tick with the bindings of D-289 for the five actions that have a bit: jump, sprint, dodge, attack, and interact.
+- `Smoke/SmokeSession.cs` is the script of one thousand ticks in four parts. `Main` runs it on `--smoke` and quits with exit code 0 only when the print sink counted no error line (D-114). The engine ends the session in under one second with `--fixed-fps 60`. A reserved bit at tick 500, set by hand one time, gave exit code 1 and an error line with the tick.
+- `Content/DirectoryContentSource.cs` reads the content directory of the checkout, next to the project directory (D-219). `Logging/PrintLogSink.cs` prints each line and counts the error lines (D-211).
+- `.github/workflows/smoke.yml` runs the one test of the Smoke category on the three platforms with the pinned Godot binary from `actions/cache`. `ci.yml` leaves that category out. The test project references the Game project for the pure logic.
+- Filed OQ-157, the two sensitivity numbers, and OQ-158, the cache action as a dependency (G-16). The code holds the recommendation of OQ-157 as two named constants.
+- PR #49 opened at the effective head `91d1b6f`. The automated pass approved the head with no code finding. Its one comment reads the red review-gate before a review record exists, which D-251 designs, and the reply on the PR names that. No commit answered it.
+- Session 115 moved to the archive.
+
+### State of the build
+
+- `main` is at `e1cf847`. This branch holds the work commit `91d1b6f` above it, and the handoff commits above that (D-184).
+- PR #49: CI green on the three platforms with 575 tests, the suite minus the smoke test. Bit identity, det-lint, ste-check, night-gate, bots, and smoke are green. The smoke workflow passed on its first run, with a cache miss and a download on each platform. The Windows suite took 9 min 27 s, near the ten-minute bound of the M-1 procedure (OQ-145).
+- Remote head: `origin/feat/pr-12-game-skeleton` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 576 tests, 0 failures, with the smoke test on the local Godot build. The full suite takes about four minutes on this Mac.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 9 files. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+- The Godot editor build check passes. It wrote `Main.cs.uid`, and the checkout keeps that file.
+
+### In flight
+
+This PR needs a Codex review, the owner answers to OQ-157 and OQ-158, and the owner merge. The automated pass is complete. The first run of the engine in CI passed on the three hosted and self-hosted runners.
+
+### Traps and gotchas
+
+- `dotnet test` with no filter runs `SmokeSessionPasses`, which starts the Godot build at the path that `CLAUDE.md` names, or the one that `WYC_GODOT` names. The three CI jobs filter the Smoke category out.
+- The engine reports the two shift keys as one key and the two control keys as one key, so the right keys sprint and dodge too.
+- Block, throwable, reload, satchel, and amulet from D-289 have no button bit yet. The PR that assigns each bit adds the binding.
+- The namespace `WhatYouCarry.Game.Input` hides the engine class `Input`, so the reader writes `Godot.Input`. `Button` needs the alias `CoreButton` next to the engine type of that name.
+- The Windows smoke job names the console executable of Godot, because the window executable writes nothing to standard output.
+- The next ids are D-291, OQ-159, F-96, and Session 126.
+
+### Open questions that block progress
+
+OQ-158 blocks the merge of this PR (G-16). OQ-157 binds the two constants and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #49 at the effective head `91d1b6f` per the `pr-review` skill: the Core boundary, the determinism of the builder, the input and CI boundaries, and the presentation. The owner answers OQ-157 and OQ-158 in `docs/decisions.md`, and a commit sets the two constants if the answer differs from the recommendation. After the merge, the owner answers OQ-43 and OQ-49, and a session opens PR-13.
+
 ## Session 124: 2026-09-11, Codex
 
 Author: Codex
@@ -227,177 +388,3 @@ OQ-154 blocks Phase 2. OQ-47 blocks PR-12. OQ-99 is open, and it blocks nothing.
 ### Next concrete action
 
 Commit and push the updated review record and this entry. Then verify the fresh review-gate result and the remote head.
-
-## Session 118: 2026-09-11, Claude Code
-
-Author: Claude Code
-Session: answer the PR #46 review, in the same run as Session 116. Branch `chore/night-schedule-reset`.
-
-### What this session did, and why
-
-- Read P2-1 in `docs/reviews/pr-46.md`. Full merit: the shape test asserted `02:07 Central Standard Time` and not the 08:07 UTC return time, while the PR description and Session 116 said that it did. A workflow comment with the return time changed to 09:07 UTC passed the test.
-- The review asked for an assertion on `08:07 UTC`. That text alone passes on the same trigger, because the F-95 sentence of the comment holds `08:07 UTC` too. The test asserts `08:07 UTC, which is 02:07 Central Standard Time` instead. The trigger fails it, and so does a comment with the return time removed.
-- `docs/reviews/pr-46-response.md` records the disposition. No new id.
-- The automated pass on the review commit left one comment, with merit: Session 117 entered the handoff without an archive move, so the file held 11 entries (D-146). Sessions 108 and 107 moved to the archive with this entry, and the file holds the 10 newest entries. The reply on the thread names this commit.
-- This run wrote Session 116 before the review. Session 117 came above it while the run continued, so this entry is a new one at the top, and Session 116 stays as the review read it.
-
-### State of the build
-
-- `main` is at `095ce5e`. This branch holds the work commit `862fd4c`, the Session 116 entry `d8ee1dd`, the review commit `c76d54a`, and the correction that holds this entry above them.
-- Remote head: `origin/chore/night-schedule-reset` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. The repository shape suite: 14 tests, 0 failures. `ste-check`: 0 findings in 15 files. The full suite ran 535 tests with 0 failures on `862fd4c`, and CI runs it on this head.
-- `det-lint`: 0 findings. `bit-identity`: `6ec00e90c1c85cdb`. Core did not change.
-
-### In flight
-
-This PR waits for the automated pass on the correction, then a Codex repeat review at the effective head, which is the correction commit. The owner merge must land before 15:21 UTC for the test to run today, and the disable and the enable follow the merge.
-
-### Traps and gotchas
-
-- The effective head is the correction commit, because it changes a test. The review record names `862fd4c`, and the repeat review updates the head and the verdict together (D-269).
-- A merge or an enable after 15:21 UTC moves the first test to 15:21 UTC on 2026-09-12 (D-286).
-- The traps of Session 116 stand: the third-miss deadline at 16:15 UTC, the two PRs after the pass, and the next ids D-287, OQ-156, and F-96. The next session number is 119.
-
-### Open questions that block progress
-
-OQ-154 blocks Phase 2 until the owner signs Gate 1. OQ-47 blocks PR-12. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session repeats the review per the repeat procedure at the effective head, verifies P2-1 against its trigger and the regression case, and updates `docs/reviews/pr-46.md` with the status of P2-1 and a new verdict.
-
-## Session 117: 2026-09-11, Codex
-
-Author: Codex
-Session: review PR #46 at effective head `862fd4c`. Branch `chore/night-schedule-reset`.
-
-### What this session did, and why
-
-- Verified the provider gate. Session 116 identifies Claude Code as the author of the substantive PR-46 change. Codex is the eligible reviewer.
-- Verified the base, merge base, effective head, complete diff, D-285, D-286, F-94, F-95, the Phase 1 roadmap, the workflow, the shape test, the registers, the handoff files, and every PR comment.
-- The cron reads `21 15 * * *`, and the workflow comment records the temporary test and the return to 08:07 UTC.
-- Found P2-1: the shape test checks `02:07 Central Standard Time` but does not assert the required `08:07 UTC` return text. The focused suite passes 14 tests, but the missing assertion leaves the return-time contract unguarded.
-- Wrote `docs/reviews/pr-46.md` with the verdict `Changes required` for `862fd4c`.
-
-### State of the build
-
-- `main` and the merge base are `095ce5e`. The effective implementation head is `862fd4c`. The current metadata tip is `d8ee1dd` before this review commit.
-- `dotnet build`: 0 warnings, 0 errors. The focused shape suite passes 14 tests, 0 failures, and 0 skips.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`. The Godot 4.7.2 headless build passes.
-- The local full test run did not complete after about 90 seconds with no output. Remote Linux and Windows CI, macOS bit identity, and several other checks were still pending when observed. The review-gate failure is the expected missing-record state until this review is pushed.
-
-### In flight
-
-The review record and this handoff entry need a commit and push. The author must add the direct `08:07 UTC` assertion, rerun the focused suite, and request a repeat review at the new effective head.
-
-### Traps and gotchas
-
-- The effective head is `862fd4c`, not the metadata tip. The first commit changes the workflow, test, and registers. The second commit changes only metadata under D-184.
-- `git fetch origin` could not update `.git/FETCH_HEAD` because the execution context denied access. The local branch matched `origin/chore/night-schedule-reset` at `d8ee1dd` before this review commit.
-- The owner must merge only after the P2-1 correction, a repeat review, the fresh review-gate result, and all required platform checks pass.
-
-### Open questions that block progress
-
-OQ-154 blocks Phase 2 until the first scheduled night passes. OQ-47 blocks PR-12. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Commit and push the review record and this entry. Then wait for the author correction and perform the repeat review.
-
-## Session 116: 2026-09-11, Claude Code
-
-Author: Claude Code
-Session: listen for the first scheduled night, then move the night to one schedule test at 15:21 UTC (D-286). Branch `chore/night-schedule-reset`.
-
-### What this session did, and why
-
-- A background watch read the 08:07 UTC night of 2026-09-11. No run of the schedule event existed at 09:00 UTC. The runner was online and idle from 07:15 UTC, the `7 8 * * *` line stood on `main` from 06:27 UTC, the workflow read active, and Actions was on. F-95 records it, and F-94 gains a dated note: the minute was not the whole cause.
-- Asked the owner, and D-286 records the answer (OQ-155). The cron moves to one test slot, and after the merge `gh workflow disable` and `gh workflow enable` turn the workflow off and on. Gate 1 signs after the first scheduled night passes, and D-283 stands. After that pass, a PR returns the cron to 08:07 UTC.
-- The owner first named 11:21 UTC. At 11:16 UTC that slot was out of reach before a merge, and the owner moved the test to 15:21 UTC, which is 10:21 Central Daylight Time.
-- The cron reads `21 15 * * *`. `NightWorkflowRunsAtTheScheduleTestTime` replaces `NightWorkflowRunsAtTwoCentralStandardTime`. It asserts the line, the comment, both finding ids, and the 08:07 UTC return time, and it fails on the workflow of `main` at the cron line.
-- D-285 carries a `Revised in part by D-286` marker, and OQ-154 gains a dated note. Session 106 moved to the archive.
-
-### State of the build
-
-- `main` is at `095ce5e`, the squash merge of PR #45. This branch holds the work commit above it, and this entry above that.
-- Remote head: `origin/chore/night-schedule-reset` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 535 tests, 0 failures.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
-- The record on `night-results` is still the success of hand run 6 at `5455e5d`, ended 02:21 UTC on 2026-09-11. The night gate turns red on every PR at 02:21 UTC on 2026-09-13 unless a night refreshes it.
-
-### In flight
-
-This PR. It needs the automated pass, a Codex review, and the owner merge before 15:21 UTC on 2026-09-11. After the merge, `gh workflow disable night.yml` and then `gh workflow enable night.yml` run, with a read of the workflow state after each. A watch then reads the 15:21 UTC night with the three commands of Session 115.
-
-### Traps and gotchas
-
-- A merge or an enable after 15:21 UTC moves the first test to 15:21 UTC on 2026-09-12 (D-286). The night gate stays green until 02:21 UTC on 2026-09-13.
-- The night holds the Mac runner from 15:21 UTC for about 65 minutes. A macOS PR job waits in that window.
-- If no run of the schedule event exists by 16:15 UTC, that is a third miss. Stop and ask the owner. The `launchd` timer on the Mac Mini was an option in OQ-155.
-- After the pass, two PRs follow: the Gate 1 record, docs alone with the `review-override` label, and the return of the cron to 08:07 UTC, code with a Codex review. Ask the owner the order then.
-- The ids moved: the Gate 1 sign-off is D-287 now, and the answer to OQ-47 is the decision after it. The next ids are D-287, OQ-156, F-96, and Session 117.
-- D-284 and D-278 carry no marker for the partial revisions of D-285 and D-283. This PR adds the marker for D-286 alone.
-
-### Open questions that block progress
-
-OQ-154 blocks Phase 2 until the owner signs Gate 1. OQ-47 blocks PR-12, and the register holds a full recommendation. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews this PR per the `pr-review` skill: the cron line, the comment, the shape test, and the registers. The owner merges it before 15:21 UTC. Then the disable and the enable run, and a watch reads the 15:21 UTC night. When it passes, the Gate 1 record follows the edit list of Session 115, with D-287 for the sign-off, the row of the 15:21 UTC night, and F-95 at ✅.
-
-## Session 115: 2026-09-11, Claude Code
-
-Author: Claude Code
-Session: put the state of the nights in the documents before a fresh session, which listens for the first scheduled night. Branch `docs/night-state-for-gate-1`.
-
-### What this session did, and why
-
-- The owner merged PR #43 as `557568a` and PR #44 as `57bc164`. The night keeps the logs of a failed run (D-280), and the cron reads `7 8 * * *`, which is 08:07 UTC and 02:07 Central Standard Time (D-284, D-285).
-- The M-2 table holds the rows of hand runs 3 to 6: 59, 65, 63, and 68 minutes, all green. Only the row of the first scheduled night is missing.
-- OQ-154 is open: the Gate 1 sign-off, after the first scheduled night passes on its own (D-283). The next session resolves it with the owner and records the sign-off as the next decision.
-- No scheduled night has ever fired. The 03:00 UTC run of 2026-09-11 never came (F-94), and the 08:07 UTC line has not had its first chance yet.
-- Session 105 moved to the archive.
-
-### State of the build
-
-- `main` is at `57bc164`, the squash merge of PR #44. This branch holds the document commit above it, and this entry above that.
-- Remote head: `origin/docs/night-state-for-gate-1` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 535 tests, 0 failures. No code changed.
-- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6.
-- The record on `night-results` is the success of hand run 6 at `5455e5d`, ended 02:21 UTC on 2026-09-11. The night gate turns red on every PR at 02:21 UTC on 2026-09-13 unless a night refreshes it.
-- No PR is open.
-
-### In flight
-
-The first scheduled night, at 08:07 UTC on 2026-09-11. It takes about 65 minutes. Read it with these commands:
-
-- `gh run list --workflow=night.yml --event schedule --limit 1 --json databaseId,status,conclusion,createdAt`: an empty list means the schedule has not fired.
-- `gh api repos/nkramber/what-you-carry/actions/runs/<id> --jq '.run_started_at, .updated_at'`: the minutes of the row come from these two times, because the jobs API gives null times for the self-hosted job.
-- `git fetch origin night-results && git show FETCH_HEAD:night.json`: the record, with the commit, the end time, and the status.
-
-### Traps and gotchas
-
-- GitHub delays or drops a schedule at the start of an hour under load, and this repository has never seen a schedule run. If no run exists by 09:00 UTC, that is a new question for the owner, and not a repeat of F-94: name what the runner and the workflow page show.
-- The Mac runner takes a queued PR job only when no night is queued. A PR opened while the night runs waits about an hour for its macOS jobs.
-- The record of `night-record` on `main` writes no byte-order mark since PR-58, and the gate reads the older records with one through git.
-- The next ids are D-286, OQ-155, F-95, and Session 116. The scratchpad of the last session is gone: the M-2 rows above are the only copy of the hand run times, and the Gate 1 edit list below is the only copy of the plan.
-- A docs-only PR takes the `review-override` label after its last push and the automated pass, and the review gate reads green then (D-188, D-190).
-
-### Open questions that block progress
-
-OQ-154 blocks Phase 2 until the owner signs Gate 1. OQ-47 blocks PR-12, and the register holds a full recommendation. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-When the scheduled night passes, ask the owner two things in one batch: the Gate 1 sign-off, and the answer to OQ-47. Then one docs PR, the Gate 1 record, with these edits:
-
-1. The M-2 table: the row `Scheduled night 1, 2026-09-11`, the run id, the commit, the minutes, and the status. Below it: `Status: table complete 2026-09-11, seven nights (D-283).` The design doc M-2 entry reads ✅ with the same words.
-2. `docs/decisions.md`: D-286, the Gate 1 sign-off in the words of the owner. Resolves OQ-154. Applies D-150 and D-283. The next decision holds the answer to OQ-47.
-3. The Phase 1 roadmap: the status header reads `focused roadmap, complete`, sequence item 22 reads ✅ for M-2, item 23 reads ✅ signed with the D-# id, the correction note gains a dated sentence, and the open questions list moves OQ-154 to a resolved line.
-4. The design doc: sequence item 8 reads ✅ for M-2, item 9 reads ✅ signed with the D-# id, and the Phase 1 heading gains the sign-off.
-5. Session 116 handoff entry.
-
-After the merge, Phase 2 starts: a session opens PR-12 from `main` per the Phase 2 roadmap entry and the answer to OQ-47.
