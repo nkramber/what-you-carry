@@ -15,14 +15,14 @@ Session: review PR #42 at effective head `b616357`.
 
 ### State of the build
 
-- `main` is at `5455e5d`. The effective implementation head is `b616357`. The PR metadata tip is `43157e6` before this review commit.
+- `main` is at `5455e5d`. The effective implementation head is `b616357`. The PR metadata tip is `bf17077` after this review commit.
 - `dotnet build`: 0 warnings, 0 errors. The focused shape test passes. The full local suite did not complete after the test runner socket error and an approved retry that produced no output.
 - `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`. The Godot 4.7.2 headless build passes.
 - Remote Linux and Windows checks, bit identity, bots, det-lint, night-gate, STE check, and Gitar pass. The macOS CI job remains pending. The review-gate check waits for this record.
 
 ### In flight
 
-The review record and this handoff entry need one metadata commit and a push. The owner must wait for the pending macOS CI result and the review-gate result.
+The review record and this handoff entry are pushed. The owner must wait for the pending macOS CI result and the review-gate result.
 
 ### Traps and gotchas
 
@@ -35,7 +35,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-Commit and push the review record and this handoff entry. Then wait for the macOS CI and review-gate results before the owner merges.
+Wait for the macOS CI and review-gate results before the owner merges.
 
 ## Session 105: 2026-09-11, Claude Code
 
