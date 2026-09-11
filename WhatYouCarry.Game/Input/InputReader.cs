@@ -16,6 +16,12 @@ namespace WhatYouCarry.Game.Input;
 /// the sum of the two (D-233).
 /// </para>
 /// <para>
+/// The look device is the one of the latest look event (D-243). A mouse motion event names the mouse, and a
+/// stick motion event past the dead zone on a look axis names the controller. A held stick sends no new event,
+/// so a later mouse motion takes the look, and the stick takes it back when it moves again. The poll of each
+/// tick reads the stick deflection and never the device (PR #49 review P2-1).
+/// </para>
+/// <para>
 /// The engine reports the two shift keys as one key and the two control keys as one key. D-289 names the left
 /// key of each pair, and the right one works too.
 /// </para>
@@ -82,53 +88,77 @@ public sealed class InputReader
     /// <summary>The trigger deflection that counts as a press.</summary>
     public const float TriggerPressed = 0.5f;
 
+    private readonly IInputPoll poll;
     private float mouseX;
     private float mouseY;
     private bool controllerLook;
 
-    /// <summary>Adds the motion of one mouse event to the sum of this tick. The mouse then holds the look (D-243).</summary>
-    public void AddMouseMotion(InputEventMouseMotion motion)
+    /// <summary>A reader over one poll.</summary>
+    public InputReader(IInputPoll poll)
     {
-        this.mouseX += motion.Relative.X;
-        this.mouseY += motion.Relative.Y;
+        this.poll = poll;
+    }
+
+    /// <summary>Adds the motion of one mouse event to the sum of this tick. The mouse then holds the look (D-243).</summary>
+    public void AddMouseMotion(float relativeX, float relativeY)
+    {
+        this.mouseX += relativeX;
+        this.mouseY += relativeY;
         this.controllerLook = false;
+    }
+
+    /// <summary>
+    /// Takes one stick motion event. The controller holds the look when the event moves a look axis of the
+    /// first controller past the dead zone (D-243). Any other event changes nothing.
+    /// </summary>
+    public void AddLookStickMotion(int device, JoyAxis axis, float value)
+    {
+        if (device != FirstController)
+        {
+            return;
+        }
+
+        if (axis != LookAxisX && axis != LookAxisY)
+        {
+            return;
+        }
+
+        if (IntentBuilder.StickCurve(value) != 0.0f)
+        {
+            this.controllerLook = true;
+        }
     }
 
     /// <summary>The raw input of this tick. The mouse sum starts again after it.</summary>
     public RawInput Read()
     {
-        float stickLookX = Godot.Input.GetJoyAxis(FirstController, LookAxisX);
-        float stickLookY = Godot.Input.GetJoyAxis(FirstController, LookAxisY);
-        if (IntentBuilder.StickCurve(stickLookX) != 0.0f || IntentBuilder.StickCurve(stickLookY) != 0.0f)
-        {
-            this.controllerLook = true;
-        }
-
-        float strafe = KeyAxis(RightKey, LeftKey) + Godot.Input.GetJoyAxis(FirstController, MoveAxisX);
-        float forward = KeyAxis(ForwardKey, BackKey) - Godot.Input.GetJoyAxis(FirstController, MoveAxisY);
+        float stickLookX = this.poll.GetJoyAxis(FirstController, LookAxisX);
+        float stickLookY = this.poll.GetJoyAxis(FirstController, LookAxisY);
+        float strafe = this.KeyAxis(RightKey, LeftKey) + this.poll.GetJoyAxis(FirstController, MoveAxisX);
+        float forward = this.KeyAxis(ForwardKey, BackKey) - this.poll.GetJoyAxis(FirstController, MoveAxisY);
 
         ushort buttons = 0;
-        if (Godot.Input.IsKeyPressed(JumpKey) || Godot.Input.IsJoyButtonPressed(FirstController, JumpButton))
+        if (this.poll.IsKeyPressed(JumpKey) || this.poll.IsJoyButtonPressed(FirstController, JumpButton))
         {
             buttons |= CoreButton.Jump;
         }
 
-        if (Godot.Input.IsKeyPressed(SprintKey) || Godot.Input.IsJoyButtonPressed(FirstController, SprintButton))
+        if (this.poll.IsKeyPressed(SprintKey) || this.poll.IsJoyButtonPressed(FirstController, SprintButton))
         {
             buttons |= CoreButton.Sprint;
         }
 
-        if (Godot.Input.IsKeyPressed(DodgeKey) || Godot.Input.IsJoyButtonPressed(FirstController, DodgeButton))
+        if (this.poll.IsKeyPressed(DodgeKey) || this.poll.IsJoyButtonPressed(FirstController, DodgeButton))
         {
             buttons |= CoreButton.Dodge;
         }
 
-        if (Godot.Input.IsMouseButtonPressed(AttackButton) || Godot.Input.GetJoyAxis(FirstController, AttackAxis) >= TriggerPressed)
+        if (this.poll.IsMouseButtonPressed(AttackButton) || this.poll.GetJoyAxis(FirstController, AttackAxis) >= TriggerPressed)
         {
             buttons |= CoreButton.Attack;
         }
 
-        if (Godot.Input.IsKeyPressed(InteractKey) || Godot.Input.IsJoyButtonPressed(FirstController, InteractButton))
+        if (this.poll.IsKeyPressed(InteractKey) || this.poll.IsJoyButtonPressed(FirstController, InteractButton))
         {
             buttons |= CoreButton.Interact;
         }
@@ -140,15 +170,15 @@ public sealed class InputReader
     }
 
     /// <summary>One for the positive key, minus one for the negative key, and zero for both or neither.</summary>
-    private static float KeyAxis(Key positive, Key negative)
+    private float KeyAxis(Key positive, Key negative)
     {
         float axis = 0.0f;
-        if (Godot.Input.IsKeyPressed(positive))
+        if (this.poll.IsKeyPressed(positive))
         {
             axis += 1.0f;
         }
 
-        if (Godot.Input.IsKeyPressed(negative))
+        if (this.poll.IsKeyPressed(negative))
         {
             axis -= 1.0f;
         }

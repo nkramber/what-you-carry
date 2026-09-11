@@ -72,7 +72,7 @@ public partial class Main : Node3D
     private readonly PrintLogSink sink = new();
     private readonly JsonlLogger logger;
     private readonly IntentBuilder builder = new();
-    private readonly InputReader reader = new();
+    private readonly InputReader reader = new(new EnginePoll());
 
     private SimulationLoop? loop;
     private MeshInstance3D? playerBox;
@@ -164,7 +164,11 @@ public partial class Main : Node3D
     {
         if (@event is InputEventMouseMotion motion)
         {
-            this.reader.AddMouseMotion(motion);
+            this.reader.AddMouseMotion(motion.Relative.X, motion.Relative.Y);
+        }
+        else if (@event is InputEventJoypadMotion stick)
+        {
+            this.reader.AddLookStickMotion(stick.Device, stick.Axis, stick.AxisValue);
         }
     }
 
