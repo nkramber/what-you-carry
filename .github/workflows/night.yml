@@ -1,8 +1,8 @@
 # The scheduled night on the self-hosted macOS runner (D-115, D-116, D-117, D-157, D-177; PR-11 exit tests 6 and 7).
-# It runs at 17:21 UTC for one test of the schedule, which is 12:21 Central Daylight Time (D-286). The 03:00 UTC and
-# 08:07 UTC runs of 2026-09-11 never came (F-94, F-95). After the first scheduled night passes, the cron returns to
-# 08:07 UTC, which is 02:07 Central Standard Time and 03:07 Central Daylight Time (D-284, D-285). The cron reads UTC
-# alone, and the minute stays off the start of the hour, because GitHub delays or drops a schedule there under load.
+# It runs at 08:07 UTC, which is 02:07 Central Standard Time and 03:07 Central Daylight Time (D-284, D-285, D-288).
+# The cron reads UTC alone, and the minute stays off the start of the hour, because GitHub delays or drops a schedule
+# there under load. The 03:00 UTC run of 2026-09-11 never came (F-94), and the 08:07 UTC run of that day started
+# 4 h 40 min late, at 12:47 UTC (F-95).
 # Five thousand bot runs per policy, and the reachability sweep of PR-9 at one hundred thousand seeds. The last
 # two steps write night.json with the commit, the end time, and the status, whatever the outcome, and commit it
 # to the orphan branch night-results, which holds that one file (D-273). When the build itself fails, the
@@ -13,7 +13,7 @@ name: Night
 
 on:
   schedule:
-    - cron: "21 17 * * *"
+    - cron: "7 8 * * *"
   workflow_dispatch:
 
 permissions:
