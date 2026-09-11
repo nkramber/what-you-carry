@@ -1,0 +1,103 @@
+# Runs the headless smoke session on the three platforms (D-114, D-149; PR-12 exit tests 4 and 5).
+# Each job takes the pinned Godot .NET binary of D-61 from the actions cache, or downloads it from the GitHub
+# release on a miss, builds the solution, and runs the one test of the Smoke category. That test starts the
+# engine headless with the --smoke flag on the built Game assembly, and it reads the exit code and the log.
+# The three CI jobs leave that category to this workflow, because they hold no engine. The Windows job names
+# the console executable, because the window executable writes nothing to standard output.
+name: Smoke
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: 4.7.2-stable
+
+jobs:
+  linux-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Restore the Godot binary
+        id: godot
+        uses: actions/cache@v4
+        with:
+          path: godot
+          key: godot-${{ env.GODOT_VERSION }}-mono-linux-x86_64
+      - name: Download the Godot binary
+        if: steps.godot.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_mono_linux_x86_64.zip"
+          unzip -q godot.zip -d godot
+          rm godot.zip
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Smoke session
+        env:
+          WYC_GODOT: ${{ github.workspace }}/godot/Godot_v${{ env.GODOT_VERSION }}_mono_linux_x86_64/Godot_v${{ env.GODOT_VERSION }}_mono_linux.x86_64
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Smoke"
+
+  windows-x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Restore the Godot binary
+        id: godot
+        uses: actions/cache@v4
+        with:
+          path: godot
+          key: godot-${{ env.GODOT_VERSION }}-mono-win64
+      - name: Download the Godot binary
+        if: steps.godot.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/$env:GODOT_VERSION/Godot_v$($env:GODOT_VERSION)_mono_win64.zip" -OutFile godot.zip
+          Expand-Archive -Path godot.zip -DestinationPath godot
+          Remove-Item godot.zip
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Smoke session
+        env:
+          WYC_GODOT: ${{ github.workspace }}/godot/Godot_v${{ env.GODOT_VERSION }}_mono_win64/Godot_v${{ env.GODOT_VERSION }}_mono_win64_console.exe
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Smoke"
+
+  macos-arm64:
+    runs-on: [self-hosted, macos-arm64-self-hosted]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Restore the Godot binary
+        id: godot
+        uses: actions/cache@v4
+        with:
+          path: godot
+          key: godot-${{ env.GODOT_VERSION }}-mono-macos-universal
+      - name: Download the Godot binary
+        if: steps.godot.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_mono_macos.universal.zip"
+          unzip -q godot.zip -d godot
+          rm godot.zip
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Smoke session
+        env:
+          WYC_GODOT: ${{ github.workspace }}/godot/Godot_mono.app/Contents/MacOS/Godot
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Smoke"

@@ -4,7 +4,11 @@ Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.m
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
-External facts: none new.
+External facts, verified 2026-09-11:
+
+- The GitHub release `4.7.2-stable` of Godot holds one .NET zip per platform: `Godot_v4.7.2-stable_mono_linux_x86_64.zip`, `Godot_v4.7.2-stable_mono_win64.zip`, and `Godot_v4.7.2-stable_mono_macos.universal.zip`. Source: the GitHub release API, fetched 2026-09-11.
+- The Linux zip holds the executable `Godot_v4.7.2-stable_mono_linux_x86_64/Godot_v4.7.2-stable_mono_linux.x86_64`. The Windows zip holds `Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe` next to the window executable. The macOS zip holds `Godot_mono.app`. Source: a download and a listing of each zip, 2026-09-11.
+- The option `--fixed-fps 60` of Godot 4.7.2 gives every frame the delta of one sixtieth of a second and waits for no clock. The headless smoke session of one thousand ticks then ends in under one second. Source: the help text of the local build and a local run, 2026-09-11.
 
 Correction passes: none yet.
 
@@ -373,6 +377,8 @@ Open:
 - OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-49: the wall fade approach. Blocks PR-13.
 - OQ-50: a Steam Deck unit for M-3. Blocks M-3.
+- OQ-157: the look sensitivity numbers. Blocks nothing, and it binds the two constants of PR-12.
+- OQ-158: the Godot binary in CI. Blocks the merge of PR-12 (G-16).
 
 Resolved 2026-09-11:
 
