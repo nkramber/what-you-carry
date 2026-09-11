@@ -22,7 +22,7 @@ Session: review PR #44 at effective head `0bfafbd`. Branch `chore/night-minute`.
 
 ### In flight
 
-The review record and this handoff entry need a push. The fresh review-gate result must pass at effective head `0bfafbd` before the owner merges.
+The review record and this handoff entry are pushed. The fresh review-gate result must pass at effective head `0bfafbd` before the owner merges.
 
 ### Traps and gotchas
 
@@ -35,7 +35,7 @@ None. OQ-99 is open, and it blocks nothing.
 
 ### Next concrete action
 
-Push the review record and handoff. Fetch the branch, verify that the remote has no ahead count, and confirm that the fresh review-gate result passes.
+Wait for the fresh checks. Verify that the remote has no ahead count, and confirm that the fresh review-gate result passes.
 
 ## Session 113: 2026-09-11, Claude Code
 
