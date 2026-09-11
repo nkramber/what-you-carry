@@ -124,6 +124,7 @@ A PR merges only when every line holds:
 - [ ] The `det-lint` job is green. It reads Core for the determinism rules and Game for the string rule (G-2, G-8, G-21).
 - [ ] The `ste-check` job is green (G-14).
 - [ ] The `night-gate` job is green: a success record from a night inside 48 hours, at a commit on the base branch (D-115, D-177, D-274, D-275).
+- [ ] The `smoke` job is green on all three platforms: the headless smoke session of the Game layer, with the pinned Godot binary (D-114, D-149).
 - [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250).
 - [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
 - [ ] The `review-gate` check run is green. Grey means no review record yet, and the job line reads red then (D-251). Red means the review does not approve this head (D-179, D-181, D-185).

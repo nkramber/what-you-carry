@@ -44,6 +44,8 @@ Each entry has: scope, out of scope, exit tests, review focus, the check clause,
 
 ### PR-12: Game skeleton and input
 
+Status: merged 2026-09-11 as PR #49, commit `9313358`. Exit tests 1 to 6 passed before the merge, and the smoke workflow passed on the three platforms on its first run. OQ-157 and OQ-158 stayed open at the merge, and the owner answers them in `docs/decisions.md`.
+
 Scope:
 
 - `WhatYouCarry.Game/Main.cs`: the root node built in C# (D-63). It owns one Core simulation, steps it at 60 Hz from the engine's fixed process, and interpolates render positions between the last two ticks (D-73).
@@ -337,7 +339,7 @@ Procedure: on a Steam Deck (OQ-50), run the PR-13 build and then the PR-18 build
 One person owns the program. Items run one at a time in this order. Gate 1 signed 2026-09-11 (D-288).
 
 1. ✅ OQ-47 answered 2026-09-11: D-289.
-2. PR-12.
+2. ✅ PR-12 merged 2026-09-11 as PR #49.
 3. Owner: answer OQ-43 and OQ-49.
 4. PR-13.
 5. PR-57.
@@ -377,8 +379,8 @@ Open:
 - OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-49: the wall fade approach. Blocks PR-13.
 - OQ-50: a Steam Deck unit for M-3. Blocks M-3.
-- OQ-157: the look sensitivity numbers. Blocks nothing, and it binds the two constants of PR-12.
-- OQ-158: the Godot binary in CI. Blocks the merge of PR-12 (G-16).
+- OQ-157: the look sensitivity numbers. Blocks nothing, and it binds the two constants of `IntentBuilder` on `main`.
+- OQ-158: the Godot binary in CI. Binds the smoke workflow on `main` (G-16). PR #49 merged with it open.
 
 Resolved 2026-09-11:
 

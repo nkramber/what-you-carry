@@ -423,7 +423,7 @@ Record the night sweep duration for seven nights: the six hand runs of 2026-09-1
 
 ### Phase 2: First playable (gate: the owner plays one floor with the timer, the hunter, and a stairwell, D-57)
 
-**PR-12: Game skeleton and input.** 🔧
+**PR-12: Game skeleton and input.** ✅ Merged 2026-09-11 as PR #49.
 Create the Godot project with scenes built in C# (D-63). Bind the Core loop at 60 Hz with render interpolation (D-73). Map keyboard, mouse, and controller to the intent, with sensitivity and curves applied before quantization (D-15, D-77, D-289). Add the headless smoke session to CI: boot, start a run, move for one thousand ticks, quit, with no log errors (D-114, D-149). PR-18 extends it to the stairwell.
 Gate: the smoke session passes on all three platforms.
 > *In plain English:* this is the first thing you can open and move in. It also adds an automatic run of the real game on every change.
@@ -640,7 +640,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 7. PR-9, PR-59, PR-10, PR-11. One night runs, scheduled or by hand, then PR-58 (D-177, D-278). ✅ PR-9 merged 2026-09-09 as PR #27. ✅ PR-59 merged 2026-09-09 as PR #29. ✅ PR-10 merged 2026-09-10 as PR #31. ✅ PR-11 merged 2026-09-10 as PR #34. ✅ Two nights ran by hand 2026-09-10. ✅ PR-58 merged 2026-09-10 as PR #40.
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
-10. PR-12, PR-13, PR-57, PR-14.
+10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49.
 11. PR-15, PR-16, PR-17, PR-18.
 12. PR-19, PR-20.
 13. M-3.
