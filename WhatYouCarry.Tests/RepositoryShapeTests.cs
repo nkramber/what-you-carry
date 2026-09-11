@@ -150,11 +150,12 @@ public sealed class RepositoryShapeTests
     [Fact]
     public void NightWorkflowRunsAtTwoCentralStandardTime()
     {
-        // D-284: the night runs at 08:00 UTC, which is 02:00 Central Standard Time, and by hand on demand.
+        // D-284, D-285: the night runs at 08:07 UTC, which is 02:07 Central Standard Time, off the start of the hour, and by hand on demand.
         string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
-        Assert.Contains("- cron: \"0 8 * * *\"", workflow, StringComparison.Ordinal);
+        Assert.Contains("- cron: \"7 8 * * *\"", workflow, StringComparison.Ordinal);
         Assert.Contains("workflow_dispatch:", workflow, StringComparison.Ordinal);
-        Assert.Contains("02:00 Central Standard Time", workflow, StringComparison.Ordinal);
+        Assert.Contains("02:07 Central Standard Time", workflow, StringComparison.Ordinal);
+        Assert.Contains("(F-94)", workflow, StringComparison.Ordinal);
     }
 
     [Fact]
