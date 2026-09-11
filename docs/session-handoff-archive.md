@@ -1,5 +1,113 @@
 # Session handoff archive
 
+## Session 114: 2026-09-11, Codex
+
+Author: Codex
+Session: review PR #44 at effective head `0bfafbd`. Branch `chore/night-minute`.
+
+### What this session did, and why
+
+- Verified the provider gate. Session 113 identifies Claude Code as the author of the substantive PR-44 change. Codex is the eligible reviewer.
+- Verified the base, merge base, effective head, complete diff, D-284, D-285, F-94, the Phase 1 roadmap, and every PR comment.
+- The workflow runs at `7 8 * * *`, the shape test checks the line and F-94, and the changed registers and handoff agree with the decision.
+- The focused repository-shape suite passes 14 tests. The review found no defect and wrote `docs/reviews/pr-44.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` and the merge base are `557568a`. The effective implementation head is `0bfafbd`. The metadata tip is `838c544`.
+- Local det-lint, STE check, bit identity, and the Godot headless build pass. The focused suite passes 14 tests with 0 failures and 0 skips.
+- The local full build and full test run did not complete in the execution context. Remote platform builds and tests, bit identity, bots, det-lint, STE check, night-gate, and Gitar pass on the PR tip.
+
+### In flight
+
+The review record and this handoff entry are pushed. The fresh review-gate result must pass at effective head `0bfafbd` before the owner merges.
+
+### Traps and gotchas
+
+- The effective head is `0bfafbd`, not the handoff-only tip `838c544` (D-184).
+- The current review-gate failure is the expected missing-record state. It is not a product failure. The gate must rerun after `docs/reviews/pr-44.md` reaches the PR.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Wait for the fresh checks. Verify that the remote has no ahead count, and confirm that the fresh review-gate result passes.
+
+## Session 113: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: the night minute, off the start of the hour (D-285). Branch `chore/night-minute`.
+
+### What this session did, and why
+
+- The 03:00 UTC scheduled night of 2026-09-11 never fired. No run of the schedule event exists, the runner was free from 02:45 UTC, the old cron line stood on `main` until PR #42 merged at 03:54 UTC, and the workflow reads active on GitHub. F-94 records it. GitHub documents a delay or a drop at the start of an hour under load.
+- Asked the owner, and D-285 records the answer: the night runs at 08:07 UTC, which is 02:07 Central Standard Time, in a PR of its own. OQ-153 holds the question. D-284 is revised in part, the minute only.
+- The cron reads `7 8 * * *`, the comment names the minute and F-94, and `NightWorkflowRunsAtTwoCentralStandardTime` asserts the new line in place, so this PR adds no test at the anchor that PR #43 also touches.
+- PR #43, the night logs of D-280, is open from Session 109 with a Codex review pending. This PR is the second open PR, because the owner wants the minute on `main` before 08:00 UTC.
+- Session 103 moved to the archive at the rebase onto the PR #43 merge. This entry was Session 110 on the branch, and the rebase renumbered it to 113, because `main` holds a Session 110 from the review of PR #43 and D-187 allows one heading per number.
+
+### State of the build
+
+- `main` is at `557568a`, the squash merge of PR #43. This branch holds the workflow commit above it, and this entry above that.
+- Remote head: `origin/chore/night-minute` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 533 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+
+### In flight
+
+This PR, rebased onto the PR #43 merge. A watch reads the next scheduled run, at 08:00 UTC if this PR merges after that hour and at 08:07 UTC otherwise. After it passes, a session adds the five rows to the M-2 table and the owner signs Gate 1 (D-283).
+
+### Traps and gotchas
+
+- No scheduled run has ever fired for this repository. The first one is the proof D-283 asks for, and a second miss at 08:07 UTC is a new question, not a repeat of F-94.
+- Two PRs touched `night.yml` in different hunks, and both added a handoff entry. This one merged second and needed a rebase for the handoff alone, with a renumber.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews this PR per the `pr-review` skill: the cron line, the comment, and the shape test. The owner merges it when the review allows.
+
+## Session 112: 2026-09-11, Codex
+
+Author: Codex
+Session: repeat review PR #43 at effective head `e63c35b`. Branch `chore/night-logs-artifact`.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-43-response.md` and checked the provider gate again.
+- Verified the new effective head `e63c35b` and the diff since `d89338c`. The workflow did not change. The test now checks the upload step after the walker, descender, and reachability sweep.
+- Reproduced the original trigger with the new mutation test. The focused repository-shape suite passes 14 tests, with no failures or skips.
+- Updated `docs/reviews/pr-43.md`. P2-1 is fixed in `e63c35b`, and the verdict is `Ready for owner merge` after the fresh review gate passes.
+
+### State of the build
+
+- `main` and the merge base are `f19fe2e`. The effective implementation head is `e63c35b`.
+- Local det-lint, STE check, bit identity, focused tests, and Godot build pass. The local full suite did not complete after 30 seconds with no output. The author reports 535 tests, 0 failures, and remote platform jobs pass.
+- The evaluate and review-gate jobs still read the prior review verdict. They must run again after this review record is pushed.
+
+### In flight
+
+The repeat-review record and this handoff entry need a push. Then the fresh review-gate result must pass before merge.
+
+### Traps and gotchas
+
+- The workflow commit remains `8ea990f`. The new effective head is the test correction `e63c35b`, not a metadata tip.
+- The review gate failed before this update because the record still held the prior verdict. That is a stale metadata result, not a product failure.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Push the repeat-review record and handoff. Refresh the review-gate result and confirm the owner can merge when all required checks pass.
+
 ## Session 111: 2026-09-11, Claude Code
 
 Author: Claude Code
