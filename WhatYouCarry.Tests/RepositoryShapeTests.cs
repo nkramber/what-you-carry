@@ -157,6 +157,80 @@ public sealed class RepositoryShapeTests
         Assert.Contains("02:00 Central Standard Time", workflow, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void NightWorkflowKeepsTheLogsOfAFailedNight()
+    {
+        // D-280: a failed night uploads its bot logs as a run artifact, on failure alone, after every bot step.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        Assert.Null(UploadStepDefect(workflow));
+    }
+
+    [Fact]
+    public void NightWorkflowUploadStepMustFollowEveryBotStep()
+    {
+        // PR #43 review P2-1: the upload step moved before the sweep, or before a bot step, fails the check by name.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        string beforeSweep = MoveStepBefore(workflow, "Keep the bot logs of a failed night", "Reachability sweep, one hundred thousand seeds");
+        Assert.Equal("The upload step comes before the step 'Reachability sweep, one hundred thousand seeds'.", UploadStepDefect(beforeSweep));
+        string beforeWalker = MoveStepBefore(workflow, "Keep the bot logs of a failed night", "Random walker, five thousand seeds");
+        Assert.Equal("The upload step comes before the step 'Random walker, five thousand seeds'.", UploadStepDefect(beforeWalker));
+        Assert.Equal("The night workflow has no upload-artifact step.", UploadStepDefect(workflow.Replace("actions/upload-artifact@v4", "actions/other@v4", StringComparison.Ordinal)));
+    }
+
+    /// <summary>The first defect of the upload step in a night workflow text, or null when the step is right (D-280).</summary>
+    private static string? UploadStepDefect(string workflow)
+    {
+        int upload = workflow.IndexOf("uses: actions/upload-artifact@v4", StringComparison.Ordinal);
+        if (upload < 0)
+        {
+            return "The night workflow has no upload-artifact step.";
+        }
+
+        int stepStart = workflow.LastIndexOf("- name:", upload, StringComparison.Ordinal);
+        int nextStep = workflow.IndexOf("- name:", upload, StringComparison.Ordinal);
+        string step = nextStep < 0 ? workflow[stepStart..] : workflow[stepStart..nextStep];
+        if (!step.Contains("if: failure()", StringComparison.Ordinal))
+        {
+            return "The upload step does not run on failure alone.";
+        }
+
+        if (!step.Contains("path: bot-logs", StringComparison.Ordinal))
+        {
+            return "The upload step does not take the bot-logs directory.";
+        }
+
+        if (!step.Contains("if-no-files-found: warn", StringComparison.Ordinal))
+        {
+            return "The upload step does not warn on a night without logs.";
+        }
+
+        foreach (string bot in new[] { "Random walker, five thousand seeds", "Greedy descender, five thousand seeds", "Reachability sweep, one hundred thousand seeds" })
+        {
+            if (workflow.IndexOf(bot, StringComparison.Ordinal) > upload)
+            {
+                return $"The upload step comes before the step '{bot}'.";
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>The workflow text with one step cut from its place and put in front of another step, for a regression case.</summary>
+    private static string MoveStepBefore(string workflow, string stepName, string targetName)
+    {
+        int stepStart = workflow.IndexOf($"- name: {stepName}", StringComparison.Ordinal);
+        int stepEnd = workflow.IndexOf("- name:", stepStart + 1, StringComparison.Ordinal);
+        Assert.True(stepStart >= 0 && stepEnd > stepStart, $"The step '{stepName}' is not followed by another step.");
+        int lineStart = workflow.LastIndexOf('\n', stepStart) + 1;
+        int lineEnd = workflow.LastIndexOf('\n', stepEnd) + 1;
+        string block = workflow[lineStart..lineEnd];
+        string without = workflow.Remove(lineStart, lineEnd - lineStart);
+        int target = without.IndexOf($"- name: {targetName}", StringComparison.Ordinal);
+        Assert.True(target >= 0, $"The step '{targetName}' is absent.");
+        int targetLine = without.LastIndexOf('\n', target) + 1;
+        return without.Insert(targetLine, block);
+    }
+
     /// <summary>
     /// The last step of the review-gate workflow passes the job on a success conclusion alone, so a neutral
     /// verdict, and a missing or unexpected conclusion, read red. A job cannot be neutral by its exit code

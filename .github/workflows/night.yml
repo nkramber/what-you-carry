@@ -5,7 +5,8 @@
 # two steps write night.json with the commit, the end time, and the status, whatever the outcome, and commit it
 # to the orphan branch night-results, which holds that one file (D-273). When the build itself fails, the
 # publish step writes the failure record in shell, so the branch never keeps a stale success. PR-58 adds the
-# gate that reads it.
+# gate that reads it. A failed night keeps its bot logs as a run artifact, because the runner checkout cleans them at
+# its next job (D-280).
 name: Night
 
 on:
@@ -34,6 +35,15 @@ jobs:
         env:
           WYC_NIGHT_SWEEP: "1"
         run: dotnet test WhatYouCarry.slnx --no-build --filter "FullyQualifiedName~EveryChamberReachable|FullyQualifiedName~DetailKeepsEveryChamberReachable"
+      - name: Keep the bot logs of a failed night
+        # The crash text of a failed run lives in its log alone, and the next job on the runner cleans the directory (D-280).
+        # A night that fails before the bot steps has no logs, and the step says so instead of failing in silence.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bot-logs
+          path: bot-logs
+          if-no-files-found: warn
       - name: Write the night record
         if: always()
         run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-record --commit "${GITHUB_SHA}" --status "${{ job.status }}" --output "${RUNNER_TEMP}/night.json"
