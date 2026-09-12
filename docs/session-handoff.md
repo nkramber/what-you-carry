@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 132: 2026-09-11, Codex
+
+Author: Codex
+Session: review PR #52 at effective head `9085a95`.
+
+### What this session did, and why
+
+- Verified the provider gate. Claude Code authored the substantive PR commits, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the complete diff, the model file, affected callers, Core bot and simulation contracts, roadmap, decisions, questions, tests, and every PR comment.
+- Found no defect. The automated pass finding on frame-log permission errors is corrected in `9085a95`.
+- Added `docs/reviews/pr-52.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- The effective head is `9085a95`. The review and handoff commit are metadata only.
+- Local build, full test, focused tests, det-lint, STE check, bit identity, Godot editor build, and smoke pass.
+- The bot session passes on seed 1 at floor 2 and tick 421. Its local frame log has 1,001 frames and a 99th percentile of 7,402 microseconds.
+- Remote build and test, bots, bit identity, det-lint, night gate, STE check, and smoke pass. The review-gate check needs a refresh after this record reaches the PR head.
+
+### In flight
+
+PR #52 needs the review record push, the refreshed review-gate result, and the owner merge. Exit test 7 needs the Steam Deck M-3 run under OQ-161.
+
+### Traps and gotchas
+
+- The review-gate check is expected to fail before `docs/reviews/pr-52.md` reaches the PR head.
+- The effective head is `9085a95`, not the later metadata commit.
+- Visual feel and Deck readability remain for M-3 and Gate 2.
+
+### Open questions that block progress
+
+OQ-161 blocks exit test 7 and M-3. OQ-159 and OQ-160 block nothing.
+
+### Next concrete action
+
+Commit and push this review and handoff. Verify the remote head and the refreshed review-gate result.
+
 ## Session 131: 2026-09-11, Claude Code
 
 Author: Claude Code
