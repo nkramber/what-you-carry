@@ -2,6 +2,44 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 138: 2026-09-12, Codex
+
+Author: Codex
+Session: review PR #56 at effective head `9236744`.
+
+### What this session did, and why
+
+- Verified that the Session 137 handoff identifies Claude Code as the author of the substantive PR commit. Codex is the eligible reviewer under T-4 and D-101.
+- Read the complete PR diff, the texture contracts, the content loader, the atlas consumers, the contact sheet, the tests, the workflow, the roadmap, the decisions, the questions, and every PR comment.
+- Found P2-1: an unreadable palette or rule file escapes the command error boundary. A direct unreadable-rule probe produced an unhandled `UnauthorizedAccessException` and exit code 134 instead of exit code 1 with file context.
+- Added `docs/reviews/pr-56.md` with the verdict `Changes required` for effective head `9236744`.
+
+### State of the build
+
+- `main` and the merge base are `163742e`. The effective head is `9236744`. The two later handoff commits and the automated-pass note change metadata paths only.
+- Focused texture and contact-sheet tests pass, 54 tests with 0 failures. STE check, det-lint, asset QA, texture generation, and bit identity pass locally.
+- The local build produced no output and was cancelled. The local full suite did not complete after the smoke portion started. The handoff reports the completed build and 759 passing tests on this head.
+- Remote asset QA, bots, compare, det-lint, bit identity, smoke, macOS, Windows, STE check, and night-gate checks pass. Linux CI was pending when checked. Evaluate failed and review-gate skipped before the review record existed.
+
+### In flight
+
+PR #56 needs the unreadable-input correction and its regression tests. The review record and this handoff entry need a commit and push after the owner correction.
+
+### Traps and gotchas
+
+- `texture-gen` catches `ContextException` around atlas construction, but direct file reads in `ReadFile` and `ReadRules` can throw `IOException` or `UnauthorizedAccessException`.
+- The effective review head is the feature commit `9236744`, not the metadata tip, under D-184.
+- The local dotnet build and the smoke portion of the full suite can stop without output in this checkout. Remote results remain separate evidence.
+- The next ids are D-310, OQ-170, F-96, and Session 139.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants but block no work. OQ-44 blocks PR-18. OQ-99 remains open but blocks no work.
+
+### Next concrete action
+
+Correct P2-1 with unreadable palette and rule regression tests, push the correction, and run the automated pass before the repeat Codex review.
+
 ## Session 137: 2026-09-12, Claude Code
 
 Author: Claude Code
