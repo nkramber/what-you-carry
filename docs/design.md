@@ -433,7 +433,7 @@ Implement the Blockbench JSON loader that builds an ArrayMesh from the box list,
 Gate: a full floor renders under the mesh budget, and M-3 records the Deck frame time.
 > *In plain English:* this turns the block grid and the box models into pictures, cheaply enough for the smallest target machine. It also hides the wall between the camera and you.
 
-**PR-57: Asset QA gate v1.** 🔧
+**PR-57: Asset QA gate v1.** ✅ Merged 2026-09-12 as PR #54.
 Implement the C# tool for three checks (D-135, D-149). No two boxes interpenetrate at the rest pose or at any animation keyframe, with the pairs of a bone and its parent exempt (D-301). Each armor overlay encloses the body box of its name (D-300). Every file name reference matches the file case (D-302). The tool reads the animation files of D-298 and poses each model through `WhatYouCarry.Assets`, the reader that Game shares (D-299). Run it in CI on every model. PR-49 extends it. This entry follows PR-13 in the sequence.
 Gate: the tool fails a model with a clip and a model with a wrong-case reference.
 > *In plain English:* from the first model onward, an automatic inspection catches pieces that clip through each other and file names that break on Linux.
@@ -640,7 +640,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 7. PR-9, PR-59, PR-10, PR-11. One night runs, scheduled or by hand, then PR-58 (D-177, D-278). ✅ PR-9 merged 2026-09-09 as PR #27. ✅ PR-59 merged 2026-09-09 as PR #29. ✅ PR-10 merged 2026-09-10 as PR #31. ✅ PR-11 merged 2026-09-10 as PR #34. ✅ Two nights ran by hand 2026-09-10. ✅ PR-58 merged 2026-09-10 as PR #40.
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
-10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52.
+10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54.
 11. PR-15, PR-16, PR-17, PR-18.
 12. PR-19, PR-20.
 13. M-3.
