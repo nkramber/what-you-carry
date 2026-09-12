@@ -17,19 +17,21 @@ Session: answer OQ-1 and open PR-14, the texture generator and the palette, as P
 - `content/models/player.bbmodel` has the resolution 256, and each face reads its body tile at 32 texels per meter. A script rewrote the face rectangles and changed no other line.
 - The Game flag `--contact-sheet <png>` renders the seven blocks and the body from two sides at game zoom. The owner approved the first sheet as drawn, and D-309 records the ten rule values, which closes exit test 5.
 - Session 127 moved to the archive, because the file held eleven entries with this one.
+- The trial quota paused the automatic pass of gitar on the first push. The comment `Gitar review` ran it on demand, and it approved `2b52074` with no finding (D-250, D-303).
 
 ### State of the build
 
-- `main` is at `163742e`, the squash merge of PR #55. This branch holds the feat commit `9236744` and the docs commit of this entry above it. The effective head is `9236744`, because the handoff and the archive are metadata paths (D-184).
+- `main` is at `163742e`, the squash merge of PR #55. This branch holds the feat commit `9236744` and two docs commits of this entry above it. The effective head is `9236744`, because the handoff and the archive are metadata paths (D-184).
 - Remote head: `origin/feat/pr-14-texture-generator` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 759 tests, 0 failures, with the two Smoke tests on the local Godot build.
 - `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 26 files. `asset-qa`: 0 findings, 1 model. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`, unchanged.
 - The Godot editor build and the windowed contact sheet run end with exit code 0.
+- On `2b52074`, CI, bit identity, and smoke passed on the three platforms, and bots, det-lint, asset-qa, STE check, the night gate, and the gitar check passed. The review gate `evaluate` job fails, and `review-gate` skips, until the review record exists (D-251).
 - The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it.
 
 ### In flight
 
-PR #56: the automated pass, then the Codex review. No open question binds it.
+PR #56: the Codex review. The automated pass approved the head, and no open question binds the PR.
 
 ### Traps and gotchas
 
