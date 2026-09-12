@@ -19,7 +19,7 @@ Session: review PR #58 at effective head `3dfbf03`.
 - `main` and the merge base are `f3f0bc0`. The effective head is `3dfbf03`. The later handoff commit remains outside the effective diff under D-184.
 - The serial local build passed with 0 warnings and 0 errors. Focused tests passed, 12 tests with 0 failures. Det-lint, STE check, bit identity, and the Godot build check passed.
 - The local full test stalled after discovery and was cancelled. Remote CI reported in the previous handoff passed on the code head. The metadata-tip CI rerun passes the product jobs. `evaluate` fails and `review-gate` is neutral until the review record reaches the PR.
-- `git fetch origin` could not open `.git/FETCH_HEAD` in this checkout. The local branch is at the remote PR metadata tip `74ab9d8` according to `gh pr view`.
+- `git fetch origin` could not open `.git/FETCH_HEAD` before the elevated retry. The local branch is at the remote PR metadata tip `5e4dfe1` after the review push.
 
 ### In flight
 
