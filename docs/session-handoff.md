@@ -19,15 +19,15 @@ Session: review PR #52 at effective head `9085a95`.
 - The effective head is `9085a95`. The review and handoff commit are metadata only.
 - Local build, full test, focused tests, det-lint, STE check, bit identity, Godot editor build, and smoke pass.
 - The bot session passes on seed 1 at floor 2 and tick 421. Its local frame log has 1,001 frames and a 99th percentile of 7,402 microseconds.
-- Remote build and test, bots, bit identity, det-lint, night gate, STE check, and smoke pass. The review-gate check needs a refresh after this record reaches the PR head.
+- Remote build and test, bots, bit identity, det-lint, night gate, STE check, and smoke pass on the reviewed effective head. The review-gate passes after the metadata push. Duplicate platform checks from that push remain pending.
 
 ### In flight
 
-PR #52 needs the review record push, the refreshed review-gate result, and the owner merge. Exit test 7 needs the Steam Deck M-3 run under OQ-161.
+PR #52 needs the owner merge after the pending duplicate checks settle. Exit test 7 needs the Steam Deck M-3 run under OQ-161.
 
 ### Traps and gotchas
 
-- The review-gate check is expected to fail before `docs/reviews/pr-52.md` reaches the PR head.
+- The review-gate check passes after `docs/reviews/pr-52.md` reaches the PR head.
 - The effective head is `9085a95`, not the later metadata commit.
 - Visual feel and Deck readability remain for M-3 and Gate 2.
 
@@ -37,7 +37,7 @@ OQ-161 blocks exit test 7 and M-3. OQ-159 and OQ-160 block nothing.
 
 ### Next concrete action
 
-Commit and push this review and handoff. Verify the remote head and the refreshed review-gate result.
+The review and handoff are pushed at `726ce79`. Verify the pending duplicate checks, then the owner can merge.
 
 ## Session 131: 2026-09-11, Claude Code
 
