@@ -20,7 +20,7 @@ Session: re-review PR #58 at effective head `39a0c02`.
 - `main` and the merge base are `f3f0bc0`. The effective head is `39a0c02`. The review and handoff metadata commits remain outside the effective diff under D-184.
 - The serial build passed with 0 warnings and 0 errors. Focused tests passed, 7 tests with 0 failures. The Escape and Start command probes passed at tick 101. Det-lint and STE check passed.
 - The full local test stalled after discovery and was cancelled. Revision-matched CI passed build, test, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar. `evaluate` and `review-gate` fail because P2-2 remains open.
-- Remote head: the review update is not pushed yet.
+- Remote head: `08e3797` holds the review update, verified with the session end gate.
 
 ### In flight
 
