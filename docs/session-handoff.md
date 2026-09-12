@@ -21,7 +21,7 @@ Session: open PR-57, the asset QA gate v1, as PR #54. Branch `feat/pr-57-asset-q
 
 ### State of the build
 
-- `main` is at `5848bda`, the squash merge of PR #53. This branch holds the feat commit `73ba35b` and the fix commit `0cb62c7` above it, and the effective head is `0cb62c7`.
+- `main` is at `5848bda`, the squash merge of PR #53. This branch holds the feat commit `73ba35b`, the fix commit `0cb62c7`, and the docs commit that records D-303 above it. The effective head is the docs commit, because a new decision moves it.
 - Remote head: `origin/feat/pr-57-asset-qa-gate` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 704 tests, 0 failures, with the smoke test on the local Godot build. Core gained one constant and no behavior.
 - `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 24 files. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`. `asset-qa`: 0 findings, 1 model, 0 overlays, 0 animations.
@@ -40,8 +40,8 @@ PR #54: the Codex review. The automated pass approved the effective head. No ope
 - The clip check poses the body with each overlay alone, never two overlays together, because two pieces for one slot enclose the same limb.
 - A texture `path` in a model file is a machine path that Blockbench writes, and the file case check flags a rooted reference. The player model has no texture, and PR-14 assigns the atlas.
 - The frame log of a `--fixed-fps` run reads the fixed frame time. M-3 runs without that flag.
-- The automatic pass of gitar pauses when the trial quota of the period is used. The comment `Gitar review` on the PR runs one on demand.
-- The next ids are D-303, OQ-166, F-96, and Session 135.
+- The automatic pass of gitar pauses when the trial quota of the period is used. The comment `Gitar review` on the PR runs one on demand (D-303).
+- The next ids are D-304, OQ-166, F-96, and Session 135.
 
 ### Open questions that block progress
 
@@ -49,7 +49,7 @@ OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and
 
 ### Next concrete action
 
-A Codex session reviews PR #54 per the `pr-review` skill, at the effective head `0cb62c7`. After the merge, the owner answers OQ-1, and a fresh session opens PR-14.
+A Codex session reviews PR #54 per the `pr-review` skill, at the effective head, which is the docs commit above `0cb62c7`. After the merge, the owner answers OQ-1, and a fresh session opens PR-14.
 
 ## Session 133: 2026-09-12, Claude Code
 
