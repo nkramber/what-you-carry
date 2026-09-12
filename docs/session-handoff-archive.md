@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 136: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-57 as PR #54, in the same invocation as Session 134 (D-297). Branch `docs/pr-57-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #54 as `811aa84` at 07:17 UTC, with the verdict `Ready for owner merge` for `ecdc95a` in `docs/reviews/pr-54.md`. CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit.
+- `docs/design.md` marks PR-57 merged in the roadmap entry and in sequence item 10. The Phase 2 roadmap gains the status line of PR-57 and the mark in sequence item 5.
+- `docs/questions.md` needs no addendum, because every question that PR-57 raised had its answer before the merge.
+- Session 126 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `811aa84`, the squash merge of PR #54. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-57-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `ste-check`: 0 findings in 15 files. No code changed. `bit-identity`: `6ec00e90c1c85cdb` on PR #54.
+- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. It turns red at 13:45 UTC on 2026-09-13 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone, with the `review-override` label after the automated pass. Exit test 7 of PR-13 waits for the M-3 run on the Deck (OQ-161).
+
+### Traps and gotchas
+
+- The automatic pass of gitar pauses when the trial quota of the period is used, and the comment `Gitar review` runs one on demand (D-303).
+- The handoff held eleven entries with this one. Count the entries before you add one, and move every entry past the tenth.
+- The next ids are D-304, OQ-166, F-96, and Session 137.
+
+### Open questions that block progress
+
+OQ-1 blocks PR-14 and sequence item 6. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. The owner then answers OQ-1, the palette, and a fresh session opens PR-14 from `main` per the Phase 2 roadmap.
+
 ## Session 135: 2026-09-12, Codex
 
 Author: Codex

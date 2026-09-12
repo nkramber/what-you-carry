@@ -2,6 +2,47 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 146: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: answer the PR #58 repeat review, P2-2. Branch `feat/pr-60-fullscreen-test-exit`.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-58.md` at the reviewed head `39a0c02`. P2-1 is fixed there. P2-2 has partial merit: a plain word after the press tick passed in silence, and T-2 binds the user arguments. The whole argument grammar is outside PR-60, because every older flag has the same property, so that part is OQ-170 for the owner.
+- `TestExit.PressOf` reads the word after the tick when one exists. A word that does not start with `--` is a `ContextException` that names the word. A flag after the tick belongs to its own parser, so the two orders of `--smoke` and `--press` both work.
+- `PressOfRejectsATrailingWord` asserts the error and the word for the trigger of the review and for a second number after the tick. It fails on the parser of `39a0c02`. `PressOfReadsTheInputAndTheTick` gains the two orders with a flag after the tick.
+- The command `--smoke --press escape 100 unexpected` ends at boot with exit code 1 and names `unexpected`.
+- `docs/reviews/pr-58-response.md` gains the P2-2 section and the checks of this head. `docs/questions.md` gains OQ-170.
+- Session 136 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `f3f0bc0`. The effective head is the correction commit above the repeat review commit `e5a3846`, and it holds this entry, the response file, and the corrected files in one commit (D-182).
+- Remote head: `origin/feat/pr-60-fullscreen-test-exit` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 770 tests, 0 failures, with the four Smoke tests on the local Godot build.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 27 files. `ste-check`: 0 findings in 15 files. Core and content did not change.
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it.
+
+### In flight
+
+PR #58: the second repeat Codex review of P2-2 at the correction head, then the owner merge. The automated pass on the correction head runs after the push, and the PR carries its result (D-250).
+
+### Traps and gotchas
+
+- The press parser rejects a plain word after the tick and accepts a flag there. It reads nothing else, so an unknown flag anywhere still passes in silence until OQ-170 has its answer.
+- The automatic pass of gitar did not run on `39a0c02`, and the head had no `Gitar` check run at all. The comment `Gitar review` ran it, and the pass approved the head three minutes later (D-303). Read the check runs of the head before you post the comment.
+- The effective head is the correction commit and not a later metadata commit (D-184).
+- The next ids are D-313, OQ-171, F-96, and Session 147.
+
+### Open questions that block progress
+
+None blocks PR #58. OQ-170 blocks nothing. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews P2-2 per the repeat review procedure of the `pr-review` skill at the correction head and sets the verdict. The owner then merges, answers OQ-170, and a docs PR records the merge (D-297).
+
 ## Session 145: 2026-09-12, Codex
 
 Author: Codex
@@ -376,40 +417,3 @@ OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 a
 ### Next concrete action
 
 The automated pass on PR #56, then a Codex session reviews it per the `pr-review` skill at the effective head `9236744`. After the merge, the owner answers OQ-5 and OQ-46, and a fresh session opens PR-15.
-
-## Session 136: 2026-09-12, Claude Code
-
-Author: Claude Code
-Session: record the merge of PR-57 as PR #54, in the same invocation as Session 134 (D-297). Branch `docs/pr-57-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #54 as `811aa84` at 07:17 UTC, with the verdict `Ready for owner merge` for `ecdc95a` in `docs/reviews/pr-54.md`. CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit.
-- `docs/design.md` marks PR-57 merged in the roadmap entry and in sequence item 10. The Phase 2 roadmap gains the status line of PR-57 and the mark in sequence item 5.
-- `docs/questions.md` needs no addendum, because every question that PR-57 raised had its answer before the merge.
-- Session 126 moved to the archive, because the file held eleven entries with this one.
-
-### State of the build
-
-- `main` is at `811aa84`, the squash merge of PR #54. This branch holds one docs commit above it.
-- Remote head: `origin/docs/pr-57-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `ste-check`: 0 findings in 15 files. No code changed. `bit-identity`: `6ec00e90c1c85cdb` on PR #54.
-- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. It turns red at 13:45 UTC on 2026-09-13 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
-
-### In flight
-
-This PR: docs alone, with the `review-override` label after the automated pass. Exit test 7 of PR-13 waits for the M-3 run on the Deck (OQ-161).
-
-### Traps and gotchas
-
-- The automatic pass of gitar pauses when the trial quota of the period is used, and the comment `Gitar review` runs one on demand (D-303).
-- The handoff held eleven entries with this one. Count the entries before you add one, and move every entry past the tenth.
-- The next ids are D-304, OQ-166, F-96, and Session 137.
-
-### Open questions that block progress
-
-OQ-1 blocks PR-14 and sequence item 6. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges this PR with the `review-override` label. The owner then answers OQ-1, the palette, and a fresh session opens PR-14 from `main` per the Phase 2 roadmap.

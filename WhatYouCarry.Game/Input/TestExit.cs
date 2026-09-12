@@ -33,6 +33,9 @@ public static class TestExit
     /// <summary>The user argument that scripts one press. The next two arguments are the input name and the tick.</summary>
     public const string PressFlag = "--press";
 
+    /// <summary>The start of every flag. A word after the tick that does not start with it belongs to no flag, and it is an error.</summary>
+    public const string FlagStart = "--";
+
     /// <summary>The input name of the Escape key after the press flag.</summary>
     public const string EscapeName = "escape";
 
@@ -44,6 +47,7 @@ public static class TestExit
     private const string NoArguments = "The press flag needs an input name and a tick after it, and the arguments end there.";
     private const string UnknownInput = "The press flag names no input of the test exit. The names are escape and start.";
     private const string BadTick = "The press flag needs a whole tick of zero or more after the input name.";
+    private const string TrailingWord = "The press flag takes an input name and a tick, and a word after the tick belongs to no flag.";
 
     /// <summary>Answers whether the exit key or the exit button of the first controller is down at this moment.</summary>
     public static bool IsPressed(IInputPoll poll)
@@ -65,8 +69,12 @@ public static class TestExit
         return false;
     }
 
-    /// <summary>The scripted press: the input name and the tick after the flag.</summary>
-    /// <exception cref="ContextException">The flag is absent, the two arguments do not follow it, the name is unknown, or the tick is not a whole number.</exception>
+    /// <summary>
+    /// The scripted press: the input name and the tick after the flag. A word after the tick that starts no flag is
+    /// an error, so a misspelled or extra argument never passes in silence (T-2). A flag after the tick belongs to
+    /// its own parser.
+    /// </summary>
+    /// <exception cref="ContextException">The flag is absent, the two arguments do not follow it, the name is unknown, the tick is not a whole number, or a plain word follows the tick.</exception>
     public static ScriptedPress PressOf(string[] userArguments)
     {
         for (int index = 0; index < userArguments.Length; index++)
@@ -81,7 +89,15 @@ public static class TestExit
                 throw new ContextException(NoArguments);
             }
 
-            return new ScriptedPress(InputOf(userArguments[index + 1]), TickOf(userArguments[index + 2]));
+            ScriptedPress press = new(InputOf(userArguments[index + 1]), TickOf(userArguments[index + 2]));
+            if (index + 3 < userArguments.Length && !userArguments[index + 3].StartsWith(FlagStart, System.StringComparison.Ordinal))
+            {
+                ContextException error = new(TrailingWord);
+                error.AddContext(ArgumentField, userArguments[index + 3]);
+                throw error;
+            }
+
+            return press;
         }
 
         ContextException absent = new($"The arguments hold no {PressFlag} flag.");

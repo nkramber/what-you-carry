@@ -97,6 +97,21 @@ public sealed class TestExitTests
 
         Assert.Equal(new ScriptedPress(ExitInput.Escape, 0), TestExit.PressOf([TestExit.PressFlag, TestExit.EscapeName, "0"]));
         Assert.Equal(new ScriptedPress(ExitInput.Start, 250), TestExit.PressOf(["--smoke", TestExit.PressFlag, TestExit.StartName, "250"]));
+
+        // A flag after the tick belongs to its own parser, in either order.
+        Assert.Equal(new ScriptedPress(ExitInput.Escape, 100), TestExit.PressOf([TestExit.PressFlag, TestExit.EscapeName, "100", "--smoke"]));
+        Assert.Equal(new ScriptedPress(ExitInput.Escape, 100), TestExit.PressOf([TestExit.PressFlag, TestExit.EscapeName, "100", "--frame-log", "frames.txt"]));
+    }
+
+    /// <summary>PR #58 review P2-2. A plain word after the tick is an error that names the word, and never a press that ignores it (T-2).</summary>
+    [Fact]
+    public void PressOfRejectsATrailingWord()
+    {
+        ContextException trailing = Assert.Throws<ContextException>(() => TestExit.PressOf(["--smoke", TestExit.PressFlag, TestExit.EscapeName, "100", "unexpected"]));
+        Assert.Contains("unexpected", trailing.Message, StringComparison.Ordinal);
+
+        ContextException secondTick = Assert.Throws<ContextException>(() => TestExit.PressOf([TestExit.PressFlag, TestExit.StartName, "100", "200"]));
+        Assert.Contains("200", secondTick.Message, StringComparison.Ordinal);
     }
 
     /// <summary>An absent flag, a short argument list, an unknown name, and a bad tick are each an error that names the cause (T-2).</summary>
