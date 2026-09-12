@@ -1,5 +1,93 @@
 # Session handoff archive
 
+## Session 134: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: open PR-57, the asset QA gate v1, as PR #54. Branch `feat/pr-57-asset-qa-gate`.
+
+### What this session did, and why
+
+- PR #53 merged as `5848bda`. The Phase 2 sequence puts PR-57 next, so the session opened it from `main` per the roadmap and D-149.
+- Five questions blocked the exit tests, and the owner answered all five on the day. OQ-45 blocked exit test 1, because the tool checks every keyframe and no format existed. OQ-162 asked where the one model reader lives, because the PR-13 reader used engine vectors in Game and Tools cannot reference Game. OQ-163 asked how an overlay box pairs with its limb box. OQ-164 asked what a clip is. OQ-165 asked what a file name reference is. D-298 to D-302 record the answers.
+- The first answer on the clip rule took every pair with zero tolerance, and the second answer, on keyframes in v1, made every bent elbow a clip. The session quoted both, and the owner exempted the pairs of a bone and its parent (D-301).
+- `WhatYouCarry.Assets` is the fifth project (D-299). The Blockbench reader moved into it from Game with the Core vector, and `AnimationLoader`, `RotationMatrix`, `ModelPose`, and `BoxOverlap` joined it. Game converts each vector where it builds a node.
+- `WhatYouCarry.Tools/AssetQa/` holds the command `asset-qa` and the three checks: `ClipCheck`, `OverlayCheck`, and `FileCaseCheck`. `AssetSet` reads every model, overlay, and animation, and a file that does not load is a finding and not a stop.
+- `ContentLoader.ModelDirectory` names the directory that every content source skips (D-298), in Game, in the bot runner, and in the tests.
+- `.github/workflows/asset-qa.yml` is the new job, and `CLAUDE.md` and `AGENTS.md` carry the command, the gate line, and the Assets rule.
+- Exit tests 1 to 5 pass, with 82 new tests. The command on the checkout reports 0 findings over 1 model.
+- The automated pass on `73ba35b` had one comment, and it has merit: a pair of two body boxes counted once per overlay, and an unknown bone in an animation gave one finding per overlay. `0cb62c7` counts a body pair on the pass with no overlay alone and checks the tracks of an animation once, with two regression tests that fail on `73ba35b`. The reply on the thread names the commit. The automatic pass was paused by the trial quota after the push, and the comment `Gitar review` ran one on demand, which approved `0cb62c7` with the one finding resolved (D-250).
+
+### State of the build
+
+- `main` is at `5848bda`, the squash merge of PR #53. This branch holds the feat commit `73ba35b`, the fix commit `0cb62c7`, and the docs commit that records D-303 above it. The effective head is the docs commit, because a new decision moves it.
+- Remote head: `origin/feat/pr-57-asset-qa-gate` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 704 tests, 0 failures, with the smoke test on the local Godot build. Core gained one constant and no behavior.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 24 files. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`. `asset-qa`: 0 findings, 1 model, 0 overlays, 0 animations.
+- The Godot editor build, the headless smoke session, and the headless bot session end with exit code 0. The bot reaches floor 2 of seed 1 at tick 421.
+- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. It turns red at 13:45 UTC on 2026-09-13 unless a night refreshes it. The run list held no later night at 06:22 UTC on 2026-09-12. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
+
+### In flight
+
+PR #54: the Codex review. The automated pass approved the effective head. No open question binds it.
+
+### Traps and gotchas
+
+- A `.json` file under `content/models/` is an animation, and the Core loader never sees it. A `.json` file in any other unclaimed directory still errors in the Core loader.
+- A file that is not JSON gives two findings: one from the loader and one from the file case check. Each check reads the file on its own.
+- The euler order is the order of Blockbench: the matrix is Rz times Ry times Rx. The test `RotationOrderIsBlockbenchOrder` pins it, and the pose tests read meters and not file units.
+- The clip check poses the body with each overlay alone, never two overlays together, because two pieces for one slot enclose the same limb.
+- A texture `path` in a model file is a machine path that Blockbench writes, and the file case check flags a rooted reference. The player model has no texture, and PR-14 assigns the atlas.
+- The frame log of a `--fixed-fps` run reads the fixed frame time. M-3 runs without that flag.
+- The automatic pass of gitar pauses when the trial quota of the period is used. The comment `Gitar review` on the PR runs one on demand (D-303).
+- The next ids are D-304, OQ-166, F-96, and Session 135.
+
+### Open questions that block progress
+
+OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-1 blocks PR-14. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #54 per the `pr-review` skill, at the effective head, which is the docs commit above `0cb62c7`. After the merge, the owner answers OQ-1, and a fresh session opens PR-14.
+
+## Session 133: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-13 as PR #52 and the owner answer on documentation PRs (D-297), in the same invocation as Session 131. Branch `docs/pr-13-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #52 as `9749581` at 04:48 UTC, with the verdict `Ready for owner merge` for `9085a95` in `docs/reviews/pr-52.md`. CI, smoke, bit identity, bots, det-lint, and STE check passed on the merge commit.
+- The session asked where the merge record runs, because D-121 gives one PR per session and Session 131 opened PR #52. The owner answered that a documentation PR needs no new session, and only a code PR does. D-297 records it and revises in part D-121, the count of PRs only.
+- `docs/design.md` marks PR-13 merged in the roadmap entry and in sequence item 10, and section 3.14 cites D-297. The Phase 2 roadmap gains the status line of PR-13 and the mark in sequence item 4.
+- `docs/questions.md` gains a dated addendum on OQ-159, OQ-160, and OQ-161: the merge came with the three open.
+- `CLAUDE.md` and `AGENTS.md` state the session rule with D-297. Sessions 123 and 122 moved to the archive, because the file held eleven entries.
+
+### State of the build
+
+- `main` is at `9749581`, the squash merge of PR #52. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-13-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `ste-check`: 0 findings in 15 files. `dotnet test` without the Smoke category: 0 failures. No code changed. `bit-identity`: `6ec00e90c1c85cdb` on PR #52.
+- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. It turns red at 13:45 UTC on 2026-09-13 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone, with the `review-override` label after the automated pass. The owner answers OQ-159, OQ-160, and OQ-161 in `docs/decisions.md` as the next ids. Exit test 7 of PR-13 waits for the M-3 run on the Deck.
+
+### Traps and gotchas
+
+- D-297 lets a documentation PR follow the code PR in one invocation. A second code PR still needs a fresh session (D-121).
+- The handoff held eleven entries after the Codex review session. Count the entries before you add one, and move every entry past the tenth.
+- The M-3 command in `CLAUDE.md` runs without `--headless`, `--write-movie`, and `--fixed-fps`, or the frame log reads a fixed frame time.
+- The next ids are D-298, OQ-162, F-96, and Session 134.
+
+### Open questions that block progress
+
+OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-1 blocks PR-14. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. A fresh session then opens PR-57, the asset QA gate v1, from `main` per the Phase 2 roadmap. The owner runs the M-3 command on the Deck when OQ-161 has its answer.
+
 ## Session 132: 2026-09-11, Codex
 
 Author: Codex

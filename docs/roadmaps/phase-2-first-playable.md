@@ -171,6 +171,7 @@ Scope:
 
 - `WhatYouCarry.Game/project.godot`: the window mode setting opens the game in the borderless fullscreen of the engine (D-310). The window takes the resolution of the display, on every desktop and on the Steam Deck. A headless run opens no window, as before.
 - `WhatYouCarry.Game/Main.cs`: the Escape key and the Start button of a controller end the session with exit code 0 and an end line (D-311). The quit stays until the escape menu of PR-53 replaces it.
+- `WhatYouCarry.Game/Input/TestExit.cs`: the two exit inputs, and the `--press` flag that gives the engine one press of either input at one tick. Exit tests 2 and 3 run a headless smoke session with the flag, so the smoke workflow proves the exit on each platform.
 - One PR carries both changes, as an exception to G-10 (D-312).
 
 Out of scope: the escape menu and any display option (PR-53), and the Deck verification pass (PR-54).

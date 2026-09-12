@@ -45,7 +45,8 @@ namespace WhatYouCarry.Game;
 /// The window opens in the borderless fullscreen of the engine at the resolution of the display, from the
 /// project settings (D-310). The Escape key and the Start button of a controller end any session that runs
 /// the loop, with an end line and exit code 0, until the escape menu of PR-53 replaces the test exit (D-311).
-/// The poll of the tick reads both inputs before the intent, so the exit needs no input event.
+/// The poll of the tick reads both inputs before the intent, so the exit needs no input event. The press flag
+/// gives the engine one scripted press of either input at one tick, so a headless test proves the exit.
 /// </para>
 /// <para>
 /// The contact sheet flag starts no loop. It renders every block material and the body at game zoom to one PNG
@@ -133,6 +134,7 @@ public partial class Main : Node3D
     private Camera3D? camera;
     private ShaderMaterial? worldMaterial;
     private GreedyDescender? bot;
+    private ScriptedPress? press;
     private FrameLog? frames;
     private string frameLogPath = string.Empty;
     private bool smoke;
@@ -170,6 +172,12 @@ public partial class Main : Node3D
         if (this.loop is null || this.ended)
         {
             return;
+        }
+
+        if (this.press is ScriptedPress press && this.loop.Tick == press.Tick)
+        {
+            // The engine holds the input down from the next frame, and the poll of a later tick reads it.
+            Godot.Input.ParseInputEvent(TestExit.EventOf(press));
         }
 
         if (TestExit.IsPressed(this.poll))
@@ -303,6 +311,11 @@ public partial class Main : Node3D
     {
         string[] arguments = OS.GetCmdlineUserArgs();
         this.smoke = SmokeSession.IsRequested(arguments);
+        if (TestExit.IsPressRequested(arguments))
+        {
+            this.press = TestExit.PressOf(arguments);
+        }
+
         if (FrameLog.IsRequested(arguments))
         {
             this.frameLogPath = FrameLog.PathOf(arguments);
