@@ -171,7 +171,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 ### 3.14 Process
 
-Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one handoff rewrite (D-121). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250).
+Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation and one code PR (D-121). A documentation PR can follow the merge of that code PR in the same session (D-297). Each PR has its own handoff entry (D-146). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250).
 
 The document protocol (D-118, D-120, D-125, D-129, D-132):
 
@@ -428,7 +428,7 @@ Create the Godot project with scenes built in C# (D-63). Bind the Core loop at 6
 Gate: the smoke session passes on all three platforms.
 > *In plain English:* this is the first thing you can open and move in. It also adds an automatic run of the real game on every change.
 
-**PR-13: Model loader and mesher.** 🔧
+**PR-13: Model loader and mesher.** ✅ Merged 2026-09-12 as PR #52.
 Implement the Blockbench JSON loader that builds an ArrayMesh from the box list, with armor overlay attachment per slot (D-9, D-18). Implement greedy meshing for the voxel grid, one mesh per chunk, with vertex ambient occlusion (D-78, D-81, D-291). Fade the walls between the camera and the player in the world shader, with no change to the mesher (D-88, D-292). One atlas, one material. A test asserts the mesh count per floor stays under the budget of D-291.
 Gate: a full floor renders under the mesh budget, and M-3 records the Deck frame time.
 > *In plain English:* this turns the block grid and the box models into pictures, cheaply enough for the smallest target machine. It also hides the wall between the camera and you.
@@ -640,7 +640,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 7. PR-9, PR-59, PR-10, PR-11. One night runs, scheduled or by hand, then PR-58 (D-177, D-278). ✅ PR-9 merged 2026-09-09 as PR #27. ✅ PR-59 merged 2026-09-09 as PR #29. ✅ PR-10 merged 2026-09-10 as PR #31. ✅ PR-11 merged 2026-09-10 as PR #34. ✅ Two nights ran by hand 2026-09-10. ✅ PR-58 merged 2026-09-10 as PR #40.
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
-10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49.
+10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52.
 11. PR-15, PR-16, PR-17, PR-18.
 12. PR-19, PR-20.
 13. M-3.

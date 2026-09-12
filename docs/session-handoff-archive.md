@@ -1,5 +1,81 @@
 # Session handoff archive
 
+## Session 123: 2026-09-11, Codex
+
+Author: Codex
+Session: review PR #48 at effective head `4786cfa`. Branch `chore/night-back-to-0807`.
+
+### What this session did, and why
+
+- Verified that the substantive PR change came from Claude Code in Session 122. Codex is the eligible reviewer under T-4 and D-101.
+- Verified the base, merge base, effective head, complete diff, D-286, D-288, D-290, F-94, F-95, the Phase 1 roadmap, the workflow, the shape test, the handoff files, and every PR comment.
+- Found no defect. The workflow returns to `7 8 * * *`, keeps `workflow_dispatch`, and records the late scheduled run. The shape test asserts the cron, the hand trigger, the return phrase, and both finding ids.
+- The local focused suite, build, det-lint, STE check, and bit identity pass. The local full suite did not complete after 120 seconds with no output. Remote Linux and macOS CI pass, and Windows CI remains pending.
+- Added `docs/reviews/pr-48.md` with a `Blocked` verdict until the pending required check and the fresh review-gate result complete.
+
+### State of the build
+
+- `main` and the merge base are `b700296`. The effective implementation head is `4786cfa`. The handoff commit `80eca7a` and the review commit are metadata under D-184.
+- The remote branch matched the local branch at `80eca7a` before this review record was added.
+- The review record names the pending Windows CI job and the expected pre-review evaluate and review-gate results.
+
+### In flight
+
+The review record and this handoff entry need a commit and push. The Windows CI job must pass. The review-gate job must refresh against this record.
+
+### Traps and gotchas
+
+- The effective head is `4786cfa`, not the metadata tip.
+- The review remains blocked until the required Windows CI result passes and the fresh review-gate result reads this record.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit and push the review record and handoff entry. Fetch the remote. Confirm that the remote has no ahead count and that the fresh review-gate result passes.
+
+## Session 122: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: return the night to 08:07 UTC (D-286, D-288, D-290), in the same run as Sessions 116, 118, 120, and 121. Branch `chore/night-back-to-0807`.
+
+### What this session did, and why
+
+- The owner merged PR #47 as `b700296` at 17:02 UTC. Gate 1 is signed (D-288), and Phase 2 can start.
+- The cron of `night.yml` reads `7 8 * * *` again, which is 02:07 Central Standard Time. The comment names D-288 and corrects the text of PR #46: the 08:07 UTC run of 2026-09-11 started 4 h 40 min late, at 12:47 UTC (F-95).
+- `NightWorkflowRunsAtTwoCentralStandardTime` replaces `NightWorkflowRunsAtTheScheduleTestTime`. It asserts the line, the hand trigger, the phrase `08:07 UTC, which is 02:07 Central Standard Time`, and both finding ids. It fails on the `21 17 * * *` workflow of `main`.
+- No new decision: D-286 bound the return to the first scheduled pass, D-288 holds the words of the owner, and D-290 sends the return through this PR with a Codex review.
+- Session 112 moved to the archive.
+
+### State of the build
+
+- `main` is at `b700296`, the squash merge of PR #47. The cron on `main` reads `21 17 * * *` until this PR merges. This branch holds the work commit above it, and this entry above that.
+- Remote head: `origin/chore/night-back-to-0807` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 535 tests, 0 failures.
+- `det-lint`: 0 findings. `ste-check`: 0 findings in 15 files.
+- `bit-identity`: `6ec00e90c1c85cdb`. The simulation version is 6. Core did not change.
+
+### In flight
+
+This PR needs the automated pass, a Codex review, and the owner merge before 08:07 UTC on 2026-09-12. The 17:21 UTC scheduled run of 2026-09-11 stays (D-290). It can start hours late, and it holds the Mac runner for about an hour.
+
+### Traps and gotchas
+
+- A merge after 08:07 UTC on 2026-09-12 leaves the night of that day at 17:21 UTC.
+- A schedule run here can start hours after its cron. Do not read a miss from one hour of silence (F-95).
+- D-286 turned the workflow off and on for the test slot alone. This return has no such step.
+- The next ids are D-291, OQ-157, F-96, and Session 123.
+
+### Open questions that block progress
+
+None blocks PR-12. OQ-43 and OQ-49 block PR-13. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews this PR per the `pr-review` skill: the cron line, the comment, and the shape test. The owner merges it before 08:07 UTC on 2026-09-12. After that, a session opens PR-12 from `main` per the Phase 2 roadmap and D-289.
+
 ## Session 121: 2026-09-11, Claude Code
 
 Author: Claude Code
