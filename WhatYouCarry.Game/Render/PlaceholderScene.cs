@@ -8,13 +8,16 @@ namespace WhatYouCarry.Game.Render;
 /// </summary>
 public static class PlaceholderScene
 {
+    /// <summary>The vertical view of the camera, in degrees: the default of the engine, named here so the contact sheet reads the same view (D-306).</summary>
+    public const float ViewDegrees = 75.0f;
+
     /// <summary>The tilt of the light, in degrees about each axis.</summary>
     public static readonly Vector3 LightRotationDegrees = new(-55.0f, 35.0f, 0.0f);
 
-    /// <summary>The one camera of the scene. Main places it from the Core pose on each frame (D-245).</summary>
+    /// <summary>The one camera of the scene, with the view of <see cref="ViewDegrees"/>. Main places it from the Core pose on each frame (D-245).</summary>
     public static Camera3D Camera()
     {
-        return new Camera3D { Current = true };
+        return new Camera3D { Current = true, Fov = ViewDegrees };
     }
 
     /// <summary>One directional light, so the chunks and the model have shade.</summary>

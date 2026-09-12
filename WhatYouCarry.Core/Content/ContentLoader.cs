@@ -35,6 +35,19 @@ public sealed class ContentLoader
     /// </summary>
     public const string ModelDirectory = "models/";
 
+    /// <summary>
+    /// The directory of the palette, the texture rules, and the atlas, which Core never reads (D-305). Every content
+    /// source skips it, so a palette change leaves the content hash of D-163 as it was.
+    /// </summary>
+    public const string TextureDirectory = "textures/";
+
+    /// <summary>Answers whether a content path lies in a directory that every content source skips: the models or the textures (D-298, D-305).</summary>
+    public static bool IsAssetPath(string contentPath)
+    {
+        return contentPath.StartsWith(ModelDirectory, System.StringComparison.Ordinal)
+            || contentPath.StartsWith(TextureDirectory, System.StringComparison.Ordinal);
+    }
+
     private readonly IContentSource source;
 
     /// <summary>A loader that reads one source.</summary>

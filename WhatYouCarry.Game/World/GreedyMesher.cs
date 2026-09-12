@@ -231,7 +231,7 @@ public static class GreedyMesher
         float[] normal = new float[3];
         normal[axis] = sign;
         bool flip = orderedLevels[0] + orderedLevels[2] > orderedLevels[1] + orderedLevels[3];
-        data.AddQuad(orderedPositions, new Vector3(normal[0], normal[1], normal[2]), orderedColors, orderedUvs, AtlasLayout.TileOrigin(key.Block), flip);
+        data.AddQuad(orderedPositions, new Vector3(normal[0], normal[1], normal[2]), orderedColors, orderedUvs, AtlasTile.Origin(key.Block), flip);
     }
 
     /// <summary>

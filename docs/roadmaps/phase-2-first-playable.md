@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, and D-298 to D-302. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-309. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -138,12 +138,14 @@ Gate: exit tests 1 to 5 pass.
 
 Scope:
 
-- `content/palette.json`: the palette of about 32 colors, an owner input (D-85, OQ-1).
-- `WhatYouCarry.Tools/TextureGen/`: a command that reads the palette and rule files and emits the 32 px atlas as one PNG (D-65, D-85). A seed in the rule file makes the output deterministic.
-- `content/textures/rules/*.json`: one rule file per material: base color index, noise amount, edge darkness, and a seed.
-- A contact sheet command that renders every material and every model at game zoom to one image for review (D-83).
+- `content/textures/palette.json`: the palette of D-304, eight ramps of four colors from dark to light (D-85).
+- `WhatYouCarry.Tools/TextureGen/`: the command `texture-gen` reads the palette and the rule files and writes the atlas of 256 px as one indexed PNG to `content/textures/atlas.png` (D-65, D-85, D-305). A seed in each rule file makes the output deterministic.
+- `content/textures/rules/*.json`: one rule file per material, ten in all (D-307). Each rule holds its tile, the base color index, the noise amount, the edge darkness, and a seed.
+- Every content source skips `content/textures/`, as it skips `content/models/`, and Game reads the atlas at boot (D-305).
+- `content/models/player.bbmodel`: each face reads its body tile at 32 texels per meter (D-308).
+- A Game flag `--contact-sheet <png>` renders every block material and the body at game zoom to one image for review (D-83, D-306).
 
-Out of scope: any hand-painted texture, model textures beyond the first three materials.
+Out of scope: any hand-painted texture, model textures beyond the three body materials of D-307, armor textures (PR-22).
 
 Exit tests:
 
@@ -351,7 +353,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 3. ✅ OQ-43 and OQ-49 answered 2026-09-11: D-291 and D-292.
 4. ✅ PR-13 merged 2026-09-12 as PR #52. Exit test 7 waits for M-3 (OQ-161).
 5. ✅ PR-57 merged 2026-09-12 as PR #54.
-6. Owner: answer OQ-1.
+6. ✅ OQ-1 answered 2026-09-12: D-304.
 7. PR-14.
 8. Owner: answer OQ-5 and OQ-46. ✅ OQ-45 answered 2026-09-12: D-298.
 9. PR-15.
@@ -374,7 +376,6 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 2. Each 
 
 Open:
 
-- OQ-1: the palette. Blocks PR-14.
 - OQ-4: timer lengths. Blocks PR-17.
 - OQ-5: stagger and weight. Blocks PR-15.
 - OQ-6: the hunter. Blocks PR-17.
@@ -388,6 +389,11 @@ Open:
 
 Resolved 2026-09-12:
 
+- OQ-1 (D-304): the palette. PR-14.
+- OQ-166 (D-305): the home of the texture files. PR-14.
+- OQ-167 (D-306): the render of the contact sheet. PR-14.
+- OQ-168 (D-307): the texture scope. PR-14 and PR-22.
+- OQ-169 (D-308): the body texel density. PR-14 and PR-22.
 - OQ-45 (D-298): the animation keyframe format. PR-57 and PR-15.
 - OQ-162 (D-299): the home of the model reader. PR-57.
 - OQ-163 (D-300): the overlay rule. PR-57 and PR-22.

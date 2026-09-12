@@ -132,13 +132,13 @@ The v1 scope is small (D-56): 15 floors, one biome, 3 bosses, about 12 weapons, 
 
 The world theme is fantasy with black-powder guns (D-7). The v1 biome is a collapsed deep mine, and a blasting charge is a mining tool (D-210). The tone is dark with dry humor (D-8). The look reference is Minecraft Dungeons, pushed darker with torchlight (D-59). The world is a voxel grid of one-meter cubes (D-78). Each floor is a mine dig plan of galleries, drifts, chambers, and shafts (D-253). Props break, and walls are permanent (D-79).
 
-Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
+Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The palette is eight ramps of four colors from dark to light (D-304). A tool generates the atlas from the palette and one rule per material (D-305, D-307). Every face has 32 texels per meter, a body face too (D-308). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
 A C# synthesizer generates all audio from parameter files, music included (D-89, D-93). Music quality is a register risk (F-18).
 
 ### 3.12 Architecture
 
-Two projects hold the game: `WhatYouCarry.Core` and `WhatYouCarry.Game` (D-108). Core is a pure C# library with no engine dependency. It owns the simulation, collision, pathfinding, projectiles, camera, items, economy, and saves. Game is a thin Godot layer for render, audio, and input. Tools and Tests are separate projects. A fifth project, `WhatYouCarry.Assets`, holds the model reader, the animation reader, and the pose math, with no engine dependency (D-299). Game and Tools read a model through it. Core uses the frame of Godot: right-handed, Y up, meters, and forward at yaw zero is minus Z (D-234). A body is a box that Core sweeps against the grid, one axis at a time (D-165). A contact stops one skin before a block face, and the edge of the grid is a wall (D-235, D-237).
+Two projects hold the game: `WhatYouCarry.Core` and `WhatYouCarry.Game` (D-108). Core is a pure C# library with no engine dependency. It owns the simulation, collision, pathfinding, projectiles, camera, items, economy, and saves. Game is a thin Godot layer for render, audio, and input. Tools and Tests are separate projects. A fifth project, `WhatYouCarry.Assets`, holds the model reader, the animation reader, and the pose math, with no engine dependency (D-299). Game and Tools read a model through it. The atlas layout lives there too, because Game and the texture generator of Tools read the same tiles. Core uses the frame of Godot: right-handed, Y up, meters, and forward at yaw zero is minus Z (D-234). A body is a box that Core sweeps against the grid, one axis at a time (D-165). A contact stops one skin before a block face, and the edge of the grid is a wall (D-235, D-237).
 
 Determinism rules (D-69 to D-73, D-77):
 
@@ -439,7 +439,7 @@ Gate: the tool fails a model with a clip and a model with a wrong-case reference
 > *In plain English:* from the first model onward, an automatic inspection catches pieces that clip through each other and file names that break on Linux.
 
 **PR-14: Texture generator and palette.** 🔧
-Implement the C# texture generator that emits the 32 px atlas from the palette and rule files (D-65, D-85). The palette is an owner input (OQ-1). Contact sheets render at game zoom for review.
+Implement the C# texture generator that writes the 32 px atlas from the palette and the rule files under `content/textures/` (D-65, D-85, D-305). The palette is candidate A of D-304. Ten rules paint the seven blocks and three body materials (D-307), and each body face reads its tile at 32 texels per meter (D-308). A Game flag renders the contact sheet at game zoom for review (D-306).
 Gate: the owner approves the first contact sheet.
 > *In plain English:* a tool paints every texture from a fixed set of about thirty colors, so the whole game looks like one thing.
 

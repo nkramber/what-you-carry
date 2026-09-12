@@ -208,7 +208,8 @@ public sealed class FileLogSink : ILogSink, IDisposable
 
 /// <summary>
 /// The content source of a checkout directory, which reads every JSON file under it with a forward-slash path
-/// (D-219). It skips the model directory, which holds the animation files that Core never reads (D-298).
+/// (D-219). It skips the model directory and the texture directory, which hold the animation, palette, and rule
+/// files that Core never reads (D-298, D-305).
 /// </summary>
 public sealed class DirectoryContentSource : IContentSource
 {
@@ -225,7 +226,7 @@ public sealed class DirectoryContentSource : IContentSource
         foreach (string file in Directory.EnumerateFiles(this.root, "*.json", SearchOption.AllDirectories))
         {
             string contentPath = Path.GetRelativePath(this.root, file).Replace('\\', '/');
-            if (contentPath.StartsWith(ContentLoader.ModelDirectory, StringComparison.Ordinal))
+            if (ContentLoader.IsAssetPath(contentPath))
             {
                 continue;
             }

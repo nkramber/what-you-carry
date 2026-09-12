@@ -108,13 +108,17 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - STE check, the reference check, and the session number check: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .`
 - Determinism and string lint: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --root .`
 - Asset QA: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- asset-qa --root .`
+- Texture generator: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- texture-gen --root .`
 - Bit identity: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- bit-identity`
 - Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Smoke session, local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke`
 - Bot session with a frame log, for M-3: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt`
+- Contact sheet, a local run with a window: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
 
-The name `Godot` is not on the command path of this machine, so the check needs the full path above. `det-lint` reads Core with the determinism rules and the Game project with the string rule, and it reports one count for each (D-222). `asset-qa` reads every model, overlay, and animation under `content/` and runs the clip check, the overlay check, and the file case check (D-135). `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. The test `SmokeSessionPasses` starts the Godot build at the path above, or the one that `WYC_GODOT` names. A local `dotnet test` needs one of the two. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
+The name `Godot` is not on the command path of this machine, so the check needs the full path above. `det-lint` reads Core with the determinism rules and the Game project with the string rule, and it reports one count for each (D-222). `asset-qa` reads every model, overlay, and animation under `content/` and runs the clip check, the overlay check, and the file case check (D-135). `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. The two tests of the Smoke category, `SmokeSessionPasses` and `ContactSheetFailsHeadless`, start the Godot build at the path above, or the one that `WYC_GODOT` names. A local `dotnet test` needs one of the two builds. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
+
+`texture-gen` writes `content/textures/atlas.png` from the palette and the rules under `content/textures/` (D-305). A test fails when the committed atlas differs from the output, so commit the atlas after each palette or rule change. The contact sheet needs a window, so it runs on a desktop and not in CI (D-306). A headless run of it ends with exit code 1.
 
 The layout is one directory per project at the root. `project.godot` lives in `WhatYouCarry.Game/`, next to its project file. The solution file stays at the root. Each project file names its target framework, because the Godot editor writes `net8.0` into a project file that has none.
 

@@ -104,20 +104,31 @@ public sealed class GameShapeTests
         Assert.Equal(TestWorld.Content.Hash, new ContentLoader(new DirectoryContentSource(content)).Load().Hash);
     }
 
-    /// <summary>Every content source skips the model directory, because an animation file there is JSON that Core never reads (D-298).</summary>
+    /// <summary>
+    /// Every content source skips the model directory and the texture directory, because the animation, palette, and
+    /// rule files there are JSON that Core never reads (D-298, D-305).
+    /// </summary>
     [Fact]
-    public void ContentSourcesSkipTheModelDirectory()
+    public void ContentSourcesSkipTheAssetDirectories()
     {
         using TemporaryContentDirectory content = new();
         content.Write("floors/a.json", "{}");
         content.Write("models/rig.attack.json", "{}");
         content.Write("models/armor/chest.json", "{}");
+        content.Write("textures/palette.json", "{}");
+        content.Write("textures/rules/raw-stone.json", "{}");
+        content.Write("texturesets/b.json", "{}");
 
-        string[] gamePaths = new DirectoryContentSource(content.Content).Read().Select(file => file.Path).ToArray();
-        string[] toolPaths = new WhatYouCarry.Tools.BotRunner.DirectoryContentSource(content.Content).Read().Select(file => file.Path).ToArray();
+        string[] gamePaths = new DirectoryContentSource(content.Content).Read().Select(file => file.Path).OrderBy(path => path, StringComparer.Ordinal).ToArray();
+        string[] toolPaths = new WhatYouCarry.Tools.BotRunner.DirectoryContentSource(content.Content).Read().Select(file => file.Path).OrderBy(path => path, StringComparer.Ordinal).ToArray();
 
-        Assert.Equal(new[] { "floors/a.json" }, gamePaths);
-        Assert.Equal(new[] { "floors/a.json" }, toolPaths);
+        // A directory whose name only starts with the texture directory name is not the texture directory.
+        Assert.Equal(new[] { "floors/a.json", "texturesets/b.json" }, gamePaths);
+        Assert.Equal(new[] { "floors/a.json", "texturesets/b.json" }, toolPaths);
+        Assert.True(ContentLoader.IsAssetPath("textures/palette.json"));
+        Assert.True(ContentLoader.IsAssetPath("models/player.attack.json"));
+        Assert.False(ContentLoader.IsAssetPath("floors/a.json"));
+        Assert.False(ContentLoader.IsAssetPath("texturesets/b.json"));
     }
 
     /// <summary>An absent directory is an error that names the path, and never an empty set (T-2).</summary>
