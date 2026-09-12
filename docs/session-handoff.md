@@ -14,24 +14,26 @@ Session: answer the PR #56 review, P2-1. Branch `feat/pr-14-texture-generator`.
 - Two regression tests make the rule or the palette unreadable on every platform, and they assert exit code 1, the file name, and no atlas. Both failed on `9236744`, and both pass on the correction.
 - `docs/reviews/pr-56-response.md` records the disposition, the correction, and the checks.
 - Sessions 129 and 128 moved to the archive, because the file held twelve entries with this one.
+- The trial quota kept the automatic pass of gitar paused. The comment `Gitar review` ran it on demand, and its check run on `c83360e` passed at 19:00 UTC with an approval and no comment (D-250, D-303). The dashboard summary repeats the text of the first pass.
 
 ### State of the build
 
-- `main` is at `163742e`. The effective head is the correction commit above the review commit `cdad3f4`.
+- `main` is at `163742e`. The effective head is `c83360e`, the correction commit above the review commit `cdad3f4`. This entry is in a metadata commit above it (D-184).
 - Remote head: `origin/feat/pr-14-texture-generator` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 761 tests, 0 failures, with the two Smoke tests on the local Godot build.
 - `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 26 files. `ste-check`: 0 findings in 15 files. Core, Game, and content did not change.
+- On `c83360e`, CI, bit identity, and smoke passed on the three platforms, and bots, det-lint, asset-qa, STE check, the night gate, and the gitar check passed. The `review-gate` check fails, because `docs/reviews/pr-56.md` still gives `Changes required` for `9236744`, and `evaluate` fails with it (D-251).
 - The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it.
 
 ### In flight
 
-PR #56 needs the automated pass on the correction, then a repeat Codex review of P2-1 and the owner merge.
+PR #56: the repeat Codex review of P2-1 at `c83360e`, then the owner merge. The automated pass approved the correction.
 
 ### Traps and gotchas
 
 - A test that needs an unreadable file removes every permission on Linux and macOS and holds the file with no share on Windows. It proves the file unreadable first, so a user that permissions do not bind fails the test and never passes it.
 - The rule directory has no automated unreadable test, because Windows gives no plain way to make a directory unreadable. The listing shares the catch of the rule test.
-- The effective head is the correction commit, not a later metadata commit (D-184).
+- The effective head is the correction commit `c83360e`, not a later metadata commit (D-184).
 - Session 138 left eleven entries in the file. Count the entries before you add one, and move every entry past the tenth.
 - The next ids are D-310, OQ-170, F-96, and Session 140.
 
@@ -41,7 +43,7 @@ OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 a
 
 ### Next concrete action
 
-The automated pass on the correction, then a Codex session reviews P2-1 per the repeat review procedure of the `pr-review` skill and sets the verdict for the new effective head. The owner then merges.
+A Codex session reviews P2-1 per the repeat review procedure of the `pr-review` skill at the effective head `c83360e` and sets the verdict. The owner then merges.
 
 ## Session 138: 2026-09-12, Codex
 
