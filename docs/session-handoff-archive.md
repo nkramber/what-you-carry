@@ -1,5 +1,46 @@
 # Session handoff archive
 
+## Session 130: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: record the owner answers to OQ-15, OQ-43, OQ-49, OQ-50, OQ-157, and OQ-158 (D-291 to D-296). Branch `docs/oq-43-49-157-158-record`.
+
+### What this session did, and why
+
+- PR #50 merged as `cfafad3` at 23:04 UTC. CI, bit identity, det-lint, STE check, smoke, and bots passed on that commit.
+- Phase 2 sequence item 3 is an owner answer, so the session put OQ-43, OQ-49, OQ-157, and OQ-158 to the owner in one batch. The owner chose each recommendation.
+- D-291 resolves OQ-43: one mesh per chunk of 16 by 32 by 16 blocks, and a budget of 64 world meshes plus one per entity. D-292 resolves OQ-49: the wall fade in the world shader. It revises in part D-88, the effect note only.
+- D-293 resolves OQ-157, and D-294 resolves OQ-158. Both keep the values that PR #49 merged, so no code and no workflow change follows. D-294 is the dependency entry of `actions/cache` (G-16).
+- Exit test 7 of PR-13 needs M-3 on a Deck. The sequence put the OQ-50 answer at item 19, after PR-13. The session put OQ-50 and OQ-15 to the owner too.
+- D-296 resolves OQ-50: the owner owns a Steam Deck OLED, and M-3 measures on it. D-295 resolves OQ-15 against the recommendation: 90 frames per second, the top refresh rate of the OLED panel, with 60 as the fallback.
+- OQ-44 gains a dated note, because its recommendation reads "two frames at 60". The design doc, the Phase 2 roadmap, and the Phase 5 roadmap cite the six decisions. Session 120 moved to the archive.
+
+### State of the build
+
+- `main` is at `cfafad3`, the squash merge of PR #50. This branch holds one docs commit above it.
+- Remote head: `origin/docs/oq-43-49-157-158-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 584 tests, 0 failures, with the smoke test on the local Godot build. No code changed.
+- `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`.
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12.
+
+### In flight
+
+PR #51: docs alone. The automated pass approved the head with no code finding. The owner merge is next. Then PR-13 opens from `main` per the Phase 2 roadmap.
+
+### Traps and gotchas
+
+- A maximum floor fills the world budget of D-291 exactly: 64 chunks and 64 world meshes.
+- D-295 sets 90 frames per second. The M-3 row of PR-13 reads the 99th percentile frame time against that bound.
+- The next ids are D-297, OQ-159, F-96, and Session 131.
+
+### Open questions that block progress
+
+None blocks PR-13. OQ-1 blocks PR-14. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR. A session then opens PR-13 from `main` per the Phase 2 roadmap.
+
 ## Session 129: 2026-09-11, Claude Code
 
 Author: Claude Code
