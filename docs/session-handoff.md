@@ -2,6 +2,45 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 145: 2026-09-12, Codex
+
+Author: Codex
+Session: re-review PR #58 at effective head `39a0c02`.
+
+### What this session did, and why
+
+- Checked the provider gate again. The handoff identifies Claude Code as the author of the correction, so Codex remains the eligible reviewer under T-4 and D-101.
+- Read `docs/reviews/pr-58-response.md`, the correction diff, the affected files, the roadmap, the decisions, the questions, and all current PR comments.
+- Verified that P2-1 is fixed. The two Smoke tests drive Escape and Start through the headless Game process, and both assert exit code 0, the test exit line, and no smoke end line.
+- Found P2-2. `TestExit.PressOf` accepts trailing arguments after the press tick. A command with `unexpected` exits successfully and ignores that argument, which violates T-2 input validation.
+- Updated `docs/reviews/pr-58.md` with P2-1 fixed, P2-2 open, and the verdict `Changes required` for effective head `39a0c02`.
+
+### State of the build
+
+- `main` and the merge base are `f3f0bc0`. The effective head is `39a0c02`. The review and handoff metadata commits remain outside the effective diff under D-184.
+- The serial build passed with 0 warnings and 0 errors. Focused tests passed, 7 tests with 0 failures. The Escape and Start command probes passed at tick 101. Det-lint and STE check passed.
+- The full local test stalled after discovery and was cancelled. Revision-matched CI passed build, test, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar. `evaluate` and `review-gate` fail because P2-2 remains open.
+- Remote head: the review update is not pushed yet.
+
+### In flight
+
+PR #58 needs trailing-argument validation and its regression test. The owner must request another repeat review after the correction.
+
+### Traps and gotchas
+
+- P2-1 is fixed at `39a0c02`. Keep its finding id and evidence in later reviews.
+- P2-2 reproduces with `--smoke --press escape 100 unexpected`. The command must reject `unexpected` after the correction.
+- The effective head is `39a0c02`, not a later metadata commit, under D-184.
+- The next ids are D-313, OQ-170, F-96, and Session 146.
+
+### Open questions that block progress
+
+None blocks PR #58. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159, OQ-160, OQ-44, and OQ-99 do not block this PR.
+
+### Next concrete action
+
+The author rejects trailing arguments, adds the regression test, pushes the correction, and requests the repeat cross-provider review.
+
 ## Session 144: 2026-09-12, Claude Code
 
 Author: Claude Code
@@ -374,39 +413,3 @@ OQ-1 blocks PR-14 and sequence item 6. OQ-161 blocks exit test 7 of PR-13 and M-
 ### Next concrete action
 
 The owner merges this PR with the `review-override` label. The owner then answers OQ-1, the palette, and a fresh session opens PR-14 from `main` per the Phase 2 roadmap.
-
-## Session 135: 2026-09-12, Codex
-
-Author: Codex
-Session: review PR #54 at effective head `ecdc95a`. Branch `feat/pr-57-asset-qa-gate`.
-
-### What this session did, and why
-
-- Verified that Claude Code authored the substantive PR commits, so Codex is the eligible reviewer under T-4 and D-101.
-- Read the complete diff, the animation and model content contracts, affected callers, tests, workflow, roadmap, decisions, questions, and every PR comment.
-- Found no defect. The automated pass finding on duplicate clip and unknown-bone reports is corrected in `0cb62c7` and covered by two regression tests.
-- Added `docs/reviews/pr-54.md` with the verdict `Ready for owner merge` for the effective head. The effective head includes the D-303 process commit `ecdc95a`.
-
-### State of the build
-
-- `main` and the merge base are `5848bda`. The effective head is `ecdc95a`. The review metadata tip is `632e281` before this correction commit.
-- Focused asset, animation, pose, and overlap tests pass, 80 tests with 0 failures. The local build attempt hung without output and was cancelled.
-- Remote build and test, asset QA, bots, bit identity, det-lint, STE check, night gate, and smoke pass. The pre-review evaluate check failed because the review file did not exist, and review-gate skipped for the same reason.
-
-### In flight
-
-The review record and this handoff entry need a commit and push. The fresh evaluate and review-gate checks must pass against the published review record.
-
-### Traps and gotchas
-
-- The effective head is `ecdc95a`, because `.claude/skills/pr-review/SKILL.md` changed in that commit. The review and handoff paths alone are metadata under D-184.
-- The local full build did not produce output after several minutes. Remote CI is the build evidence for this review.
-- The automated pass was paused before the owner requested the on-demand Gitar review. The on-demand review approved `0cb62c7` after the correction.
-
-### Open questions that block progress
-
-OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind no work. OQ-1 blocks PR-14. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Commit and push the review record and handoff entry. Fetch the remote. Confirm that the remote has no ahead count and that the fresh review-gate check passes.
