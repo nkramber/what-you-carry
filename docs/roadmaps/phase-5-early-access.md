@@ -1,6 +1,6 @@
 # Phase 5 roadmap: Early Access candidate
 
-Status: **focused roadmap, active.** This file expands Phase 5 of `docs/design.md` section 7: PR-51 to PR-55. It applies D-1, D-15, D-96, D-112, D-142, D-152, D-170, D-180, and D-185. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 5 of `docs/design.md` section 7: PR-51 to PR-55. It applies D-1, D-15, D-96, D-112, D-142, D-152, D-170, D-180, D-185, and D-295. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 4 is `phase-4-content-complete.md`. Gate 4 must pass before PR-51 starts.
 
@@ -125,7 +125,7 @@ Scope:
 
 - Controller glyphs for the Deck's controls in every prompt.
 - 800p text sizes on every screen, checked against the screenshot fixture of PR-19.
-- Default settings that meet the M-3 target on the Deck (OQ-15).
+- Default settings that meet the M-3 target on the Deck (D-295).
 - The Deck checklist from OQ-66, fetched and dated, with each item's evidence in this file.
 
 Out of scope: any gameplay change.
@@ -180,7 +180,7 @@ One person owns the program. Items run one at a time in this order. Gate 4 must 
 4. PR-52.
 5. Owner: answer OQ-14 and OQ-69.
 6. PR-53.
-7. Owner: answer OQ-66. Confirm OQ-15.
+7. Owner: answer OQ-66. Confirm D-295.
 8. PR-54.
 9. Owner: answer OQ-70.
 10. PR-55.
@@ -194,7 +194,6 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 5. Each 
 Open:
 
 - OQ-14: accessibility. Blocks PR-53.
-- OQ-15: the Deck frame target. Blocks PR-54.
 - OQ-17: the trademark search. Blocks the store page.
 - OQ-18: purchase dates. Blocks PR-51 and PR-52.
 - OQ-19: cloud save conflicts. Blocks PR-52.
@@ -204,3 +203,7 @@ Open:
 - OQ-69: the settings list. Blocks PR-53.
 - OQ-70: the crash report location. Blocks PR-55.
 - OQ-71: the cloud save file set. Blocks PR-52.
+
+Resolved 2026-09-11:
+
+- OQ-15 (D-295): the Deck frame target. PR-54. Sequence item 7 confirms it.

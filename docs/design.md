@@ -250,8 +250,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-37 | HEAD pointed at the unborn branch `docs/repository-audit`. The first commit would have missed `main` (D-126) | 2026-09-07 | ✅ D-156. HEAD reset to `main` before the initial commit |
 | F-38 | PR-10's gate named the full weapon roster, which does not exist until Phase 3 | 2026-09-07 | 🔧 A test-only definitions file under D-149. Binds PR-10, PR-24, PR-43 to PR-46 |
 | F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | 🔧 D-157. Owner action before PR-1 |
-| F-40 | D-88's effect note put wall fade in the mesher as per-block visibility. A shader test needs no mesher change | 2026-09-07 | ❓ OQ-49. Binds PR-13 |
-| F-41 | No item said whether a Steam Deck unit exists for M-3, and D-15 makes the Deck the floor | 2026-09-07 | ❓ OQ-50. Binds M-3 |
+| F-40 | D-88's effect note put wall fade in the mesher as per-block visibility. A shader test needs no mesher change | 2026-09-07 | 🔧 D-292: the shader test, with no mesher change. Binds PR-13 |
+| F-41 | No item said whether a Steam Deck unit exists for M-3, and D-15 makes the Deck the floor | 2026-09-07 | ✅ D-296: the owner owns a Steam Deck, and M-3 measures on it. Binds M-3 |
 | F-42 | D-49 shows a rarity color on an enemy, but no decision names the rarity tiers | 2026-09-07 | ❓ OQ-52. Binds PR-21, PR-26 |
 | F-43 | D-128 sets the Tier 3 cadence but not the model or the budget | 2026-09-07 | ❓ OQ-58. Binds PR-32 |
 | F-44 | The Deck verification checklist is an external fact with no source or date in the plan | 2026-09-07 | ❓ OQ-66. Binds PR-54 |
@@ -429,9 +429,9 @@ Gate: the smoke session passes on all three platforms.
 > *In plain English:* this is the first thing you can open and move in. It also adds an automatic run of the real game on every change.
 
 **PR-13: Model loader and mesher.** 🔧
-Implement the Blockbench JSON loader that builds an ArrayMesh from the box list, with armor overlay attachment per slot (D-9, D-18). Implement greedy meshing for the voxel grid with vertex ambient occlusion and per-block visibility for wall fade (D-78, D-81, D-88). One atlas, one material. A test asserts the mesh count per floor stays under a budget.
+Implement the Blockbench JSON loader that builds an ArrayMesh from the box list, with armor overlay attachment per slot (D-9, D-18). Implement greedy meshing for the voxel grid, one mesh per chunk, with vertex ambient occlusion (D-78, D-81, D-291). Fade the walls between the camera and the player in the world shader, with no change to the mesher (D-88, D-292). One atlas, one material. A test asserts the mesh count per floor stays under the budget of D-291.
 Gate: a full floor renders under the mesh budget, and M-3 records the Deck frame time.
-> *In plain English:* this turns the block grid and the box models into pictures, cheaply enough for the smallest target machine.
+> *In plain English:* this turns the block grid and the box models into pictures, cheaply enough for the smallest target machine. It also hides the wall between the camera and you.
 
 **PR-57: Asset QA gate v1.** 🔧
 Implement the C# tool for three checks (D-135, D-149). No two boxes interpenetrate at any animation keyframe. Each armor overlay encloses its limb box. Every file name reference matches the file case. Run it in CI on every model. PR-49 extends it. This entry follows PR-13 in the sequence.
@@ -474,7 +474,7 @@ Gate: the owner approves the sword and hunter sounds.
 > *In plain English:* a tool makes every sound from a recipe, and the first sounds give the sword and the hunter their weight.
 
 **M-3: Steam Deck frame time.** 🔧
-Measure the 99th percentile frame time on a Deck over one full floor, with the target from OQ-15. Binds every render PR (F-3).
+Measure the 99th percentile frame time on the Steam Deck OLED of D-296 over one full floor, with the target of D-295. Binds every render PR (F-3).
 
 ### Phase 3: Full loop (gate: hub, loadout, death loss, bank, tree, saves, and replay resume work, and friends play)
 

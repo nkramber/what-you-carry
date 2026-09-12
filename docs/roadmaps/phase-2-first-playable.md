@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, and D-289. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, and D-291 to D-296. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -44,7 +44,7 @@ Each entry has: scope, out of scope, exit tests, review focus, the check clause,
 
 ### PR-12: Game skeleton and input
 
-Status: merged 2026-09-11 as PR #49, commit `9313358`. Exit tests 1 to 6 passed before the merge, and the smoke workflow passed on the three platforms on its first run. OQ-157 and OQ-158 stayed open at the merge, and the owner answers them in `docs/decisions.md`.
+Status: merged 2026-09-11 as PR #49, commit `9313358`. Exit tests 1 to 6 passed before the merge, and the smoke workflow passed on the three platforms on its first run. OQ-157 and OQ-158 stayed open at the merge. The owner answered both on 2026-09-11 with the merged values: D-293 for the two constants, and D-294 for the cache action.
 
 Scope:
 
@@ -78,10 +78,10 @@ Gate: exit tests 1 to 6 pass.
 Scope:
 
 - `WhatYouCarry.Game/Models/BlockbenchLoader.cs`: reads a Blockbench JSON file and builds an ArrayMesh from the box list (D-9, D-18). The box hierarchy becomes the bones for animation. Each equipment slot has one attachment point.
-- `WhatYouCarry.Game/World/GreedyMesher.cs`: one mesh per chunk of the voxel grid, with faces merged across equal blocks, and vertex ambient occlusion (D-78, D-81). The chunk size and the mesh budget come from OQ-43.
-- Wall fade in the world shader: a fragment between the camera and the player, inside a capsule around that segment, fades (D-88). The mesher does not change for it. The approach is OQ-49.
+- `WhatYouCarry.Game/World/GreedyMesher.cs`: one mesh per chunk of the voxel grid, with faces merged across equal blocks, and vertex ambient occlusion (D-78, D-81). The chunk size and the mesh budget come from D-291.
+- Wall fade in the world shader: a fragment between the camera and the player, inside a capsule around that segment, fades (D-88). The mesher does not change for it. The approach comes from D-292.
 - One atlas texture and one material for every world chunk and every model (D-85).
-- `MeshBudgetTest` asserts the mesh instance count per floor under the OQ-43 budget.
+- `MeshBudgetTest` asserts the mesh instance count per floor under the D-291 budget.
 
 Out of scope: textures (PR-14), armor overlays (PR-22), props (PR-48).
 
@@ -332,7 +332,7 @@ Gate: exit tests 1 to 5 pass.
 
 ### M-3: Steam Deck frame time
 
-Procedure: on a Steam Deck (OQ-50), run the PR-13 build and then the PR-18 build over one full floor. The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target is OQ-15. A miss files a question that binds the next render PR (F-3).
+Procedure: on the Steam Deck OLED of the owner (D-296), run the PR-13 build and then the PR-18 build over one full floor. The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target comes from D-295. A miss files a question that binds the next render PR (F-3).
 
 ## 5. Sequence
 
@@ -340,7 +340,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 
 1. ✅ OQ-47 answered 2026-09-11: D-289.
 2. ✅ PR-12 merged 2026-09-11 as PR #49.
-3. Owner: answer OQ-43 and OQ-49.
+3. ✅ OQ-43 and OQ-49 answered 2026-09-11: D-291 and D-292.
 4. PR-13.
 5. PR-57.
 6. Owner: answer OQ-1.
@@ -356,7 +356,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 16. PR-19.
 17. Owner: answer OQ-48.
 18. PR-20.
-19. Owner: answer OQ-15 and OQ-50. M-3 table complete.
+19. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
 20. Tier 4 pass on the screenshot fixture (D-133).
 21. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
@@ -371,17 +371,17 @@ Open:
 - OQ-5: stagger and weight. Blocks PR-15.
 - OQ-6: the hunter. Blocks PR-17.
 - OQ-9: the enemy families. Blocks PR-16.
-- OQ-15: the Deck frame target. Blocks M-3.
-- OQ-43: the chunk size and mesh budget. Blocks PR-13.
 - OQ-44: the transition hitch budget. Blocks PR-18.
 - OQ-45: the animation keyframe format. Blocks PR-15.
 - OQ-46: the initial combat numbers. Blocks PR-15.
 - OQ-48: the sound parameter format. Blocks PR-20.
-- OQ-49: the wall fade approach. Blocks PR-13.
-- OQ-50: a Steam Deck unit for M-3. Blocks M-3.
-- OQ-157: the look sensitivity numbers. Blocks nothing, and it binds the two constants of `IntentBuilder` on `main`.
-- OQ-158: the Godot binary in CI. Binds the smoke workflow on `main` (G-16). PR #49 merged with it open.
 
 Resolved 2026-09-11:
 
+- OQ-15 (D-295): the Deck frame target. M-3.
+- OQ-43 (D-291): the chunk size and mesh budget. PR-13.
 - OQ-47 (D-289): default bindings and curves. PR-12.
+- OQ-49 (D-292): the wall fade approach. PR-13.
+- OQ-50 (D-296): a Steam Deck unit for M-3. M-3 and PR-13.
+- OQ-157 (D-293): the look sensitivity numbers. PR-12.
+- OQ-158 (D-294): the Godot binary in CI. PR-12.
