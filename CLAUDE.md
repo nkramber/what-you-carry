@@ -43,7 +43,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 - Record each answer in `docs/decisions.md` with the next D-# id and the date. Never renumber.
 - Mark a change to an earlier decision in its `Effect` column (D-186). Use `Superseded by D-N` when the whole answer changes. Use `Revised in part by D-N` when one part changes, and name the part that changed and the parts that stand.
 - A citation of a superseded decision must name the superseding decision. A decision revised in part stays citable.
-- One session is one harness invocation, one PR, and one handoff entry (D-121, D-146).
+- One session is one harness invocation and one code PR (D-121). A documentation PR can follow the merge of that code PR in the same session (D-297). Each PR has its own handoff entry (D-146).
 
 ## Session handoff
 

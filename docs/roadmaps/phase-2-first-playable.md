@@ -75,7 +75,7 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-13: Model loader and mesher
 
-Status: open 2026-09-11 as PR #52. Exit tests 1 to 6 pass. Exit test 7 waits for the M-3 run on the Steam Deck of D-296 (OQ-161). OQ-159 and OQ-160 bind the constants of the loader, the mesher, and the shader.
+Status: merged 2026-09-12 as PR #52, commit `9749581`. Exit tests 1 to 6 passed before the merge, and CI, smoke, bit identity, bots, det-lint, and STE check passed on the merge commit. Exit test 7 waits for the M-3 run on the Steam Deck of D-296 (OQ-161). OQ-159, OQ-160, and OQ-161 stayed open at the merge. The first two bind the constants of the loader, the mesher, and the shader.
 
 Scope:
 
@@ -345,7 +345,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 1. ✅ OQ-47 answered 2026-09-11: D-289.
 2. ✅ PR-12 merged 2026-09-11 as PR #49.
 3. ✅ OQ-43 and OQ-49 answered 2026-09-11: D-291 and D-292.
-4. PR-13.
+4. ✅ PR-13 merged 2026-09-12 as PR #52. Exit test 7 waits for M-3 (OQ-161).
 5. PR-57.
 6. Owner: answer OQ-1.
 7. PR-14.
