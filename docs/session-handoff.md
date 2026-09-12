@@ -37,7 +37,7 @@ OQ-161 blocks exit test 7 and M-3. OQ-159 and OQ-160 block nothing.
 
 ### Next concrete action
 
-The review and handoff are pushed at `456ea06`. Verify the pending duplicate checks, then the owner can merge.
+The review and handoff are pushed at `42e5a46`. Verify the pending duplicate checks, then the owner can merge.
 
 ## Session 131: 2026-09-11, Claude Code
 
