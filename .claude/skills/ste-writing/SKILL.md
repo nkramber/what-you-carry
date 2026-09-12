@@ -123,6 +123,7 @@ The rules permit these as written. They are technical names (rule 1.5):
 - Game terms, the gear: satchel, quick slot, amulet, skill orb, skill tree, skill point, affix, rarity, tier, band, potion, mana.
 - Game terms, combat: cooldown, reload, hyper-armor, stagger, dodge, block, shield, intent.
 - Game terms, the world: voxel, greedy meshing, pathfinding, lighting, ambient occlusion.
+- Art terms: atlas, tile, palette, ramp, texture rule, texel, contact sheet, game zoom.
 - Process terms: session handoff, decision register, questions register, PR gate, cross-provider review, property test, bot sweep, seed sweep, smoke session, foundation gate.
 - Save terms: profile file, run record, basic kit, simulation version, content hash.
 - The standard itself: ASD-STE100, STE.

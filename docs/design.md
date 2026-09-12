@@ -438,10 +438,15 @@ Implement the C# tool for three checks (D-135, D-149). No two boxes interpenetra
 Gate: the tool fails a model with a clip and a model with a wrong-case reference.
 > *In plain English:* from the first model onward, an automatic inspection catches pieces that clip through each other and file names that break on Linux.
 
-**PR-14: Texture generator and palette.** 🔧
+**PR-14: Texture generator and palette.** ✅ Merged 2026-09-12 as PR #56.
 Implement the C# texture generator that writes the 32 px atlas from the palette and the rule files under `content/textures/` (D-65, D-85, D-305). The palette is candidate A of D-304. Ten rules paint the seven blocks and three body materials (D-307), and each body face reads its tile at 32 texels per meter (D-308). A Game flag renders the contact sheet at game zoom for review (D-306).
 Gate: the owner approves the first contact sheet.
 > *In plain English:* a tool paints every texture from a fixed set of about thirty colors, so the whole game looks like one thing.
+
+**PR-60: Fullscreen window and the test exit.** 🔧
+Open the game window in borderless fullscreen at the resolution of the display, on every desktop and on the Deck (D-310). End a session on the Escape key or the controller Start button during tests, until PR-53 brings the escape menu (D-311). One PR carries both changes before PR-15 (D-312).
+Gate: a test covers the window mode and each quit input, and a headless session still passes.
+> *In plain English:* the game fills the screen that it runs on, so it is no longer a small box on a large display. During testing, Escape or Start closes it.
 
 **PR-15: Player entity and the first weapon.** 🔧
 Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger, and one sword with windup, active, and recovery frames (D-25, D-27, D-28, D-29, OQ-5). Play the animation files of D-298 and implement the procedural locomotion in Game (D-87). A test asserts that the animation file agrees with the Core time values.
@@ -606,9 +611,9 @@ Gate: a save conflict shows a prompt and never resolves in silence.
 > *In plain English:* your bank follows you between machines, and a clash between two copies asks you instead of a guess.
 
 **PR-53: Settings and accessibility.** 🔧
-Build the settings screen. Complete the string table (D-98). Add accessibility options per OQ-14.
-Gate: every option works with a controller.
-> *In plain English:* the options screen, complete text, and any assist options the owner chooses.
+Build the settings screen. Complete the string table (D-98). Add accessibility options per OQ-14. Build the escape menu on the Escape key and the controller Start button, and remove the test exit of PR-60 (D-311).
+Gate: every option works with a controller, and Escape opens the escape menu and never ends the game.
+> *In plain English:* the options screen, the escape menu, complete text, and any assist options the owner chooses.
 
 **PR-54: Steam Deck verification pass.** 🔧
 Controller glyphs, 800p text sizes, default settings that hit the M-3 target, and the Deck checklist (D-15).
@@ -640,8 +645,8 @@ One person owns the program. Items run one at a time in this order. The list cha
 7. PR-9, PR-59, PR-10, PR-11. One night runs, scheduled or by hand, then PR-58 (D-177, D-278). ✅ PR-9 merged 2026-09-09 as PR #27. ✅ PR-59 merged 2026-09-09 as PR #29. ✅ PR-10 merged 2026-09-10 as PR #31. ✅ PR-11 merged 2026-09-10 as PR #34. ✅ Two nights ran by hand 2026-09-10. ✅ PR-58 merged 2026-09-10 as PR #40.
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
-10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54.
-11. PR-15, PR-16, PR-17, PR-18.
+10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
+11. PR-60, PR-15, PR-16, PR-17, PR-18.
 12. PR-19, PR-20.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.

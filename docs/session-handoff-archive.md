@@ -1,5 +1,54 @@
 # Session handoff archive
 
+## Session 131: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: open PR-13, the model loader, the greedy mesher, and the wall fade shader, as PR #52. Branch `feat/pr-13-model-loader-and-mesher`.
+
+### What this session did, and why
+
+- PR #51 merged as `52ab6ca`. The Phase 2 sequence puts PR-13 next, and no open question blocks it, so the session opened it from `main` per the roadmap, D-291, D-292, D-295, and D-296.
+- `Models/BlockbenchLoader.cs` reads the project file that Blockbench 5 writes: the flat `elements` and `groups` lists, and the `outliner` tree of ids. A group is a bone, a cube is a box under its bone, and a locator named after a slot of D-18 is an attachment point. The session read the Blockbench source of the codec on GitHub to confirm the keys. `BoxGeometry` gives each box its six quads relative to its pivot, and `ModelNodes` builds the bone tree for the engine.
+- `World/GreedyMesher.cs` emits one mesh per chunk of D-291, with the faces merged over equal block and equal occlusion, and the vertex occlusion of D-81 in the vertex colors. The outside of the grid is rock (D-237), so the edge of the world shows no face and a chunk reads its neighbor through the grid, so no seam shows.
+- `World/world.gdshader` fades each fragment inside the capsule from the camera to the player with a screen-door dither, so every chunk stays in the opaque pass (D-292). `WorldMaterial` sets the two ends on every frame, and `PlaceholderAtlas` gives one flat color per block until PR-14.
+- `Measure/BotSession.cs` and `Measure/FrameLog.cs` give M-3 its two flags: the greedy descender drives one floor, and the frame log writes one microsecond count per frame with the 99th percentile in the end line (D-295, D-296).
+- `content/models/player.bbmodel` is the first body: ten boxes, ten bones, and six locators, at sixteen units per meter. `Main` loads it in place of the box of PR-12, and the chunk meshes replace the flat floor.
+- Exit tests 1 to 6 pass, with 38 new tests. Exit test 7 waits for the M-3 run on the Deck (OQ-161). OQ-159 and OQ-160 hold the constants of the loader, the mesher, and the shader, with the recommendation in the code.
+- The session checked the render with the movie writer of the engine, because `screencapture` reaches no display from the shell. The walls, the floor, and the ceiling show from inside with the merged faces, and a wall between the camera and the player dissolves in the dither when the radius is large.
+- `CLAUDE.md` and `AGENTS.md` gain the bot session command. Session 121 moved to the archive.
+- The automated pass approved the head with one comment, and it has merit: a path that the user cannot write raises `UnauthorizedAccessException`, which is not an `IOException`, so the frame log write failure escaped the catch with no error line (T-2). `9085a95` widens the catch, and the reply on the thread names it (D-250).
+
+### State of the build
+
+- `main` is at `52ab6ca`, the squash merge of PR #51. This branch holds the feat commit `9a7fb96` and the fix commit `9085a95` above it, and the effective head is `9085a95`.
+- Remote head: `origin/feat/pr-13-model-loader-and-mesher` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 622 tests, 0 failures, with the smoke test on the local Godot build. Core did not change.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 27 files. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`.
+- The headless smoke session and the headless bot session with a frame log both end with exit code 0. The bot reaches floor 2 of seed 1 at tick 421.
+- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. It turns red at 13:45 UTC on 2026-09-13 unless a night refreshes it. The run list held no later night at 03:26 UTC on 2026-09-12. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
+
+### In flight
+
+PR #52: the automated pass, then the Codex review. Exit test 7 is the M-3 run on the Steam Deck, and OQ-161 asks the owner how the build reaches the Deck. The owner answers OQ-159, OQ-160, and OQ-161 in `docs/decisions.md` as the next ids.
+
+### Traps and gotchas
+
+- `screencapture` fails in this shell with "could not create image from display", and a windowed run never quits. The engine flag `--write-movie <dir>/frame.png` with `--quit-after N` writes N frames offscreen and quits, and `Read` shows a frame.
+- The frame log of a movie run reads the fixed frame time and not the real one. M-3 runs the bot session with no `--write-movie` and no `--fixed-fps`.
+- The Game string rule flags a literal in `AddContext`, so every context field name in Game is a `const`.
+- The Godot editor build writes a `.uid` file next to every new script, and it wrote one for `EnginePoll.cs` and `IInputPoll.cs` of PR-12 too. Commit them, or every session sees them as new.
+- The outside of the grid is rock for the occlusion too, so the corners of a flat test floor darken at the grid edge. A test reads an interior vertex, and the darkest level needs two solid edge cells.
+- The model faces read the atlas rows that no block owns, so the placeholder atlas fills its base with one gray. PR-14 assigns the model tiles.
+- The next ids are D-297, OQ-162, F-96, and Session 132.
+
+### Open questions that block progress
+
+OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-1 blocks PR-14. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The automated pass on PR #52, then a Codex session reviews it per the `pr-review` skill. The owner answers OQ-161 and runs the M-3 command of `CLAUDE.md` on the Deck for exit test 7.
+
 ## Session 130: 2026-09-11, Claude Code
 
 Author: Claude Code
