@@ -5,18 +5,18 @@ Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end o
 ## Session 135: 2026-09-12, Codex
 
 Author: Codex
-Session: review PR #54 at effective head `0cb62c7`. Branch `feat/pr-57-asset-qa-gate`.
+Session: review PR #54 at effective head `ecdc95a`. Branch `feat/pr-57-asset-qa-gate`.
 
 ### What this session did, and why
 
 - Verified that Claude Code authored the substantive PR commits, so Codex is the eligible reviewer under T-4 and D-101.
 - Read the complete diff, the animation and model content contracts, affected callers, tests, workflow, roadmap, decisions, questions, and every PR comment.
 - Found no defect. The automated pass finding on duplicate clip and unknown-bone reports is corrected in `0cb62c7` and covered by two regression tests.
-- Added `docs/reviews/pr-54.md` with the verdict `Ready for owner merge` for the effective head.
+- Added `docs/reviews/pr-54.md` with the verdict `Ready for owner merge` for the effective head. The effective head includes the D-303 process commit `ecdc95a`.
 
 ### State of the build
 
-- `main` and the merge base are `5848bda`. The effective implementation head is `0cb62c7`. The handoff tip is `8642383` before this review commit.
+- `main` and the merge base are `5848bda`. The effective head is `ecdc95a`. The review metadata tip is `632e281` before this correction commit.
 - Focused asset, animation, pose, and overlap tests pass, 80 tests with 0 failures. The local build attempt hung without output and was cancelled.
 - Remote build and test, asset QA, bots, bit identity, det-lint, STE check, night gate, and smoke pass. The pre-review evaluate check failed because the review file did not exist, and review-gate skipped for the same reason.
 
@@ -26,7 +26,7 @@ The review record and this handoff entry need a commit and push. The fresh evalu
 
 ### Traps and gotchas
 
-- The effective head is `0cb62c7`, not the metadata tip.
+- The effective head is `ecdc95a`, because `.claude/skills/pr-review/SKILL.md` changed in that commit. The review and handoff paths alone are metadata under D-184.
 - The local full build did not produce output after several minutes. Remote CI is the build evidence for this review.
 - The automated pass was paused before the owner requested the on-demand Gitar review. The on-demand review approved `0cb62c7` after the correction.
 
