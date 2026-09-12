@@ -109,6 +109,7 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Smoke session, local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke`
+- Bot session with a frame log, for M-3: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt`
 
 The name `Godot` is not on the command path of this machine, so the check needs the full path above. `det-lint` reads Core with the determinism rules and the Game project with the string rule, and it reports one count for each (D-222). `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. The test `SmokeSessionPasses` starts the Godot build at the path above, or the one that `WYC_GODOT` names. A local `dotnet test` needs one of the two. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
 
