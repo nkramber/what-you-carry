@@ -2,6 +2,52 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 137: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: answer OQ-1 and open PR-14, the texture generator and the palette, as PR #56. Branch `feat/pr-14-texture-generator`.
+
+### What this session did, and why
+
+- PR #55 merged as `163742e` at 14:18 UTC with the `review-override` label. The night of 2026-09-12 ran at `811aa84` and ended with success at 13:04 UTC.
+- Sequence item 6 of the Phase 2 roadmap is the owner answer to OQ-1. The session built a preview page of three palettes, each painted on the seven blocks and a miner at game zoom, and asked the owner. The owner chose candidate A, "Lamp and Rock" (D-304).
+- Four more questions blocked PR-14, and the owner took each recommendation on the day. OQ-166 asked where the palette and the rules live, because the Core loader stops on unclaimed JSON (D-305). OQ-167 asked where the contact sheet renders (D-306). OQ-168 asked which materials PR-14 ships (D-307). OQ-169 asked how a body face reads its tile, because the model used the 64 px net of a Minecraft skin (D-308).
+- `WhatYouCarry.Tools/TextureGen/` is the command `texture-gen`. It reads the palette and ten rules, paints each tile from a xorshift sequence of its seed, and writes an indexed PNG with stored deflate blocks. The tiles equal the preview pixel for pixel, the file has one byte form on every platform, and a test holds the committed atlas equal to the output.
+- `WhatYouCarry.Assets/AtlasLayout.cs` holds the tile layout for Game and Tools. `ContentLoader.IsAssetPath` names the `models/` and `textures/` directories, and the three content sources skip both. `Game/World/AtlasFile.cs` loads the atlas at boot, and the placeholder atlas of PR-13 is gone.
+- `content/models/player.bbmodel` has the resolution 256, and each face reads its body tile at 32 texels per meter. A script rewrote the face rectangles and changed no other line.
+- The Game flag `--contact-sheet <png>` renders the seven blocks and the body from two sides at game zoom. The owner approved the first sheet as drawn, and D-309 records the ten rule values, which closes exit test 5.
+- Session 127 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `163742e`, the squash merge of PR #55. This branch holds the feat commit `9236744` and the docs commit of this entry above it. The effective head is `9236744`, because the handoff and the archive are metadata paths (D-184).
+- Remote head: `origin/feat/pr-14-texture-generator` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 759 tests, 0 failures, with the two Smoke tests on the local Godot build.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 26 files. `asset-qa`: 0 findings, 1 model. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`, unchanged.
+- The Godot editor build and the windowed contact sheet run end with exit code 0.
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it.
+
+### In flight
+
+PR #56: the automated pass, then the Codex review. No open question binds it.
+
+### Traps and gotchas
+
+- A change to the palette or a rule needs `texture-gen --root .` and a commit of `content/textures/atlas.png`, or `CommittedAtlasMatchesTheGenerator` fails. A rule change also needs a new contact sheet for the owner (D-309).
+- The contact sheet needs a window. A run with `--headless` ends with exit code 1 by design, and `ContactSheetFailsHeadless` holds that.
+- In zsh, `status` is a read-only variable, and a variable that holds a command with its arguments does not split into words. Name the exit code `rc`, and write each tool command in full.
+- Godot has a class `AtlasTexture`, so a Game class of that name is ambiguous under `using Godot`. The loader is `AtlasFile`.
+- The body tiles are 8, 9, and 10 (D-307). A new block takes the tile of its id, and a new body material takes the next free tile of row 1.
+- The next ids are D-310, OQ-170, F-96, and Session 138.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The automated pass on PR #56, then a Codex session reviews it per the `pr-review` skill at the effective head `9236744`. After the merge, the owner answers OQ-5 and OQ-46, and a fresh session opens PR-15.
+
 ## Session 136: 2026-09-12, Claude Code
 
 Author: Claude Code
@@ -370,43 +416,3 @@ OQ-158 blocks PR #49 under G-16. OQ-157 remains open and blocks nothing. OQ-43 a
 ### Next concrete action
 
 Commit and push this repeat review and handoff. Then verify the remote head and the refreshed review-gate result.
-
-## Session 127: 2026-09-11, Claude Code
-
-Author: Claude Code
-Session: answer the PR #49 review, P2-1 (D-243), in the same run as Session 125. Branch `feat/pr-12-game-skeleton`.
-
-### What this session did, and why
-
-- Read `docs/reviews/pr-49.md` at the reviewed head `91d1b6f`. P2-1 has full merit: `Read` set the controller flag from the held stick on each tick, so a later mouse event lost the look device.
-- The look device now follows the latest look event (D-243). `Main` hands the mouse motion and the joypad motion events to the reader as plain values, `AddLookStickMotion` names the controller on a look axis event past the dead zone, and `Read` reads the deflection alone.
-- The reader polls through `IInputPoll`: `EnginePoll` over the engine, and a test poll in `InputReaderTests`, the two callers of D-111. Eight reader tests pin the device transitions and every D-289 binding with a bit. The regression test fails on the old line, 1 failed and 7 passed, and passes on the correction.
-- `docs/reviews/pr-49-response.md` records the disposition, the correction, and the regression check.
-- Sessions 117 and 116 moved to the archive, because the file held eleven entries.
-
-### State of the build
-
-- `main` is at `e1cf847`. The effective head is the correction commit, the one commit above the review commits `42bd504`, `307f025`, and `735f7fd`.
-- Remote head: `origin/feat/pr-12-game-skeleton` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 584 tests, 0 failures, with the smoke test on the local Godot build.
-- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 11 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. Core did not change.
-
-### In flight
-
-PR #49 needs a repeat Codex review of the correction, the owner answers to OQ-157 and OQ-158, and the owner merge. The automated pass runs again on the push.
-
-### Traps and gotchas
-
-- A `dotnet test --no-build` after a build of the Game project alone reads the stale copy of the Game assembly in the test output. Build the solution before a test of a Game change.
-- A stick moved past the dead zone and released keeps the look with the controller until the mouse moves, because the release event is inside the dead zone.
-- The effective head is the correction commit, not a later metadata commit.
-- The next ids are D-291, OQ-159, F-96, and Session 128.
-
-### Open questions that block progress
-
-OQ-158 blocks the merge of this PR (G-16). OQ-157 binds the two constants and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The automated pass, then a Codex session reviews the correction per the repeat review procedure of the `pr-review` skill and sets the verdict for the new effective head. The owner answers OQ-157 and OQ-158, and merges.
