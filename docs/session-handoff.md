@@ -2,6 +2,55 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 134: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: open PR-57, the asset QA gate v1, as PR #54. Branch `feat/pr-57-asset-qa-gate`.
+
+### What this session did, and why
+
+- PR #53 merged as `5848bda`. The Phase 2 sequence puts PR-57 next, so the session opened it from `main` per the roadmap and D-149.
+- Five questions blocked the exit tests, and the owner answered all five on the day. OQ-45 blocked exit test 1, because the tool checks every keyframe and no format existed. OQ-162 asked where the one model reader lives, because the PR-13 reader used engine vectors in Game and Tools cannot reference Game. OQ-163 asked how an overlay box pairs with its limb box. OQ-164 asked what a clip is. OQ-165 asked what a file name reference is. D-298 to D-302 record the answers.
+- The first answer on the clip rule took every pair with zero tolerance, and the second answer, on keyframes in v1, made every bent elbow a clip. The session quoted both, and the owner exempted the pairs of a bone and its parent (D-301).
+- `WhatYouCarry.Assets` is the fifth project (D-299). The Blockbench reader moved into it from Game with the Core vector, and `AnimationLoader`, `RotationMatrix`, `ModelPose`, and `BoxOverlap` joined it. Game converts each vector where it builds a node.
+- `WhatYouCarry.Tools/AssetQa/` holds the command `asset-qa` and the three checks: `ClipCheck`, `OverlayCheck`, and `FileCaseCheck`. `AssetSet` reads every model, overlay, and animation, and a file that does not load is a finding and not a stop.
+- `ContentLoader.ModelDirectory` names the directory that every content source skips (D-298), in Game, in the bot runner, and in the tests.
+- `.github/workflows/asset-qa.yml` is the new job, and `CLAUDE.md` and `AGENTS.md` carry the command, the gate line, and the Assets rule.
+- Exit tests 1 to 5 pass, with 82 new tests. The command on the checkout reports 0 findings over 1 model.
+- The automated pass on `73ba35b` had one comment, and it has merit: a pair of two body boxes counted once per overlay, and an unknown bone in an animation gave one finding per overlay. `0cb62c7` counts a body pair on the pass with no overlay alone and checks the tracks of an animation once, with two regression tests that fail on `73ba35b`. The reply on the thread names the commit. The automatic pass was paused by the trial quota after the push, and the comment `Gitar review` ran one on demand, which approved `0cb62c7` with the one finding resolved (D-250).
+
+### State of the build
+
+- `main` is at `5848bda`, the squash merge of PR #53. This branch holds the feat commit `73ba35b` and the fix commit `0cb62c7` above it, and the effective head is `0cb62c7`.
+- Remote head: `origin/feat/pr-57-asset-qa-gate` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 704 tests, 0 failures, with the smoke test on the local Godot build. Core gained one constant and no behavior.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 24 files. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`. `asset-qa`: 0 findings, 1 model, 0 overlays, 0 animations.
+- The Godot editor build, the headless smoke session, and the headless bot session end with exit code 0. The bot reaches floor 2 of seed 1 at tick 421.
+- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. It turns red at 13:45 UTC on 2026-09-13 unless a night refreshes it. The run list held no later night at 06:22 UTC on 2026-09-12. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
+
+### In flight
+
+PR #54: the Codex review. The automated pass approved the effective head. No open question binds it.
+
+### Traps and gotchas
+
+- A `.json` file under `content/models/` is an animation, and the Core loader never sees it. A `.json` file in any other unclaimed directory still errors in the Core loader.
+- A file that is not JSON gives two findings: one from the loader and one from the file case check. Each check reads the file on its own.
+- The euler order is the order of Blockbench: the matrix is Rz times Ry times Rx. The test `RotationOrderIsBlockbenchOrder` pins it, and the pose tests read meters and not file units.
+- The clip check poses the body with each overlay alone, never two overlays together, because two pieces for one slot enclose the same limb.
+- A texture `path` in a model file is a machine path that Blockbench writes, and the file case check flags a rooted reference. The player model has no texture, and PR-14 assigns the atlas.
+- The frame log of a `--fixed-fps` run reads the fixed frame time. M-3 runs without that flag.
+- The automatic pass of gitar pauses when the trial quota of the period is used. The comment `Gitar review` on the PR runs one on demand.
+- The next ids are D-303, OQ-166, F-96, and Session 135.
+
+### Open questions that block progress
+
+OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-1 blocks PR-14. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #54 per the `pr-review` skill, at the effective head `0cb62c7`. After the merge, the owner answers OQ-1, and a fresh session opens PR-14.
+
 ## Session 133: 2026-09-12, Claude Code
 
 Author: Claude Code
@@ -372,38 +421,3 @@ OQ-158 blocks the merge of this PR (G-16). OQ-157 binds the two constants and bl
 ### Next concrete action
 
 A Codex session reviews PR #49 at the effective head `91d1b6f` per the `pr-review` skill: the Core boundary, the determinism of the builder, the input and CI boundaries, and the presentation. The owner answers OQ-157 and OQ-158 in `docs/decisions.md`, and a commit sets the two constants if the answer differs from the recommendation. After the merge, the owner answers OQ-43 and OQ-49, and a session opens PR-13.
-
-## Session 124: 2026-09-11, Codex
-
-Author: Codex
-Session: re-review PR #48 at effective head `4786cfa`. Branch `chore/night-back-to-0807`.
-
-### What this session did, and why
-
-- Verified that the effective head remains `4786cfa`. The later commits change only review and handoff metadata under D-184.
-- Read the prior review, the complete implementation diff, all PR comments, D-286, D-288, D-290, F-94, F-95, the Phase 1 roadmap, and the changed workflow and shape test.
-- No finding remains. The required Linux, Windows, and macOS CI jobs, three-platform bit identity, bots, det-lint, STE check, night-gate, and Gitar pass.
-- Updated `docs/reviews/pr-48.md` with the earlier `Blocked` verdict and the current `Ready for owner merge` verdict.
-
-### State of the build
-
-- `main` and the merge base are `b700296`. The effective implementation head is `4786cfa`. The current metadata tip is `ccabf74` before this re-review commit.
-- The prior local build and focused suite passed. The local full test run did not complete after 120 seconds with no output. Remote platform CI passed the full suite.
-- Evaluate and review-gate failed only because the prior review record held `Blocked`. They must refresh after this re-review record reaches the PR head.
-
-### In flight
-
-The re-review record and this handoff entry need a commit and push. The fresh review-gate result must pass against `Ready for owner merge`.
-
-### Traps and gotchas
-
-- The effective head is `4786cfa`, not the metadata tip.
-- The prior blocked result was correct while Windows CI was pending. The current verdict can approve only after all required platform checks pass.
-
-### Open questions that block progress
-
-None. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Commit and push the re-review record and handoff entry. Fetch the remote. Confirm that the remote has no ahead count and that the fresh review-gate result passes.

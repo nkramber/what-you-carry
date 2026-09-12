@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 124: 2026-09-11, Codex
+
+Author: Codex
+Session: re-review PR #48 at effective head `4786cfa`. Branch `chore/night-back-to-0807`.
+
+### What this session did, and why
+
+- Verified that the effective head remains `4786cfa`. The later commits change only review and handoff metadata under D-184.
+- Read the prior review, the complete implementation diff, all PR comments, D-286, D-288, D-290, F-94, F-95, the Phase 1 roadmap, and the changed workflow and shape test.
+- No finding remains. The required Linux, Windows, and macOS CI jobs, three-platform bit identity, bots, det-lint, STE check, night-gate, and Gitar pass.
+- Updated `docs/reviews/pr-48.md` with the earlier `Blocked` verdict and the current `Ready for owner merge` verdict.
+
+### State of the build
+
+- `main` and the merge base are `b700296`. The effective implementation head is `4786cfa`. The current metadata tip is `ccabf74` before this re-review commit.
+- The prior local build and focused suite passed. The local full test run did not complete after 120 seconds with no output. Remote platform CI passed the full suite.
+- Evaluate and review-gate failed only because the prior review record held `Blocked`. They must refresh after this re-review record reaches the PR head.
+
+### In flight
+
+The re-review record and this handoff entry need a commit and push. The fresh review-gate result must pass against `Ready for owner merge`.
+
+### Traps and gotchas
+
+- The effective head is `4786cfa`, not the metadata tip.
+- The prior blocked result was correct while Windows CI was pending. The current verdict can approve only after all required platform checks pass.
+
+### Open questions that block progress
+
+None. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit and push the re-review record and handoff entry. Fetch the remote. Confirm that the remote has no ahead count and that the fresh review-gate result passes.
+
 ## Session 123: 2026-09-11, Codex
 
 Author: Codex
