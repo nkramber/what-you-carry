@@ -2,6 +2,51 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 142: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: open PR-60, the fullscreen window and the test exit, as PR #58. Branch `feat/pr-60-fullscreen-test-exit`.
+
+### What this session did, and why
+
+- PR #57 merged as `f3f0bc0`, and the Session 141 handoff named PR-60 as the next action. This session opened it from `main` per D-310 to D-312.
+- `WhatYouCarry.Game/project.godot` gains a `[display]` section with `window/size/mode=3`, the borderless fullscreen of the engine, and no window size, so the viewport takes the resolution of the display (D-310).
+- `WhatYouCarry.Game/Input/TestExit.cs` holds the two exit inputs, the Escape key and the Start button of the first controller (D-311). `Main` polls it once per tick before the intent, in every session that runs the loop, and quits with the end line `The test exit ends the session.` and exit code 0 when the log holds no error line. `Main` now holds one poll for the reader and the exit.
+- The fake poll of the reader tests moved to `WhatYouCarry.Tests/FakePoll.cs`, because the test exit tests share it. `TestExitTests.cs` holds exit tests 2 to 4, and `GameShapeTests.WindowOpensFullscreen` is exit test 1. The window test fails on the old project file with `The project has no display section.`
+- `CLAUDE.md` and `AGENTS.md` update the play session line: the window opens fullscreen, Escape or Start ends the session, and the engine flag `--windowed` gives a window.
+- The automated pass of gitar ran on `3dfbf03` after the push and approved it at 19:52 UTC with no comment, and its dashboard comment still shows the trial pause note (D-250). The comment `Gitar review` per D-303 got the reply `On it` at 19:53 UTC and no further output in fifty minutes. The approved check run on the head is the pass of D-250.
+- Session 132 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `f3f0bc0`. The effective head of PR #58 is `3dfbf03`, the one code commit. This entry is in a metadata commit above it (D-184).
+- Remote head: `origin/feat/pr-60-fullscreen-test-exit` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 765 tests, 0 failures, with the two Smoke tests on the local Godot build.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 27 files. `ste-check`: 0 findings in 15 files. The Godot build check passed.
+- On `3dfbf03`, CI, bit identity, and smoke passed on the three platforms, and bots, det-lint, asset-qa, STE check, and the night gate passed. The `evaluate` check fails and `review-gate` is grey, because no review record exists yet (D-251).
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-13, and it can start hours late (F-95).
+
+### In flight
+
+PR #58: the Codex review per the `pr-review` skill at the effective head `3dfbf03`, then the owner merge. A docs PR then records the merge (D-297).
+
+### Traps and gotchas
+
+- Every session with a window now opens in fullscreen: the play session, the windowed contact sheet run, and the M-3 bot session. The engine flag `--windowed` overrides it. A headless run opens no window, and the smoke workflow proves it.
+- The test exit polls the input once per tick in every session that runs the loop, the smoke and bot sessions too. A headless run has no key down, so CI never ends there. A windowed bot session ends on Escape, and the frame log still writes.
+- No visual check of the fullscreen ran in this session, because a test cannot see the window. The play session of the owner is that check.
+- The `evaluate` check fails until the review record exists, and the `review-gate` check stays grey (D-251).
+- The pause note of gitar can show on a PR whose automatic pass ran and approved the head. Read the `Gitar` check run on the head before you post `Gitar review`, and count an `On it` reply with no later output as no new pass.
+- The next ids are D-313, OQ-170, F-96, and Session 143.
+
+### Open questions that block progress
+
+None blocks PR #58. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #58 per the `pr-review` skill at the effective head `3dfbf03` and writes `docs/reviews/pr-58.md`. The owner then merges, and a docs PR records the merge. The owner answers OQ-5 and OQ-46 before PR-15.
+
 ## Session 141: 2026-09-12, Claude Code
 
 Author: Claude Code
@@ -373,40 +418,3 @@ OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and
 ### Next concrete action
 
 The owner merges this PR with the `review-override` label. A fresh session then opens PR-57, the asset QA gate v1, from `main` per the Phase 2 roadmap. The owner runs the M-3 command on the Deck when OQ-161 has its answer.
-
-## Session 132: 2026-09-11, Codex
-
-Author: Codex
-Session: review PR #52 at effective head `9085a95`.
-
-### What this session did, and why
-
-- Verified the provider gate. Claude Code authored the substantive PR commits, so Codex is the eligible reviewer under T-4 and D-101.
-- Read the complete diff, the model file, affected callers, Core bot and simulation contracts, roadmap, decisions, questions, tests, and every PR comment.
-- Found no defect. The automated pass finding on frame-log permission errors is corrected in `9085a95`.
-- Added `docs/reviews/pr-52.md` with the verdict `Ready for owner merge`.
-
-### State of the build
-
-- The effective head is `9085a95`. The review and handoff commit are metadata only.
-- Local build, full test, focused tests, det-lint, STE check, bit identity, Godot editor build, and smoke pass.
-- The bot session passes on seed 1 at floor 2 and tick 421. Its local frame log has 1,001 frames and a 99th percentile of 7,402 microseconds.
-- Remote build and test, bots, bit identity, det-lint, night gate, STE check, and smoke pass on the reviewed effective head. The review-gate passes after the metadata push. Duplicate platform checks from that push remain pending.
-
-### In flight
-
-PR #52 needs the owner merge after the pending duplicate checks settle. Exit test 7 needs the Steam Deck M-3 run under OQ-161.
-
-### Traps and gotchas
-
-- The review-gate check passes after `docs/reviews/pr-52.md` reaches the PR head.
-- The effective head is `9085a95`, not the later metadata commit.
-- Visual feel and Deck readability remain for M-3 and Gate 2.
-
-### Open questions that block progress
-
-OQ-161 blocks exit test 7 and M-3. OQ-159 and OQ-160 block nothing.
-
-### Next concrete action
-
-The review and handoff are pushed at `42e5a46`. Verify the pending duplicate checks, then the owner can merge.
