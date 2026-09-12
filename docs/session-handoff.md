@@ -27,7 +27,7 @@ Session: record the owner answers to OQ-15, OQ-43, OQ-49, OQ-50, OQ-157, and OQ-
 
 ### In flight
 
-This PR: docs alone, with the `review-override` label after the automated pass. Then PR-13 opens from `main` per the Phase 2 roadmap: the Blockbench loader, the greedy mesher, and the wall fade shader.
+PR #51: docs alone. The automated pass approved the head with no code finding. Its one comment reads the missing review record, and the reply on the PR names the `review-override` label (D-188, D-190). No commit answered it. The label is on, and the owner merge is next. Then PR-13 opens from `main` per the Phase 2 roadmap: the Blockbench loader, the greedy mesher, and the wall fade shader.
 
 ### Traps and gotchas
 
