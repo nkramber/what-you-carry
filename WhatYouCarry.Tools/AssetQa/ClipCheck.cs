@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using WhatYouCarry.Assets;
-using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 
 namespace WhatYouCarry.Tools.AssetQa;
@@ -19,12 +18,14 @@ namespace WhatYouCarry.Tools.AssetQa;
 /// </para>
 /// <para>
 /// The check poses the body with each overlay alone, and never two overlays together, because two pieces
-/// for one slot enclose the same limb and never dress the body at the same time.
+/// for one slot enclose the same limb and never dress the body at the same time. A pair of two body boxes
+/// counts once, on the pass with no overlay, so a body clip gives one finding and not one per overlay.
 /// </para>
 /// </remarks>
 public static class ClipCheck
 {
     private const string RestPose = "the rest pose";
+    private const string NotABone = "is not a bone of the model, and every track of an animation names one";
 
     /// <summary>Every clip finding of the set, in the order of the models, then the poses, then the pairs.</summary>
     public static IReadOnlyList<AssetFinding> Run(AssetSet set)
@@ -32,6 +33,20 @@ public static class ClipCheck
         List<AssetFinding> findings = [];
         foreach (LoadedModel body in set.Bodies)
         {
+            List<LoadedAnimation> animations = [];
+            foreach (LoadedAnimation animation in set.AnimationsOf(body))
+            {
+                string? unknown = UnknownBone(body.Model, animation.Clip);
+                if (unknown is not null)
+                {
+                    // A track that names no bone of the model is one finding on the animation, and no pose reads the animation.
+                    findings.Add(new AssetFinding(animation.Path, $"'{unknown}' {NotABone} '{body.Path}'"));
+                    continue;
+                }
+
+                animations.Add(animation);
+            }
+
             List<LoadedModel?> dressings = [null];
             if (body.Path == AssetPaths.BodyModel)
             {
@@ -44,7 +59,7 @@ public static class ClipCheck
             foreach (LoadedModel? overlay in dressings)
             {
                 CheckPose(body, overlay, RestPose, new Dictionary<string, Vector3>(), findings);
-                foreach (LoadedAnimation animation in set.AnimationsOf(body))
+                foreach (LoadedAnimation animation in animations)
                 {
                     CheckAnimation(body, overlay, animation, findings);
                 }
@@ -54,23 +69,27 @@ public static class ClipCheck
         return findings;
     }
 
-    /// <summary>Every keyframe tick of one animation, on the body and one overlay or none.</summary>
+    /// <summary>The first track bone that the model does not have, or null when every track names a bone.</summary>
+    private static string? UnknownBone(BlockbenchModel model, AnimationClip clip)
+    {
+        foreach (BoneTrack track in clip.Tracks)
+        {
+            if (model.BoneIndex(track.Bone) == ModelBone.NoParent)
+            {
+                return track.Bone;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Every keyframe tick of one animation, on the body and one overlay or none. Every track names a bone of the body.</summary>
     private static void CheckAnimation(LoadedModel body, LoadedModel? overlay, LoadedAnimation animation, List<AssetFinding> findings)
     {
         foreach (int tick in animation.Clip.KeyframeTicks())
         {
             string pose = $"tick {tick.ToString(CultureInfo.InvariantCulture)} of '{animation.Path}'";
-            IReadOnlyDictionary<string, Vector3> rotations = animation.Clip.RotationsAt(tick);
-            try
-            {
-                CheckPose(body, overlay, pose, rotations, findings);
-            }
-            catch (ContextException error)
-            {
-                // A track that names no bone of the model is a defect of the animation, and the check reports it once per pose.
-                findings.Add(new AssetFinding(animation.Path, error.Message));
-                return;
-            }
+            CheckPose(body, overlay, pose, animation.Clip.RotationsAt(tick), findings);
         }
     }
 
@@ -104,6 +123,12 @@ public static class ClipCheck
         {
             for (int second = first + 1; second < boxes.Count; second++)
             {
+                if (overlay is not null && !boxes[first].IsOverlay && !boxes[second].IsOverlay)
+                {
+                    // Two body boxes count once, on the pass with no overlay.
+                    continue;
+                }
+
                 CheckPair(body.Model, boxes[first], boxes[second], pose, findings);
             }
         }

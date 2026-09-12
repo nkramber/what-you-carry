@@ -84,6 +84,38 @@ public sealed class AssetQaTests
         Assert.Contains("wing", finding.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>A body clip is one finding, and not one per overlay: two body boxes count once, on the pass with no overlay.</summary>
+    [Fact]
+    public void BodyClipIsReportedOnce()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write(AssetPaths.BodyModel, ModelJson.SiblingRig());
+        content.Write("models/player.attack.json", ModelJson.Animation(AssetPaths.BodyModel, "arm_bone", 10, "[0, 0, -90]"));
+        content.Write("models/armor/sleeve.bbmodel", ModelJson.Overlay("arm", "[4, 8, -2]", "[8, 16, 2]"));
+        content.Write("models/armor/glove.bbmodel", ModelJson.Overlay("arm", "[4, 8, -2]", "[8, 16, 2]"));
+
+        IReadOnlyList<AssetFinding> findings = Findings(content);
+
+        Assert.Equal(3, findings.Count);
+        Assert.Single(findings, finding => finding.Message.Contains("the box 'arm'", StringComparison.Ordinal));
+        Assert.Equal(2, findings.Count(finding => finding.Message.Contains("the overlay box 'arm'", StringComparison.Ordinal)));
+    }
+
+    /// <summary>An unknown bone in an animation is one finding when overlays exist too, and no pose reads that animation.</summary>
+    [Fact]
+    public void UnknownBoneIsOneFindingWithOverlays()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write(AssetPaths.BodyModel, ModelJson.TorsoBody());
+        content.Write("models/player.attack.json", ModelJson.Animation(AssetPaths.BodyModel, "wing", 10, "[0, 0, -90]"));
+        content.Write("models/armor/chest.bbmodel", ModelJson.Overlay("torso", "[-5, -1, -5]", "[5, 17, 5]"));
+
+        AssetFinding finding = Assert.Single(Findings(content));
+        Assert.Equal("models/player.attack.json", finding.Path);
+        Assert.Contains("'wing'", finding.Message, StringComparison.Ordinal);
+        Assert.Contains(AssetPaths.BodyModel, finding.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// A model or an animation that does not load is a finding with the loader message, and not a stop (T-2).
     /// A file that is not JSON is a finding of the case check too, because that check reads every file on its own.
