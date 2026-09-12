@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 143: 2026-09-12, Codex
+
+Author: Codex
+Session: review PR #58 at effective head `3dfbf03`.
+
+### What this session did, and why
+
+- Verified the provider gate. The handoff identifies Claude Code as the author of the code commit, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the PR description, full effective diff, roadmap, decisions, questions, review records, and all PR comments.
+- Found P2-1. The Escape and Start tests check only `TestExit.IsPressed`. They do not prove that `Main` writes the end line or quits with exit code 0, although D-311 and the roadmap require that behavior.
+- Added `docs/reviews/pr-58.md` with the verdict `Changes required` for effective head `3dfbf03`.
+
+### State of the build
+
+- `main` and the merge base are `f3f0bc0`. The effective head is `3dfbf03`. The later handoff commit remains outside the effective diff under D-184.
+- The serial local build passed with 0 warnings and 0 errors. Focused tests passed, 12 tests with 0 failures. Det-lint, STE check, bit identity, and the Godot build check passed.
+- The local full test stalled after discovery and was cancelled. Remote CI reported in the previous handoff passed on the code head. The metadata-tip CI rerun passes the product jobs. `evaluate` fails and `review-gate` is neutral until the review record reaches the PR.
+- `git fetch origin` could not open `.git/FETCH_HEAD` in this checkout. The local branch is at the remote PR metadata tip `74ab9d8` according to `gh pr view`.
+
+### In flight
+
+PR #58 needs end-to-end Escape and Start exit tests. The owner must merge only after the finding is corrected and the review gate passes for the effective head.
+
+### Traps and gotchas
+
+- The effective head is `3dfbf03`, not the metadata tip `74ab9d8`, under D-184.
+- The focused tests pass because they call the helper directly. They do not run the game loop.
+- The next ids are D-313, OQ-170, F-96, and Session 144.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants but block no work. OQ-44 and OQ-99 do not block this PR.
+
+### Next concrete action
+
+The author adds integration coverage for both test exits, pushes the correction, and requests the repeat cross-provider review.
+
 ## Session 142: 2026-09-12, Claude Code
 
 Author: Claude Code
