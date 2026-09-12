@@ -75,6 +75,8 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-13: Model loader and mesher
 
+Status: open 2026-09-11 as PR #52. Exit tests 1 to 6 pass. Exit test 7 waits for the M-3 run on the Steam Deck of D-296 (OQ-161). OQ-159 and OQ-160 bind the constants of the loader, the mesher, and the shader.
+
 Scope:
 
 - `WhatYouCarry.Game/Models/BlockbenchLoader.cs`: reads a Blockbench JSON file and builds an ArrayMesh from the box list (D-9, D-18). The box hierarchy becomes the bones for animation. Each equipment slot has one attachment point.
@@ -334,6 +336,8 @@ Gate: exit tests 1 to 5 pass.
 
 Procedure: on the Steam Deck OLED of the owner (D-296), run the PR-13 build and then the PR-18 build over one full floor. The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target comes from D-295. A miss files a question that binds the next render PR (F-3).
 
+The bot session and the frame log come from PR-13 (OQ-161). The command in `CLAUDE.md` starts the game with the two flags `--bot` and `--frame-log <path>`. The session ends at the first descent. The file holds one frame time per line, in microseconds. The end line of the log carries the count of frames and the 99th percentile. The seed of the session is the first seed of `Main` until the hub of PR-30 picks one per run. The three seeds of the table wait for a seed flag or for PR-30.
+
 ## 5. Sequence
 
 One person owns the program. Items run one at a time in this order. Gate 1 signed 2026-09-11 (D-288).
@@ -375,6 +379,9 @@ Open:
 - OQ-45: the animation keyframe format. Blocks PR-15.
 - OQ-46: the initial combat numbers. Blocks PR-15.
 - OQ-48: the sound parameter format. Blocks PR-20.
+- OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
+- OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
+- OQ-161: the M-3 run on the Steam Deck. Blocks exit test 7 of PR-13 and M-3.
 
 Resolved 2026-09-11:
 
