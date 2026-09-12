@@ -361,6 +361,86 @@ public sealed class TextureGenTests
         Assert.False(File.Exists(Path.Combine(content.Content, AssetPaths.AtlasImage)));
     }
 
+    /// <summary>A rule file that the user cannot read is exit code 1 with the file name, and never an unhandled exception (T-2, PR #56 review P2-1).</summary>
+    [Fact]
+    public void CommandReportsAnUnreadableRule()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write(AssetPaths.PaletteFile, File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
+        content.Write(AssetPaths.RuleDirectory + "raw-stone.json", Encoding.UTF8.GetString(RuleBytes()));
+        string rule = Path.Combine(content.Content, AssetPaths.RuleDirectory, "raw-stone.json");
+
+        (int exit, string errors) = RunWithUnreadableFile(content.Root, rule);
+
+        Assert.Equal(1, exit);
+        Assert.Contains("raw-stone.json", errors, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(content.Content, AssetPaths.AtlasImage)));
+    }
+
+    /// <summary>A palette that the user cannot read is exit code 1 with the file name, and never an unhandled exception (T-2, PR #56 review P2-1).</summary>
+    [Fact]
+    public void CommandReportsAnUnreadablePalette()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write(AssetPaths.PaletteFile, File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
+        content.Write(AssetPaths.RuleDirectory + "raw-stone.json", Encoding.UTF8.GetString(RuleBytes()));
+        string palette = Path.Combine(content.Content, AssetPaths.PaletteFile);
+
+        (int exit, string errors) = RunWithUnreadableFile(content.Root, palette);
+
+        Assert.Equal(1, exit);
+        Assert.Contains("palette.json", errors, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(content.Content, AssetPaths.AtlasImage)));
+    }
+
+    /// <summary>
+    /// Runs the command while one file cannot be read, and returns the exit code and the error output. Windows reads no
+    /// file that another handle holds with no share, and Linux and macOS read no file with no permission. The method
+    /// first proves the file unreadable, so a user that permissions do not bind fails the test and never passes it, and
+    /// it makes the file readable again before it returns.
+    /// </summary>
+    private static (int Exit, string Errors) RunWithUnreadableFile(string root, string file)
+    {
+        TextWriter savedError = Console.Error;
+        using StringWriter errors = new();
+        FileStream? hold = null;
+        if (OperatingSystem.IsWindows())
+        {
+            hold = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None);
+        }
+        else
+        {
+            File.SetUnixFileMode(file, UnixFileMode.None);
+        }
+
+        try
+        {
+            bool readable = true;
+            try
+            {
+                File.ReadAllBytes(file);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                readable = false;
+            }
+
+            Assert.False(readable, $"The test could not make '{file}' unreadable, so it cannot reach the read failure.");
+            Console.SetError(errors);
+            int exit = TextureGenCommand.Run(["--root", root]);
+            return (exit, errors.ToString());
+        }
+        finally
+        {
+            Console.SetError(savedError);
+            hold?.Dispose();
+            if (!OperatingSystem.IsWindows())
+            {
+                File.SetUnixFileMode(file, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            }
+        }
+    }
+
     /// <summary>An absent palette, an absent rule directory, and a rule directory with no rule are each an error that names the place.</summary>
     [Fact]
     public void AnAbsentPaletteOrRuleIsAnError()

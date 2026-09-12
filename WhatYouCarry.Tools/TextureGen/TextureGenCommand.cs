@@ -20,7 +20,7 @@ public static class TextureGenCommand
     /// <summary>The file pattern of a rule file.</summary>
     public const string RulePattern = "*.json";
 
-    /// <summary>The whole run as an exit code: 0 when the atlas is written, 1 on a bad palette, a bad rule, or a write failure, 2 on a bad command line.</summary>
+    /// <summary>The whole run as an exit code: 0 when the atlas is written, 1 on a palette or a rule that is bad or unreadable, or on a write failure, 2 on a bad command line.</summary>
     public static int Run(string[] args)
     {
         string? root = null;
@@ -72,7 +72,7 @@ public static class TextureGenCommand
     }
 
     /// <summary>The bytes of the atlas PNG that the palette and the rules under one content directory give.</summary>
-    /// <exception cref="ContextException">The palette or the rule directory is absent, or a file is not valid.</exception>
+    /// <exception cref="ContextException">The palette or the rule directory is absent, the user cannot read an input, or a file is not valid.</exception>
     public static byte[] AtlasBytes(string contentRoot)
     {
         Palette palette = Palette.Parse(AssetPaths.PaletteFile, ReadFile(contentRoot, AssetPaths.PaletteFile));
@@ -82,7 +82,7 @@ public static class TextureGenCommand
     }
 
     /// <summary>Every rule file of the rule directory, in ordinal order of the file name.</summary>
-    /// <exception cref="ContextException">The directory is absent, it holds no rule file, or a rule is not valid.</exception>
+    /// <exception cref="ContextException">The directory is absent, the user cannot read it or a rule in it, it holds no rule file, or a rule is not valid.</exception>
     public static IReadOnlyList<TextureRule> ReadRules(string contentRoot, Palette palette)
     {
         string directory = Path.Combine(contentRoot, AssetPaths.RuleDirectory);
@@ -91,24 +91,34 @@ public static class TextureGenCommand
             throw new ContextException($"The rule directory '{directory}' does not exist.");
         }
 
-        string[] files = Directory.GetFiles(directory, RulePattern);
-        Array.Sort(files, StringComparer.Ordinal);
-        if (files.Length == 0)
+        try
         {
-            throw new ContextException($"The rule directory '{directory}' holds no rule file, and the atlas needs one rule per tile that it paints (D-307).");
-        }
+            string[] files = Directory.GetFiles(directory, RulePattern);
+            Array.Sort(files, StringComparer.Ordinal);
+            if (files.Length == 0)
+            {
+                throw new ContextException($"The rule directory '{directory}' holds no rule file, and the atlas needs one rule per tile that it paints (D-307).");
+            }
 
-        List<TextureRule> rules = [];
-        foreach (string file in files)
+            List<TextureRule> rules = [];
+            foreach (string file in files)
+            {
+                string contentPath = AssetPaths.RuleDirectory + Path.GetFileName(file);
+                rules.Add(TextureRule.Parse(contentPath, File.ReadAllBytes(file), palette));
+            }
+
+            return rules;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
-            string contentPath = AssetPaths.RuleDirectory + Path.GetFileName(file);
-            rules.Add(TextureRule.Parse(contentPath, File.ReadAllBytes(file), palette));
+            // A directory or a file that the user cannot read raises the second kind, and it is not an IOException.
+            // The message of the platform names the exact path, and the directory listing and each rule read share
+            // this one boundary (PR #56 review P2-1).
+            throw new ContextException($"The rule directory '{directory}' or a rule in it could not be read. {error.Message}", error);
         }
-
-        return rules;
     }
 
-    /// <summary>The bytes of one file under the content directory. An absent file is an error that names the path (T-2).</summary>
+    /// <summary>The bytes of one file under the content directory. An absent file, and a file that the user cannot read, are each an error that names the path (T-2).</summary>
     private static byte[] ReadFile(string contentRoot, string contentPath)
     {
         string file = Path.Combine(contentRoot, contentPath);
@@ -117,7 +127,15 @@ public static class TextureGenCommand
             throw new ContextException($"The file '{file}' does not exist.");
         }
 
-        return File.ReadAllBytes(file);
+        try
+        {
+            return File.ReadAllBytes(file);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // A file that the user cannot read raises the second kind, and it is not an IOException (PR #56 review P2-1).
+            throw new ContextException($"The file '{file}' could not be read. {error.Message}", error);
+        }
     }
 
     private static string Text(int number)
