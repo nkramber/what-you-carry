@@ -343,8 +343,9 @@ public partial class Main : Node3D
     }
 
     /// <summary>
-    /// Ends the session. The frame log, when one runs, goes to its file first, and a write failure turns the
-    /// exit code to failure. The engine quits at the end of the frame, and no later tick runs.
+    /// Ends the session. The frame log, when one runs, goes to its file first, and a write failure of either
+    /// kind, a disk error or a path the user cannot write, turns the exit code to failure. The engine quits at
+    /// the end of the frame, and no later tick runs.
     /// </summary>
     private void Quit(int exitCode)
     {
@@ -355,8 +356,9 @@ public partial class Main : Node3D
             {
                 File.WriteAllText(this.frameLogPath, this.frames.Text());
             }
-            catch (IOException error)
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
             {
+                // A path that the user cannot write raises the second kind, and it is not an IOException.
                 LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
                 fields.Add(FileField, this.frameLogPath);
                 this.LogFailure(FrameLogFailedMessage, fields, error);
