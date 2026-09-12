@@ -18,10 +18,11 @@ Session: open PR-13, the model loader, the greedy mesher, and the wall fade shad
 - Exit tests 1 to 6 pass, with 38 new tests. Exit test 7 waits for the M-3 run on the Deck (OQ-161). OQ-159 and OQ-160 hold the constants of the loader, the mesher, and the shader, with the recommendation in the code.
 - The session checked the render with the movie writer of the engine, because `screencapture` reaches no display from the shell. The walls, the floor, and the ceiling show from inside with the merged faces, and a wall between the camera and the player dissolves in the dither when the radius is large.
 - `CLAUDE.md` and `AGENTS.md` gain the bot session command. Session 121 moved to the archive.
+- The automated pass approved the head with one comment, and it has merit: a path that the user cannot write raises `UnauthorizedAccessException`, which is not an `IOException`, so the frame log write failure escaped the catch with no error line (T-2). `9085a95` widens the catch, and the reply on the thread names it (D-250).
 
 ### State of the build
 
-- `main` is at `52ab6ca`, the squash merge of PR #51. This branch holds one feat commit above it.
+- `main` is at `52ab6ca`, the squash merge of PR #51. This branch holds the feat commit `9a7fb96` and the fix commit `9085a95` above it, and the effective head is `9085a95`.
 - Remote head: `origin/feat/pr-13-model-loader-and-mesher` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 622 tests, 0 failures, with the smoke test on the local Godot build. Core did not change.
 - `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 27 files. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`.
