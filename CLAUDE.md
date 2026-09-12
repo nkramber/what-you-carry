@@ -113,7 +113,7 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Smoke session, local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke`
-- Play session, a local run with a window after the build: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game`. The session captures the mouse and has no quit key, so press Cmd+Q, or Ctrl+C in the terminal.
+- Play session, a local run after the build: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game`. The window opens in borderless fullscreen at the resolution of the display (D-310), and the session captures the mouse. The Escape key or the Start button of a controller ends the session (D-311). The engine flag `--windowed` opens a window in place of the fullscreen.
 - Bot session with a frame log, for M-3: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt`
 - Contact sheet, a local run with a window: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
 

@@ -42,6 +42,12 @@ namespace WhatYouCarry.Game;
 /// project directory, which is the content directory of the checkout (D-219, D-305).
 /// </para>
 /// <para>
+/// The window opens in the borderless fullscreen of the engine at the resolution of the display, from the
+/// project settings (D-310). The Escape key and the Start button of a controller end any session that runs
+/// the loop, with an end line and exit code 0, until the escape menu of PR-53 replaces the test exit (D-311).
+/// The poll of the tick reads both inputs before the intent, so the exit needs no input event.
+/// </para>
+/// <para>
 /// The contact sheet flag starts no loop. It renders every block material and the body at game zoom to one PNG
 /// file for the review of the owner, and quits (D-306).
 /// </para>
@@ -68,6 +74,9 @@ public partial class Main : Node3D
 
     /// <summary>The message of the line at the end of the bot session.</summary>
     public const string BotEndMessage = "The bot session ends.";
+
+    /// <summary>The message of the line at the end of a session that the test exit ends (D-311).</summary>
+    public const string TestExitMessage = "The test exit ends the session.";
 
     /// <summary>The message of the error line of a boot failure.</summary>
     public const string BootFailedMessage = "The boot failed, and the game quits.";
@@ -115,8 +124,9 @@ public partial class Main : Node3D
 
     private readonly PrintLogSink sink = new();
     private readonly JsonlLogger logger;
+    private readonly IInputPoll poll = new EnginePoll();
     private readonly IntentBuilder builder = new();
-    private readonly InputReader reader = new(new EnginePoll());
+    private readonly InputReader reader;
 
     private SimulationLoop? loop;
     private Node3D? player;
@@ -136,6 +146,7 @@ public partial class Main : Node3D
     public Main()
     {
         this.logger = new JsonlLogger(this.sink);
+        this.reader = new InputReader(this.poll);
     }
 
     /// <inheritdoc/>
@@ -158,6 +169,13 @@ public partial class Main : Node3D
     {
         if (this.loop is null || this.ended)
         {
+            return;
+        }
+
+        if (TestExit.IsPressed(this.poll))
+        {
+            this.logger.Write(LogContextKind.Run, LogLevel.Info, TestExitMessage, this.EndFields());
+            this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
             return;
         }
 

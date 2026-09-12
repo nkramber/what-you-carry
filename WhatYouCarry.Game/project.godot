@@ -14,6 +14,10 @@ config/name="What You Carry"
 run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
+[display]
+
+window/size/mode=3
+
 [dotnet]
 
 project/assembly_name="WhatYouCarry.Game"

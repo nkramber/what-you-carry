@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Godot;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Game.Content;
@@ -70,6 +71,27 @@ public sealed class GameShapeTests
         string project = RepositoryRoot.ReadFile("WhatYouCarry.Game/project.godot");
         Assert.Contains("run/main_scene=\"res://Main.tscn\"", project, StringComparison.Ordinal);
         Assert.Contains("common/physics_ticks_per_second=60", project, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// PR-60 exit test 1. The project opens the window in the borderless fullscreen of the engine, and it sets no
+    /// window size, so the viewport takes the resolution of the display (D-310). The exclusive mode changes the
+    /// video mode of the display, and the project never asks for it.
+    /// </summary>
+    [Fact]
+    public void WindowOpensFullscreen()
+    {
+        string project = RepositoryRoot.ReadFile("WhatYouCarry.Game/project.godot");
+        int display = project.IndexOf("[display]", StringComparison.Ordinal);
+        Assert.True(display >= 0, "The project has no display section.");
+
+        string section = SectionAfter(project, display);
+        Assert.Contains($"window/size/mode={(int)DisplayServer.WindowMode.Fullscreen}", section, StringComparison.Ordinal);
+        Assert.DoesNotContain("window/size/viewport_width", project, StringComparison.Ordinal);
+        Assert.DoesNotContain("window/size/viewport_height", project, StringComparison.Ordinal);
+        Assert.DoesNotContain("window/size/window_width_override", project, StringComparison.Ordinal);
+        Assert.DoesNotContain("window/size/window_height_override", project, StringComparison.Ordinal);
+        Assert.Equal(3, (int)DisplayServer.WindowMode.Fullscreen);
     }
 
     /// <summary>The root scene is one node with the root script, and the script has its uid file (D-63).</summary>
@@ -180,6 +202,13 @@ public sealed class GameShapeTests
         }
 
         return null;
+    }
+
+    /// <summary>The text of one section of a project file: from its header to the next header, or to the end.</summary>
+    private static string SectionAfter(string project, int header)
+    {
+        int next = project.IndexOf("\n[", header + 1, StringComparison.Ordinal);
+        return next < 0 ? project[header..] : project[header..next];
     }
 
     /// <summary>The count of times one text holds another.</summary>
