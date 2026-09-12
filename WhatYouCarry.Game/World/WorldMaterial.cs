@@ -41,7 +41,7 @@ public static class WorldMaterial
             Shader = GD.Load<Shader>(ShaderPath),
         };
         material.SetShaderParameter(AtlasName, atlas);
-        material.SetShaderParameter(TileSizeName, new Vector2(AtlasLayout.TileSize, AtlasLayout.TileSize));
+        material.SetShaderParameter(TileSizeName, new Vector2(AtlasTile.Size, AtlasTile.Size));
         material.SetShaderParameter(FadeRadiusName, FadeRadius);
         return material;
     }

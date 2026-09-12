@@ -1,7 +1,8 @@
-# Runs the headless smoke session on the three platforms (D-114, D-149; PR-12 exit tests 4 and 5).
+# Runs the tests of the Smoke category on the three platforms (D-114, D-149, D-306; PR-12 exit tests 4 and 5).
 # Each job takes the pinned Godot .NET binary of D-61 from the actions cache, or downloads it from the GitHub
-# release on a miss, builds the solution, and runs the one test of the Smoke category. That test starts the
-# engine headless with the --smoke flag on the built Game assembly, and it reads the exit code and the log.
+# release on a miss, builds the solution, and runs the Smoke category. The first test starts the engine headless
+# with the --smoke flag on the built Game assembly, and it reads the exit code and the log. The second starts it
+# headless with the --contact-sheet flag and expects exit code 1, because the headless display renders no image.
 # The three CI jobs leave that category to this workflow, because they hold no engine. The Windows job names
 # the console executable, because the window executable writes nothing to standard output.
 name: Smoke

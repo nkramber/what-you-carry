@@ -188,11 +188,11 @@ public sealed class GreedyMesherTests
         MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0);
 
         // The surface of the pool at y = 2, and the stone floor around it at y = 2.
-        Assert.Equal(AtlasLayout.TileOrigin(BlockId.StillWater), TileAt(mesh, new Vector3(4.5f, 2.0f, 4.5f), Vector3.Up));
+        Assert.Equal(AtlasTile.Origin(BlockId.StillWater), TileAt(mesh, new Vector3(4.5f, 2.0f, 4.5f), Vector3.Up));
 
         // The stone under the pool shows its top face against the water, and the pool walls show their sides.
-        Assert.Equal(AtlasLayout.TileOrigin(BlockId.RawStone), TileAt(mesh, new Vector3(4.5f, 1.0f, 4.5f), Vector3.Up));
-        Assert.Equal(AtlasLayout.TileOrigin(BlockId.RawStone), TileAt(mesh, new Vector3(4.0f, 1.5f, 4.5f), Vector3.Right));
+        Assert.Equal(AtlasTile.Origin(BlockId.RawStone), TileAt(mesh, new Vector3(4.5f, 1.0f, 4.5f), Vector3.Up));
+        Assert.Equal(AtlasTile.Origin(BlockId.RawStone), TileAt(mesh, new Vector3(4.0f, 1.5f, 4.5f), Vector3.Right));
 
         // The water shows no side face and no bottom face of its own.
         Assert.False(HasFace(mesh, new Vector3(4.0f, 1.5f, 4.5f), Vector3.Left));
@@ -274,7 +274,7 @@ public sealed class GreedyMesherTests
 
             maxU = System.Math.Max(maxU, mesh.Uvs[vertex].X);
             maxV = System.Math.Max(maxV, mesh.Uvs[vertex].Y);
-            Assert.Equal(AtlasLayout.TileOrigin(BlockId.OreVein), mesh.TileOrigins[vertex]);
+            Assert.Equal(AtlasTile.Origin(BlockId.OreVein), mesh.TileOrigins[vertex]);
         }
 
         Assert.Equal(4.0f, maxU);
@@ -310,11 +310,10 @@ public sealed class GreedyMesherTests
     [Fact]
     public void TileOriginsFollowTheBlockId()
     {
-        Assert.Equal(new Vector2(0.0f, 0.0f), AtlasLayout.TileOrigin(BlockId.Air));
-        Assert.Equal(new Vector2(0.125f, 0.0f), AtlasLayout.TileOrigin(BlockId.RawStone));
-        Assert.Equal(new Vector2(0.875f, 0.0f), AtlasLayout.TileOrigin(BlockId.Plank));
-        Assert.Equal(256, AtlasLayout.AtlasPixels);
-        Assert.Equal(8, PlaceholderAtlas.TileColors.Length);
+        Assert.Equal(new Vector2(0.0f, 0.0f), AtlasTile.Origin(BlockId.Air));
+        Assert.Equal(new Vector2(0.125f, 0.0f), AtlasTile.Origin(BlockId.RawStone));
+        Assert.Equal(new Vector2(0.875f, 0.0f), AtlasTile.Origin(BlockId.Plank));
+        Assert.Equal(0.125f, AtlasTile.Size);
     }
 
     /// <summary>A maximum floor of D-164: rock with a grid of chambers carved out, so every chunk shows faces.</summary>

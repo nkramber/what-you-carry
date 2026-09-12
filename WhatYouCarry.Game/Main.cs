@@ -1,5 +1,7 @@
 using System;
+using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
 using Godot;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Camera;
@@ -14,6 +16,7 @@ using WhatYouCarry.Game.Measure;
 using WhatYouCarry.Assets;
 using WhatYouCarry.Game.Models;
 using WhatYouCarry.Game.Render;
+using WhatYouCarry.Game.Review;
 using WhatYouCarry.Game.Smoke;
 using WhatYouCarry.Game.World;
 using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
@@ -35,8 +38,12 @@ namespace WhatYouCarry.Game;
 /// A boot failure and a step failure both write an error line and quit with exit code 1 (T-2). The smoke
 /// session quits with exit code 0 only when the log holds no error line (D-114). The bot session of M-3 drives
 /// the loop with the greedy descender over one floor, and the frame log flag writes every frame time to a file
-/// at the end of any session (D-295, D-296). The content comes from the directory next to the project
-/// directory, which is the content directory of the checkout (D-219).
+/// at the end of any session (D-295, D-296). The content and the atlas come from the directory next to the
+/// project directory, which is the content directory of the checkout (D-219, D-305).
+/// </para>
+/// <para>
+/// The contact sheet flag starts no loop. It renders every block material and the body at game zoom to one PNG
+/// file for the review of the owner, and quits (D-306).
 /// </para>
 /// </remarks>
 public partial class Main : Node3D
@@ -74,6 +81,15 @@ public partial class Main : Node3D
     /// <summary>The message of the error line of a frame log that the game could not write.</summary>
     public const string FrameLogFailedMessage = "The frame log could not be written, and the game quits.";
 
+    /// <summary>The message of the line at the end of the contact sheet.</summary>
+    public const string ContactSheetEndMessage = "The contact sheet is written.";
+
+    /// <summary>The message of the error line of a contact sheet that failed.</summary>
+    public const string ContactSheetFailedMessage = "The contact sheet failed, and the game quits.";
+
+    /// <summary>The message of the error when the contact sheet starts on the headless display.</summary>
+    public const string ContactSheetNeedsWindow = "The contact sheet needs a window, and the headless display renders no image.";
+
     /// <summary>The name of the field of the end line that holds the count of frames of the frame log.</summary>
     public const string FramesField = "frames";
 
@@ -90,7 +106,10 @@ public partial class Main : Node3D
     private const string EntitiesField = "entities";
     private const string ErrorField = "error";
     private const string FileField = "file";
+    private const string ShotField = "shot";
     private const string AbsentModel = "The player model file does not exist.";
+    private const string HeadlessDisplay = "headless";
+    private const string NoShotImage = "The viewport of the contact sheet gave no image for a shot.";
 
     private static readonly long[] NoEntities = [];
 
@@ -258,8 +277,9 @@ public partial class Main : Node3D
     }
 
     /// <summary>
-    /// Reads the user arguments, loads the content and the player model, starts the loop, and builds the scene.
-    /// In a play session the mouse is captured. In the smoke session and the bot session it is not.
+    /// Reads the user arguments, loads the content, the player model, and the atlas, starts the loop, and builds
+    /// the scene. The contact sheet flag renders the sheet in place of the loop (D-306). In a play session the
+    /// mouse is captured. In the smoke session and the bot session it is not.
     /// </summary>
     private void Boot()
     {
@@ -275,6 +295,12 @@ public partial class Main : Node3D
         string contentDirectory = Path.GetFullPath(Path.Combine(projectDirectory, ParentDirectory, ContentDirectoryName));
         ContentSet content = new ContentLoader(new DirectoryContentSource(contentDirectory)).Load();
         BlockbenchModel playerModel = BlockbenchLoader.Parse(AssetPaths.BodyModel, ReadModelBytes(contentDirectory, AssetPaths.BodyModel));
+        ImageTexture atlas = AtlasFile.Load(contentDirectory);
+        if (ContactSheet.IsRequested(arguments))
+        {
+            this.RenderContactSheet(ContactSheet.PathOf(arguments), atlas, playerModel);
+            return;
+        }
 
         SimulationLoop loop = new(FirstSeed, content);
         this.loop = loop;
@@ -288,7 +314,6 @@ public partial class Main : Node3D
         this.currentPose = loop.Camera();
         this.previousPose = this.currentPose;
 
-        ImageTexture atlas = PlaceholderAtlas.Create();
         this.worldMaterial = WorldMaterial.Create(atlas);
         foreach (MeshInstance3D chunk in ChunkNodes.Build(loop.Grid, this.worldMaterial))
         {
@@ -331,6 +356,63 @@ public partial class Main : Node3D
             AlbedoTexture = atlas,
             TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
         };
+    }
+
+    /// <summary>
+    /// Renders the contact sheet one shot at a time, writes the PNG file, and quits (D-306). The scene draws some
+    /// frames before the first shot, so every shader is ready, and each shot waits for its own frames after the
+    /// camera moves. The headless display, a shot with no image, and a write failure are each an error line and
+    /// exit code 1 (T-2).
+    /// </summary>
+    private async void RenderContactSheet(string path, Texture2D atlas, BlockbenchModel playerModel)
+    {
+        LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
+        fields.Add(FileField, path);
+        try
+        {
+            if (DisplayServer.GetName() == HeadlessDisplay)
+            {
+                throw new ContextException(ContactSheetNeedsWindow);
+            }
+
+            ContactSheetNodes nodes = ContactSheetScene.Build(atlas, playerModel, ModelMaterial(atlas));
+            this.AddChild(nodes.Viewport);
+            Image sheet = Image.CreateEmpty(ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(), false, Image.Format.Rgb8);
+            await this.WaitFrames(ContactSheet.WarmUpFrames);
+            foreach (SheetShot shot in ContactSheet.Shots())
+            {
+                nodes.Camera.LookAtFromPosition(ContactSheet.CameraPosition(shot), shot.Target, Vector3.Up);
+                await this.WaitFrames(ContactSheet.FramesPerShot);
+                Image frame = nodes.Viewport.GetTexture().GetImage();
+                if (frame is null || frame.IsEmpty())
+                {
+                    ContextException error = new(NoShotImage);
+                    error.AddContext(ShotField, shot.Index.ToString(CultureInfo.InvariantCulture));
+                    throw error;
+                }
+
+                frame.Convert(Image.Format.Rgb8);
+                sheet.BlitRect(frame, ContactSheet.CropRect(), ContactSheet.CellOrigin(shot.Index));
+            }
+
+            File.WriteAllBytes(path, sheet.SavePngToBuffer());
+            this.logger.Write(LogContextKind.Run, LogLevel.Info, ContactSheetEndMessage, fields);
+            this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
+        }
+        catch (Exception error)
+        {
+            this.LogFailure(ContactSheetFailedMessage, fields, error);
+            this.Quit(ExitFailure);
+        }
+    }
+
+    /// <summary>Waits until the engine draws the given count of frames.</summary>
+    private async Task WaitFrames(int count)
+    {
+        for (int frame = 0; frame < count; frame++)
+        {
+            await this.ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        }
     }
 
     /// <summary>Writes the error line of a failure, with the text of the exception after the run fields.</summary>

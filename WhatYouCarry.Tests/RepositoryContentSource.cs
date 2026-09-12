@@ -4,7 +4,7 @@ using WhatYouCarry.Core.Content;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The content source of this checkout, which reads the real `content/` directory and skips the model directory (D-298).</summary>
+/// <summary>The content source of this checkout, which reads the real `content/` directory and skips the model and texture directories (D-298, D-305).</summary>
 internal sealed class RepositoryContentSource : IContentSource
 {
     public IReadOnlyList<ContentFile> Read()
@@ -14,7 +14,7 @@ internal sealed class RepositoryContentSource : IContentSource
         foreach (string file in Directory.EnumerateFiles(root, "*.json", SearchOption.AllDirectories))
         {
             string contentPath = Path.GetRelativePath(root, file).Replace('\\', '/');
-            if (contentPath.StartsWith(ContentLoader.ModelDirectory, System.StringComparison.Ordinal))
+            if (ContentLoader.IsAssetPath(contentPath))
             {
                 continue;
             }

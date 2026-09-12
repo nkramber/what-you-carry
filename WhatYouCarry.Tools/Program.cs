@@ -6,12 +6,13 @@ using WhatYouCarry.Tools.DetLint;
 using WhatYouCarry.Tools.NightGate;
 using WhatYouCarry.Tools.ReviewGate;
 using WhatYouCarry.Tools.SteCheck;
+using WhatYouCarry.Tools.TextureGen;
 
 namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check, det-lint, asset-qa, bit-identity, bot-run, night-record, night-gate.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check, det-lint, asset-qa, texture-gen, bit-identity, bot-run, night-record, night-gate.";
 
     public static int Main(string[] args)
     {
@@ -33,6 +34,8 @@ public static class Program
                 return DetLintCommand.Run(commandArgs);
             case "asset-qa":
                 return AssetQaCommand.Run(commandArgs);
+            case "texture-gen":
+                return TextureGenCommand.Run(commandArgs);
             case "bit-identity":
                 return BitIdentityCommand.Run(commandArgs);
             case "bot-run":

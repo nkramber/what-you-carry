@@ -105,6 +105,42 @@ public sealed class SmokeSessionTests
     [Trait("Category", SmokeCategory)]
     public async Task SmokeSessionPasses()
     {
+        EngineRun run = await RunEngine("smoke session", ["--headless", "--fixed-fps", "60"], [SmokeSession.Flag]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitSuccess, $"The smoke session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal) && line.Contains("\"tick\":0,", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal) && line.Contains($"\"tick\":{SmokeSession.Ticks},", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// The contact sheet on the headless display is an error line and exit code 1, and never a blank sheet (D-306,
+    /// T-2). The engine boots with the flag, loads the atlas, finds no window, and writes no file.
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task ContactSheetFailsHeadless()
+    {
+        string sheet = Path.Combine(Path.GetTempPath(), "wyc-contact-sheet-" + Guid.NewGuid().ToString("N") + ".png");
+
+        EngineRun run = await RunEngine("contact sheet", ["--headless"], [WhatYouCarry.Game.Review.ContactSheet.Flag, sheet]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitFailure, $"The contact sheet ended with exit code {run.ExitCode} on the headless display.{Environment.NewLine}{run.Output}");
+        Assert.Contains(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal)
+            && line.Contains(Main.ContactSheetFailedMessage, StringComparison.Ordinal)
+            && line.Contains(Main.ContactSheetNeedsWindow, StringComparison.Ordinal));
+        Assert.False(File.Exists(sheet), $"The headless contact sheet wrote '{sheet}'.");
+    }
+
+    /// <summary>
+    /// Runs the engine on the Game project with its own arguments and the user arguments after the separator, and
+    /// waits for the end. An engine that never quits is a failure with its output, and never a test that hangs (T-2).
+    /// </summary>
+    private static async Task<EngineRun> RunEngine(string what, string[] engineArguments, string[] userArguments)
+    {
         string godot = GodotExecutable();
         string root = RepositoryRoot.Find();
         ProcessStartInfo start = new(godot)
@@ -114,13 +150,18 @@ public sealed class SmokeSessionTests
             UseShellExecute = false,
             WorkingDirectory = root,
         };
-        start.ArgumentList.Add("--headless");
+        foreach (string argument in engineArguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
         start.ArgumentList.Add("--path");
         start.ArgumentList.Add(Path.Combine(root, "WhatYouCarry.Game"));
-        start.ArgumentList.Add("--fixed-fps");
-        start.ArgumentList.Add("60");
         start.ArgumentList.Add("--");
-        start.ArgumentList.Add(SmokeSession.Flag);
+        foreach (string argument in userArguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
 
         using Process process = Process.Start(start) ?? throw new InvalidOperationException($"The engine at '{godot}' did not start.");
         Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
@@ -132,23 +173,16 @@ public sealed class SmokeSessionTests
         }
         catch (OperationCanceledException)
         {
-            // An engine that never quits is a failure with its output, and never a test that hangs (T-2).
             process.Kill(entireProcessTree: true);
             await process.WaitForExitAsync();
-            Assert.Fail($"The smoke session did not end inside {TimeoutMilliseconds} ms.{Environment.NewLine}{await outputTask}{await errorTask}");
+            Assert.Fail($"The {what} did not end inside {TimeoutMilliseconds} ms.{Environment.NewLine}{await outputTask}{await errorTask}");
         }
 
-        string output = await outputTask;
-        string error = await errorTask;
-        string all = output + error;
-        string[] lines = all.Split('\n');
-
-        Assert.True(process.ExitCode == Main.ExitSuccess, $"The smoke session ended with exit code {process.ExitCode}.{Environment.NewLine}{all}");
-        Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
-        Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
-        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal) && line.Contains("\"tick\":0,", StringComparison.Ordinal));
-        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal) && line.Contains($"\"tick\":{SmokeSession.Ticks},", StringComparison.Ordinal));
+        return new EngineRun(process.ExitCode, await outputTask + await errorTask);
     }
+
+    /// <summary>The exit code of one engine run, and its standard output followed by its standard error.</summary>
+    private sealed record EngineRun(int ExitCode, string Output);
 
     /// <summary>The Godot executable: the variable when it is set, or the local build of the Mac. Neither one absent is a skip.</summary>
     private static string GodotExecutable()

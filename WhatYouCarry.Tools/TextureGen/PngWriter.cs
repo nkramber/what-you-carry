@@ -1,0 +1,179 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using WhatYouCarry.Core.Determinism;
+
+namespace WhatYouCarry.Tools.TextureGen;
+
+/// <summary>
+/// Writes an indexed PNG (D-305): one palette entry for each palette color, one byte per pixel, and the image data in
+/// stored deflate blocks.
+/// </summary>
+/// <remarks>
+/// A stored block copies the bytes and compresses nothing. The file then has one byte form on every platform, which
+/// a compressor of the platform does not promise, so the committed atlas can equal the generator output byte for
+/// byte on Linux, macOS, and Windows. The atlas of 256 by 256 pixels gives a file of about 66 kilobytes. The chunk
+/// checksum is the CRC-32 of Core, which is the checksum that the PNG format names.
+/// </remarks>
+public static class PngWriter
+{
+    /// <summary>The most bytes in one stored deflate block.</summary>
+    public const int MaxStoredBlock = 65535;
+
+    /// <summary>The eight bytes that start every PNG file.</summary>
+    public static readonly byte[] Signature = [137, 80, 78, 71, 13, 10, 26, 10];
+
+    private const byte BitDepth = 8;
+    private const byte IndexedColor = 3;
+    private const byte NoFilter = 0;
+    private const byte ZlibMethod = 0x78;
+    private const byte ZlibFlags = 0x01;
+    private const uint AdlerModulus = 65521;
+
+    /// <summary>The file of one indexed image: the size, the palette colors, and one palette index per pixel, row by row.</summary>
+    /// <exception cref="ArgumentException">The size is not positive, the pixel count differs from the size, the palette is empty or past <see cref="Palette.MaxColors"/>, or a pixel names an index past the palette.</exception>
+    public static byte[] Write(int width, int height, IReadOnlyList<PaletteColor> colors, byte[] pixels)
+    {
+        CheckImage(width, height, colors, pixels);
+        List<byte> file = [.. Signature];
+        AddChunk(file, "IHDR", Header(width, height));
+        AddChunk(file, "PLTE", PaletteEntries(colors));
+        AddChunk(file, "IDAT", StoredZlib(Scanlines(width, height, pixels)));
+        AddChunk(file, "IEND", []);
+        return [.. file];
+    }
+
+    /// <summary>The size, the pixel count, the palette count, and every pixel index must agree.</summary>
+    private static void CheckImage(int width, int height, IReadOnlyList<PaletteColor> colors, byte[] pixels)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            throw new ArgumentException($"The image size must be positive. The size is {Text(width)} by {Text(height)}.");
+        }
+
+        if ((long)pixels.Length != (long)width * height)
+        {
+            throw new ArgumentException($"The image holds {Text(pixels.Length)} pixels, and a size of {Text(width)} by {Text(height)} needs {((long)width * height).ToString(CultureInfo.InvariantCulture)}.", nameof(pixels));
+        }
+
+        if (colors.Count == 0 || colors.Count > Palette.MaxColors)
+        {
+            throw new ArgumentException($"The palette holds {Text(colors.Count)} colors, and an indexed PNG needs 1 to {Text(Palette.MaxColors)}.", nameof(colors));
+        }
+
+        for (int index = 0; index < pixels.Length; index++)
+        {
+            if (pixels[index] >= colors.Count)
+            {
+                throw new ArgumentException($"The pixel {Text(index)} names the index {Text(pixels[index])}, and the palette holds {Text(colors.Count)} colors.", nameof(pixels));
+            }
+        }
+    }
+
+    /// <summary>The header chunk data: the size, 8 bits per index, the indexed color type, and no interlace.</summary>
+    private static byte[] Header(int width, int height)
+    {
+        List<byte> header = [];
+        AddBigEndian(header, (uint)width);
+        AddBigEndian(header, (uint)height);
+        header.Add(BitDepth);
+        header.Add(IndexedColor);
+        header.Add(0);
+        header.Add(0);
+        header.Add(0);
+        return [.. header];
+    }
+
+    /// <summary>The palette chunk data: the red, green, and blue bytes of each color, in index order.</summary>
+    private static byte[] PaletteEntries(IReadOnlyList<PaletteColor> colors)
+    {
+        List<byte> entries = [];
+        foreach (PaletteColor color in colors)
+        {
+            entries.Add(color.Red);
+            entries.Add(color.Green);
+            entries.Add(color.Blue);
+        }
+
+        return [.. entries];
+    }
+
+    /// <summary>Each row of indices after a filter byte of zero, which is no filter.</summary>
+    private static byte[] Scanlines(int width, int height, byte[] pixels)
+    {
+        byte[] data = new byte[(width + 1) * height];
+        for (int row = 0; row < height; row++)
+        {
+            int start = row * (width + 1);
+            data[start] = NoFilter;
+            Array.Copy(pixels, row * width, data, start + 1, width);
+        }
+
+        return data;
+    }
+
+    /// <summary>A zlib stream of stored deflate blocks: the zlib header, the blocks, and the Adler-32 checksum of the data.</summary>
+    private static byte[] StoredZlib(byte[] data)
+    {
+        List<byte> stream = [ZlibMethod, ZlibFlags];
+        int offset = 0;
+        bool final = false;
+        while (!final)
+        {
+            int length = Math.Min(MaxStoredBlock, data.Length - offset);
+            final = offset + length == data.Length;
+            int inverse = ~length & 0xFFFF;
+            stream.Add(final ? (byte)1 : (byte)0);
+            stream.Add((byte)(length & 0xFF));
+            stream.Add((byte)(length >> 8));
+            stream.Add((byte)(inverse & 0xFF));
+            stream.Add((byte)(inverse >> 8));
+            for (int index = 0; index < length; index++)
+            {
+                stream.Add(data[offset + index]);
+            }
+
+            offset += length;
+        }
+
+        AddBigEndian(stream, Adler32(data));
+        return [.. stream];
+    }
+
+    /// <summary>The Adler-32 checksum that ends a zlib stream: two sums modulo 65521.</summary>
+    private static uint Adler32(byte[] data)
+    {
+        uint low = 1;
+        uint high = 0;
+        foreach (byte value in data)
+        {
+            low = (low + value) % AdlerModulus;
+            high = (high + low) % AdlerModulus;
+        }
+
+        return (high << 16) | low;
+    }
+
+    /// <summary>One chunk: the data length, the type, the data, and the CRC-32 of the type and the data.</summary>
+    private static void AddChunk(List<byte> file, string type, byte[] data)
+    {
+        List<byte> typeAndData = [.. Encoding.ASCII.GetBytes(type), .. data];
+        AddBigEndian(file, (uint)data.Length);
+        file.AddRange(typeAndData);
+        AddBigEndian(file, Crc32.Of(typeAndData, 0, typeAndData.Count));
+    }
+
+    private static void AddBigEndian(List<byte> bytes, uint value)
+    {
+        bytes.Add((byte)(value >> 24));
+        bytes.Add((byte)(value >> 16));
+        bytes.Add((byte)(value >> 8));
+        bytes.Add((byte)value);
+    }
+
+    private static string Text(int number)
+    {
+        return number.ToString(CultureInfo.InvariantCulture);
+    }
+}

@@ -2,6 +2,174 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 140: 2026-09-12, Codex
+
+Author: Codex
+Session: re-review PR #56 at effective head `c83360e`.
+
+### What this session did, and why
+
+- Checked the provider gate again. Session 139 identifies Claude Code as the author of the correction, so Codex remains the eligible reviewer under T-4 and D-101.
+- Read the response file, the correction diff, the new regression tests, the full review history, and all current PR comments.
+- Verified that P2-1 is fixed. The palette and rule reads now convert read failures into contextual `ContextException` values, and the two regression tests pass.
+- Updated `docs/reviews/pr-56.md` with the fixed finding, the effective head `c83360e`, the earlier verdict, and the current verdict `Ready for owner merge`.
+- Session 130 moved to the archive because this file held eleven sessions with this entry.
+
+### State of the build
+
+- `main` and the merge base are `163742e`. The effective head is `c83360e`. The review and handoff metadata commits remain outside the effective diff.
+- The focused texture, contact-sheet, and console tests pass, 57 tests with 0 failures. STE check and det-lint pass locally.
+- The local full test and build commands produced no result and were cancelled. Session 139 reports 761 tests with 0 failures and a clean build on the effective head.
+- Remote CI, bit identity, smoke, bots, det-lint, asset QA, STE check, night-gate, and the automated pass pass for `c83360e`. The review-gate and evaluate checks failed before this updated review record. Fresh checks for the metadata tip were pending at the review.
+
+### In flight
+
+The updated review record and this handoff entry need a commit and push. The owner can merge after the fresh review-gate and required checks pass.
+
+### Traps and gotchas
+
+- P2-1 keeps its id and its original trigger. Its status is `fixed in c83360e`.
+- The effective head is `c83360e`, not the metadata tip, under D-184.
+- The local full build can stop without output in this checkout. Remote CI and the author report provide separate evidence.
+- The next ids are D-310, OQ-170, F-96, and Session 141.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants but block no work. OQ-44 blocks PR-18. OQ-99 remains open but blocks no work.
+
+### Next concrete action
+
+Commit and push this repeat review and handoff. Verify the fresh review-gate result and the synchronized remote head.
+
+## Session 139: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: answer the PR #56 review, P2-1. Branch `feat/pr-14-texture-generator`.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-56.md` at the reviewed head `9236744`. P2-1 has full merit: an unreadable palette, rule, or rule directory made `texture-gen` end with an unhandled `UnauthorizedAccessException` and exit code 134, and not with exit code 1 and the path (T-2).
+- `ReadFile` and `ReadRules` of `TextureGenCommand` now turn a read failure into a `ContextException` that names the path. The rule directory listing and each rule read share one boundary.
+- Two regression tests make the rule or the palette unreadable on every platform, and they assert exit code 1, the file name, and no atlas. Both failed on `9236744`, and both pass on the correction.
+- `docs/reviews/pr-56-response.md` records the disposition, the correction, and the checks.
+- Sessions 129 and 128 moved to the archive, because the file held twelve entries with this one.
+- The trial quota kept the automatic pass of gitar paused. The comment `Gitar review` ran it on demand, and its check run on `c83360e` passed at 19:00 UTC with an approval and no comment (D-250, D-303). The dashboard summary repeats the text of the first pass.
+
+### State of the build
+
+- `main` is at `163742e`. The effective head is `c83360e`, the correction commit above the review commit `cdad3f4`. This entry is in a metadata commit above it (D-184).
+- Remote head: `origin/feat/pr-14-texture-generator` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 761 tests, 0 failures, with the two Smoke tests on the local Godot build.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 26 files. `ste-check`: 0 findings in 15 files. Core, Game, and content did not change.
+- On `c83360e`, CI, bit identity, and smoke passed on the three platforms, and bots, det-lint, asset-qa, STE check, the night gate, and the gitar check passed. The `review-gate` check fails, because `docs/reviews/pr-56.md` still gives `Changes required` for `9236744`, and `evaluate` fails with it (D-251).
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it.
+
+### In flight
+
+PR #56: the repeat Codex review of P2-1 at `c83360e`, then the owner merge. The automated pass approved the correction.
+
+### Traps and gotchas
+
+- A test that needs an unreadable file removes every permission on Linux and macOS and holds the file with no share on Windows. It proves the file unreadable first, so a user that permissions do not bind fails the test and never passes it.
+- The rule directory has no automated unreadable test, because Windows gives no plain way to make a directory unreadable. The listing shares the catch of the rule test.
+- The effective head is the correction commit `c83360e`, not a later metadata commit (D-184).
+- Session 138 left eleven entries in the file. Count the entries before you add one, and move every entry past the tenth.
+- The next ids are D-310, OQ-170, F-96, and Session 140.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews P2-1 per the repeat review procedure of the `pr-review` skill at the effective head `c83360e` and sets the verdict. The owner then merges.
+
+## Session 138: 2026-09-12, Codex
+
+Author: Codex
+Session: review PR #56 at effective head `9236744`.
+
+### What this session did, and why
+
+- Verified that the Session 137 handoff identifies Claude Code as the author of the substantive PR commit. Codex is the eligible reviewer under T-4 and D-101.
+- Read the complete PR diff, the texture contracts, the content loader, the atlas consumers, the contact sheet, the tests, the workflow, the roadmap, the decisions, the questions, and every PR comment.
+- Found P2-1: an unreadable palette or rule file escapes the command error boundary. A direct unreadable-rule probe produced an unhandled `UnauthorizedAccessException` and exit code 134 instead of exit code 1 with file context.
+- Added `docs/reviews/pr-56.md` with the verdict `Changes required` for effective head `9236744`.
+
+### State of the build
+
+- `main` and the merge base are `163742e`. The effective head is `9236744`. The two later handoff commits and the automated-pass note change metadata paths only.
+- Focused texture and contact-sheet tests pass, 54 tests with 0 failures. STE check, det-lint, asset QA, texture generation, and bit identity pass locally.
+- The local build produced no output and was cancelled. The local full suite did not complete after the smoke portion started. The handoff reports the completed build and 759 passing tests on this head.
+- Remote asset QA, bots, compare, det-lint, bit identity, smoke, macOS, Windows, STE check, and night-gate checks pass. Linux CI was pending when checked. Evaluate failed and review-gate skipped before the review record existed.
+
+### In flight
+
+PR #56 needs the unreadable-input correction and its regression tests. The review record and this handoff entry need a commit and push after the owner correction.
+
+### Traps and gotchas
+
+- `texture-gen` catches `ContextException` around atlas construction, but direct file reads in `ReadFile` and `ReadRules` can throw `IOException` or `UnauthorizedAccessException`.
+- The effective review head is the feature commit `9236744`, not the metadata tip, under D-184.
+- The local dotnet build and the smoke portion of the full suite can stop without output in this checkout. Remote results remain separate evidence.
+- The next ids are D-310, OQ-170, F-96, and Session 139.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants but block no work. OQ-44 blocks PR-18. OQ-99 remains open but blocks no work.
+
+### Next concrete action
+
+Correct P2-1 with unreadable palette and rule regression tests, push the correction, and run the automated pass before the repeat Codex review.
+
+## Session 137: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: answer OQ-1 and open PR-14, the texture generator and the palette, as PR #56. Branch `feat/pr-14-texture-generator`.
+
+### What this session did, and why
+
+- PR #55 merged as `163742e` at 14:18 UTC with the `review-override` label. The night of 2026-09-12 ran at `811aa84` and ended with success at 13:04 UTC.
+- Sequence item 6 of the Phase 2 roadmap is the owner answer to OQ-1. The session built a preview page of three palettes, each painted on the seven blocks and a miner at game zoom, and asked the owner. The owner chose candidate A, "Lamp and Rock" (D-304).
+- Four more questions blocked PR-14, and the owner took each recommendation on the day. OQ-166 asked where the palette and the rules live, because the Core loader stops on unclaimed JSON (D-305). OQ-167 asked where the contact sheet renders (D-306). OQ-168 asked which materials PR-14 ships (D-307). OQ-169 asked how a body face reads its tile, because the model used the 64 px net of a Minecraft skin (D-308).
+- `WhatYouCarry.Tools/TextureGen/` is the command `texture-gen`. It reads the palette and ten rules, paints each tile from a xorshift sequence of its seed, and writes an indexed PNG with stored deflate blocks. The tiles equal the preview pixel for pixel, the file has one byte form on every platform, and a test holds the committed atlas equal to the output.
+- `WhatYouCarry.Assets/AtlasLayout.cs` holds the tile layout for Game and Tools. `ContentLoader.IsAssetPath` names the `models/` and `textures/` directories, and the three content sources skip both. `Game/World/AtlasFile.cs` loads the atlas at boot, and the placeholder atlas of PR-13 is gone.
+- `content/models/player.bbmodel` has the resolution 256, and each face reads its body tile at 32 texels per meter. A script rewrote the face rectangles and changed no other line.
+- The Game flag `--contact-sheet <png>` renders the seven blocks and the body from two sides at game zoom. The owner approved the first sheet as drawn, and D-309 records the ten rule values, which closes exit test 5.
+- Session 127 moved to the archive, because the file held eleven entries with this one.
+- The trial quota paused the automatic pass of gitar on the first push. The comment `Gitar review` ran it on demand, and it approved `2b52074` with no finding (D-250, D-303).
+
+### State of the build
+
+- `main` is at `163742e`, the squash merge of PR #55. This branch holds the feat commit `9236744` and two docs commits of this entry above it. The effective head is `9236744`, because the handoff and the archive are metadata paths (D-184).
+- Remote head: `origin/feat/pr-14-texture-generator` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 759 tests, 0 failures, with the two Smoke tests on the local Godot build.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 26 files. `asset-qa`: 0 findings, 1 model. `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`, unchanged.
+- The Godot editor build and the windowed contact sheet run end with exit code 0.
+- On `2b52074`, CI, bit identity, and smoke passed on the three platforms, and bots, det-lint, asset-qa, STE check, the night gate, and the gitar check passed. The review gate `evaluate` job fails, and `review-gate` skips, until the review record exists (D-251).
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it.
+
+### In flight
+
+PR #56: the Codex review. The automated pass approved the head, and no open question binds the PR.
+
+### Traps and gotchas
+
+- A change to the palette or a rule needs `texture-gen --root .` and a commit of `content/textures/atlas.png`, or `CommittedAtlasMatchesTheGenerator` fails. A rule change also needs a new contact sheet for the owner (D-309).
+- The contact sheet needs a window. A run with `--headless` ends with exit code 1 by design, and `ContactSheetFailsHeadless` holds that.
+- In zsh, `status` is a read-only variable, and a variable that holds a command with its arguments does not split into words. Name the exit code `rc`, and write each tool command in full.
+- Godot has a class `AtlasTexture`, so a Game class of that name is ambiguous under `using Godot`. The loader is `AtlasFile`.
+- The body tiles are 8, 9, and 10 (D-307). A new block takes the tile of its id, and a new body material takes the next free tile of row 1.
+- The next ids are D-310, OQ-170, F-96, and Session 138.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The automated pass on PR #56, then a Codex session reviews it per the `pr-review` skill at the effective head `9236744`. After the merge, the owner answers OQ-5 and OQ-46, and a fresh session opens PR-15.
+
 ## Session 136: 2026-09-12, Claude Code
 
 Author: Claude Code
@@ -248,165 +416,3 @@ OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and
 ### Next concrete action
 
 The automated pass on PR #52, then a Codex session reviews it per the `pr-review` skill. The owner answers OQ-161 and runs the M-3 command of `CLAUDE.md` on the Deck for exit test 7.
-
-## Session 130: 2026-09-11, Claude Code
-
-Author: Claude Code
-Session: record the owner answers to OQ-15, OQ-43, OQ-49, OQ-50, OQ-157, and OQ-158 (D-291 to D-296). Branch `docs/oq-43-49-157-158-record`.
-
-### What this session did, and why
-
-- PR #50 merged as `cfafad3` at 23:04 UTC. CI, bit identity, det-lint, STE check, smoke, and bots passed on that commit.
-- Phase 2 sequence item 3 is an owner answer, so the session put OQ-43, OQ-49, OQ-157, and OQ-158 to the owner in one batch. The owner chose each recommendation.
-- D-291 resolves OQ-43: one mesh per chunk of 16 by 32 by 16 blocks, and a budget of 64 world meshes plus one per entity. D-292 resolves OQ-49: the wall fade in the world shader. It revises in part D-88, the effect note only.
-- D-293 resolves OQ-157, and D-294 resolves OQ-158. Both keep the values that PR #49 merged, so no code and no workflow change follows. D-294 is the dependency entry of `actions/cache` (G-16).
-- Exit test 7 of PR-13 needs M-3 on a Deck. The sequence put the OQ-50 answer at item 19, after PR-13. The session put OQ-50 and OQ-15 to the owner too.
-- D-296 resolves OQ-50: the owner owns a Steam Deck OLED, and M-3 measures on it. D-295 resolves OQ-15 against the recommendation: 90 frames per second, the top refresh rate of the OLED panel, with 60 as the fallback.
-- OQ-44 gains a dated note, because its recommendation reads "two frames at 60". The design doc, the Phase 2 roadmap, and the Phase 5 roadmap cite the six decisions. Session 120 moved to the archive.
-
-### State of the build
-
-- `main` is at `cfafad3`, the squash merge of PR #50. This branch holds one docs commit above it.
-- Remote head: `origin/docs/oq-43-49-157-158-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 584 tests, 0 failures, with the smoke test on the local Godot build. No code changed.
-- `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`.
-- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. It turns red at 13:45 UTC on 2026-09-13 unless a night refreshes it. The run list held no run of the 17:21 UTC cron of 2026-09-11 at the check of this session. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
-
-### In flight
-
-PR #51: docs alone. The automated pass approved the head with no code finding. Its one comment reads the missing review record, and the reply on the PR names the `review-override` label (D-188, D-190). No commit answered it. The label is on, and the owner merge is next. Then PR-13 opens from `main` per the Phase 2 roadmap: the Blockbench loader, the greedy mesher, and the wall fade shader.
-
-### Traps and gotchas
-
-- A maximum floor (D-164) fills the world budget of D-291 exactly: 64 chunks and 64 world meshes. A second mesh instance per chunk breaks `MeshBudgetTest`.
-- D-295 sets 90 frames per second, which is 11.1 milliseconds per frame. The M-3 row of PR-13 reads the 99th percentile frame time against that bound, and a miss files a question (F-3).
-- The recommendation of OQ-44 reads "two frames at 60", and D-295 changed the target. The owner answers OQ-44 before PR-18.
-- Three comment lines in `IntentBuilder.cs` cite OQ-157, and one says that the owner sets the numbers by a decision. The reference check reads superseded decisions alone, so the citation passes. The next PR that edits that file can cite D-293.
-- `dotnet test` with no filter runs `SmokeSessionPasses` on the local Godot build. The full local suite takes about three and a half minutes.
-- The next ids are D-297, OQ-159, F-96, and Session 131.
-
-### Open questions that block progress
-
-None blocks PR-13. OQ-1 blocks PR-14. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges this PR, which carries the `review-override` label. A session then opens PR-13 from `main` per the Phase 2 roadmap, D-291, D-292, D-295, and D-296. Exit test 7 records the M-3 frame time on the Steam Deck OLED of the owner.
-
-## Session 129: 2026-09-11, Claude Code
-
-Author: Claude Code
-Session: record the merge of PR-12 as PR #49 and bring every document up to date, in the same run as Sessions 125 and 127. Branch `docs/pr-12-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #49 as `9313358` at 20:41 UTC, with the verdict `Ready for owner merge` for `066ce0e`. OQ-157 and OQ-158 stayed open at the merge, so `main` holds the two sensitivity constants of the recommendation and the `actions/cache` step with no decision entry yet.
-- `docs/design.md` marks PR-12 merged in the roadmap entry and in sequence item 10. The Phase 2 roadmap gains the status line of PR-12, the mark in sequence item 2, and the new state of OQ-157 and OQ-158 in section 6.
-- `docs/questions.md` gains a dated addendum on OQ-157 and on OQ-158: the merge came with both open.
-- `CLAUDE.md` and `AGENTS.md` gain the `smoke` job in the PR gate.
-- Session 119 moved to the archive.
-
-### State of the build
-
-- `main` is at `9313358`, the squash merge of PR #49. On that commit the smoke workflow, bit identity, and CI on the three platforms passed.
-- Remote head: `origin/docs/pr-12-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `ste-check`: 0 findings in 15 files. `dotnet test`: 584 tests, 0 failures. No code changed. `bit-identity`: `6ec00e90c1c85cdb`.
-- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
-
-### In flight
-
-This PR: docs alone, with the `review-override` label after the automated pass. The owner answers OQ-157 and OQ-158 in `docs/decisions.md` as the next two ids. If the OQ-157 answer differs from the recommendation, a PR changes `MouseHundredthsPerPixel` and `StickHundredthsPerTick` in `IntentBuilder.cs` and the tests that read them.
-
-### Traps and gotchas
-
-- `dotnet test` with no filter runs `SmokeSessionPasses`, which starts the Godot build at the path that `CLAUDE.md` names, or the one that `WYC_GODOT` names. The three CI jobs filter the Smoke category out, and the smoke workflow runs it.
-- A `dotnet test --no-build` after a build of the Game project alone reads a stale copy of the Game assembly in the test output. Build the solution before a test of a Game change.
-- The full local suite takes about three and a half minutes on this Mac. A run with a two-minute timeout reads as a stall.
-- The Windows CI suite took 9 min 27 s on PR #49, near the ten-minute bound of the M-1 procedure (OQ-145).
-- The engine reports the two shift keys as one key and the two control keys as one key. Block, throwable, reload, satchel, and amulet from D-289 have no button bit yet.
-- The next ids are D-291, OQ-159, F-96, and Session 130.
-
-### Open questions that block progress
-
-OQ-43 and OQ-49 block PR-13. OQ-157 and OQ-158 are open on `main` and block nothing, and OQ-158 needs its decision entry under G-16. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges this PR with the `review-override` label. The owner answers OQ-157 and OQ-158, then OQ-43 and OQ-49. A session then opens PR-13 from `main` per the Phase 2 roadmap: the Blockbench loader and the greedy mesher.
-
-## Session 128: 2026-09-11, Codex
-
-Author: Codex
-Session: re-review PR #49 at effective head `066ce0e`.
-
-### What this session did, and why
-
-- Verified the provider gate. The substantive PR work and the P2-1 correction came from Claude Code, so Codex is the eligible reviewer under T-4 and D-101.
-- Read the prior review, the response, the complete correction diff, the roadmap, the affected input callers, the tests, and every PR comment.
-- P2-1 has full merit at `91d1b6f`. The correction at `066ce0e` tracks the latest look event instead of the held stick state.
-- The regression test fails on the old behavior and passes on the correction. No finding remains at the new effective head.
-- Updated `docs/reviews/pr-49.md` with the earlier verdict and the current `Ready for owner merge` verdict.
-
-### State of the build
-
-- `main` and the merge base are `e1cf847`. The effective implementation head is `066ce0e`. Review and handoff metadata commits remain outside the effective diff.
-- The focused reader suite passes 8 tests, and the focused smoke test passes. The author reports 584 full-suite tests with 0 failures, and remote Linux, Windows, and macOS CI pass.
-- Local det-lint, STE check, bit identity, Godot editor build, and the smoke session pass. The local full build and full test commands did not complete in this execution context after more than 60 seconds without output.
-
-### In flight
-
-The repeat review record needs a commit and push. The review-gate and evaluate checks must refresh against the new `Ready for owner merge` verdict. OQ-158 still blocks the merge.
-
-### Traps and gotchas
-
-- The effective head is `066ce0e`, not a later metadata commit.
-- A held stick keeps controller look state until a new mouse or stick event names a device.
-- A full local test command may stall after the Godot project build. Use the focused tests and remote full-suite evidence.
-
-### Open questions that block progress
-
-OQ-158 blocks PR #49 under G-16. OQ-157 remains open and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open and blocks nothing.
-
-### Next concrete action
-
-Commit and push this repeat review and handoff. Then verify the remote head and the refreshed review-gate result.
-
-## Session 127: 2026-09-11, Claude Code
-
-Author: Claude Code
-Session: answer the PR #49 review, P2-1 (D-243), in the same run as Session 125. Branch `feat/pr-12-game-skeleton`.
-
-### What this session did, and why
-
-- Read `docs/reviews/pr-49.md` at the reviewed head `91d1b6f`. P2-1 has full merit: `Read` set the controller flag from the held stick on each tick, so a later mouse event lost the look device.
-- The look device now follows the latest look event (D-243). `Main` hands the mouse motion and the joypad motion events to the reader as plain values, `AddLookStickMotion` names the controller on a look axis event past the dead zone, and `Read` reads the deflection alone.
-- The reader polls through `IInputPoll`: `EnginePoll` over the engine, and a test poll in `InputReaderTests`, the two callers of D-111. Eight reader tests pin the device transitions and every D-289 binding with a bit. The regression test fails on the old line, 1 failed and 7 passed, and passes on the correction.
-- `docs/reviews/pr-49-response.md` records the disposition, the correction, and the regression check.
-- Sessions 117 and 116 moved to the archive, because the file held eleven entries.
-
-### State of the build
-
-- `main` is at `e1cf847`. The effective head is the correction commit, the one commit above the review commits `42bd504`, `307f025`, and `735f7fd`.
-- Remote head: `origin/feat/pr-12-game-skeleton` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 584 tests, 0 failures, with the smoke test on the local Godot build.
-- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 11 files. `ste-check`: 0 findings in 15 files.
-- `bit-identity`: `6ec00e90c1c85cdb`. Core did not change.
-
-### In flight
-
-PR #49 needs a repeat Codex review of the correction, the owner answers to OQ-157 and OQ-158, and the owner merge. The automated pass runs again on the push.
-
-### Traps and gotchas
-
-- A `dotnet test --no-build` after a build of the Game project alone reads the stale copy of the Game assembly in the test output. Build the solution before a test of a Game change.
-- A stick moved past the dead zone and released keeps the look with the controller until the mouse moves, because the release event is inside the dead zone.
-- The effective head is the correction commit, not a later metadata commit.
-- The next ids are D-291, OQ-159, F-96, and Session 128.
-
-### Open questions that block progress
-
-OQ-158 blocks the merge of this PR (G-16). OQ-157 binds the two constants and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The automated pass, then a Codex session reviews the correction per the repeat review procedure of the `pr-review` skill and sets the verdict for the new effective head. The owner answers OQ-157 and OQ-158, and merges.

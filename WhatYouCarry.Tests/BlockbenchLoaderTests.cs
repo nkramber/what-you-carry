@@ -108,9 +108,9 @@ public sealed class BlockbenchLoaderTests
         BlockbenchModel model = PlayerModel();
         ModelBox head = Assert.Single(model.Boxes, box => box.Name == "head_box");
 
-        // The north face of the head is at pixels (8, 8) to (16, 16) of 64.
+        // The north face of the head is at pixels (0, 32) to (16, 48) of 256: the top left of the skin tile (D-308).
         FaceUv north = head.Faces[(int)BoxSide.North];
-        Assert.Equal(new FaceUv(0.125f, 0.125f, 0.25f, 0.25f), north);
+        Assert.Equal(new FaceUv(0.0f, 0.125f, 0.0625f, 0.1875f), north);
     }
 
     /// <summary>A rotation on a box or a bone is an error that names it, because the model file holds the rest pose alone (D-298).</summary>

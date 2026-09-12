@@ -3,8 +3,8 @@ using WhatYouCarry.Core.Content;
 namespace WhatYouCarry.Assets;
 
 /// <summary>
-/// The places of the asset files under the content directory (D-298, D-299, D-300). Every path here is relative
-/// to the content directory, with forward slashes.
+/// The places of the asset files under the content directory (D-298, D-299, D-300, D-305). Every path here is
+/// relative to the content directory, with forward slashes.
 /// </summary>
 public static class AssetPaths
 {
@@ -25,6 +25,18 @@ public static class AssetPaths
 
     /// <summary>The character between the model stem and the animation name in an animation file name (D-298).</summary>
     public const char AnimationSeparator = '.';
+
+    /// <summary>The directory of the palette, the texture rules, and the atlas, which every content source skips (D-305).</summary>
+    public const string TextureDirectory = ContentLoader.TextureDirectory;
+
+    /// <summary>The palette of the atlas: ramps of colors from dark to light (D-304, D-305).</summary>
+    public const string PaletteFile = TextureDirectory + "palette.json";
+
+    /// <summary>The directory of the texture rules, one file per material (D-307).</summary>
+    public const string RuleDirectory = TextureDirectory + "rules/";
+
+    /// <summary>The atlas image that the texture generator writes and the game reads at boot (D-305).</summary>
+    public const string AtlasImage = TextureDirectory + "atlas.png";
 
     /// <summary>The path of one animation of one model: <c>models/player.attack.json</c> for the model <c>models/player.bbmodel</c> (D-298).</summary>
     public static string AnimationPath(string modelPath, string animationName)
