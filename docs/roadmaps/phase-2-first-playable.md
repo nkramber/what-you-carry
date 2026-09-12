@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-309. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-312. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -136,6 +136,8 @@ Gate: exit tests 1 to 5 pass.
 
 ### PR-14: Texture generator and palette
 
+Status: merged 2026-09-12 as PR #56, commit `3d8060b`. Exit tests 1 to 5 passed before the merge, and CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit. The owner approved the first contact sheet as D-309. The review found one defect, P2-1, an unreadable input that crashed `texture-gen`, and its correction merged with the PR.
+
 Scope:
 
 - `content/textures/palette.json`: the palette of D-304, eight ramps of four colors from dark to light (D-85).
@@ -162,6 +164,32 @@ Check clause: none.
 Gate: exit tests 1 to 5 pass.
 
 > *In plain English:* a tool paints every texture from a fixed set of about thirty colors, so the whole game looks like one thing.
+
+### PR-60: Fullscreen window and the test exit
+
+Scope:
+
+- `WhatYouCarry.Game/project.godot`: the window mode setting opens the game in the borderless fullscreen of the engine (D-310). The window takes the resolution of the display, on every desktop and on the Steam Deck. A headless run opens no window, as before.
+- `WhatYouCarry.Game/Main.cs`: the Escape key and the Start button of a controller end the session with exit code 0 and an end line (D-311). The quit stays until the escape menu of PR-53 replaces it.
+- One PR carries both changes, as an exception to G-10 (D-312).
+
+Out of scope: the escape menu and any display option (PR-53), and the Deck verification pass (PR-54).
+
+Exit tests:
+
+1. `WindowOpensFullscreen` asserts that the project opens the window in borderless fullscreen with no fixed size (D-310).
+2. `EscapeEndsTheSession` asserts that the Escape key ends a session with exit code 0 and an end line (D-311).
+3. `StartButtonEndsTheSession` asserts the same for the Start button of a controller (D-311).
+4. `NoOtherInputEndsTheSession` asserts that no other key or button ends a session.
+5. `SmokeSessionPasses` and `ContactSheetFailsHeadless` still pass, because a headless run opens no window.
+
+Review focus: presentation, input and CI boundaries, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 5 pass.
+
+> *In plain English:* the game fills the screen that it runs on, so it is no longer a small box on a large display. During testing, Escape or Start closes it.
 
 ### PR-15: Player entity and the first weapon
 
@@ -354,21 +382,22 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 4. ✅ PR-13 merged 2026-09-12 as PR #52. Exit test 7 waits for M-3 (OQ-161).
 5. ✅ PR-57 merged 2026-09-12 as PR #54.
 6. ✅ OQ-1 answered 2026-09-12: D-304.
-7. PR-14.
-8. Owner: answer OQ-5 and OQ-46. ✅ OQ-45 answered 2026-09-12: D-298.
-9. PR-15.
-10. Owner: answer OQ-9, at least the first family.
-11. PR-16.
-12. Owner: answer OQ-4 and OQ-6.
-13. PR-17.
-14. Owner: answer OQ-44.
-15. PR-18.
-16. PR-19.
-17. Owner: answer OQ-48.
-18. PR-20.
-19. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-20. Tier 4 pass on the screenshot fixture (D-133).
-21. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+7. ✅ PR-14 merged 2026-09-12 as PR #56.
+8. PR-60, the fullscreen window and the test exit (D-310, D-311, D-312).
+9. Owner: answer OQ-5 and OQ-46. ✅ OQ-45 answered 2026-09-12: D-298.
+10. PR-15.
+11. Owner: answer OQ-9, at least the first family.
+12. PR-16.
+13. Owner: answer OQ-4 and OQ-6.
+14. PR-17.
+15. Owner: answer OQ-44.
+16. PR-18.
+17. PR-19.
+18. Owner: answer OQ-48.
+19. PR-20.
+20. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+21. Tier 4 pass on the screenshot fixture (D-133).
+22. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

@@ -1,6 +1,6 @@
 # Phase 5 roadmap: Early Access candidate
 
-Status: **focused roadmap, active.** This file expands Phase 5 of `docs/design.md` section 7: PR-51 to PR-55. It applies D-1, D-15, D-96, D-112, D-142, D-152, D-170, D-180, D-185, and D-295. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 5 of `docs/design.md` section 7: PR-51 to PR-55. It applies D-1, D-15, D-96, D-112, D-142, D-152, D-170, D-180, D-185, D-295, and D-311. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 4 is `phase-4-content-complete.md`. Gate 4 must pass before PR-51 starts.
 
@@ -100,6 +100,7 @@ Scope:
 - A rebind for keyboard, mouse, and controller, saved in the profile.
 - Accessibility options per OQ-14, each with no effect on the simulation seed context unless D-53 changes.
 - The string table complete for every screen (D-98).
+- `WhatYouCarry.Game/Ui/EscapeMenu.cs`: the escape menu on the Escape key and the controller Start button. It replaces the test exit of PR-60, which ends the game on those two inputs (D-311).
 
 Out of scope: localization (D-98).
 
@@ -110,14 +111,15 @@ Exit tests:
 3. `SettingsNavigate` asserts every control reachable with the controller model.
 4. `StringTableComplete` asserts every screen's text ids exist in the table (G-8).
 5. `AssistDoesNotEnterIntent` asserts an assist option changes no intent frame (D-77), unless OQ-14 decides otherwise.
+6. `EscapeOpensTheMenu` asserts that Escape and Start open the escape menu and never end the session (D-311).
 
 Review focus: presentation, persistence, content.
 
 Check clause: none.
 
-Gate: exit tests 1 to 5 pass.
+Gate: exit tests 1 to 6 pass.
 
-> *In plain English:* the options screen, complete text, and any assist options the owner chooses.
+> *In plain English:* the options screen, the escape menu, complete text, and any assist options the owner chooses.
 
 ### PR-54: Steam Deck verification pass
 
