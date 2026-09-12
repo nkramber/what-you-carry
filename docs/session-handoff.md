@@ -2,6 +2,43 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 136: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-57 as PR #54, in the same invocation as Session 134 (D-297). Branch `docs/pr-57-merge-record`.
+
+### What this session did, and why
+
+- The owner merged PR #54 as `811aa84` at 07:17 UTC, with the verdict `Ready for owner merge` for `ecdc95a` in `docs/reviews/pr-54.md`. CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit.
+- `docs/design.md` marks PR-57 merged in the roadmap entry and in sequence item 10. The Phase 2 roadmap gains the status line of PR-57 and the mark in sequence item 5.
+- `docs/questions.md` needs no addendum, because every question that PR-57 raised had its answer before the merge.
+- Session 126 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `811aa84`, the squash merge of PR #54. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-57-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `ste-check`: 0 findings in 15 files. No code changed. `bit-identity`: `6ec00e90c1c85cdb` on PR #54.
+- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. It turns red at 13:45 UTC on 2026-09-13 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone, with the `review-override` label after the automated pass. Exit test 7 of PR-13 waits for the M-3 run on the Deck (OQ-161).
+
+### Traps and gotchas
+
+- The automatic pass of gitar pauses when the trial quota of the period is used, and the comment `Gitar review` runs one on demand (D-303).
+- The handoff held eleven entries with this one. Count the entries before you add one, and move every entry past the tenth.
+- The next ids are D-304, OQ-166, F-96, and Session 137.
+
+### Open questions that block progress
+
+OQ-1 blocks PR-14 and sequence item 6. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. The owner then answers OQ-1, the palette, and a fresh session opens PR-14 from `main` per the Phase 2 roadmap.
+
 ## Session 135: 2026-09-12, Codex
 
 Author: Codex
@@ -373,39 +410,3 @@ OQ-158 blocks the merge of this PR (G-16). OQ-157 binds the two constants and bl
 ### Next concrete action
 
 The automated pass, then a Codex session reviews the correction per the repeat review procedure of the `pr-review` skill and sets the verdict for the new effective head. The owner answers OQ-157 and OQ-158, and merges.
-
-## Session 126: 2026-09-11, Codex
-
-Author: Codex
-Session: review PR #49 at effective head `91d1b6f`.
-
-### What this session did, and why
-
-- Verified the provider gate. The substantive PR work came from Claude Code, so Codex is the eligible reviewer under T-4 and D-101.
-- Read the handoff, the project rules, the design, the relevant decisions and questions, the Phase 2 roadmap, the complete PR diff, the affected Core callers, and every PR comment.
-- Found P2-1. A held controller stick overrides a later mouse look event, so the input frame can set the controller aim bit for the wrong device.
-- Added `docs/reviews/pr-49.md` with a `Changes required` verdict for the effective head.
-
-### State of the build
-
-- `main` and the merge base are `e1cf847`. The effective implementation head is `91d1b6f`. The current branch tip before this session is `dfdc68e`, which holds metadata only.
-- The focused Game, input, render, smoke, and shape tests pass with 41 tests. The remote three-platform CI and smoke checks pass on the effective head. Gitar passes, while `evaluate` and `review-gate` fail for the recorded `Changes required` verdict.
-- Local det-lint, STE check, bit identity, Godot editor build, and the headless smoke session pass. Local `dotnet build` did not complete after more than 80 seconds without output.
-
-### In flight
-
-PR #49 needs the P2-1 correction and a regression test. OQ-158 also needs an owner decision before merge. The review-gate check must refresh after the review record reaches the PR head.
-
-### Traps and gotchas
-
-- The effective head is `91d1b6f`, not the metadata tip.
-- `InputReader.Read` checks the current stick after mouse input has set the flag false. A held stick can therefore override the last mouse event.
-- The first `dotnet build` attempt produced no output for more than 80 seconds. Remote CI gives the build evidence for this head.
-
-### Open questions that block progress
-
-OQ-158 blocks PR #49 under G-16. OQ-157 remains open and blocks nothing. OQ-43 and OQ-49 block PR-13. OQ-99 is open and blocks nothing.
-
-### Next concrete action
-
-The author corrects the input-device state and adds the regression test. Then the author pushes the fix, and a later review checks the new effective head.

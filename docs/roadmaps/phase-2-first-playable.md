@@ -107,6 +107,8 @@ Gate: exit tests 1 to 7 pass.
 
 ### PR-57: Asset QA gate v1
 
+Status: merged 2026-09-12 as PR #54, commit `811aa84`. Exit tests 1 to 5 passed before the merge, and CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit. The five questions that the PR raised, OQ-45 and OQ-162 to OQ-165, had their answers before the merge (D-298 to D-302). D-303 records the manual trigger of the automated pass.
+
 Scope:
 
 - `WhatYouCarry.Assets/`: a fifth project with no engine dependency (D-299). The model reader of PR-13 moves into it from Game, and the animation reader of D-298 and the pose math join it. Game and Tools read a model through it.
@@ -348,7 +350,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 2. ✅ PR-12 merged 2026-09-11 as PR #49.
 3. ✅ OQ-43 and OQ-49 answered 2026-09-11: D-291 and D-292.
 4. ✅ PR-13 merged 2026-09-12 as PR #52. Exit test 7 waits for M-3 (OQ-161).
-5. PR-57.
+5. ✅ PR-57 merged 2026-09-12 as PR #54.
 6. Owner: answer OQ-1.
 7. PR-14.
 8. Owner: answer OQ-5 and OQ-46. ✅ OQ-45 answered 2026-09-12: D-298.
