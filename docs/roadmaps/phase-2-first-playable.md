@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, and D-291 to D-296. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, and D-298 to D-302. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -109,7 +109,9 @@ Gate: exit tests 1 to 7 pass.
 
 Scope:
 
-- `WhatYouCarry.Tools/AssetQa/`: a command that reads each model and its animations and runs three checks (D-135, D-149). No two boxes of one model, or of a model plus its overlays, interpenetrate at any keyframe beyond a tolerance. Each armor overlay encloses its limb box. Every file name reference matches the file case.
+- `WhatYouCarry.Assets/`: a fifth project with no engine dependency (D-299). The model reader of PR-13 moves into it from Game, and the animation reader of D-298 and the pose math join it. Game and Tools read a model through it.
+- `WhatYouCarry.Tools/AssetQa/`: the command `asset-qa` reads each model, each overlay, and each animation and runs three checks (D-135, D-149). No two boxes of one model, or of a model plus one overlay, penetrate each other at the rest pose or at any keyframe (D-301). A shared face is not a clip, and the pairs of a bone and its parent are exempt. Each armor overlay box encloses the body box of its name (D-300). Every file name reference matches the file case (D-302).
+- Every content source skips the `models/` directory, so an animation file next to its model is not a content file of the Core loader (D-298).
 - A CI job `asset-qa` that runs on every model under `content/models/`.
 
 Out of scope: the polygon budget, pivots, and UV coverage (PR-49).
@@ -164,8 +166,8 @@ Scope:
 - `Core/Entities/Player.cs`: the PR-7 body plus sprint, dodge on a cooldown that armor weight extends, health, and stagger (D-27, D-28, D-29). The stagger rule against weight is OQ-5.
 - `Core/Combat/MeleeWeapon.cs`: one sword with windup, active, and recovery frames in ticks, and a hit box swept through the active frames (D-25). The initial numbers are OQ-46.
 - `content/weapons/sword-basic.json`: the tier-0 sword of D-153, with the `weapon` content type and validator (D-168).
-- `content/animations/*.json`: the keyframe format of OQ-45, with per-bone euler rotations in ticks and a phase tag per range (D-87).
-- `WhatYouCarry.Game/Animation/`: the keyframe player and the procedural locomotion from distance traveled (D-87).
+- `content/models/player.<animation>.json`: the first animations of the body, in the format of D-298, next to the model (D-87).
+- `WhatYouCarry.Game/Animation/`: the keyframe player, which reads a clip through `WhatYouCarry.Assets` (D-299), and the procedural locomotion from distance traveled (D-87).
 - `AnimationMatchesCore` asserts that each animation's phase ranges equal the weapon's windup, active, and recovery ticks.
 
 Out of scope: enemies, damage numbers on screen (PR-19), any second weapon.
@@ -349,7 +351,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 5. PR-57.
 6. Owner: answer OQ-1.
 7. PR-14.
-8. Owner: answer OQ-5, OQ-45, OQ-46.
+8. Owner: answer OQ-5 and OQ-46. ✅ OQ-45 answered 2026-09-12: D-298.
 9. PR-15.
 10. Owner: answer OQ-9, at least the first family.
 11. PR-16.
@@ -376,12 +378,19 @@ Open:
 - OQ-6: the hunter. Blocks PR-17.
 - OQ-9: the enemy families. Blocks PR-16.
 - OQ-44: the transition hitch budget. Blocks PR-18.
-- OQ-45: the animation keyframe format. Blocks PR-15.
 - OQ-46: the initial combat numbers. Blocks PR-15.
 - OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-161: the M-3 run on the Steam Deck. Blocks exit test 7 of PR-13 and M-3.
+
+Resolved 2026-09-12:
+
+- OQ-45 (D-298): the animation keyframe format. PR-57 and PR-15.
+- OQ-162 (D-299): the home of the model reader. PR-57.
+- OQ-163 (D-300): the overlay rule. PR-57 and PR-22.
+- OQ-164 (D-301): the clip rule. PR-57 and PR-49.
+- OQ-165 (D-302): the file name reference rule. PR-57.
 
 Resolved 2026-09-11:
 

@@ -10,6 +10,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../WhatYouCarry.Assets/WhatYouCarry.Assets.csproj" />
     <ProjectReference Include="../WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
     <!-- The Game project, for the pure input and render logic of PR-12. A test calls no engine method. -->
     <ProjectReference Include="../WhatYouCarry.Game/WhatYouCarry.Game.csproj" />

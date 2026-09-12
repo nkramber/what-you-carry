@@ -33,9 +33,22 @@ public sealed class RepositoryShapeTests
     }
 
     [Fact]
+    public void AssetsReferencesNoEngine()
+    {
+        // D-299: Assets has no package reference, and its one project reference is Core.
+        XDocument project = XDocument.Parse(RepositoryRoot.ReadFile("WhatYouCarry.Assets/WhatYouCarry.Assets.csproj"));
+        List<string> references = project.Descendants()
+            .Where(element => element.Name.LocalName is "PackageReference" or "ProjectReference" or "Reference")
+            .Select(element => $"{element.Name.LocalName} {element.Attribute("Include")?.Value}")
+            .ToList();
+        Assert.Equal(["ProjectReference ../WhatYouCarry.Core/WhatYouCarry.Core.csproj"], references);
+        Assert.Equal("Microsoft.NET.Sdk", project.Root?.Attribute("Sdk")?.Value);
+    }
+
+    [Fact]
     public void SolutionIsSlnx()
     {
-        // D-194: the solution is WhatYouCarry.slnx, no .sln exists, and the four projects are listed.
+        // D-194: the solution is WhatYouCarry.slnx, no .sln exists, and the five projects are listed (D-299).
         string root = RepositoryRoot.Find();
         string[] legacySolutions = Directory.GetFiles(root, "*.sln", SearchOption.AllDirectories)
             .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}.git{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
@@ -49,6 +62,7 @@ public sealed class RepositoryShapeTests
             .ToArray();
         string[] expected =
         [
+            "WhatYouCarry.Assets/WhatYouCarry.Assets.csproj",
             "WhatYouCarry.Core/WhatYouCarry.Core.csproj",
             "WhatYouCarry.Game/WhatYouCarry.Game.csproj",
             "WhatYouCarry.Tests/WhatYouCarry.Tests.csproj",

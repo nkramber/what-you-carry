@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The asset readers (D-299): the model file, the animation file, and the pose math. No engine dependency.
+       Game builds the scene nodes from these types, and the asset-qa command of Tools checks them (D-135). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The vector type and the content error helpers come from Core. Core references nothing back (G-1). -->
+    <ProjectReference Include="../WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
+  </ItemGroup>
+</Project>

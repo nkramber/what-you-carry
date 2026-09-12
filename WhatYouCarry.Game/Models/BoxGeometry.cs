@@ -1,4 +1,5 @@
 using Godot;
+using WhatYouCarry.Assets;
 using WhatYouCarry.Game.Render;
 
 namespace WhatYouCarry.Game.Models;
@@ -35,18 +36,18 @@ public static class BoxGeometry
     public static MeshData Build(ModelBox box)
     {
         MeshData data = new();
-        Vector3 low = box.From - box.Pivot;
-        Vector3 high = box.To - box.Pivot;
+        Vector3 low = RenderInterpolation.ToGodot(box.From - box.Pivot);
+        Vector3 high = RenderInterpolation.ToGodot(box.To - box.Pivot);
         for (int side = 0; side < Faces; side++)
         {
             Vector3[] corners = Corners((BoxSide)side, low, high);
             FaceUv uv = box.Faces[side];
             Vector2[] uvs =
             [
-                new(uv.Low.X, uv.Low.Y),
-                new(uv.High.X, uv.Low.Y),
-                new(uv.High.X, uv.High.Y),
-                new(uv.Low.X, uv.High.Y),
+                new(uv.LowU, uv.LowV),
+                new(uv.HighU, uv.LowV),
+                new(uv.HighU, uv.HighV),
+                new(uv.LowU, uv.HighV),
             ];
             data.AddQuad(corners, Normals[side], [Unshaded, Unshaded, Unshaded, Unshaded], uvs, Vector2.Zero, flipDiagonal: false);
         }

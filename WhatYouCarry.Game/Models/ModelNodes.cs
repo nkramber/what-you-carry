@@ -1,11 +1,15 @@
 using Godot;
+using WhatYouCarry.Assets;
 using WhatYouCarry.Game.Render;
+using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 
 namespace WhatYouCarry.Game.Models;
 
 /// <summary>
 /// The scene nodes of one model: a node per bone, a mesh instance per box under its bone, and an empty node per
 /// attachment point. The root node sits at the model origin, which is the point between the feet of a body.
+/// The model comes from the Assets project in Core vectors, and this is the place that turns them into engine
+/// vectors (D-299).
 /// </summary>
 /// <remarks>
 /// Every position here is relative to the parent, so a bone node at its pivot moves its boxes and its child
@@ -22,8 +26,8 @@ public static class ModelNodes
         for (int index = 0; index < model.Bones.Count; index++)
         {
             ModelBone bone = model.Bones[index];
-            Vector3 parentPivot = bone.Parent == ModelBone.NoParent ? Vector3.Zero : model.Bones[bone.Parent].Pivot;
-            Node3D node = new() { Name = bone.Name, Position = bone.Pivot - parentPivot };
+            CoreVector3 parentPivot = bone.Parent == ModelBone.NoParent ? new CoreVector3(0.0f, 0.0f, 0.0f) : model.Bones[bone.Parent].Pivot;
+            Node3D node = new() { Name = bone.Name, Position = RenderInterpolation.ToGodot(bone.Pivot - parentPivot) };
             boneNodes[index] = node;
             Node3D parent = bone.Parent == ModelBone.NoParent ? root : boneNodes[bone.Parent];
             parent.AddChild(node);
@@ -36,14 +40,14 @@ public static class ModelNodes
                 Name = box.Name,
                 Mesh = ArrayMeshBuilder.Build(BoxGeometry.Build(box)),
                 MaterialOverride = material,
-                Position = box.Pivot - model.Bones[box.Bone].Pivot,
+                Position = RenderInterpolation.ToGodot(box.Pivot - model.Bones[box.Bone].Pivot),
             };
             boneNodes[box.Bone].AddChild(instance);
         }
 
         foreach (AttachmentPoint point in model.Attachments)
         {
-            Node3D node = new() { Name = point.Slot, Position = point.Position - model.Bones[point.Bone].Pivot };
+            Node3D node = new() { Name = point.Slot, Position = RenderInterpolation.ToGodot(point.Position - model.Bones[point.Bone].Pivot) };
             boneNodes[point.Bone].AddChild(node);
         }
 

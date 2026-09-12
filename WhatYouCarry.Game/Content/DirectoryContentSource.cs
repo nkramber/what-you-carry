@@ -11,7 +11,8 @@ namespace WhatYouCarry.Game.Content;
 /// </summary>
 /// <remarks>
 /// PR-12 reads the content directory of the checkout, next to the project directory. PR-31 reads the content
-/// directory of an exported build. An absent directory is an error that names the path (T-2).
+/// directory of an exported build. An absent directory is an error that names the path (T-2). The model
+/// directory holds the animation files, which are JSON that Core never reads, so the source skips it (D-298).
 /// </remarks>
 public sealed class DirectoryContentSource : IContentSource
 {
@@ -43,7 +44,13 @@ public sealed class DirectoryContentSource : IContentSource
         List<ContentFile> files = [];
         foreach (string file in Directory.EnumerateFiles(this.root, Pattern, SearchOption.AllDirectories))
         {
-            files.Add(new ContentFile(Path.GetRelativePath(this.root, file).Replace('\\', '/'), File.ReadAllBytes(file)));
+            string contentPath = Path.GetRelativePath(this.root, file).Replace('\\', '/');
+            if (contentPath.StartsWith(ContentLoader.ModelDirectory, System.StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            files.Add(new ContentFile(contentPath, File.ReadAllBytes(file)));
         }
 
         return files;

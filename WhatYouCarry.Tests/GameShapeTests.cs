@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Game.Content;
@@ -101,6 +102,22 @@ public sealed class GameShapeTests
         Assert.Contains(files, file => file.Path == Strings.FilePath);
         Assert.DoesNotContain(files, file => file.Path.Contains('\\', StringComparison.Ordinal));
         Assert.Equal(TestWorld.Content.Hash, new ContentLoader(new DirectoryContentSource(content)).Load().Hash);
+    }
+
+    /// <summary>Every content source skips the model directory, because an animation file there is JSON that Core never reads (D-298).</summary>
+    [Fact]
+    public void ContentSourcesSkipTheModelDirectory()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write("floors/a.json", "{}");
+        content.Write("models/rig.attack.json", "{}");
+        content.Write("models/armor/chest.json", "{}");
+
+        string[] gamePaths = new DirectoryContentSource(content.Content).Read().Select(file => file.Path).ToArray();
+        string[] toolPaths = new WhatYouCarry.Tools.BotRunner.DirectoryContentSource(content.Content).Read().Select(file => file.Path).ToArray();
+
+        Assert.Equal(new[] { "floors/a.json" }, gamePaths);
+        Assert.Equal(new[] { "floors/a.json" }, toolPaths);
     }
 
     /// <summary>An absent directory is an error that names the path, and never an empty set (T-2).</summary>

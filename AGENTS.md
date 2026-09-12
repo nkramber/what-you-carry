@@ -69,6 +69,7 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 
 - C# only, tools included. Do not use GDScript (D-64, D-65).
 - `WhatYouCarry.Core` has no engine dependency (G-1).
+- `WhatYouCarry.Assets` has no engine dependency. It holds the model reader, the animation reader, and the pose math, and Game and Tools read a model through it (D-299).
 - No `System.Math` transcendentals, no `Vector<T>`, no SIMD, no reflection in Core. Use `DetMath` (G-2).
 - float in Core (D-70). The simulation runs on one thread at 60 Hz (D-72, D-73).
 - Godot physics and navigation never feed the simulation (G-3).
@@ -105,13 +106,14 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Test: `dotnet test WhatYouCarry.slnx --no-build`
 - STE check, the reference check, and the session number check: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .`
 - Determinism and string lint: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --root .`
+- Asset QA: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- asset-qa --root .`
 - Bit identity: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- bit-identity`
 - Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Smoke session, local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke`
 - Bot session with a frame log, for M-3: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt`
 
-The name `Godot` is not on the command path of this machine, so the check needs the full path above. `det-lint` reads Core with the determinism rules and the Game project with the string rule, and it reports one count for each (D-222). `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. The test `SmokeSessionPasses` starts the Godot build at the path above, or the one that `WYC_GODOT` names. A local `dotnet test` needs one of the two. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
+The name `Godot` is not on the command path of this machine, so the check needs the full path above. `det-lint` reads Core with the determinism rules and the Game project with the string rule, and it reports one count for each (D-222). `asset-qa` reads every model, overlay, and animation under `content/` and runs the clip check, the overlay check, and the file case check (D-135). `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. The test `SmokeSessionPasses` starts the Godot build at the path above, or the one that `WYC_GODOT` names. A local `dotnet test` needs one of the two. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
 
 The layout is one directory per project at the root. `project.godot` lives in `WhatYouCarry.Game/`, next to its project file. The solution file stays at the root. Each project file names its target framework, because the Godot editor writes `net8.0` into a project file that has none.
 
@@ -123,6 +125,7 @@ A PR merges only when every line holds:
 - [ ] No silent failure. Every error carries context (T-2).
 - [ ] The three-platform bit-identity job is green (G-9).
 - [ ] The `det-lint` job is green. It reads Core for the determinism rules and Game for the string rule (G-2, G-8, G-21).
+- [ ] The `asset-qa` job is green: the clip check, the overlay check, and the file case check over every model, overlay, and animation (D-135, D-300, D-301, D-302).
 - [ ] The `ste-check` job is green (G-14).
 - [ ] The `night-gate` job is green: a success record from a night inside 48 hours, at a commit on the base branch (D-115, D-177, D-274, D-275).
 - [ ] The `smoke` job is green on all three platforms: the headless smoke session of the Game layer, with the pinned Godot binary (D-114, D-149).
