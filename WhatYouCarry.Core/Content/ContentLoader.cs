@@ -29,6 +29,12 @@ public sealed class ContentLoader
     /// <summary>The directory that holds every projectile definition.</summary>
     public const string ProjectileDirectory = "projectiles/";
 
+    /// <summary>
+    /// The directory of the models and the animations, which Core never reads (OQ-159, D-298). Every content
+    /// source skips it, so an animation file there is not a content file of this loader.
+    /// </summary>
+    public const string ModelDirectory = "models/";
+
     private readonly IContentSource source;
 
     /// <summary>A loader that reads one source.</summary>

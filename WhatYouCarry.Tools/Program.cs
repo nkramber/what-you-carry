@@ -1,4 +1,5 @@
 using System;
+using WhatYouCarry.Tools.AssetQa;
 using WhatYouCarry.Tools.BitIdentity;
 using WhatYouCarry.Tools.BotRunner;
 using WhatYouCarry.Tools.DetLint;
@@ -10,7 +11,7 @@ namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check, det-lint, bit-identity, bot-run, night-record, night-gate.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check, det-lint, asset-qa, bit-identity, bot-run, night-record, night-gate.";
 
     public static int Main(string[] args)
     {
@@ -30,6 +31,8 @@ public static class Program
                 return SteCheckCommand.Run(commandArgs);
             case "det-lint":
                 return DetLintCommand.Run(commandArgs);
+            case "asset-qa":
+                return AssetQaCommand.Run(commandArgs);
             case "bit-identity":
                 return BitIdentityCommand.Run(commandArgs);
             case "bot-run":

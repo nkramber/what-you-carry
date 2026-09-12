@@ -6,6 +6,7 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../WhatYouCarry.Assets/WhatYouCarry.Assets.csproj" />
     <ProjectReference Include="../WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
   </ItemGroup>
 </Project>

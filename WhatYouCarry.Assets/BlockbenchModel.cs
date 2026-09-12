@@ -1,22 +1,51 @@
 using System.Collections.Generic;
-using Godot;
+using WhatYouCarry.Core.Physics;
 
-namespace WhatYouCarry.Game.Models;
+namespace WhatYouCarry.Assets;
 
 /// <summary>
 /// One model from a Blockbench file (D-9, D-18, D-86): the bones, the boxes, and the attachment points, in
-/// meters in the frame of D-234. The loader builds one, a test reads it, and <see cref="ModelNodes"/> hands it
-/// to the engine.
+/// meters in the frame of D-234. The loader builds one, the asset QA poses it, and the Game layer hands it to
+/// the engine (D-299).
 /// </summary>
 /// <param name="Name">The model name from the file.</param>
 /// <param name="Bones">Every bone, in file order. A parent comes before its children.</param>
 /// <param name="Boxes">Every box, in file order.</param>
 /// <param name="Attachments">Every attachment point, one per equipment slot that the model declares.</param>
-public sealed record BlockbenchModel(string Name, IReadOnlyList<ModelBone> Bones, IReadOnlyList<ModelBox> Boxes, IReadOnlyList<AttachmentPoint> Attachments);
+public sealed record BlockbenchModel(string Name, IReadOnlyList<ModelBone> Bones, IReadOnlyList<ModelBox> Boxes, IReadOnlyList<AttachmentPoint> Attachments)
+{
+    /// <summary>The index of the bone with a name, or <see cref="ModelBone.NoParent"/> when no bone has it.</summary>
+    public int BoneIndex(string name)
+    {
+        for (int index = 0; index < this.Bones.Count; index++)
+        {
+            if (this.Bones[index].Name == name)
+            {
+                return index;
+            }
+        }
+
+        return ModelBone.NoParent;
+    }
+
+    /// <summary>The box with a name, or null when no box has it.</summary>
+    public ModelBox? Box(string name)
+    {
+        foreach (ModelBox box in this.Boxes)
+        {
+            if (box.Name == name)
+            {
+                return box;
+            }
+        }
+
+        return null;
+    }
+}
 
 /// <summary>
-/// One bone: a group of the Blockbench outliner (D-87). PR-15 rotates a bone about its pivot, and every box and
-/// every child bone under it turns with it.
+/// One bone: a group of the Blockbench outliner (D-87). A keyframe rotates a bone about its pivot, and every box
+/// and every child bone under it turns with it (D-298).
 /// </summary>
 /// <param name="Name">The bone name, unique in the model.</param>
 /// <param name="Pivot">The pivot, in meters in model space.</param>
@@ -42,7 +71,7 @@ public sealed record ModelBox(string Name, int Bone, Vector3 From, Vector3 To, V
 /// The texture rectangle of one face, as fractions of the texture: the low corner and the high corner. A
 /// Blockbench file gives pixels of the model resolution, and the loader divides them out.
 /// </summary>
-public readonly record struct FaceUv(Vector2 Low, Vector2 High);
+public readonly record struct FaceUv(float LowU, float LowV, float HighU, float HighV);
 
 /// <summary>The six sides of a box, in the names of Blockbench. The frame is the frame of D-234.</summary>
 public enum BoxSide

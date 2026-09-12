@@ -118,7 +118,7 @@ The rules permit these as written. They are technical names (rule 1.5):
 - The game title: What You Carry.
 - Tools and platforms: Godot, C#, .NET, xUnit, dotnet format, GitHub Actions, Steam, Steamworks, Steam Deck, Blockbench, JSON, JSONL, Metal, Vulkan, MoltenVK.
 - The two harnesses: Claude Code, Codex.
-- Project names: WhatYouCarry.Core, WhatYouCarry.Game, WhatYouCarry.Tools, WhatYouCarry.Tests, DetMath.
+- Project names: WhatYouCarry.Core, WhatYouCarry.Game, WhatYouCarry.Assets, WhatYouCarry.Tools, WhatYouCarry.Tests, DetMath.
 - Game terms, the run: run, floor, stairwell, hunter, timer, boss, hub, bank, loadout, tick, seed, replay.
 - Game terms, the gear: satchel, quick slot, amulet, skill orb, skill tree, skill point, affix, rarity, tier, band, potion, mana.
 - Game terms, combat: cooldown, reload, hyper-armor, stagger, dodge, block, shield, intent.

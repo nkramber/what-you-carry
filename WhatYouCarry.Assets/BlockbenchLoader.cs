@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
-using Godot;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Physics;
 
-namespace WhatYouCarry.Game.Models;
+namespace WhatYouCarry.Assets;
 
 /// <summary>
 /// Reads a Blockbench project file into a <see cref="BlockbenchModel"/> (D-9, D-18, D-86, OQ-159). The file is
@@ -19,21 +19,21 @@ namespace WhatYouCarry.Game.Models;
 /// the frame of D-234, so no axis changes.
 /// </para>
 /// <para>
-/// PR-13 reads the rest pose alone. A box or a bone with a rotation is an error that names it, because the
-/// keyframe rotation arrives with PR-15 (D-87), and a silent drop of a rotation would show a wrong model (T-2).
-/// Every failure names the file and the box, the bone, or the point at fault (D-92).
+/// The loader reads the rest pose alone. A box or a bone with a rotation is an error that names it, because a
+/// rotation lives in an animation file (D-87, D-298), and a silent drop of a rotation would show a wrong model
+/// (T-2). Every failure names the file and the box, the bone, or the point at fault (D-92).
 /// </para>
 /// </remarks>
 public static class BlockbenchLoader
 {
-    /// <summary>The file extension that Blockbench writes for a project (OQ-159).</summary>
-    public const string Extension = ".bbmodel";
-
     /// <summary>The count of file units in one meter (OQ-159).</summary>
     public const int UnitsPerMeter = 16;
 
     /// <summary>The lowest major format version that the loader reads. Blockbench 5 writes the flat groups list.</summary>
     public const int MinimumFormatMajor = 5;
+
+    /// <summary>The count of numbers of a face rectangle: two corners.</summary>
+    public const int RectangleLength = 4;
 
     private const string RootName = "the file";
     private const string MetaKey = "meta";
@@ -61,7 +61,7 @@ public static class BlockbenchLoader
     private const string NotOneObject = "the file must hold one JSON object";
     private const string NotAList = "is not a list";
     private const string ResolutionNotPositive = "must be above zero";
-    private const string RotationNotZero = "is not zero, and PR-13 reads the rest pose alone (D-87)";
+    private const string RotationNotZero = "is not zero, and the model file holds the rest pose alone (D-87, D-298)";
     private const string FromAboveTo = "has a component above the same component of 'to'";
     private const string NotASlot = "is a locator whose name is not an equipment slot of D-18";
     private const string SlotTwice = "is the name of two locators, and a slot has one attachment point";
@@ -106,7 +106,7 @@ public static class BlockbenchLoader
 
             CheckFormatVersion(path, root);
             string name = JsonShape.Text(path, root, RootName, NameKey);
-            Vector2 resolution = ReadResolution(path, root);
+            TextureResolution resolution = ReadResolution(path, root);
             Dictionary<string, JsonElement> groups = ReadById(path, root, GroupsKey);
             Dictionary<string, JsonElement> elements = ReadById(path, root, ElementsKey);
 
@@ -150,7 +150,7 @@ public static class BlockbenchLoader
     /// <summary>One meter for each <see cref="UnitsPerMeter"/> file units.</summary>
     public static Vector3 ToMeters(Vector3 units)
     {
-        return units / UnitsPerMeter;
+        return units * (1.0f / UnitsPerMeter);
     }
 
     /// <summary>The major number of the format version must reach <see cref="MinimumFormatMajor"/>.</summary>
@@ -167,7 +167,7 @@ public static class BlockbenchLoader
     }
 
     /// <summary>The texture resolution of the model, in pixels. The face rectangles divide by it.</summary>
-    private static Vector2 ReadResolution(string path, JsonElement root)
+    private static TextureResolution ReadResolution(string path, JsonElement root)
     {
         JsonElement resolution = JsonShape.Member(path, root, RootName, ResolutionKey);
         float width = JsonShape.Number(path, resolution, ResolutionKey, WidthKey);
@@ -182,7 +182,7 @@ public static class BlockbenchLoader
             throw ContentError.Make(path, HeightKey, ResolutionNotPositive);
         }
 
-        return new Vector2(width, height);
+        return new TextureResolution(width, height);
     }
 
     /// <summary>Every object of one list, by its id. A repeated id is an error.</summary>
@@ -306,7 +306,7 @@ public static class BlockbenchLoader
     }
 
     /// <summary>One box from one cube element. The six face rectangles divide by the resolution.</summary>
-    private static ModelBox ReadBox(string path, JsonElement element, string name, int bone, Vector2 resolution)
+    private static ModelBox ReadBox(string path, JsonElement element, string name, int bone, TextureResolution resolution)
     {
         Vector3 from = JsonShape.Vector(path, element, name, FromKey);
         Vector3 to = JsonShape.Vector(path, element, name, ToKey);
@@ -322,10 +322,9 @@ public static class BlockbenchLoader
         for (int side = 0; side < FaceNames.Length; side++)
         {
             JsonElement face = JsonShape.Member(path, faces, name, FaceNames[side]);
-            Vector4 rectangle = JsonShape.Rectangle(path, face, $"{name}.{FaceNames[side]}", UvKey);
-            uvs[side] = new FaceUv(
-                new Vector2(rectangle.X / resolution.X, rectangle.Y / resolution.Y),
-                new Vector2(rectangle.Z / resolution.X, rectangle.W / resolution.Y));
+            string faceName = $"{name}.{FaceNames[side]}";
+            float[] rectangle = JsonShape.Numbers(path, JsonShape.Member(path, face, faceName, UvKey), faceName, UvKey, RectangleLength);
+            uvs[side] = new FaceUv(rectangle[0] / resolution.Width, rectangle[1] / resolution.Height, rectangle[2] / resolution.Width, rectangle[3] / resolution.Height);
         }
 
         return new ModelBox(name, bone, ToMeters(from), ToMeters(to), ToMeters(pivot), uvs);
@@ -360,7 +359,7 @@ public static class BlockbenchLoader
         }
 
         Vector3 rotation = JsonShape.Vector(path, owner, name, RotationKey);
-        if (rotation != Vector3.Zero)
+        if (rotation != new Vector3(0.0f, 0.0f, 0.0f))
         {
             throw ContentError.Make(path, RotationKey, $"on '{name}' {RotationNotZero}");
         }
@@ -389,4 +388,7 @@ public static class BlockbenchLoader
 
     /// <summary>One node of the outliner in walk order: a group or an element, and the bone above it.</summary>
     private readonly record struct OutlinerEntry(string Id, bool IsGroup, int Parent);
+
+    /// <summary>The texture size of the model, in pixels.</summary>
+    private readonly record struct TextureResolution(float Width, float Height);
 }

@@ -11,6 +11,7 @@ using WhatYouCarry.Game.Content;
 using WhatYouCarry.Game.Input;
 using WhatYouCarry.Game.Logging;
 using WhatYouCarry.Game.Measure;
+using WhatYouCarry.Assets;
 using WhatYouCarry.Game.Models;
 using WhatYouCarry.Game.Render;
 using WhatYouCarry.Game.Smoke;
@@ -72,9 +73,6 @@ public partial class Main : Node3D
 
     /// <summary>The message of the error line of a frame log that the game could not write.</summary>
     public const string FrameLogFailedMessage = "The frame log could not be written, and the game quits.";
-
-    /// <summary>The content path of the player model, under the content directory (OQ-159).</summary>
-    public const string PlayerModelPath = "models/player.bbmodel";
 
     /// <summary>The name of the field of the end line that holds the count of frames of the frame log.</summary>
     public const string FramesField = "frames";
@@ -276,7 +274,7 @@ public partial class Main : Node3D
         string projectDirectory = ProjectSettings.GlobalizePath(ProjectRoot);
         string contentDirectory = Path.GetFullPath(Path.Combine(projectDirectory, ParentDirectory, ContentDirectoryName));
         ContentSet content = new ContentLoader(new DirectoryContentSource(contentDirectory)).Load();
-        BlockbenchModel playerModel = BlockbenchLoader.Parse(PlayerModelPath, ReadModelBytes(contentDirectory, PlayerModelPath));
+        BlockbenchModel playerModel = BlockbenchLoader.Parse(AssetPaths.BodyModel, ReadModelBytes(contentDirectory, AssetPaths.BodyModel));
 
         SimulationLoop loop = new(FirstSeed, content);
         this.loop = loop;

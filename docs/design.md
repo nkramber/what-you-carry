@@ -138,7 +138,7 @@ A C# synthesizer generates all audio from parameter files, music included (D-89,
 
 ### 3.12 Architecture
 
-Two projects hold the game: `WhatYouCarry.Core` and `WhatYouCarry.Game` (D-108). Core is a pure C# library with no engine dependency. It owns the simulation, collision, pathfinding, projectiles, camera, items, economy, and saves. Game is a thin Godot layer for render, audio, and input. Tools and Tests are separate projects. Core uses the frame of Godot: right-handed, Y up, meters, and forward at yaw zero is minus Z (D-234). A body is a box that Core sweeps against the grid, one axis at a time (D-165). A contact stops one skin before a block face, and the edge of the grid is a wall (D-235, D-237).
+Two projects hold the game: `WhatYouCarry.Core` and `WhatYouCarry.Game` (D-108). Core is a pure C# library with no engine dependency. It owns the simulation, collision, pathfinding, projectiles, camera, items, economy, and saves. Game is a thin Godot layer for render, audio, and input. Tools and Tests are separate projects. A fifth project, `WhatYouCarry.Assets`, holds the model reader, the animation reader, and the pose math, with no engine dependency (D-299). Game and Tools read a model through it. Core uses the frame of Godot: right-handed, Y up, meters, and forward at yaw zero is minus Z (D-234). A body is a box that Core sweeps against the grid, one axis at a time (D-165). A contact stops one skin before a block face, and the edge of the grid is a wall (D-235, D-237).
 
 Determinism rules (D-69 to D-73, D-77):
 
@@ -434,7 +434,7 @@ Gate: a full floor renders under the mesh budget, and M-3 records the Deck frame
 > *In plain English:* this turns the block grid and the box models into pictures, cheaply enough for the smallest target machine. It also hides the wall between the camera and you.
 
 **PR-57: Asset QA gate v1.** 🔧
-Implement the C# tool for three checks (D-135, D-149). No two boxes interpenetrate at any animation keyframe. Each armor overlay encloses its limb box. Every file name reference matches the file case. Run it in CI on every model. PR-49 extends it. This entry follows PR-13 in the sequence.
+Implement the C# tool for three checks (D-135, D-149). No two boxes interpenetrate at the rest pose or at any animation keyframe, with the pairs of a bone and its parent exempt (D-301). Each armor overlay encloses the body box of its name (D-300). Every file name reference matches the file case (D-302). The tool reads the animation files of D-298 and poses each model through `WhatYouCarry.Assets`, the reader that Game shares (D-299). Run it in CI on every model. PR-49 extends it. This entry follows PR-13 in the sequence.
 Gate: the tool fails a model with a clip and a model with a wrong-case reference.
 > *In plain English:* from the first model onward, an automatic inspection catches pieces that clip through each other and file names that break on Linux.
 
@@ -444,7 +444,7 @@ Gate: the owner approves the first contact sheet.
 > *In plain English:* a tool paints every texture from a fixed set of about thirty colors, so the whole game looks like one thing.
 
 **PR-15: Player entity and the first weapon.** 🔧
-Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger, and one sword with windup, active, and recovery frames (D-25, D-27, D-28, D-29, OQ-5). Implement the animation JSON format and the procedural locomotion in Game (D-87). A test asserts that the animation file agrees with the Core time values.
+Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger, and one sword with windup, active, and recovery frames (D-25, D-27, D-28, D-29, OQ-5). Play the animation files of D-298 and implement the procedural locomotion in Game (D-87). A test asserts that the animation file agrees with the Core time values.
 Gate: the owner confirms the sword feels committed and readable.
 > *In plain English:* you can run, jump, dodge, and swing a sword, and the swing shows its wind-up so you can read an enemy.
 

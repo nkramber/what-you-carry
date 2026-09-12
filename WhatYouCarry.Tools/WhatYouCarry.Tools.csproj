@@ -9,6 +9,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
   </ItemGroup>
   <ItemGroup>
+    <!-- The asset-qa command reads the models and the animations through the Assets project (D-299). -->
+    <ProjectReference Include="../WhatYouCarry.Assets/WhatYouCarry.Assets.csproj" />
     <!-- The bit-identity command runs the Core determinism types (D-201). Core references nothing back (G-1). -->
     <ProjectReference Include="../WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
   </ItemGroup>

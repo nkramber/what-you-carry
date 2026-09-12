@@ -1,0 +1,24 @@
+# Runs the asset QA gate on every model, overlay, and animation under content/ (D-135, D-149).
+# The checks live in WhatYouCarry.Tools, command asset-qa. A finding fails the job.
+# One platform is enough, and it is Linux: the file case check reads directory entries, and the game fails on
+# the wrong case on Linux and nowhere else (D-191, D-302).
+name: Asset QA
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  asset-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Check the assets
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- asset-qa --root .

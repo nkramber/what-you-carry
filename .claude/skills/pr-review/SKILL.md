@@ -442,7 +442,7 @@ An automated reviewer, gitar, comments on every PR after a push (D-250). The aut
 
 Do these steps after each push.
 
-1. Wait for the pass. It ends with a comment on the PR that says approved or that requests changes, and a line comment for each issue.
+1. Wait for the pass. It ends with a comment on the PR that says approved or that requests changes, and a line comment for each issue. When the comment reports a pause of the automatic reviews for the period, post the comment `Gitar review` on the PR. The pass then runs on demand (D-303).
 2. Read each comment as a claim, not a fact. Reproduce the trigger and read the contract it names, as for a review finding.
 3. For a comment with no merit, reply on its thread with the reason, and resolve the thread.
 4. For a comment with merit, make the smallest change that restores the contract, commit, push, and reply on the thread with the commit.
