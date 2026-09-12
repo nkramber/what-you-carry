@@ -2,6 +2,50 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 130: 2026-09-11, Claude Code
+
+Author: Claude Code
+Session: record the owner answers to OQ-15, OQ-43, OQ-49, OQ-50, OQ-157, and OQ-158 (D-291 to D-296). Branch `docs/oq-43-49-157-158-record`.
+
+### What this session did, and why
+
+- PR #50 merged as `cfafad3` at 23:04 UTC. CI, bit identity, det-lint, STE check, smoke, and bots passed on that commit.
+- Phase 2 sequence item 3 is an owner answer, so the session put OQ-43, OQ-49, OQ-157, and OQ-158 to the owner in one batch. The owner chose each recommendation.
+- D-291 resolves OQ-43: one mesh per chunk of 16 by 32 by 16 blocks, and a budget of 64 world meshes plus one per entity. D-292 resolves OQ-49: the wall fade in the world shader. It revises in part D-88, the effect note only.
+- D-293 resolves OQ-157, and D-294 resolves OQ-158. Both keep the values that PR #49 merged, so no code and no workflow change follows. D-294 is the dependency entry of `actions/cache` (G-16).
+- Exit test 7 of PR-13 needs M-3 on a Deck. The sequence put the OQ-50 answer at item 19, after PR-13. The session put OQ-50 and OQ-15 to the owner too.
+- D-296 resolves OQ-50: the owner owns a Steam Deck OLED, and M-3 measures on it. D-295 resolves OQ-15 against the recommendation: 90 frames per second, the top refresh rate of the OLED panel, with 60 as the fallback.
+- OQ-44 gains a dated note, because its recommendation reads "two frames at 60". The design doc, the Phase 2 roadmap, and the Phase 5 roadmap cite the six decisions. Session 120 moved to the archive.
+
+### State of the build
+
+- `main` is at `cfafad3`, the squash merge of PR #50. This branch holds one docs commit above it.
+- Remote head: `origin/docs/oq-43-49-157-158-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 584 tests, 0 failures, with the smoke test on the local Godot build. No code changed.
+- `ste-check`: 0 findings in 15 files. `bit-identity`: `6ec00e90c1c85cdb`.
+- The night gate reads the success of run 34600758086 at `095ce5e`, ended 13:45 UTC on 2026-09-11. It turns red at 13:45 UTC on 2026-09-13 unless a night refreshes it. The run list held no run of the 17:21 UTC cron of 2026-09-11 at the check of this session. The next scheduled night is 08:07 UTC on 2026-09-12, and it can start hours late (F-95).
+
+### In flight
+
+PR #51: docs alone. The automated pass approved the head with no code finding. Its one comment reads the missing review record, and the reply on the PR names the `review-override` label (D-188, D-190). No commit answered it. The label is on, and the owner merge is next. Then PR-13 opens from `main` per the Phase 2 roadmap: the Blockbench loader, the greedy mesher, and the wall fade shader.
+
+### Traps and gotchas
+
+- A maximum floor (D-164) fills the world budget of D-291 exactly: 64 chunks and 64 world meshes. A second mesh instance per chunk breaks `MeshBudgetTest`.
+- D-295 sets 90 frames per second, which is 11.1 milliseconds per frame. The M-3 row of PR-13 reads the 99th percentile frame time against that bound, and a miss files a question (F-3).
+- The recommendation of OQ-44 reads "two frames at 60", and D-295 changed the target. The owner answers OQ-44 before PR-18.
+- Three comment lines in `IntentBuilder.cs` cite OQ-157, and one says that the owner sets the numbers by a decision. The reference check reads superseded decisions alone, so the citation passes. The next PR that edits that file can cite D-293.
+- `dotnet test` with no filter runs `SmokeSessionPasses` on the local Godot build. The full local suite takes about three and a half minutes.
+- The next ids are D-297, OQ-159, F-96, and Session 131.
+
+### Open questions that block progress
+
+None blocks PR-13. OQ-1 blocks PR-14. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR, which carries the `review-override` label. A session then opens PR-13 from `main` per the Phase 2 roadmap, D-291, D-292, D-295, and D-296. Exit test 7 records the M-3 frame time on the Steam Deck OLED of the owner.
+
 ## Session 129: 2026-09-11, Claude Code
 
 Author: Claude Code
@@ -354,40 +398,3 @@ None blocks PR-12 once this PR merges. OQ-43 and OQ-49 block PR-13, the item aft
 ### Next concrete action
 
 The owner merges this PR. This run then opens the return PR from `main`: `7 8 * * *` in `night.yml`, the shape test back on the 08:07 UTC line, the workflow comment, F-95 at ✅, and a handoff entry, with a Codex review. After both merge, a session opens PR-12 from `main` per the Phase 2 roadmap and D-289.
-
-## Session 120: 2026-09-11, Claude Code
-
-Author: Claude Code
-Session: move the PR #46 test slot to 17:21 UTC with no repeat review (D-286, D-287), in the same run as Sessions 116 and 118. Branch `chore/night-schedule-reset`.
-
-### What this session did, and why
-
-- The 15:21 UTC slot passed before a merge. The owner moved the test to 17:21 UTC, which is 12:21 Central Daylight Time, and waived the Codex repeat review of the swap.
-- The swap commit changes the cron to `21 17 * * *`, the matching strings of `NightWorkflowRunsAtTheScheduleTestTime`, and the times in D-286, OQ-154, OQ-155, F-95, and the Phase 1 roadmap. The shape test fails on the 15:21 UTC workflow.
-- The `review-override` label cannot turn the gate green here, because the gate fails the label on a PR that changes a workflow or a test (D-190). D-287 records the owner waiver: the author sets the head field of `docs/reviews/pr-46.md` to the swap commit, with a dated note, one time, as D-282 did for PR #39.
-- Session 110 moved to the archive.
-
-### State of the build
-
-- `main` is at `095ce5e`. The effective head is the swap commit. The commit above it holds the head correction, this entry, and the archive move, all metadata (D-184).
-- Remote head: `origin/chore/night-schedule-reset` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. The repository shape suite: 14 tests, 0 failures. `ste-check`: 0 findings in 15 files. The full suite ran 535 tests with 0 failures on `862fd4c`, and CI runs it on this head.
-
-### In flight
-
-This PR waits for the checks and the automated pass on the new head, then the owner merge before 17:21 UTC. After the merge, `gh workflow disable night.yml` and then `gh workflow enable night.yml` run, and a watch reads the 17:21 UTC night.
-
-### Traps and gotchas
-
-- A merge or an enable after 17:21 UTC moves the first test to 17:21 UTC on 2026-09-12 (D-286).
-- If no run of the schedule event exists by 18:15 UTC, that is a third miss. Stop and ask the owner.
-- The handoff entries of Sessions 116 to 119 and the review record name 15:21 UTC. They are dated records, and D-286 names the move.
-- The next ids are D-288, OQ-156, F-96, and Session 121. The Gate 1 sign-off is D-288 now.
-
-### Open questions that block progress
-
-OQ-154 blocks Phase 2 until the owner signs Gate 1. OQ-47 blocks PR-12. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges PR #46 before 17:21 UTC. Then the disable and the enable run, and a watch reads the 17:21 UTC night. When it passes, the Gate 1 record follows the edit list of Session 115, with D-288 for the sign-off, the row of the 17:21 UTC night, and F-95 at ✅. A PR returns the cron to 08:07 UTC.
