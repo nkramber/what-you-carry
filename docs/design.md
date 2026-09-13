@@ -90,7 +90,7 @@ Movement verbs are dodge roll, sprint, and jump (D-27). There is no stamina. Dod
 
 Modeled slots: head, chest, legs, feet, amulet, shield (D-18). The two ring slots have no model (D-18, D-55). The player equips one main weapon at a time (D-20). Spare weapons ride in the satchel. A swap is slow, and the player cannot cancel it (D-21). The satchel is small and visible (D-19). Consumables in the satchel go to a quick slot (D-22).
 
-Armor gives damage reduction plus weight. Weight slows movement and dodge recovery (D-23). A shield needs a one-handed melee weapon (D-26). Only shields block. Nothing interrupts a two-handed melee swing (D-29). A stagger system exists for the player (F-21).
+Armor gives damage reduction plus weight. Weight slows movement and dodge recovery (D-23). A shield needs a one-handed melee weapon (D-26). Only shields block. Nothing interrupts a two-handed melee swing (D-29). A stagger system exists for the player (F-21). Heavy armor resists stagger, and light armor does not (D-314).
 
 ### 3.5 Combat
 
@@ -231,7 +231,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-18 | All music is generated (D-93). Quality is unproven | 2026-09-07 | ❓ Owner ear at each phase gate. Binds PR-50 |
 | F-19 | Night sweeps are scheduled jobs. D-103 forbids scheduled agents | 2026-09-06 | ✅ doc. D-117: tests may run on a schedule, agents may not |
 | F-20 | Per-kill points (D-44) reward a full clear of every floor | 2026-09-06 | ⚠ The timer counters it. Binds M-5 |
-| F-21 | Hyper-armor (D-29) needs a stagger system. The effect of armor weight on stagger is undecided | 2026-09-06 | ❓ OQ-5. Binds PR-15 |
+| F-21 | Hyper-armor (D-29) needs a stagger system. The effect of armor weight on stagger is undecided | 2026-09-06 | ⚠ D-314 and D-316, 2026-09-12. Binds PR-15 and PR-22 |
 | F-22 | The v1 build order put procgen before any render layer for weeks. D-57 wants a playable floor early | 2026-09-06 | 🔧 Phase 2 places the Game skeleton right after the Core foundations |
 | F-23 | The name "Descent" had a trademark risk. "What You Carry" (D-11) has no trademark search yet | 2026-09-06 | ❓ OQ-17 |
 | F-24 | Always-on numbers (D-36) and Deck 800p (D-15) strain Pillar 5 readability | 2026-09-06 | ⚠ Binds PR-19. Tier 4 checks it |
@@ -443,13 +443,18 @@ Implement the C# texture generator that writes the 32 px atlas from the palette 
 Gate: the owner approves the first contact sheet.
 > *In plain English:* a tool paints every texture from a fixed set of about thirty colors, so the whole game looks like one thing.
 
-**PR-60: Fullscreen window and the test exit.** 🔧
+**PR-60: Fullscreen window and the test exit.** ✅ Merged 2026-09-13 as PR #58.
 Open the game window in borderless fullscreen at the resolution of the display, on every desktop and on the Deck (D-310). End a session on the Escape key or the controller Start button during tests, until PR-53 brings the escape menu (D-311). One PR carries both changes before PR-15 (D-312).
 Gate: a test covers the window mode and each quit input, and a headless session still passes.
 > *In plain English:* the game fills the screen that it runs on, so it is no longer a small box on a large display. During testing, Escape or Start closes it.
 
+**PR-61: User argument check.** 🔧
+Read the user arguments of the Game layer once at boot, with one parser (D-313). The parser holds each flag and the count of words after it. An unknown word, an unknown flag, a repeated flag, and a flag with too few words each stop the boot. The error names the word (T-2).
+Gate: a test covers each kind of bad argument, and the user arguments of every session command in `CLAUDE.md` still parse.
+> *In plain English:* the game ignores a typo in a test command today, and a test can pass while it runs the wrong command. After this change, the typo stops the game with a message that names it.
+
 **PR-15: Player entity and the first weapon.** 🔧
-Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger, and one sword with windup, active, and recovery frames (D-25, D-27, D-28, D-29, OQ-5). Play the animation files of D-298 and implement the procedural locomotion in Game (D-87). A test asserts that the animation file agrees with the Core time values.
+Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger, and one sword with windup, active, and recovery frames (D-25, D-27, D-28, D-29, D-314, D-315). PR-15 builds the zero-weight case, and PR-22 adds the effects of weight (D-316). Play the animation files of D-298 and implement the procedural locomotion in Game (D-87). A test asserts that the animation file agrees with the Core time values.
 Gate: the owner confirms the sword feels committed and readable.
 > *In plain English:* you can run, jump, dodge, and swing a sword, and the swing shows its wind-up so you can read an enemy.
 
@@ -489,9 +494,9 @@ Gate: the affix set has one test per behavior, for the player and for an enemy.
 > *In plain English:* items get random extra powers, and an enemy that carries such an item uses the power against you.
 
 **PR-22: Equipment slots, armor overlays, and weight.** 🔧
-Implement the modeled slots and the two ring slots (D-18, D-55). Attach armor overlays and the shield to the shared base body (D-82). Implement damage reduction and weight on movement and dodge (D-23, D-26).
+Implement the modeled slots and the two ring slots (D-18, D-55). Attach armor overlays and the shield to the shared base body (D-82). Implement damage reduction and weight on movement and dodge (D-23, D-26). Set the growth of the dodge cooldown with weight and the weight at which armor resists stagger (D-314, D-316).
 Gate: the PR-57 pose check passes for every armor piece on every animation (D-135).
-> *In plain English:* what you wear shows on your body. Heavy pieces make you slower. The pieces never clip through each other.
+> *In plain English:* what you wear shows on your body. Heavy pieces make you slower and harder to stagger. The pieces never clip through each other.
 
 **PR-23: Satchel, quick slot, throwables, potions, and weapon swap.** 🔧
 Implement the satchel with a slot count from OQ-3 (D-19). Implement the quick slot, bombs with full self-damage, health and mana potions, and the slow uncancelable weapon swap (D-21, D-22, D-24, D-32).
@@ -646,7 +651,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
-11. PR-60, PR-15, PR-16, PR-17, PR-18.
+11. PR-60, PR-61, PR-15, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58.
 12. PR-19, PR-20.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.

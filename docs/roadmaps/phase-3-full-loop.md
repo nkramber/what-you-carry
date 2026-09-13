@@ -80,7 +80,7 @@ Gate: exit tests 1 to 6 pass.
 Scope:
 
 - `Core/Entities/Equipment.cs`: the six modeled slots and the two ring slots, with equip and unequip rules (D-18, D-55). A shield needs a one-handed melee weapon (D-26).
-- `Core/Entities/Weight.cs`: the sum of armor weight, and its effect on walk speed, sprint speed, and dodge cooldown (D-23, D-28). The stagger rule against weight follows OQ-5.
+- `Core/Entities/Weight.cs`: the sum of armor weight, and its effect on walk speed, sprint speed, and dodge cooldown (D-23, D-28). The stagger rule against weight follows D-314. This PR sets the growth of the dodge cooldown with weight and the weight at which armor resists stagger (D-316).
 - `content/models/armor/*.json`: overlay boxes per slot on the shared base body (D-82), with the first three armor sets from OQ-10.
 - `WhatYouCarry.Game/Models/OverlayAttach.cs`: attaches an overlay model to its slot bone.
 
@@ -89,19 +89,20 @@ Out of scope: item stats beyond reduction and weight, the bank (PR-30).
 Exit tests:
 
 1. `ShieldNeedsOneHandedMelee` asserts a shield equip fails with a two-handed weapon and succeeds with a one-handed sword.
-2. `WeightSlowsDodge` asserts a longer dodge cooldown with heavier armor.
+2. `WeightSlowsDodge` asserts a longer dodge cooldown with heavier armor (D-316).
 3. `ReductionAppliesPerHit` asserts damage taken equals the hit minus the reduction, never below zero.
 4. `RingAffixesApply` asserts a ring's affix triggers for the wearer.
 5. `OverlayEnclosesLimb` runs the PR-57 tool on every armor model and asserts zero findings (D-135).
 6. `EquipmentIsDeterministic` replays a record with equip changes and asserts one state hash.
+7. `HeavyArmorResistsStagger` asserts that a hit staggers a player below the heavy weight and does not stagger a player at or above it (D-314, D-316).
 
 Review focus: gameplay, presentation, content, test quality.
 
 Check clause: none.
 
-Gate: exit tests 1 to 6 pass.
+Gate: exit tests 1 to 7 pass.
 
-> *In plain English:* what you wear shows on your body. Heavy pieces make you slower. The pieces never clip through each other.
+> *In plain English:* what you wear shows on your body. Heavy pieces make you slower and harder to stagger. The pieces never clip through each other.
 
 ### PR-23: Satchel, quick slot, throwables, potions, and weapon swap
 
@@ -409,7 +410,7 @@ One person owns the program. Items run one at a time in this order. Gate 2 must 
 
 1. Owner: answer OQ-22, OQ-51, OQ-52.
 2. PR-21.
-3. Owner: answer OQ-5 if still open, and the first three armor sets from OQ-10.
+3. Owner: answer the first three armor sets from OQ-10, with the two weight numbers of D-316. ✅ OQ-5 answered 2026-09-12: D-314.
 4. PR-22.
 5. Owner: answer OQ-3 and OQ-53.
 6. PR-23.
@@ -442,7 +443,6 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 3. Each 
 Open:
 
 - OQ-3: satchel slot count. Blocks PR-23.
-- OQ-5: stagger and weight. Blocks PR-22 if still open after Phase 2.
 - OQ-7: amulet abilities. Blocks PR-28.
 - OQ-8: tree branches. Blocks PR-29.
 - OQ-10: the weapon list, at least the first armor sets. Blocks PR-22.
@@ -460,3 +460,7 @@ Open:
 - OQ-57: the profile path. Blocks PR-31.
 - OQ-58: the Tier 3 model and budget. Blocks PR-32.
 - OQ-59: the hub layout. Blocks PR-30.
+
+Resolved 2026-09-12:
+
+- OQ-5 (D-314 and D-316): stagger and weight. PR-15 and PR-22.
