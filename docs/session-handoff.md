@@ -2,6 +2,57 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 152: 2026-09-13, Claude Code
+
+Author: Claude Code
+Session: write `README.md` with the launch steps, and open PR-15, the player and the first sword, as PR #62. Branch `feat/pr-15-player-first-weapon`.
+
+### What this session did, and why
+
+- PR #61 merged as `aeb91df` at 18:50 UTC on 2026-09-13, after Session 151. The owner asked for a root `README.md` with the steps to launch the game, and then for the next work, PR-15.
+- A fresh clone of `aeb91df` with no `.godot` directory built in 4 seconds, ran the headless smoke session to tick 1000, and ended the test exit at tick 101. `README.md` holds those steps, the controls, and the notes for a bad argument. `README.md` is outside the override set of D-190, so the owner chose to carry it in PR-15 (D-318).
+- Before the code, the owner answered the gaps of the PR-15 scope in six batches, D-319 to D-337. The sprint conflict of D-231 and D-315 went to 7 m/s (D-319). The attack bit swings the first weapon, and the Phase 1 shot ends, so D-320 supersedes D-265. Against the recommendation, the owner chose free move and live aim for the swing (D-324) and a roll that no hit lands on (D-328). The owner added a guard against a stunlock to the stagger (D-326), chose a sword model with a new metal tile (D-330), and replaced a half roll in water with no roll in water (D-337).
+- Core: `Player` holds health, the roll, the stagger and its guard, and the swing. `MeleeWeapon` holds the exact wedge test of the arc. The loop hashes the run end kind as one byte and the player after the projectiles, and the simulation version is 7. `WeaponDefinition` is the `weapon` content type. `Int32.MaxValue` gave three det-lint findings, so the weapon type stores its ticks as `long` with the `UInt32.MaxValue` bound, as the projectile type does, and needs no allowlist entry.
+- Content and Game: `sword-basic.json`, `sword-basic.bbmodel`, the metal rule and the atlas, the `weapon` locator, and the swing, roll, and stagger clips. Asset QA found the right forearm in the torso at tick 26 of the first swing clip, and the keyframe moved out to the right. The Game layer plays the clips, walks the limbs from the distance traveled, holds the sword in the right hand, and stands the lowest box corner of the pose on the feet. The smoke script swings and rolls.
+- The bit-identity sweep folds a projectile run and the arc test of its own, because no intent fires a shot now. The known answer moved from `6ec00e90c1c85cdb` to `2258ba8b9cc94b3f`.
+- The owner read the contact sheet and asked whether these were test materials. The art is the first output of the approved pipeline, and no roadmap item raised it. D-338 keeps the PR-15 sheet as a first pass and closes exit test 8. D-339 adds PR-62, an art quality pass after PR-20 (OQ-171, F-96).
+- The owner parked exit test 7, the play test, and runs the Codex review and the merge after the automated pass.
+- The automated pass of gitar approved `932cf0a` with one suggestion: an arc with fewer hundredths than active ticks. It had partial merit. The coverage claim did not hold, and a wedge of no turn accepted a point on its line behind the body. `6e35bc5` rejects that arc and that wedge with regression tests, the reply on the thread names the evidence, and the thread is resolved. The pass approved `6e35bc5` at 22:31 UTC with the finding resolved, and its reply on the thread accepted the reasoning. The watcher posted `Gitar review` at 22:35 UTC, because the check run of the head was not listed yet, and gitar answered `On it`. The approved check run on the head is the pass of D-250.
+- Session 142 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `aeb91df`. The effective head of PR #62 is `6e35bc5`, the fix commit above the code commit `932cf0a`. This entry is in a metadata commit above it (D-184).
+- Remote head: `origin/feat/pr-15-player-first-weapon` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test` on the code of `932cf0a`: 841 tests with the five Smoke tests on the local Godot build, 0 failures after the correction of four sentences that `SteCheckTests` found before the commit. The fix commit passed the 250 tests of the classes it touches.
+- `det-lint`: 0 findings, Core 0 in 65 files, Game 0 in 32 files. `ste-check`: 0 findings in 16 files. `asset-qa`: 0 findings in 2 models and 3 animations. The Godot build check passed, and the contact sheet rendered in a window.
+- On `932cf0a`, CI, bit identity, and smoke passed on the three platforms, and bots, det-lint, asset-qa, STE check, the night gate, and gitar passed. The `evaluate` check fails and `review-gate` is grey, because no review record exists yet (D-251). On `6e35bc5`, CI, bit identity, and smoke passed on the three platforms again, and bots, det-lint, asset-qa, STE check, the night gate, and gitar passed.
+- The night gate reads the success of run 34759337453 at `4a1048c`, ended 14:13 UTC on 2026-09-13. It turns red at 14:13 UTC on 2026-09-15 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-14, and it can start hours late (F-95).
+
+### In flight
+
+PR #62: the Codex review per the `pr-review` skill at the effective head `6e35bc5`, the play test of the owner for exit test 7, and then the owner merge. A docs PR then records the merge (D-297).
+
+### Traps and gotchas
+
+- Exit test 7 of PR-15 is open: the owner plays the sword and records the result as a decision before the merge. Exit test 8 closed as a first pass (D-338).
+- The bit-identity known answer is `2258ba8b9cc94b3f`. The hash reads the run end as one byte of its kind and the player after the projectiles, and `StairwellTests.HashWith` holds that order.
+- Nothing in the loop deals damage before PR-16. A test deals damage with `loop.Player.TakeHit`, which the record does not hold, so a replay cannot see it. PR-16 deals damage inside `Step`.
+- The swing clip keeps the right arm in front of its own shoulder, and the torso twist gives the sweep. A straight arm across the chest clips the torso or the head at a keyframe, and asset QA reports it.
+- The walk amount follows the horizontal speed up to the walk speed, so a body at rest stands straight. D-333 names the stride and the angles alone, and the play test judges that rule.
+- The model root stands the lowest box corner of the pose on the feet, so the roll lifts the model about 0.55 m at its middle.
+- The GitHub PR #62 is PR-15. The roadmap id PR-62 is the art quality pass.
+- The branch came from `origin/main` and tracked it at first. The first push set the upstream to the feature branch, and a push names the branch.
+- The next ids are D-340, OQ-172, F-97, PR-63, and Session 153.
+
+### Open questions that block progress
+
+None blocks PR #62. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #62 per the `pr-review` skill at the effective head `6e35bc5` and writes `docs/reviews/pr-62.md`. The owner plays the sword for exit test 7, then merges, and a docs PR records the merge (D-297).
+
 ## Session 151: 2026-09-13, Claude Code
 
 Author: Claude Code
@@ -371,48 +422,3 @@ OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 a
 ### Next concrete action
 
 The author adds integration coverage for both test exits, pushes the correction, and requests the repeat cross-provider review.
-
-## Session 142: 2026-09-12, Claude Code
-
-Author: Claude Code
-Session: open PR-60, the fullscreen window and the test exit, as PR #58. Branch `feat/pr-60-fullscreen-test-exit`.
-
-### What this session did, and why
-
-- PR #57 merged as `f3f0bc0`, and the Session 141 handoff named PR-60 as the next action. This session opened it from `main` per D-310 to D-312.
-- `WhatYouCarry.Game/project.godot` gains a `[display]` section with `window/size/mode=3`, the borderless fullscreen of the engine, and no window size, so the viewport takes the resolution of the display (D-310).
-- `WhatYouCarry.Game/Input/TestExit.cs` holds the two exit inputs, the Escape key and the Start button of the first controller (D-311). `Main` polls it once per tick before the intent, in every session that runs the loop, and quits with the end line `The test exit ends the session.` and exit code 0 when the log holds no error line. `Main` now holds one poll for the reader and the exit.
-- The fake poll of the reader tests moved to `WhatYouCarry.Tests/FakePoll.cs`, because the test exit tests share it. `TestExitTests.cs` holds exit tests 2 to 4, and `GameShapeTests.WindowOpensFullscreen` is exit test 1. The window test fails on the old project file with `The project has no display section.`
-- `CLAUDE.md` and `AGENTS.md` update the play session line: the window opens fullscreen, Escape or Start ends the session, and the engine flag `--windowed` gives a window.
-- The automated pass of gitar ran on `3dfbf03` after the push and approved it at 19:52 UTC with no comment, and its dashboard comment still shows the trial pause note (D-250). The comment `Gitar review` per D-303 got the reply `On it` at 19:53 UTC and no further output in fifty minutes. The approved check run on the head is the pass of D-250.
-- Session 132 moved to the archive, because the file held eleven entries with this one.
-
-### State of the build
-
-- `main` is at `f3f0bc0`. The effective head of PR #58 is `3dfbf03`, the one code commit. This entry is in a metadata commit above it (D-184).
-- Remote head: `origin/feat/pr-60-fullscreen-test-exit` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 765 tests, 0 failures, with the two Smoke tests on the local Godot build.
-- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 27 files. `ste-check`: 0 findings in 15 files. The Godot build check passed.
-- On `3dfbf03`, CI, bit identity, and smoke passed on the three platforms, and bots, det-lint, asset-qa, STE check, and the night gate passed. The `evaluate` check fails and `review-gate` is grey, because no review record exists yet (D-251).
-- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-13, and it can start hours late (F-95).
-
-### In flight
-
-PR #58: the Codex review per the `pr-review` skill at the effective head `3dfbf03`, then the owner merge. A docs PR then records the merge (D-297).
-
-### Traps and gotchas
-
-- Every session with a window now opens in fullscreen: the play session, the windowed contact sheet run, and the M-3 bot session. The engine flag `--windowed` overrides it. A headless run opens no window, and the smoke workflow proves it.
-- The test exit polls the input once per tick in every session that runs the loop, the smoke and bot sessions too. A headless run has no key down, so CI never ends there. A windowed bot session ends on Escape, and the frame log still writes.
-- No visual check of the fullscreen ran in this session, because a test cannot see the window. The play session of the owner is that check.
-- The `evaluate` check fails until the review record exists, and the `review-gate` check stays grey (D-251).
-- The pause note of gitar can show on a PR whose automatic pass ran and approved the head. Read the `Gitar` check run on the head before you post `Gitar review`, and count an `On it` reply with no later output as no new pass.
-- The next ids are D-313, OQ-170, F-96, and Session 143.
-
-### Open questions that block progress
-
-None blocks PR #58. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #58 per the `pr-review` skill at the effective head `3dfbf03` and writes `docs/reviews/pr-58.md`. The owner then merges, and a docs PR records the merge. The owner answers OQ-5 and OQ-46 before PR-15.
