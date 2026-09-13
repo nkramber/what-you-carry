@@ -22,7 +22,7 @@ Session: review PR #60 at effective head `1e3dba8`.
 
 ### In flight
 
-The review record and this handoff entry are pushed in `32f4ae0`. The owner can merge after the duplicate platform jobs finish, if branch protection requires them.
+The review record and this handoff entry are pushed in `8d9477a`. The owner can merge after the duplicate platform jobs finish, if branch protection requires them.
 
 ### Traps and gotchas
 
