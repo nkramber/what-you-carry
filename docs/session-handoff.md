@@ -18,11 +18,11 @@ Session: review PR #60 at effective head `1e3dba8`.
 
 - `main` and the merge base are `98e3c47`. The effective head is `1e3dba8`. The later handoff commit is metadata under D-184.
 - The focused tests passed, 37 tests with 0 failures. The local build, full test, and det-lint commands produced no output and did not complete. Revision-matched remote CI passed the required code, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar checks.
-- `evaluate` failed and `review-gate` was neutral before this review record existed. Fresh results are needed after the review commit.
+- The fresh `evaluate` and `review-gate` checks pass after the review record reached the PR. Duplicate post-metadata platform jobs remain pending, while their prior revision-matched checks pass.
 
 ### In flight
 
-The review record and this handoff entry need a commit and push. Then verify the fresh review-gate result and the synchronized remote head.
+The review record and this handoff entry are pushed in `32f4ae0`. The owner can merge after the duplicate platform jobs finish, if branch protection requires them.
 
 ### Traps and gotchas
 
