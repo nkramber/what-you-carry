@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-312. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60, PR-61, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-316. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -167,6 +167,8 @@ Gate: exit tests 1 to 5 pass.
 
 ### PR-60: Fullscreen window and the test exit
 
+Status: merged 2026-09-13 as PR #58, commit `94f0897`. Exit tests 1 to 5 passed before the merge, and CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit. The review found two defects, and their corrections merged with the PR. P2-1: exit tests 2 and 3 did not run a session. P2-2: a plain word after the press tick passed in silence. D-313 gives the check of the whole argument list to PR-61.
+
 Scope:
 
 - `WhatYouCarry.Game/project.godot`: the window mode setting opens the game in the borderless fullscreen of the engine (D-310). The window takes the resolution of the display, on every desktop and on the Steam Deck. A headless run opens no window, as before.
@@ -192,22 +194,49 @@ Gate: exit tests 1 to 5 pass.
 
 > *In plain English:* the game fills the screen that it runs on, so it is no longer a small box on a large display. During testing, Escape or Start closes it.
 
+### PR-61: User argument check
+
+Scope:
+
+- `WhatYouCarry.Game/UserArguments.cs`: one parser that reads the user arguments once at boot (D-313). It holds each flag of the Game layer and the count of words after it. `--smoke` and `--bot` take no word, `--frame-log` and `--contact-sheet` take one, and `--press` takes two.
+- The parser rejects an unknown word, an unknown flag, a repeated flag, and a flag with too few words. Each is a `ContextException` that names the word, and `Main` ends the boot with exit code 1 (T-2).
+- `Main`, `SmokeSession`, `BotSession`, `FrameLog`, `ContactSheet`, and `TestExit` read their flags through the parser. The check of a plain word after the press tick moves into the parser.
+
+Out of scope: the engine flags before `--`, which the engine reads, and any new flag.
+
+Exit tests:
+
+1. `UnknownWordStopsTheBoot` asserts that a plain word, such as `unexpected` after `--smoke`, is an error that names the word.
+2. `UnknownFlagStopsTheBoot` asserts the same for a misspelled flag, such as `--smok`.
+3. `RepeatedFlagStopsTheBoot` asserts the same for a second `--press`.
+4. `ShortFlagStopsTheBoot` asserts that a flag with too few words after it is an error that names the flag.
+5. `SessionCommandsParse` asserts that the user arguments of the smoke, test exit, bot, and contact sheet commands in `CLAUDE.md` parse with no error.
+6. `BadArgumentEndsTheSession` runs the headless game with `--smoke unexpected` and asserts exit code 1 and the word in the error line.
+
+Review focus: input and CI boundaries, errors, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 6 pass.
+
+> *In plain English:* the game ignores a typo in a test command today, and a test can pass while it runs the wrong command. After this change, the typo stops the game with a message that names it.
+
 ### PR-15: Player entity and the first weapon
 
 Scope:
 
-- `Core/Entities/Player.cs`: the PR-7 body plus sprint, dodge on a cooldown that armor weight extends, health, and stagger (D-27, D-28, D-29). The stagger rule against weight is OQ-5.
-- `Core/Combat/MeleeWeapon.cs`: one sword with windup, active, and recovery frames in ticks, and a hit box swept through the active frames (D-25). The initial numbers are OQ-46.
+- `Core/Entities/Player.cs`: the PR-7 body plus sprint, dodge on a cooldown, health, and stagger (D-27, D-28, D-29). The player has no armor in this PR, so the PR builds the zero-weight case: the stagger rule of light armor (D-314) and the cooldown of D-315. PR-22 adds the effects of weight (D-316).
+- `Core/Combat/MeleeWeapon.cs`: one sword with windup, active, and recovery frames in ticks, and a hit box swept through the active frames (D-25). The initial numbers are D-315.
 - `content/weapons/sword-basic.json`: the tier-0 sword of D-153, with the `weapon` content type and validator (D-168).
 - `content/models/player.<animation>.json`: the first animations of the body, in the format of D-298, next to the model (D-87).
 - `WhatYouCarry.Game/Animation/`: the keyframe player, which reads a clip through `WhatYouCarry.Assets` (D-299), and the procedural locomotion from distance traveled (D-87).
 - `AnimationMatchesCore` asserts that each animation's phase ranges equal the weapon's windup, active, and recovery ticks.
 
-Out of scope: enemies, damage numbers on screen (PR-19), any second weapon.
+Out of scope: enemies, damage numbers on screen (PR-19), any second weapon, the effects of weight (PR-22).
 
 Exit tests:
 
-1. `DodgeCooldownHolds` asserts a second dodge inside the cooldown does nothing, and the cooldown grows with weight.
+1. `DodgeCooldownHolds` asserts that a second dodge inside the cooldown does nothing (D-316).
 2. `SwordHitsOnlyInActiveFrames` asserts no hit during windup or recovery, and a hit during active frames.
 3. `StaggerInterruptsSwing` asserts that a hit during windup cancels the swing when the stagger rule applies.
 4. `HealthNeverBelowZero` asserts the floor at zero and a death event at zero.
@@ -384,21 +413,22 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 5. ✅ PR-57 merged 2026-09-12 as PR #54.
 6. ✅ OQ-1 answered 2026-09-12: D-304.
 7. ✅ PR-14 merged 2026-09-12 as PR #56.
-8. PR-60, the fullscreen window and the test exit (D-310, D-311, D-312).
-9. Owner: answer OQ-5 and OQ-46. ✅ OQ-45 answered 2026-09-12: D-298.
-10. PR-15.
-11. Owner: answer OQ-9, at least the first family.
-12. PR-16.
-13. Owner: answer OQ-4 and OQ-6.
-14. PR-17.
-15. Owner: answer OQ-44.
-16. PR-18.
-17. PR-19.
-18. Owner: answer OQ-48.
-19. PR-20.
-20. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-21. Tier 4 pass on the screenshot fixture (D-133).
-22. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+8. ✅ PR-60 merged 2026-09-13 as PR #58.
+9. ✅ OQ-5 and OQ-46 answered 2026-09-12: D-314 and D-315, with D-316 for weight. ✅ OQ-45 answered 2026-09-12: D-298.
+10. PR-61, the user argument check (D-313).
+11. PR-15.
+12. Owner: answer OQ-9, at least the first family.
+13. PR-16.
+14. Owner: answer OQ-4 and OQ-6.
+15. PR-17.
+16. Owner: answer OQ-44.
+17. PR-18.
+18. PR-19.
+19. Owner: answer OQ-48.
+20. PR-20.
+21. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+22. Tier 4 pass on the screenshot fixture (D-133).
+23. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
@@ -407,11 +437,9 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 2. Each 
 Open:
 
 - OQ-4: timer lengths. Blocks PR-17.
-- OQ-5: stagger and weight. Blocks PR-15.
 - OQ-6: the hunter. Blocks PR-17.
 - OQ-9: the enemy families. Blocks PR-16.
 - OQ-44: the transition hitch budget. Blocks PR-18.
-- OQ-46: the initial combat numbers. Blocks PR-15.
 - OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
@@ -419,6 +447,9 @@ Open:
 
 Resolved 2026-09-12:
 
+- OQ-170 (D-313): unknown user arguments. PR-61.
+- OQ-5 (D-314 and D-316): stagger and weight. PR-15 and PR-22.
+- OQ-46 (D-315): the initial combat numbers. PR-15.
 - OQ-1 (D-304): the palette. PR-14.
 - OQ-166 (D-305): the home of the texture files. PR-14.
 - OQ-167 (D-306): the render of the contact sheet. PR-14.
