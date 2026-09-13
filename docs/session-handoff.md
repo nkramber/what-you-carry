@@ -2,6 +2,48 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 151: 2026-09-13, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-61 as PR #60, in the same invocation as Session 149 (D-297). Branch `docs/pr-61-merge-record`.
+
+### What this session did, and why
+
+- Session 150 approved `1e3dba8` in `docs/reviews/pr-60.md` with no finding, and `review-gate` passed. The owner merged PR #60 as `4a1048c` at 07:46 UTC on 2026-09-13.
+- `docs/design.md` marks PR-61 merged in the roadmap entry and in sequence item 11. The Phase 2 roadmap gains the status line of PR-61 and the mark in sequence item 10.
+- No decision and no question changed in this PR. D-317 entered the register with PR #60.
+- Session 141 moved to the archive, because the file held eleven entries with this one. Session 150 moved Session 140 before this session.
+
+### State of the build
+
+- `main` is at `4a1048c`, the squash merge of PR #60. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-61-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- On `4a1048c`, CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed.
+- `ste-check`: 0 findings in 15 files. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `4a1048c`.
+- `dotnet test`: 778 tests, 0 failures, with the five Smoke tests on the local Godot build, on the final documents of this PR.
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-13, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone, with the `review-override` label after the automated pass (D-188, D-190). Then a fresh session opens PR-15 from `main`, because D-121 gives one code PR to each session.
+
+### Traps and gotchas
+
+- PR-15 builds the zero-weight case alone (D-316). Its exit test 7 needs the owner to play the sword, and PR-22 holds `WeightSlowsDodge` and `HeavyArmorResistsStagger`.
+- No decision names the author of the first animation files of PR-15. The PR-15 scope lists them as work of the PR, in the format of D-298.
+- A PR that adds a Game flag adds it to the table of `UserArguments`, and to the ignored flag rule when a session ignores it (D-313, D-317). `SessionCommandsParse` reads every Godot command of `CLAUDE.md`.
+- Session 150 reports that the local build, the full test, and `det-lint` stopped with no output in its checkout. The same commands completed in Session 149, so remote CI and the author checks carry that evidence.
+- The merge marks use the UTC date of the merge, 2026-09-13, and so does this entry.
+- The next ids are D-318, OQ-171, F-96, PR-62, and Session 152.
+
+### Open questions that block progress
+
+None blocks this PR or PR-15. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. A fresh session then opens PR-15 from `main` per the Phase 2 roadmap and D-314 to D-316.
+
 ## Session 150: 2026-09-13, Codex
 
 Author: Codex
@@ -374,46 +416,3 @@ None blocks PR #58. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-
 ### Next concrete action
 
 A Codex session reviews PR #58 per the `pr-review` skill at the effective head `3dfbf03` and writes `docs/reviews/pr-58.md`. The owner then merges, and a docs PR records the merge. The owner answers OQ-5 and OQ-46 before PR-15.
-
-## Session 141: 2026-09-12, Claude Code
-
-Author: Claude Code
-Session: record the merge of PR-14 as PR #56 and two owner instructions for PR-60, in the same invocation as Sessions 137 and 139 (D-297). Branch `docs/pr-14-merge-record`.
-
-### What this session did, and why
-
-- The owner merged PR #56 as `3d8060b` at 19:21 UTC, with the verdict `Ready for owner merge` for `c83360e` in `docs/reviews/pr-56.md`. CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit.
-- `docs/design.md` marks PR-14 merged in the roadmap entry and in sequence item 10. The Phase 2 roadmap gains the status line of PR-14 and the mark in sequence item 7.
-- The owner asked how to run the game from the command line. `CLAUDE.md` and `AGENTS.md` gain the play session command and its quit keys.
-- The owner gave two instructions for an immediate follow-up. D-310 opens the window in borderless fullscreen at the resolution of the display, on every desktop and on the Deck, because the default window of 1152 by 648 was tiny on a 4K screen. D-311 ends the game on Escape and on the controller Start button, for testing, until the escape menu of PR-53 replaces the exit.
-- D-312 puts both changes in one PR, PR-60, before PR-15, as an exception to G-10. The owner chose borderless fullscreen, one PR, PR-53, and the Start button, against each recommendation.
-- `docs/design.md` and the Phase 2 roadmap gain the PR-60 entry, and the Phase 2 sequence puts PR-60 at item 8. The later items move down by one. `docs/design.md` and the Phase 5 roadmap give PR-53 the escape menu and a sixth exit test.
-- `.claude/skills/ste-writing/SKILL.md` gains the art terms of PR-14. Session 131 moved to the archive, because the file held eleven entries with this one.
-
-### State of the build
-
-- `main` is at `3d8060b`, the squash merge of PR #56. This branch holds one docs commit above it.
-- Remote head: `origin/docs/pr-14-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `ste-check`: 0 findings in 15 files. No code changed. `bit-identity`: `6ec00e90c1c85cdb` on PR #56.
-- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-13, and it can start hours late (F-95).
-
-### In flight
-
-This PR: docs alone, with the `review-override` label after the automated pass. Then a fresh session opens PR-60 from `main`, because D-121 gives one code PR to each session.
-
-### Traps and gotchas
-
-- PR-60 changes every session with a window. The windowed contact sheet run and the M-3 bot session then open in fullscreen, and the engine flag `--windowed` overrides that. A headless run opens no window.
-- Until PR-60 merges, the play session has no quit key: press Cmd+Q, or Ctrl+C in the terminal.
-- The Phase 2 sequence moved down by one after item 7. An older handoff that names item 8 or a later item means the item one number higher now.
-- The trial quota of gitar pauses the automatic pass for the whole period, so each push needs the comment `Gitar review` (D-303). The result arrives as an edit of a dashboard comment, and the summary text can repeat an earlier pass. The `Gitar` check run on the head proves a fresh pass.
-- A Codex session can add an entry and skip the archive move. Count the entries before you add one, and move every entry past the tenth.
-- The next ids are D-313, OQ-170, F-96, and Session 142.
-
-### Open questions that block progress
-
-None blocks PR-60. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges this PR with the `review-override` label. A fresh session then opens PR-60 from `main` per the Phase 2 roadmap and D-310 to D-312. The owner answers OQ-5 and OQ-46 before PR-15.

@@ -448,7 +448,7 @@ Open the game window in borderless fullscreen at the resolution of the display, 
 Gate: a test covers the window mode and each quit input, and a headless session still passes.
 > *In plain English:* the game fills the screen that it runs on, so it is no longer a small box on a large display. During testing, Escape or Start closes it.
 
-**PR-61: User argument check.** 🔧
+**PR-61: User argument check.** ✅ Merged 2026-09-13 as PR #60.
 Read the user arguments of the Game layer once at boot, with one parser (D-313). The parser holds each flag and the count of words after it. An unknown word, an unknown flag, a repeated flag, and a flag with too few words each stop the boot. A flag that the session ignores stops it too: the contact sheet flag with another flag, and the smoke flag with the bot flag (D-317). The error names the word (T-2).
 Gate: a test covers each kind of bad argument, and the user arguments of every session command in `CLAUDE.md` still parse.
 > *In plain English:* the game ignores a typo in a test command today, and a test can pass while it runs the wrong command. After this change, the typo stops the game with a message that names it.
@@ -651,7 +651,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
-11. PR-60, PR-61, PR-15, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58.
+11. PR-60, PR-61, PR-15, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60.
 12. PR-19, PR-20.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.

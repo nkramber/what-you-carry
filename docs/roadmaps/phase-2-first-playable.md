@@ -196,6 +196,8 @@ Gate: exit tests 1 to 5 pass.
 
 ### PR-61: User argument check
 
+Status: merged 2026-09-13 as PR #60, commit `4a1048c`. Exit tests 1 to 7 passed before the merge, and CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit. The review found no defect. Exit test 7 and the ignored flag rule come from D-317, which the owner chose before the code.
+
 Scope:
 
 - `WhatYouCarry.Game/UserArguments.cs`: one parser that reads the user arguments once at boot (D-313). It holds each flag of the Game layer and the count of words after it. `--smoke` and `--bot` take no word, `--frame-log` and `--contact-sheet` take one, and `--press` takes two.
@@ -417,7 +419,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 7. ✅ PR-14 merged 2026-09-12 as PR #56.
 8. ✅ PR-60 merged 2026-09-13 as PR #58.
 9. ✅ OQ-5 and OQ-46 answered 2026-09-12: D-314 and D-315, with D-316 for weight. ✅ OQ-45 answered 2026-09-12: D-298.
-10. PR-61, the user argument check (D-313, D-317).
+10. ✅ PR-61 merged 2026-09-13 as PR #60.
 11. PR-15.
 12. Owner: answer OQ-9, at least the first family.
 13. PR-16.
