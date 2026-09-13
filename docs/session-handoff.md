@@ -16,14 +16,14 @@ Session: review PR #62, the player and the first sword, at effective head `6e35b
 
 ### State of the build
 
-- `main` and the merge base are `aeb91df`. The effective head is `6e35bc5`. The current branch tip is the metadata commit `0b57af1` before this review entry.
+- `main` and the merge base are `aeb91df`. The effective head is `6e35bc5`. The review and handoff are pushed in metadata commit `37f519d`.
 - The focused Player, Animation, and Content tests passed 138 tests. The serial build passed with 0 warnings and 0 errors.
 - The full local test host failed to bind its socket. The non-Smoke full suite did not produce a result in the local execution window. These are execution-context limits.
 - Revision-matched remote build-and-test, bit identity, smoke, bots, det-lint, asset QA, STE check, night gate, and Gitar checks passed on `6e35bc5`. `evaluate` and `review-gate` do not approve the head until this record reaches the PR.
 
 ### In flight
 
-The review record and this handoff entry need one commit and one push. The author must correct P2-1, run the regression check, and request a re-review at the new effective head. Exit test 7 remains the owner play test.
+The author must correct P2-1, run the regression check, and request a re-review at the new effective head. Exit test 7 remains the owner play test.
 
 ### Traps and gotchas
 
@@ -38,7 +38,7 @@ None blocks the review record. P2-1 blocks merge. Exit test 7 needs the owner pl
 
 ### Next concrete action
 
-Commit and push `docs/reviews/pr-62.md` and this handoff entry. Verify the synchronized remote head. The author then fixes P2-1 before the repeat review.
+The author fixes P2-1, runs the regression check, and requests the repeat review. The owner also records exit test 7.
 
 ## Session 152: 2026-09-13, Claude Code
 
