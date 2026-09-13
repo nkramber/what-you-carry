@@ -2,6 +2,44 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 153: 2026-09-13, Codex
+
+Author: Codex
+Session: review PR #62, the player and the first sword, at effective head `6e35bc5`.
+
+### What this session did, and why
+
+- Checked the provider gate. Session 152 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the full effective diff, the design contract, decisions D-318 to D-339, the questions register, the Phase 2 roadmap, affected callers, tests, and all PR comments.
+- Found P2-1. `WeaponDefinition.AssetPath` accepts dot-segment paths and the wrong file extension because it checks only the `models/` prefix. The record gives the correction and regression check.
+- Added `docs/reviews/pr-62.md` with the effective head and the verdict `Changes required`.
+
+### State of the build
+
+- `main` and the merge base are `aeb91df`. The effective head is `6e35bc5`. The current branch tip is the metadata commit `0b57af1` before this review entry.
+- The focused Player, Animation, and Content tests passed 138 tests. The serial build passed with 0 warnings and 0 errors.
+- The full local test host failed to bind its socket. The non-Smoke full suite did not produce a result in the local execution window. These are execution-context limits.
+- Revision-matched remote build-and-test, bit identity, smoke, bots, det-lint, asset QA, STE check, night gate, and Gitar checks passed on `6e35bc5`. `evaluate` and `review-gate` do not approve the head until this record reaches the PR.
+
+### In flight
+
+The review record and this handoff entry need one commit and one push. The author must correct P2-1, run the regression check, and request a re-review at the new effective head. Exit test 7 remains the owner play test.
+
+### Traps and gotchas
+
+- Under D-184, the review head is `6e35bc5`, not a later metadata tip.
+- The art quality roadmap item also uses PR-62. It is not GitHub PR #62 and remains after PR-20 under D-339.
+- The local full suite has a test-host socket restriction. Do not report it as passed.
+- The next ids are D-340, OQ-172, F-97, PR-63, and Session 154.
+
+### Open questions that block progress
+
+None blocks the review record. P2-1 blocks merge. Exit test 7 needs the owner play test. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit and push `docs/reviews/pr-62.md` and this handoff entry. Verify the synchronized remote head. The author then fixes P2-1 before the repeat review.
+
 ## Session 152: 2026-09-13, Claude Code
 
 Author: Claude Code
