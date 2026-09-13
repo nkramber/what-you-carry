@@ -47,25 +47,27 @@ public sealed class MeasureTests
         Assert.Equal("16667\n11111\n", log.Text());
     }
 
-    /// <summary>The flag takes the next argument as the path, and a flag with no path is an error.</summary>
+    /// <summary>The flag takes its one word as the path, and a read with no flag is an error. The parser stops a flag with no path (D-313).</summary>
     [Fact]
     public void FrameLogReadsThePathAfterTheFlag()
     {
-        Assert.True(FrameLog.IsRequested([BotSession.Flag, FrameLog.Flag, "frames.txt"]));
-        Assert.False(FrameLog.IsRequested([BotSession.Flag]));
-        Assert.Equal("frames.txt", FrameLog.PathOf([BotSession.Flag, FrameLog.Flag, "frames.txt"]));
-        Assert.Throws<ContextException>(() => FrameLog.PathOf([FrameLog.Flag]));
-        Assert.Throws<ContextException>(() => FrameLog.PathOf([BotSession.Flag]));
+        UserArguments withLog = UserArguments.Parse([BotSession.Flag, FrameLog.Flag, "frames.txt"]);
+        Assert.True(FrameLog.IsRequested(withLog));
+        Assert.Equal("frames.txt", FrameLog.PathOf(withLog));
+
+        UserArguments noLog = UserArguments.Parse([BotSession.Flag]);
+        Assert.False(FrameLog.IsRequested(noLog));
+        Assert.Throws<ContextException>(() => FrameLog.PathOf(noLog));
     }
 
     /// <summary>The bot flag starts the session, and nothing else does.</summary>
     [Fact]
     public void BotSessionReadsTheFlag()
     {
-        Assert.True(BotSession.IsRequested([BotSession.Flag]));
-        Assert.True(BotSession.IsRequested(["--other", BotSession.Flag]));
-        Assert.False(BotSession.IsRequested([]));
-        Assert.False(BotSession.IsRequested([FrameLog.Flag, "frames.txt"]));
+        Assert.True(BotSession.IsRequested(UserArguments.Parse([BotSession.Flag])));
+        Assert.True(BotSession.IsRequested(UserArguments.Parse([FrameLog.Flag, "frames.txt", BotSession.Flag])));
+        Assert.False(BotSession.IsRequested(UserArguments.Parse([])));
+        Assert.False(BotSession.IsRequested(UserArguments.Parse([FrameLog.Flag, "frames.txt"])));
     }
 
     /// <summary>The greedy descender drives the loop of the first seed off the first floor inside the tick budget.</summary>

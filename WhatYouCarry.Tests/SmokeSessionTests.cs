@@ -15,9 +15,9 @@ using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 namespace WhatYouCarry.Tests;
 
 /// <summary>
-/// The smoke session (D-114, D-149; PR-12 exit test 4) and the two engine tests of the test exit (D-311; PR-60 exit
-/// tests 2 and 3). The script tests run in this process, and the tests of the Smoke category start the engine
-/// headless with the built Game assembly.
+/// The smoke session (D-114, D-149; PR-12 exit test 4), the two engine tests of the test exit (D-311; PR-60 exit
+/// tests 2 and 3), and the engine test of a bad user argument (D-313; PR-61 exit test 6). The script tests run in
+/// this process, and the tests of the Smoke category start the engine headless with the built Game assembly.
 /// </summary>
 public sealed class SmokeSessionTests
 {
@@ -40,10 +40,10 @@ public sealed class SmokeSessionTests
     [Fact]
     public void IsRequestedReadsTheFlag()
     {
-        Assert.True(SmokeSession.IsRequested([SmokeSession.Flag]));
-        Assert.True(SmokeSession.IsRequested(["--other", SmokeSession.Flag]));
-        Assert.False(SmokeSession.IsRequested([]));
-        Assert.False(SmokeSession.IsRequested(["--other"]));
+        Assert.True(SmokeSession.IsRequested(UserArguments.Parse([SmokeSession.Flag])));
+        Assert.True(SmokeSession.IsRequested(UserArguments.Parse([TestExit.PressFlag, TestExit.EscapeName, "1", SmokeSession.Flag])));
+        Assert.False(SmokeSession.IsRequested(UserArguments.Parse([])));
+        Assert.False(SmokeSession.IsRequested(UserArguments.Parse([TestExit.PressFlag, TestExit.EscapeName, "1"])));
     }
 
     /// <summary>Every tick of the script has an intent for that tick, with no reserved bit (D-232).</summary>
@@ -138,6 +138,26 @@ public sealed class SmokeSessionTests
     public async Task StartButtonEndsTheSession()
     {
         await PressEndsTheSession(TestExit.StartName);
+    }
+
+    /// <summary>
+    /// PR-61 exit test 6. The engine boots headless with a word that no flag takes, and the boot ends with exit code 1 and
+    /// an error line that names the word, before the run starts (D-313, T-2).
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task BadArgumentEndsTheSession()
+    {
+        EngineRun run = await RunEngine("bad argument session", ["--headless", "--fixed-fps", "60"], [SmokeSession.Flag, "unexpected"]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitFailure, $"The bad argument session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        Assert.Contains(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal)
+            && line.Contains(Main.BootFailedMessage, StringComparison.Ordinal)
+            && line.Contains(UserArguments.UnknownWordMessage, StringComparison.Ordinal)
+            && line.Contains("unexpected", StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal));
     }
 
     /// <summary>

@@ -449,7 +449,7 @@ Gate: a test covers the window mode and each quit input, and a headless session 
 > *In plain English:* the game fills the screen that it runs on, so it is no longer a small box on a large display. During testing, Escape or Start closes it.
 
 **PR-61: User argument check.** 🔧
-Read the user arguments of the Game layer once at boot, with one parser (D-313). The parser holds each flag and the count of words after it. An unknown word, an unknown flag, a repeated flag, and a flag with too few words each stop the boot. The error names the word (T-2).
+Read the user arguments of the Game layer once at boot, with one parser (D-313). The parser holds each flag and the count of words after it. An unknown word, an unknown flag, a repeated flag, and a flag with too few words each stop the boot. A flag that the session ignores stops it too: the contact sheet flag with another flag, and the smoke flag with the bot flag (D-317). The error names the word (T-2).
 Gate: a test covers each kind of bad argument, and the user arguments of every session command in `CLAUDE.md` still parse.
 > *In plain English:* the game ignores a typo in a test command today, and a test can pass while it runs the wrong command. After this change, the typo stops the game with a message that names it.
 

@@ -70,10 +70,6 @@ public static class ContactSheet
     /// <summary>The frames that each shot waits for after the camera moves.</summary>
     public const int FramesPerShot = 3;
 
-    private const string NoPath = "The contact sheet flag needs the path of a PNG file after it.";
-    private const string NoFlag = "The arguments hold no contact sheet flag.";
-    private const string FlagField = "flag";
-
     /// <summary>The blocks of the sheet: every block but air, in id order (D-259).</summary>
     public static readonly BlockId[] Blocks =
     [
@@ -87,43 +83,16 @@ public static class ContactSheet
     ];
 
     /// <summary>Answers whether the user arguments ask for the sheet.</summary>
-    public static bool IsRequested(string[] userArguments)
+    public static bool IsRequested(UserArguments userArguments)
     {
-        foreach (string argument in userArguments)
-        {
-            if (argument == Flag)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return userArguments.Has(Flag);
     }
 
-    /// <summary>The path of the PNG file: the argument after the flag.</summary>
-    /// <exception cref="ContextException">The arguments hold no flag, or no argument follows it.</exception>
-    public static string PathOf(string[] userArguments)
+    /// <summary>The path of the PNG file: the one word of the flag. The parser stops a flag with no word (D-313).</summary>
+    /// <exception cref="ContextException">The flag is absent.</exception>
+    public static string PathOf(UserArguments userArguments)
     {
-        for (int index = 0; index < userArguments.Length; index++)
-        {
-            if (userArguments[index] != Flag)
-            {
-                continue;
-            }
-
-            if (index + 1 >= userArguments.Length)
-            {
-                ContextException noPath = new(NoPath);
-                noPath.AddContext(FlagField, Flag);
-                throw noPath;
-            }
-
-            return userArguments[index + 1];
-        }
-
-        ContextException absent = new(NoFlag);
-        absent.AddContext(FlagField, Flag);
-        throw absent;
+        return userArguments.WordsOf(Flag)[0];
     }
 
     /// <summary>Every shot, in cell order: one per block, then the body, then the turned body.</summary>

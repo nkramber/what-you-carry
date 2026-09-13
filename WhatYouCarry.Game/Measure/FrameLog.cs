@@ -13,15 +13,13 @@ namespace WhatYouCarry.Game.Measure;
 /// </summary>
 public sealed class FrameLog
 {
-    /// <summary>The user argument that starts the log. The next argument is the file path.</summary>
+    /// <summary>The user argument that starts the log. Its one word is the file path.</summary>
     public const string Flag = "--frame-log";
 
     /// <summary>The count of microseconds in one second.</summary>
     public const long MicrosecondsPerSecond = 1000000;
 
-    private const string FlagField = "flag";
     private const string NoFrames = "The frame log holds no frame, and a percentile needs at least one.";
-    private const string NoPath = "The frame log flag needs a file path after it, and the arguments end there.";
 
     private readonly List<long> frames = [];
 
@@ -29,41 +27,16 @@ public sealed class FrameLog
     public IReadOnlyList<long> Frames => this.frames;
 
     /// <summary>Answers whether the user arguments ask for the log.</summary>
-    public static bool IsRequested(string[] userArguments)
+    public static bool IsRequested(UserArguments userArguments)
     {
-        foreach (string argument in userArguments)
-        {
-            if (argument == Flag)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return userArguments.Has(Flag);
     }
 
-    /// <summary>The file path after the flag.</summary>
-    /// <exception cref="ContextException">The flag is absent, or no argument follows it.</exception>
-    public static string PathOf(string[] userArguments)
+    /// <summary>The file path: the one word of the flag. The parser stops a flag with no word (D-313).</summary>
+    /// <exception cref="ContextException">The flag is absent.</exception>
+    public static string PathOf(UserArguments userArguments)
     {
-        for (int index = 0; index < userArguments.Length; index++)
-        {
-            if (userArguments[index] != Flag)
-            {
-                continue;
-            }
-
-            if (index + 1 >= userArguments.Length)
-            {
-                throw new ContextException(NoPath);
-            }
-
-            return userArguments[index + 1];
-        }
-
-        ContextException absent = new($"The arguments hold no {Flag} flag.");
-        absent.AddContext(FlagField, Flag);
-        throw absent;
+        return userArguments.WordsOf(Flag)[0];
     }
 
     /// <summary>Adds one frame from its time in seconds, rounded to the nearest microsecond.</summary>

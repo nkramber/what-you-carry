@@ -1,5 +1,87 @@
 # Session handoff archive
 
+## Session 140: 2026-09-12, Codex
+
+Author: Codex
+Session: re-review PR #56 at effective head `c83360e`.
+
+### What this session did, and why
+
+- Checked the provider gate again. Session 139 identifies Claude Code as the author of the correction, so Codex remains the eligible reviewer under T-4 and D-101.
+- Read the response file, the correction diff, the new regression tests, the full review history, and all current PR comments.
+- Verified that P2-1 is fixed. The palette and rule reads now convert read failures into contextual `ContextException` values, and the two regression tests pass.
+- Updated `docs/reviews/pr-56.md` with the fixed finding, the effective head `c83360e`, the earlier verdict, and the current verdict `Ready for owner merge`.
+- Session 130 moved to the archive because this file held eleven sessions with this entry.
+
+### State of the build
+
+- `main` and the merge base are `163742e`. The effective head is `c83360e`. The review and handoff metadata commits remain outside the effective diff.
+- The focused texture, contact-sheet, and console tests pass, 57 tests with 0 failures. STE check and det-lint pass locally.
+- The local full test and build commands produced no result and were cancelled. Session 139 reports 761 tests with 0 failures and a clean build on the effective head.
+- Remote CI, bit identity, smoke, bots, det-lint, asset QA, STE check, night-gate, and the automated pass pass for `c83360e`. The review-gate and evaluate checks failed before this updated review record. Fresh checks for the metadata tip were pending at the review.
+
+### In flight
+
+The updated review record and this handoff entry need a commit and push. The owner can merge after the fresh review-gate and required checks pass.
+
+### Traps and gotchas
+
+- P2-1 keeps its id and its original trigger. Its status is `fixed in c83360e`.
+- The effective head is `c83360e`, not the metadata tip, under D-184.
+- The local full build can stop without output in this checkout. Remote CI and the author report provide separate evidence.
+- The next ids are D-310, OQ-170, F-96, and Session 141.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants but block no work. OQ-44 blocks PR-18. OQ-99 remains open but blocks no work.
+
+### Next concrete action
+
+Commit and push this repeat review and handoff. Verify the fresh review-gate result and the synchronized remote head.
+
+## Session 139: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: answer the PR #56 review, P2-1. Branch `feat/pr-14-texture-generator`.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-56.md` at the reviewed head `9236744`. P2-1 has full merit: an unreadable palette, rule, or rule directory made `texture-gen` end with an unhandled `UnauthorizedAccessException` and exit code 134, and not with exit code 1 and the path (T-2).
+- `ReadFile` and `ReadRules` of `TextureGenCommand` now turn a read failure into a `ContextException` that names the path. The rule directory listing and each rule read share one boundary.
+- Two regression tests make the rule or the palette unreadable on every platform, and they assert exit code 1, the file name, and no atlas. Both failed on `9236744`, and both pass on the correction.
+- `docs/reviews/pr-56-response.md` records the disposition, the correction, and the checks.
+- Sessions 129 and 128 moved to the archive, because the file held twelve entries with this one.
+- The trial quota kept the automatic pass of gitar paused. The comment `Gitar review` ran it on demand, and its check run on `c83360e` passed at 19:00 UTC with an approval and no comment (D-250, D-303). The dashboard summary repeats the text of the first pass.
+
+### State of the build
+
+- `main` is at `163742e`. The effective head is `c83360e`, the correction commit above the review commit `cdad3f4`. This entry is in a metadata commit above it (D-184).
+- Remote head: `origin/feat/pr-14-texture-generator` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 761 tests, 0 failures, with the two Smoke tests on the local Godot build.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 26 files. `ste-check`: 0 findings in 15 files. Core, Game, and content did not change.
+- On `c83360e`, CI, bit identity, and smoke passed on the three platforms, and bots, det-lint, asset-qa, STE check, the night gate, and the gitar check passed. The `review-gate` check fails, because `docs/reviews/pr-56.md` still gives `Changes required` for `9236744`, and `evaluate` fails with it (D-251).
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it.
+
+### In flight
+
+PR #56: the repeat Codex review of P2-1 at `c83360e`, then the owner merge. The automated pass approved the correction.
+
+### Traps and gotchas
+
+- A test that needs an unreadable file removes every permission on Linux and macOS and holds the file with no share on Windows. It proves the file unreadable first, so a user that permissions do not bind fails the test and never passes it.
+- The rule directory has no automated unreadable test, because Windows gives no plain way to make a directory unreadable. The listing shares the catch of the rule test.
+- The effective head is the correction commit `c83360e`, not a later metadata commit (D-184).
+- Session 138 left eleven entries in the file. Count the entries before you add one, and move every entry past the tenth.
+- The next ids are D-310, OQ-170, F-96, and Session 140.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews P2-1 per the repeat review procedure of the `pr-review` skill at the effective head `c83360e` and sets the verdict. The owner then merges.
+
 ## Session 138: 2026-09-12, Codex
 
 Author: Codex
