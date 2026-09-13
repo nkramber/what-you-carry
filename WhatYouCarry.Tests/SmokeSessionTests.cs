@@ -1,10 +1,12 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Game;
+using WhatYouCarry.Game.Input;
 using WhatYouCarry.Game.Logging;
 using WhatYouCarry.Game.Smoke;
 using Xunit;
@@ -13,8 +15,9 @@ using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 namespace WhatYouCarry.Tests;
 
 /// <summary>
-/// The smoke session (D-114, D-149; PR-12 exit test 4). The script tests run in this process, and
-/// <see cref="SmokeSessionPasses"/> starts the engine headless with the built Game assembly.
+/// The smoke session (D-114, D-149; PR-12 exit test 4) and the two engine tests of the test exit (D-311; PR-60 exit
+/// tests 2 and 3). The script tests run in this process, and the tests of the Smoke category start the engine
+/// headless with the built Game assembly.
 /// </summary>
 public sealed class SmokeSessionTests
 {
@@ -29,6 +32,9 @@ public sealed class SmokeSessionTests
 
     /// <summary>The longest wait for the engine to end, in milliseconds. A local run ends inside two seconds.</summary>
     public const int TimeoutMilliseconds = 180000;
+
+    /// <summary>The tick of the scripted press in the two test exit runs: inside the first part of the smoke script.</summary>
+    public const uint PressTick = 100;
 
     /// <summary>The flag starts the session, and nothing else does.</summary>
     [Fact]
@@ -113,6 +119,56 @@ public sealed class SmokeSessionTests
         Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal) && line.Contains("\"tick\":0,", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal) && line.Contains($"\"tick\":{SmokeSession.Ticks},", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// PR-60 exit test 2. The engine boots headless, the press flag gives it the Escape key at a tick of the smoke
+    /// script, and the session ends with the test exit line and exit code 0 before the script ends (D-311).
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task EscapeEndsTheSession()
+    {
+        await PressEndsTheSession(TestExit.EscapeName);
+    }
+
+    /// <summary>PR-60 exit test 3. The same with the Start button of the first controller (D-311).</summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task StartButtonEndsTheSession()
+    {
+        await PressEndsTheSession(TestExit.StartName);
+    }
+
+    /// <summary>
+    /// Runs the smoke session with one scripted press at <see cref="PressTick"/>, and asserts the test exit line at a
+    /// tick past the press and before the end of the script, exit code 0, no error line, and no smoke end line.
+    /// </summary>
+    private static async Task PressEndsTheSession(string input)
+    {
+        EngineRun run = await RunEngine(
+            $"{input} press session",
+            ["--headless", "--fixed-fps", "60"],
+            [SmokeSession.Flag, TestExit.PressFlag, input, PressTick.ToString(CultureInfo.InvariantCulture)]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitSuccess, $"The {input} press session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal));
+
+        string endLine = Assert.Single(lines, line => line.Contains($"\"message\":\"{Main.TestExitMessage}\"", StringComparison.Ordinal));
+        uint endTick = EndTick(endLine);
+        Assert.InRange(endTick, PressTick + 1, SmokeSession.Ticks - 1);
+    }
+
+    /// <summary>The tick field of one log line.</summary>
+    private static uint EndTick(string line)
+    {
+        const string field = "\"tick\":";
+        int start = line.IndexOf(field, StringComparison.Ordinal) + field.Length;
+        int end = line.IndexOf(',', start);
+        return uint.Parse(line[start..end], CultureInfo.InvariantCulture);
     }
 
     /// <summary>
