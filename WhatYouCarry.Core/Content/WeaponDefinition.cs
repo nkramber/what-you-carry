@@ -125,6 +125,13 @@ public sealed record WeaponDefinition(
             throw ContentError.Make(path, "arcHundredths", $"is {arc}, and the arc is from 1 to {LargestArc} hundredths of a degree (D-325)");
         }
 
+        // Each active tick turns the blade by one step of the arc. A step of no hundredth sweeps a wedge of no width, so the
+        // arc holds at least one hundredth of a degree for each active tick (D-325).
+        if (arc < active)
+        {
+            throw ContentError.Make(path, "arcHundredths", $"is {arc}, and the arc holds at least one hundredth of a degree for each of the {active} active ticks (D-325)");
+        }
+
         long low = Number(path, members, "lowCentimetres");
         if (low < 0)
         {

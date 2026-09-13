@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
 using Xunit;
@@ -579,17 +580,31 @@ public sealed class ContentTests
     [InlineData("\"reachCentimetres\":160", "\"reachCentimetres\":0", "reachCentimetres")]
     [InlineData("\"arcHundredths\":9000", "\"arcHundredths\":18001", "arcHundredths")]
     [InlineData("\"arcHundredths\":9000", "\"arcHundredths\":0", "arcHundredths")]
+    [InlineData("\"arcHundredths\":9000", "\"arcHundredths\":5", "arcHundredths")]
     [InlineData("\"lowCentimetres\":50", "\"lowCentimetres\":-1", "lowCentimetres")]
     [InlineData("\"highCentimetres\":170", "\"highCentimetres\":50", "highCentimetres")]
     [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"w.bbmodel\"", "model")]
     [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"player.w.json\"", "animation")]
     public void AWeaponOutsideItsBoundsIsAnError(string from, string to, string field)
     {
+        // The case of 5 hundredths over 6 active ticks is the arc with a step of no turn (PR #62 automated pass).
         string text = WeaponText.Replace(from, to, StringComparison.Ordinal);
         Assert.NotEqual(WeaponText, text);
 
         ContextException error = Assert.Throws<ContextException>(
             () => WeaponDefinition.FromMembers("weapons/w.json", JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(text))));
         Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>An arc of one hundredth of a degree for each active tick is the smallest arc that loads, and its blade turns on every step (D-325).</summary>
+    [Fact]
+    public void TheSmallestArcTurnsOnEveryActiveTick()
+    {
+        string text = WeaponText.Replace("\"arcHundredths\":9000", "\"arcHundredths\":6", StringComparison.Ordinal);
+        WeaponDefinition weapon = WeaponDefinition.FromMembers("weapons/w.json", JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(text)));
+        for (int step = 0; step < weapon.ActiveTicks; step++)
+        {
+            Assert.True(MeleeWeapon.BladeOffset(weapon, step + 1) > MeleeWeapon.BladeOffset(weapon, step), $"The blade does not turn on step {step}.");
+        }
     }
 }

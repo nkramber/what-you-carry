@@ -413,6 +413,27 @@ public sealed class PlayerTests
     }
 
     /// <summary>
+    /// A wedge of no turn, a wedge that turns clockwise, and a wedge past a half turn are each an error that names both
+    /// yaws, and a half turn is the widest wedge (D-325, T-2; PR #62 automated pass).
+    /// </summary>
+    [Fact]
+    public void AWedgeOutsideItsTurnIsAnError()
+    {
+        WeaponDefinition sword = Sword;
+        Aabb ahead = BodyBoxAt(Feet + new Vector3(0.0f, 0.0f, -1.0f));
+        Aabb behind = BodyBoxAt(Feet + new Vector3(0.0f, 0.0f, 1.0f));
+
+        ContextException none = Assert.Throws<ContextException>(() => MeleeWeapon.WedgeHits(sword, Feet, 1500, 1500, ahead));
+        Assert.Contains("fromYaw=1500", none.Message, StringComparison.Ordinal);
+        Assert.Contains("toYaw=1500", none.Message, StringComparison.Ordinal);
+        Assert.Throws<ContextException>(() => MeleeWeapon.WedgeHits(sword, Feet, 1500, 0, ahead));
+        Assert.Throws<ContextException>(() => MeleeWeapon.WedgeHits(sword, Feet, 0, 18001, ahead));
+
+        Assert.True(MeleeWeapon.WedgeHits(sword, Feet, -9000, 9000, ahead));
+        Assert.False(MeleeWeapon.WedgeHits(sword, Feet, -9000, 9000, behind));
+    }
+
+    /// <summary>
     /// PR-15 exit test 3. A hit during the windup cancels the swing of a one-handed sword and staggers the player for 20
     /// ticks. The stagger stops the walk, the swing, the roll, and the jump, and a guard of 30 ticks follows it (D-321, D-326).
     /// </summary>

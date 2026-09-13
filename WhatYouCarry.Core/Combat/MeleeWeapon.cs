@@ -1,5 +1,7 @@
+using System.Globalization;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Projectiles;
 
@@ -30,6 +32,9 @@ public static class MeleeWeapon
     // Hundredths of a degree to radians.
     private const float RadiansPerHundredth = DetMath.Pi / 18000.0f;
 
+    // A half turn, in hundredths of a degree. The test of the blade lines holds for a wedge up to this turn.
+    private const int HalfTurn = 18000;
+
     /// <summary>
     /// The yaw offset of the blade after a count of active steps, in hundredths of a degree: minus half the arc, rounded
     /// toward zero, at step zero, and the rest of the arc after the last step. A negative offset is to the right.
@@ -49,10 +54,20 @@ public static class MeleeWeapon
 
     /// <summary>
     /// Answers whether a box meets the wedge that the blade sweeps from one yaw to the next, from the feet of the body
-    /// that swings. The second yaw is the first one turned counterclockwise by less than a half turn.
+    /// that swings. The second yaw is the first one turned counterclockwise by more than zero and at most a half turn.
     /// </summary>
+    /// <exception cref="ContextException">The wedge turns by zero, clockwise, or past a half turn (T-2).</exception>
     public static bool WedgeHits(WeaponDefinition weapon, Vector3 feet, int fromYaw, int toYaw, Aabb box)
     {
+        // A wedge of no turn would accept a point on its line behind the body too, so the test takes a real turn alone.
+        if (toYaw <= fromYaw || toYaw - fromYaw > HalfTurn)
+        {
+            ContextException error = new($"A wedge turns counterclockwise by more than zero and at most a half turn, and this one turns from yaw {fromYaw} to yaw {toYaw} (D-325).");
+            error.AddContext("fromYaw", ((long)fromYaw).ToString(CultureInfo.InvariantCulture));
+            error.AddContext("toYaw", ((long)toYaw).ToString(CultureInfo.InvariantCulture));
+            throw error;
+        }
+
         float low = feet.Y + (weapon.LowCentimetres / 100.0f);
         float high = feet.Y + (weapon.HighCentimetres / 100.0f);
         if (box.Max.Y <= low || box.Min.Y >= high)
