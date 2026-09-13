@@ -212,7 +212,10 @@ public sealed class StairwellTests
         Assert.Equal(HashWith(loop, 1, false), loop.Hash());
     }
 
-    /// <summary>The hash of a loop state with a floor and an end of the caller's choice, in the declared order.</summary>
+    /// <summary>
+    /// The hash of a loop state with a floor and an end of the caller's choice, in the declared order: the run end is
+    /// one byte of its kind, an ascend here, and the player follows the projectiles (D-322, PR-15).
+    /// </summary>
     private static Core.Determinism.StateHash HashWith(SimulationLoop loop, int floor, bool ended)
     {
         Core.Determinism.StateHash hash = Core.Determinism.StateHash.Start();
@@ -226,8 +229,9 @@ public sealed class StairwellTests
         hash.Add(loop.Body.Position.Z);
         hash.Add(loop.Body.VerticalVelocity);
         hash.Add(floor);
-        hash.Add(ended);
+        hash.Add(ended ? (byte)RunEnd.Ascend : (byte)RunEnd.None);
         loop.Projectiles.AddTo(ref hash);
+        loop.Player.AddTo(ref hash);
         return hash;
     }
 }

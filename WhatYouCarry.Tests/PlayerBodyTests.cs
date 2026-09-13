@@ -44,7 +44,7 @@ public sealed class PlayerBodyTests
         }
     }
 
-    /// <summary>The constants of D-165, D-231, D-233, and D-235 hold.</summary>
+    /// <summary>The constants of D-165, D-231, D-233, and D-235 hold, with the sprint speed of D-315 (D-319).</summary>
     [Fact]
     public void TheConstantsHold()
     {
@@ -52,7 +52,7 @@ public sealed class PlayerBodyTests
         Assert.Equal(1.8f, PlayerBody.Height);
         Assert.Equal(20.0f, PlayerBody.Gravity);
         Assert.Equal(4.0f, PlayerBody.WalkSpeed);
-        Assert.Equal(6.5f, PlayerBody.SprintSpeed);
+        Assert.Equal(7.0f, PlayerBody.SprintSpeed);
         Assert.Equal(7.0f, PlayerBody.JumpVelocity);
         Assert.Equal(1.0f / 60.0f, PlayerBody.TickSeconds);
         Assert.Equal(2.0f * SweptAabb.ContactSkin, PlayerBody.GroundProbe);

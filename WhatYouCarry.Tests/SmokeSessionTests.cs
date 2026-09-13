@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Game;
 using WhatYouCarry.Game.Input;
@@ -77,6 +78,14 @@ public sealed class SmokeSessionTests
         Intent strafe = SmokeSession.IntentAt(3 * SmokeSession.PartTicks);
         Assert.Equal(SmokeSession.FullMove, strafe.MoveX);
         Assert.Equal(SmokeSession.LookUpRate, strafe.PitchDelta);
+
+        // The two walks press the attack bit once each second, and the strafe presses the dodge bit, one tick each (D-323, D-327).
+        Assert.Equal(Button.Attack, walk.Buttons);
+        Assert.Equal((ushort)0, SmokeSession.IntentAt(1).Buttons);
+        Assert.Equal(Button.Attack, SmokeSession.IntentAt(SmokeSession.PressPeriod).Buttons);
+        Assert.Equal(Button.Attack, SmokeSession.IntentAt(5 * SmokeSession.PressPeriod).Buttons);
+        Assert.Equal(Button.Dodge, strafe.Buttons);
+        Assert.Equal((ushort)0, SmokeSession.IntentAt((3 * SmokeSession.PartTicks) + 1).Buttons);
     }
 
     /// <summary>A tick past the script is an error, and never an intent of the last part (T-2).</summary>
@@ -86,21 +95,27 @@ public sealed class SmokeSessionTests
         Assert.Throws<ArgumentOutOfRangeException>(() => SmokeSession.IntentAt(SmokeSession.Ticks));
     }
 
-    /// <summary>The script runs on the loop of the first seed with no error, and the body moves from its spawn.</summary>
+    /// <summary>The script runs on the loop of the first seed with no error, the body moves from its spawn, and the player swings and rolls (D-149).</summary>
     [Fact]
     public void ScriptRunsOnTheLoopAndMovesTheBody()
     {
         SimulationLoop loop = new(Main.FirstSeed, TestWorld.Content);
         CoreVector3 spawn = loop.Body.Position;
 
+        int swings = 0;
+        int rolls = 0;
         for (uint tick = 0; tick < SmokeSession.Ticks; tick++)
         {
             loop.Step(SmokeSession.IntentAt(tick));
+            swings += loop.Player.SwingTick == 1L ? 1 : 0;
+            rolls += loop.Player.RollRemaining == Player.RollTicks - 1 ? 1 : 0;
         }
 
         Assert.Equal(SmokeSession.Ticks, loop.Tick);
         Assert.NotEqual(spawn, loop.Body.Position);
         Assert.False(loop.Ended);
+        Assert.True(swings > 0, "The smoke script swung the sword on no tick.");
+        Assert.True(rolls > 0, "The smoke script rolled on no tick.");
     }
 
     /// <summary>

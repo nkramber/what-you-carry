@@ -5,6 +5,7 @@ using System.Linq;
 using Godot;
 using WhatYouCarry.Assets;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Core.World;
 using WhatYouCarry.Game;
 using WhatYouCarry.Game.Render;
@@ -129,15 +130,21 @@ public sealed class ContactSheetTests
         return ContactSheet.RenderPixels * Math.Tan(angle) / Math.Tan(halfView);
     }
 
-    /// <summary>The largest distance from the target of a body shot to a box corner of the player model, in meters.</summary>
+    /// <summary>
+    /// The largest distance from the target of a body shot to a box corner of the player model, or of the sword at the
+    /// weapon point of its right hand, in meters (D-336).
+    /// </summary>
     private static double BodyRadius()
     {
-        string file = Path.Combine(RepositoryRoot.Find(), "content", AssetPaths.BodyModel);
-        BlockbenchModel body = BlockbenchLoader.Parse(AssetPaths.BodyModel, File.ReadAllBytes(file));
+        string content = Path.Combine(RepositoryRoot.Find(), "content");
+        BlockbenchModel body = BlockbenchLoader.Parse(AssetPaths.BodyModel, File.ReadAllBytes(Path.Combine(content, AssetPaths.BodyModel)));
+        string swordPath = SimulationLoop.MainWeapon(TestWorld.Content).Model;
+        BlockbenchModel sword = BlockbenchLoader.Parse(swordPath, File.ReadAllBytes(Path.Combine(content, swordPath)));
+        AttachmentPoint hand = body.Attachments.First(point => point.Slot == EquipmentSlots.Weapon);
         SheetShot shot = ContactSheet.Shots().First(candidate => candidate.IsBody);
         Vector3 center = shot.Target - shot.Origin;
         double radius = 0.0;
-        foreach (ModelBox box in body.Boxes)
+        foreach ((ModelBox box, Vector3 offset) in body.Boxes.Select(box => (box, Vector3.Zero)).Concat(sword.Boxes.Select(box => (box, new Vector3(hand.Position.X, hand.Position.Y, hand.Position.Z)))))
         {
             foreach (float x in new[] { box.From.X, box.To.X })
             {
@@ -145,7 +152,7 @@ public sealed class ContactSheetTests
                 {
                     foreach (float z in new[] { box.From.Z, box.To.Z })
                     {
-                        radius = Math.Max(radius, new Vector3(x, y, z).DistanceTo(center));
+                        radius = Math.Max(radius, (new Vector3(x, y, z) + offset).DistanceTo(center));
                     }
                 }
             }

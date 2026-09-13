@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using WhatYouCarry.Core.Camera;
+using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Procgen;
+using WhatYouCarry.Core.Projectiles;
 using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Core.World;
@@ -13,9 +15,9 @@ using WhatYouCarry.Core.World;
 namespace WhatYouCarry.Tools.BitIdentity;
 
 /// <summary>
-/// A fixed run of the RNG, of DetMath, of the floor generator, of one recorded run through the replay, and of
-/// the camera over that run, folded into one state hash (D-69, D-71). Two platforms that give the same hash
-/// agree on every bit of all five.
+/// A fixed run of the RNG, of DetMath, of the floor generator, of one recorded run through the replay, of the
+/// camera over that run, of a projectile run, and of the sword arc, folded into one state hash (D-69, D-71). Two
+/// platforms that give the same hash agree on every bit of all seven.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -48,6 +50,15 @@ public static class BitIdentitySweep
 
     /// <summary>The content hash that the sweep record carries. It has no meaning beyond its shape (D-221).</summary>
     public const string ReplayContentHash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+    /// <summary>The count of shots of the projectile run of the sweep (D-320).</summary>
+    public const int ProjectileShots = 16;
+
+    /// <summary>The count of yaws at which the sweep folds every step of the sword arc (D-325).</summary>
+    public const int ArcYaws = 8;
+
+    /// <summary>The count of boxes on the ring around the feet that the sword arc is tested against (D-325).</summary>
+    public const int ArcBoxes = 24;
 
     /// <summary>The floors that the sweep digs and folds, one per band of the sweep content (PR-9 exit test 7, PR-59 exit test 4).</summary>
     private static readonly int[] SweptFloors = [1, 2, 3];
@@ -82,14 +93,16 @@ public static class BitIdentitySweep
         AddRootsAndPowers(ref hash);
         AddFloors(ref hash, SweepContent());
         AddReplay(ref hash, SweepIntents(), SweepContent());
+        AddProjectileRun(ref hash, SweepContent());
+        AddSwordArcs(ref hash, SweepContent());
         return hash;
     }
 
     /// <summary>
     /// The content set of the sweep: three templates on a small grid, one per band of D-210 on floors 1, 2, and
-    /// 3, two chamber kinds whose weights fill the budget, and one projectile definition with a spread, which
-    /// the attack bit of the sweep intents fires (D-265). The three swept floors then take every block of the
-    /// detail pass. The hash of the set has no meaning beyond its shape (D-221).
+    /// 3, two chamber kinds whose weights fill the budget, one projectile definition with a spread for the projectile
+    /// run, and one weapon definition, which the attack bit of the sweep intents swings (D-320). The three swept
+    /// floors then take every block of the detail pass. The hash of the set has no meaning beyond its shape (D-221).
     /// </summary>
     public static ContentSet SweepContent()
     {
@@ -108,7 +121,75 @@ public static class BitIdentitySweep
         [
             new("sweep-shot", 4000, 100, 300, 1, 0, 200),
         ];
-        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, Strings.FromMembers(Strings.FilePath, []));
+        WeaponDefinition[] weapons =
+        [
+            new("sweep-sword", 0, WeaponDefinition.OneHanded, 12, 6, 18, 34, 160, 9000, 50, 170, "models/sweep-sword.bbmodel", "models/sweep.swing.json"),
+        ];
+        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, Strings.FromMembers(Strings.FilePath, []));
+    }
+
+    /// <summary>
+    /// Fires the projectile definition of the sweep from over the spawn of floor 1 in fixed directions, with the
+    /// spread of the Projectile stream, steps every shot to its end against the grid and one entity box, and folds
+    /// each end (D-320, PR-10 exit test 5). No intent fires a shot from PR-15 onward, so this run keeps the
+    /// integrator, the spread, and the swept collision in the three-platform comparison.
+    /// </summary>
+    private static void AddProjectileRun(ref StateHash hash, ContentSet content)
+    {
+        FloorPlan plan = FloorGenerator.Generate(RunSeed, 1, content);
+        ProjectileSimulation simulation = new(plan.Grid, content.Projectiles);
+        Rng spread = Rng.ForStream(RunSeed, RngStream.Projectile);
+        Vector3 origin = plan.Spawn + new Vector3(0.0f, 1.5f, 0.0f);
+        for (int shot = 0; shot < ProjectileShots; shot++)
+        {
+            float angle = shot * (DetMath.Pi / 8.0f);
+            simulation.Fire(0, -1, origin, new Vector3(DetMath.Sin(angle), 0.25f, DetMath.Cos(angle)), spread);
+        }
+
+        EntityBox[] boxes = [new EntityBox(0, new Aabb(plan.Spawn + new Vector3(1.0f, 0.0f, 1.0f), plan.Spawn + new Vector3(1.6f, 1.8f, 1.6f)))];
+        while (simulation.Live.Count > 0)
+        {
+            foreach (ProjectileEnd end in simulation.Step(boxes))
+            {
+                hash.Add((int)end.Kind);
+                hash.Add(end.Point.X);
+                hash.Add(end.Point.Y);
+                hash.Add(end.Point.Z);
+                hash.Add(end.Projectile.Age);
+                hash.Add(end.EntityIndex);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Folds the blade lines and the wedge test of the sweep weapon for every step of the arc at eight yaws, against a
+    /// ring of boxes around the feet (D-325). No enemy stands in the loop before PR-16, so the replay swings at no box,
+    /// and this fold keeps the arc in the three-platform comparison.
+    /// </summary>
+    private static void AddSwordArcs(ref StateHash hash, ContentSet content)
+    {
+        WeaponDefinition weapon = content.Weapons[0];
+        Vector3 feet = new(10.0f, 1.0f, 10.0f);
+        for (int yawStep = 0; yawStep < ArcYaws; yawStep++)
+        {
+            int yaw = yawStep * (SimulationLoop.FullTurn / ArcYaws);
+            for (int step = 0; step < weapon.ActiveTicks; step++)
+            {
+                int fromYaw = yaw + MeleeWeapon.BladeOffset(weapon, step);
+                int toYaw = yaw + MeleeWeapon.BladeOffset(weapon, step + 1);
+                Vector3 blade = MeleeWeapon.BladeDirection(fromYaw);
+                hash.Add(blade.X);
+                hash.Add(blade.Z);
+                for (int ring = 0; ring < ArcBoxes; ring++)
+                {
+                    float angle = ring * (DetMath.Pi / 12.0f);
+                    float distance = 0.5f + ((ring % 4) * 0.45f);
+                    Vector3 center = feet + new Vector3(DetMath.Sin(angle) * distance, 0.0f, -DetMath.Cos(angle) * distance);
+                    Aabb box = new(center + new Vector3(-0.3f, 0.2f, -0.3f), center + new Vector3(0.3f, 1.4f, 0.3f));
+                    hash.Add(MeleeWeapon.WedgeHits(weapon, feet, fromYaw, toYaw, box));
+                }
+            }
+        }
     }
 
     /// <summary>

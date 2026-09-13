@@ -104,6 +104,8 @@ public sealed class ContentTests
         Assert.Equal(3, set.Floors.Count);
         Assert.Equal(8, set.Chambers.Count);
         Assert.Equal(6, set.Projectiles.Count);
+        WeaponDefinition sword = Assert.Single(set.Weapons);
+        Assert.Equal("sword-basic", sword.Id);
         Assert.True(set.Strings.Count > 0);
         Assert.Equal(64, set.Hash.Length);
 
@@ -251,6 +253,18 @@ public sealed class ContentTests
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
         Assert.Contains("two floor templates", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Two weapon definitions of one id are an error, because the loadout of PR-30 looks a weapon up by it (D-334).</summary>
+    [Fact]
+    public void ARepeatedWeaponIdIsAnError()
+    {
+        MemorySource source = Valid()
+            .Add("weapons/a.json", WeaponText)
+            .Add("weapons/b.json", WeaponText);
+
+        ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
+        Assert.Contains("two weapon definitions", error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A file that is not one JSON object is an error that names the file (T-2).</summary>
@@ -513,6 +527,69 @@ public sealed class ContentTests
 
         ContextException error = Assert.Throws<ContextException>(
             () => ProjectileDefinition.FromMembers("projectiles/p.json", JsonObjectReader.Read("projectiles/p.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    private const string WeaponText = """
+        {"id":"w","tier":0,"handedness":"one","windupTicks":12,"activeTicks":6,"recoveryTicks":18,"damage":34,"reachCentimetres":160,"arcHundredths":9000,"lowCentimetres":50,"highCentimetres":170,"model":"models/w.bbmodel","animation":"models/player.w.json"}
+        """;
+
+    /// <summary>Every field of a weapon definition is required (D-92, D-334).</summary>
+    [Theory]
+    [InlineData("id")]
+    [InlineData("tier")]
+    [InlineData("handedness")]
+    [InlineData("windupTicks")]
+    [InlineData("activeTicks")]
+    [InlineData("recoveryTicks")]
+    [InlineData("damage")]
+    [InlineData("reachCentimetres")]
+    [InlineData("arcHundredths")]
+    [InlineData("lowCentimetres")]
+    [InlineData("highCentimetres")]
+    [InlineData("model")]
+    [InlineData("animation")]
+    public void EveryRequiredWeaponFieldIsRequired(string omitted)
+    {
+        List<JsonMember> members = [];
+        foreach (JsonMember member in JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(WeaponText)))
+        {
+            if (member.Name != omitted)
+            {
+                members.Add(member);
+            }
+        }
+
+        ContextException error = Assert.Throws<ContextException>(() => WeaponDefinition.FromMembers("weapons/w.json", members));
+        Assert.Contains(omitted, error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A weapon definition outside its bounds is an error that names the field: a negative tier, an unknown handedness, a
+    /// phase of no tick or past the tick counter, no damage, no reach, an arc past a half turn, a band with no height,
+    /// and a path outside the model directory (D-26, D-298, D-325, D-334).
+    /// </summary>
+    [Theory]
+    [InlineData("\"tier\":0", "\"tier\":-1", "tier")]
+    [InlineData("\"handedness\":\"one\"", "\"handedness\":\"three\"", "handedness")]
+    [InlineData("\"windupTicks\":12", "\"windupTicks\":0", "windupTicks")]
+    [InlineData("\"activeTicks\":6", "\"activeTicks\":4294967296", "activeTicks")]
+    [InlineData("\"recoveryTicks\":18", "\"recoveryTicks\":-18", "recoveryTicks")]
+    [InlineData("\"damage\":34", "\"damage\":0", "damage")]
+    [InlineData("\"reachCentimetres\":160", "\"reachCentimetres\":0", "reachCentimetres")]
+    [InlineData("\"arcHundredths\":9000", "\"arcHundredths\":18001", "arcHundredths")]
+    [InlineData("\"arcHundredths\":9000", "\"arcHundredths\":0", "arcHundredths")]
+    [InlineData("\"lowCentimetres\":50", "\"lowCentimetres\":-1", "lowCentimetres")]
+    [InlineData("\"highCentimetres\":170", "\"highCentimetres\":50", "highCentimetres")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"w.bbmodel\"", "model")]
+    [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"player.w.json\"", "animation")]
+    public void AWeaponOutsideItsBoundsIsAnError(string from, string to, string field)
+    {
+        string text = WeaponText.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(WeaponText, text);
+
+        ContextException error = Assert.Throws<ContextException>(
+            () => WeaponDefinition.FromMembers("weapons/w.json", JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(text))));
         Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
     }
 }

@@ -10,11 +10,15 @@ namespace WhatYouCarry.Core.Bots;
 /// </summary>
 /// <remarks>
 /// <para>
-/// A run ends at the bottom when the loop ends, which the descender does by the ascend bit at the stairwell of
-/// the last floor. A policy that promises no progress runs out its wander budget and ends by budget. A policy
-/// that promises progress ends as a softlock when a floor budget passes with no floor change. Any exception
-/// ends the run as a crash, and the result holds the exception text, so the harness runs the next seed and the
-/// log names the fault (T-2).
+/// A run ends at the bottom when the loop ends by an ascend, which the descender does by the ascend bit at the
+/// stairwell of the last floor. A policy that promises no progress runs out its wander budget and ends by budget.
+/// A policy that promises progress ends as a softlock when a floor budget passes with no floor change. Any
+/// exception ends the run as a crash, and the result holds the exception text, so the harness runs the next seed
+/// and the log names the fault (T-2).
+/// </para>
+/// <para>
+/// A death ends the run as a crash. The loop takes no intent after the end, and its error names the end kind, so a
+/// night never reads a death as the bottom. No end state of D-270 names a death (D-322).
 /// </para>
 /// <para>
 /// The run holds no file and writes no line. The runner in the Tools project writes the log from the result.
@@ -40,7 +44,7 @@ public static class BotRun
             uint floorStart = 0;
             while (true)
             {
-                if (loop.Ended)
+                if (loop.End == RunEnd.Ascend)
                 {
                     return new BotRunResult(policy.Name, seed, BotRunEnd.Bottom, floorsReached, ticks, string.Empty);
                 }

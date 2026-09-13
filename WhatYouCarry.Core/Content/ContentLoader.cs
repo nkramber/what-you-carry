@@ -29,6 +29,9 @@ public sealed class ContentLoader
     /// <summary>The directory that holds every projectile definition.</summary>
     public const string ProjectileDirectory = "projectiles/";
 
+    /// <summary>The directory that holds every weapon definition (D-334).</summary>
+    public const string WeaponDirectory = "weapons/";
+
     /// <summary>
     /// The directory of the models and the animations, which Core never reads (OQ-159, D-298). Every content
     /// source skips it, so an animation file there is not a content file of this loader.
@@ -72,6 +75,7 @@ public sealed class ContentLoader
         List<FloorTemplate> floors = [];
         List<ChamberKind> chambers = [];
         List<ProjectileDefinition> projectiles = [];
+        List<WeaponDefinition> weapons = [];
         Strings? strings = null;
 
         foreach (ContentFile file in files)
@@ -94,6 +98,10 @@ public sealed class ContentLoader
             {
                 projectiles.Add(ProjectileDefinition.FromMembers(file.Path, members));
             }
+            else if (file.Path.StartsWith(WeaponDirectory, System.StringComparison.Ordinal))
+            {
+                weapons.Add(WeaponDefinition.FromMembers(file.Path, members));
+            }
             else
             {
                 // A file that no type claims is a defect of the content set, and never a file to step over.
@@ -108,12 +116,12 @@ public sealed class ContentLoader
             throw error;
         }
 
-        CheckUniqueIds(floors, chambers, projectiles);
-        return new ContentSet(hash, floors, chambers, projectiles, strings);
+        CheckUniqueIds(floors, chambers, projectiles, weapons);
+        return new ContentSet(hash, floors, chambers, projectiles, weapons, strings);
     }
 
     /// <summary>Two records of one type must not share an id, because a lookup would then take either one.</summary>
-    private static void CheckUniqueIds(List<FloorTemplate> floors, List<ChamberKind> chambers, List<ProjectileDefinition> projectiles)
+    private static void CheckUniqueIds(List<FloorTemplate> floors, List<ChamberKind> chambers, List<ProjectileDefinition> projectiles, List<WeaponDefinition> weapons)
     {
         for (int index = 0; index < floors.Count; index++)
         {
@@ -147,8 +155,19 @@ public sealed class ContentLoader
                 }
             }
         }
+
+        for (int index = 0; index < weapons.Count; index++)
+        {
+            for (int other = index + 1; other < weapons.Count; other++)
+            {
+                if (weapons[index].Id == weapons[other].Id)
+                {
+                    throw ContentError.Make(ContentLoader.WeaponDirectory, weapons[index].Id, "is the id of two weapon definitions");
+                }
+            }
+        }
     }
 }
 
 /// <summary>Every record of one content set, and the hash that the run record header carries (D-151, D-163).</summary>
-public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, Strings Strings);
+public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, Strings Strings);

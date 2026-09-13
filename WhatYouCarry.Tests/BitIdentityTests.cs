@@ -26,9 +26,11 @@ public sealed class BitIdentityTests
     /// PR-59 moved it from `036df5c08e2682e3` when the detail pass changed every dug floor (D-260). PR-10 moved
     /// it from `62c5e1d152fe94fe` when the state gained the projectiles and the sweep intents began to fire, and
     /// the PR #31 review moved it again when the spread draw became one angle and one roll inside the cone (F-87).
-    /// PR-11 moved it from `d8943df12fefcbee` when the sweep gained the Bot stream (D-272).
+    /// PR-11 moved it from `d8943df12fefcbee` when the sweep gained the Bot stream (D-272). PR-15 moved it from
+    /// `6ec00e90c1c85cdb` when the state gained the player and the run end kind, the sweep intents began to swing and roll,
+    /// and the sweep gained a projectile run and the arc test (D-320, D-322, D-325).
     /// </remarks>
-    private const string ExpectedHash = "6ec00e90c1c85cdb";
+    private const string ExpectedHash = "2258ba8b9cc94b3f";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -128,8 +130,13 @@ public sealed class BitIdentityTests
         Assert.Contains("FloorGenerator.Generate(", sweep, StringComparison.Ordinal);
         Assert.Contains("plan.Grid.Get(", sweep, StringComparison.Ordinal);
 
-        // PR-10 exit test 5: the sweep content holds a projectile definition, so the attack bit of the sweep intents fires shots.
+        // PR-10 exit test 5, as D-320 revises it: no intent fires a shot, so the sweep fires its projectile definition in a run of its own.
         Assert.Contains("new(\"sweep-shot\"", sweep, StringComparison.Ordinal);
+        Assert.Contains("AddProjectileRun(", sweep, StringComparison.Ordinal);
+
+        // PR-15 exit test 6: the sweep content holds a sword, so the sweep intents swing and roll in the replay, and the sweep folds the arc test.
+        Assert.Contains("new(\"sweep-sword\"", sweep, StringComparison.Ordinal);
+        Assert.Contains("MeleeWeapon.WedgeHits(", sweep, StringComparison.Ordinal);
 
         // PR-59 exit test 4: the sweep content names every band, so the folded floors hold every block of the detail pass.
         Assert.Contains("DetailPass.WorkingMine", sweep, StringComparison.Ordinal);

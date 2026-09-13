@@ -95,7 +95,7 @@ public sealed class TextureGenTests
         Assert.Equal(0, image.Width % AtlasLayout.TilePixels);
     }
 
-    /// <summary>The layout has 64 tiles, a block tile is its id, the body tiles start the second row, and a tile outside the atlas is an error (D-85, D-259, D-307).</summary>
+    /// <summary>The layout has 64 tiles, a block tile is its id, the body tiles start the second row, the metal tile follows them, and a tile outside the atlas is an error (D-85, D-259, D-307, D-330).</summary>
     [Fact]
     public void AtlasLayoutPlacesTheBodyTiles()
     {
@@ -104,6 +104,7 @@ public sealed class TextureGenTests
         Assert.Equal((0, 1), (AtlasLayout.Column(AtlasLayout.SkinTile), AtlasLayout.Row(AtlasLayout.SkinTile)));
         Assert.Equal((1, 1), (AtlasLayout.Column(AtlasLayout.ClothTile), AtlasLayout.Row(AtlasLayout.ClothTile)));
         Assert.Equal((2, 1), (AtlasLayout.Column(AtlasLayout.LeatherTile), AtlasLayout.Row(AtlasLayout.LeatherTile)));
+        Assert.Equal((3, 1), (AtlasLayout.Column(AtlasLayout.MetalTile), AtlasLayout.Row(AtlasLayout.MetalTile)));
         Assert.Throws<ArgumentOutOfRangeException>(() => AtlasLayout.Column(AtlasLayout.TileCount));
         Assert.Throws<ArgumentOutOfRangeException>(() => AtlasLayout.Row(-1));
     }
@@ -120,7 +121,7 @@ public sealed class TextureGenTests
         Assert.Equal(OwnerColors, colors);
     }
 
-    /// <summary>The rules paint the seven blocks of D-259 and the three body tiles, and no other tile (D-307).</summary>
+    /// <summary>The rules paint the seven blocks of D-259, the three body tiles, and the metal tile of the sword, and no other tile (D-307, D-330).</summary>
     [Fact]
     public void RulesPaintEveryBlockAndTheBody()
     {
@@ -131,7 +132,7 @@ public sealed class TextureGenTests
         [
             (int)BlockId.RawStone, (int)BlockId.HewnStone, (int)BlockId.TimberBeam, (int)BlockId.OreVein,
             (int)BlockId.StillWater, (int)BlockId.Rubble, (int)BlockId.Plank,
-            AtlasLayout.SkinTile, AtlasLayout.ClothTile, AtlasLayout.LeatherTile,
+            AtlasLayout.SkinTile, AtlasLayout.ClothTile, AtlasLayout.LeatherTile, AtlasLayout.MetalTile,
         ];
         Assert.Equal(expected, tiles);
     }
@@ -480,7 +481,38 @@ public sealed class TextureGenTests
         Assert.Equal(10, body.Boxes.Count);
         foreach (ModelBox box in body.Boxes)
         {
-            int tile = BodyTileOf(box.Name);
+            AssertFacesReadTile(box, BodyTileOf(box.Name));
+        }
+    }
+
+    /// <summary>
+    /// Every face of the sword model reads one tile at the world density of 32 texels per meter, as a body face does: the
+    /// blade and the tip read metal, the guard reads plank, and the grip reads leather (D-308, D-330).
+    /// </summary>
+    [Fact]
+    public void SwordFacesReadTheirTileAtWorldDensity()
+    {
+        const string swordPath = "models/sword-basic.bbmodel";
+        BlockbenchModel sword = BlockbenchLoader.Parse(swordPath, File.ReadAllBytes(Path.Combine(ContentRoot(), swordPath)));
+        Dictionary<string, int> tiles = new()
+        {
+            ["grip_box"] = AtlasLayout.LeatherTile,
+            ["guard_box"] = (int)BlockId.Plank,
+            ["blade_box"] = AtlasLayout.MetalTile,
+            ["tip_box"] = AtlasLayout.MetalTile,
+        };
+
+        Assert.Equal(tiles.Count, sword.Boxes.Count);
+        foreach (ModelBox box in sword.Boxes)
+        {
+            AssertFacesReadTile(box, tiles[box.Name]);
+        }
+    }
+
+    /// <summary>Every face of one box reads a rectangle inside one tile at 32 texels per meter (D-308).</summary>
+    private static void AssertFacesReadTile(ModelBox box, int tile)
+    {
+        {
             float tileLeft = AtlasLayout.Column(tile) * AtlasLayout.TilePixels;
             float tileTop = AtlasLayout.Row(tile) * AtlasLayout.TilePixels;
             for (int side = 0; side < box.Faces.Count; side++)

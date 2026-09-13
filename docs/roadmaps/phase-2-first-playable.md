@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60, PR-61, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-317. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60, PR-61, PR-62, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-339. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -28,6 +28,7 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-29 | Four gates preceded their prerequisites | PR-12, PR-16, PR-17, PR-18, PR-57 |
 | F-40 | D-88's effect note put wall fade in the mesher. A shader test needs no mesher change | PR-13 |
 | F-41 | No item said whether a Steam Deck unit exists for M-3 | M-3 |
+| F-96 | The art stayed a first pass, and no item raised it to finished quality | PR-62 |
 
 ## 3. Guardrails for this phase
 
@@ -229,11 +230,17 @@ Gate: exit tests 1 to 7 pass.
 
 Scope:
 
-- `Core/Entities/Player.cs`: the PR-7 body plus sprint, dodge on a cooldown, health, and stagger (D-27, D-28, D-29). The player has no armor in this PR, so the PR builds the zero-weight case: the stagger rule of light armor (D-314) and the cooldown of D-315. PR-22 adds the effects of weight (D-316).
-- `Core/Combat/MeleeWeapon.cs`: one sword with windup, active, and recovery frames in ticks, and a hit box swept through the active frames (D-25). The initial numbers are D-315.
-- `content/weapons/sword-basic.json`: the tier-0 sword of D-153, with the `weapon` content type and validator (D-168).
-- `content/models/player.<animation>.json`: the first animations of the body, in the format of D-298, next to the model (D-87).
-- `WhatYouCarry.Game/Animation/`: the keyframe player, which reads a clip through `WhatYouCarry.Assets` (D-299), and the procedural locomotion from distance traveled (D-87).
+- `Core/Entities/Player.cs`: the PR-7 body plus sprint, dodge on a cooldown, health, and stagger (D-27, D-28, D-29). The player has no armor in this PR, so the PR builds the zero-weight case: the stagger rule of light armor (D-314) and the cooldown of D-315. PR-22 adds the effects of weight (D-316). The sprint speed is 7 meters per second (D-319).
+- The roll moves 3 meters over 18 ticks in the direction of the movement input, and the cooldown counts from the press (D-327). It starts on the ground and out of still water, and it cancels a swing (D-329, D-337). No hit lands during a roll (D-328).
+- A stagger lasts 20 ticks and stops the walk, the swing, the roll, and the jump. A guard of 30 ticks after it stops a stunlock (D-326). The tier-0 sword takes one hand, so a hit interrupts its swing (D-321).
+- At zero health the run ends as a death (D-322). Health alone carries across a descent (D-335).
+- `Core/Combat/MeleeWeapon.cs`: one sword with windup, active, and recovery frames in ticks, and a hit box swept through the active frames (D-25). The initial numbers are D-315. The blade sweeps 90 degrees at a reach of 1.6 meters from right to left, from the camera yaw of each tick (D-324, D-325). A swing starts on a press, and the walk stays free (D-323, D-324).
+- The attack bit swings the first weapon definition of the content set, and the Phase 1 shot ends (D-320).
+- `content/weapons/sword-basic.json`: the tier-0 sword of D-153, with the `weapon` content type and validator (D-168, D-334).
+- `content/models/sword-basic.bbmodel`: the sword with a blade of the new metal texture rule, at the new `weapon` locator of the body (D-330). The contact sheet shows the sword in the hand (D-336).
+- `content/models/player.<animation>.json`: the swing, the roll, and the stagger of the body, in the format of D-298, next to the model (D-87, D-331).
+- `WhatYouCarry.Game/Animation/`: the keyframe player, which reads a clip through `WhatYouCarry.Assets` (D-299), and the procedural locomotion from distance traveled (D-87, D-333). The body faces the camera yaw (D-332).
+- `README.md`: the steps to launch the game. One PR carries it with PR-15, as an exception to G-10 (D-318).
 - `AnimationMatchesCore` asserts that each animation's phase ranges equal the weapon's windup, active, and recovery ticks.
 
 Out of scope: enemies, damage numbers on screen (PR-19), any second weapon, the effects of weight (PR-22).
@@ -247,12 +254,13 @@ Exit tests:
 5. `AnimationMatchesCore` passes for the sword.
 6. `PlayerIsDeterministic` replays a record with attacks and asserts one state hash on three platforms.
 7. The owner confirms the sword feels committed and readable, recorded as a decision.
+8. The owner approves the contact sheet with the sword and the metal tile, recorded as a decision (D-309, D-330).
 
 Review focus: determinism, replay, gameplay, presentation.
 
 Check clause: none.
 
-Gate: exit tests 1 to 7 pass.
+Gate: exit tests 1 to 8 pass.
 
 > *In plain English:* you can run, jump, dodge, and swing a sword. The swing shows its wind-up, so an enemy can read it, and a hit can stop it.
 
@@ -400,6 +408,32 @@ Gate: exit tests 1 to 5 pass.
 
 > *In plain English:* a tool makes every sound from a recipe, and the first sounds give the sword and the hunter their weight.
 
+### PR-62: Art quality pass
+
+Scope:
+
+- Texture rules: the generator of PR-14 gains the rule kinds of a finished material (D-305, D-339). A face then shows more than a base color with noise and an edge.
+- Models: the body of PR-13 and the sword of PR-15 gain the detail that the owner asks for. The detail stays inside the proportion set of D-82 and the rule of D-83. The enemy models of PR-16 take the same pass.
+- Light: the scene light of play and of the contact sheet moves toward the torchlight of D-59, inside the budget of D-81.
+- The owner answers the rule kinds and the looks in the PR-62 session, before the code (D-339).
+
+Out of scope: armor overlays (PR-22), the enemy families of PR-36 to PR-42, the polygon, pivot, and UV checks (PR-49).
+
+Exit tests:
+
+1. `CommittedAtlasMatchesTheGenerator` and `GeneratorIsDeterministic` pass with the new rule kinds.
+2. `RepositoryModelsPass` passes on the new models and on every clip.
+3. `SmokeSessionPasses` passes on the three platforms with the new models and the new light.
+4. The owner approves a new contact sheet as finished art, recorded as a decision.
+
+Review focus: presentation, content, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 4 pass.
+
+> *In plain English:* the blocks, the body, and the sword look like a first pass today. This change gives them the detail and the light of a finished game, before the owner signs off on the first playable.
+
 ### M-3: Steam Deck frame time
 
 Procedure: on the Steam Deck OLED of the owner (D-296), run the PR-13 build and then the PR-18 build over one full floor. The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target comes from D-295. A miss files a question that binds the next render PR (F-3).
@@ -430,9 +464,10 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 18. PR-19.
 19. Owner: answer OQ-48.
 20. PR-20.
-21. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-22. Tier 4 pass on the screenshot fixture (D-133).
-23. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+21. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
+22. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+23. Tier 4 pass on the screenshot fixture (D-133).
+24. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
@@ -448,6 +483,10 @@ Open:
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-161: the M-3 run on the Steam Deck. Blocks exit test 7 of PR-13 and M-3.
+
+Resolved 2026-09-13:
+
+- OQ-171 (D-339): the art quality pass. PR-62.
 
 Resolved 2026-09-12:
 

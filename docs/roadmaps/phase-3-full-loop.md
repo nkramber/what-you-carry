@@ -141,6 +141,7 @@ Scope:
 
 - `content/weapons/bow-short.json` and `content/weapons/musket.json`: the first ranged weapons with the numbers from OQ-54 (D-40, D-42).
 - `Core/Combat/RangedWeapon.cs`: draw and release for the bow, and load and fire for the musket, with the reload as exposure (D-20).
+- The attack bit fires the ranged weapon of the loadout, as it swings the sword from PR-15. No intent fires a shot before this PR (D-320).
 - `Core/Combat/ArrowSplinter.cs` or the volley from OQ-13: the small area damage of arrows (D-42).
 - `Core/Ai/HumanoidBrain.cs`: aim with lead from the arc solver, fire, and reload behavior for enemies (D-30).
 - Contact sheets of both projectiles in flight at game zoom (D-83).

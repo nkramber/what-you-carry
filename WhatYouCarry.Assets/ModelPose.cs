@@ -52,6 +52,37 @@ public static class ModelPose
         Vector3 halfExtents = (box.To - box.From) * 0.5f;
         return new PosedBox(box.Name, box.Bone, transform.Apply(restCenter), halfExtents, transform.Rotation);
     }
+
+    /// <summary>
+    /// The height of the lowest box corner of a model at the rotations, in meters over the model origin. The Game layer
+    /// stands that corner on the feet, so a roll or a stride never sinks a box into the floor (D-331, D-333).
+    /// </summary>
+    /// <exception cref="ContextException">A rotation names a bone that the model does not have, or the model holds no box.</exception>
+    public static float LowestPoint(string path, BlockbenchModel model, IReadOnlyDictionary<string, Vector3> rotationDegreesByBone)
+    {
+        if (model.Boxes.Count == 0)
+        {
+            throw ContentError.MakeForFile(path, "the model holds no box, and a pose has no lowest point");
+        }
+
+        IReadOnlyList<BoneTransform> transforms = BoneTransforms(path, model, rotationDegreesByBone);
+        float lowest = float.MaxValue;
+        foreach (ModelBox box in model.Boxes)
+        {
+            PosedBox posed = Place(box, transforms[box.Bone]);
+            RotationMatrix axes = posed.Axes;
+
+            // The second row of the matrix holds the height of each box axis, so the box reaches this far down from its center.
+            float down = (System.MathF.Abs(axes.M10) * posed.HalfExtents.X) + (System.MathF.Abs(axes.M11) * posed.HalfExtents.Y) + (System.MathF.Abs(axes.M12) * posed.HalfExtents.Z);
+            float bottom = posed.Center.Y - down;
+            if (bottom < lowest)
+            {
+                lowest = bottom;
+            }
+        }
+
+        return lowest;
+    }
 }
 
 /// <summary>A rotation and then a translation: the place of a bone in model space at a pose.</summary>
