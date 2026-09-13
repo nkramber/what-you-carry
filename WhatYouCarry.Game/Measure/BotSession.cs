@@ -17,17 +17,9 @@ public static class BotSession
     public const uint TickBudget = BotRun.FloorBudget;
 
     /// <summary>Answers whether the user arguments ask for the session.</summary>
-    public static bool IsRequested(string[] userArguments)
+    public static bool IsRequested(UserArguments userArguments)
     {
-        foreach (string argument in userArguments)
-        {
-            if (argument == Flag)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return userArguments.Has(Flag);
     }
 
     /// <summary>Answers whether the loop left the first floor, by a descent or by the end of the run.</summary>

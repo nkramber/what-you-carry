@@ -1,14 +1,16 @@
 using System;
 using Godot;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Game;
 using WhatYouCarry.Game.Input;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
 
 /// <summary>
-/// The test exit of PR-60 (D-311; PR-60 exit test 4) and its press flag. No test here starts the engine. The two
-/// engine tests, exit tests 2 and 3, are in <see cref="SmokeSessionTests"/>.
+/// The test exit of PR-60 (D-311; PR-60 exit test 4) and the read of its press flag. No test here starts the engine. The
+/// two engine tests, exit tests 2 and 3, are in <see cref="SmokeSessionTests"/>. The parser of the user arguments and its
+/// errors are in <see cref="UserArgumentsTests"/> (D-313).
 /// </summary>
 public sealed class TestExitTests
 {
@@ -86,50 +88,40 @@ public sealed class TestExitTests
         }
     }
 
-    /// <summary>The press flag reads the input name and the tick after it, and nothing else asks for a press.</summary>
+    /// <summary>The press flag reads the input name and the tick from its two words, and nothing else asks for a press.</summary>
     [Fact]
     public void PressOfReadsTheInputAndTheTick()
     {
-        Assert.True(TestExit.IsPressRequested([TestExit.PressFlag, TestExit.EscapeName, "0"]));
-        Assert.True(TestExit.IsPressRequested(["--smoke", TestExit.PressFlag, TestExit.StartName, "7"]));
-        Assert.False(TestExit.IsPressRequested([]));
-        Assert.False(TestExit.IsPressRequested(["--smoke"]));
+        Assert.True(TestExit.IsPressRequested(UserArguments.Parse([TestExit.PressFlag, TestExit.EscapeName, "0"])));
+        Assert.True(TestExit.IsPressRequested(UserArguments.Parse(["--smoke", TestExit.PressFlag, TestExit.StartName, "7"])));
+        Assert.False(TestExit.IsPressRequested(UserArguments.Parse([])));
+        Assert.False(TestExit.IsPressRequested(UserArguments.Parse(["--smoke"])));
 
-        Assert.Equal(new ScriptedPress(ExitInput.Escape, 0), TestExit.PressOf([TestExit.PressFlag, TestExit.EscapeName, "0"]));
-        Assert.Equal(new ScriptedPress(ExitInput.Start, 250), TestExit.PressOf(["--smoke", TestExit.PressFlag, TestExit.StartName, "250"]));
+        Assert.Equal(new ScriptedPress(ExitInput.Escape, 0), TestExit.PressOf(UserArguments.Parse([TestExit.PressFlag, TestExit.EscapeName, "0"])));
+        Assert.Equal(new ScriptedPress(ExitInput.Start, 250), TestExit.PressOf(UserArguments.Parse(["--smoke", TestExit.PressFlag, TestExit.StartName, "250"])));
 
-        // A flag after the tick belongs to its own parser, in either order.
-        Assert.Equal(new ScriptedPress(ExitInput.Escape, 100), TestExit.PressOf([TestExit.PressFlag, TestExit.EscapeName, "100", "--smoke"]));
-        Assert.Equal(new ScriptedPress(ExitInput.Escape, 100), TestExit.PressOf([TestExit.PressFlag, TestExit.EscapeName, "100", "--frame-log", "frames.txt"]));
+        // A flag after the tick is a flag of its own, in either order.
+        Assert.Equal(new ScriptedPress(ExitInput.Escape, 100), TestExit.PressOf(UserArguments.Parse([TestExit.PressFlag, TestExit.EscapeName, "100", "--smoke"])));
+        Assert.Equal(new ScriptedPress(ExitInput.Escape, 100), TestExit.PressOf(UserArguments.Parse([TestExit.PressFlag, TestExit.EscapeName, "100", "--frame-log", "frames.txt"])));
     }
 
-    /// <summary>PR #58 review P2-2. A plain word after the tick is an error that names the word, and never a press that ignores it (T-2).</summary>
-    [Fact]
-    public void PressOfRejectsATrailingWord()
-    {
-        ContextException trailing = Assert.Throws<ContextException>(() => TestExit.PressOf(["--smoke", TestExit.PressFlag, TestExit.EscapeName, "100", "unexpected"]));
-        Assert.Contains("unexpected", trailing.Message, StringComparison.Ordinal);
-
-        ContextException secondTick = Assert.Throws<ContextException>(() => TestExit.PressOf([TestExit.PressFlag, TestExit.StartName, "100", "200"]));
-        Assert.Contains("200", secondTick.Message, StringComparison.Ordinal);
-    }
-
-    /// <summary>An absent flag, a short argument list, an unknown name, and a bad tick are each an error that names the cause (T-2).</summary>
+    /// <summary>
+    /// An absent flag, an unknown name, and a bad tick are each an error that names the cause (T-2). The parser stops a
+    /// short press flag and a word after the tick, and <see cref="UserArgumentsTests"/> covers both (D-313, PR #58 review
+    /// P2-2).
+    /// </summary>
     [Fact]
     public void PressOfRejectsBadArguments()
     {
-        ContextException absent = Assert.Throws<ContextException>(() => TestExit.PressOf(["--smoke"]));
+        ContextException absent = Assert.Throws<ContextException>(() => TestExit.PressOf(UserArguments.Parse(["--smoke"])));
         Assert.Contains(TestExit.PressFlag, absent.Message, StringComparison.Ordinal);
 
-        Assert.Throws<ContextException>(() => TestExit.PressOf([TestExit.PressFlag]));
-        Assert.Throws<ContextException>(() => TestExit.PressOf([TestExit.PressFlag, TestExit.EscapeName]));
-
-        ContextException unknown = Assert.Throws<ContextException>(() => TestExit.PressOf([TestExit.PressFlag, "enter", "1"]));
+        ContextException unknown = Assert.Throws<ContextException>(() => TestExit.PressOf(UserArguments.Parse([TestExit.PressFlag, "enter", "1"])));
         Assert.Contains("enter", unknown.Message, StringComparison.Ordinal);
 
-        ContextException negative = Assert.Throws<ContextException>(() => TestExit.PressOf([TestExit.PressFlag, TestExit.StartName, "-1"]));
+        ContextException negative = Assert.Throws<ContextException>(() => TestExit.PressOf(UserArguments.Parse([TestExit.PressFlag, TestExit.StartName, "-1"])));
         Assert.Contains("-1", negative.Message, StringComparison.Ordinal);
-        Assert.Throws<ContextException>(() => TestExit.PressOf([TestExit.PressFlag, TestExit.StartName, "soon"]));
-        Assert.Throws<ContextException>(() => TestExit.PressOf([TestExit.PressFlag, TestExit.StartName, "1.5"]));
+        Assert.Throws<ContextException>(() => TestExit.PressOf(UserArguments.Parse([TestExit.PressFlag, TestExit.StartName, "soon"])));
+        Assert.Throws<ContextException>(() => TestExit.PressOf(UserArguments.Parse([TestExit.PressFlag, TestExit.StartName, "1.5"])));
     }
 }

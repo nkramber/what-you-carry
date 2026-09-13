@@ -303,13 +303,14 @@ public partial class Main : Node3D
     }
 
     /// <summary>
-    /// Reads the user arguments, loads the content, the player model, and the atlas, starts the loop, and builds
-    /// the scene. The contact sheet flag renders the sheet in place of the loop (D-306). In a play session the
-    /// mouse is captured. In the smoke session and the bot session it is not.
+    /// Reads the user arguments with one parser, loads the content, the player model, and the atlas, starts the loop,
+    /// and builds the scene. A bad argument stops the boot before the content loads (D-313, D-317). The contact sheet
+    /// flag renders the sheet in place of the loop (D-306). In a play session the mouse is captured. In the smoke
+    /// session and the bot session it is not.
     /// </summary>
     private void Boot()
     {
-        string[] arguments = OS.GetCmdlineUserArgs();
+        UserArguments arguments = UserArguments.Parse(OS.GetCmdlineUserArgs());
         this.smoke = SmokeSession.IsRequested(arguments);
         if (TestExit.IsPressRequested(arguments))
         {

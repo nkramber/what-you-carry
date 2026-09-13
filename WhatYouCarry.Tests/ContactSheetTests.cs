@@ -6,6 +6,7 @@ using Godot;
 using WhatYouCarry.Assets;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.World;
+using WhatYouCarry.Game;
 using WhatYouCarry.Game.Render;
 using WhatYouCarry.Game.Review;
 using Xunit;
@@ -25,21 +26,19 @@ public sealed class ContactSheetTests
     [Fact]
     public void IsRequestedReadsTheFlag()
     {
-        Assert.True(ContactSheet.IsRequested([ContactSheet.Flag, "sheet.png"]));
-        Assert.True(ContactSheet.IsRequested(["--other", ContactSheet.Flag, "sheet.png"]));
-        Assert.False(ContactSheet.IsRequested([]));
-        Assert.False(ContactSheet.IsRequested(["--smoke"]));
+        Assert.True(ContactSheet.IsRequested(UserArguments.Parse([ContactSheet.Flag, "sheet.png"])));
+        Assert.False(ContactSheet.IsRequested(UserArguments.Parse([])));
+        Assert.False(ContactSheet.IsRequested(UserArguments.Parse(["--smoke"])));
     }
 
-    /// <summary>The path is the argument after the flag. A flag with no path, or no flag, is an error (T-2).</summary>
+    /// <summary>The path is the one word of the flag. A read with no flag is an error (T-2). The parser stops a flag with no path (D-313).</summary>
     [Fact]
     public void PathOfReadsTheArgumentAfterTheFlag()
     {
-        Assert.Equal("sheet.png", ContactSheet.PathOf(["--other", ContactSheet.Flag, "sheet.png"]));
+        Assert.Equal("sheet.png", ContactSheet.PathOf(UserArguments.Parse([ContactSheet.Flag, "sheet.png"])));
 
-        ContextException noPath = Assert.Throws<ContextException>(() => ContactSheet.PathOf([ContactSheet.Flag]));
-        Assert.Contains(ContactSheet.Flag, noPath.Message, StringComparison.Ordinal);
-        Assert.Throws<ContextException>(() => ContactSheet.PathOf([]));
+        ContextException absent = Assert.Throws<ContextException>(() => ContactSheet.PathOf(UserArguments.Parse([])));
+        Assert.Contains(ContactSheet.Flag, absent.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A texel on the sheet has the size of a texel in play on the Deck: about 5.4 pixels at the boom length (D-306).</summary>

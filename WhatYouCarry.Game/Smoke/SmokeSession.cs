@@ -36,17 +36,9 @@ public static class SmokeSession
     private const string PastScript = "The tick is past the end of the smoke script.";
 
     /// <summary>Answers whether the user arguments of the process ask for the session.</summary>
-    public static bool IsRequested(string[] userArguments)
+    public static bool IsRequested(UserArguments userArguments)
     {
-        foreach (string argument in userArguments)
-        {
-            if (argument == Flag)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return userArguments.Has(Flag);
     }
 
     /// <summary>The intent of one tick of the script.</summary>

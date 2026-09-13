@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60, PR-61, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-316. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60, PR-61, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-317. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -200,6 +200,7 @@ Scope:
 
 - `WhatYouCarry.Game/UserArguments.cs`: one parser that reads the user arguments once at boot (D-313). It holds each flag of the Game layer and the count of words after it. `--smoke` and `--bot` take no word, `--frame-log` and `--contact-sheet` take one, and `--press` takes two.
 - The parser rejects an unknown word, an unknown flag, a repeated flag, and a flag with too few words. Each is a `ContextException` that names the word, and `Main` ends the boot with exit code 1 (T-2).
+- The parser also rejects a flag that the session ignores (D-317). The contact sheet flag takes no other flag, and the smoke flag and the bot flag exclude each other. The error names both flags.
 - `Main`, `SmokeSession`, `BotSession`, `FrameLog`, `ContactSheet`, and `TestExit` read their flags through the parser. The check of a plain word after the press tick moves into the parser.
 
 Out of scope: the engine flags before `--`, which the engine reads, and any new flag.
@@ -212,12 +213,13 @@ Exit tests:
 4. `ShortFlagStopsTheBoot` asserts that a flag with too few words after it is an error that names the flag.
 5. `SessionCommandsParse` asserts that the user arguments of the smoke, test exit, bot, and contact sheet commands in `CLAUDE.md` parse with no error.
 6. `BadArgumentEndsTheSession` runs the headless game with `--smoke unexpected` and asserts exit code 1 and the word in the error line.
+7. `IgnoredFlagStopsTheBoot` asserts that the contact sheet flag with another flag, or the smoke flag with the bot flag, is an error that names both (D-317).
 
 Review focus: input and CI boundaries, errors, test quality.
 
 Check clause: none.
 
-Gate: exit tests 1 to 6 pass.
+Gate: exit tests 1 to 7 pass.
 
 > *In plain English:* the game ignores a typo in a test command today, and a test can pass while it runs the wrong command. After this change, the typo stops the game with a message that names it.
 
@@ -415,7 +417,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 7. ✅ PR-14 merged 2026-09-12 as PR #56.
 8. ✅ PR-60 merged 2026-09-13 as PR #58.
 9. ✅ OQ-5 and OQ-46 answered 2026-09-12: D-314 and D-315, with D-316 for weight. ✅ OQ-45 answered 2026-09-12: D-298.
-10. PR-61, the user argument check (D-313).
+10. PR-61, the user argument check (D-313, D-317).
 11. PR-15.
 12. Owner: answer OQ-9, at least the first family.
 13. PR-16.
