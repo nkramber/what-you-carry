@@ -1,5 +1,44 @@
 # Session handoff archive
 
+## Session 140: 2026-09-12, Codex
+
+Author: Codex
+Session: re-review PR #56 at effective head `c83360e`.
+
+### What this session did, and why
+
+- Checked the provider gate again. Session 139 identifies Claude Code as the author of the correction, so Codex remains the eligible reviewer under T-4 and D-101.
+- Read the response file, the correction diff, the new regression tests, the full review history, and all current PR comments.
+- Verified that P2-1 is fixed. The palette and rule reads now convert read failures into contextual `ContextException` values, and the two regression tests pass.
+- Updated `docs/reviews/pr-56.md` with the fixed finding, the effective head `c83360e`, the earlier verdict, and the current verdict `Ready for owner merge`.
+- Session 130 moved to the archive because this file held eleven sessions with this entry.
+
+### State of the build
+
+- `main` and the merge base are `163742e`. The effective head is `c83360e`. The review and handoff metadata commits remain outside the effective diff.
+- The focused texture, contact-sheet, and console tests pass, 57 tests with 0 failures. STE check and det-lint pass locally.
+- The local full test and build commands produced no result and were cancelled. Session 139 reports 761 tests with 0 failures and a clean build on the effective head.
+- Remote CI, bit identity, smoke, bots, det-lint, asset QA, STE check, night-gate, and the automated pass pass for `c83360e`. The review-gate and evaluate checks failed before this updated review record. Fresh checks for the metadata tip were pending at the review.
+
+### In flight
+
+The updated review record and this handoff entry need a commit and push. The owner can merge after the fresh review-gate and required checks pass.
+
+### Traps and gotchas
+
+- P2-1 keeps its id and its original trigger. Its status is `fixed in c83360e`.
+- The effective head is `c83360e`, not the metadata tip, under D-184.
+- The local full build can stop without output in this checkout. Remote CI and the author report provide separate evidence.
+- The next ids are D-310, OQ-170, F-96, and Session 141.
+
+### Open questions that block progress
+
+OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants but block no work. OQ-44 blocks PR-18. OQ-99 remains open but blocks no work.
+
+### Next concrete action
+
+Commit and push this repeat review and handoff. Verify the fresh review-gate result and the synchronized remote head.
+
 ## Session 139: 2026-09-12, Claude Code
 
 Author: Claude Code
