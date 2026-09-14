@@ -1,5 +1,44 @@
 # Session handoff archive
 
+## Session 145: 2026-09-12, Codex
+
+Author: Codex
+Session: re-review PR #58 at effective head `39a0c02`.
+
+### What this session did, and why
+
+- Checked the provider gate again. The handoff identifies Claude Code as the author of the correction, so Codex remains the eligible reviewer under T-4 and D-101.
+- Read `docs/reviews/pr-58-response.md`, the correction diff, the affected files, the roadmap, the decisions, the questions, and all current PR comments.
+- Verified that P2-1 is fixed. The two Smoke tests drive Escape and Start through the headless Game process, and both assert exit code 0, the test exit line, and no smoke end line.
+- Found P2-2. `TestExit.PressOf` accepts trailing arguments after the press tick. A command with `unexpected` exits successfully and ignores that argument, which violates T-2 input validation.
+- Updated `docs/reviews/pr-58.md` with P2-1 fixed, P2-2 open, and the verdict `Changes required` for effective head `39a0c02`.
+
+### State of the build
+
+- `main` and the merge base are `f3f0bc0`. The effective head is `39a0c02`. The review and handoff metadata commits remain outside the effective diff under D-184.
+- The serial build passed with 0 warnings and 0 errors. Focused tests passed, 7 tests with 0 failures. The Escape and Start command probes passed at tick 101. Det-lint and STE check passed.
+- The full local test stalled after discovery and was cancelled. Revision-matched CI passed build, test, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar. `evaluate` and `review-gate` fail because P2-2 remains open.
+- Remote head: `08e3797` holds the review update, verified with the session end gate.
+
+### In flight
+
+PR #58 needs trailing-argument validation and its regression test. The owner must request another repeat review after the correction.
+
+### Traps and gotchas
+
+- P2-1 is fixed at `39a0c02`. Keep its finding id and evidence in later reviews.
+- P2-2 reproduces with `--smoke --press escape 100 unexpected`. The command must reject `unexpected` after the correction.
+- The effective head is `39a0c02`, not a later metadata commit, under D-184.
+- The next ids are D-313, OQ-170, F-96, and Session 146.
+
+### Open questions that block progress
+
+None blocks PR #58. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159, OQ-160, OQ-44, and OQ-99 do not block this PR.
+
+### Next concrete action
+
+The author rejects trailing arguments, adds the regression test, pushes the correction, and requests the repeat cross-provider review.
+
 ## Session 144: 2026-09-12, Claude Code
 
 Author: Claude Code

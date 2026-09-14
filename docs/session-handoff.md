@@ -2,6 +2,44 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 155: 2026-09-14, Codex
+
+Author: Codex
+Session: re-review PR #62 at effective head `38d1fac`.
+
+### What this session did, and why
+
+- Recomputed the effective head. The correction commit is `38d1fac`. Later review and handoff commits are metadata under D-184.
+- Read the response file, the correction diff, the original trigger, the new regression tests, affected callers, and current PR comments.
+- Verified that P2-1 is fixed. The focused Player, Animation, and Content suite passed 149 tests, including the traversal, separator, extension, and valid subdirectory cases.
+- Updated `docs/reviews/pr-62.md` in place. P2-1 is `fixed in 38d1fac`, and the current verdict is `Ready for owner merge`.
+
+### State of the build
+
+- The revision-matched remote build, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar checks pass on `38d1fac`.
+- Fresh `review-gate` and `evaluate` checks pass after the review update reaches the PR.
+- Duplicate platform CI jobs remain in progress or queued after the metadata push. No pending job is reported as passed.
+- The local full-suite run did not produce a final result in the execution window. Session 154 reports 855 tests passed with five Smoke tests, and remote CI provides revision-matched evidence.
+
+### In flight
+
+PR #62 is ready for owner merge after the remaining duplicate CI jobs finish. Exit test 7 remains the owner play test. A docs PR records the merge (D-297).
+
+### Traps and gotchas
+
+- The effective head is `38d1fac`, not the later metadata tip.
+- Keep P2-1 and its original trigger in later review history.
+- The art quality roadmap item also uses PR-62. It is not GitHub PR #62.
+- The next ids are D-340, OQ-172, F-97, PR-63, and Session 156.
+
+### Open questions that block progress
+
+None blocks PR #62. Exit test 7 needs the owner play test. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Wait for the remaining duplicate CI jobs. The owner then plays the sword, merges PR #62, and records the merge in a docs PR.
+
 ## Session 154: 2026-09-13, Claude Code
 
 Author: Claude Code
@@ -382,42 +420,3 @@ None blocks PR #58. OQ-170 blocks nothing. OQ-5 and OQ-46 block PR-15. OQ-161 bl
 ### Next concrete action
 
 A Codex session reviews P2-2 per the repeat review procedure of the `pr-review` skill at the correction head and sets the verdict. The owner then merges, answers OQ-170, and a docs PR records the merge (D-297).
-
-## Session 145: 2026-09-12, Codex
-
-Author: Codex
-Session: re-review PR #58 at effective head `39a0c02`.
-
-### What this session did, and why
-
-- Checked the provider gate again. The handoff identifies Claude Code as the author of the correction, so Codex remains the eligible reviewer under T-4 and D-101.
-- Read `docs/reviews/pr-58-response.md`, the correction diff, the affected files, the roadmap, the decisions, the questions, and all current PR comments.
-- Verified that P2-1 is fixed. The two Smoke tests drive Escape and Start through the headless Game process, and both assert exit code 0, the test exit line, and no smoke end line.
-- Found P2-2. `TestExit.PressOf` accepts trailing arguments after the press tick. A command with `unexpected` exits successfully and ignores that argument, which violates T-2 input validation.
-- Updated `docs/reviews/pr-58.md` with P2-1 fixed, P2-2 open, and the verdict `Changes required` for effective head `39a0c02`.
-
-### State of the build
-
-- `main` and the merge base are `f3f0bc0`. The effective head is `39a0c02`. The review and handoff metadata commits remain outside the effective diff under D-184.
-- The serial build passed with 0 warnings and 0 errors. Focused tests passed, 7 tests with 0 failures. The Escape and Start command probes passed at tick 101. Det-lint and STE check passed.
-- The full local test stalled after discovery and was cancelled. Revision-matched CI passed build, test, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar. `evaluate` and `review-gate` fail because P2-2 remains open.
-- Remote head: `08e3797` holds the review update, verified with the session end gate.
-
-### In flight
-
-PR #58 needs trailing-argument validation and its regression test. The owner must request another repeat review after the correction.
-
-### Traps and gotchas
-
-- P2-1 is fixed at `39a0c02`. Keep its finding id and evidence in later reviews.
-- P2-2 reproduces with `--smoke --press escape 100 unexpected`. The command must reject `unexpected` after the correction.
-- The effective head is `39a0c02`, not a later metadata commit, under D-184.
-- The next ids are D-313, OQ-170, F-96, and Session 146.
-
-### Open questions that block progress
-
-None blocks PR #58. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159, OQ-160, OQ-44, and OQ-99 do not block this PR.
-
-### Next concrete action
-
-The author rejects trailing arguments, adds the regression test, pushes the correction, and requests the repeat cross-provider review.
