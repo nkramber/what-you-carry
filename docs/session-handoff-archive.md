@@ -1,5 +1,49 @@
 # Session handoff archive
 
+## Session 148: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-60 as PR #58 and four owner answers, D-313 to D-316 (D-297). Branch `docs/pr-60-merge-record`.
+
+### What this session did, and why
+
+- The owner asked the session to address the PR #58 re-review feedback. The PR had no open feedback at `9803a8b`: Session 146 fixed P2-2, and gitar approved the head. The trigger `--smoke --press escape 100 unexpected` ended at boot with exit code 1 and named `unexpected`. The review commit `e5a3846` raised P2-2, so the cross-provider repeat review of the fix was still necessary.
+- Session 147 approved `9803a8b` in `e35d5e9`, and `review-gate` passed on that head. The owner merged PR #58 as `94f0897` at 00:16 UTC on 2026-09-13. CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit.
+- `docs/design.md` marks PR-60 merged in the roadmap entry and in sequence item 11. The Phase 2 roadmap gains the status line of PR-60 and the mark in sequence item 8.
+- The owner answered three questions, each with the recommendation. D-313 resolves OQ-170: one parser checks the whole user argument list, in PR-61 before PR-15. D-314 resolves OQ-5: heavy armor resists stagger, and light armor does not. D-315 resolves OQ-46: the initial combat numbers.
+- PR-15 has no armor, so its exit test 1 and D-314 needed weight numbers that no decision held. The owner chose D-316: PR-15 builds the zero-weight case, and PR-22 sets the growth of the dodge cooldown with weight and the weight at which armor resists stagger, with the first armor sets.
+- `docs/design.md` and the Phase 2 roadmap gain the PR-61 entry, and the Phase 2 sequence puts PR-61 at item 10. The later items move down by one. The PR-15 scope and exit test 1 follow D-316. The Phase 3 roadmap gives PR-22 the two weight numbers and exit test 7, `HeavyArmorResistsStagger`.
+- Session 138 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `94f0897`, the squash merge of PR #58. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-60-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `ste-check`: 0 findings in 15 files. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `94f0897`.
+- `dotnet test`: 770 tests, 0 failures, with the four Smoke tests on the local Godot build. That run started before the last Phase 2 list fix and this entry. The run without the Smoke category passed on the final documents, 766 tests and 0 failures.
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-13, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone, with the `review-override` label after the automated pass (D-188, D-190). Then a fresh session opens PR-61 from `main`, because D-121 gives one code PR to each session.
+
+### Traps and gotchas
+
+- The Phase 2 sequence moved down by one after item 9. An older handoff that names item 10 or a later item means the item one number higher now.
+- PR-61 moves the trailing word check of `TestExit.PressOf` into the shared parser. `SmokeSessionPasses`, `EscapeEndsTheSession`, and `StartButtonEndsTheSession` pass user arguments, so each must still pass.
+- PR-15 builds the zero-weight case alone (D-316). Its exit test 1 has no weight clause, and PR-22 holds `WeightSlowsDodge` and `HeavyArmorResistsStagger`.
+- The merge marks use the UTC date of the merge, so PR-60 reads 2026-09-13. The decisions and this entry use the local date 2026-09-12, as D-295 and Session 147 did.
+- No decision names the author of the first animation files of PR-15. The PR-15 scope lists them as work of the PR, in the format of D-298.
+- The next ids are D-317, OQ-171, F-96, PR-62, and Session 149.
+
+### Open questions that block progress
+
+None blocks this PR or PR-61. PR-15 has no open blocker, and its exit test 7 needs the owner to play the sword. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. A fresh session then opens PR-61 from `main` per the Phase 2 roadmap and D-313. PR-15 follows it.
+
 ## Session 147: 2026-09-12, Codex
 
 Author: Codex
