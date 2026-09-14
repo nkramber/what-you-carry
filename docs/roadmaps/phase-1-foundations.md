@@ -670,7 +670,7 @@ Resolved 2026-09-10:
 - OQ-142 to OQ-144 (D-274 to D-276): the night event, the night commit, and the M-1 timing. PR-58 and M-1.
 - OQ-145 (D-277): the PR seed counts stay at 5000. M-1.
 - OQ-146 (D-278): the first night by hand. PR-58 and M-2.
-- OQ-147 to OQ-149 (D-279 to D-281): the dig job cap, the night logs, and the second night by hand. The night and PR-58.
+- OQ-147 to OQ-149 (D-279 to D-281): the dig job cap, the night logs, and the second night by hand. The night and PR-58. D-359 supersedes D-279 in PR-67.
 - OQ-150 (D-282): the head correction of the PR #39 review record, one time. PR #39.
 - OQ-151 and OQ-152 (D-283 and D-284): the Gate 1 timing with the M-2 count, and the night time. M-2, Gate 1, and the night workflow.
 - OQ-153 (D-285): the night minute, off the start of the hour. The night workflow.

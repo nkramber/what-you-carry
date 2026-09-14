@@ -22,6 +22,12 @@ namespace WhatYouCarry.Core.Procgen;
 /// floor cell lies farthest (D-256).
 /// </para>
 /// <para>
+/// A dig that runs the job budget of <see cref="DigPlan.JobBudget"/> with a chamber still in rock starts again on an
+/// empty grid: a new budget draw and a new plan, from the next draws of the same Procgen stream (D-359, D-361). The
+/// floor still comes from the seed and the floor number alone. A floor with no complete dig in <see cref="MaxDigs"/>
+/// digs is an error (D-360).
+/// </para>
+/// <para>
 /// The generator confirms its own construction: every chamber has a reachable floor cell, or the floor is an
 /// error that names the seed, the floor, and the chamber (D-112, T-2). PR-9 exit test 1 asserts the same from
 /// outside over thousands of seeds.
@@ -29,8 +35,15 @@ namespace WhatYouCarry.Core.Procgen;
 /// </remarks>
 public static class FloorGenerator
 {
+    /// <summary>
+    /// The count of digs of one floor before the floor is an error (D-360). The measurement of 2026-09-14 dug the
+    /// 675000 floors of F-98, and each of the 123 floors that ran out of the job budget dug every chamber on its second
+    /// dig. When each dig fails on its own, four failures in a row come about once in 900 trillion floors.
+    /// </summary>
+    public const int MaxDigs = 4;
+
     /// <summary>The dug floor.</summary>
-    /// <exception cref="ContextException">The floor is below one, no template or two templates cover it, the content holds no chamber kind, or the dig fails. The error names the seed and the floor.</exception>
+    /// <exception cref="ContextException">The floor is below one, no template or two templates cover it, the content holds no chamber kind, or no dig of <see cref="MaxDigs"/> digs every chamber. The error names the seed and the floor.</exception>
     public static FloorPlan Generate(ulong runSeed, int floor, ContentSet content)
     {
         try
@@ -78,22 +91,49 @@ public static class FloorGenerator
     {
         FloorTemplate template = TemplateFor(floor, content);
         Rng rng = Rng.ForStream(runSeed, RngStream.Procgen, floor);
-        IReadOnlyList<ChamberKind> kinds = ChamberBudget.Draw(rng, template, content.Chambers);
-
-        VoxelGrid grid = new(template.SizeX, template.SizeY, template.SizeZ);
-        DigCanvas canvas = new(grid);
-        DigPlan plan = new(rng, canvas, template, kinds);
-        plan.DigFirstChamber();
-        plan.DigUntilComplete();
+        DigPlan plan = DigChambers(rng, template, content, out DigCanvas canvas);
         plan.DigShafts();
         DetailResult detail = DetailPass.Apply(rng, canvas, template, plan);
 
+        VoxelGrid grid = canvas.Grid;
         Chamber first = plan.Chambers[0];
         Cell spawnCell = new(first.Anchor.X, first.FloorRow, first.Anchor.Z);
         Reachability reach = Reachability.From(grid, spawnCell);
         Cell stairwell = FarthestChamberCell(plan.Chambers, grid, reach);
         Vector3 spawn = new(first.Anchor.X + 0.5f, first.FloorRow + 1.0f, first.Anchor.Z + 0.5f);
         return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Tunnels, plan.Shafts, detail);
+    }
+
+    /// <summary>
+    /// Draws the chamber kinds and digs them on an empty grid. A dig that runs out of its job budget starts again from
+    /// the next draws of the stream (D-359, D-361). Gives the first plan that digs every chamber, with its canvas.
+    /// </summary>
+    /// <exception cref="ContextException">The budget draw fails, the first chamber of a dig finds no anchor, or no dig of <see cref="MaxDigs"/> digs every chamber (D-360).</exception>
+    private static DigPlan DigChambers(Rng rng, FloorTemplate template, ContentSet content, out DigCanvas canvas)
+    {
+        int chambersDug = 0;
+        int chambersNeeded = 0;
+        for (int dig = 0; dig < MaxDigs; dig++)
+        {
+            IReadOnlyList<ChamberKind> kinds = ChamberBudget.Draw(rng, template, content.Chambers);
+            canvas = new DigCanvas(new VoxelGrid(template.SizeX, template.SizeY, template.SizeZ));
+            DigPlan plan = new(rng, canvas, template, kinds);
+            plan.DigFirstChamber();
+            if (plan.TryDigUntilComplete(out _))
+            {
+                return plan;
+            }
+
+            chambersDug = plan.Chambers.Count;
+            chambersNeeded = kinds.Count;
+        }
+
+        ContextException error = new($"Each of {MaxDigs} digs ran {DigPlan.JobBudget} jobs with a chamber still in rock, and the last dug {chambersDug} of {chambersNeeded} chambers (D-360).");
+        error.AddContext("digs", ((long)MaxDigs).ToString(CultureInfo.InvariantCulture));
+        error.AddContext("jobBudget", ((long)DigPlan.JobBudget).ToString(CultureInfo.InvariantCulture));
+        error.AddContext("chambersDug", ((long)chambersDug).ToString(CultureInfo.InvariantCulture));
+        error.AddContext("chambersNeeded", ((long)chambersNeeded).ToString(CultureInfo.InvariantCulture));
+        throw error;
     }
 
     /// <summary>
