@@ -2,6 +2,47 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 162: 2026-09-14, Codex
+
+Author: Codex
+Session: review PR #67, the workflow concurrency groups, at effective head `d774ab9`. Branch `chore/pr-run-concurrency`.
+
+### What this session did, and why
+
+- Checked the provider gate. Session 161 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the PR description, complete diff, all ten workflows, affected tests and documents, roadmap, design, decisions, questions, and every PR comment.
+- Verified the nine pull request workflows use the D-356 group, and `night.yml` has no group.
+- Verified the group uses the PR number for pull request events and the commit for push events. The cancellation expression acts only on pull request events.
+- Found no in-scope defect. The focused regression passes on the head and fails on `main` for `asset-qa.yml`, so it rejects the old workflow shape.
+- Added `docs/reviews/pr-67.md` with the effective head and the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` and the merge base are `5b85b70`. The effective head is `d774ab9`. The later tip commit `65940c7` changes only metadata paths under D-184.
+- `dotnet build` passed with 0 warnings and 0 errors. The focused workflow regression passed 2 tests. STE check, det-lint, asset QA, and bit identity passed.
+- The local full test command did not emit a completion result because the test host did not complete in this execution context. Revision-matched CI on the effective code head passed CI, smoke, bit identity on all three platforms, asset QA, bots, det-lint, the night gate, and STE check.
+- Gitar approved the head with no issue comment. The review gate was neutral or skipped before the review record existed, as D-251 expects.
+- Remote head: `origin/chore/pr-run-concurrency`, verified with `gh pr view` after the review commit.
+
+### In flight
+
+PR #67 is ready for owner merge. The next session opens the dig restart item in the Phase 2 roadmap and asks for the job budget and the count of digs before code, as D-353 requires.
+
+### Traps and gotchas
+
+- The GitHub PR #67 is the concurrency PR. The roadmap item PR-67 is the dig restart.
+- The effective head is `d774ab9`, not the later metadata tip `65940c7`.
+- A local full test without a completion result is an execution-context limit. Do not report it as a passed local gate.
+- The review gate becomes green after this review record reaches the PR head.
+
+### Open questions that block progress
+
+None blocks PR #67. OQ-173 is resolved by D-358. The dig restart still needs the owner choices recorded by D-353.
+
+### Next concrete action
+
+The owner merges PR #67. A fresh session starts the roadmap dig restart item and asks for its job budget and dig count before code.
+
 ## Session 161: 2026-09-14, Claude Code
 
 Author: Claude Code
