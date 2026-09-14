@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 149: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: open PR-61, the user argument check, as PR #60. Branch `feat/pr-61-user-argument-check`.
+
+### What this session did, and why
+
+- PR #59 merged as `98e3c47`, and Session 148 named PR-61 as the next action. This session opened it from `main` per D-313.
+- The owner answered the scope question for ignored and conflicting flags. D-317 puts whole-list argument parsing in PR-61.
+- `UserArguments` validates unknown words, unknown flags, repeated flags, short flags, and ignored flags. `Main` parses before the Game sessions start.
+- The tests cover the parser, boot failure, and the affected Game sessions. The documents name D-317 and the new roadmap exit test.
+- The automated pass approved `1e3dba8` with no issue comment.
+
+### State of the build
+
+- `main` and the merge base were `98e3c47`. The effective head of PR #60 was `1e3dba8`. The later handoff commit was metadata under D-184.
+- The local build, full test, and det-lint commands did not produce a final result. Revision-matched remote CI passed the required code, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and automated checks.
+
+### In flight
+
+The Codex review of PR #60 and the owner merge remained in flight. A docs PR then recorded the merge (D-297).
+
+### Traps and gotchas
+
+- Engine flags stand before the `--` separator. Game flags stand after it.
+- A long pending CI state can mean a runner queue. The `evaluate` failure precedes the review record.
+- The next ids were D-318, OQ-171, F-96, PR-62, and Session 150.
+
+### Open questions that block progress
+
+None blocked PR #60. OQ-9 blocked PR-16. OQ-4 and OQ-6 blocked PR-17. OQ-44 blocked PR-18. OQ-48 blocked PR-20. OQ-161 blocked exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+A Codex session reviews PR #60 at effective head `1e3dba8` and writes `docs/reviews/pr-60.md`.
+
 ## Session 148: 2026-09-12, Claude Code
 
 Author: Claude Code

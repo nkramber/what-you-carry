@@ -2,6 +2,44 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 159: 2026-09-14, Codex
+
+Author: Codex
+Session: review PR #65, the dig sizes in the floor template, at effective head `6f0d6f2`. Branch `feat/pr-63-dig-sizes`.
+
+### What this session did, and why
+
+- Checked the provider gate. Session 158 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the PR description, complete diff, affected callers and tests, roadmap, design, decisions, questions, and all PR comments.
+- Found no in-scope defect. The template validates the six dig sizes, the plan uses the template sizes, the detail pass uses each tunnel height, and the tests check the changed contract.
+- Added `docs/reviews/pr-65.md` with the effective head and the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` and the merge base are `d2ef347`. The effective head is `6f0d6f2`. The later handoff commit is metadata under D-184.
+- Revision-matched CI passed on all three platforms for build-and-test, bit identity, and smoke. Asset QA, bots, det-lint, STE check, and the night gate passed. The compare job passed with `b00814dbf25e61e8`.
+- The local test host could not bind its socket. This execution-context failure does not provide local test evidence. Remote CI provides revision-matched test evidence.
+- The automated pass approved the head with no issue comment. The review gate was neutral before the review record existed, and `evaluate` failed for that expected reason.
+
+### In flight
+
+PR #65 is ready for owner merge after this review record reaches the branch. Exit test 6 still needs the owner play test of floor 1. PR-67 follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- The effective head is `6f0d6f2`, not the later metadata tip, under D-184.
+- About one floor in 96000 reaches the dig job cap on these sizes (F-98). D-353 assigns the restart to PR-67.
+- The owner play test remains open even though the automated checks pass.
+- The next ids are D-354, OQ-173, F-99, PR-68, and Session 160.
+
+### Open questions that block progress
+
+None blocks PR #65. Exit test 6 needs the owner play test. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner plays floor 1 for exit test 6, then merges PR #65. A docs PR records the merge (D-297). A fresh session then opens PR-67.
+
 ## Session 158: 2026-09-14, Claude Code
 
 Author: Claude Code
@@ -377,51 +415,3 @@ OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants but
 ### Next concrete action
 
 Commit and push this review and handoff. Verify the fresh review-gate result and the synchronized remote head.
-
-## Session 149: 2026-09-12, Claude Code
-
-Author: Claude Code
-Session: open PR-61, the user argument check, as PR #60. Branch `feat/pr-61-user-argument-check`.
-
-### What this session did, and why
-
-- PR #59 merged as `98e3c47` at 02:21 UTC on 2026-09-13, and the Session 148 handoff named PR-61 as the next action. This session opened it from `main` per D-313.
-- Before the code, the owner answered one scope question. A known flag that the session ignores passed in silence: `--contact-sheet sheet.png --smoke` rendered the sheet and ignored `--smoke`, and `--smoke --bot` never used the bot. D-317 puts that check in PR-61, with the recommendation.
-- `WhatYouCarry.Game/UserArguments.cs` reads the user arguments once at boot. Its table holds each flag and its count of words. The parse stops on an unknown word, an unknown flag, a repeated flag, a short flag, and an ignored flag. Each error names the word or the flags.
-- `Main` parses first in the boot, so a bad argument is a boot failure with exit code 1. `SmokeSession`, `BotSession`, `FrameLog`, `ContactSheet`, and `TestExit` read their flags through the parser. The trailing word check of `TestExit.PressOf` moved into the parser.
-- `UserArgumentsTests.cs` holds exit tests 1 to 5 and 7, and `SmokeSessionTests.BadArgumentEndsTheSession` is exit test 6. The flag tests of four older test files read through the parser, and none passes the unknown flag `--other` now.
-- `docs/decisions.md` gains D-317. `docs/design.md` and the Phase 2 roadmap name D-317 in the PR-61 entry, and the roadmap gains exit test 7. `CLAUDE.md` and `AGENTS.md` describe the check.
-- The automated pass of gitar ran on `1e3dba8` after the push. Its check run passed, and it approved with no comment, so 0 comments needed an answer (D-250). Its comment shows the trial pause note, and no `Gitar review` comment was necessary.
-- Session 139 moved to the archive, because the file held eleven entries with this one.
-
-### State of the build
-
-- `main` is at `98e3c47`. The effective head of PR #60 is `1e3dba8`, the one code commit. This entry is in a metadata commit above it (D-184).
-- Remote head: `origin/feat/pr-61-user-argument-check` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 778 tests, 0 failures, with the five Smoke tests on the local Godot build.
-- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 28 files. `ste-check`: 0 findings in 15 files. The Godot build check passed.
-- On `1e3dba8`, CI, bit identity, and smoke passed on the three platforms, and bots, det-lint, asset-qa, STE check, the night gate, and gitar passed. The `evaluate` check fails and `review-gate` is grey, because no review record exists yet (D-251).
-- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-13, and it can start hours late (F-95).
-
-### In flight
-
-PR #60: the Codex review per the `pr-review` skill at the effective head `1e3dba8`, then the owner merge. A docs PR then records the merge (D-297).
-
-### Traps and gotchas
-
-- Every user argument after `--` passes the parser now. An engine flag after the separator, such as `--windowed`, stops the boot, so it must stand before `--`.
-- A word that starts with `--` is always a flag. A file path that starts with `--` needs a prefix, such as `./`.
-- The contact sheet takes no other flag, and `--smoke` and `--bot` exclude each other (D-317). A PR that adds a flag adds it to the table of `UserArguments`, and to the ignored flag rule when a session ignores it.
-- `SessionCommandsParse` reads the Godot commands of `CLAUDE.md`. A new command there with the separator must parse.
-- A Godot command with no `--path` opens the project manager window and never quits. This session started one by mistake and stopped the process.
-- The jobs of CI, bit identity, smoke, bots, and asset-qa on `1e3dba8` waited about 28 minutes for runners before they started. A long pending state there is the queue, and not a failure.
-- `gh pr checks` exits with code 1 as soon as `evaluate` fails, while other checks still run. A wait loop must read the word `pending` in the output, and not the exit code.
-- The next ids are D-318, OQ-171, F-96, PR-62, and Session 150.
-
-### Open questions that block progress
-
-None blocks PR #60. PR-15 has no open blocker, and its exit test 7 needs the owner to play the sword. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #60 per the `pr-review` skill at the effective head `1e3dba8` and writes `docs/reviews/pr-60.md`. The owner then merges, and a docs PR records the merge (D-297). PR-15 follows.
