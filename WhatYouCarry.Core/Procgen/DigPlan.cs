@@ -8,16 +8,17 @@ namespace WhatYouCarry.Core.Procgen;
 
 /// <summary>
 /// The mine dig plan of one floor (D-253): the walkers that dig the gallery, the drifts, the ramps, the chambers,
-/// and the shafts on a <see cref="DigCanvas"/>.
+/// and the shafts on a <see cref="DigCanvas"/>, with the dig sizes of the floor template (D-341, D-342).
 /// </summary>
 /// <remarks>
 /// <para>
 /// The plan is a queue of dig jobs. A job is one walker: it starts on a cell of the dug network, faces one of
-/// the four axis directions, and digs one stamp per step with a brush of a radius, three rows high. The gallery
-/// walker takes the wide brush, and a drift walker takes the three by three brush. On each step the walker can
-/// turn, dig a ramp of one-block steps up or down, start a drift as a new job, or dig the next chamber where it
-/// stands. A walker that can dig in no direction ends its job. When the queue runs dry before every chamber is
-/// dug, a new drift starts from a random cell of the trail, so the plan always has a place to dig from.
+/// the four axis directions, and digs one stamp per step with a square brush of a radius and a height. The gallery
+/// walker takes the gallery width and height of the template, and a drift walker takes the drift width and height.
+/// On each step the walker can turn, dig a ramp of one-block steps up or down, start a drift as a new job, or dig
+/// the next chamber where it stands. A walker that can dig in no direction ends its job. When the queue runs dry
+/// before every chamber is dug, a new drift starts from a random cell of the trail, so the plan always has a place
+/// to dig from.
 /// </para>
 /// <para>
 /// Every unit attaches at a cell the walker stands on, and the canvas refuses a unit that breaks a floor, so
@@ -27,7 +28,8 @@ namespace WhatYouCarry.Core.Procgen;
 /// <para>
 /// The plan keeps, for the detail pass, which walker dug each air cell and which walkers have a dependent: a
 /// chamber, a drift, or a later walker on their trail. A collapse fills the end of a walker with no dependent,
-/// in cells that walker alone dug, so no path to a chamber goes with it (D-253).
+/// in cells that walker alone dug, so no path to a chamber goes with it (D-253). The plan also keeps the center
+/// of every stamp and every ramp landing of a walker, so a check reads each tunnel against the sizes of its template.
 /// </para>
 /// <para>
 /// Every draw comes from the one Procgen stream of the floor, in program order, so one seed gives one plan
@@ -36,21 +38,6 @@ namespace WhatYouCarry.Core.Procgen;
 /// </remarks>
 public sealed class DigPlan
 {
-    /// <summary>The brush radius of the gallery, so the gallery is five blocks wide.</summary>
-    public const int GalleryRadius = 2;
-
-    /// <summary>The brush radius of a drift, so a drift is three blocks wide (D-166).</summary>
-    public const int DriftRadius = 1;
-
-    /// <summary>The height of every tunnel, in air rows (D-166).</summary>
-    public const int TunnelHeight = 3;
-
-    /// <summary>The lowest chamber height, in air rows.</summary>
-    public const int ChamberHeightMin = 3;
-
-    /// <summary>The highest chamber height, in air rows.</summary>
-    public const int ChamberHeightMax = 4;
-
     /// <summary>The shortest ramp, in one-block steps.</summary>
     public const int RampLengthMin = 2;
 
@@ -66,8 +53,10 @@ public sealed class DigPlan
     /// <summary>
     /// The count of jobs before a floor that still lacks a chamber is an error (D-279). The first night measured the
     /// tail on 2026-09-10: of 75000 floors, three needed 615, 1661, and 2817 jobs, and the rest under 300, because
-    /// the last chamber of a crowded floor finds room only after many walkers end at once (F-92). The cap is three
-    /// and a half times that largest need, so a floor past it is a defect and not the tail.
+    /// the last chamber of a crowded floor finds room only after many walkers end at once (F-92). The cap was three
+    /// and a half times that largest need. The dig sizes of D-341 moved the tail on 2026-09-14: the largest need of
+    /// the 175000 night floors is 5890, and 7 of 500000 more floors reach the cap with a chamber in rock (F-98). The
+    /// cap stands until PR-67 digs such a floor again (D-353).
     /// </summary>
     public const int MaxJobs = 10000;
 
@@ -79,11 +68,19 @@ public sealed class DigPlan
     private const int RampChance = 12;
     private const int BranchChance = 10;
 
+    // The job index of the gallery. The first chamber queues the gallery before any drift.
+    private const int GalleryJob = 0;
+
     private readonly Rng rng;
     private readonly DigCanvas canvas;
+    private readonly FloorTemplate template;
     private readonly IReadOnlyList<ChamberKind> kinds;
+    private readonly int galleryRadius;
+    private readonly int driftRadius;
+    private readonly int tallestHeight;
     private readonly List<Chamber> chambers = [];
     private readonly List<Shaft> shafts = [];
+    private readonly List<TunnelStamp> tunnels = [];
     private readonly int[] chamberOf;
     private readonly int[] dugBy;
     private readonly List<Cell> trail = [];
@@ -96,12 +93,17 @@ public sealed class DigPlan
     // The mark of a cell that two walkers dug, or a chamber, in the dug-by map. A job mark is the job index plus one.
     private const int Shared = -1;
 
-    /// <summary>A plan that digs one chamber per kind, in order, on the canvas.</summary>
-    public DigPlan(Rng rng, DigCanvas canvas, IReadOnlyList<ChamberKind> kinds)
+    /// <summary>A plan that digs one chamber per kind, in order, on the canvas, with the dig sizes of the template (D-342).</summary>
+    /// <exception cref="ContextException">A tunnel width of the template is even, which the validator rejects (D-352).</exception>
+    public DigPlan(Rng rng, DigCanvas canvas, FloorTemplate template, IReadOnlyList<ChamberKind> kinds)
     {
         this.rng = rng;
         this.canvas = canvas;
+        this.template = template;
         this.kinds = kinds;
+        this.galleryRadius = RadiusOf(template, "galleryWidth", template.GalleryWidth);
+        this.driftRadius = RadiusOf(template, "driftWidth", template.DriftWidth);
+        this.tallestHeight = TallestHeight(template);
         this.chamberOf = new int[canvas.Grid.SizeX * canvas.Grid.SizeY * canvas.Grid.SizeZ];
         this.dugBy = new int[this.chamberOf.Length];
     }
@@ -112,7 +114,10 @@ public sealed class DigPlan
     /// <summary>The shafts dug so far, in dig order.</summary>
     public IReadOnlyList<Shaft> Shafts => this.shafts;
 
-    /// <summary>The walkers that ended in rock, with the cell and the brush radius of their last stamp. The detail pass fills them with rubble.</summary>
+    /// <summary>The stamps of the gallery and the drifts so far, in dig order: the center of each step and each ramp landing.</summary>
+    public IReadOnlyList<TunnelStamp> Tunnels => this.tunnels;
+
+    /// <summary>The walkers that ended in rock, with the cell, the brush radius, and the height of their last stamp. The detail pass fills them with rubble.</summary>
     public IReadOnlyList<DeadEnd> DeadEnds => this.deadEnds;
 
     /// <summary>Answers whether one walker alone dug the air cell, and no chamber holds it. The detail pass fills such a cell of a dead end.</summary>
@@ -137,7 +142,7 @@ public sealed class DigPlan
         int marginX = this.canvas.Grid.SizeX / 4;
         int marginZ = this.canvas.Grid.SizeZ / 4;
         int lowestRow = DigCanvas.LowestFloorRow;
-        int highestRow = this.canvas.HighestFloorRow(ChamberHeightMax);
+        int highestRow = this.canvas.HighestFloorRow(this.tallestHeight);
         for (int attempt = 0; attempt < MaxFirstChamberTries; attempt++)
         {
             Column anchor = new(
@@ -152,7 +157,7 @@ public sealed class DigPlan
             Cell start = new(anchor.X, floorRow, anchor.Z);
             this.AddTrail(start, -1);
             int direction = this.rng.NextInt(4);
-            this.AddJob(new DigJob(start, StepX(direction), StepZ(direction), GalleryRadius, this.canvas.Grid.SizeX + this.canvas.Grid.SizeZ, 0), -1);
+            this.AddJob(new DigJob(start, StepX(direction), StepZ(direction), this.galleryRadius, this.template.GalleryHeight, this.canvas.Grid.SizeX + this.canvas.Grid.SizeZ, 0), -1);
             return;
         }
 
@@ -180,7 +185,7 @@ public sealed class DigPlan
             {
                 int trailIndex = this.rng.NextInt(this.trail.Count);
                 int direction = this.rng.NextInt(4);
-                this.AddJob(new DigJob(this.trail[trailIndex], StepX(direction), StepZ(direction), DriftRadius, this.DriftLength(), 0), this.trailJobs[trailIndex]);
+                this.AddJob(new DigJob(this.trail[trailIndex], StepX(direction), StepZ(direction), this.driftRadius, this.template.DriftHeight, this.DriftLength(), 0), this.trailJobs[trailIndex]);
             }
 
             DigJob job = this.jobs[this.nextJob];
@@ -217,6 +222,45 @@ public sealed class DigPlan
         return direction == 2 ? 1 : direction == 3 ? -1 : 0;
     }
 
+    /// <summary>
+    /// The brush radius of a tunnel width: the columns on each side of the walker. The validator rejects an even width
+    /// (D-352), so an even one here comes from a template that no validator read, and it is an error and never a
+    /// narrower tunnel (T-2).
+    /// </summary>
+    /// <exception cref="ContextException">The width is even.</exception>
+    private static int RadiusOf(FloorTemplate template, string name, int width)
+    {
+        if (width % 2 == 0)
+        {
+            ContextException error = new($"The floor template '{template.Id}' has an even {name} of {width}, and the brush of a walker is centered on its cell with an odd width alone (D-352).");
+            error.AddContext("floorTemplate", template.Id);
+            error.AddContext(name, ((long)width).ToString(CultureInfo.InvariantCulture));
+            throw error;
+        }
+
+        return (width - 1) / 2;
+    }
+
+    /// <summary>
+    /// The tallest dig height of a template: the highest chamber, or a tunnel that stands taller. A floor row under this
+    /// height has room for every unit that a walker can dig from that row.
+    /// </summary>
+    private static int TallestHeight(FloorTemplate template)
+    {
+        int tallest = template.ChamberHeightMax;
+        if (template.GalleryHeight > tallest)
+        {
+            tallest = template.GalleryHeight;
+        }
+
+        if (template.DriftHeight > tallest)
+        {
+            tallest = template.DriftHeight;
+        }
+
+        return tallest;
+    }
+
     /// <summary>The square stamp of one walker step: every column within the radius, at one floor row.</summary>
     private static List<DigColumn> Stamp(Column center, int floorRow, int radius, int height)
     {
@@ -243,11 +287,18 @@ public sealed class DigPlan
         }
     }
 
-    /// <summary>Adds a walker position to the trail, with the walker that stood there.</summary>
+    /// <summary>
+    /// Adds a walker position to the trail, with the walker that stood there. The position of a walker is the center of
+    /// a stamp or a ramp landing that it dug, so the tunnel list keeps it too. The anchor of the first chamber has no walker.
+    /// </summary>
     private void AddTrail(Cell position, int jobIndex)
     {
         this.trail.Add(position);
         this.trailJobs.Add(jobIndex);
+        if (jobIndex >= 0)
+        {
+            this.tunnels.Add(new TunnelStamp(position, jobIndex == GalleryJob));
+        }
     }
 
     /// <summary>The length of one drift, in steps.</summary>
@@ -284,14 +335,14 @@ public sealed class DigPlan
                 directionZ = turnedZ;
             }
 
-            if (stamped && this.rng.NextInt(RampChance) == 0 && this.TryDigRamp(position, directionX, directionZ, job.Radius, jobIndex, out Cell afterRamp))
+            if (stamped && this.rng.NextInt(RampChance) == 0 && this.TryDigRamp(position, directionX, directionZ, job, jobIndex, out Cell afterRamp))
             {
                 position = afterRamp;
                 this.AddTrail(position, jobIndex);
                 continue;
             }
 
-            if (!this.TryDigStep(position, ref directionX, ref directionZ, job.Radius, jobIndex, out Cell next))
+            if (!this.TryDigStep(position, ref directionX, ref directionZ, job, jobIndex, out Cell next))
             {
                 break;
             }
@@ -316,14 +367,14 @@ public sealed class DigPlan
                 bool left = this.rng.NextInt(2) == 0;
                 int branchX = left ? -directionZ : directionZ;
                 int branchZ = left ? directionX : -directionX;
-                this.AddJob(new DigJob(position, branchX, branchZ, DriftRadius, this.DriftLength(), job.Depth + 1), jobIndex);
+                this.AddJob(new DigJob(position, branchX, branchZ, this.driftRadius, this.template.DriftHeight, this.DriftLength(), job.Depth + 1), jobIndex);
             }
         }
 
         // The walker ended where it stands, in a stamp of its own or in a chamber. A chamber cell is never a dead end.
         if (stamped && this.chamberOf[this.Index(position.X, position.Y + 1, position.Z)] == 0)
         {
-            this.deadEnds.Add(new DeadEnd(position, job.Radius, jobIndex));
+            this.deadEnds.Add(new DeadEnd(position, job.Radius, job.Height, jobIndex));
         }
     }
 
@@ -331,7 +382,7 @@ public sealed class DigPlan
     /// Digs one flat step in the facing direction, or after a turn when the facing direction is blocked: left,
     /// then right, then back. Gives false when every direction is blocked.
     /// </summary>
-    private bool TryDigStep(Cell position, ref int directionX, ref int directionZ, int radius, int jobIndex, out Cell next)
+    private bool TryDigStep(Cell position, ref int directionX, ref int directionZ, DigJob job, int jobIndex, out Cell next)
     {
         int[] quarterTurns = [0, 1, 3, 2];
         foreach (int quarter in quarterTurns)
@@ -339,7 +390,7 @@ public sealed class DigPlan
             int stepX = quarter == 0 ? directionX : quarter == 1 ? -directionZ : quarter == 2 ? -directionX : directionZ;
             int stepZ = quarter == 0 ? directionZ : quarter == 1 ? directionX : quarter == 2 ? -directionZ : -directionX;
             Column center = new(position.X + stepX, position.Z + stepZ);
-            List<DigColumn> unit = Stamp(center, position.Y, radius, TunnelHeight);
+            List<DigColumn> unit = Stamp(center, position.Y, job.Radius, job.Height);
             if (this.canvas.CanCarve(unit))
             {
                 this.MarkDug(unit, jobIndex);
@@ -361,24 +412,26 @@ public sealed class DigPlan
     /// then stands in a landing that has the shape of a flat stamp, so the next step or ramp meets the new floor
     /// row alone and leaves no gap.
     /// </summary>
-    private bool TryDigRamp(Cell position, int directionX, int directionZ, int radius, int jobIndex, out Cell after)
+    private bool TryDigRamp(Cell position, int directionX, int directionZ, DigJob job, int jobIndex, out Cell after)
     {
         int length = RampLengthMin + this.rng.NextInt(RampLengthMax - RampLengthMin + 1);
         int stepY = this.rng.NextInt(2) == 0 ? -1 : 1;
         int endRow = position.Y + (stepY * length);
-        if (endRow < DigCanvas.LowestFloorRow || endRow > this.canvas.HighestFloorRow(ChamberHeightMax))
+        int highestRow = this.canvas.HighestFloorRow(this.tallestHeight);
+        if (endRow < DigCanvas.LowestFloorRow || endRow > highestRow)
         {
             stepY = -stepY;
             endRow = position.Y + (stepY * length);
         }
 
-        if (endRow < DigCanvas.LowestFloorRow || endRow > this.canvas.HighestFloorRow(ChamberHeightMax))
+        if (endRow < DigCanvas.LowestFloorRow || endRow > highestRow)
         {
             after = position;
             return false;
         }
 
         List<DigColumn> unit = [];
+        int radius = job.Radius;
         int landingCenter = (2 * radius) + length + 1;
         int landingEnd = landingCenter + radius;
         for (int distance = radius + 1; distance <= landingEnd; distance++)
@@ -390,7 +443,7 @@ public sealed class DigPlan
             for (int across = -radius; across <= radius; across++)
             {
                 // Across is at a right angle to the direction: it runs along Z on an X walk, and along X on a Z walk.
-                unit.Add(new DigColumn(alongX + (directionZ * across), alongZ + (directionX * across), floorRow, TunnelHeight));
+                unit.Add(new DigColumn(alongX + (directionZ * across), alongZ + (directionX * across), floorRow, job.Height));
             }
         }
 
@@ -411,7 +464,7 @@ public sealed class DigPlan
     {
         ChamberKind kind = this.kinds[this.chambers.Count];
         IReadOnlyList<Column> footprint = ChamberFootprint.Make(this.rng, kind, anchor);
-        int height = ChamberHeightMin + this.rng.NextInt(ChamberHeightMax - ChamberHeightMin + 1);
+        int height = this.template.ChamberHeightMin + this.rng.NextInt(this.template.ChamberHeightMax - this.template.ChamberHeightMin + 1);
 
         List<DigColumn> unit = [];
         foreach (Column column in footprint)
@@ -542,8 +595,8 @@ public sealed class DigPlan
     }
 }
 
-/// <summary>The end of a walker in rock: the cell it stood on, the radius of its brush, and its job index.</summary>
-public readonly record struct DeadEnd(Cell End, int Radius, int Job);
+/// <summary>The end of a walker in rock: the cell it stood on, the radius and the height of its brush, and its job index.</summary>
+public readonly record struct DeadEnd(Cell End, int Radius, int Height, int Job);
 
-/// <summary>One walker: where it starts, which axis direction it faces, its brush radius, its length in steps, and its drift generation.</summary>
-public readonly record struct DigJob(Cell Start, int DirectionX, int DirectionZ, int Radius, int Length, int Depth);
+/// <summary>One walker: where it starts, which axis direction it faces, its brush radius and height, its length in steps, and its drift generation.</summary>
+public readonly record struct DigJob(Cell Start, int DirectionX, int DirectionZ, int Radius, int Height, int Length, int Depth);

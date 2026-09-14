@@ -28,9 +28,10 @@ public sealed class BitIdentityTests
     /// the PR #31 review moved it again when the spread draw became one angle and one roll inside the cone (F-87).
     /// PR-11 moved it from `d8943df12fefcbee` when the sweep gained the Bot stream (D-272). PR-15 moved it from
     /// `6ec00e90c1c85cdb` when the state gained the player and the run end kind, the sweep intents began to swing and roll,
-    /// and the sweep gained a projectile run and the arc test (D-320, D-322, D-325).
+    /// and the sweep gained a projectile run and the arc test (D-320, D-322, D-325). PR-63 moved it from `2258ba8b9cc94b3f`
+    /// when the sweep floors took the dig sizes of D-341 and the simulation version rose to 8 (D-342, G-20).
     /// </remarks>
-    private const string ExpectedHash = "2258ba8b9cc94b3f";
+    private const string ExpectedHash = "b00814dbf25e61e8";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

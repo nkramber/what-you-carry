@@ -2,11 +2,17 @@
   "id": "mine-deep",
   "minDepth": 11,
   "maxDepth": 15,
-  "roomCountMin": 11,
-  "roomCountMax": 17,
-  "difficultyBudget": 400,
+  "roomCountMin": 5,
+  "roomCountMax": 9,
+  "difficultyBudget": 100,
   "band": "what-the-miners-reached",
-  "sizeX": 96,
+  "sizeX": 64,
   "sizeY": 20,
-  "sizeZ": 96
+  "sizeZ": 64,
+  "galleryWidth": 7,
+  "galleryHeight": 5,
+  "driftWidth": 5,
+  "driftHeight": 4,
+  "chamberHeightMin": 5,
+  "chamberHeightMax": 8
 }

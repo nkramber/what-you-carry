@@ -21,9 +21,9 @@ namespace WhatYouCarry.Core.Procgen;
 /// A pool is a small rectangle of chamber floor cells that turn to still water, over rock. Every pool cell keeps
 /// a dry floor cell of the chamber beside it, so a body leaves the pool by one jump (D-258, D-262). A pillar is
 /// one column of a chamber whose eight neighbors are chamber floor, so the chamber stays one connected floor. A
-/// collapse fills the last stamp of a walker that ended in rock with a heap of rubble, one to three rows high.
-/// It touches only a walker with no dependent, in cells that this walker alone dug, so no other walker, chamber,
-/// or drift loses its way.
+/// collapse fills the last stamp of a walker that ended in rock with a heap of rubble, from one row to the height
+/// of its tunnel. It touches only a walker with no dependent, in cells that this walker alone dug, so no other
+/// walker, chamber, or drift loses its way.
 /// </para>
 /// <para>
 /// Every draw comes from the Procgen stream of the floor, after the dig, in scan order (D-159).
@@ -81,9 +81,9 @@ public static class DetailPass
     }
 
     /// <summary>
-    /// Fills the last stamp of each walker that ended in rock with rubble, one to three rows high per column. A
-    /// walker with a dependent stays open, and so does a dead end whose stamp holds a cell of another walker or
-    /// of a chamber.
+    /// Fills the last stamp of each walker that ended in rock with rubble, from one row to the height of its tunnel
+    /// per column. A walker with a dependent stays open, and so does a dead end whose stamp holds a cell of another
+    /// walker or of a chamber.
     /// </summary>
     private static List<Cell> CollapseDeadEnds(Rng rng, DigCanvas canvas, DigPlan plan)
     {
@@ -101,7 +101,7 @@ public static class DetailPass
             {
                 for (int x = deadEnd.End.X - deadEnd.Radius; x <= deadEnd.End.X + deadEnd.Radius && safe; x++)
                 {
-                    for (int y = deadEnd.End.Y + 1; y <= deadEnd.End.Y + DigPlan.TunnelHeight; y++)
+                    for (int y = deadEnd.End.Y + 1; y <= deadEnd.End.Y + deadEnd.Height; y++)
                     {
                         if (!canvas.IsAir(x, y, z))
                         {
@@ -129,7 +129,7 @@ public static class DetailPass
             int[] heights = new int[side * side];
             for (int index = 0; index < heights.Length; index++)
             {
-                heights[index] = 1 + rng.NextInt(DigPlan.TunnelHeight);
+                heights[index] = 1 + rng.NextInt(deadEnd.Height);
             }
 
             foreach (Cell cell in region)

@@ -99,18 +99,19 @@ public static class BitIdentitySweep
     }
 
     /// <summary>
-    /// The content set of the sweep: three templates on a small grid, one per band of D-210 on floors 1, 2, and
-    /// 3, two chamber kinds whose weights fill the budget, one projectile definition with a spread for the projectile
-    /// run, and one weapon definition, which the attack bit of the sweep intents swings (D-320). The three swept
-    /// floors then take every block of the detail pass. The hash of the set has no meaning beyond its shape (D-221).
+    /// The content set of the sweep: three templates on a small grid with the dig sizes of D-341, one per band of
+    /// D-210 on floors 1, 2, and 3, two chamber kinds whose weights fill the budget, one projectile definition with a
+    /// spread for the projectile run, and one weapon definition, which the attack bit of the sweep intents swings
+    /// (D-320). The three swept floors then take every block of the detail pass, and a gallery and drifts of two
+    /// heights. The hash of the set has no meaning beyond its shape (D-221).
     /// </summary>
     public static ContentSet SweepContent()
     {
         FloorTemplate[] floors =
         [
-            new("sweep-working", 1, 1, 4, 8, 100, DetailPass.WorkingMine, 32, 12, 32),
-            new("sweep-older", 2, 2, 4, 8, 100, DetailPass.OlderWorkings, 32, 12, 32),
-            new("sweep-deep", 3, 3, 4, 8, 100, DetailPass.Deep, 32, 12, 32),
+            new("sweep-working", 1, 1, 4, 8, 100, DetailPass.WorkingMine, 32, 12, 32, 7, 5, 5, 4, 5, 8),
+            new("sweep-older", 2, 2, 4, 8, 100, DetailPass.OlderWorkings, 32, 12, 32, 7, 5, 5, 4, 5, 8),
+            new("sweep-deep", 3, 3, 4, 8, 100, DetailPass.Deep, 32, 12, 32, 7, 5, 5, 4, 5, 8),
         ];
         ChamberKind[] kinds =
         [

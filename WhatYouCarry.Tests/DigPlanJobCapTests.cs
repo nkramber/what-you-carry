@@ -9,17 +9,21 @@ namespace WhatYouCarry.Tests;
 
 /// <summary>
 /// The job cap of the dig plan holds the measured tail (D-279, F-92). The first night found three floors that
-/// needed more than the 400 jobs of the first cap, and each crashed the run. This test digs those floors and
-/// fails on the old cap.
+/// needed more than the 400 jobs of the first cap, and each crashed the run. The dig sizes of PR-63 moved the
+/// tail (D-341, D-343, D-344): of the 175000 floors of the two night sets, the largest need was 5890 jobs on
+/// 2026-09-14. This test digs the three floors of the largest need, and it fails on the old cap.
 /// </summary>
 public sealed class DigPlanJobCapTests
 {
-    /// <summary>The three floors of the first night that passed 400 jobs, with the job count each needed on 2026-09-10.</summary>
+    /// <summary>
+    /// The three floors of the largest job count on 2026-09-14, over the floors that the night digs: seeds 1 to 5000
+    /// on floors 1 to 15 for the bot sweep, and seeds 1 to 100000 on the floor of the reachability sweep.
+    /// </summary>
     public static readonly (ulong Seed, int Floor, int Jobs)[] TailFloors =
     [
-        (2170UL, 10, 2817),
-        (3000UL, 4, 1661),
-        (4786UL, 10, 615),
+        (43783UL, 14, 5890),
+        (62900UL, 6, 5662),
+        (1365UL, 13, 5568),
     ];
 
     /// <summary>Each tail floor digs every chamber of its budget, needs more jobs than the first cap of 400, and stays under the cap.</summary>
@@ -56,7 +60,7 @@ public sealed class DigPlanJobCapTests
         IReadOnlyList<ChamberKind> kinds = ChamberBudget.Draw(rng, template, content.Chambers);
         VoxelGrid grid = new(template.SizeX, template.SizeY, template.SizeZ);
         DigCanvas canvas = new(grid);
-        DigPlan plan = new(rng, canvas, kinds);
+        DigPlan plan = new(rng, canvas, template, kinds);
         plan.DigFirstChamber();
         int jobs = plan.DigUntilComplete();
         chambers = plan.Chambers.Count;

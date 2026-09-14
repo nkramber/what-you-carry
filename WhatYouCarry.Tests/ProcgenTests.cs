@@ -11,7 +11,7 @@ using Xunit;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The floor generator, the dig canvas, the chamber budget, the footprint, and the reachability search (D-159, D-165 to D-167, D-252 to D-256; PR-9 exit tests 1 to 7).</summary>
+/// <summary>The floor generator, the dig canvas, the chamber budget, the footprint, and the reachability search (D-159, D-165 to D-167, D-252 to D-256, D-341 to D-344, D-352; PR-9 exit tests 1 to 7, PR-63 exit tests 1 and 2).</summary>
 public sealed class ProcgenTests
 {
     /// <summary>The environment variable that the night job sets to run the night seed counts (D-116).</summary>
@@ -317,51 +317,93 @@ public sealed class ProcgenTests
         }
     }
 
+    /// <summary>The count of cells that a three by three window reaches past its cell on each axis.</summary>
+    private const int WindowReach = 2;
+
     /// <summary>
-    /// PR-9 exit test 5. Over one thousand seeds, every tunnel air cell sits inside an air cross-section three
-    /// blocks wide and three blocks high (D-166). A chamber cell beside a pillar and a cell of a collapsed dead
-    /// end are not tunnel cells, so the check steps over them (PR-59).
+    /// PR-63 exit test 2 and PR-9 exit test 5. Over one thousand seeds, every stamp of the gallery is air over the
+    /// gallery width and height of its template, and every stamp of a drift is air over the drift width and height
+    /// (D-341, D-342). Every tunnel air cell also sits inside an air cross-section three blocks wide and three blocks
+    /// high (D-166). A pillar and the rubble of a collapse fill cells on purpose, so both checks step over them (PR-59).
     /// </summary>
     [Fact]
     public void TunnelCrossSection()
     {
+        int galleryStamps = 0;
+        int driftStamps = 0;
         for (int seed = 1; seed <= PropertySeeds; seed++)
         {
             FloorPlan plan = Plan(seed);
             VoxelGrid grid = plan.Grid;
-            HashSet<Cell> outside = [];
-            foreach (Chamber chamber in plan.Chambers)
+            FloorTemplate template = plan.Template;
+            HashSet<Cell> collapses = [.. plan.Detail.Collapses];
+            HashSet<Column> pillarColumns = [];
+            foreach (Cell pillar in plan.Detail.Pillars)
             {
-                foreach (Cell cell in chamber.AirCells())
-                {
-                    outside.Add(cell);
-                }
+                pillarColumns.Add(new Column(pillar.X, pillar.Z));
             }
 
-            foreach (Cell cell in plan.Detail.Collapses)
+            // The size of each stamp comes from the template, and not from the plan, so a plan that digs another size fails.
+            BlockId pillarBlock = DetailPass.PillarBlock(template.Band);
+            foreach (TunnelStamp stamp in plan.Tunnels)
             {
-                for (int dz = -DigPlan.GalleryRadius; dz <= DigPlan.GalleryRadius; dz++)
+                string tunnel = stamp.Gallery ? "gallery" : "drift";
+                int width = stamp.Gallery ? template.GalleryWidth : template.DriftWidth;
+                int height = stamp.Gallery ? template.GalleryHeight : template.DriftHeight;
+                galleryStamps += stamp.Gallery ? 1 : 0;
+                driftStamps += stamp.Gallery ? 0 : 1;
+                for (int z = stamp.Center.Z - (width / 2); z <= stamp.Center.Z + (width / 2); z++)
                 {
-                    for (int dx = -DigPlan.GalleryRadius; dx <= DigPlan.GalleryRadius; dx++)
+                    for (int x = stamp.Center.X - (width / 2); x <= stamp.Center.X + (width / 2); x++)
                     {
-                        for (int dy = -DigPlan.TunnelHeight; dy <= DigPlan.TunnelHeight; dy++)
+                        for (int y = stamp.Center.Y + 1; y <= stamp.Center.Y + height; y++)
                         {
-                            outside.Add(new Cell(cell.X + dx, cell.Y + dy, cell.Z + dz));
+                            BlockId block = grid.Get(x, y, z);
+                            if (block == BlockId.Air || collapses.Contains(new Cell(x, y, z)) || (block == pillarBlock && pillarColumns.Contains(new Column(x, z))))
+                            {
+                                continue;
+                            }
+
+                            Assert.Fail($"Seed {seed}, floor {plan.Floor}: the {tunnel} stamp at {stamp.Center} holds {block} at ({x}, {y}, {z}), inside its {width} by {height} blocks.");
                         }
                     }
                 }
             }
 
-            // A pillar cuts the windows of the cells around it, and a pool cell is water under chamber air.
+            // No window of a cell reads past the window reach, so a rubble cell cuts the windows of the cells within
+            // that reach alone. A pillar cuts the windows of the columns around it, and a pool cell is water under chamber air.
+            bool[] outside = new bool[grid.SizeX * grid.SizeY * grid.SizeZ];
+            foreach (Chamber chamber in plan.Chambers)
+            {
+                foreach (Cell cell in chamber.AirCells())
+                {
+                    MarkOutside(outside, grid, cell.X, cell.Y, cell.Z);
+                }
+            }
+
+            foreach (Cell cell in plan.Detail.Collapses)
+            {
+                for (int dz = -WindowReach; dz <= WindowReach; dz++)
+                {
+                    for (int dx = -WindowReach; dx <= WindowReach; dx++)
+                    {
+                        for (int dy = -WindowReach; dy <= WindowReach; dy++)
+                        {
+                            MarkOutside(outside, grid, cell.X + dx, cell.Y + dy, cell.Z + dz);
+                        }
+                    }
+                }
+            }
+
             foreach (Cell pillar in plan.Detail.Pillars)
             {
-                for (int dz = -2; dz <= 2; dz++)
+                for (int dz = -WindowReach; dz <= WindowReach; dz++)
                 {
-                    for (int dx = -2; dx <= 2; dx++)
+                    for (int dx = -WindowReach; dx <= WindowReach; dx++)
                     {
                         for (int y = 0; y < grid.SizeY; y++)
                         {
-                            outside.Add(new Cell(pillar.X + dx, y, pillar.Z + dz));
+                            MarkOutside(outside, grid, pillar.X + dx, y, pillar.Z + dz);
                         }
                     }
                 }
@@ -373,13 +415,31 @@ public sealed class ProcgenTests
                 {
                     for (int x = 0; x < grid.SizeX; x++)
                     {
-                        if (!grid.IsSolid(x, y, z) && grid.Get(x, y, z) != BlockId.StillWater && !outside.Contains(new Cell(x, y, z)))
+                        bool tunnelAir = !grid.IsSolid(x, y, z) && grid.Get(x, y, z) != BlockId.StillWater && !outside[CellIndex(grid, x, y, z)];
+                        if (tunnelAir && !HasCrossSection(grid, x, y, z))
                         {
-                            Assert.True(HasCrossSection(grid, x, y, z), $"Seed {seed}, floor {plan.Floor}: the air cell ({x}, {y}, {z}) has no three by three window of air.");
+                            Assert.Fail($"Seed {seed}, floor {plan.Floor}: the air cell ({x}, {y}, {z}) has no three by three window of air.");
                         }
                     }
                 }
             }
+        }
+
+        Assert.True(galleryStamps > 0 && driftStamps > 0, $"The sweep saw {galleryStamps} gallery stamps and {driftStamps} drift stamps.");
+    }
+
+    /// <summary>The array index of one cell: x fastest, then z, then y, as the grid stores it.</summary>
+    private static int CellIndex(VoxelGrid grid, int x, int y, int z)
+    {
+        return x + (grid.SizeX * (z + (grid.SizeZ * y)));
+    }
+
+    /// <summary>Marks one cell as outside the cross-section check. A cell past the grid needs no mark.</summary>
+    private static void MarkOutside(bool[] outside, VoxelGrid grid, int x, int y, int z)
+    {
+        if (grid.Contains(x, y, z))
+        {
+            outside[x + (grid.SizeX * (z + (grid.SizeZ * y)))] = true;
         }
     }
 
@@ -494,25 +554,31 @@ public sealed class ProcgenTests
         Assert.Contains("band=sunlit-meadow", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>PR-9 exit test 6. Floor 15 is larger than floor 1 for one seed, and each band carries its size (D-252).</summary>
+    /// <summary>A template that no validator read, with an even tunnel width, stops the dig with an error that names the width, and never digs a narrower tunnel (D-352, T-2).</summary>
     [Fact]
-    public void FloorSizeGrowsWithDepth()
+    public void AnEvenTunnelWidthStopsThePlan()
     {
-        for (int seed = 1; seed <= 20; seed++)
+        FloorTemplate even = FloorGenerator.TemplateFor(1, TestWorld.Content) with { Id = "even", DriftWidth = 6 };
+        List<FloorTemplate> floors = [even];
+        ContentSet content = TestWorld.Content with { Floors = floors };
+        ContextException error = Assert.Throws<ContextException>(() => FloorGenerator.Generate(1UL, 1, content));
+        Assert.Contains("driftWidth=6", error.Message, StringComparison.Ordinal);
+        Assert.Contains("floorTemplate=even", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>PR-9 exit test 6, as D-343 revises it. Floors 1 to 15 dig one grid of 64 by 20 by 64 for each seed, and the grid takes the size of its template.</summary>
+    [Fact]
+    public void EveryBandHasOneFloorSize()
+    {
+        for (int seed = 1; seed <= 4; seed++)
         {
-            FloorPlan shallow = FloorGenerator.Generate((ulong)seed, 1, TestWorld.Content);
-            FloorPlan middle = FloorGenerator.Generate((ulong)seed, 8, TestWorld.Content);
-            FloorPlan deep = FloorGenerator.Generate((ulong)seed, 15, TestWorld.Content);
-
-            long shallowCells = (long)shallow.Grid.SizeX * shallow.Grid.SizeY * shallow.Grid.SizeZ;
-            long middleCells = (long)middle.Grid.SizeX * middle.Grid.SizeY * middle.Grid.SizeZ;
-            long deepCells = (long)deep.Grid.SizeX * deep.Grid.SizeY * deep.Grid.SizeZ;
-            Assert.True(shallowCells < middleCells && middleCells < deepCells, $"Seed {seed}: the floors hold {shallowCells}, {middleCells}, and {deepCells} cells.");
-
-            Assert.Equal(48, shallow.Grid.SizeX);
-            Assert.Equal(12, shallow.Grid.SizeY);
-            Assert.Equal(96, deep.Grid.SizeX);
-            Assert.Equal(20, deep.Grid.SizeY);
+            for (int floor = 1; floor <= 15; floor++)
+            {
+                FloorPlan plan = FloorGenerator.Generate((ulong)seed, floor, TestWorld.Content);
+                string context = $"Seed {seed}, floor {floor}, template '{plan.Template.Id}'";
+                Assert.True(plan.Grid.SizeX == 64 && plan.Grid.SizeY == 20 && plan.Grid.SizeZ == 64, $"{context}: the grid is {plan.Grid.SizeX} by {plan.Grid.SizeY} by {plan.Grid.SizeZ}.");
+                Assert.True(plan.Grid.SizeX == plan.Template.SizeX && plan.Grid.SizeY == plan.Template.SizeY && plan.Grid.SizeZ == plan.Template.SizeZ, $"{context}: the grid does not take the size of its template.");
+            }
         }
     }
 
@@ -621,7 +687,7 @@ public sealed class ProcgenTests
             }
         }
 
-        FloorTemplate tight = new("tight", 1, 1, 1, 1, 10, "test", 24, 12, 24);
+        FloorTemplate tight = new("tight", 1, 1, 1, 1, 10, "test", 24, 12, 24, 7, 5, 5, 4, 5, 8);
         ChamberKind heavy = new("heavy", 100, 1, 1, 3, 3);
         ContextException error = Assert.Throws<ContextException>(() => ChamberBudget.Draw(Rng.ForStream(1UL, RngStream.Procgen, 1), tight, [heavy]));
         Assert.Contains("floorTemplate=tight", error.Message, StringComparison.Ordinal);

@@ -27,7 +27,7 @@ public sealed class ContentTests
     }
 
     private const string Floor = """
-        {"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48}
+        {"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8}
         """;
 
     private const string ChamberKindText = """
@@ -47,7 +47,7 @@ public sealed class ContentTests
     public void AbsentFieldNamesField()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48}""")
+            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -68,6 +68,12 @@ public sealed class ContentTests
     [InlineData("sizeX")]
     [InlineData("sizeY")]
     [InlineData("sizeZ")]
+    [InlineData("galleryWidth")]
+    [InlineData("galleryHeight")]
+    [InlineData("driftWidth")]
+    [InlineData("driftHeight")]
+    [InlineData("chamberHeightMin")]
+    [InlineData("chamberHeightMax")]
     public void EveryRequiredFloorFieldIsRequired(string omitted)
     {
         List<JsonMember> members = [];
@@ -88,7 +94,7 @@ public sealed class ContentTests
     public void UnknownFieldFails()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"extra":1}""")
+            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"extra":1}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -286,7 +292,7 @@ public sealed class ContentTests
     public void AFieldOfTheWrongKindIsAnError()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":1,"minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48}""")
+            .Add("floors/a.json", """{"id":1,"minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -399,7 +405,7 @@ public sealed class ContentTests
     [Theory]
     [InlineData("\"sizeX\":48", "\"sizeX\":23", "sizeX")]
     [InlineData("\"sizeX\":48", "\"sizeX\":129", "sizeX")]
-    [InlineData("\"sizeY\":12", "\"sizeY\":6", "sizeY")]
+    [InlineData("\"sizeY\":12", "\"sizeY\":5", "sizeY")]
     [InlineData("\"sizeY\":12", "\"sizeY\":33", "sizeY")]
     [InlineData("\"sizeZ\":48", "\"sizeZ\":0", "sizeZ")]
     [InlineData("\"difficultyBudget\":100", "\"difficultyBudget\":9", "difficultyBudget")]
@@ -411,6 +417,34 @@ public sealed class ContentTests
         ContextException error = Assert.Throws<ContextException>(
             () => FloorTemplate.FromMembers("floors/a.json", JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(text))));
         Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// PR-63 exit test 3. On a floor of 48 by 12 by 48, a dig size under the three blocks of D-166, an even tunnel width,
+    /// a width past the shell, a height past the rows of the floor, and a chamber height range upside down are each an
+    /// error that names the field and the reason (D-342, D-352).
+    /// </summary>
+    [Theory]
+    [InlineData("\"galleryWidth\":7", "\"galleryWidth\":1", "galleryWidth", "is from 3 to 46")]
+    [InlineData("\"galleryWidth\":7", "\"galleryWidth\":6", "galleryWidth", "is odd")]
+    [InlineData("\"galleryWidth\":7", "\"galleryWidth\":47", "galleryWidth", "is from 3 to 46")]
+    [InlineData("\"galleryHeight\":5", "\"galleryHeight\":2", "galleryHeight", "is from 3 to 9")]
+    [InlineData("\"driftWidth\":5", "\"driftWidth\":2", "driftWidth", "is from 3 to 46")]
+    [InlineData("\"driftWidth\":5", "\"driftWidth\":4", "driftWidth", "is odd")]
+    [InlineData("\"driftHeight\":4", "\"driftHeight\":2", "driftHeight", "is from 3 to 9")]
+    [InlineData("\"driftHeight\":4", "\"driftHeight\":10", "driftHeight", "is from 3 to 9")]
+    [InlineData("\"chamberHeightMin\":5", "\"chamberHeightMin\":2", "chamberHeightMin", "is from 3 to 9")]
+    [InlineData("\"chamberHeightMax\":8", "\"chamberHeightMax\":10", "chamberHeightMax", "is from 3 to 9")]
+    [InlineData("\"chamberHeightMin\":5", "\"chamberHeightMin\":9", "chamberHeightMin", "is above chamberHeightMax")]
+    public void ADigSizeOutsideItsBoundsIsAnError(string from, string to, string field, string reason)
+    {
+        string text = Floor.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(Floor, text);
+
+        ContextException error = Assert.Throws<ContextException>(
+            () => FloorTemplate.FromMembers("floors/a.json", JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+        Assert.Contains(reason, error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>Two chamber kinds with one id are an error, because the draw would take either one.</summary>
@@ -425,12 +459,26 @@ public sealed class ContentTests
         Assert.Contains("two chamber kinds", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>The chamber kinds of the checkout load with their weights, and the floors carry their sizes by band (D-252, D-255).</summary>
+    /// <summary>
+    /// The chamber kinds of the checkout load with their weights and the box ranges of D-341. Every floor template
+    /// carries the one floor size of D-343, the dig sizes of D-341, and the room count and budget of D-344 (D-255).
+    /// </summary>
     [Fact]
     public void TheChamberKindsAndFloorSizesLoad()
     {
         ContentSet set = TestWorld.Content;
 
+        Dictionary<string, (int Min, int Max)> boxSizes = new()
+        {
+            ["crosscut-junction"] = (5, 8),
+            ["stope"] = (6, 11),
+            ["cavern"] = (8, 14),
+            ["great-stope"] = (9, 15),
+            ["lamp-room"] = (5, 8),
+            ["ore-bin"] = (8, 12),
+            ["powder-magazine"] = (5, 8),
+            ["pump-chamber"] = (9, 12),
+        };
         long lightest = long.MaxValue;
         long heaviest = 0;
         foreach (ChamberKind kind in set.Chambers)
@@ -438,18 +486,22 @@ public sealed class ContentTests
             lightest = Math.Min(lightest, kind.Weight);
             heaviest = Math.Max(heaviest, kind.Weight);
             Assert.True(kind.BoxSizeMin >= ChamberKind.SmallestBoxSide, $"The kind '{kind.Id}' has a box side of {kind.BoxSizeMin}, below the tunnel width.");
+            Assert.True(boxSizes.TryGetValue(kind.Id, out (int Min, int Max) sizes), $"The kind '{kind.Id}' has no box range in D-341.");
+            Assert.True(kind.BoxSizeMin == sizes.Min && kind.BoxSizeMax == sizes.Max, $"The kind '{kind.Id}' has boxes of {kind.BoxSizeMin} to {kind.BoxSizeMax}, and D-341 names {sizes.Min} to {sizes.Max}.");
         }
 
         Assert.Equal(8, lightest);
         Assert.Equal(40, heaviest);
+        Assert.Equal(boxSizes.Count, set.Chambers.Count);
 
         foreach (FloorTemplate floor in set.Floors)
         {
-            int expected = floor.MinDepth == 1 ? 48 : floor.MinDepth == 6 ? 72 : 96;
-            int expectedHeight = floor.MinDepth == 1 ? 12 : floor.MinDepth == 6 ? 16 : 20;
-            Assert.Equal(expected, floor.SizeX);
-            Assert.Equal(expectedHeight, floor.SizeY);
-            Assert.Equal(expected, floor.SizeZ);
+            string context = $"The template '{floor.Id}'";
+            Assert.True(floor.SizeX == 64 && floor.SizeY == 20 && floor.SizeZ == 64, $"{context} is {floor.SizeX} by {floor.SizeY} by {floor.SizeZ}.");
+            Assert.True(floor.GalleryWidth == 7 && floor.GalleryHeight == 5, $"{context} has a gallery of {floor.GalleryWidth} by {floor.GalleryHeight}.");
+            Assert.True(floor.DriftWidth == 5 && floor.DriftHeight == 4, $"{context} has a drift of {floor.DriftWidth} by {floor.DriftHeight}.");
+            Assert.True(floor.ChamberHeightMin == 5 && floor.ChamberHeightMax == 8, $"{context} has chambers {floor.ChamberHeightMin} to {floor.ChamberHeightMax} high.");
+            Assert.True(floor.RoomCountMin == 5 && floor.RoomCountMax == 9 && floor.DifficultyBudget == 100, $"{context} holds {floor.RoomCountMin} to {floor.RoomCountMax} rooms with a budget of {floor.DifficultyBudget}.");
         }
     }
 
