@@ -6,7 +6,7 @@ using WhatYouCarry.Core.World;
 namespace WhatYouCarry.Core.Procgen;
 
 /// <summary>
-/// One dug floor (D-253, D-256): the grid, the spawn point, the stairwell cell, the chambers, and the shafts.
+/// One dug floor (D-253, D-256): the grid, the spawn point, the stairwell cell, the chambers, the tunnels, and the shafts.
 /// </summary>
 /// <param name="Floor">The floor number, from one (D-3).</param>
 /// <param name="Template">The floor template of the band that holds the floor (D-252).</param>
@@ -14,9 +14,10 @@ namespace WhatYouCarry.Core.Procgen;
 /// <param name="Spawn">The feet center of the player at tick zero: the center of the anchor cell of the first chamber (D-256).</param>
 /// <param name="Stairwell">The floor cell of the stairwell: the cell with the longest walkable path from the spawn, in the chamber that lies farthest (D-256).</param>
 /// <param name="Chambers">The chambers, in dig order. The first one holds the spawn.</param>
+/// <param name="Tunnels">The stamps of the gallery and the drifts, in dig order (D-341, D-342).</param>
 /// <param name="Shafts">The shafts, in dig order.</param>
 /// <param name="Detail">The pools, the pillars, and the collapses of the detail pass (D-254).</param>
-public sealed record FloorPlan(int Floor, FloorTemplate Template, VoxelGrid Grid, Vector3 Spawn, Cell Stairwell, IReadOnlyList<Chamber> Chambers, IReadOnlyList<Shaft> Shafts, DetailResult Detail);
+public sealed record FloorPlan(int Floor, FloorTemplate Template, VoxelGrid Grid, Vector3 Spawn, Cell Stairwell, IReadOnlyList<Chamber> Chambers, IReadOnlyList<TunnelStamp> Tunnels, IReadOnlyList<Shaft> Shafts, DetailResult Detail);
 
 /// <summary>
 /// One chamber of a floor (D-253, D-255). Its air fills the rows above <paramref name="FloorRow"/> over every
@@ -55,3 +56,11 @@ public sealed record Chamber(int Index, ChamberKind Kind, int FloorRow, int Heig
 /// <param name="TopRow">The floor row of the chamber, which is the highest row the shaft removed.</param>
 /// <param name="LandingAirRow">The top air row of the space below, which the shaft joins.</param>
 public sealed record Shaft(int ChamberIndex, Column Center, int TopRow, int LandingAirRow);
+
+/// <summary>
+/// One stamp of a tunnel (D-253, D-341): the cell that a walker stood on after a step or a ramp landing. The air of the
+/// stamp fills the square of the tunnel width around that cell, over the tunnel height above it (D-342).
+/// </summary>
+/// <param name="Center">The floor cell under the walker.</param>
+/// <param name="Gallery">True for a stamp of the gallery walker, and false for a stamp of a drift.</param>
+public readonly record struct TunnelStamp(Cell Center, bool Gallery);

@@ -3,6 +3,6 @@
   "weight": 20,
   "boxCountMin": 1,
   "boxCountMax": 2,
-  "boxSizeMin": 6,
-  "boxSizeMax": 8
+  "boxSizeMin": 9,
+  "boxSizeMax": 12
 }

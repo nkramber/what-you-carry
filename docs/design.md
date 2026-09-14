@@ -310,6 +310,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-95 | The scheduled night at 08:07 UTC on 2026-09-11 never fired either: no run of the schedule event existed at 09:00 UTC, the runner was online and idle from 07:15 UTC, the `7 8 * * *` line stood on `main` from 06:27 UTC, the workflow read active, and Actions was on. The repository has no schedule run in two chances on two cron lines, githubstatus.com listed no incident after 2026-09-04, and the cause is unknown | 2026-09-11 | ✅ Refuted 2026-09-11: the night ran at 12:47 UTC as run 34600758086, 4 h 40 min after the cron, and passed. The watch stopped at 09:00 UTC and read a late run as a miss. D-286 moved the cron to 17:21 UTC for one test, and D-288 returns it to 08:07 UTC |
 | F-96 | The PR-15 contact sheet showed the art as a first pass: faces of three rule settings, a body of ten boxes, and one light. The owner asked whether these were test materials, and no roadmap item raised the art to finished quality | 2026-09-13 | 🔧 D-338 keeps the PR-15 sheet as a first pass. D-339 adds PR-62 after PR-20. Binds PR-62 |
 | F-97 | The owner played floor 1 of PR-15 and found the tunnels very cramped. The dig plan carves drifts of 3 by 3 blocks, a gallery of 5 by 3, and chambers 3 to 4 high, and every rise in a tunnel is a one-block step that needs a jump (D-165, D-253) | 2026-09-14 | 🔧 D-341 to D-351: wider and taller spaces, one floor size and one room count, ramps of three slopes, chamber tiers, and the work before PR-16. Binds PR-63 to PR-66 and PR-16 |
+| F-98 | The PR-63 measurement: on the sizes of D-341, D-343, and D-344, the two night sets of 175000 floors pass, and the largest need is 5890 jobs. A sweep of 500000 more floors found 7 that ran the 10000 jobs of D-279 with a chamber still in rock: seed 193207 floor 8, 286534 floor 5, 370718 floor 9, 451689 floor 10, 469501 floor 2, 514012 floor 8, and 573862 floor 8 | 2026-09-14 | 🔧 D-353: PR-63 keeps the cap, and PR-67 digs such a floor again after a job budget. Binds PR-67 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -463,9 +464,14 @@ Gate: the owner confirms the sword feels committed and readable, and approves th
 > *In plain English:* you can run, jump, dodge, and swing a sword, and the swing shows its wind-up so you can read an enemy.
 
 **PR-63: Dig sizes in the floor template.** 🔧
-Move the dig sizes from Core constants to the floor template (D-342), and set the wide sizes of D-341. Every band takes one floor of 64 by 20 by 64 and 5 to 9 chambers with a budget of 100 (D-343, D-344). The chamber kinds take the larger box ranges of D-341. The PR-9 and PR-59 property tests, the bot sweep, and the night sweep run on the new sizes. The simulation version rises (G-20).
+Move the dig sizes from Core constants to the floor template (D-342), and set the wide sizes of D-341. The validator rejects an even tunnel width and a size that the floor cannot hold (D-352). Every band takes one floor of 64 by 20 by 64 and 5 to 9 chambers with a budget of 100 (D-343, D-344). The chamber kinds take the larger box ranges of D-341. The PR-9 and PR-59 property tests, the bot sweep, and the night sweep run on the new sizes. The simulation version rises (G-20). The dig tail of F-98 waits for PR-67, and PR-63 keeps the job cap of D-279 (D-353).
 Gate: the property tests and the night sweep pass on the new sizes, and the owner confirms that floor 1 no longer feels cramped.
 > *In plain English:* the tunnels and chambers are small today, so a fight feels cramped. This change makes every space wider and taller, and the sizes live in data files.
+
+**PR-67: Dig restart.** 🔧
+When a dig passes a job budget, dig the floor again from the next draws of the Procgen stream (D-159, D-353). The floor still comes from the seed and the floor number alone. The owner sets the job budget and the count of digs before the code. The 7 floors of F-98 become regression tests, and a sweep of at least 675000 floors reports zero dig errors.
+Gate: every floor of F-98 digs, and the property tests, the bot sweep, and the night sweep pass.
+> *In plain English:* about one floor in 96000 fails to dig on the new sizes. This change digs such a floor again from the same seed, so no run stops on it.
 
 **PR-64: Ramp cells in Core.** 🔧
 Add the ramp cell to the voxel grid: a sloped floor that rises one block over two, three, or four blocks along one of four directions (D-345, D-346). A body walks up and down a ramp with no jump. The camera boom and projectiles stop at the slope (D-246). The reachability search reads a ramp as a walk (D-165, as D-345 revises it). The owner answers the motion on a ramp before the code, and the session decides the cell encoding. The simulation version rises (G-20).
@@ -680,7 +686,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
-11. PR-60, PR-61, PR-15, PR-63, PR-64, PR-65, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62.
+11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62.
 12. PR-19, PR-20, PR-62.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.

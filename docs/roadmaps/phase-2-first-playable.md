@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-66, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-351. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-353. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -30,6 +30,7 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-41 | No item said whether a Steam Deck unit exists for M-3 | M-3 |
 | F-96 | The art stayed a first pass, and no item raised it to finished quality | PR-62 |
 | F-97 | The tunnels felt cramped in play, and every rise in a tunnel needed a jump | PR-63, PR-64, PR-65, PR-66, PR-16 |
+| F-98 | On the wide sizes, about one floor in 96000 ran the dig job cap with a chamber still in rock | PR-63, PR-67, PR-66 |
 
 ## 3. Guardrails for this phase
 
@@ -271,12 +272,13 @@ Gate: exit tests 1 to 8 pass.
 
 Scope:
 
-- `Core/Content/FloorTemplate.cs`: the gallery width and height, the drift width and height, and the chamber height range join the template (D-342). The validator rejects a size under the minimum of D-166, and each error names the field (T-2).
+- `Core/Content/FloorTemplate.cs`: the gallery width and height, the drift width and height, and the chamber height range join the template (D-342). The validator rejects a size under the minimum of D-166, and each error names the field (T-2). It also rejects an even tunnel width, a width past the rock shell, and a height past the rows of the floor (D-352).
 - `Core/Procgen/DigPlan.cs`: the dig reads these sizes from the template. The constants `GalleryRadius`, `DriftRadius`, `TunnelHeight`, `ChamberHeightMin`, and `ChamberHeightMax` leave Core.
 - `content/floors/*.json`: each template takes a gallery of 7 by 5, a drift of 5 by 4, and chambers 5 to 8 high (D-341). It also takes a floor of 64 by 20 by 64 and 5 to 9 rooms with a budget of 100 (D-343, D-344).
 - `content/chambers/*.json`: the box size ranges of D-341.
-- Tests: a test of one floor size on every band replaces `FloorSizeGrowsWithDepth` (D-343). `TunnelCrossSection` reads the sizes of the template.
+- Tests: a test of one floor size on every band replaces `FloorSizeGrowsWithDepth` (D-343). `TunnelCrossSection` reads the sizes of the template over each stamp of the gallery and the drifts, and the floor plan lists those stamps.
 - If 5 to 9 rooms do not fit a 64 by 64 floor over the seed sweep, the session files a question (D-344).
+- The dig tail of F-98 waits for PR-67, and PR-63 keeps the job cap of D-279 (D-353).
 - The simulation version rises, and the bit-identity sweep takes a new known answer (G-20).
 
 Out of scope: ramps and tiers (PR-64 to PR-66), the camera numbers of D-242, the enemy spawns (PR-16).
@@ -285,7 +287,7 @@ Exit tests:
 
 1. `EveryChamberReachable`, `NoChamberOverlap`, `StairwellReachable`, and `BudgetWithinTolerance` pass on every template with the new sizes.
 2. `TunnelCrossSection` asserts over the seed sweep that every gallery and drift has the width and the height of its template.
-3. The content tests reject a missing size field and a size under the minimum of D-166, and each error names the field.
+3. The content tests reject a missing size field and a size under the minimum of D-166. They also reject an even tunnel width and a size that the floor cannot hold (D-352). Each error names the field.
 4. The bot sweep and the night sweep report zero crashes and zero softlocks on the new sizes, inside the dig job cap of D-279.
 5. The bit-identity job passes on the three platforms with the new known answer.
 6. The owner plays floor 1 and confirms that the spaces no longer feel cramped, recorded as a decision.
@@ -297,6 +299,33 @@ Check clause: none.
 Gate: exit tests 1 to 6 pass.
 
 > *In plain English:* the tunnels and chambers are small today, so a fight feels cramped. This change makes every space wider and taller, and the sizes live in data files that a later tune can change.
+
+### PR-67: Dig restart
+
+Scope:
+
+- `Core/Procgen/FloorGenerator.cs` and `Core/Procgen/DigPlan.cs`: when a dig passes a job budget, the generator digs the floor again from the next draws of the Procgen stream (D-159, D-353). The floor still comes from the seed and the floor number alone.
+- Before the code, the owner sets the job budget and the count of digs before an error (D-353). A decision records whether the cap of D-279 changes.
+- Tests: each of the 7 floors of F-98 digs every chamber of its budget.
+- The session decides the simulation version and the bit-identity known answer under D-260 and G-20.
+
+Out of scope: the ramps and the tiers (PR-66), a new rule for the chamber draw.
+
+Exit tests:
+
+1. `EveryTailFloorDigs` asserts that each of the 7 floors of F-98 digs every chamber of its budget.
+2. The PR-9 and PR-59 property tests pass.
+3. A sweep of at least the 675000 floors of F-98 reports zero dig errors, and the PR records the largest job count.
+4. The bot sweep and the night sweep report zero crashes and zero softlocks.
+5. The bit-identity job passes on the three platforms.
+
+Review focus: determinism, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 5 pass.
+
+> *In plain English:* about one floor in 96000 fails to dig on the new sizes. This change digs such a floor again from the same seed, so no run stops on it.
 
 ### PR-64: Ramp cells in Core
 
@@ -579,23 +608,24 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 10. ✅ PR-61 merged 2026-09-13 as PR #60.
 11. ✅ PR-15 merged 2026-09-14 as PR #62.
 12. ✅ Owner answers on the dig sizes and the ramps, 2026-09-14: D-341 to D-351.
-13. PR-63.
-14. PR-64.
-15. PR-65.
-16. PR-66.
-17. Owner: answer OQ-9, at least the first family.
-18. PR-16.
-19. Owner: answer OQ-4 and OQ-6.
-20. PR-17.
-21. Owner: answer OQ-44.
-22. PR-18.
-23. PR-19.
-24. Owner: answer OQ-48.
-25. PR-20.
-26. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
-27. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-28. Tier 4 pass on the screenshot fixture (D-133).
-29. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+13. PR-63. ✅ OQ-172 answered 2026-09-14: D-353.
+14. PR-67.
+15. PR-64.
+16. PR-65.
+17. PR-66.
+18. Owner: answer OQ-9, at least the first family.
+19. PR-16.
+20. Owner: answer OQ-4 and OQ-6.
+21. PR-17.
+22. Owner: answer OQ-44.
+23. PR-18.
+24. PR-19.
+25. Owner: answer OQ-48.
+26. PR-20.
+27. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
+28. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+29. Tier 4 pass on the screenshot fixture (D-133).
+30. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
@@ -611,6 +641,10 @@ Open:
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-161: the M-3 run on the Steam Deck. Blocks exit test 7 of PR-13 and M-3.
+
+Resolved 2026-09-14:
+
+- OQ-172 (D-353): the dig tail. PR-63 and PR-67.
 
 Resolved 2026-09-13:
 
