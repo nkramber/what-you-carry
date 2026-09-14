@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60, PR-61, PR-62, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-339. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-66, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-351. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -29,6 +29,7 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-40 | D-88's effect note put wall fade in the mesher. A shader test needs no mesher change | PR-13 |
 | F-41 | No item said whether a Steam Deck unit exists for M-3 | M-3 |
 | F-96 | The art stayed a first pass, and no item raised it to finished quality | PR-62 |
+| F-97 | The tunnels felt cramped in play, and every rise in a tunnel needed a jump | PR-63, PR-64, PR-65, PR-66, PR-16 |
 
 ## 3. Guardrails for this phase
 
@@ -266,11 +267,131 @@ Gate: exit tests 1 to 8 pass.
 
 > *In plain English:* you can run, jump, dodge, and swing a sword. The swing shows its wind-up, so an enemy can read it, and a hit can stop it.
 
+### PR-63: Dig sizes in the floor template
+
+Scope:
+
+- `Core/Content/FloorTemplate.cs`: the gallery width and height, the drift width and height, and the chamber height range join the template (D-342). The validator rejects a size under the minimum of D-166, and each error names the field (T-2).
+- `Core/Procgen/DigPlan.cs`: the dig reads these sizes from the template. The constants `GalleryRadius`, `DriftRadius`, `TunnelHeight`, `ChamberHeightMin`, and `ChamberHeightMax` leave Core.
+- `content/floors/*.json`: each template takes a gallery of 7 by 5, a drift of 5 by 4, and chambers 5 to 8 high (D-341). It also takes a floor of 64 by 20 by 64 and 5 to 9 rooms with a budget of 100 (D-343, D-344).
+- `content/chambers/*.json`: the box size ranges of D-341.
+- Tests: a test of one floor size on every band replaces `FloorSizeGrowsWithDepth` (D-343). `TunnelCrossSection` reads the sizes of the template.
+- If 5 to 9 rooms do not fit a 64 by 64 floor over the seed sweep, the session files a question (D-344).
+- The simulation version rises, and the bit-identity sweep takes a new known answer (G-20).
+
+Out of scope: ramps and tiers (PR-64 to PR-66), the camera numbers of D-242, the enemy spawns (PR-16).
+
+Exit tests:
+
+1. `EveryChamberReachable`, `NoChamberOverlap`, `StairwellReachable`, and `BudgetWithinTolerance` pass on every template with the new sizes.
+2. `TunnelCrossSection` asserts over the seed sweep that every gallery and drift has the width and the height of its template.
+3. The content tests reject a missing size field and a size under the minimum of D-166, and each error names the field.
+4. The bot sweep and the night sweep report zero crashes and zero softlocks on the new sizes, inside the dig job cap of D-279.
+5. The bit-identity job passes on the three platforms with the new known answer.
+6. The owner plays floor 1 and confirms that the spaces no longer feel cramped, recorded as a decision.
+
+Review focus: determinism, content, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 6 pass.
+
+> *In plain English:* the tunnels and chambers are small today, so a fight feels cramped. This change makes every space wider and taller, and the sizes live in data files that a later tune can change.
+
+### PR-64: Ramp cells in Core
+
+Scope:
+
+- `Core/World/VoxelGrid.cs` and `Core/World/BlockId.cs`: a ramp cell holds a sloped floor that rises one block over two, three, or four blocks, along one of four directions (D-345, D-346). The session decides the encoding of a ramp, inside D-164 or with a decision that revises it, before the code.
+- `Core/Physics/SweptAabb.cs`: a body walks up and down a ramp with no jump. The owner answers the motion on a ramp before the code: the speed on a slope, the jump, the roll, and the stagger.
+- `Core/Physics/GridRay.cs`: the camera boom and every projectile stop at the slope of a ramp, and not at the edge of its cell (D-246).
+- `Core/Procgen/Reachability.cs`: the search reads a ramp as a walk in both directions, the move rule of D-165 as D-345 revises it.
+- Tests build ramps by hand in a test grid. The generator digs no ramp before PR-66.
+- The simulation version rises, and the bit-identity sweep adds a run over ramps (G-20).
+
+Out of scope: the ramp mesh (PR-65), the generator (PR-66), the pathfinder (PR-16).
+
+Exit tests:
+
+1. `BodyWalksUpARamp` asserts for each slope and each direction that a body walks from the low floor to the high floor with no jump.
+2. `BodyWalksDownARamp` asserts that a body walks from the high floor to the low floor with the motion that the owner sets.
+3. A property test over a seed loop of ramp grids asserts no tunnel through a ramp at maximum speed and no fall through a slope.
+4. `CameraNeverEntersARamp` asserts that the boom stops at the slope, and `ProjectileHitsARampSlope` asserts that a shot stops on it.
+5. `TheSearchFollowsTheBodyRule` passes on ramp grids, and the search joins the two floors of a ramp in both directions.
+6. The bit-identity job passes on the three platforms with the ramp run.
+
+Review focus: determinism, physics, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 6 pass.
+
+> *In plain English:* today a height change is a row of whole-block steps, and each step needs a jump. This change adds a sloped block that bodies walk up and down, with the same result on every machine.
+
+### PR-65: Ramp meshes in Game
+
+Scope:
+
+- `WhatYouCarry.Game/World/GreedyMesher.cs`: a ramp cell gives a sloped face and two side faces (D-345). Each face takes the tile of its block at 32 texels per meter (D-308).
+- `WhatYouCarry.Game/World/AmbientOcclusion.cs`: the vertex occlusion of D-81 reads the slope of a ramp.
+- The chunk mesh budget of D-291 holds with ramps.
+- The contact sheet adds ramps of the three slopes at game zoom (D-306).
+
+Out of scope: the generator (PR-66), new texture rules (PR-62).
+
+Exit tests:
+
+1. `GreedyMesherTests` cover each slope and each direction: a ramp gives its sloped face and its side faces, and a block beside it keeps its open faces.
+2. The mesh budget test of D-291 passes on a test floor with ramps.
+3. The smoke session passes on the three platforms.
+4. The owner approves a contact sheet with the ramps, recorded as a decision.
+
+Review focus: presentation, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 4 pass.
+
+> *In plain English:* the game can draw only whole blocks today. This change draws the sloped blocks of PR-64 with the same textures and shade as the walls.
+
+### PR-66: Ramps and chamber tiers in the generator
+
+Scope:
+
+- `Core/Procgen/DigPlan.cs`: `TryDigRamp` digs ramp cells in place of one-block steps, so a tunnel changes height by a ramp or a shaft alone (D-345, D-347). The Procgen stream picks the slope of each ramp from the list of the template (D-159, D-346).
+- `content/floors/*.json`: every template lists the slopes 1:2, 1:3, and 1:4 (D-346).
+- Chamber tiers: a chamber with a tier gets a floor 2 blocks over its chamber floor, and a ramp joins the two (D-348, D-349). The tier chance of the chamber kind decides which chambers get one (D-350).
+- `content/chambers/*.json`: each kind names its tier chance. Great stope takes 50, cavern 40, stope, ore bin, and pump chamber 25, and the rest 0 (D-350).
+- `Core/Procgen/DetailPass.cs`: rubble, pillars, posts, and pools keep every ramp and its two ends clear.
+- The owner answers the shape of a tier before the code: its share of the chamber, and the case of a chamber too small for a tier and its ramp.
+- The simulation version rises, and the bit-identity sweep takes a new known answer (G-20).
+
+Out of scope: enemy spawns on a tier (PR-16).
+
+Exit tests:
+
+1. The PR-9 and PR-59 property tests pass with ramps and tiers: every chamber and tier reachable, no overlap, the stairwell reachable, and the budget within tolerance.
+2. `TunnelsHaveNoStep` asserts over the seed sweep that no tunnel floor changes height by a one-block step.
+3. `RampsUseTheTemplateSlopes` asserts over the seed sweep that every ramp has a slope of its template, and that each slope appears.
+4. `TierChanceMatchesTheKind` asserts over the seed sweep that each kind gets tiers near its chance, and none at chance 0.
+5. `TierIsTwoBlocksUp` asserts that every tier floor is 2 blocks over its chamber floor, and that a ramp joins the two.
+6. The bot sweep and the night sweep report zero crashes and zero softlocks with ramps and tiers.
+7. The bit-identity job passes on the three platforms with the new known answer.
+8. The owner plays floor 1 and confirms the ramps and the tiers, recorded as a decision.
+
+Review focus: determinism, gameplay, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 8 pass.
+
+> *In plain English:* the mine joins its levels with smooth ramps of three slopes in place of steps. Some chambers get a raised floor, so a fight can use the high ground.
+
 ### PR-16: First enemy family, AI, and pathfinder
 
 Scope:
 
-- `Core/Pathfinding/GridPathfinder.cs`: an A* search over walkable cells with the move rule of D-165, one block up or any drop (D-76).
+- `Core/Pathfinding/GridPathfinder.cs`: an A* search over walkable cells with the move rule of D-165 as D-345 revises it: one block up, any drop, or a walk along a ramp (D-76).
 - `Core/Ai/HumanoidBrain.cs`: target selection, approach along a path, and attack with the same melee rules as the player (D-30, D-31). The brain retreats when the swing is on cooldown.
 - `content/enemies/<family>.json`: the first humanoid family from OQ-9, with the `enemy` content type and validator (D-168). Its weight maps to the room weights of D-167.
 - Spawn placement: the generator of PR-9 fills room weights with enemies of this family.
@@ -280,7 +401,7 @@ Out of scope: ranged enemy attacks (PR-24), monsters, a second family.
 
 Exit tests:
 
-1. `PathfinderRespectsMoveRule` asserts a path uses one-block steps and drops, and never a two-block step.
+1. `PathfinderRespectsMoveRule` asserts a path uses one-block steps, drops, and ramps, and never a two-block step.
 2. `PathfinderFindsStairwell` over one thousand seeds asserts a path from every spawn to the stairwell.
 3. `EnemyUsesPlayerRules` asserts an enemy swing has the same windup, active, and recovery as the player's sword.
 4. `EnemyCountMatchesBudget` asserts the spawned weight within 10 percent of the floor budget (D-167).
@@ -457,19 +578,24 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 9. ✅ OQ-5 and OQ-46 answered 2026-09-12: D-314 and D-315, with D-316 for weight. ✅ OQ-45 answered 2026-09-12: D-298.
 10. ✅ PR-61 merged 2026-09-13 as PR #60.
 11. ✅ PR-15 merged 2026-09-14 as PR #62.
-12. Owner: answer OQ-9, at least the first family.
-13. PR-16.
-14. Owner: answer OQ-4 and OQ-6.
-15. PR-17.
-16. Owner: answer OQ-44.
-17. PR-18.
-18. PR-19.
-19. Owner: answer OQ-48.
-20. PR-20.
-21. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
-22. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-23. Tier 4 pass on the screenshot fixture (D-133).
-24. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+12. ✅ Owner answers on the dig sizes and the ramps, 2026-09-14: D-341 to D-351.
+13. PR-63.
+14. PR-64.
+15. PR-65.
+16. PR-66.
+17. Owner: answer OQ-9, at least the first family.
+18. PR-16.
+19. Owner: answer OQ-4 and OQ-6.
+20. PR-17.
+21. Owner: answer OQ-44.
+22. PR-18.
+23. PR-19.
+24. Owner: answer OQ-48.
+25. PR-20.
+26. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
+27. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+28. Tier 4 pass on the screenshot fixture (D-133).
+29. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
