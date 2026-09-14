@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
 using Xunit;
@@ -104,6 +105,8 @@ public sealed class ContentTests
         Assert.Equal(3, set.Floors.Count);
         Assert.Equal(8, set.Chambers.Count);
         Assert.Equal(6, set.Projectiles.Count);
+        WeaponDefinition sword = Assert.Single(set.Weapons);
+        Assert.Equal("sword-basic", sword.Id);
         Assert.True(set.Strings.Count > 0);
         Assert.Equal(64, set.Hash.Length);
 
@@ -251,6 +254,18 @@ public sealed class ContentTests
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
         Assert.Contains("two floor templates", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Two weapon definitions of one id are an error, because the loadout of PR-30 looks a weapon up by it (D-334).</summary>
+    [Fact]
+    public void ARepeatedWeaponIdIsAnError()
+    {
+        MemorySource source = Valid()
+            .Add("weapons/a.json", WeaponText)
+            .Add("weapons/b.json", WeaponText);
+
+        ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
+        Assert.Contains("two weapon definitions", error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A file that is not one JSON object is an error that names the file (T-2).</summary>
@@ -514,5 +529,106 @@ public sealed class ContentTests
         ContextException error = Assert.Throws<ContextException>(
             () => ProjectileDefinition.FromMembers("projectiles/p.json", JsonObjectReader.Read("projectiles/p.json", Encoding.UTF8.GetBytes(text))));
         Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    private const string WeaponText = """
+        {"id":"w","tier":0,"handedness":"one","windupTicks":12,"activeTicks":6,"recoveryTicks":18,"damage":34,"reachCentimetres":160,"arcHundredths":9000,"lowCentimetres":50,"highCentimetres":170,"model":"models/w.bbmodel","animation":"models/player.w.json"}
+        """;
+
+    /// <summary>Every field of a weapon definition is required (D-92, D-334).</summary>
+    [Theory]
+    [InlineData("id")]
+    [InlineData("tier")]
+    [InlineData("handedness")]
+    [InlineData("windupTicks")]
+    [InlineData("activeTicks")]
+    [InlineData("recoveryTicks")]
+    [InlineData("damage")]
+    [InlineData("reachCentimetres")]
+    [InlineData("arcHundredths")]
+    [InlineData("lowCentimetres")]
+    [InlineData("highCentimetres")]
+    [InlineData("model")]
+    [InlineData("animation")]
+    public void EveryRequiredWeaponFieldIsRequired(string omitted)
+    {
+        List<JsonMember> members = [];
+        foreach (JsonMember member in JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(WeaponText)))
+        {
+            if (member.Name != omitted)
+            {
+                members.Add(member);
+            }
+        }
+
+        ContextException error = Assert.Throws<ContextException>(() => WeaponDefinition.FromMembers("weapons/w.json", members));
+        Assert.Contains(omitted, error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A weapon definition outside its bounds is an error that names the field: a negative tier, an unknown handedness, a
+    /// phase of no tick or past the tick counter, no damage, no reach, an arc past a half turn, a band with no height,
+    /// a path outside the model directory, a path with an empty, dot, or backslash segment, and a file name without the
+    /// extension of its kind (D-26, D-219, D-298, D-325, D-334; PR #62 review P2-1).
+    /// </summary>
+    [Theory]
+    [InlineData("\"tier\":0", "\"tier\":-1", "tier")]
+    [InlineData("\"handedness\":\"one\"", "\"handedness\":\"three\"", "handedness")]
+    [InlineData("\"windupTicks\":12", "\"windupTicks\":0", "windupTicks")]
+    [InlineData("\"activeTicks\":6", "\"activeTicks\":4294967296", "activeTicks")]
+    [InlineData("\"recoveryTicks\":18", "\"recoveryTicks\":-18", "recoveryTicks")]
+    [InlineData("\"damage\":34", "\"damage\":0", "damage")]
+    [InlineData("\"reachCentimetres\":160", "\"reachCentimetres\":0", "reachCentimetres")]
+    [InlineData("\"arcHundredths\":9000", "\"arcHundredths\":18001", "arcHundredths")]
+    [InlineData("\"arcHundredths\":9000", "\"arcHundredths\":0", "arcHundredths")]
+    [InlineData("\"arcHundredths\":9000", "\"arcHundredths\":5", "arcHundredths")]
+    [InlineData("\"lowCentimetres\":50", "\"lowCentimetres\":-1", "lowCentimetres")]
+    [InlineData("\"highCentimetres\":170", "\"highCentimetres\":50", "highCentimetres")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"w.bbmodel\"", "model")]
+    [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"player.w.json\"", "animation")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/../floors/a.json\"", "model")]
+    [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"models/player.bbmodel\"", "animation")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/player.w.json\"", "model")]
+    [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"models/../player.w.json\"", "animation")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/./w.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models//w.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/a\\\\..\\\\w.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/w.BBMODEL\"", "model")]
+    public void AWeaponOutsideItsBoundsIsAnError(string from, string to, string field)
+    {
+        // The case of 5 hundredths over 6 active ticks is the arc with a step of no turn (PR #62 automated pass).
+        string text = WeaponText.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(WeaponText, text);
+
+        ContextException error = Assert.Throws<ContextException>(
+            () => WeaponDefinition.FromMembers("weapons/w.json", JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>An arc of one hundredth of a degree for each active tick is the smallest arc that loads, and its blade turns on every step (D-325).</summary>
+    [Fact]
+    public void TheSmallestArcTurnsOnEveryActiveTick()
+    {
+        string text = WeaponText.Replace("\"arcHundredths\":9000", "\"arcHundredths\":6", StringComparison.Ordinal);
+        WeaponDefinition weapon = WeaponDefinition.FromMembers("weapons/w.json", JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(text)));
+        for (int step = 0; step < weapon.ActiveTicks; step++)
+        {
+            Assert.True(MeleeWeapon.BladeOffset(weapon, step + 1) > MeleeWeapon.BladeOffset(weapon, step), $"The blade does not turn on step {step}.");
+        }
+    }
+
+    /// <summary>A model path and an animation path under the model directory load, in a subdirectory of it too (D-298, D-334; PR #62 review P2-1).</summary>
+    [Theory]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/weapons/w.bbmodel\"")]
+    [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"models/weapons/player.w.json\"")]
+    public void AWeaponAssetPathUnderTheModelDirectoryLoads(string from, string to)
+    {
+        string text = WeaponText.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(WeaponText, text);
+
+        WeaponDefinition weapon = WeaponDefinition.FromMembers("weapons/w.json", JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(text)));
+        Assert.StartsWith(WeaponDefinition.AssetDirectory, weapon.Model, StringComparison.Ordinal);
+        Assert.StartsWith(WeaponDefinition.AssetDirectory, weapon.Animation, StringComparison.Ordinal);
     }
 }

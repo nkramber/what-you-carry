@@ -1,19 +1,21 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Godot;
+using WhatYouCarry.Assets;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Camera;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Game.Animation;
 using WhatYouCarry.Game.Content;
 using WhatYouCarry.Game.Input;
 using WhatYouCarry.Game.Logging;
 using WhatYouCarry.Game.Measure;
-using WhatYouCarry.Assets;
 using WhatYouCarry.Game.Models;
 using WhatYouCarry.Game.Render;
 using WhatYouCarry.Game.Review;
@@ -35,11 +37,11 @@ namespace WhatYouCarry.Game;
 /// The world material takes the fade segment from the camera to the player on every frame (D-292).
 /// </para>
 /// <para>
-/// A boot failure and a step failure both write an error line and quit with exit code 1 (T-2). The smoke
-/// session quits with exit code 0 only when the log holds no error line (D-114). The bot session of M-3 drives
+/// A boot failure, a step failure, and a pose failure each write an error line and quit with exit code 1 (T-2). The
+/// smoke session quits with exit code 0 only when the log holds no error line (D-114). The bot session of M-3 drives
 /// the loop with the greedy descender over one floor, and the frame log flag writes every frame time to a file
-/// at the end of any session (D-295, D-296). The content and the atlas come from the directory next to the
-/// project directory, which is the content directory of the checkout (D-219, D-305).
+/// at the end of any session (D-295, D-296). The content, the models, the clips, and the atlas come from the directory
+/// next to the project directory, which is the content directory of the checkout (D-219, D-305).
 /// </para>
 /// <para>
 /// The window opens in the borderless fullscreen of the engine at the resolution of the display, from the
@@ -49,8 +51,14 @@ namespace WhatYouCarry.Game;
 /// gives the engine one scripted press of either input at one tick, so a headless test proves the exit.
 /// </para>
 /// <para>
-/// The contact sheet flag starts no loop. It renders every block material and the body at game zoom to one PNG
-/// file for the review of the owner, and quits (D-306).
+/// The player model holds the sword of the main weapon in the right hand (D-330). On each frame the body takes the
+/// pose of the player state: the stagger clip, the roll clip, or the walk with the swing clip over it (D-331, D-333).
+/// The walk reads the horizontal distance of each tick. The body faces the camera yaw (D-332), and the lowest box
+/// corner of the pose stands on the feet.
+/// </para>
+/// <para>
+/// The contact sheet flag starts no loop. It renders every block material and the body with the sword at game zoom
+/// to one PNG file for the review of the owner, and quits (D-306, D-336).
 /// </para>
 /// </remarks>
 public partial class Main : Node3D
@@ -85,6 +93,9 @@ public partial class Main : Node3D
     /// <summary>The message of the error line of a tick failure.</summary>
     public const string StepFailedMessage = "A tick failed, and the game quits.";
 
+    /// <summary>The message of the error line of a frame whose pose of the player failed.</summary>
+    public const string PoseFailedMessage = "The pose of the player failed, and the game quits.";
+
     /// <summary>The message of the error line of a bot session whose tick budget passed on the first floor.</summary>
     public const string BotStuckMessage = "The bot session passed its tick budget on the first floor, and the game quits.";
 
@@ -117,7 +128,6 @@ public partial class Main : Node3D
     private const string ErrorField = "error";
     private const string FileField = "file";
     private const string ShotField = "shot";
-    private const string AbsentModel = "The player model file does not exist.";
     private const string HeadlessDisplay = "headless";
     private const string NoShotImage = "The viewport of the contact sheet gave no image for a shot.";
 
@@ -130,7 +140,9 @@ public partial class Main : Node3D
     private readonly InputReader reader;
 
     private SimulationLoop? loop;
-    private Node3D? player;
+    private ModelNodeTree? playerNodes;
+    private BlockbenchModel? playerModel;
+    private PlayerClips? clips;
     private Camera3D? camera;
     private ShaderMaterial? worldMaterial;
     private GreedyDescender? bot;
@@ -143,6 +155,8 @@ public partial class Main : Node3D
     private CoreVector3 currentFeet;
     private CameraPose previousPose;
     private CameraPose currentPose;
+    private float walked;
+    private float walkAmount;
 
     /// <summary>A root node with its logger. The boot runs when the node enters the tree.</summary>
     public Main()
@@ -217,6 +231,13 @@ public partial class Main : Node3D
         this.previousPose = this.currentPose;
         this.currentPose = this.loop.Camera();
 
+        // The walk reads the horizontal distance of the tick, and its amount follows the speed (D-333).
+        float stepX = this.currentFeet.X - this.previousFeet.X;
+        float stepZ = this.currentFeet.Z - this.previousFeet.Z;
+        float stride = MathF.Sqrt((stepX * stepX) + (stepZ * stepZ));
+        this.walked += stride;
+        this.walkAmount = WalkCycle.Amount(stride / PlayerBody.TickSeconds);
+
         if (this.smoke && this.loop.Tick >= SmokeSession.Ticks)
         {
             this.logger.Write(LogContextKind.Run, LogLevel.Info, EndMessage, this.EndFields());
@@ -237,7 +258,7 @@ public partial class Main : Node3D
     /// <inheritdoc/>
     public override void _Process(double delta)
     {
-        if (this.loop is null || this.player is null || this.camera is null || this.worldMaterial is null)
+        if (this.loop is null || this.playerNodes is null || this.playerModel is null || this.clips is null || this.camera is null || this.worldMaterial is null || this.ended)
         {
             return;
         }
@@ -246,11 +267,28 @@ public partial class Main : Node3D
 
         float fraction = (float)Engine.GetPhysicsInterpolationFraction();
         CoreVector3 feet = RenderInterpolation.Between(this.previousFeet, this.currentFeet, fraction);
-        this.player.Position = RenderInterpolation.ToGodot(feet);
 
-        // The body faces the yaw of the last tick. The yaw turns counterclockwise seen from above, as a positive
-        // rotation about Y does (D-234). PR-15 gives the body its own turn from the locomotion.
-        this.player.RotationDegrees = new Vector3(0.0f, this.loop.Yaw / 100.0f, 0.0f);
+        float lowest;
+        try
+        {
+            IReadOnlyDictionary<string, CoreVector3> rotations = BodyPose.Rotations(this.loop.Player, this.clips, this.walked, this.walkAmount);
+            ModelNodes.Pose(this.playerNodes, rotations);
+            lowest = ModelPose.LowestPoint(AssetPaths.BodyModel, this.playerModel, rotations);
+        }
+        catch (Exception error)
+        {
+            this.LogFailure(PoseFailedMessage, RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick), error);
+            this.Quit(ExitFailure);
+            return;
+        }
+
+        // The lowest box corner of the pose stands on the feet, so a roll or a stride never sinks a box into the floor.
+        Vector3 feetPoint = RenderInterpolation.ToGodot(feet);
+        this.playerNodes.Root.Position = feetPoint + new Vector3(0.0f, -lowest, 0.0f);
+
+        // The body faces the yaw of the last tick, so a walk sideways is a strafe (D-332). The yaw turns counterclockwise
+        // seen from above, as a positive rotation about Y does (D-234).
+        this.playerNodes.Root.RotationDegrees = new Vector3(0.0f, this.loop.Yaw / 100.0f, 0.0f);
 
         CameraPose pose = RenderInterpolation.Between(this.previousPose, this.currentPose, fraction);
         Vector3 cameraPosition = RenderInterpolation.ToGodot(pose.Position);
@@ -259,7 +297,7 @@ public partial class Main : Node3D
             RenderInterpolation.ToGodot(pose.Position + pose.Forward),
             RenderInterpolation.ToGodot(pose.Up));
 
-        Vector3 playerCenter = this.player.Position + new Vector3(0.0f, PlayerBody.Height / 2.0f, 0.0f);
+        Vector3 playerCenter = feetPoint + new Vector3(0.0f, PlayerBody.Height / 2.0f, 0.0f);
         WorldMaterial.SetFade(this.worldMaterial, cameraPosition, playerCenter);
     }
 
@@ -303,10 +341,10 @@ public partial class Main : Node3D
     }
 
     /// <summary>
-    /// Reads the user arguments with one parser, loads the content, the player model, and the atlas, starts the loop,
-    /// and builds the scene. A bad argument stops the boot before the content loads (D-313, D-317). The contact sheet
-    /// flag renders the sheet in place of the loop (D-306). In a play session the mouse is captured. In the smoke
-    /// session and the bot session it is not.
+    /// Reads the user arguments with one parser, loads the content, the models of the body and of the main weapon, the
+    /// atlas, and the clips, starts the loop, and builds the scene. A bad argument stops the boot before the content loads
+    /// (D-313, D-317). The contact sheet flag renders the sheet in place of the loop (D-306). In a play session the mouse is
+    /// captured. In the smoke session and the bot session it is not.
     /// </summary>
     private void Boot()
     {
@@ -326,14 +364,17 @@ public partial class Main : Node3D
         string projectDirectory = ProjectSettings.GlobalizePath(ProjectRoot);
         string contentDirectory = Path.GetFullPath(Path.Combine(projectDirectory, ParentDirectory, ContentDirectoryName));
         ContentSet content = new ContentLoader(new DirectoryContentSource(contentDirectory)).Load();
-        BlockbenchModel playerModel = BlockbenchLoader.Parse(AssetPaths.BodyModel, ReadModelBytes(contentDirectory, AssetPaths.BodyModel));
+        WeaponDefinition weapon = SimulationLoop.MainWeapon(content);
+        BlockbenchModel bodyModel = BlockbenchLoader.Parse(AssetPaths.BodyModel, AssetFile.Read(contentDirectory, AssetPaths.BodyModel));
+        BlockbenchModel swordModel = BlockbenchLoader.Parse(weapon.Model, AssetFile.Read(contentDirectory, weapon.Model));
         ImageTexture atlas = AtlasFile.Load(contentDirectory);
         if (ContactSheet.IsRequested(arguments))
         {
-            this.RenderContactSheet(ContactSheet.PathOf(arguments), atlas, playerModel);
+            this.RenderContactSheet(ContactSheet.PathOf(arguments), atlas, bodyModel, swordModel);
             return;
         }
 
+        PlayerClips playerClips = PlayerClips.Load(contentDirectory, weapon);
         SimulationLoop loop = new(FirstSeed, content);
         this.loop = loop;
         if (BotSession.IsRequested(arguments))
@@ -352,9 +393,14 @@ public partial class Main : Node3D
             this.AddChild(chunk);
         }
 
-        this.player = ModelNodes.Build(playerModel, ModelMaterial(atlas));
+        StandardMaterial3D modelMaterial = ModelMaterial(atlas);
+        ModelNodeTree nodes = ModelNodes.Build(bodyModel, modelMaterial);
+        ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(swordModel, modelMaterial).Root);
+        this.playerNodes = nodes;
+        this.playerModel = bodyModel;
+        this.clips = playerClips;
         this.camera = PlaceholderScene.Camera();
-        this.AddChild(this.player);
+        this.AddChild(nodes.Root);
         this.AddChild(this.camera);
         this.AddChild(PlaceholderScene.Light());
 
@@ -364,20 +410,6 @@ public partial class Main : Node3D
         }
 
         this.logger.Write(LogContextKind.Run, LogLevel.Info, StartMessage, RunFields(loop.Seed, loop.Floor, loop.Tick));
-    }
-
-    /// <summary>The bytes of one model file under the content directory. An absent file is an error that names the path (T-2).</summary>
-    private static byte[] ReadModelBytes(string contentDirectory, string contentPath)
-    {
-        string file = Path.Combine(contentDirectory, contentPath);
-        if (!File.Exists(file))
-        {
-            ContextException error = new(AbsentModel);
-            error.AddContext(FileField, file);
-            throw error;
-        }
-
-        return File.ReadAllBytes(file);
     }
 
     /// <summary>The one material of every model: the atlas with nearest filtering, so a texel stays a square (D-85).</summary>
@@ -396,7 +428,7 @@ public partial class Main : Node3D
     /// camera moves. The headless display, a shot with no image, and a write failure are each an error line and
     /// exit code 1 (T-2).
     /// </summary>
-    private async void RenderContactSheet(string path, Texture2D atlas, BlockbenchModel playerModel)
+    private async void RenderContactSheet(string path, Texture2D atlas, BlockbenchModel bodyModel, BlockbenchModel swordModel)
     {
         LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
         fields.Add(FileField, path);
@@ -407,7 +439,7 @@ public partial class Main : Node3D
                 throw new ContextException(ContactSheetNeedsWindow);
             }
 
-            ContactSheetNodes nodes = ContactSheetScene.Build(atlas, playerModel, ModelMaterial(atlas));
+            ContactSheetNodes nodes = ContactSheetScene.Build(atlas, bodyModel, swordModel, ModelMaterial(atlas));
             this.AddChild(nodes.Viewport);
             Image sheet = Image.CreateEmpty(ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(), false, Image.Format.Rgb8);
             await this.WaitFrames(ContactSheet.WarmUpFrames);

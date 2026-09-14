@@ -7,15 +7,15 @@ using WhatYouCarry.Core.World;
 namespace WhatYouCarry.Core.Entities;
 
 /// <summary>
-/// The box that stands for the player in Phase 1 (D-149, D-165). It reads the movement, the jump bit, and the
-/// sprint bit of an intent, falls under gravity, and moves through <see cref="SweptAabb"/>. No health and no
-/// weapon: PR-15 adds those.
+/// The box that stands for the player (D-149, D-165). It falls under gravity and moves through
+/// <see cref="SweptAabb"/>. The <see cref="Player"/> of PR-15 owns it, and it adds health, the roll, the stagger,
+/// and the swing.
 /// </summary>
 /// <remarks>
 /// <para>
 /// The position is the feet center: the middle of the box on X and Z, and the bottom of it on Y, in float
 /// meters (D-70, D-235). The box is 0.6 by 1.8 by 0.6 meters (D-165). The state is the position and the
-/// vertical velocity. The horizontal velocity comes from the intent on every tick, on the ground and in the
+/// vertical velocity. The horizontal velocity comes from the caller on every tick, on the ground and in the
 /// air, so it is not state (D-233, D-238).
 /// </para>
 /// <para>
@@ -29,7 +29,7 @@ namespace WhatYouCarry.Core.Entities;
 /// twice as long (D-258, D-261, D-262). The probe reads the column of the feet at the start of the tick, and it
 /// holds while the body is in the air over the water, because a jump that lost the quarter gravity as soon as
 /// the feet rose out of the cell would end below one block. A body that steps off a ledge over a pool falls
-/// slowly into it for the same reason.
+/// slowly into it for the same reason. A roll keeps its own speed over water (D-337).
 /// </para>
 /// </remarks>
 public sealed class PlayerBody
@@ -46,8 +46,8 @@ public sealed class PlayerBody
     /// <summary>The speed of a walk, in meters per second (D-231).</summary>
     public const float WalkSpeed = 4.0f;
 
-    /// <summary>The speed of a sprint, in meters per second (D-231).</summary>
-    public const float SprintSpeed = 6.5f;
+    /// <summary>The speed of a sprint, in meters per second (D-315, D-319).</summary>
+    public const float SprintSpeed = 7.0f;
 
     /// <summary>The upward velocity at the start of a jump, in meters per second (D-231).</summary>
     public const float JumpVelocity = 7.0f;
@@ -140,28 +140,38 @@ public sealed class PlayerBody
     }
 
     /// <summary>
-    /// Runs one tick. The jump comes first, then gravity, then the horizontal velocity of the intent, and then
-    /// one sweep with the whole displacement. Water scales the three at the start of the tick (D-261, D-262).
+    /// Runs one tick of a walk: the horizontal velocity of the intent, with the water factor of the start of the
+    /// tick, and the jump bit (D-233, D-261). The player of PR-15 calls <see cref="Move"/> directly.
     /// </summary>
     /// <param name="intent">The intent of the tick.</param>
     /// <param name="yaw">The yaw sum of the loop after the intent, in hundredths of a degree (D-227).</param>
     public void Step(Intent intent, int yaw)
     {
         bool inWater = this.IsInWater();
+        float speedFactor = inWater ? WaterSpeedFactor : 1.0f;
+        this.Move(WalkVelocity(intent, yaw) * speedFactor, (intent.Buttons & Button.Jump) != 0, inWater);
+    }
+
+    /// <summary>
+    /// Runs one tick with a horizontal velocity. The jump comes first, then gravity, and then one sweep with the whole
+    /// displacement. Water scales the jump and gravity (D-262). The caller scales the horizontal velocity.
+    /// </summary>
+    /// <param name="horizontal">The horizontal velocity of the tick, in meters per second. Its Y component is zero.</param>
+    /// <param name="jump">Whether the tick asks for a jump. A jump needs the ground.</param>
+    /// <param name="inWater">The water probe of the start of the tick (D-264).</param>
+    public void Move(Vector3 horizontal, bool jump, bool inWater)
+    {
         float jumpFactor = inWater ? WaterJumpFactor : 1.0f;
         float gravityFactor = inWater ? WaterGravityFactor : 1.0f;
-        float speedFactor = inWater ? WaterSpeedFactor : 1.0f;
 
-        if ((intent.Buttons & Button.Jump) != 0 && this.IsOnGround())
+        if (jump && this.IsOnGround())
         {
             this.VerticalVelocity = JumpVelocity * jumpFactor;
         }
 
         this.VerticalVelocity -= Gravity * gravityFactor * TickSeconds;
 
-        Vector3 horizontal = HorizontalVelocity(intent, yaw) * speedFactor;
         Vector3 delta = new(horizontal.X * TickSeconds, this.VerticalVelocity * TickSeconds, horizontal.Z * TickSeconds);
-
         SweepResult result = SweptAabb.Sweep(this.grid, this.Box, delta);
         this.Position += result.Allowed;
 
@@ -173,25 +183,14 @@ public sealed class PlayerBody
     }
 
     /// <summary>
-    /// The horizontal velocity of an intent (D-233). The strafe and the forward fractions clamp to a length of
-    /// one, so a diagonal is never faster than a straight line, and the pair rotates by the yaw.
+    /// The horizontal velocity of a walk (D-233): the walk speed, or the sprint speed when the sprint bit is set. The
+    /// strafe and the forward fractions clamp to a length of one, so a diagonal is never faster than a straight line,
+    /// and the pair rotates by the yaw.
     /// </summary>
-    private static Vector3 HorizontalVelocity(Intent intent, int yaw)
+    public static Vector3 WalkVelocity(Intent intent, int yaw)
     {
-        int moveX = intent.MoveX;
-        int moveY = intent.MoveY;
-        if (moveX < -MoveScale)
-        {
-            moveX = -MoveScale;
-        }
-
-        if (moveY < -MoveScale)
-        {
-            moveY = -MoveScale;
-        }
-
-        float strafe = moveX / (float)MoveScale;
-        float forward = moveY / (float)MoveScale;
+        float strafe = Fraction(intent.MoveX);
+        float forward = Fraction(intent.MoveY);
         float length = DetMath.Sqrt((strafe * strafe) + (forward * forward));
         if (length > 1.0f)
         {
@@ -200,14 +199,46 @@ public sealed class PlayerBody
         }
 
         float speed = (intent.Buttons & Button.Sprint) != 0 ? SprintSpeed : WalkSpeed;
+        return YawFrame(strafe, forward, yaw, speed);
+    }
 
-        // Forward at yaw zero is minus Z, and right is plus X. The yaw turns counterclockwise seen from above,
-        // so forward at 90 degrees is minus X and right is minus Z (D-234).
+    /// <summary>
+    /// The unit direction of a roll (D-327): the direction of the movement input, rotated by the yaw, or backward
+    /// with no input. The input sets the direction and never the distance, so a small stick deflection rolls as far
+    /// as a full one.
+    /// </summary>
+    public static Vector3 RollDirection(Intent intent, int yaw)
+    {
+        float strafe = Fraction(intent.MoveX);
+        float forward = Fraction(intent.MoveY);
+        float length = DetMath.Sqrt((strafe * strafe) + (forward * forward));
+        if (length == 0.0f)
+        {
+            return YawFrame(0.0f, -1.0f, yaw, 1.0f);
+        }
+
+        return YawFrame(strafe / length, forward / length, yaw, 1.0f);
+    }
+
+    /// <summary>One movement byte as a fraction from -1 to 1. A byte of -128 clamps to -127 (D-233).</summary>
+    private static float Fraction(sbyte move)
+    {
+        int value = move < -MoveScale ? -MoveScale : move;
+        return value / (float)MoveScale;
+    }
+
+    /// <summary>
+    /// A strafe and a forward amount in the frame of the yaw, scaled. Forward at yaw zero is minus Z, and right is
+    /// plus X. The yaw turns counterclockwise seen from above, so forward at 90 degrees is minus X and right is minus
+    /// Z (D-234).
+    /// </summary>
+    private static Vector3 YawFrame(float strafe, float forward, int yaw, float scale)
+    {
         float radians = yaw * RadiansPerHundredth;
         float sin = DetMath.Sin(radians);
         float cos = DetMath.Cos(radians);
-        float x = ((strafe * cos) - (forward * sin)) * speed;
-        float z = ((-strafe * sin) - (forward * cos)) * speed;
+        float x = ((strafe * cos) - (forward * sin)) * scale;
+        float z = ((-strafe * sin) - (forward * cos)) * scale;
         return new Vector3(x, 0.0f, z);
     }
 }

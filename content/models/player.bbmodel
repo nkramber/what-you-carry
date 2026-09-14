@@ -946,6 +946,24 @@
       "locked": false,
       "type": "locator",
       "uuid": "87035036-fc09-44ff-abd3-f1ccb1a69eee"
+    },
+    {
+      "name": "weapon",
+      "position": [
+        6.5,
+        10.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "ignore_inherited_scale": false,
+      "visibility": true,
+      "locked": false,
+      "type": "locator",
+      "uuid": "41b14fc7-7690-496e-9694-20f8782d2e9b"
     }
   ],
   "groups": [
@@ -1172,7 +1190,8 @@
               "uuid": "e5ca6d52-6422-43e6-83b2-9d3cd2291e6d",
               "isOpen": true,
               "children": [
-                "d4a0a8cb-a7cb-4d12-841c-cd44ae47c605"
+                "d4a0a8cb-a7cb-4d12-841c-cd44ae47c605",
+                "41b14fc7-7690-496e-9694-20f8782d2e9b"
               ]
             }
           ]

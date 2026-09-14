@@ -20,26 +20,28 @@ namespace WhatYouCarry.Core.Simulation;
 /// <para>
 /// The state is the seed, the tick, the yaw and pitch sums in hundredths of a degree, the buttons of the last
 /// intent (D-227), then the position and the vertical velocity of the player body (PR-7), then the floor number
-/// and the run end (PR-9), then the projectiles in flight (PR-10). The yaw wraps at a full turn, and the pitch
-/// stops at 80 degrees up and 80 degrees down (D-241). A positive pitch looks up (D-248). The camera and the
-/// aim ray come from the state on demand, and they are not state (D-245).
+/// and the run end (PR-9, D-322), then the projectiles in flight (PR-10), then the player: the health, the dodge
+/// cooldown, the roll, the swing, the stagger, and the guard (PR-15). The yaw wraps at a full turn, and the pitch
+/// stops at 80 degrees up and 80 degrees down (D-241). A positive pitch looks up (D-248). The camera and the aim
+/// ray come from the state on demand, and they are not state (D-245).
 /// </para>
 /// <para>
-/// The attack bit fires the first projectile definition of the content set once per press, from the shoulder
-/// point toward the first solid cell that the crosshair ray meets within <see cref="AimReach"/> meters, or
-/// toward the point of the ray there (D-265, D-267, D-268). The spread of each shot comes from the Projectile
-/// stream of the run (D-159, D-266). The projectiles of a floor end with the floor.
+/// The attack bit swings the main weapon: the first weapon definition of the content set, until the loadout of
+/// PR-30 (D-320). No intent fires a projectile before PR-24, and the projectiles of a floor end with the floor.
+/// No enemy exists before PR-16, so the blade has no target box yet.
 /// </para>
 /// <para>
 /// The floor comes from the seed, the floor number, and the content set, so the grid and the spawn are inputs
 /// like the content and not state, and the hash reads the body and not the blocks (D-236). At the stairwell,
-/// the interact bit digs the next floor and the ascend bit ends the run (D-257). A loop whose run ended takes
-/// no intent, because an intent after the end has no tick to run on (T-2).
+/// the interact bit digs the next floor and the ascend bit ends the run (D-257). Health alone carries to the next
+/// floor (D-335). A run ends as a death when the health of the player reaches zero (D-322). A loop whose run
+/// ended takes no intent, because an intent after the end has no tick to run on (T-2).
 /// </para>
 /// <para>
-/// The look deltas apply first, and the body then moves by the yaw sum after them. The shot and the projectiles
-/// run after the body, and the stairwell reads the body last. The loop rejects an intent whose tick is not the next one, because a replay that stepped
-/// over a frame would diverge in silence, and it rejects a set reserved button bit (T-2, G-5, D-232).
+/// The look deltas apply first, and the player then runs its tick with the yaw sum after them. The projectiles
+/// run after the player, and the stairwell reads the body last. The loop rejects an intent whose tick is not the
+/// next one, because a replay that stepped over a frame would diverge in silence, and it rejects a set reserved
+/// button bit (T-2, G-5, D-232).
 /// </para>
 /// </remarks>
 public sealed class SimulationLoop
@@ -56,29 +58,47 @@ public sealed class SimulationLoop
     /// <summary>The floor that every run starts at (D-3).</summary>
     public const int FirstFloor = 1;
 
-    /// <summary>How far the crosshair ray reaches for the target of a shot, in meters (D-268).</summary>
-    public const float AimReach = 100.0f;
-
     /// <summary>The owner id of the player in the projectile simulation.</summary>
     public const int PlayerOwner = 0;
 
-    private readonly ContentSet content;
-    private readonly Rng projectileRng;
+    /// <summary>The target boxes of the blade. PR-16 takes them from the enemies, and no enemy exists before it.</summary>
+    private static readonly EntityBox[] NoTargets = [];
 
-    /// <summary>A loop at tick zero for one run, on floor 1 of the seed, with the body at rest at the spawn point.</summary>
-    /// <exception cref="ContextException">The content set cannot dig floor 1.</exception>
+    private readonly ContentSet content;
+    private bool ascended;
+
+    /// <summary>A loop at tick zero for one run, on floor 1 of the seed, with the player at rest at the spawn point.</summary>
+    /// <exception cref="ContextException">The content set holds no weapon definition, or it cannot dig floor 1.</exception>
     public SimulationLoop(ulong seed, ContentSet content)
     {
         this.Seed = seed;
         this.content = content;
+        this.Weapon = MainWeapon(content);
         this.Plan = FloorGenerator.Generate(seed, FirstFloor, content);
-        this.Body = new PlayerBody(this.Plan.Grid, this.Plan.Spawn);
+        this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, this.Weapon, Player.MaxHealth);
         this.Projectiles = new ProjectileSimulation(this.Plan.Grid, content.Projectiles);
-        this.projectileRng = Rng.ForStream(seed, RngStream.Projectile);
+    }
+
+    /// <summary>
+    /// The main weapon of a content set: the first weapon definition, in the ordinal path order of the typed lists,
+    /// until the loadout of PR-30 (D-320). The Game layer reads the same rule for the model and the clips.
+    /// </summary>
+    /// <exception cref="ContextException">The content set holds no weapon definition (T-2).</exception>
+    public static WeaponDefinition MainWeapon(ContentSet content)
+    {
+        if (content.Weapons.Count == 0)
+        {
+            throw new ContextException("The content set holds no weapon definition, and the attack bit swings the first one (D-320).");
+        }
+
+        return content.Weapons[0];
     }
 
     /// <summary>The seed of the run. Every random stream of the run derives from it (D-159).</summary>
     public ulong Seed { get; }
+
+    /// <summary>The main weapon of the run: the first weapon definition of the content set (D-320).</summary>
+    public WeaponDefinition Weapon { get; }
 
     /// <summary>The dug floor that the body stands in (D-253).</summary>
     public FloorPlan Plan { get; private set; }
@@ -86,8 +106,11 @@ public sealed class SimulationLoop
     /// <summary>The grid of the floor (D-78, D-236).</summary>
     public VoxelGrid Grid => this.Plan.Grid;
 
-    /// <summary>The player body (D-149, D-165). A descent puts a new body at the spawn of the next floor.</summary>
-    public PlayerBody Body { get; private set; }
+    /// <summary>The player (PR-15). A descent puts a new player at the spawn of the next floor with the same health (D-335).</summary>
+    public Player Player { get; private set; }
+
+    /// <summary>The body of the player (D-149, D-165).</summary>
+    public PlayerBody Body => this.Player.Body;
 
     /// <summary>The projectiles of the floor (G-6). A descent starts an empty simulation on the next floor.</summary>
     public ProjectileSimulation Projectiles { get; private set; }
@@ -98,8 +121,11 @@ public sealed class SimulationLoop
     /// <summary>The floor number, from one (D-3). The state holds it, and the hash reads it after the body.</summary>
     public int Floor { get; private set; } = FirstFloor;
 
-    /// <summary>Answers whether the run ended at the stairwell (D-50). An ended loop takes no intent.</summary>
-    public bool Ended { get; private set; }
+    /// <summary>How the run ended: an ascend at the stairwell (D-50), a death at zero health (D-322), or no end yet.</summary>
+    public RunEnd End => this.ascended ? RunEnd.Ascend : (this.Player.IsDead ? RunEnd.Death : RunEnd.None);
+
+    /// <summary>Answers whether the run ended. An ended loop takes no intent.</summary>
+    public bool Ended => this.End != RunEnd.None;
 
     /// <summary>The count of ticks that ran, which is also the tick of the next intent.</summary>
     public uint Tick { get; private set; }
@@ -119,9 +145,10 @@ public sealed class SimulationLoop
     {
         if (this.Ended)
         {
-            ContextException ended = new($"The run ended at tick {this.Tick} on floor {this.Floor}, and the loop takes no intent after the end (D-50).");
+            ContextException ended = new($"The run ended at tick {this.Tick} on floor {this.Floor}, and the loop takes no intent after the end (D-50, D-322).");
             ended.AddContext("tick", ((long)this.Tick).ToString(CultureInfo.InvariantCulture));
             ended.AddContext("floor", ((long)this.Floor).ToString(CultureInfo.InvariantCulture));
+            ended.AddContext("end", EndText(this.End));
             throw ended;
         }
 
@@ -165,15 +192,11 @@ public sealed class SimulationLoop
             pitch = -PitchLimit;
         }
 
-        bool attackPressed = (intent.Buttons & Button.Attack) != 0 && (this.Buttons & Button.Attack) == 0;
+        ushort previousButtons = this.Buttons;
         this.Yaw = yaw;
         this.Pitch = pitch;
         this.Buttons = intent.Buttons;
-        this.Body.Step(intent, yaw);
-        if (attackPressed)
-        {
-            this.FireShot();
-        }
+        this.Player.Step(intent, previousButtons, yaw, NoTargets);
 
         EntityBox[] boxes = [new EntityBox(PlayerOwner, this.Body.Box)];
         this.LastEnds = this.Projectiles.Step(boxes);
@@ -182,7 +205,7 @@ public sealed class SimulationLoop
         StairwellAction action = StairwellTransition.Choose(intent.Buttons, this.Body, this.Plan.Stairwell);
         if (action == StairwellAction.Ascend)
         {
-            this.Ended = true;
+            this.ascended = true;
         }
         else if (action == StairwellAction.Descend)
         {
@@ -210,8 +233,9 @@ public sealed class SimulationLoop
 
     /// <summary>
     /// The hash of the whole state, in the declared field order (D-160): the five fields of D-227, then the
-    /// position and the vertical velocity of the body, then the floor number and the run end, then the
-    /// projectiles in flight order. A new field goes after these, so the order of every earlier one stands.
+    /// position and the vertical velocity of the body, then the floor number and the run end as one byte, then the
+    /// projectiles in flight order, then the player. A new field goes after these, so the order of every earlier one
+    /// stands.
     /// </summary>
     public StateHash Hash()
     {
@@ -226,42 +250,29 @@ public sealed class SimulationLoop
         hash.Add(this.Body.Position.Z);
         hash.Add(this.Body.VerticalVelocity);
         hash.Add(this.Floor);
-        hash.Add(this.Ended);
+        hash.Add((byte)this.End);
         this.Projectiles.AddTo(ref hash);
+        this.Player.AddTo(ref hash);
         return hash;
     }
 
-    /// <summary>
-    /// Fires the first projectile definition of the content set from the shoulder point toward the first solid
-    /// cell that the crosshair ray meets within the aim reach, or toward the point of the ray there (D-265, D-268).
-    /// </summary>
-    /// <exception cref="ContextException">The content set holds no projectile definition.</exception>
-    private void FireShot()
+    /// <summary>The name of a run end in a message. The switch is explicit, so no reflection reads the enum (G-2).</summary>
+    private static string EndText(RunEnd end)
     {
-        if (this.content.Projectiles.Count == 0)
+        switch (end)
         {
-            throw new ContextException("The attack bit fires the first projectile definition of the content set, and the set holds none (D-265).");
+            case RunEnd.Ascend: return "ascend";
+            case RunEnd.Death: return "death";
+            default: return "none";
         }
-
-        CameraPose pose = this.Camera();
-        Vector3 reach = pose.Position + (pose.Forward * AimReach);
-        RayHit hit = GridRay.FirstSolid(this.Grid, pose.Position, reach);
-        Vector3 target = hit.Hit ? pose.Position + (pose.Forward * hit.Distance) : reach;
-        Vector3 direction = target - pose.Shoulder;
-        if (direction.Length() == 0.0f)
-        {
-            direction = pose.Forward;
-        }
-
-        this.Projectiles.Fire(0, PlayerOwner, pose.Shoulder, direction, this.projectileRng);
     }
 
-    /// <summary>Digs the next floor from the run seed and the next floor number, and puts a body at rest at its spawn (D-257).</summary>
+    /// <summary>Digs the next floor from the run seed and the next floor number, and puts a player at rest at its spawn with the same health (D-257, D-335).</summary>
     private void Descend()
     {
         int next = this.Floor + 1;
         this.Plan = FloorGenerator.Generate(this.Seed, next, this.content);
-        this.Body = new PlayerBody(this.Plan.Grid, this.Plan.Spawn);
+        this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, this.Weapon, this.Player.Health);
         this.Projectiles = new ProjectileSimulation(this.Plan.Grid, this.content.Projectiles);
         this.Floor = next;
     }

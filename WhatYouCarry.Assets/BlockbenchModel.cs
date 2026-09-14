@@ -104,9 +104,15 @@ public enum BoxSide
 /// <param name="Position">The point, in meters in model space.</param>
 public sealed record AttachmentPoint(string Slot, int Bone, Vector3 Position);
 
-/// <summary>The equipment slots that a model can attach to (D-18, D-26). The two ring slots are not modeled.</summary>
+/// <summary>
+/// The equipment slots that a model can attach to (D-18, D-26), and the main weapon (D-20, D-330). The two ring slots
+/// are not modeled.
+/// </summary>
 public static class EquipmentSlots
 {
+    /// <summary>The main weapon, which the right hand holds (D-20, D-330).</summary>
+    public const string Weapon = "weapon";
+
     /// <summary>The head slot.</summary>
     public const string Head = "head";
 
@@ -126,7 +132,7 @@ public static class EquipmentSlots
     public const string Shield = "shield";
 
     /// <summary>The slot names, which are the locator names of a model file.</summary>
-    public static readonly IReadOnlyList<string> Names = [Head, Chest, Legs, Feet, Amulet, Shield];
+    public static readonly IReadOnlyList<string> Names = [Head, Chest, Legs, Feet, Amulet, Shield, Weapon];
 
     /// <summary>Answers whether a name is a slot.</summary>
     public static bool Contains(string name)

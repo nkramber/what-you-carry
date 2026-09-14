@@ -65,7 +65,7 @@ public sealed class BlockbenchLoaderTests
         Assert.Contains("models/bad.bbmodel", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>The player model has one attachment point per slot of D-18, on the bone of its limb.</summary>
+    /// <summary>The player model has one attachment point per slot of D-18, and the weapon point of D-330 in the right hand, each on the bone of its limb.</summary>
     [Fact]
     public void PlayerModelHasEveryAttachmentPoint()
     {
@@ -84,6 +84,10 @@ public sealed class BlockbenchLoaderTests
 
         AttachmentPoint shield = Assert.Single(model.Attachments, point => point.Slot == EquipmentSlots.Shield);
         Assert.Equal("arm_left_lower", model.Bones[shield.Bone].Name);
+
+        AttachmentPoint weapon = Assert.Single(model.Attachments, point => point.Slot == EquipmentSlots.Weapon);
+        Assert.Equal("arm_right_lower", model.Bones[weapon.Bone].Name);
+        Assert.Equal(new CoreVector3(0.40625f, 0.65625f, 0.0f), weapon.Position);
     }
 
     /// <summary>Every bone comes after its parent, and the root bone is the body.</summary>

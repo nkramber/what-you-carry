@@ -12,8 +12,8 @@ public sealed record ContactSheetNodes(SubViewport Viewport, Camera3D Camera);
 
 /// <summary>
 /// Builds the scene of the contact sheet (D-306) in a viewport with a world of its own: each block in a small grid
-/// through the greedy mesher and the world material, the two bodies with the model material, the scene light, and
-/// the camera of play. Every subject stands at the place that its shot gives.
+/// through the greedy mesher and the world material, the two bodies with the sword in the hand and the model material
+/// (D-336), the scene light, and the camera of play. Every subject stands at the place that its shot gives.
 /// </summary>
 public static class ContactSheetScene
 {
@@ -24,7 +24,7 @@ public static class ContactSheetScene
     public static readonly Vector3 FarPoint = new(0.0f, -1000.0f, 0.0f);
 
     /// <summary>The viewport and the camera, with every subject of <see cref="ContactSheet.Shots"/> in the viewport.</summary>
-    public static ContactSheetNodes Build(Texture2D atlas, BlockbenchModel body, Material modelMaterial)
+    public static ContactSheetNodes Build(Texture2D atlas, BlockbenchModel body, BlockbenchModel sword, Material modelMaterial)
     {
         SubViewport viewport = new()
         {
@@ -39,10 +39,11 @@ public static class ContactSheetScene
         {
             if (shot.IsBody)
             {
-                Node3D node = ModelNodes.Build(body, modelMaterial);
-                node.Position = shot.Origin;
-                node.RotationDegrees = new Vector3(0.0f, shot.BodyYawDegrees, 0.0f);
-                viewport.AddChild(node);
+                ModelNodeTree nodes = ModelNodes.Build(body, modelMaterial);
+                ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(sword, modelMaterial).Root);
+                nodes.Root.Position = shot.Origin;
+                nodes.Root.RotationDegrees = new Vector3(0.0f, shot.BodyYawDegrees, 0.0f);
+                viewport.AddChild(nodes.Root);
                 continue;
             }
 

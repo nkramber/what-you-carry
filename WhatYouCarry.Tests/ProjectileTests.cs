@@ -6,39 +6,20 @@ using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Projectiles;
-using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Core.World;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The projectile simulation, the arc solver, and the shot of the attack bit (G-6, D-159, D-231, D-265 to D-268; PR-10 exit tests 1 to 6).</summary>
+/// <summary>
+/// The projectile simulation and the arc solver (G-6, D-159, D-231, D-266; PR-10 exit tests 1 to 6). D-320 supersedes the shot of
+/// the attack bit in PR-15, so these tests fire through the simulation, and the attack bit fires no shot.
+/// </summary>
 public sealed class ProjectileTests
 {
     /// <summary>The owner id of a test source, which owns no entity box.</summary>
     private const int Source = -1;
-
-    /// <summary>A sink that keeps the record in memory.</summary>
-    private sealed class MemorySink : IRunRecordSink
-    {
-        public List<byte> Bytes { get; } = [];
-
-        public void Append(byte[] bytes)
-        {
-            this.Bytes.AddRange(bytes);
-        }
-    }
-
-    private sealed class CollectingSink : ILogSink
-    {
-        public List<string> Lines { get; } = [];
-
-        public void Write(string line)
-        {
-            this.Lines.Add(line);
-        }
-    }
 
     /// <summary>The index of a definition of the repository content by id. An absent id is a defect of the test.</summary>
     private static int Index(string id)
@@ -79,7 +60,7 @@ public sealed class ProjectileTests
         return Math.Acos(Math.Clamp(dot / lengths, -1.0, 1.0)) * 180.0 / Math.PI;
     }
 
-    /// <summary>The test-only set of D-149 holds the four extremes, and the two plain definitions come first in path order (D-265).</summary>
+    /// <summary>The test-only set of D-149 holds the four extremes, and the two plain definitions come first in path order.</summary>
     [Fact]
     public void TheTestOnlySetHoldsTheExtremes()
     {
@@ -284,46 +265,55 @@ public sealed class ProjectileTests
     }
 
     /// <summary>
-    /// PR-10 exit test 5. A run with shots on a dug floor replays to the live end hash, and a run without shots
-    /// gives another hash. The bit-identity sweep fires shots on its own, so the three platforms assert the same.
+    /// PR-10 exit test 5, as D-320 revises it. No intent fires a shot from PR-15 onward, so the test fires every definition
+    /// through the simulation over the dug floors of twenty seeds, twice, and asserts one list of ends and one state hash
+    /// in flight. The bit-identity sweep folds a projectile run of its own, so the three platforms assert the same.
     /// </summary>
     [Fact]
     public void ProjectilesAreDeterministic()
     {
         for (int seed = 1; seed <= 20; seed++)
         {
-            MemorySink sink = new();
-            RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.Content.Hash, (ulong)seed));
-            SimulationLoop live = TestWorld.NewLoop((ulong)seed);
-            SimulationLoop silent = TestWorld.NewLoop((ulong)seed);
-            Random random = new(seed);
-            int shots = 0;
-            int flying = 0;
-            for (uint tick = 0; tick < 240; tick++)
+            SimulationLoop loop = TestWorld.NewLoop((ulong)seed);
+            ProjectileSimulation first = FireAll(loop, (ulong)seed);
+            ProjectileSimulation second = FireAll(loop, (ulong)seed);
+            first.Step([]);
+            second.Step([]);
+            StateHash firstHash = StateHash.Start();
+            StateHash secondHash = StateHash.Start();
+            first.AddTo(ref firstHash);
+            second.AddTo(ref secondHash);
+            Assert.True(first.Live.Count > 0, $"Seed {seed}: no projectile was in flight after one tick.");
+            Assert.True(firstHash.Value == secondHash.Value, $"Seed {seed}: two runs in flight give {firstHash} and {secondHash}.");
+
+            List<ProjectileEnd> firstEnds = [];
+            List<ProjectileEnd> secondEnds = [];
+            while (first.Live.Count > 0 || second.Live.Count > 0)
             {
-                ushort buttons = tick % 20 == 0 ? Button.Attack : (ushort)0;
-                Intent intent = new(tick, (short)random.Next(-300, 301), (short)random.Next(-100, 101), 0, 0, buttons);
-                recorder.Record(intent);
-                live.Step(intent);
-                silent.Step(intent with { Buttons = 0 });
-                shots += live.LastEnds.Count;
-                if (live.Projectiles.Live.Count > 0)
-                {
-                    // A projectile in flight is state, so the two hashes differ while one is up.
-                    flying++;
-                    Assert.NotEqual(live.Hash(), silent.Hash());
-                }
+                firstEnds.AddRange(first.Step([]));
+                secondEnds.AddRange(second.Step([]));
             }
 
-            shots += live.Projectiles.Live.Count;
-            Assert.Equal(12, shots);
-            Assert.True(flying > 0, $"Seed {seed}: no projectile was ever in flight.");
-            Assert.Empty(silent.Projectiles.Live);
-
-            ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.Content, new JsonlLogger(new CollectingSink()));
-            Assert.True(live.Hash().Value == replay.Loop.Hash().Value, $"Seed {seed}: the live hash is {live.Hash()}, and the replay gives {replay.Loop.Hash()}.");
-            Assert.Equal(live.Projectiles.Live.Count, replay.Loop.Projectiles.Live.Count);
+            Assert.Equal(firstEnds, secondEnds);
         }
+    }
+
+    /// <summary>A simulation over the floor of a loop, with every definition fired from over the spawn in eight directions, with the Projectile stream of the seed.</summary>
+    private static ProjectileSimulation FireAll(SimulationLoop loop, ulong seed)
+    {
+        ProjectileSimulation simulation = new(loop.Grid, TestWorld.Content.Projectiles);
+        Rng spread = Rng.ForStream(seed, RngStream.Projectile);
+        Vector3 origin = loop.Plan.Spawn + new Vector3(0.0f, 1.5f, 0.0f);
+        for (int definition = 0; definition < TestWorld.Content.Projectiles.Count; definition++)
+        {
+            for (int direction = 0; direction < 8; direction++)
+            {
+                double angle = direction * Math.PI / 4.0;
+                simulation.Fire(definition, Source, origin, new Vector3((float)Math.Sin(angle), 0.2f, (float)Math.Cos(angle)), spread);
+            }
+        }
+
+        return simulation;
     }
 
     /// <summary>PR-10 exit test 6. A shot at a player box registers a hit on the box at its near face, and a shot of the owner of the box passes through it.</summary>
@@ -407,51 +397,31 @@ public sealed class ProjectileTests
         Assert.Equal(new Vector3(180.0f, 0.0f, -240.0f), exact.Live[0].Velocity);
     }
 
-    /// <summary>The attack bit fires once per press: a held bit fires once, and a release and a press fire again (D-267).</summary>
+    /// <summary>The attack bit swings the sword and fires no shot from PR-15 onward, held or pressed (D-320).</summary>
     [Fact]
-    public void TheAttackBitFiresOncePerPress()
+    public void TheAttackBitFiresNoShot()
     {
         SimulationLoop loop = TestWorld.NewLoop(6UL);
-        int shots = 0;
-        ushort[] presses = [Button.Attack, Button.Attack, Button.Attack, 0, Button.Attack, 0, 0, Button.Attack | Button.Jump];
+        ushort[] presses = [Button.Attack, Button.Attack, 0, Button.Attack, 0, Button.Attack | Button.Jump];
         for (uint tick = 0; tick < presses.Length; tick++)
         {
             loop.Step(new Intent(tick, 0, 0, 0, 0, presses[tick]));
-            shots += loop.LastEnds.Count;
+            Assert.Empty(loop.LastEnds);
+            Assert.Empty(loop.Projectiles.Live);
         }
 
-        shots += loop.Projectiles.Live.Count;
-        Assert.Equal(3, shots);
+        Assert.NotEqual(Player.NoSwing, loop.Player.SwingTick);
     }
 
-    /// <summary>A shot starts at the shoulder point of the camera and flies toward the crosshair hit, and it is the first definition of the content set (D-265, D-268).</summary>
+    /// <summary>A loop with no projectile definition runs its attack bit with no error, because no intent fires a shot (D-320). A shot of an index outside the list is an error (T-2).</summary>
     [Fact]
-    public void TheShotStartsAtTheShoulder()
-    {
-        SimulationLoop loop = TestWorld.NewLoop(7UL);
-        loop.Step(new Intent(0U, 0, 0, 0, 0, 0));
-        Core.Camera.CameraPose pose = loop.Camera();
-        loop.Step(new Intent(1U, 0, 0, 0, 0, Button.Attack));
-
-        Projectile shot = loop.Projectiles.Live.Count > 0 ? loop.Projectiles.Live[0] : loop.LastEnds[0].Projectile;
-        Assert.Equal(0, shot.Definition);
-        Assert.Equal(SimulationLoop.PlayerOwner, shot.Owner);
-        Assert.True(Distance(shot.Position, pose.Shoulder) <= 1.0f, $"The shot is at {shot.Position}, far from the shoulder {pose.Shoulder}.");
-
-        float speed = TestWorld.Content.Projectiles[0].SpeedCentimetres / 100.0f;
-        Assert.InRange(shot.Velocity.Length(), speed - 0.5f, speed + 0.5f);
-        Assert.True(DegreesBetween(shot.Velocity, pose.Forward) < 15.0, $"The shot flies along {shot.Velocity}, away from the look {pose.Forward}.");
-    }
-
-    /// <summary>A content set without a projectile definition makes the attack bit an error that names D-265, and a shot of an index outside the list is an error too (T-2).</summary>
-    [Fact]
-    public void AShotWithoutADefinitionIsAnError()
+    public void AShotOutsideTheDefinitionsIsAnError()
     {
         ContentSet none = TestWorld.Content with { Projectiles = [] };
         SimulationLoop loop = new(8UL, none);
         loop.Step(new Intent(0U, 0, 0, 0, 0, Button.Jump));
-        ContextException error = Assert.Throws<ContextException>(() => loop.Step(new Intent(1U, 0, 0, 0, 0, Button.Attack)));
-        Assert.Contains("D-265", error.Message, StringComparison.Ordinal);
+        loop.Step(new Intent(1U, 0, 0, 0, 0, Button.Attack));
+        Assert.Empty(loop.Projectiles.Live);
 
         ProjectileSimulation simulation = Simulation(TestWorld.FlatFloor());
         Rng spread = Rng.ForStream(9UL, RngStream.Projectile);
@@ -476,7 +446,7 @@ public sealed class ProjectileTests
     public void TheProjectilesEndWithTheFloor()
     {
         SimulationLoop loop = TestWorld.NewLoop(10UL);
-        loop.Step(new Intent(0U, 0, 0, 0, 0, Button.Attack));
+        loop.Step(new Intent(0U, 0, 0, 0, 0, 0));
         Assert.Same(loop.Grid, loop.Plan.Grid);
         Assert.Equal(TestWorld.Content.Projectiles.Count, loop.Projectiles.Definitions.Count);
     }

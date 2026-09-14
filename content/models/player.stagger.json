@@ -1,0 +1,29 @@
+{
+  "model": "models/player.bbmodel",
+  "length": 20,
+  "bones": {
+    "body": [
+      { "tick": 0, "rotation": [0, 0, 0] },
+      { "tick": 4, "rotation": [15, 0, 0] },
+      { "tick": 20, "rotation": [0, 0, 0] }
+    ],
+    "head": [
+      { "tick": 0, "rotation": [0, 0, 0] },
+      { "tick": 4, "rotation": [25, 0, 0] },
+      { "tick": 20, "rotation": [0, 0, 0] }
+    ],
+    "arm_left": [
+      { "tick": 0, "rotation": [0, 0, 0] },
+      { "tick": 4, "rotation": [0, 0, -35] },
+      { "tick": 20, "rotation": [0, 0, 0] }
+    ],
+    "arm_right": [
+      { "tick": 0, "rotation": [0, 0, 0] },
+      { "tick": 4, "rotation": [0, 0, 35] },
+      { "tick": 20, "rotation": [0, 0, 0] }
+    ]
+  },
+  "phases": [
+    { "start": 0, "end": 20, "tag": "idle" }
+  ]
+}

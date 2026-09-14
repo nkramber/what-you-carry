@@ -35,6 +35,9 @@ public static class AtlasLayout
     /// <summary>The tile of the leather of the body (D-307).</summary>
     public const int LeatherTile = TilesPerRow + 2;
 
+    /// <summary>The tile of the metal of the sword blade, the tile after the body tiles (D-330).</summary>
+    public const int MetalTile = TilesPerRow + 3;
+
     /// <summary>The column of a tile, from zero at the left edge of the atlas.</summary>
     /// <exception cref="ArgumentOutOfRangeException">The tile is outside the atlas.</exception>
     public static int Column(int tile)

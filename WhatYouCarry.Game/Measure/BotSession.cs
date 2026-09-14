@@ -22,10 +22,13 @@ public static class BotSession
         return userArguments.Has(Flag);
     }
 
-    /// <summary>Answers whether the loop left the first floor, by a descent or by the end of the run.</summary>
+    /// <summary>
+    /// Answers whether the loop left the first floor, by a descent or by an ascend. A death is no completion, so the
+    /// next tick fails the session with an error line (D-322).
+    /// </summary>
     public static bool IsComplete(SimulationLoop loop)
     {
-        return loop.Floor > SimulationLoop.FirstFloor || loop.Ended;
+        return loop.Floor > SimulationLoop.FirstFloor || loop.End == RunEnd.Ascend;
     }
 
     /// <summary>Answers whether the tick budget passed with the loop still on the first floor.</summary>

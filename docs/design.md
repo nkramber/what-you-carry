@@ -84,17 +84,17 @@ At each stairwell the player ascends or descends (D-50). Ascension costs nothing
 
 One character. Gear is identity (D-17). The camera is over-the-shoulder and the player controls it (D-13). Aim is free, with aim assist on a controller (D-14). The intent marks a controller aim on each tick, and the assist pulls the aim ray toward a target inside a cone (D-243, D-244). Core derives the camera on each tick, and its boom sweeps the grid along the line (D-245, D-246). Input targets are keyboard and mouse, controller, and the Steam Deck (D-15). The Deck is the performance floor and the readability floor.
 
-Movement verbs are dodge roll, sprint, and jump (D-27). There is no stamina. Dodge has a cooldown, and armor weight extends it (D-28). Health carries across floors. Potions in the satchel are the only heal (D-24).
+Movement verbs are dodge roll, sprint, and jump (D-27). There is no stamina. Dodge has a cooldown, and armor weight extends it (D-28). A roll moves 3 meters in 18 ticks, and no hit lands during it (D-327, D-328). A roll needs the ground and dry feet, and it cancels a swing (D-329, D-337). Health carries across floors, and zero health ends the run as a death (D-322, D-335). Potions in the satchel are the only heal (D-24).
 
 ### 3.4 Equipment
 
 Modeled slots: head, chest, legs, feet, amulet, shield (D-18). The two ring slots have no model (D-18, D-55). The player equips one main weapon at a time (D-20). Spare weapons ride in the satchel. A swap is slow, and the player cannot cancel it (D-21). The satchel is small and visible (D-19). Consumables in the satchel go to a quick slot (D-22).
 
-Armor gives damage reduction plus weight. Weight slows movement and dodge recovery (D-23). A shield needs a one-handed melee weapon (D-26). Only shields block. Nothing interrupts a two-handed melee swing (D-29). A stagger system exists for the player (F-21). Heavy armor resists stagger, and light armor does not (D-314).
+Armor gives damage reduction plus weight. Weight slows movement and dodge recovery (D-23). A shield needs a one-handed melee weapon (D-26). Only shields block. Nothing interrupts a two-handed melee swing (D-29). A stagger system exists for the player (F-21). Heavy armor resists stagger, and light armor does not (D-314). A stagger lasts 20 ticks, and a guard of 30 ticks after it stops a stunlock (D-326).
 
 ### 3.5 Combat
 
-Fights are fast and lethal (D-25). No hitscan exists. Every projectile is a simulated object with travel time, drop, and a lifetime. Enemies fire the same projectiles under the same rules (D-30). The player's own bombs deal full self-damage (D-32).
+Fights are fast and lethal (D-25). The tier-0 sword sweeps an arc of 90 degrees at a reach of 1.6 meters, and the arc follows the look (D-324, D-325). A swing starts on a press, and the walk stays free during it (D-323). No hitscan exists. Every projectile is a simulated object with travel time, drop, and a lifetime. Enemies fire the same projectiles under the same rules (D-30). The player's own bombs deal full self-damage (D-32).
 
 Ammunition is infinite. Reload and draw time are the only cost (D-40). Guns are muzzle-loaders with single-target burst and a slow reload (D-7, D-42). Bows have small area damage and a faster draw (D-42). Exotic weapons use mana. Mana regenerates slowly, and potions restore it (D-33, D-43). The feel references are Hunt: Showdown gunplay and Risk of Rain 2 movement (D-60).
 
@@ -306,6 +306,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-93 | PR #40 review P1-1: the `night-gate` workflow read `night.json` from the PR checkout when the fetch of `night-results` failed, so a PR could carry a fresh success record and pass the gate with no night | 2026-09-10 | ✅ Corrected in PR-58 before the merge. The command fetches the branch itself and reads the record from git, never from the working tree. A git failure other than an absent branch is an error that names the command |
 | F-94 | The scheduled night at 03:00 UTC on 2026-09-11 never fired: no run of the schedule event exists, the runner was free from 02:45 UTC, the old cron line stood on `main` until 03:54 UTC, and the workflow reads active on GitHub | 2026-09-11 | ✅ D-285 moves the cron to 08:07 UTC, off the start of the hour, which GitHub names as the load peak that delays or drops a schedule. Refuted 2026-09-11 as the whole cause: the 08:07 UTC night came 4 h 40 min late, and a watch read it as a miss (F-95) |
 | F-95 | The scheduled night at 08:07 UTC on 2026-09-11 never fired either: no run of the schedule event existed at 09:00 UTC, the runner was online and idle from 07:15 UTC, the `7 8 * * *` line stood on `main` from 06:27 UTC, the workflow read active, and Actions was on. The repository has no schedule run in two chances on two cron lines, githubstatus.com listed no incident after 2026-09-04, and the cause is unknown | 2026-09-11 | ✅ Refuted 2026-09-11: the night ran at 12:47 UTC as run 34600758086, 4 h 40 min after the cron, and passed. The watch stopped at 09:00 UTC and read a late run as a miss. D-286 moved the cron to 17:21 UTC for one test, and D-288 returns it to 08:07 UTC |
+| F-96 | The PR-15 contact sheet showed the art as a first pass: faces of three rule settings, a body of ten boxes, and one light. The owner asked whether these were test materials, and no roadmap item raised the art to finished quality | 2026-09-13 | 🔧 D-338 keeps the PR-15 sheet as a first pass. D-339 adds PR-62 after PR-20. Binds PR-62 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -401,7 +402,7 @@ Gate: the PR-9 property tests pass with the detail on, and every floor of a band
 > *In plain English:* the bare tunnels gain the look of a mine: fallen rock, timber, cut stone, ore, and water. The tests from before run again, so nothing blocks the way.
 
 **PR-10: Projectile simulation.** ✅ Merged 2026-09-10 as PR #31.
-Implement the projectile integrator with fixed-step Euler, swept collision against the grid and entity boxes, gravity scale, lifetime, and spread from weapon data (G-6, D-266). Implement the arc solver with DetMath. Add a `projectile` content schema and a test-only definitions file (F-38, D-149). Until PR-15 gives the loadout a weapon, the attack bit fires the first definition of the content set once per press (D-265, D-267). A shot starts at the shoulder point and flies toward the aim hit (D-268). The file holds the slowest arc, the fastest flat shot, the longest lifetime, and the widest spread. Property tests assert three facts. No projectile tunnels through the minimum wall at the maximum velocity. Every projectile ends inside its lifetime. The arc solver reaches a reachable target and reports an unreachable one.
+Implement the projectile integrator with fixed-step Euler, swept collision against the grid and entity boxes, gravity scale, lifetime, and spread from weapon data (G-6, D-266). Implement the arc solver with DetMath. Add a `projectile` content schema and a test-only definitions file (F-38, D-149). Until PR-15 gives the loadout a weapon, the attack bit fires the first definition of the content set once per press (D-265, D-267). D-320 supersedes D-265 in PR-15, and the attack bit swings the sword there. A shot starts at the shoulder point and flies toward the aim hit (D-268). The file holds the slowest arc, the fastest flat shot, the longest lifetime, and the widest spread. Property tests assert three facts. No projectile tunnels through the minimum wall at the maximum velocity. Every projectile ends inside its lifetime. The arc solver reaches a reachable target and reports an unreachable one.
 Gate: the projectile property tests pass over the test-only definitions. PR-24 and PR-43 to PR-46 rerun them over the real roster.
 > *In plain English:* bullets and arrows are real objects that fly, drop, and can miss. Tests prove a fast bullet never passes through a wall.
 
@@ -454,8 +455,8 @@ Gate: a test covers each kind of bad argument, and the user arguments of every s
 > *In plain English:* the game ignores a typo in a test command today, and a test can pass while it runs the wrong command. After this change, the typo stops the game with a message that names it.
 
 **PR-15: Player entity and the first weapon.** 🔧
-Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger, and one sword with windup, active, and recovery frames (D-25, D-27, D-28, D-29, D-314, D-315). PR-15 builds the zero-weight case, and PR-22 adds the effects of weight (D-316). Play the animation files of D-298 and implement the procedural locomotion in Game (D-87). A test asserts that the animation file agrees with the Core time values.
-Gate: the owner confirms the sword feels committed and readable.
+Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger, and one sword with windup, active, and recovery frames (D-25, D-27, D-28, D-29, D-314, D-315). PR-15 builds the zero-weight case, and PR-22 adds the effects of weight (D-316). The owner answers of D-319 to D-337 set the roll, the stagger and its guard, the arc, the death, the sword model, and the clips. The attack bit swings the sword, and the Phase 1 shot ends (D-320). Play the animation files of D-298 and implement the procedural locomotion in Game (D-87). A test asserts that the animation file agrees with the Core time values. The PR also carries `README.md` with the launch steps (D-318).
+Gate: the owner confirms the sword feels committed and readable, and approves the contact sheet with the sword (D-330).
 > *In plain English:* you can run, jump, dodge, and swing a sword, and the swing shows its wind-up so you can read an enemy.
 
 **PR-16: First enemy family, AI, and pathfinder.** 🔧
@@ -483,6 +484,11 @@ Implement the C# synthesizer that renders sound effects from parameter files (D-
 Gate: the owner approves the sword and hunter sounds.
 > *In plain English:* a tool makes every sound from a recipe, and the first sounds give the sword and the hunter their weight.
 
+**PR-62: Art quality pass.** 🔧
+Raise the art from the first pass of PR-14 and PR-15 to finished quality (D-338, D-339): richer texture rules, a more detailed body and sword, the scene light, and the enemy models of PR-16. The owner answers the rule kinds and the looks before the code.
+Gate: the owner approves a new contact sheet as finished art.
+> *In plain English:* the blocks, the body, and the sword look like a first pass today. This change gives them the detail and the light of a finished game, before the owner signs off on the first playable.
+
 **M-3: Steam Deck frame time.** 🔧
 Measure the 99th percentile frame time on the Steam Deck OLED of D-296 over one full floor, with the target of D-295. Binds every render PR (F-3).
 
@@ -504,7 +510,7 @@ Gate: a full satchel forces a drop choice, and the choice works on a controller.
 > *In plain English:* you carry a small bag. Bombs, potions, spare weapons, and found amulets all compete for its few slots.
 
 **PR-24: Bow and musket.** 🔧
-Implement one bow with a fast draw and small area arrows, and one musket with a slow reload and a flat shot (D-40, D-42, OQ-13). Enemies use both (D-30). Contact sheets prove the two projectiles are distinct in flight.
+Implement one bow with a fast draw and small area arrows, and one musket with a slow reload and a flat shot (D-40, D-42, OQ-13). The attack bit fires the ranged weapon of the loadout (D-320). Enemies use both (D-30). Contact sheets prove the two projectiles are distinct in flight.
 Gate: the owner confirms the musket reload feels like exposure and the bow feels like pressure.
 > *In plain English:* the first ranged weapons arrive. A shot from a musket is a commitment, and an arrow is quick and spreads its damage.
 
@@ -652,7 +658,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60.
-12. PR-19, PR-20.
+12. PR-19, PR-20, PR-62.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

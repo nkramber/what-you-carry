@@ -9,9 +9,16 @@ namespace WhatYouCarry.Game.Smoke;
 /// only when the log holds no error line. PR-18 extends the script to the stairwell.
 /// </summary>
 /// <remarks>
+/// <para>
 /// The script has four parts of 250 ticks: a walk forward, a walk with a turn to the left, a sprint with a
 /// held jump, and a strafe to the right with a look up. Each part meets whatever the floor of the seed puts in
 /// its way, and a wall stops the body with no error (D-235).
+/// </para>
+/// <para>
+/// The two walks press the attack bit once each second, and the strafe presses the dodge bit once each second, so the
+/// session swings the sword, rolls, and plays their clips on every platform (D-149, D-323, D-331). A press sets the bit
+/// for one tick, and the cooldown of a roll ends before the next press (D-327).
+/// </para>
 /// </remarks>
 public static class SmokeSession
 {
@@ -33,6 +40,12 @@ public static class SmokeSession
     /// <summary>A full movement byte (D-233).</summary>
     public const sbyte FullMove = 127;
 
+    /// <summary>The ticks from one press to the next: one second.</summary>
+    public const uint PressPeriod = 60;
+
+    /// <summary>The tick inside a press period of a press of the dodge bit.</summary>
+    public const uint DodgeOffset = 30;
+
     private const string PastScript = "The tick is past the end of the smoke script.";
 
     /// <summary>Answers whether the user arguments of the process ask for the session.</summary>
@@ -50,13 +63,15 @@ public static class SmokeSession
             throw new ArgumentOutOfRangeException(nameof(tick), tick, PastScript);
         }
 
+        ushort attack = tick % PressPeriod == 0 ? Button.Attack : (ushort)0;
+        ushort dodge = tick % PressPeriod == DodgeOffset ? Button.Dodge : (ushort)0;
         uint part = tick / PartTicks;
         switch (part)
         {
-            case 0: return new Intent(tick, 0, 0, 0, FullMove, 0);
-            case 1: return new Intent(tick, TurnRate, 0, 0, FullMove, 0);
+            case 0: return new Intent(tick, 0, 0, 0, FullMove, attack);
+            case 1: return new Intent(tick, TurnRate, 0, 0, FullMove, attack);
             case 2: return new Intent(tick, 0, 0, 0, FullMove, Button.Sprint | Button.Jump);
-            default: return new Intent(tick, 0, LookUpRate, FullMove, 0, 0);
+            default: return new Intent(tick, 0, LookUpRate, FullMove, 0, dodge);
         }
     }
 }

@@ -1,0 +1,15 @@
+{
+  "id": "sword-basic",
+  "tier": 0,
+  "handedness": "one",
+  "windupTicks": 12,
+  "activeTicks": 6,
+  "recoveryTicks": 18,
+  "damage": 34,
+  "reachCentimetres": 160,
+  "arcHundredths": 9000,
+  "lowCentimetres": 50,
+  "highCentimetres": 170,
+  "model": "models/sword-basic.bbmodel",
+  "animation": "models/player.sword-swing.json"
+}

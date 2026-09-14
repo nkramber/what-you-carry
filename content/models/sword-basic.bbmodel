@@ -1,0 +1,384 @@
+{
+  "meta": {
+    "format_version": "5.0",
+    "model_format": "free",
+    "box_uv": false
+  },
+  "name": "sword-basic",
+  "model_identifier": "",
+  "visible_box": [
+    1,
+    1,
+    0
+  ],
+  "variable_placeholders": "",
+  "variable_placeholder_buttons": [],
+  "unhandled_root_fields": {},
+  "resolution": {
+    "width": 256,
+    "height": 256
+  },
+  "elements": [
+    {
+      "name": "grip_box",
+      "box_uv": false,
+      "rescale": false,
+      "locked": false,
+      "render_order": "default",
+      "from": [
+        -0.5,
+        -1,
+        -0.5
+      ],
+      "to": [
+        0.5,
+        1,
+        0.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            64,
+            32,
+            66.0,
+            36
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            66,
+            34,
+            68.0,
+            38
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            68,
+            36,
+            70.0,
+            40
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            70,
+            38,
+            72.0,
+            42
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            72,
+            40,
+            74.0,
+            42.0
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            74,
+            42,
+            76.0,
+            44.0
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "48618fe8-f1bb-4c0f-bced-7260c842b412"
+    },
+    {
+      "name": "guard_box",
+      "box_uv": false,
+      "rescale": false,
+      "locked": false,
+      "render_order": "default",
+      "from": [
+        -1.5,
+        -1.5,
+        -0.5
+      ],
+      "to": [
+        1.5,
+        -1,
+        0.5
+      ],
+      "autouv": 0,
+      "color": 0,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            224,
+            0,
+            230.0,
+            1.0
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            226,
+            2,
+            228.0,
+            3.0
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            228,
+            4,
+            234.0,
+            5.0
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            230,
+            6,
+            232.0,
+            7.0
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            232,
+            8,
+            238.0,
+            10.0
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            234,
+            10,
+            240.0,
+            12.0
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "e18c6d7c-c847-4c48-8ebc-6f829ed21d75"
+    },
+    {
+      "name": "blade_box",
+      "box_uv": false,
+      "rescale": false,
+      "locked": false,
+      "render_order": "default",
+      "from": [
+        -0.75,
+        -9.5,
+        -0.25
+      ],
+      "to": [
+        0.75,
+        -1.5,
+        0.25
+      ],
+      "autouv": 0,
+      "color": 0,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            96,
+            32,
+            99.0,
+            48.0
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            98,
+            34,
+            99.0,
+            50.0
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            100,
+            36,
+            103.0,
+            52.0
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            102,
+            38,
+            103.0,
+            54.0
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            104,
+            40,
+            107.0,
+            41.0
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            106,
+            42,
+            109.0,
+            43.0
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "5b2e35d9-513d-4481-8d0c-ac3668d15d26"
+    },
+    {
+      "name": "tip_box",
+      "box_uv": false,
+      "rescale": false,
+      "locked": false,
+      "render_order": "default",
+      "from": [
+        -0.25,
+        -10.25,
+        -0.25
+      ],
+      "to": [
+        0.25,
+        -9.5,
+        0.25
+      ],
+      "autouv": 0,
+      "color": 0,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            96,
+            32,
+            97.0,
+            33.5
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            98,
+            34,
+            99.0,
+            35.5
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            100,
+            36,
+            101.0,
+            37.5
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            102,
+            38,
+            103.0,
+            39.5
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            104,
+            40,
+            105.0,
+            41.0
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            106,
+            42,
+            107.0,
+            43.0
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "5fa7fc27-8551-4e88-88a9-0f3b39531554"
+    }
+  ],
+  "groups": [
+    {
+      "name": "sword",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "color": 0,
+      "uuid": "59e8304c-421c-49c7-b0d8-b0be85658bac",
+      "export": true,
+      "mirror_uv": false,
+      "isOpen": true,
+      "locked": false,
+      "visibility": true,
+      "autouv": 0,
+      "selected": false,
+      "children": []
+    }
+  ],
+  "outliner": [
+    {
+      "uuid": "59e8304c-421c-49c7-b0d8-b0be85658bac",
+      "isOpen": true,
+      "children": [
+        "48618fe8-f1bb-4c0f-bced-7260c842b412",
+        "e18c6d7c-c847-4c48-8ebc-6f829ed21d75",
+        "5b2e35d9-513d-4481-8d0c-ac3668d15d26",
+        "5fa7fc27-8551-4e88-88a9-0f3b39531554"
+      ]
+    }
+  ],
+  "textures": []
+}
