@@ -2,6 +2,46 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 165: 2026-09-14, Codex
+
+Author: Codex
+Session: review PR #69, the dig restart, at effective head `80ee5d9`. Branch `feat/pr-67-dig-restart`.
+
+### What this session did, and why
+
+- Read the PR description, complete diff, affected Core callers, tests, roadmap, design, decisions, questions, prior records, and every PR comment.
+- Checked the provider gate. Session 164 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Verified the restart state machine. Each failed dig uses the next draws of the same Procgen stream and a new empty grid, and the first complete plan supplies the shafts and detail.
+- The focused restart suite passed 4 tests. The tests cover a complete first dig, budget exhaustion, retry output, and the four-dig contextual error.
+- Found no in-scope defect. Wrote `docs/reviews/pr-69.md` with the verdict `Ready for owner merge` for `80ee5d9`.
+
+### State of the build
+
+- `main` and the merge base are `d65823c`. The effective head is `80ee5d9`. The later tip `0e69c58` changes only metadata paths under D-184.
+- The focused restart tests passed 4 tests. A local full-suite, build, and STE-check attempt produced no completion result. The review records those attempts as unverified.
+- Revision-matched CI on `80ee5d9` passed CI, smoke, bit identity on all three platforms, compare, bots, det-lint, asset QA, night gate, and STE check. Gitar approved with no issue comment.
+- `evaluate` failed and `review-gate` was neutral before this review record existed, as D-251 predicts. They must refresh after the review commit reaches the PR.
+
+### In flight
+
+PR #69 is ready for owner merge after the review record and handoff commit reach the branch. The owner then merges, and a docs PR records the merge (D-297). PR-64 follows in a fresh session.
+
+### Traps and gotchas
+
+- The GitHub PR is #69, but the roadmap item is PR-67.
+- The effective head is `80ee5d9`, not the metadata tip `0e69c58` (D-184).
+- The first `git fetch origin` after the review failed because the checkout could not open `.git/FETCH_HEAD`. The initial fetch and PR read succeeded before the failure.
+- The local test host first failed with a socket permission error. The elevated focused run passed. The elevated full suite produced no completion result.
+- The next ids are D-362, OQ-174, F-101, PR-68, and Session 166.
+
+### Open questions that block progress
+
+None blocks PR #69. PR-64 asks the owner for the motion on a ramp before the code. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Commit the review record and this handoff entry. Push them to `origin/feat/pr-67-dig-restart`. Fetch and verify the remote head and the refreshed review-gate check.
+
 ## Session 164: 2026-09-14, Claude Code
 
 Author: Claude Code
@@ -404,41 +444,3 @@ None blocks this PR. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks 
 ### Next concrete action
 
 The owner merges this PR. The owner then answers OQ-9, the enemy families, and a fresh session opens PR-16 per the Phase 2 roadmap.
-
-## Session 155: 2026-09-14, Codex
-
-Author: Codex
-Session: re-review PR #62 at effective head `38d1fac`.
-
-### What this session did, and why
-
-- Recomputed the effective head. The correction commit is `38d1fac`. Later review and handoff commits are metadata under D-184.
-- Read the response file, the correction diff, the original trigger, the new regression tests, affected callers, and current PR comments.
-- Verified that P2-1 is fixed. The focused Player, Animation, and Content suite passed 149 tests, including the traversal, separator, extension, and valid subdirectory cases.
-- Updated `docs/reviews/pr-62.md` in place. P2-1 is `fixed in 38d1fac`, and the current verdict is `Ready for owner merge`.
-
-### State of the build
-
-- The revision-matched remote build, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar checks pass on `38d1fac`.
-- Fresh `review-gate` and `evaluate` checks pass after the review update reaches the PR.
-- Duplicate platform CI jobs remain in progress or queued after the metadata push. No pending job is reported as passed.
-- The local full-suite run did not produce a final result in the execution window. Session 154 reports 855 tests passed with five Smoke tests, and remote CI provides revision-matched evidence.
-
-### In flight
-
-PR #62 is ready for owner merge after the remaining duplicate CI jobs finish. Exit test 7 remains the owner play test. A docs PR records the merge (D-297).
-
-### Traps and gotchas
-
-- The effective head is `38d1fac`, not the later metadata tip.
-- Keep P2-1 and its original trigger in later review history.
-- The art quality roadmap item also uses PR-62. It is not GitHub PR #62.
-- The next ids are D-340, OQ-172, F-97, PR-63, and Session 156.
-
-### Open questions that block progress
-
-None blocks PR #62. Exit test 7 needs the owner play test. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Wait for the remaining duplicate CI jobs. The owner then plays the sword, merges PR #62, and records the merge in a docs PR.

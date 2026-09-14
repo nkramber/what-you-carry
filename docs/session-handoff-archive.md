@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 155: 2026-09-14, Codex
+
+Author: Codex
+Session: re-review PR #62 at effective head `38d1fac`.
+
+### What this session did, and why
+
+- Recomputed the effective head. The correction commit is `38d1fac`. Later review and handoff commits are metadata under D-184.
+- Read the response file, the correction diff, the original trigger, the new regression tests, affected callers, and current PR comments.
+- Verified that P2-1 is fixed. The focused Player, Animation, and Content suite passed 149 tests, including the traversal, separator, extension, and valid subdirectory cases.
+- Updated `docs/reviews/pr-62.md` in place. P2-1 is `fixed in 38d1fac`, and the current verdict is `Ready for owner merge`.
+
+### State of the build
+
+- The revision-matched remote build, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar checks pass on `38d1fac`.
+- Fresh `review-gate` and `evaluate` checks pass after the review update reaches the PR.
+- Duplicate platform CI jobs remain in progress or queued after the metadata push. No pending job is reported as passed.
+- The local full-suite run did not produce a final result in the execution window. Session 154 reports 855 tests passed with five Smoke tests, and remote CI provides revision-matched evidence.
+
+### In flight
+
+PR #62 is ready for owner merge after the remaining duplicate CI jobs finish. Exit test 7 remains the owner play test. A docs PR records the merge (D-297).
+
+### Traps and gotchas
+
+- The effective head is `38d1fac`, not the later metadata tip.
+- Keep P2-1 and its original trigger in later review history.
+- The art quality roadmap item also uses PR-62. It is not GitHub PR #62.
+- The next ids are D-340, OQ-172, F-97, PR-63, and Session 156.
+
+### Open questions that block progress
+
+None blocks PR #62. Exit test 7 needs the owner play test. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Wait for the remaining duplicate CI jobs. The owner then plays the sword, merges PR #62, and records the merge in a docs PR.
+
 ## Session 154: 2026-09-13, Claude Code
 
 Author: Claude Code
