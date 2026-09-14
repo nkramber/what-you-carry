@@ -132,6 +132,8 @@ The v1 scope is small (D-56): 15 floors, one biome, 3 bosses, about 12 weapons, 
 
 The world theme is fantasy with black-powder guns (D-7). The v1 biome is a collapsed deep mine, and a blasting charge is a mining tool (D-210). The tone is dark with dry humor (D-8). The look reference is Minecraft Dungeons, pushed darker with torchlight (D-59). The world is a voxel grid of one-meter cubes (D-78). Each floor is a mine dig plan of galleries, drifts, chambers, and shafts (D-253). Props break, and walls are permanent (D-79).
 
+Every floor is 64 by 20 by 64 blocks, with 5 to 9 chambers (D-343, D-344). A gallery is 7 blocks wide and 5 high, and a drift is 5 blocks wide and 4 high (D-341). A chamber is 5 to 8 blocks high. A tunnel changes height by a ramp or a shaft, and never by a one-block step (D-347). A ramp rises one block over two, three, or four blocks, and a body walks it with no jump (D-345, D-346). Some chambers hold a tier 2 blocks over the floor, and a ramp joins the tier to the floor (D-348 to D-350).
+
 Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The palette is eight ramps of four colors from dark to light (D-304). A tool generates the atlas from the palette and one rule per material (D-305, D-307). Every face has 32 texels per meter, a body face too (D-308). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
 A C# synthesizer generates all audio from parameter files, music included (D-89, D-93). Music quality is a register risk (F-18).
@@ -307,6 +309,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-94 | The scheduled night at 03:00 UTC on 2026-09-11 never fired: no run of the schedule event exists, the runner was free from 02:45 UTC, the old cron line stood on `main` until 03:54 UTC, and the workflow reads active on GitHub | 2026-09-11 | ✅ D-285 moves the cron to 08:07 UTC, off the start of the hour, which GitHub names as the load peak that delays or drops a schedule. Refuted 2026-09-11 as the whole cause: the 08:07 UTC night came 4 h 40 min late, and a watch read it as a miss (F-95) |
 | F-95 | The scheduled night at 08:07 UTC on 2026-09-11 never fired either: no run of the schedule event existed at 09:00 UTC, the runner was online and idle from 07:15 UTC, the `7 8 * * *` line stood on `main` from 06:27 UTC, the workflow read active, and Actions was on. The repository has no schedule run in two chances on two cron lines, githubstatus.com listed no incident after 2026-09-04, and the cause is unknown | 2026-09-11 | ✅ Refuted 2026-09-11: the night ran at 12:47 UTC as run 34600758086, 4 h 40 min after the cron, and passed. The watch stopped at 09:00 UTC and read a late run as a miss. D-286 moved the cron to 17:21 UTC for one test, and D-288 returns it to 08:07 UTC |
 | F-96 | The PR-15 contact sheet showed the art as a first pass: faces of three rule settings, a body of ten boxes, and one light. The owner asked whether these were test materials, and no roadmap item raised the art to finished quality | 2026-09-13 | 🔧 D-338 keeps the PR-15 sheet as a first pass. D-339 adds PR-62 after PR-20. Binds PR-62 |
+| F-97 | The owner played floor 1 of PR-15 and found the tunnels very cramped. The dig plan carves drifts of 3 by 3 blocks, a gallery of 5 by 3, and chambers 3 to 4 high, and every rise in a tunnel is a one-block step that needs a jump (D-165, D-253) | 2026-09-14 | 🔧 D-341 to D-351: wider and taller spaces, one floor size and one room count, ramps of three slopes, chamber tiers, and the work before PR-16. Binds PR-63 to PR-66 and PR-16 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -392,7 +395,7 @@ Gate: a recorded run with camera motion replays to the same hash on all three pl
 > *In plain English:* the camera is part of the simulation, not decoration, so where you look and where you aim replay exactly.
 
 **PR-9: Procgen v1 and property tests.** ✅ Merged 2026-09-09 as PR #27.
-Implement floor generation on the grid for one biome, a collapsed deep mine (D-6, D-13, D-46, D-210). A floor is a mine dig plan: a main gallery with side drifts, chambers, shafts and ramps, a spawn point, and a stairwell (D-253). Every tunnel is at least three by three (D-166). The floor size grows with depth, by band, in the floor template (D-252). Chamber kinds are a content type with a weight, and the sum of weights lands inside the budget window (D-167, D-255). The spawn is in the first chamber, and the stairwell is in the farthest one (D-256). Implement the stairwell transition in Core (D-50, D-149). Two button bits at the stairwell carry the choice, so the record replays it (D-257). The next floor generates from the run seed and the floor number. PR-9 carves raw stone and air alone, and PR-59 adds the detail (D-254). Property tests run over thousands of seeds per PR and one hundred thousand each night (D-116). They assert four facts: every chamber is reachable, no chambers overlap, the stairwell is reachable, and the difficulty budget is within tolerance.
+Implement floor generation on the grid for one biome, a collapsed deep mine (D-6, D-13, D-46, D-210). A floor is a mine dig plan: a main gallery with side drifts, chambers, shafts and ramps, a spawn point, and a stairwell (D-253). Every tunnel is at least three by three (D-166). The floor size grows with depth, by band, in the floor template (D-252). D-343 revises the band sizes for PR-63: every band is 64 by 20 by 64. Chamber kinds are a content type with a weight, and the sum of weights lands inside the budget window (D-167, D-255). The spawn is in the first chamber, and the stairwell is in the farthest one (D-256). Implement the stairwell transition in Core (D-50, D-149). Two button bits at the stairwell carry the choice, so the record replays it (D-257). The next floor generates from the run seed and the floor number. PR-9 carves raw stone and air alone, and PR-59 adds the detail (D-254). Property tests run over thousands of seeds per PR and one hundred thousand each night (D-116). They assert four facts: every chamber is reachable, no chambers overlap, the stairwell is reachable, and the difficulty budget is within tolerance.
 Gate: the night sweep passes on one hundred thousand seeds.
 > *In plain English:* this digs the mine floors from a random seed: galleries, side tunnels, chambers, and shafts, and no two floors look alike. Tests over huge numbers of seeds prove that a player can reach every chamber and the stairs down.
 
@@ -459,8 +462,28 @@ Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger
 Gate: the owner confirms the sword feels committed and readable, and approves the contact sheet with the sword (D-330).
 > *In plain English:* you can run, jump, dodge, and swing a sword, and the swing shows its wind-up so you can read an enemy.
 
+**PR-63: Dig sizes in the floor template.** 🔧
+Move the dig sizes from Core constants to the floor template (D-342), and set the wide sizes of D-341. Every band takes one floor of 64 by 20 by 64 and 5 to 9 chambers with a budget of 100 (D-343, D-344). The chamber kinds take the larger box ranges of D-341. The PR-9 and PR-59 property tests, the bot sweep, and the night sweep run on the new sizes. The simulation version rises (G-20).
+Gate: the property tests and the night sweep pass on the new sizes, and the owner confirms that floor 1 no longer feels cramped.
+> *In plain English:* the tunnels and chambers are small today, so a fight feels cramped. This change makes every space wider and taller, and the sizes live in data files.
+
+**PR-64: Ramp cells in Core.** 🔧
+Add the ramp cell to the voxel grid: a sloped floor that rises one block over two, three, or four blocks along one of four directions (D-345, D-346). A body walks up and down a ramp with no jump. The camera boom and projectiles stop at the slope (D-246). The reachability search reads a ramp as a walk (D-165, as D-345 revises it). The owner answers the motion on a ramp before the code, and the session decides the cell encoding. The simulation version rises (G-20).
+Gate: property tests assert no tunnel through a ramp at maximum speed, and the bit-identity job passes with a ramp run.
+> *In plain English:* today a height change is a row of whole-block steps, and each step needs a jump. This change adds a sloped block that bodies walk up and down, with the same result on every machine.
+
+**PR-65: Ramp meshes in Game.** 🔧
+Extend the greedy mesher of PR-13 to ramp cells: a sloped face and two side faces, with the block texture at 32 texels per meter (D-308) and the vertex occlusion of D-81. The chunk mesh budget of D-291 holds. The contact sheet shows each slope at game zoom (D-306).
+Gate: mesher tests cover each slope and direction, and the owner approves the ramps on a contact sheet.
+> *In plain English:* the game can draw only whole blocks today. This change draws the sloped blocks of PR-64 with the same textures and shade as the walls.
+
+**PR-66: Ramps and chamber tiers in the generator.** 🔧
+Dig ramps in place of one-block steps, so a tunnel changes height by a ramp or a shaft alone (D-345, D-347). Each ramp takes a slope from the list of its floor template (D-346). The tier chance of each chamber kind gives some chambers a tier 2 blocks over the floor, and a ramp joins the two (D-348 to D-350). The detail pass of PR-59 keeps every ramp clear. The PR-9 and PR-59 property tests, the bot sweep, and the night sweep run again. The simulation version rises (G-20).
+Gate: no tunnel over the seed sweep holds a one-block step, and every ramp slope comes from its template. The owner confirms the ramps and the tiers in play.
+> *In plain English:* the mine joins its levels with smooth ramps of three slopes in place of steps. Some chambers get a raised floor, so a fight can use the high ground.
+
 **PR-16: First enemy family, AI, and pathfinder.** 🔧
-Implement the 3D grid pathfinder that understands jumps and drops (D-76). Implement one humanoid family with Core AI: target selection, approach, attack, and reload behavior (D-30, D-31, OQ-9). Add the full-clearer bot policy (D-149). Bot runs cover it.
+Implement the 3D grid pathfinder that understands jumps, drops, and ramps (D-76, D-345). Implement one humanoid family with Core AI: target selection, approach, attack, and reload behavior (D-30, D-31, OQ-9). Add the full-clearer bot policy (D-149). Bot runs cover it.
 Gate: the bot sweep passes with enemies active.
 > *In plain English:* the first enemies find their way through the dungeon and fight by the same rules you do.
 
@@ -657,7 +680,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
-11. PR-60, PR-61, PR-15, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62.
+11. PR-60, PR-61, PR-15, PR-63, PR-64, PR-65, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62.
 12. PR-19, PR-20, PR-62.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.

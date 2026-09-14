@@ -1,5 +1,44 @@
 # Session handoff archive
 
+## Session 147: 2026-09-12, Codex
+
+Author: Codex
+Session: re-review PR #58 at effective head `9803a8b`.
+
+### What this session did, and why
+
+- Checked the provider gate again. The handoff identifies Claude Code as the author of the correction, so Codex remains the eligible reviewer under T-4 and D-101.
+- Read the response file, the correction diff, the affected tests, the roadmap, the decisions, the questions, and all current PR comments.
+- Verified that P2-2 is fixed. `PressOf` rejects a plain word after the press tick, names the word, and preserves flag ordering for the other parser.
+- Verified the correction with the unit tests and the headless command. The command with `unexpected` now fails at boot with exit code 1 and no successful test-exit line.
+- Updated `docs/reviews/pr-58.md` with P2-1 and P2-2 fixed, OQ-170 out of scope, and the verdict `Ready for owner merge` for effective head `9803a8b`.
+
+### State of the build
+
+- `main` and the merge base are `f3f0bc0`. The effective head is `9803a8b`. The later review metadata commits remain outside the effective diff under D-184.
+- The focused tests passed, 15 tests with 0 failures. The full suite passed, 770 tests with 0 failures, as reported in the prior handoff. The build, det-lint, STE check, and revision-matched remote gates passed.
+- `evaluate` and `review-gate` still read the earlier review record and fail until this update reaches the PR.
+- Remote head: the review update is not pushed yet.
+
+### In flight
+
+The owner can merge PR #58 after the fresh review-gate result passes. OQ-170 remains open for whole-list validation in a later change.
+
+### Traps and gotchas
+
+- P2-1 and P2-2 are fixed at `9803a8b`. Keep both finding ids and their evidence in later records.
+- OQ-170 accepts the remaining unknown-flag behavior across the other Game parsers. It does not block PR #58.
+- The effective head is `9803a8b`, not a later metadata commit, under D-184.
+- The next ids are D-313, OQ-171, F-96, and Session 148.
+
+### Open questions that block progress
+
+None blocks PR #58. OQ-170 blocks no work. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159, OQ-160, OQ-44, and OQ-99 do not block this PR.
+
+### Next concrete action
+
+Commit and push the updated review and handoff. Refresh `review-gate` and `evaluate`, then the owner can merge PR #58.
+
 ## Session 146: 2026-09-12, Claude Code
 
 Author: Claude Code
