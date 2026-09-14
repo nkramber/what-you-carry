@@ -1,5 +1,46 @@
 # Session handoff archive
 
+## Session 146: 2026-09-12, Claude Code
+
+Author: Claude Code
+Session: answer the PR #58 repeat review, P2-2. Branch `feat/pr-60-fullscreen-test-exit`.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-58.md` at the reviewed head `39a0c02`. P2-1 is fixed there. P2-2 has partial merit: a plain word after the press tick passed in silence, and T-2 binds the user arguments. The whole argument grammar is outside PR-60, because every older flag has the same property, so that part is OQ-170 for the owner.
+- `TestExit.PressOf` reads the word after the tick when one exists. A word that does not start with `--` is a `ContextException` that names the word. A flag after the tick belongs to its own parser, so the two orders of `--smoke` and `--press` both work.
+- `PressOfRejectsATrailingWord` asserts the error and the word for the trigger of the review and for a second number after the tick. It fails on the parser of `39a0c02`. `PressOfReadsTheInputAndTheTick` gains the two orders with a flag after the tick.
+- The command `--smoke --press escape 100 unexpected` ends at boot with exit code 1 and names `unexpected`.
+- `docs/reviews/pr-58-response.md` gains the P2-2 section and the checks of this head. `docs/questions.md` gains OQ-170.
+- Session 136 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `f3f0bc0`. The effective head is the correction commit above the repeat review commit `e5a3846`, and it holds this entry, the response file, and the corrected files in one commit (D-182).
+- Remote head: `origin/feat/pr-60-fullscreen-test-exit` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 770 tests, 0 failures, with the four Smoke tests on the local Godot build.
+- `det-lint`: 0 findings, Core 0 in 61 files, Game 0 in 27 files. `ste-check`: 0 findings in 15 files. Core and content did not change.
+- The night gate reads the success of run 34692777858 at `811aa84`, ended 13:04 UTC on 2026-09-12. It turns red at 13:04 UTC on 2026-09-14 unless a night refreshes it.
+
+### In flight
+
+PR #58: the second repeat Codex review of P2-2 at the correction head, then the owner merge. The automated pass on the correction head runs after the push, and the PR carries its result (D-250).
+
+### Traps and gotchas
+
+- The press parser rejects a plain word after the tick and accepts a flag there. It reads nothing else, so an unknown flag anywhere still passes in silence until OQ-170 has its answer.
+- The automatic pass of gitar did not run on `39a0c02`, and the head had no `Gitar` check run at all. The comment `Gitar review` ran it, and the pass approved the head three minutes later (D-303). Read the check runs of the head before you post the comment.
+- The effective head is the correction commit and not a later metadata commit (D-184).
+- The next ids are D-313, OQ-171, F-96, and Session 147.
+
+### Open questions that block progress
+
+None blocks PR #58. OQ-170 blocks nothing. OQ-5 and OQ-46 block PR-15. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-44 blocks PR-18. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews P2-2 per the repeat review procedure of the `pr-review` skill at the correction head and sets the verdict. The owner then merges, answers OQ-170, and a docs PR records the merge (D-297).
+
 ## Session 145: 2026-09-12, Codex
 
 Author: Codex

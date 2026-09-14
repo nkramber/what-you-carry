@@ -228,6 +228,8 @@ Gate: exit tests 1 to 7 pass.
 
 ### PR-15: Player entity and the first weapon
 
+Status: merged 2026-09-14 as PR #62, commit `3f3e8bf`. Exit tests 1 to 6 passed before the merge, and CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit. D-338 closed exit test 8 as a first pass before the merge. D-340 closed exit test 7 after it, when the owner played the sword. The automated pass found an arc with a step of no turn, and the review found weapon asset paths that left the model directory, P2-1. Both corrections merged with the PR.
+
 Scope:
 
 - `Core/Entities/Player.cs`: the PR-7 body plus sprint, dodge on a cooldown, health, and stagger (D-27, D-28, D-29). The player has no armor in this PR, so the PR builds the zero-weight case: the stagger rule of light armor (D-314) and the cooldown of D-315. PR-22 adds the effects of weight (D-316). The sprint speed is 7 meters per second (D-319).
@@ -454,7 +456,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 8. ✅ PR-60 merged 2026-09-13 as PR #58.
 9. ✅ OQ-5 and OQ-46 answered 2026-09-12: D-314 and D-315, with D-316 for weight. ✅ OQ-45 answered 2026-09-12: D-298.
 10. ✅ PR-61 merged 2026-09-13 as PR #60.
-11. PR-15.
+11. ✅ PR-15 merged 2026-09-14 as PR #62.
 12. Owner: answer OQ-9, at least the first family.
 13. PR-16.
 14. Owner: answer OQ-4 and OQ-6.
