@@ -1,5 +1,84 @@
 # Session handoff archive
 
+## Session 155: 2026-09-14, Codex
+
+Author: Codex
+Session: re-review PR #62 at effective head `38d1fac`.
+
+### What this session did, and why
+
+- Recomputed the effective head. The correction commit is `38d1fac`. Later review and handoff commits are metadata under D-184.
+- Read the response file, the correction diff, the original trigger, the new regression tests, affected callers, and current PR comments.
+- Verified that P2-1 is fixed. The focused Player, Animation, and Content suite passed 149 tests, including the traversal, separator, extension, and valid subdirectory cases.
+- Updated `docs/reviews/pr-62.md` in place. P2-1 is `fixed in 38d1fac`, and the current verdict is `Ready for owner merge`.
+
+### State of the build
+
+- The revision-matched remote build, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar checks pass on `38d1fac`.
+- Fresh `review-gate` and `evaluate` checks pass after the review update reaches the PR.
+- Duplicate platform CI jobs remain in progress or queued after the metadata push. No pending job is reported as passed.
+- The local full-suite run did not produce a final result in the execution window. Session 154 reports 855 tests passed with five Smoke tests, and remote CI provides revision-matched evidence.
+
+### In flight
+
+PR #62 is ready for owner merge after the remaining duplicate CI jobs finish. Exit test 7 remains the owner play test. A docs PR records the merge (D-297).
+
+### Traps and gotchas
+
+- The effective head is `38d1fac`, not the later metadata tip.
+- Keep P2-1 and its original trigger in later review history.
+- The art quality roadmap item also uses PR-62. It is not GitHub PR #62.
+- The next ids are D-340, OQ-172, F-97, PR-63, and Session 156.
+
+### Open questions that block progress
+
+None blocks PR #62. Exit test 7 needs the owner play test. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Wait for the remaining duplicate CI jobs. The owner then plays the sword, merges PR #62, and records the merge in a docs PR.
+
+## Session 154: 2026-09-13, Claude Code
+
+Author: Claude Code
+Session: answer the PR #62 review, P2-1. Branch `feat/pr-15-player-first-weapon`.
+
+### What this session did, and why
+
+- Read `docs/reviews/pr-62.md` at the reviewed head `6e35bc5`. P2-1 has full merit: `WeaponDefinition.AssetPath` checked the `models/` prefix alone, so a '..' segment and the extension of the other kind passed Core validation.
+- Nine regression cases in `ContentTests.AWeaponOutsideItsBoundsIsAnError` failed against the validator of `6e35bc5` before the correction, with 16 other cases passed.
+- `AssetPath` takes the extension of its kind, and it rejects a backslash, an empty, '.', or '..' segment, and a file name without the extension after a name. The extensions of a model and an animation moved into `ContentLoader`, and `AssetPaths` reads them. `AWeaponAssetPathUnderTheModelDirectoryLoads` keeps a path in a subdirectory of `models/` valid.
+- `docs/reviews/pr-62-response.md` records the disposition, the evidence, and the checks.
+- The review session left eleven entries in the file. Sessions 144 and 143 moved to the archive, so the file holds ten with this one.
+
+### State of the build
+
+- `main` is at `aeb91df`. The effective head is the correction commit above the review commits `37f519d` and `5b8f03a`, and it holds this entry, the response file, and the corrected files in one commit (D-182).
+- Remote head: `origin/feat/pr-15-player-first-weapon` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 855 tests, 0 failures, with the five Smoke tests on the local Godot build. `det-lint`: 0 findings, Core 0 in 65 files, Game 0 in 32 files. `asset-qa`: 0 findings. `ste-check`: 0 findings in 16 files.
+- The night gate reads the success of run 34759337453 at `4a1048c`, ended 14:13 UTC on 2026-09-13. It turns red at 14:13 UTC on 2026-09-15 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-14, and it can start hours late (F-95).
+
+### In flight
+
+PR #62: the automated pass of gitar on the correction head, then the repeat Codex review of P2-1 per the `pr-review` skill. The owner then plays the sword for exit test 7 and merges. A docs PR records the merge (D-297). The automated pass runs after the push, and the PR carries its result (D-250).
+
+### Traps and gotchas
+
+- The effective head is the correction commit, and not a later metadata commit (D-184).
+- A weapon asset path names its kind by its extension: a model ends in `.bbmodel`, and a swing clip ends in `.json`. A path in a subdirectory of `models/` still loads.
+- `review-gate` reads red until the repeat review approves the correction head (D-181).
+- Exit test 7 of PR-15 is still open: the owner plays the sword and records the result as a decision before the merge.
+- Session 153 reported a local test host that could not bind its socket. The full local suite ran in this session, and the state of the build gives its result.
+- The next ids are D-340, OQ-172, F-97, PR-63, and Session 155.
+
+### Open questions that block progress
+
+None blocks PR #62. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews the correction of P2-1 per the repeat review procedure of the `pr-review` skill at the correction head and sets the verdict. The owner plays the sword for exit test 7, then merges, and a docs PR records the merge (D-297).
+
 ## Session 153: 2026-09-13, Codex
 
 Author: Codex

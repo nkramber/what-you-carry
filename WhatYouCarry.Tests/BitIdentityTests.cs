@@ -29,9 +29,11 @@ public sealed class BitIdentityTests
     /// PR-11 moved it from `d8943df12fefcbee` when the sweep gained the Bot stream (D-272). PR-15 moved it from
     /// `6ec00e90c1c85cdb` when the state gained the player and the run end kind, the sweep intents began to swing and roll,
     /// and the sweep gained a projectile run and the arc test (D-320, D-322, D-325). PR-63 moved it from `2258ba8b9cc94b3f`
-    /// when the sweep floors took the dig sizes of D-341 and the simulation version rose to 8 (D-342, G-20).
+    /// when the sweep floors took the dig sizes of D-341 and the simulation version rose to 8 (D-342, G-20). PR-67 moved it
+    /// from `b00814dbf25e61e8` when the simulation version rose to 9 (D-359, G-20). The sweep floors dig inside the job
+    /// budget and stay the same, and the replay header holds the version, so only the version moved the hash.
     /// </remarks>
-    private const string ExpectedHash = "b00814dbf25e61e8";
+    private const string ExpectedHash = "efcce6816cec980e";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

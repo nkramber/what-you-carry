@@ -51,14 +51,13 @@ public sealed class DigPlan
     public const int MaxBranchDepth = 3;
 
     /// <summary>
-    /// The count of jobs before a floor that still lacks a chamber is an error (D-279). The first night measured the
-    /// tail on 2026-09-10: of 75000 floors, three needed 615, 1661, and 2817 jobs, and the rest under 300, because
-    /// the last chamber of a crowded floor finds room only after many walkers end at once (F-92). The cap was three
-    /// and a half times that largest need. The dig sizes of D-341 moved the tail on 2026-09-14: the largest need of
-    /// the 175000 night floors is 5890, and 7 of 500000 more floors reach the cap with a chamber in rock (F-98). The
-    /// cap stands until PR-67 digs such a floor again (D-353).
+    /// The count of jobs of one dig before the floor generator digs the floor again (D-359). The last chamber of a
+    /// crowded floor finds room only after many walkers end at once (F-92). The measurement of 2026-09-14 dug the 675000
+    /// floors of F-98 on the sizes of D-341: one floor in 5500 needs more than 1000 jobs, and 7 ran 10000 jobs with a
+    /// chamber in rock (F-98). A heavy floor digs 1000 jobs in about half a second, and the next floor digs inside one
+    /// tick, so the budget also bounds the stop of the game at a descend. It replaces the job cap of D-279.
     /// </summary>
-    public const int MaxJobs = 10000;
+    public const int JobBudget = 1000;
 
     /// <summary>The count of anchors tried for the first chamber before the floor is an error.</summary>
     public const int MaxFirstChamberTries = 100;
@@ -166,19 +165,19 @@ public sealed class DigPlan
         throw error;
     }
 
-    /// <summary>Runs dig jobs until every chamber is dug, and gives the count of jobs it ran.</summary>
-    /// <exception cref="ContextException"><see cref="MaxJobs"/> jobs ran and a chamber is still not dug.</exception>
-    public int DigUntilComplete()
+    /// <summary>
+    /// Runs dig jobs until every chamber is dug, or until <see cref="JobBudget"/> jobs ran. Gives true when every
+    /// chamber is dug, and false when the budget ran out with a chamber still in rock, so the floor generator digs the
+    /// floor again (D-359). The count of jobs that ran comes out in both cases.
+    /// </summary>
+    public bool TryDigUntilComplete(out int jobCount)
     {
-        int jobCount = 0;
+        jobCount = 0;
         while (this.chambers.Count < this.kinds.Count)
         {
-            if (jobCount >= MaxJobs)
+            if (jobCount >= JobBudget)
             {
-                ContextException error = new($"The dig plan ran {MaxJobs} jobs and dug {this.chambers.Count} of {this.kinds.Count} chambers.");
-                error.AddContext("chambersDug", ((long)this.chambers.Count).ToString(CultureInfo.InvariantCulture));
-                error.AddContext("chambersNeeded", ((long)this.kinds.Count).ToString(CultureInfo.InvariantCulture));
-                throw error;
+                return false;
             }
 
             if (this.nextJob >= this.jobs.Count)
@@ -195,7 +194,7 @@ public sealed class DigPlan
             this.RunJob(job, jobIndex);
         }
 
-        return jobCount;
+        return true;
     }
 
     /// <summary>Tries one shaft per chamber, at a random column of a random chamber each time.</summary>

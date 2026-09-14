@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, and D-304 to D-353. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-361. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -280,7 +280,7 @@ Scope:
 - `content/chambers/*.json`: the box size ranges of D-341.
 - Tests: a test of one floor size on every band replaces `FloorSizeGrowsWithDepth` (D-343). `TunnelCrossSection` reads the sizes of the template over each stamp of the gallery and the drifts, and the floor plan lists those stamps.
 - If 5 to 9 rooms do not fit a 64 by 64 floor over the seed sweep, the session files a question (D-344).
-- The dig tail of F-98 waits for PR-67, and PR-63 keeps the job cap of D-279 (D-353).
+- The dig tail of F-98 waits for PR-67, and PR-63 keeps the job cap of D-279 (D-353). D-359 supersedes that cap in PR-67.
 - The simulation version rises, and the bit-identity sweep takes a new known answer (G-20).
 
 Out of scope: ramps and tiers (PR-64 to PR-66), the camera numbers of D-242, the enemy spawns (PR-16).
@@ -290,7 +290,7 @@ Exit tests:
 1. `EveryChamberReachable`, `NoChamberOverlap`, `StairwellReachable`, and `BudgetWithinTolerance` pass on every template with the new sizes.
 2. `TunnelCrossSection` asserts over the seed sweep that every gallery and drift has the width and the height of its template.
 3. The content tests reject a missing size field and a size under the minimum of D-166. They also reject an even tunnel width and a size that the floor cannot hold (D-352). Each error names the field.
-4. The bot sweep and the night sweep report zero crashes and zero softlocks on the new sizes, inside the dig job cap of D-279.
+4. The bot sweep and the night sweep report zero crashes and zero softlocks on the new sizes, inside the dig job cap of D-279. D-359 supersedes that cap in PR-67.
 5. The bit-identity job passes on the three platforms with the new known answer.
 6. The owner plays floor 1 and confirms that the spaces no longer feel cramped, recorded as a decision.
 
@@ -306,10 +306,10 @@ Gate: exit tests 1 to 6 pass.
 
 Scope:
 
-- `Core/Procgen/FloorGenerator.cs` and `Core/Procgen/DigPlan.cs`: when a dig passes a job budget, the generator digs the floor again from the next draws of the Procgen stream (D-159, D-353). The floor still comes from the seed and the floor number alone.
-- Before the code, the owner sets the job budget and the count of digs before an error (D-353). A decision records whether the cap of D-279 changes.
-- Tests: each of the 7 floors of F-98 digs every chamber of its budget.
-- The session decides the simulation version and the bit-identity known answer under D-260 and G-20.
+- `Core/Procgen/FloorGenerator.cs` and `Core/Procgen/DigPlan.cs`: when a dig runs 1000 jobs with a chamber still in rock, the generator digs the floor again (D-353, D-359). The restart draws the chamber kinds again from the next draws of the Procgen stream (D-159, D-361). The floor still comes from the seed and the floor number alone.
+- The owner set the job budget to 1000 jobs, the count of digs to 4, and a new chamber draw on each restart (D-359 to D-361). D-359 supersedes the job cap of D-279.
+- Tests: each of the 7 floors of F-98 digs every chamber of its budget. A floor with no complete dig in 4 digs is an error (D-360).
+- The floors that needed 1001 to 10000 jobs change, so the simulation version rises to 9 (D-260, G-20). The three floors of the bit-identity sweep dig inside the budget and stay the same. The replay header holds the version, so the known answer moves (G-20).
 
 Out of scope: the ramps and the tiers (PR-66), a new rule for the chamber draw.
 
