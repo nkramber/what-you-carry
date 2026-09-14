@@ -17,19 +17,20 @@ Session: review PR #69, the dig restart, at effective head `80ee5d9`. Branch `fe
 
 ### State of the build
 
-- `main` and the merge base are `d65823c`. The effective head is `80ee5d9`. The later tip `0e69c58` changes only metadata paths under D-184.
+- `main` and the merge base are `d65823c`. The effective head is `80ee5d9`. The later tips `0e69c58` and `bc991cc` change only metadata paths under D-184.
+- Remote head: `origin/feat/pr-67-dig-restart` at `bc991cc`, verified with `gh pr view`. The branch has no ahead count.
 - The focused restart tests passed 4 tests. A local full-suite, build, and STE-check attempt produced no completion result. The review records those attempts as unverified.
 - Revision-matched CI on `80ee5d9` passed CI, smoke, bit identity on all three platforms, compare, bots, det-lint, asset QA, night gate, and STE check. Gitar approved with no issue comment.
 - `evaluate` failed and `review-gate` was neutral before this review record existed, as D-251 predicts. They must refresh after the review commit reaches the PR.
 
 ### In flight
 
-PR #69 is ready for owner merge after the review record and handoff commit reach the branch. The owner then merges, and a docs PR records the merge (D-297). PR-64 follows in a fresh session.
+PR #69 is ready for owner merge after the fresh required checks pass. The owner then merges, and a docs PR records the merge (D-297). PR-64 follows in a fresh session.
 
 ### Traps and gotchas
 
 - The GitHub PR is #69, but the roadmap item is PR-67.
-- The effective head is `80ee5d9`, not the metadata tip `0e69c58` (D-184).
+- The effective head is `80ee5d9`, not the metadata tips `0e69c58` and `bc991cc` (D-184).
 - The first `git fetch origin` after the review failed because the checkout could not open `.git/FETCH_HEAD`. The initial fetch and PR read succeeded before the failure.
 - The local test host first failed with a socket permission error. The elevated focused run passed. The elevated full suite produced no completion result.
 - The next ids are D-362, OQ-174, F-101, PR-68, and Session 166.
@@ -40,7 +41,7 @@ None blocks PR #69. PR-64 asks the owner for the motion on a ramp before the cod
 
 ### Next concrete action
 
-Commit the review record and this handoff entry. Push them to `origin/feat/pr-67-dig-restart`. Fetch and verify the remote head and the refreshed review-gate check.
+Wait for the fresh required checks. Verify that `review-gate` passes for effective head `80ee5d9`.
 
 ## Session 164: 2026-09-14, Claude Code
 
