@@ -87,6 +87,7 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 - Trunk is `main`. Work on a short branch. The owner squash-merges (D-126).
 - Commit subjects use a conventional prefix: `feat`, `fix`, `docs`, `test`, `chore`.
 - One concern per PR (G-10).
+- A newer push to a PR cancels the older runs of each workflow for that PR (D-356). CI on the tip counts for the effective head when every later commit is a metadata commit (D-357).
 
 ## Automated review pass
 

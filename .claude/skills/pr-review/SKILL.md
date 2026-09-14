@@ -163,6 +163,7 @@ Use the current build commands in `AGENTS.md`. Do not invent a successful comman
 - Distinguish a passed check from a skipped, unavailable, failed, or author-reported check.
 - Record the command, revision, environment, result, and relevant artifact for each required check.
 - Verify CI results against the reviewed revision and configured test target.
+- A newer push to a PR cancels the older runs of each workflow (D-356). CI on the tip then counts as evidence for the effective head when every later commit is a metadata commit (D-357).
 - Check the three-platform bit-identity result and required smoke and content tests (D-71, D-114).
 - Check the applicable bot, seed, economy, asset, and human gates in the current roadmap.
 - Confirm that a known night failure does not bypass the next merge gate (D-115).

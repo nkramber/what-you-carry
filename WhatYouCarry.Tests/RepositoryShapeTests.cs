@@ -194,6 +194,47 @@ public sealed class RepositoryShapeTests
         Assert.Equal("The night workflow has no upload-artifact step.", UploadStepDefect(workflow.Replace("actions/upload-artifact@v4", "actions/other@v4", StringComparison.Ordinal)));
     }
 
+    /// <summary>The concurrency block that every workflow on a pull request carries (D-356).</summary>
+    private const string PullRequestConcurrency = """
+        concurrency:
+          group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+          cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
+        """;
+
+    [Fact]
+    public void EveryPullRequestWorkflowCancelsItsOlderRuns()
+    {
+        // D-356, F-99: a newer event on a PR cancels the older run of each workflow for that PR, so the one Mac runner
+        // serves the newest head. The group keys on the PR number, because the ref of pull_request_target is the base
+        // branch for every PR, and a push to main takes the group of its own commit.
+        string directory = Path.Combine(RepositoryRoot.Find(), ".github", "workflows");
+        List<string> pullRequestWorkflows = [];
+        foreach (string path in Directory.GetFiles(directory, "*.yml").OrderBy(path => path, StringComparer.Ordinal))
+        {
+            string workflow = File.ReadAllText(path);
+            bool onPullRequest = workflow.Contains("\n  pull_request:\n", StringComparison.Ordinal) || workflow.Contains("\n  pull_request_target:\n", StringComparison.Ordinal);
+            if (!onPullRequest)
+            {
+                continue;
+            }
+
+            string name = Path.GetFileName(path);
+            pullRequestWorkflows.Add(name);
+            Assert.True(workflow.Contains("\n" + PullRequestConcurrency + "\n", StringComparison.Ordinal), $"The workflow '{name}' does not carry the concurrency group of D-356.");
+        }
+
+        Assert.Equal(9, pullRequestWorkflows.Count);
+    }
+
+    [Fact]
+    public void TheNightNeverCancels()
+    {
+        // D-356: the night gate fails a cancelled night record (D-274), so the night workflow takes no concurrency group.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        Assert.DoesNotContain("concurrency:", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("cancel-in-progress", workflow, StringComparison.Ordinal);
+    }
+
     /// <summary>The first defect of the upload step in a night workflow text, or null when the step is right (D-280).</summary>
     private static string? UploadStepDefect(string workflow)
     {
