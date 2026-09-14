@@ -454,7 +454,7 @@ Read the user arguments of the Game layer once at boot, with one parser (D-313).
 Gate: a test covers each kind of bad argument, and the user arguments of every session command in `CLAUDE.md` still parse.
 > *In plain English:* the game ignores a typo in a test command today, and a test can pass while it runs the wrong command. After this change, the typo stops the game with a message that names it.
 
-**PR-15: Player entity and the first weapon.** 🔧
+**PR-15: Player entity and the first weapon.** ✅ Merged 2026-09-14 as PR #62.
 Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger, and one sword with windup, active, and recovery frames (D-25, D-27, D-28, D-29, D-314, D-315). PR-15 builds the zero-weight case, and PR-22 adds the effects of weight (D-316). The owner answers of D-319 to D-337 set the roll, the stagger and its guard, the arc, the death, the sword model, and the clips. The attack bit swings the sword, and the Phase 1 shot ends (D-320). Play the animation files of D-298 and implement the procedural locomotion in Game (D-87). A test asserts that the animation file agrees with the Core time values. The PR also carries `README.md` with the launch steps (D-318).
 Gate: the owner confirms the sword feels committed and readable, and approves the contact sheet with the sword (D-330).
 > *In plain English:* you can run, jump, dodge, and swing a sword, and the swing shows its wind-up so you can read an enemy.
@@ -657,7 +657,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
-11. PR-60, PR-61, PR-15, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60.
+11. PR-60, PR-61, PR-15, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62.
 12. PR-19, PR-20, PR-62.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
