@@ -304,6 +304,8 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-67: Dig restart
 
+Status: merged 2026-09-14 as PR #69, commit `f2a04e6`. Exit tests 1, 2, 3, and 5 passed before the merge. CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit. Exit test 4 passed for the bot sweep of the PR. The sweep of exit test 3 dug the floors of the night with no error. The first night on the restart runs after the merge. The review found no defect.
+
 Scope:
 
 - `Core/Procgen/FloorGenerator.cs` and `Core/Procgen/DigPlan.cs`: when a dig runs 1000 jobs with a chamber still in rock, the generator digs the floor again (D-353, D-359). The restart draws the chamber kinds again from the next draws of the Procgen stream (D-159, D-361). The floor still comes from the seed and the floor number alone.
@@ -611,7 +613,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 11. ✅ PR-15 merged 2026-09-14 as PR #62.
 12. ✅ Owner answers on the dig sizes and the ramps, 2026-09-14: D-341 to D-351.
 13. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ OQ-172 answered 2026-09-14: D-353.
-14. PR-67.
+14. ✅ PR-67 merged 2026-09-14 as PR #69.
 15. PR-64.
 16. PR-65.
 17. PR-66.

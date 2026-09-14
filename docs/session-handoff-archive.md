@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 156: 2026-09-14, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-15 as PR #62 and the play test of the owner, D-340, in the same invocation as Sessions 152 and 154 (D-297). Branch `docs/pr-15-merge-record`.
+
+### What this session did, and why
+
+- Session 155 approved `38d1fac` in `docs/reviews/pr-62.md` with P2-1 fixed. The owner merged PR #62 as `3f3e8bf` at 03:16 UTC on 2026-09-14. CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit.
+- No decision recorded exit test 7 before the merge. The owner played the sword, first asked whether the roll was in the game, found it on Left Control, and confirmed that the sword feels committed and readable. D-340 closes exit test 7.
+- `docs/design.md` marks PR-15 merged in the roadmap entry and in sequence item 11. The Phase 2 roadmap gains the status line of PR-15 and the mark in sequence item 11.
+- Session 146 moved to the archive, because the file held eleven entries with this one. Session 155 moved Session 145 before this session.
+
+### State of the build
+
+- `main` is at `3f3e8bf`, the squash merge of PR #62. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-15-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `ste-check`: 0 findings in 16 files. `dotnet test`: 855 tests, 0 failures, with the five Smoke tests on the local Godot build. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `3f3e8bf`.
+- The night gate reads the success of run 34759337453 at `4a1048c`, ended 14:13 UTC on 2026-09-13. It turns red at 14:13 UTC on 2026-09-15 unless a night refreshes it. The next scheduled night is 08:07 UTC on 2026-09-14, and it can start hours late (F-95). At 13:51 UTC on 2026-09-14, no run of it had started.
+
+### In flight
+
+This PR: docs alone. The `review-override` label goes on after the last push and the automated pass (D-188, D-190). PR-16 is next, OQ-9 blocks it, and a fresh session opens it (D-121).
+
+### Traps and gotchas
+
+- The merge marks use the UTC date of the merge, 2026-09-14. D-340 and this entry use the local date, also 2026-09-14.
+- The roll needs the ground, dry feet, and a ready cooldown, and its key is Left Control (D-289, D-329, D-337). A player who misses the key thinks the roll is absent, as the owner did first.
+- The GitHub PR #62 is PR-15. The roadmap id PR-62 is the art quality pass after PR-20 (D-339).
+- The next ids are D-341, OQ-172, F-97, PR-63, and Session 157.
+
+### Open questions that block progress
+
+None blocks this PR. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR. The owner then answers OQ-9, the enemy families, and a fresh session opens PR-16 per the Phase 2 roadmap.
+
 ## Session 155: 2026-09-14, Codex
 
 Author: Codex
