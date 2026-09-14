@@ -463,7 +463,7 @@ Implement the player in Core: sprint, jump, dodge on a cooldown, health, stagger
 Gate: the owner confirms the sword feels committed and readable, and approves the contact sheet with the sword (D-330).
 > *In plain English:* you can run, jump, dodge, and swing a sword, and the swing shows its wind-up so you can read an enemy.
 
-**PR-63: Dig sizes in the floor template.** 🔧
+**PR-63: Dig sizes in the floor template.** ✅ Merged 2026-09-14 as PR #65.
 Move the dig sizes from Core constants to the floor template (D-342), and set the wide sizes of D-341. The validator rejects an even tunnel width and a size that the floor cannot hold (D-352). Every band takes one floor of 64 by 20 by 64 and 5 to 9 chambers with a budget of 100 (D-343, D-344). The chamber kinds take the larger box ranges of D-341. The PR-9 and PR-59 property tests, the bot sweep, and the night sweep run on the new sizes. The simulation version rises (G-20). The dig tail of F-98 waits for PR-67, and PR-63 keeps the job cap of D-279 (D-353).
 Gate: the property tests and the night sweep pass on the new sizes, and the owner confirms that floor 1 no longer feels cramped.
 > *In plain English:* the tunnels and chambers are small today, so a fight feels cramped. This change makes every space wider and taller, and the sizes live in data files.
@@ -686,7 +686,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
-11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62.
+11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65.
 12. PR-19, PR-20, PR-62.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.

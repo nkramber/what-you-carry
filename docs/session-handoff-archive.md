@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 150: 2026-09-13, Codex
+
+Author: Codex
+Session: review PR #60 at effective head `1e3dba8`.
+
+### What this session did, and why
+
+- Checked the provider gate. Session 149 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the PR description, complete diff, affected callers and tests, roadmap, design, decisions, questions, review records, and all PR comments.
+- Found no in-scope defect. The parser rejects unknown words, unknown flags, repeated flags, short flags, and ignored combinations with contextual errors.
+- Added `docs/reviews/pr-60.md` with the effective head and the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` and the merge base are `98e3c47`. The effective head is `1e3dba8`. The later handoff commit is metadata under D-184.
+- The focused tests passed, 37 tests with 0 failures. The local build, full test, and det-lint commands produced no output and did not complete. Revision-matched remote CI passed the required code, smoke, bit identity, bots, det-lint, asset QA, STE check, night gate, and Gitar checks.
+- The fresh `evaluate` and `review-gate` checks pass after the review record reached the PR. Duplicate post-metadata platform jobs remain pending, while their prior revision-matched checks pass.
+
+### In flight
+
+The review record and this handoff entry are pushed in `8d9477a`. The owner can merge after the duplicate platform jobs finish, if branch protection requires them.
+
+### Traps and gotchas
+
+- The effective head is `1e3dba8`, not the later metadata tip, under D-184.
+- A new flag needs an entry in `UserArguments` and an ignored-flag rule when a session ignores it (D-313, D-317).
+- The local dotnet commands can stop without output in this checkout. Remote CI provides separate evidence.
+- The next ids are D-318, OQ-171, F-96, PR-62, and Session 151.
+
+### Open questions that block progress
+
+OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants but block no work. OQ-99 remains open but blocks no work.
+
+### Next concrete action
+
+Commit and push this review and handoff. Verify the fresh review-gate result and the synchronized remote head.
+
 ## Session 149: 2026-09-12, Claude Code
 
 Author: Claude Code

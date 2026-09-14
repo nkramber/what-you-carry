@@ -270,6 +270,8 @@ Gate: exit tests 1 to 8 pass.
 
 ### PR-63: Dig sizes in the floor template
 
+Status: merged 2026-09-14 as PR #65, commit `002054a`. Exit tests 1, 2, 3, and 5 passed before the merge. CI, smoke, bit identity, bots, det-lint, asset-qa, and STE check passed on the merge commit. Exit test 4 passed for the bot sweep of the PR, and a measurement dug the floors of the night with no error. The first night on the new sizes runs after the merge. D-354 closed exit test 6 after the merge, when the owner played floor 1. The review found no defect. The measurement found the dig tail of F-98, and D-353 gives it to PR-67.
+
 Scope:
 
 - `Core/Content/FloorTemplate.cs`: the gallery width and height, the drift width and height, and the chamber height range join the template (D-342). The validator rejects a size under the minimum of D-166, and each error names the field (T-2). It also rejects an even tunnel width, a width past the rock shell, and a height past the rows of the floor (D-352).
@@ -608,7 +610,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 10. ✅ PR-61 merged 2026-09-13 as PR #60.
 11. ✅ PR-15 merged 2026-09-14 as PR #62.
 12. ✅ Owner answers on the dig sizes and the ramps, 2026-09-14: D-341 to D-351.
-13. PR-63. ✅ OQ-172 answered 2026-09-14: D-353.
+13. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ OQ-172 answered 2026-09-14: D-353.
 14. PR-67.
 15. PR-64.
 16. PR-65.
