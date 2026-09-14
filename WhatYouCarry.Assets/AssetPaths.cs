@@ -18,10 +18,10 @@ public static class AssetPaths
     public const string BodyModel = ModelDirectory + "player.bbmodel";
 
     /// <summary>The file extension that Blockbench writes for a project (OQ-159).</summary>
-    public const string ModelExtension = ".bbmodel";
+    public const string ModelExtension = ContentLoader.ModelExtension;
 
     /// <summary>The file extension of an animation (D-298).</summary>
-    public const string AnimationExtension = ".json";
+    public const string AnimationExtension = ContentLoader.AnimationExtension;
 
     /// <summary>The character between the model stem and the animation name in an animation file name (D-298).</summary>
     public const char AnimationSeparator = '.';

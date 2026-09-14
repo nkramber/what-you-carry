@@ -38,6 +38,12 @@ public sealed class ContentLoader
     /// </summary>
     public const string ModelDirectory = "models/";
 
+    /// <summary>The file extension of a model under the model directory: the project file that Blockbench writes (OQ-159).</summary>
+    public const string ModelExtension = ".bbmodel";
+
+    /// <summary>The file extension of an animation under the model directory (D-298).</summary>
+    public const string AnimationExtension = ".json";
+
     /// <summary>
     /// The directory of the palette, the texture rules, and the atlas, which Core never reads (D-305). Every content
     /// source skips it, so a palette change leaves the content hash of D-163 as it was.

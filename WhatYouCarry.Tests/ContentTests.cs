@@ -568,7 +568,8 @@ public sealed class ContentTests
     /// <summary>
     /// A weapon definition outside its bounds is an error that names the field: a negative tier, an unknown handedness, a
     /// phase of no tick or past the tick counter, no damage, no reach, an arc past a half turn, a band with no height,
-    /// and a path outside the model directory (D-26, D-298, D-325, D-334).
+    /// a path outside the model directory, a path with an empty, dot, or backslash segment, and a file name without the
+    /// extension of its kind (D-26, D-219, D-298, D-325, D-334; PR #62 review P2-1).
     /// </summary>
     [Theory]
     [InlineData("\"tier\":0", "\"tier\":-1", "tier")]
@@ -585,6 +586,15 @@ public sealed class ContentTests
     [InlineData("\"highCentimetres\":170", "\"highCentimetres\":50", "highCentimetres")]
     [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"w.bbmodel\"", "model")]
     [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"player.w.json\"", "animation")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/../floors/a.json\"", "model")]
+    [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"models/player.bbmodel\"", "animation")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/player.w.json\"", "model")]
+    [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"models/../player.w.json\"", "animation")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/./w.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models//w.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/a\\\\..\\\\w.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/w.BBMODEL\"", "model")]
     public void AWeaponOutsideItsBoundsIsAnError(string from, string to, string field)
     {
         // The case of 5 hundredths over 6 active ticks is the arc with a step of no turn (PR #62 automated pass).
@@ -606,5 +616,19 @@ public sealed class ContentTests
         {
             Assert.True(MeleeWeapon.BladeOffset(weapon, step + 1) > MeleeWeapon.BladeOffset(weapon, step), $"The blade does not turn on step {step}.");
         }
+    }
+
+    /// <summary>A model path and an animation path under the model directory load, in a subdirectory of it too (D-298, D-334; PR #62 review P2-1).</summary>
+    [Theory]
+    [InlineData("\"model\":\"models/w.bbmodel\"", "\"model\":\"models/weapons/w.bbmodel\"")]
+    [InlineData("\"animation\":\"models/player.w.json\"", "\"animation\":\"models/weapons/player.w.json\"")]
+    public void AWeaponAssetPathUnderTheModelDirectoryLoads(string from, string to)
+    {
+        string text = WeaponText.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(WeaponText, text);
+
+        WeaponDefinition weapon = WeaponDefinition.FromMembers("weapons/w.json", JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(text)));
+        Assert.StartsWith(WeaponDefinition.AssetDirectory, weapon.Model, StringComparison.Ordinal);
+        Assert.StartsWith(WeaponDefinition.AssetDirectory, weapon.Animation, StringComparison.Ordinal);
     }
 }
