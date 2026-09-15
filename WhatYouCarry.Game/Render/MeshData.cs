@@ -10,8 +10,9 @@ namespace WhatYouCarry.Game.Render;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The engine draws a triangle whose vertices run clockwise as seen from the front. Every quad here follows that
-/// order, so a face shows from the side that its normal points to and the engine culls it from the other side.
+/// The engine draws a triangle whose vertices run clockwise as seen from the front. Every quad and every triangle
+/// face here follows that order, so a face shows from the side that its normal points to and the engine culls it
+/// from the other side.
 /// </para>
 /// <para>
 /// The color carries the ambient occlusion of the vertex (D-81). The first texture coordinate is the local
@@ -27,12 +28,16 @@ public sealed class MeshData
     /// <summary>The count of indices of one quad: two triangles.</summary>
     public const int QuadIndices = 6;
 
+    /// <summary>The count of vertices and of indices of one triangle face.</summary>
+    public const int TriangleVertices = 3;
+
     private readonly List<Vector3> positions = [];
     private readonly List<Vector3> normals = [];
     private readonly List<Color> colors = [];
     private readonly List<Vector2> uvs = [];
     private readonly List<Vector2> tileOrigins = [];
     private readonly List<int> indices = [];
+    private int quadCount;
 
     /// <summary>The position of each vertex, in meters.</summary>
     public IReadOnlyList<Vector3> Positions => this.positions;
@@ -52,8 +57,14 @@ public sealed class MeshData
     /// <summary>The vertex indices of every triangle, three per triangle.</summary>
     public IReadOnlyList<int> Indices => this.indices;
 
-    /// <summary>The count of quads. Every face of a box or a chunk is one quad.</summary>
-    public int QuadCount => this.indices.Count / QuadIndices;
+    /// <summary>
+    /// The count of quads that <see cref="AddQuad"/> added. Every face of a box is one quad, and every face of a chunk
+    /// is one quad or, on the side of a ramp, one triangle face.
+    /// </summary>
+    public int QuadCount => this.quadCount;
+
+    /// <summary>The count of triangles in the index buffer: two for each quad and one for each triangle face.</summary>
+    public int TriangleCount => this.indices.Count / TriangleVertices;
 
     /// <summary>
     /// Adds one quad of four vertices. The corners run clockwise as seen from the side that the normal points to.
@@ -89,6 +100,26 @@ public sealed class MeshData
             this.indices.Add(first + 0);
             this.indices.Add(first + 2);
             this.indices.Add(first + 3);
+        }
+
+        this.quadCount++;
+    }
+
+    /// <summary>
+    /// Adds one triangle face of three vertices: the side of a ramp cell that comes to a point at the low end of its
+    /// run (D-345). The corners run clockwise as seen from the side that the normal points to.
+    /// </summary>
+    public void AddTriangle(Vector3[] corners, Vector3 normal, Color[] cornerColors, Vector2[] cornerUvs, Vector2 tileOrigin)
+    {
+        int first = this.positions.Count;
+        for (int corner = 0; corner < TriangleVertices; corner++)
+        {
+            this.positions.Add(corners[corner]);
+            this.normals.Add(normal);
+            this.colors.Add(cornerColors[corner]);
+            this.uvs.Add(cornerUvs[corner]);
+            this.tileOrigins.Add(tileOrigin);
+            this.indices.Add(first + corner);
         }
     }
 }

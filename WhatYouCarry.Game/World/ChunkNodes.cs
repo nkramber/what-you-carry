@@ -20,7 +20,7 @@ public static class ChunkNodes
             for (int chunkX = 0; chunkX < ChunkLayout.CountX(grid); chunkX++)
             {
                 MeshData data = GreedyMesher.MeshChunk(grid, chunkX, chunkZ);
-                if (data.QuadCount == 0)
+                if (data.TriangleCount == 0)
                 {
                     continue;
                 }

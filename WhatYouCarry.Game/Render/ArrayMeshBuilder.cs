@@ -9,11 +9,11 @@ namespace WhatYouCarry.Game.Render;
 /// </summary>
 public static class ArrayMeshBuilder
 {
-    /// <summary>One mesh with one triangle surface from the buffers. A mesh with no quad has no surface.</summary>
+    /// <summary>One mesh with one triangle surface from the buffers. A mesh with no triangle has no surface.</summary>
     public static ArrayMesh Build(MeshData data)
     {
         ArrayMesh mesh = new();
-        if (data.QuadCount == 0)
+        if (data.TriangleCount == 0)
         {
             return mesh;
         }

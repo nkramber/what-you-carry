@@ -12,8 +12,9 @@ public sealed record ContactSheetNodes(SubViewport Viewport, Camera3D Camera);
 
 /// <summary>
 /// Builds the scene of the contact sheet (D-306) in a viewport with a world of its own: each block in a small grid
-/// through the greedy mesher and the world material, the two bodies with the sword in the hand and the model material
-/// (D-336), the scene light, and the camera of play. Every subject stands at the place that its shot gives.
+/// and each ramp in its ramp scene through the greedy mesher and the world material, the two bodies with the sword in
+/// the hand and the model material (D-336), the scene light, and the camera of play. Every subject stands at the place
+/// that its shot gives.
 /// </summary>
 public static class ContactSheetScene
 {
@@ -44,6 +45,18 @@ public static class ContactSheetScene
                 nodes.Root.Position = shot.Origin;
                 nodes.Root.RotationDegrees = new Vector3(0.0f, shot.BodyYawDegrees, 0.0f);
                 viewport.AddChild(nodes.Root);
+                continue;
+            }
+
+            if (Ramp.IsRamp(shot.Block))
+            {
+                foreach (MeshInstance3D chunk in ChunkNodes.Build(ContactSheet.RampScene(Ramp.FromId(shot.Block).Run), worldMaterial))
+                {
+                    // The ramp scene grid starts at the origin of the shot.
+                    chunk.Position = shot.Origin;
+                    viewport.AddChild(chunk);
+                }
+
                 continue;
             }
 

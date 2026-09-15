@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-367. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-369. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -367,19 +367,20 @@ Gate: exit tests 1 to 6 pass.
 
 Scope:
 
-- `WhatYouCarry.Game/World/GreedyMesher.cs`: a ramp cell gives a sloped face and two side faces (D-345). Each face takes the tile of its block at 32 texels per meter (D-308).
-- `WhatYouCarry.Game/World/AmbientOcclusion.cs`: the vertex occlusion of D-81 reads the slope of a ramp.
+- `WhatYouCarry.Game/World/GreedyMesher.cs`, `RampFaces.cs`, `FaceShape.cs`, and `GreedySweep.cs`: a ramp cell gives a sloped face and each side and end that shows (D-345). A face beside a ramp shows unless the ramp covers it. Each face of a ramp takes the raw stone tile at 32 texels per meter (D-308, D-368), and the slopes of one plane merge.
+- `WhatYouCarry.Game/World/AmbientOcclusion.cs`: the vertex occlusion of D-81 reads the upper half of a ramp as a block and the lower half as air.
+- `WhatYouCarry.Game/Render/MeshData.cs`: a triangle face for the side of a ramp that comes to a point at the low end.
 - The chunk mesh budget of D-291 holds with ramps.
-- The contact sheet adds ramps of the three slopes at game zoom (D-306).
+- The contact sheet adds a ramp of each slope at game zoom, in the whole render (D-306).
 
 Out of scope: the generator (PR-66), new texture rules (PR-62).
 
 Exit tests:
 
-1. `GreedyMesherTests` cover each slope and each direction: a ramp gives its sloped face and its side faces, and a block beside it keeps its open faces.
-2. The mesh budget test of D-291 passes on a test floor with ramps.
+1. `GreedyMesherTests.RampGivesItsSlopeAndSideFaces` covers each slope and each direction: a ramp gives its sloped face and its side faces, and a block beside it keeps its open faces. `SlopeVerticesLieOnTheSlope`, `EveryFaceKeepsTheTexelDensity`, `RampTrianglesRunClockwiseWithArea`, and `SlopesMergeAcrossTheWidth` cover the geometry.
+2. `MeshBudgetTest` passes on a test floor with a ramp in each chamber (D-291).
 3. The smoke session passes on the three platforms.
-4. The owner approves a contact sheet with the ramps, recorded as a decision.
+4. The owner approves a contact sheet with the ramps, recorded as a decision (D-369).
 
 Review focus: presentation, test quality.
 
