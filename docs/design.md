@@ -134,6 +134,8 @@ The world theme is fantasy with black-powder guns (D-7). The v1 biome is a colla
 
 Every floor is 64 by 20 by 64 blocks, with 5 to 9 chambers (D-343, D-344). A gallery is 7 blocks wide and 5 high, and a drift is 5 blocks wide and 4 high (D-341). A chamber is 5 to 8 blocks high. A tunnel changes height by a ramp or a shaft, and never by a one-block step (D-347). A ramp rises one block over two, three, or four blocks, and a body walks it with no jump (D-345, D-346). Some chambers hold a tier 2 blocks over the floor, and a ramp joins the tier to the floor (D-348 to D-350).
 
+A ramp cell is one block id from 8 to 43, so the grid stays one byte per cell (D-164, D-367). On a ramp, the speed along the slope is the flat speed (D-362). A walk and a sprint stay on the slope on the way down, and a roll leaves it (D-363). A body does not slide on a ramp, and it jumps and rolls from a ramp as from flat ground (D-364 to D-366).
+
 Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The palette is eight ramps of four colors from dark to light (D-304). A tool generates the atlas from the palette and one rule per material (D-305, D-307). Every face has 32 texels per meter, a body face too (D-308). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
 A C# synthesizer generates all audio from parameter files, music included (D-89, D-93). Music quality is a register risk (F-18).
@@ -476,7 +478,7 @@ Gate: every floor of F-98 digs, and the property tests, the bot sweep, and the n
 > *In plain English:* about one floor in 96000 fails to dig on the new sizes. This change digs such a floor again from the same seed, so no run stops on it.
 
 **PR-64: Ramp cells in Core.** 🔧
-Add the ramp cell to the voxel grid: a sloped floor that rises one block over two, three, or four blocks along one of four directions (D-345, D-346). A body walks up and down a ramp with no jump. The camera boom and projectiles stop at the slope (D-246). The reachability search reads a ramp as a walk (D-165, as D-345 revises it). The owner answers the motion on a ramp before the code, and the session decides the cell encoding. The simulation version rises (G-20).
+Add the ramp cell to the voxel grid: a sloped floor that rises one block over two, three, or four blocks along one of four directions (D-345, D-346). A body walks up and down a ramp with no jump. The camera boom and projectiles stop at the slope (D-246). The reachability search reads a ramp as a walk (D-165, as D-345 revises it). A ramp cell is a block id from 8 to 43 (D-367). The speed along the slope is the flat speed, a walk stays on the slope on the way down, and a roll leaves it (D-362, D-363). A body does not slide, and it jumps and rolls from a ramp (D-364 to D-366). The simulation version rises (G-20).
 Gate: property tests assert no tunnel through a ramp at maximum speed, and the bit-identity job passes with a ramp run.
 > *In plain English:* today a height change is a row of whole-block steps, and each step needs a jump. This change adds a sloped block that bodies walk up and down, with the same result on every machine.
 

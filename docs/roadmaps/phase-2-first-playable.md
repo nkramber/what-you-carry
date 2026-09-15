@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-361. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-367. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -335,22 +335,22 @@ Gate: exit tests 1 to 5 pass.
 
 Scope:
 
-- `Core/World/VoxelGrid.cs` and `Core/World/BlockId.cs`: a ramp cell holds a sloped floor that rises one block over two, three, or four blocks, along one of four directions (D-345, D-346). The session decides the encoding of a ramp, inside D-164 or with a decision that revises it, before the code.
-- `Core/Physics/SweptAabb.cs`: a body walks up and down a ramp with no jump. The owner answers the motion on a ramp before the code: the speed on a slope, the jump, the roll, and the stagger.
+- `Core/World/Ramp.cs`, `Core/World/VoxelGrid.cs`, and `Core/World/BlockId.cs`: a ramp cell holds a sloped floor that rises one block over two, three, or four blocks, along one of four directions (D-345, D-346). A ramp cell is a block id from 8 to 43, inside D-164 (D-367).
+- `Core/Physics/SweptAabb.cs` and `Core/Entities/PlayerBody.cs`: a body walks up and down a ramp with no jump. The speed along the slope is the flat speed (D-362). A walk and a sprint stay on the slope on the way down, and a roll leaves it (D-363). A body does not slide, and it jumps and rolls from a ramp (D-364 to D-366).
 - `Core/Physics/GridRay.cs`: the camera boom and every projectile stop at the slope of a ramp, and not at the edge of its cell (D-246).
 - `Core/Procgen/Reachability.cs`: the search reads a ramp as a walk in both directions, the move rule of D-165 as D-345 revises it.
 - Tests build ramps by hand in a test grid. The generator digs no ramp before PR-66.
-- The simulation version rises, and the bit-identity sweep adds a run over ramps (G-20).
+- The simulation version rises to 10, and the bit-identity sweep adds a run over ramps (G-20).
 
 Out of scope: the ramp mesh (PR-65), the generator (PR-66), the pathfinder (PR-16).
 
 Exit tests:
 
 1. `BodyWalksUpARamp` asserts for each slope and each direction that a body walks from the low floor to the high floor with no jump.
-2. `BodyWalksDownARamp` asserts that a body walks from the high floor to the low floor with the motion that the owner sets.
-3. A property test over a seed loop of ramp grids asserts no tunnel through a ramp at maximum speed and no fall through a slope.
+2. `BodyWalksDownARamp` asserts that a walk and a sprint from the high floor reach the low floor and stay on the slope (D-363). `ARollLeavesARampOnTheWayDown` asserts that a roll leaves it.
+3. `NoFallThroughASlope` and `NoTunnelThroughARamp` assert over seed loops of ramp grids no tunnel through a ramp at maximum speed and no fall through a slope.
 4. `CameraNeverEntersARamp` asserts that the boom stops at the slope, and `ProjectileHitsARampSlope` asserts that a shot stops on it.
-5. `TheSearchFollowsTheBodyRule` passes on ramp grids, and the search joins the two floors of a ramp in both directions.
+5. `TheSearchWalksARamp` asserts that the search joins the two floors of a ramp in both directions. `TheSearchFollowsTheBodyRuleOnRamps` asserts the body rule beside a ramp.
 6. The bit-identity job passes on the three platforms with the ramp run.
 
 Review focus: determinism, physics, test quality.

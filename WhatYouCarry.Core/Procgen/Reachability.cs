@@ -6,15 +6,21 @@ using WhatYouCarry.Core.World;
 namespace WhatYouCarry.Core.Procgen;
 
 /// <summary>
-/// The walkable cells that a body reaches from one floor cell, with the count of moves to each (D-165, D-256).
+/// The walkable cells that a body reaches from one floor cell, with the count of moves to each (D-165, D-256,
+/// D-345).
 /// </summary>
 /// <remarks>
 /// <para>
-/// A floor cell is a rock cell with two air cells above it, so the box of D-165 stands on it. A move goes to one
-/// of the four neighbor columns. It is a step of at most one block up, or a drop of any depth. A step up needs
-/// the block of the step, two air cells over it, and a third air cell over the start for the jump. A flat move
-/// or a drop needs two air cells in the neighbor column at the height of the start, and the body then lands on
-/// the first rock below.
+/// A floor cell is a solid cell with two open cells above it, so the box of D-165 stands on it. A ramp is a floor
+/// cell too, and the body stands on its slope. A move goes to one of the four neighbor columns. It is a walk along
+/// a ramp, a step of at most one block up, or a drop of any depth. A step up needs the block of the step, two open
+/// cells over it, and a third open cell over the start for the jump. A flat move or a drop needs two open cells in
+/// the neighbor column at the height of the start, and the body then lands on the first solid cell below.
+/// </para>
+/// <para>
+/// A walk along a ramp joins two cells whose slopes meet at one height on the shared face (D-345). A start on a
+/// ramp stands under the top of its cell, so a drop from it needs the neighbor open from the ramp row up, and a
+/// step up from it reaches a block in the ramp row alone.
 /// </para>
 /// <para>
 /// The search is a breadth-first walk over an array queue, so the distance of a cell is the count of moves of
@@ -41,7 +47,7 @@ public sealed class Reachability
     /// <summary>The floor cell that the search started from.</summary>
     public Cell Start { get; }
 
-    /// <summary>Answers whether a body stands on the cell: rock, with two air cells above it. A cell outside the grid is no floor.</summary>
+    /// <summary>Answers whether a body stands on the cell: a block or a ramp, with two open cells above it. A cell outside the grid is no floor.</summary>
     public static bool IsFloor(VoxelGrid grid, Cell cell)
     {
         return grid.Contains(cell.X, cell.Y, cell.Z)
@@ -88,13 +94,20 @@ public sealed class Reachability
             int y = index / (grid.SizeX * grid.SizeZ);
             for (int direction = 0; direction < 4; direction++)
             {
-                int landingY = Landing(grid, x, y, z, x + stepX[direction], z + stepZ[direction]);
+                int neighborX = x + stepX[direction];
+                int neighborZ = z + stepZ[direction];
+                int landingY = RampWalk(grid, x, y, z, neighborX, neighborZ);
+                if (landingY == Unreached)
+                {
+                    landingY = Landing(grid, x, y, z, neighborX, neighborZ);
+                }
+
                 if (landingY == Unreached)
                 {
                     continue;
                 }
 
-                int landing = Index(grid, x + stepX[direction], landingY, z + stepZ[direction]);
+                int landing = Index(grid, neighborX, landingY, neighborZ);
                 if (distance[landing] != Unreached)
                 {
                     continue;
@@ -147,11 +160,117 @@ public sealed class Reachability
     }
 
     /// <summary>
-    /// The floor row that a body reaches in the neighbor column from a floor cell, or minus one when no move
-    /// leads there. A step up comes first, then a flat move or a drop.
+    /// The floor row that a walk along a ramp reaches in the neighbor column from a floor cell, or minus one when no
+    /// such walk leads there (D-345). A walk goes to the next place up or down the same ramp, to the same place of a
+    /// ramp beside it, from the top of a ramp to a block or to the low end of a ramp one row up, and from the low end
+    /// of a ramp to a block or to the top of a ramp one row down. It also goes from a block to the top of a ramp in
+    /// its row or to the low end of a ramp one row up. Of two cells a row apart, the lower one needs a third open cell
+    /// over it, because a body over both columns rises into that cell.
+    /// </summary>
+    public static int RampWalk(VoxelGrid grid, int x, int y, int z, int neighborX, int neighborZ)
+    {
+        RampRise toward;
+        RampRise away;
+        if (neighborX > x)
+        {
+            toward = RampRise.PlusX;
+            away = RampRise.MinusX;
+        }
+        else if (neighborX < x)
+        {
+            toward = RampRise.MinusX;
+            away = RampRise.PlusX;
+        }
+        else if (neighborZ > z)
+        {
+            toward = RampRise.PlusZ;
+            away = RampRise.MinusZ;
+        }
+        else
+        {
+            toward = RampRise.MinusZ;
+            away = RampRise.PlusZ;
+        }
+
+        bool levelRamp = grid.TryGetRamp(neighborX, y, neighborZ, out Ramp level);
+        bool levelFloor = IsFloor(grid, new Cell(neighborX, y, neighborZ));
+        bool upperRamp = grid.TryGetRamp(neighborX, y + 1, neighborZ, out Ramp upper);
+        bool upperFloor = IsFloor(grid, new Cell(neighborX, y + 1, neighborZ));
+        bool lowEndAhead = upperRamp && upperFloor && upper.Rise == toward && upper.Place == 0 && !grid.IsSolid(x, y + 3, z);
+
+        if (!grid.TryGetRamp(x, y, z, out Ramp start))
+        {
+            bool topAhead = levelRamp && levelFloor && level.Rise == away && level.Place == level.Run - 1;
+            if (topAhead)
+            {
+                return y;
+            }
+
+            return lowEndAhead ? y + 1 : Unreached;
+        }
+
+        if (start.Rise == toward && start.Place == start.Run - 1)
+        {
+            if (levelFloor && !levelRamp)
+            {
+                return y;
+            }
+
+            return lowEndAhead ? y + 1 : Unreached;
+        }
+
+        if (start.Rise == away && start.Place == 0)
+        {
+            bool lowerRamp = grid.TryGetRamp(neighborX, y - 1, neighborZ, out Ramp lower);
+            bool lowerTop = !lowerRamp || (lower.Rise == away && lower.Place == lower.Run - 1);
+            bool lowerRoom = IsFloor(grid, new Cell(neighborX, y - 1, neighborZ)) && !grid.IsSolid(neighborX, y + 2, neighborZ);
+            return lowerTop && lowerRoom ? y - 1 : Unreached;
+        }
+
+        int place = start.Place;
+        if (start.Rise == toward)
+        {
+            place++;
+        }
+        else if (start.Rise == away)
+        {
+            place--;
+        }
+
+        bool joins = levelRamp && levelFloor && level.Rise == start.Rise && level.Run == start.Run && level.Place == place;
+        return joins ? y : Unreached;
+    }
+
+    /// <summary>
+    /// The floor row that a step or a drop reaches in the neighbor column from a floor cell, or minus one when no
+    /// such move leads there. A step up comes first, then a flat move or a drop. A ramp counts as solid for the
+    /// step and for the landing. From a ramp, the feet stand under the top of the cell, so a drop needs the
+    /// neighbor open from the ramp row up, and a step up reaches a block in the ramp row alone.
     /// </summary>
     public static int Landing(VoxelGrid grid, int x, int y, int z, int neighborX, int neighborZ)
     {
+        if (grid.TryGetRamp(x, y, z, out _))
+        {
+            bool openAhead = !grid.IsSolid(neighborX, y, neighborZ) && !grid.IsSolid(neighborX, y + 1, neighborZ) && !grid.IsSolid(neighborX, y + 2, neighborZ);
+            if (openAhead)
+            {
+                int dropY = y - 1;
+                while (dropY >= 0 && !grid.IsSolid(neighborX, dropY, neighborZ))
+                {
+                    dropY--;
+                }
+
+                return dropY;
+            }
+
+            bool blockAhead = grid.IsSolid(neighborX, y, neighborZ) && !grid.TryGetRamp(neighborX, y, neighborZ, out _);
+            bool rampStep = blockAhead
+                && !grid.IsSolid(neighborX, y + 1, neighborZ)
+                && !grid.IsSolid(neighborX, y + 2, neighborZ)
+                && !grid.IsSolid(x, y + 3, z);
+            return rampStep ? y : Unreached;
+        }
+
         bool stepUp = grid.IsSolid(neighborX, y + 1, neighborZ)
             && !grid.IsSolid(neighborX, y + 2, neighborZ)
             && !grid.IsSolid(neighborX, y + 3, neighborZ)
@@ -166,8 +285,8 @@ public sealed class Reachability
             return Unreached;
         }
 
-        // The body falls to the first rock at or below the height of the start. The cells on the way down are
-        // air by the scan, so the landing has its two air cells.
+        // The body falls to the first solid cell at or below the height of the start. The cells on the way down
+        // are open by the scan, so the landing has its two open cells.
         int landingY = y;
         while (landingY >= 0 && !grid.IsSolid(neighborX, landingY, neighborZ))
         {

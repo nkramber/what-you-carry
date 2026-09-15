@@ -4,6 +4,7 @@ using WhatYouCarry.Core.Camera;
 using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Procgen;
@@ -16,8 +17,9 @@ namespace WhatYouCarry.Tools.BitIdentity;
 
 /// <summary>
 /// A fixed run of the RNG, of DetMath, of the floor generator, of one recorded run through the replay, of the
-/// camera over that run, of a projectile run, and of the sword arc, folded into one state hash (D-69, D-71). Two
-/// platforms that give the same hash agree on every bit of all seven.
+/// camera over that run, of a projectile run, of the sword arc, and of a body, the rays, and the search on ramp
+/// courses, folded into one state hash (D-69, D-71). Two platforms that give the same hash agree on every bit of
+/// all eight.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -53,6 +55,12 @@ public static class BitIdentitySweep
 
     /// <summary>The count of shots of the projectile run of the sweep (D-320).</summary>
     public const int ProjectileShots = 16;
+
+    /// <summary>The count of ticks of the body on each ramp course of the sweep (PR-64 exit test 6).</summary>
+    public const int RampTicks = 180;
+
+    /// <summary>The rises of the ramp courses, in the order of D-367. The list is explicit, so the sweep reads no enum metadata.</summary>
+    private static readonly RampRise[] SweptRises = [RampRise.PlusX, RampRise.MinusX, RampRise.PlusZ, RampRise.MinusZ];
 
     /// <summary>The count of yaws at which the sweep folds every step of the sword arc (D-325).</summary>
     public const int ArcYaws = 8;
@@ -95,7 +103,106 @@ public static class BitIdentitySweep
         AddReplay(ref hash, SweepIntents(), SweepContent());
         AddProjectileRun(ref hash, SweepContent());
         AddSwordArcs(ref hash, SweepContent());
+        foreach (RampRise rise in SweptRises)
+        {
+            for (int run = Ramp.SteepestRun; run <= Ramp.ShallowestRun; run++)
+            {
+                AddRampRun(ref hash, rise, run);
+            }
+        }
+
         return hash;
+    }
+
+    /// <summary>
+    /// Builds a course along one rise: a stone floor, a ramp of the run across the whole width, and a high floor one
+    /// block up. A body walks up the slope on a diagonal with a jump on the slope, rolls down, and sprints down, and
+    /// the sweep folds its position, its vertical velocity, and the camera on every tick. Rays down onto the slope and
+    /// along the rise fold too, with the reachability search in both directions (PR-64 exit test 6). No dug floor
+    /// holds a ramp before PR-66, so this run keeps the ramp collision, the ray march, and the search in the
+    /// three-platform comparison.
+    /// </summary>
+    private static void AddRampRun(ref StateHash hash, RampRise rise, int run)
+    {
+        const int Length = 16;
+        const int Width = 9;
+        const int RampStart = 6;
+        bool alongX = rise == RampRise.PlusX || rise == RampRise.MinusX;
+        bool towardPlus = rise == RampRise.PlusX || rise == RampRise.PlusZ;
+        VoxelGrid grid = alongX ? new VoxelGrid(Length, 8, Width) : new VoxelGrid(Width, 8, Length);
+        for (int along = 0; along < Length; along++)
+        {
+            int cellAlong = towardPlus ? along : Length - 1 - along;
+            for (int across = 0; across < Width; across++)
+            {
+                int x = alongX ? cellAlong : across;
+                int z = alongX ? across : cellAlong;
+                grid.Set(x, 0, z, BlockId.RawStone);
+                if (along >= RampStart && along < RampStart + run)
+                {
+                    grid.Set(x, 1, z, new Ramp(rise, run, along - RampStart).Id);
+                }
+                else if (along >= RampStart + run)
+                {
+                    grid.Set(x, 1, z, BlockId.RawStone);
+                }
+            }
+        }
+
+        float sign = towardPlus ? 1.0f : -1.0f;
+        Vector3 uphill = alongX ? new Vector3(sign, 0.0f, 0.0f) : new Vector3(0.0f, 0.0f, sign);
+        Vector3 sideways = alongX ? new Vector3(0.0f, 0.0f, 1.0f) : new Vector3(1.0f, 0.0f, 0.0f);
+        float lowAlong = towardPlus ? 3.5f : Length - 3.5f;
+        Vector3 start = alongX ? new Vector3(lowAlong, 1.0f, 4.4f) : new Vector3(4.4f, 1.0f, lowAlong);
+        PlayerBody body = new(grid, start);
+        for (int tick = 0; tick < RampTicks; tick++)
+        {
+            // A walk up with a drift across the slope, then a roll down, which leaves the slope, then a sprint down.
+            Vector3 velocity = (uphill * PlayerBody.WalkSpeed) + (sideways * 0.5f);
+            bool follow = true;
+            if (tick >= 100 && tick < 100 + Player.RollTicks)
+            {
+                velocity = uphill * -Player.RollSpeed;
+                follow = false;
+            }
+            else if (tick >= 100 + Player.RollTicks)
+            {
+                velocity = uphill * -PlayerBody.SprintSpeed;
+            }
+
+            body.Move(velocity, tick == 60, false, follow);
+            hash.Add(body.Position.X);
+            hash.Add(body.Position.Y);
+            hash.Add(body.Position.Z);
+            hash.Add(body.VerticalVelocity);
+
+            int pitch = ((tick * 131) % ((2 * SimulationLoop.PitchLimit) + 1)) - SimulationLoop.PitchLimit;
+            CameraPose pose = OrbitCamera.Place(grid, body.Position, (tick * 997) % SimulationLoop.FullTurn, pitch);
+            hash.Add(pose.Position.X);
+            hash.Add(pose.Position.Y);
+            hash.Add(pose.Position.Z);
+        }
+
+        Vector3 up = new(0.0f, 1.0f, 0.0f);
+        for (int sample = 0; sample < 8; sample++)
+        {
+            Vector3 over = start + (uphill * (2.5f + (sample * 0.37f))) + (up * 4.0f);
+            RayHit downHit = GridRay.FirstSolid(grid, over, over + (uphill * 0.6f) - (up * 4.5f) + (sideways * 0.2f));
+            hash.Add(downHit.Hit);
+            hash.Add(downHit.Distance);
+
+            Vector3 level = start + (up * (0.05f + (sample * 0.12f)));
+            RayHit levelHit = GridRay.FirstSolid(grid, level, level + (uphill * 10.0f));
+            hash.Add(levelHit.Hit);
+            hash.Add(levelHit.Distance);
+        }
+
+        int lowCell = towardPlus ? 3 : Length - 1 - 3;
+        int highCell = towardPlus ? 12 : Length - 1 - 12;
+        Cell low = alongX ? new Cell(lowCell, 0, 4) : new Cell(4, 0, lowCell);
+        Cell high = alongX ? new Cell(highCell, 1, 4) : new Cell(4, 1, highCell);
+        hash.Add(Reachability.From(grid, low).Distance(high));
+        hash.Add(Reachability.From(grid, high).Distance(low));
     }
 
     /// <summary>
