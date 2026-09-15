@@ -333,6 +333,8 @@ Gate: exit tests 1 to 5 pass.
 
 ### PR-64: Ramp cells in Core
 
+Status: merged 2026-09-15 as PR #71, commit `43f14eb`. Exit tests 1 to 6 passed before the merge, on the effective head `b5bf2de`. The review found no defect. The first night on the ramp code runs after the merge, and no dug floor holds a ramp before PR-66.
+
 Scope:
 
 - `Core/World/Ramp.cs`, `Core/World/VoxelGrid.cs`, and `Core/World/BlockId.cs`: a ramp cell holds a sloped floor that rises one block over two, three, or four blocks, along one of four directions (D-345, D-346). A ramp cell is a block id from 8 to 43, inside D-164 (D-367).
@@ -614,7 +616,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 12. ✅ Owner answers on the dig sizes and the ramps, 2026-09-14: D-341 to D-351.
 13. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ OQ-172 answered 2026-09-14: D-353.
 14. ✅ PR-67 merged 2026-09-14 as PR #69.
-15. PR-64.
+15. ✅ PR-64 merged 2026-09-15 as PR #71.
 16. PR-65.
 17. PR-66.
 18. Owner: answer OQ-9, at least the first family.

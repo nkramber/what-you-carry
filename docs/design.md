@@ -477,7 +477,7 @@ When a dig runs 1000 jobs with a chamber still in rock, dig the floor again (D-3
 Gate: every floor of F-98 digs, and the property tests, the bot sweep, and the night sweep pass.
 > *In plain English:* about one floor in 96000 fails to dig on the new sizes. This change digs such a floor again from the same seed, so no run stops on it.
 
-**PR-64: Ramp cells in Core.** 🔧
+**PR-64: Ramp cells in Core.** ✅ Merged 2026-09-15 as PR #71.
 Add the ramp cell to the voxel grid: a sloped floor that rises one block over two, three, or four blocks along one of four directions (D-345, D-346). A body walks up and down a ramp with no jump. The camera boom and projectiles stop at the slope (D-246). The reachability search reads a ramp as a walk (D-165, as D-345 revises it). A ramp cell is a block id from 8 to 43 (D-367). The speed along the slope is the flat speed, a walk stays on the slope on the way down, and a roll leaves it (D-362, D-363). A body does not slide, and it jumps and rolls from a ramp (D-364 to D-366). The simulation version rises (G-20).
 Gate: property tests assert no tunnel through a ramp at maximum speed, and the bit-identity job passes with a ramp run.
 > *In plain English:* today a height change is a row of whole-block steps, and each step needs a jump. This change adds a sloped block that bodies walk up and down, with the same result on every machine.
@@ -690,7 +690,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
-11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69.
+11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71.
 12. PR-19, PR-20, PR-62.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
