@@ -1,5 +1,91 @@
 # Session handoff archive
 
+## Session 159: 2026-09-14, Codex
+
+Author: Codex
+Session: review PR #65, the dig sizes in the floor template, at effective head `6f0d6f2`. Branch `feat/pr-63-dig-sizes`.
+
+### What this session did, and why
+
+- Checked the provider gate. Session 158 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Read the PR description, complete diff, affected callers and tests, roadmap, design, decisions, questions, and all PR comments.
+- Found no in-scope defect. The template validates the six dig sizes, the plan uses the template sizes, the detail pass uses each tunnel height, and the tests check the changed contract.
+- Added `docs/reviews/pr-65.md` with the effective head and the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `main` and the merge base are `d2ef347`. The effective head is `6f0d6f2`. The later handoff commit is metadata under D-184.
+- Revision-matched CI passed on all three platforms for build-and-test, bit identity, and smoke. Asset QA, bots, det-lint, STE check, and the night gate passed. The compare job passed with `b00814dbf25e61e8`.
+- The local test host could not bind its socket. This execution-context failure does not provide local test evidence. Remote CI provides revision-matched test evidence.
+- The automated pass approved the head with no issue comment. The review gate was neutral before the review record existed, and `evaluate` failed for that expected reason.
+
+### In flight
+
+PR #65 is ready for owner merge after this review record reaches the branch. Exit test 6 still needs the owner play test of floor 1. PR-67 follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- The effective head is `6f0d6f2`, not the later metadata tip, under D-184.
+- About one floor in 96000 reaches the dig job cap on these sizes (F-98). D-353 assigns the restart to PR-67.
+- The owner play test remains open even though the automated checks pass.
+- The next ids are D-354, OQ-173, F-99, PR-68, and Session 160.
+
+### Open questions that block progress
+
+None blocks PR #65. Exit test 6 needs the owner play test. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner plays floor 1 for exit test 6, then merges PR #65. A docs PR records the merge (D-297). A fresh session then opens PR-67.
+
+## Session 158: 2026-09-14, Claude Code
+
+Author: Claude Code
+Session: open PR-63, the dig sizes in the floor template, as PR #65. Branch `feat/pr-63-dig-sizes`.
+
+### What this session did, and why
+
+- The owner merged PR #64, the record of D-341 to D-351, as `d2ef347`, and asked for PR-63. The branch came from `origin/main` at `d2ef347`.
+- Before the code, the owner chose D-352 on the recommendation: the validator rejects an even tunnel width, a width past the rock shell, and a dig height that leaves fewer than three rows of the floor. The dig plan also stops on an even width in a template that no validator read.
+- `FloorTemplate` gains the six dig sizes, and `DigPlan` reads them in place of five Core constants. Each walker carries the radius and the height of its tunnel, a collapse heap reaches the height of its own tunnel, and `FloorPlan` lists the tunnel stamps. The content takes D-341, D-343, and D-344. The simulation version is 8, and the bit-identity known answer moved from `2258ba8b9cc94b3f` to `b00814dbf25e61e8`.
+- `TunnelCrossSection` checks each stamp against the width and the height of its template, and it keeps the D-166 window check on a mask in place of a hash set. `EveryBandHasOneFloorSize` replaces `FloorSizeGrowsWithDepth`. `ADigSizeOutsideItsBoundsIsAnError` covers each bound with its reason, and `AnEvenTunnelWidthStopsThePlan` covers the guard in the plan.
+- A scratch program outside the repository dug the floors of the night: 175000 floors with 0 errors, so 5 to 9 rooms fit (D-344). The median need is 1 job, and the largest is 5890. 500000 more floors found 7 that ran the 10000 jobs of D-279 with a chamber still in rock (F-98). The session filed OQ-172, and the owner chose D-353 on the recommendation: PR-63 keeps the cap, and PR-67, a dig restart, comes right after it.
+- `DigPlanJobCapTests` pins the three floors of the largest need, 5890, 5662, and 5568 jobs, in place of the F-92 floors of the old sizes.
+- The design doc and the Phase 2 roadmap gain F-98 and the PR-67 entry, and the Phase 2 sequence puts PR-67 at item 14.
+- The automated pass of gitar ran on `6f0d6f2` after the push. Its check run passed at 17:05 UTC, and it approved with no comment, so 0 comments needed an answer (D-250). Its comment shows the trial pause note, and the completed check run on the head made a `Gitar review` comment unnecessary.
+- Session 148 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `d2ef347`. The effective head of PR #65 is `6f0d6f2`, the one code commit. This entry is in a metadata commit above it (D-184).
+- Remote head: `origin/feat/pr-63-dig-sizes` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 873 tests, 0 failures, with the five Smoke tests on the local Godot build. `det-lint`: 0 findings, Core 0 in 65 files, Game 0 in 32 files. `asset-qa`: 0 findings. `ste-check`: 0 findings in 16 files. The Godot build check passed.
+- The PR bot sweep ran locally on the code: the random walker and the greedy descender over seeds 1 to 100, 0 softlocks and 0 crashes, and the descender reached the bottom on every seed.
+- CI on `6f0d6f2`: build-and-test passed on the three platforms, the last at 17:15 UTC. Bit identity passed on the three platforms with the compare job, so `b00814dbf25e61e8` holds on each. Smoke passed on the three platforms, and asset-qa, bots, det-lint, the night gate, STE check, and gitar passed. The `evaluate` check fails and `review-gate` is grey, because no review record exists yet (D-251).
+- The scheduled night of 2026-09-14, run 34858986484 at `f487401`, passed at 15:58 UTC. The night gate reads it until 15:58 UTC on 2026-09-16.
+
+### In flight
+
+PR #65: the Codex review per the `pr-review` skill at the effective head `6f0d6f2`. Exit test 6 needs the owner to play floor 1 and confirm that the spaces no longer feel cramped, recorded as a decision. The owner then merges, and a docs PR records the merge (D-297). PR-67 follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- About one floor in 96000 fails to dig on these sizes (F-98). The night passes because its floors are fixed. A change that moves the floors of the night, such as PR-66, can fail a night before PR-67 lands (D-353).
+- `DigPlanJobCapTests` digs the three heaviest floors twice each, so the class is the slowest of the procgen tests. `TheCapHoldsTheMeasuredTail` pins the three counts, and a change to the dig moves them.
+- A tunnel width in a floor template is odd (D-352). Job 0 is the gallery, and `TunnelStamp.Gallery` reads it.
+- The scratch measurement program is not in the repository. F-98 names the seven failed floors, and `FloorGenerator.Generate` on one of them gives the error again.
+- zsh does not split a variable that holds a command and its arguments into words. Two command chains of this session failed on it, so write each command in full.
+- PR-67 asks the owner for the job budget and the count of digs before the code (D-353).
+- The next ids are D-354, OQ-173, F-99, PR-68, and Session 159.
+
+### Open questions that block progress
+
+None blocks PR #65, and exit test 6 needs the owner play test. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #65 per the `pr-review` skill at the effective head `6f0d6f2` and writes `docs/reviews/pr-65.md`. The owner plays floor 1 for exit test 6, then merges, and a docs PR records the merge (D-297). A fresh session then opens PR-67.
+
 ## Session 157: 2026-09-14, Claude Code
 
 Author: Claude Code
