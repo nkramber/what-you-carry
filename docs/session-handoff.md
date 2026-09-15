@@ -2,6 +2,47 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 171: 2026-09-15, Codex
+
+Author: Codex
+Session: review PR #73, the ramp meshes in Game, at effective head `720c7a9`. Branch `feat/pr-65-ramp-meshes`.
+
+### What this session did, and why
+
+- Reviewed the complete code and test diff for the ramp mesh, face coverage, ambient occlusion, mesh triangle, greedy sweep, and contact-sheet changes.
+- Verified the provider gate. Session 170 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Checked the ramp slope planes, side and end coverage, chunk borders, triangle winding, texture density, occlusion, mesh budget path, contact-sheet layout, and no-ramp mesh preservation against D-368, D-369, and the PR-65 exit tests.
+- The focused mesher and contact-sheet suite passed 86 tests. Found no in-scope defect.
+- Wrote `docs/reviews/pr-73.md` with the verdict `Ready for owner merge` for `720c7a9`.
+- Read the existing automated-review comment. It approved the head and raised no issue.
+
+### State of the build
+
+- `main` is at `a4bf6d6`. The effective head of PR #73 is `720c7a9`. The later `f4747ac` commit changes only `docs/session-handoff.md` and `docs/session-handoff-archive.md` under D-184.
+- Remote head: `origin/feat/pr-65-ramp-meshes` is `f4747ac` before the review push. The final remote head will be recorded after the push.
+- The focused suite passed 86 tests. Local full build and gate commands produced no completion result because the .NET process hung without output. Session 170 reports the full gates and revision-matched CI as passed on `720c7a9`.
+- The GitHub API refresh failed with a connection error after the initial PR read. No new remote result was available at the end of the review.
+
+### In flight
+
+PR #73 is ready for owner merge after the review commit reaches the PR and the review-gate refreshes. PR-66 follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- The GitHub PR #73 is roadmap PR-65. The roadmap id PR-66 digs the ramps and tiers.
+- The effective head is `720c7a9`, not the metadata tip `f4747ac` (D-184).
+- A mesh with the side of a ramp holds triangle faces. Read `TriangleCount` for triangles, because `QuadCount` counts quads alone.
+- The local .NET hang is an execution-context limitation, not a passed check. Use the revision-matched CI evidence from Session 170.
+- The next ids are D-370, OQ-174, F-101, PR-68, and Session 172.
+
+### Open questions that block progress
+
+None blocks PR #73. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Push the review record and this handoff. Verify the remote head and the refreshed review-gate check. The owner then merges PR #73. A fresh session opens PR-66 and asks the owner for the shape of a tier first (D-350).
+
 ## Session 170: 2026-09-15, Claude Code
 
 Author: Claude Code
@@ -394,53 +435,3 @@ None blocks PR #67. OQ-173 is resolved by D-358. The dig restart still needs the
 ### Next concrete action
 
 The owner merges PR #67. A fresh session starts the roadmap dig restart item and asks for its job budget and dig count before code.
-
-## Session 161: 2026-09-14, Claude Code
-
-Author: Claude Code
-Session: open the concurrency groups of D-356 and the evidence rule of D-357 as PR #67, in the same invocation as Sessions 158 and 160 (D-355), and record the owner answer on a lost self-hosted leg, D-358. Branch `chore/pr-run-concurrency`.
-
-### What this session did, and why
-
-- The owner merged PR #66, the PR-63 merge record, as `5b85b70` at 19:21 UTC on 2026-09-14, and asked for the concurrency PR (D-355).
-- The branch rebased onto `origin/main` with no conflict. The code commit `704ce9f` became `5381e3f`, and `git range-diff` shows the same change.
-- The permission rules of the session refused an amend of the rebased commit, so the F-99 mark went into a second commit, `66ebefb`.
-- A scratch worktree of `main` at `5b85b70` took the new `RepositoryShapeTests.cs`. There `EveryPullRequestWorkflowCancelsItsOlderRuns` fails on `asset-qa.yml`, and `TheNightNeverCancels` passes, so the new test fails on the old workflows (T-3).
-- The push with `--force-with-lease` replaced `704ce9f` on the remote, and PR #67 opened at 19:33 UTC. The automated pass of gitar approved `66ebefb` at 19:36 UTC with no comment. Its comment shows the trial pause note, and the completed check run on that head made a `Gitar review` comment unnecessary.
-- The macOS leg of Bit identity on `66ebefb` ended "not acquired" at 19:42 UTC with no other run in its group, and the compare job skipped. The runner log on the Mac mini shows `acquirejob` HTTP 409 conflicts and skipped job messages in that window and in the F-99 window. A re-run of the failed jobs at 19:45 UTC passed, compare included.
-- The F-99 mark of `66ebefb` said corrected, and the lost leg showed that it overstated the change. The owner answered two questions on the recommendation. D-358: the author re-runs the failed jobs of a run with a lost self-hosted leg, and the re-run counts as CI for that head. F-99 goes back to 🔧, F-100 records the log evidence, and OQ-173 records the question.
-- Commit `d774ab9` holds D-358, F-100, OQ-173, the F-99 mark, and the D-358 line in `CLAUDE.md`, `AGENTS.md`, and the pr-review skill.
-- The pause note showed on `d774ab9`, and no automatic pass started in five minutes. The `Gitar review` comment at 20:05 UTC ran a pass, and its check run passed at 20:06 UTC. It approved with no comment, so 0 comments needed an answer (D-250, D-303).
-- Session 151 moved to the archive, because the file held eleven entries with this one.
-
-### State of the build
-
-- `main` is at `5b85b70`. The effective head of PR #67 is `d774ab9`, the register commit above `66ebefb` and the code commit `5381e3f`. This entry is in a metadata commit above it (D-184).
-- Remote head: `origin/chore/pr-run-concurrency` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test` on `d774ab9`: 875 tests, 0 failures, with the five Smoke tests on the local Godot build. `ste-check`: 0 findings in 16 files. A YAML parse of the ten workflows finds the group in the nine PR workflows and none in `night.yml`.
-- CI on `66ebefb`: CI, smoke, and bit identity passed on the three platforms, bit identity on its second attempt. Asset-qa, bots, det-lint, the night gate, STE check, and gitar passed. `evaluate` fails and `review-gate` is grey, because no review record exists yet (D-251).
-- CI on `d774ab9`: CI, smoke, and bit identity passed on the three platforms, bit identity on its first attempt. Asset-qa, bots, det-lint, the night gate, STE check, and gitar passed, the last run at 20:10 UTC. `evaluate` fails and `review-gate` is grey, because no review record exists yet (D-251).
-- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC is the first on the new sizes, and it can start hours late (F-95).
-
-### In flight
-
-PR #67: the Codex review per the `pr-review` skill at the effective head `d774ab9` (T-4, D-355). The owner then merges. PR-67 follows in a fresh session (D-121, D-353).
-
-### Traps and gotchas
-
-- The GitHub PR #67 is the concurrency PR. The roadmap id PR-67 is the dig restart (D-353).
-- The effective head is `d774ab9`, and not `66ebefb` or `5381e3f`. The registers and the agent files are outside the metadata set (D-184).
-- A macOS leg can end "not acquired" while the runner is online (F-100). Re-run the failed jobs of that run, and do not read the loss as a code failure (D-358).
-- The Mac runner is the launchd service `actions.runner.nkramber-what-you-carry.mac-mini-m4` on the Mac mini. Its log is under `/Volumes/SSD-1TB/actions-runner/_diag`.
-- Every run on `d774ab9` completed before the push of this entry, so that push cancels nothing. Under D-356, a later push to PR #67 cancels the runs of the earlier head that are still in progress. That is the change at work and not a failure, and D-357 makes CI on the tip the evidence.
-- The review gate runs its workflow from the base branch (D-197). On this PR it runs with no group, and its group acts only after the merge.
-- The Codex reviews of Sessions 153, 155, and 159 started in the Codex desktop app. The `codex` command on the command path is version 0.39.0, which is older than the app.
-- The next ids are D-359, OQ-174, F-101, PR-68, and Session 162.
-
-### Open questions that block progress
-
-None blocks PR #67. D-358 resolves OQ-173. PR-67 asks the owner for the job budget and the count of digs before the code (D-353). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #67 per the `pr-review` skill at the effective head `d774ab9` and writes `docs/reviews/pr-67.md`. The owner then merges. A fresh session then opens PR-67, and it asks the owner for the job budget and the count of digs first (D-353).

@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 161: 2026-09-14, Claude Code
+
+Author: Claude Code
+Session: open the concurrency groups of D-356 and the evidence rule of D-357 as PR #67, in the same invocation as Sessions 158 and 160 (D-355), and record the owner answer on a lost self-hosted leg, D-358. Branch `chore/pr-run-concurrency`.
+
+### What this session did, and why
+
+- The owner merged PR #66, the PR-63 merge record, as `5b85b70` at 19:21 UTC on 2026-09-14, and asked for the concurrency PR (D-355).
+- The branch rebased onto `origin/main` with no conflict. The code commit `704ce9f` became `5381e3f`, and `git range-diff` shows the same change.
+- A scratch worktree of `main` at `5b85b70` showed that the new workflow test failed on the old workflows (T-3).
+- PR #67 opened at 19:33 UTC. The automated pass approved it with no comment. A macOS self-hosted leg ended "not acquired"; a re-run of the failed jobs passed, including compare.
+- D-358 records that the author re-runs failed jobs after a lost self-hosted leg, and the re-run counts as CI for that head. D-358, F-100, OQ-173, and the related records landed in `d774ab9`.
+- The manual automated pass approved `d774ab9` with no comment (D-250, D-303).
+
+### State of the build
+
+- `main` was at `5b85b70`. The effective head of PR #67 was `d774ab9`, with this entry in a metadata commit above it (D-184).
+- CI, smoke, bit identity, asset QA, bots, determinism lint, the night gate, STE check, and the automated pass passed on `d774ab9`.
+
+### In flight
+
+PR #67 awaited the Codex review at effective head `d774ab9`.
+
+### Traps and gotchas
+
+- GitHub PR #67 was the concurrency PR. Roadmap PR-67 was the dig restart.
+- A macOS leg can end "not acquired" while the runner is online. Re-run the failed jobs of that run (D-358).
+
+### Open questions that block progress
+
+None blocks PR #67. D-358 resolves OQ-173.
+
+### Next concrete action
+
+Review PR #67 and write `docs/reviews/pr-67.md`.
+
 ## Session 160: 2026-09-14, Claude Code
 
 Author: Claude Code
