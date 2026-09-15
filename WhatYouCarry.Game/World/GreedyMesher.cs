@@ -6,27 +6,27 @@ namespace WhatYouCarry.Game.World;
 
 /// <summary>
 /// The greedy mesher of one chunk (D-78, D-291): every visible block face in the chunk, merged into the largest
-/// rectangles of equal block and equal occlusion, with the vertex occlusion of D-81 in the vertex colors.
+/// rectangles of equal block and equal occlusion, with the vertex occlusion of D-81 in the vertex colors, and the
+/// faces of the ramp cells of the chunk (D-345).
 /// </summary>
 /// <remarks>
 /// <para>
-/// A face is visible when its block is not air, the cell past it is not solid, and the two blocks differ. So a
-/// stone wall shows against air and against water, a pool shows its surface against air, and two water cells
-/// share no face. A cell outside the grid is rock (D-237), so the edge of the world shows no face, and a face
-/// at a chunk border reads the neighbor chunk through the grid, so no seam shows.
+/// A face is visible when its block is not air and the side of the cell past it does not cover it, as
+/// <see cref="FaceShape"/> reads the two sides. So a stone wall shows against air and against water, a pool shows its
+/// surface against air, two water cells share no face, and a wall beside a ramp shows over the slope. A cell outside
+/// the grid is rock (D-237), so the edge of the world shows no face, and a face at a chunk border reads the neighbor
+/// chunk through the grid, so no seam shows.
 /// </para>
 /// <para>
 /// The mesher reads the grid and nothing else, so one grid gives one buffer on every machine, and it needs no
 /// change for the wall fade, which the world shader does (D-292). Each direction runs one slice at a time: a
-/// mask of the visible faces of the slice, then a sweep that takes the widest run and the tallest stack of equal
-/// mask values as one quad.
+/// mask of the visible faces of the slice, then the sweep of <see cref="GreedySweep"/>, which takes the widest run
+/// and the tallest stack of equal mask values as one quad. A ramp cell stays out of the masks, and
+/// <see cref="RampFaces"/> gives its faces after the slices.
 /// </para>
 /// </remarks>
 public static class GreedyMesher
 {
-    /// <summary>The count of face directions.</summary>
-    public const int Directions = 6;
-
     /// <summary>The block that stands in for a cell outside the grid (D-237).</summary>
     public const BlockId Outside = BlockId.RawStone;
 
@@ -53,16 +53,17 @@ public static class GreedyMesher
         int[] high = [highX, grid.SizeY, highZ];
 
         MeshData data = new();
-        for (int direction = 0; direction < Directions; direction++)
+        for (int direction = 0; direction < FaceDirection.Count; direction++)
         {
-            int axis = direction / 2;
-            int sign = direction % 2 == 0 ? 1 : -1;
+            int axis = FaceDirection.Axis(direction);
             for (int slice = low[axis]; slice < high[axis]; slice++)
             {
-                MeshSlice(grid, data, axis, sign, slice, low, high);
+                MeshSlice(grid, data, direction, slice, low, high);
             }
         }
 
+        RampFaces.AddSlopes(grid, data, low, high);
+        RampFaces.AddCellFaces(grid, data, low, high);
         return data;
     }
 
@@ -72,18 +73,37 @@ public static class GreedyMesher
         return grid.Contains(x, y, z) ? grid.Get(x, y, z) : Outside;
     }
 
-    /// <summary>Answers whether the face of a block toward a neighbor shows: the block is not air, the neighbor is not solid, and the two differ.</summary>
-    public static bool FaceVisible(BlockId block, BlockId neighbor)
+    /// <summary>
+    /// Answers whether the face of a block toward a neighbor shows (D-258, D-345). Air shows no face, and two cells of
+    /// still water share none. Every other face shows unless the side of the neighbor covers it: a solid block covers
+    /// every face, air and still water cover none, and a ramp covers the part under its slope. The direction points
+    /// from the block to the neighbor.
+    /// </summary>
+    public static bool FaceVisible(BlockId block, BlockId neighbor, int direction)
     {
-        return block != BlockId.Air && !VoxelGrid.IsSolidBlock(neighbor) && neighbor != block;
+        if (block == BlockId.Air)
+        {
+            return false;
+        }
+
+        if (neighbor == block && !VoxelGrid.IsSolidBlock(block))
+        {
+            return false;
+        }
+
+        FaceShape face = FaceShape.OfFace(block, direction);
+        FaceShape cover = FaceShape.CoverOf(neighbor, FaceDirection.Opposite(direction));
+        return !cover.Covers(face);
     }
 
     /// <summary>
     /// One slice of one direction: the mask of visible faces, then the greedy sweep. The two axes of the slice
     /// are the next two after the face axis, in cyclic order, so their cross product points along the face axis.
     /// </summary>
-    private static void MeshSlice(VoxelGrid grid, MeshData data, int axis, int sign, int slice, int[] low, int[] high)
+    private static void MeshSlice(VoxelGrid grid, MeshData data, int direction, int slice, int[] low, int[] high)
     {
+        int axis = FaceDirection.Axis(direction);
+        int sign = FaceDirection.Sign(direction);
         int axisU = (axis + 1) % 3;
         int axisV = (axis + 2) % 3;
         int sizeU = high[axisU] - low[axisU];
@@ -100,87 +120,34 @@ public static class GreedyMesher
                 cell[axisU] = low[axisU] + u;
                 cell[axisV] = low[axisV] + v;
                 BlockId block = grid.Get(cell[0], cell[1], cell[2]);
+                if (Ramp.IsRamp(block))
+                {
+                    // A ramp cell gives its own faces through RampFaces.
+                    continue;
+                }
+
                 outer[0] = cell[0];
                 outer[1] = cell[1];
                 outer[2] = cell[2];
                 outer[axis] += sign;
-                if (!FaceVisible(block, BlockAt(grid, outer[0], outer[1], outer[2])))
+                if (!FaceVisible(block, BlockAt(grid, outer[0], outer[1], outer[2]), direction))
                 {
                     continue;
                 }
 
                 mask[u + (v * sizeU)] = new FaceKey(
                     block,
-                    CornerLevel(grid, outer, axisU, axisV, -1, -1),
-                    CornerLevel(grid, outer, axisU, axisV, 1, -1),
-                    CornerLevel(grid, outer, axisU, axisV, 1, 1),
-                    CornerLevel(grid, outer, axisU, axisV, -1, 1));
+                    AmbientOcclusion.CornerLevel(grid, outer, axisU, axisV, -1, -1),
+                    AmbientOcclusion.CornerLevel(grid, outer, axisU, axisV, 1, -1),
+                    AmbientOcclusion.CornerLevel(grid, outer, axisU, axisV, 1, 1),
+                    AmbientOcclusion.CornerLevel(grid, outer, axisU, axisV, -1, 1));
             }
         }
 
-        for (int v = 0; v < sizeV; v++)
+        foreach (MaskRectangle<FaceKey> rectangle in GreedySweep.Rectangles(mask, sizeU, sizeV))
         {
-            for (int u = 0; u < sizeU; u++)
-            {
-                FaceKey key = mask[u + (v * sizeU)];
-                if (!key.Visible)
-                {
-                    continue;
-                }
-
-                int width = 1;
-                while (u + width < sizeU && mask[u + width + (v * sizeU)] == key)
-                {
-                    width++;
-                }
-
-                int height = 1;
-                while (v + height < sizeV && RowMatches(mask, sizeU, u, v + height, width, key))
-                {
-                    height++;
-                }
-
-                for (int dv = 0; dv < height; dv++)
-                {
-                    for (int du = 0; du < width; du++)
-                    {
-                        mask[u + du + ((v + dv) * sizeU)] = default;
-                    }
-                }
-
-                EmitQuad(data, axis, sign, slice, low[axisU] + u, low[axisV] + v, width, height, key);
-            }
+            EmitQuad(data, axis, sign, slice, low[axisU] + rectangle.U, low[axisV] + rectangle.V, rectangle.Width, rectangle.Height, rectangle.Key);
         }
-    }
-
-    /// <summary>Answers whether a run of one row of the mask holds one key.</summary>
-    private static bool RowMatches(FaceKey[] mask, int sizeU, int u, int v, int width, FaceKey key)
-    {
-        for (int du = 0; du < width; du++)
-        {
-            if (mask[u + du + (v * sizeU)] != key)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>The occlusion level of one corner of a face: the three outer cells that touch that corner.</summary>
-    private static int CornerLevel(VoxelGrid grid, int[] outer, int axisU, int axisV, int du, int dv)
-    {
-        int[] edgeU = [outer[0], outer[1], outer[2]];
-        edgeU[axisU] += du;
-        int[] edgeV = [outer[0], outer[1], outer[2]];
-        edgeV[axisV] += dv;
-        int[] corner = [outer[0], outer[1], outer[2]];
-        corner[axisU] += du;
-        corner[axisV] += dv;
-        return AmbientOcclusion.Level(
-            VoxelGrid.IsSolidBlock(BlockAt(grid, edgeU[0], edgeU[1], edgeU[2])),
-            VoxelGrid.IsSolidBlock(BlockAt(grid, edgeV[0], edgeV[1], edgeV[2])),
-            VoxelGrid.IsSolidBlock(BlockAt(grid, corner[0], corner[1], corner[2])));
     }
 
     /// <summary>
@@ -254,10 +221,6 @@ public static class GreedyMesher
         }
     }
 
-    /// <summary>The block and the four corner levels of one visible face. The default value is no face.</summary>
-    private readonly record struct FaceKey(BlockId Block, int LevelLowLow, int LevelHighLow, int LevelHighHigh, int LevelLowHigh)
-    {
-        /// <summary>Answers whether the key stands for a face. Air never shows a face, so the default is none.</summary>
-        public bool Visible => this.Block != BlockId.Air;
-    }
+    /// <summary>The block and the four corner levels of one visible face. The default value, with air as the block, is no face.</summary>
+    private readonly record struct FaceKey(BlockId Block, int LevelLowLow, int LevelHighLow, int LevelHighHigh, int LevelLowHigh);
 }

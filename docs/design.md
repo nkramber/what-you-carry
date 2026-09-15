@@ -134,7 +134,7 @@ The world theme is fantasy with black-powder guns (D-7). The v1 biome is a colla
 
 Every floor is 64 by 20 by 64 blocks, with 5 to 9 chambers (D-343, D-344). A gallery is 7 blocks wide and 5 high, and a drift is 5 blocks wide and 4 high (D-341). A chamber is 5 to 8 blocks high. A tunnel changes height by a ramp or a shaft, and never by a one-block step (D-347). A ramp rises one block over two, three, or four blocks, and a body walks it with no jump (D-345, D-346). Some chambers hold a tier 2 blocks over the floor, and a ramp joins the tier to the floor (D-348 to D-350).
 
-A ramp cell is one block id from 8 to 43, so the grid stays one byte per cell (D-164, D-367). On a ramp, the speed along the slope is the flat speed (D-362). A walk and a sprint stay on the slope on the way down, and a roll leaves it (D-363). A body does not slide on a ramp, and it jumps and rolls from a ramp as from flat ground (D-364 to D-366).
+A ramp cell is one block id from 8 to 43, so the grid stays one byte per cell (D-164, D-367). On a ramp, the speed along the slope is the flat speed (D-362). A walk and a sprint stay on the slope on the way down, and a roll leaves it (D-363). A body does not slide on a ramp, and it jumps and rolls from a ramp as from flat ground (D-364 to D-366). The mesher draws every face of a ramp with the raw stone tile, so a ramp reads as the floor that it joins (D-368).
 
 Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The palette is eight ramps of four colors from dark to light (D-304). A tool generates the atlas from the palette and one rule per material (D-305, D-307). Every face has 32 texels per meter, a body face too (D-308). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
@@ -483,7 +483,7 @@ Gate: property tests assert no tunnel through a ramp at maximum speed, and the b
 > *In plain English:* today a height change is a row of whole-block steps, and each step needs a jump. This change adds a sloped block that bodies walk up and down, with the same result on every machine.
 
 **PR-65: Ramp meshes in Game.** 🔧
-Extend the greedy mesher of PR-13 to ramp cells: a sloped face and two side faces, with the block texture at 32 texels per meter (D-308) and the vertex occlusion of D-81. The chunk mesh budget of D-291 holds. The contact sheet shows each slope at game zoom (D-306).
+Extend the greedy mesher of PR-13 to ramp cells: a sloped face, and each side and end that shows, with the raw stone tile at 32 texels per meter (D-308, D-368). A face beside a ramp shows over the slope, and the vertex occlusion of D-81 reads the upper half of a ramp as a block. The chunk mesh budget of D-291 holds. The contact sheet shows each slope at game zoom (D-306).
 Gate: mesher tests cover each slope and direction, and the owner approves the ramps on a contact sheet.
 > *In plain English:* the game can draw only whole blocks today. This change draws the sloped blocks of PR-64 with the same textures and shade as the walls.
 

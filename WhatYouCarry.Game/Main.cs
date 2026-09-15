@@ -456,7 +456,7 @@ public partial class Main : Node3D
                 }
 
                 frame.Convert(Image.Format.Rgb8);
-                sheet.BlitRect(frame, ContactSheet.CropRect(), ContactSheet.CellOrigin(shot.Index));
+                sheet.BlitRect(frame, ContactSheet.CropRect(shot), ContactSheet.CellOrigin(shot));
             }
 
             File.WriteAllBytes(path, sheet.SavePngToBuffer());
