@@ -1,5 +1,62 @@
 # Session handoff archive
 
+## Session 160: 2026-09-14, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-63 as PR #65, the play test of the owner, D-354, and the owner answers on the concurrency groups of the workflows, D-355 to D-357, in the same invocation as Session 158 (D-297). Branch `docs/pr-63-merge-record`.
+
+### What this session did, and why
+
+- Session 159 approved `6f0d6f2` in `docs/reviews/pr-65.md` with no finding. The owner merged PR #65 as `002054a` at 18:10 UTC on 2026-09-14.
+- The macOS leg of Bit identity on the review tip `d66fd24` never started. The self-hosted runner did not acquire the job in 20 minutes, and the compare job skipped. Four pushes in 15 minutes queued about 12 macOS jobs on the one Mac runner. The same code passed that leg on `6f0d6f2`, `e1d58db`, `1e85f94`, and `7028406`.
+- The owner asked for a concurrency group in the workflows, so that a newer push cancels the older runs of a PR. The owner answered three questions. D-355 lets this run open that code PR as a one-time exception to D-121, after this PR merges. D-356 cancels older runs on PR events alone, keyed on the PR number, and the night never cancels. D-357 lets CI on the tip count for the effective head when every later commit is a metadata commit.
+- The concurrency change is ready on the branch `chore/pr-run-concurrency`, commit `704ce9f` on `002054a`, pushed to origin with no PR. It holds the block in the nine PR workflows, the D-357 line in `CLAUDE.md`, `AGENTS.md`, and the pr-review skill, and two tests in `RepositoryShapeTests`. Locally it passed 875 tests with the five Smoke tests, `ste-check`, and a YAML parse of every workflow, and the new test fails on the workflows of `main`.
+- The owner then asked that this PR carry every document that a fresh context needs, so it records D-355 to D-357 and F-99 ahead of the concurrency PR.
+- The owner played floor 1 and confirms that the spaces no longer feel cramped. D-354 closes exit test 6 of PR-63.
+- `docs/design.md` marks PR-63 merged in its entry and in sequence item 11, and it gains F-99. The Phase 2 roadmap gains the status line of PR-63 and the mark in sequence item 13.
+- Session 150 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `002054a`, the squash merge of PR #65, and its tree equals the review tip `d66fd24`. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-63-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- CI on `002054a`: CI, smoke, and bit identity passed on the three platforms, and asset-qa, bots, det-lint, and STE check passed, the last at 18:25 UTC.
+- `ste-check`: 0 findings in 16 files. `dotnet test`: 873 tests, 0 failures, with the five Smoke tests on the local Godot build. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `002054a`.
+- PR #66 on its first head `0b31f4e`: the automated pass approved with no comment, and every check passed, the review gate on the `review-override` label included. The register commit above it is newer than the label event and lies outside the metadata set, so the label came off and goes on again after the next pass (D-190).
+- The concurrency branch: `origin/chore/pr-run-concurrency` at `704ce9f`, with no PR. No workflow runs on a push to a branch other than `main`.
+- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC is the first on the new sizes, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone. The `review-override` label goes on again after the last push and the automated pass (D-188, D-190). After this PR merges, the concurrency PR opens from `chore/pr-run-concurrency`, rebased onto `main`, with its own handoff entry, and it takes a Codex review (D-188, D-355). PR-67 follows in a fresh session (D-121, D-353).
+
+### Traps and gotchas
+
+- The GitHub PR #65 is PR-63. The roadmap id PR-65 is the ramp meshes in Game.
+- About one floor in 96000 fails to dig on the new sizes (F-98). The floors of the first night on them dug with no error in the measurement of Session 158. A change that moves the floors of the night can fail a night before PR-67 lands (D-353).
+- The merge marks use the UTC date of the merge, 2026-09-14. D-354 and this entry use the local date, also 2026-09-14.
+- The concurrency commit `704ce9f` sits on `002054a`, and `main` gains this PR first. Rebase the branch onto `origin/main` before the PR opens. The rebase has no conflict, because this PR touches no file of that commit, and the push after it needs `--force-with-lease`.
+- D-355 to D-357 and F-99 reach `main` with this PR, so the concurrency PR adds no decision row. It marks F-99 corrected in `docs/design.md`, its handoff entry is Session 161, and its description names the three decisions.
+- Under D-356, the handoff push of the concurrency PR cancels the runs of its code commit. That is the change at work and not a failure, and D-357 makes CI on the tip the evidence.
+- The review gate runs from the base branch (D-197), so its concurrency group starts to act only after the concurrency PR merges.
+- The exact block in each of the nine PR workflows, before `jobs:`:
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
+```
+
+- The next ids are D-358, OQ-173, F-100, PR-68, and Session 161.
+
+### Open questions that block progress
+
+None blocks this PR or the concurrency PR. PR-67 asks the owner for the job budget and the count of digs before the code (D-353). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. This run, or a fresh session, then opens the concurrency PR: check out `chore/pr-run-concurrency`, rebase it onto `origin/main`, run the build, `dotnet test`, and `ste-check`, push with `--force-with-lease`, open the PR, and add Session 161. The PR takes the automated pass and a Codex review. A fresh session then opens PR-67, and it asks the owner for the job budget and the count of digs first (D-353).
+
 ## Session 159: 2026-09-14, Codex
 
 Author: Codex
