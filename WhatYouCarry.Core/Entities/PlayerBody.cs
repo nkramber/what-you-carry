@@ -19,9 +19,16 @@ namespace WhatYouCarry.Core.Entities;
 /// air, so it is not state (D-233, D-238).
 /// </para>
 /// <para>
-/// The body stands on the ground when a solid cell lies within two skins below its feet (D-235). That is a
-/// probe of the grid and not a stored flag, so the state holds nothing that the position does not already
-/// say. A jump needs the ground, and a jump clears one block and never two (D-231, D-165).
+/// The body stands on the ground when a solid part lies within two skins below its feet: the top of a block, or
+/// the slope of a ramp (D-235, D-365). That is a probe of the grid and not a stored flag, so the state holds
+/// nothing that the position does not already say. A jump needs the ground, and a jump clears one block and never
+/// two (D-231, D-165).
+/// </para>
+/// <para>
+/// On a tick that starts on the ground over a ramp, the horizontal velocity takes the factor that keeps its speed
+/// along the slope (D-362). The sweep lifts the body up a slope. A walk and a sprint also follow a slope down, and
+/// a roll leaves it, so gravity takes over (D-363, D-366). A body with no horizontal velocity stays where it stands
+/// on a slope (D-364).
 /// </para>
 /// <para>
 /// While the feet stand in a still water cell, the walk and the sprint take half their speed, the jump velocity
@@ -77,7 +84,7 @@ public sealed class PlayerBody
     private readonly VoxelGrid grid;
 
     /// <summary>A body at rest at the spawn point, which is a feet center.</summary>
-    /// <exception cref="ContextException">The box at the spawn point overlaps a solid cell or reaches past the grid.</exception>
+    /// <exception cref="ContextException">The box at the spawn point overlaps a solid part or reaches past the grid.</exception>
     public PlayerBody(VoxelGrid grid, Vector3 spawn)
     {
         this.grid = grid;
@@ -102,16 +109,25 @@ public sealed class PlayerBody
         new Vector3(this.Position.X - HalfWidth, this.Position.Y, this.Position.Z - HalfWidth),
         new Vector3(this.Position.X + HalfWidth, this.Position.Y + Height, this.Position.Z + HalfWidth));
 
-    /// <summary>Answers whether a solid cell lies within the ground probe below the feet, across the whole footprint.</summary>
+    /// <summary>
+    /// Answers whether a solid part lies within the ground probe below the feet, across the whole footprint: the top
+    /// of a block or the slope of a ramp (D-235, D-365). The rows run from the row of the probe to the row of the
+    /// feet, because the slope of a ramp in the feet row can hold the body.
+    /// </summary>
     public bool IsOnGround()
     {
         Aabb box = this.Box;
-        int row = (int)DetMath.Floor(box.Min.Y - GroundProbe);
-        int lowX = (int)DetMath.Floor(box.Min.X);
-        int highX = -(int)DetMath.Floor(-box.Max.X) - 1;
-        int lowZ = (int)DetMath.Floor(box.Min.Z);
-        int highZ = -(int)DetMath.Floor(-box.Max.Z) - 1;
-        return this.grid.IsAnySolid(lowX, highX, row, row, lowZ, highZ);
+        float probe = box.Min.Y - GroundProbe;
+        int highRow = (int)DetMath.Floor(box.Min.Y);
+        for (int row = (int)DetMath.Floor(probe); row <= highRow; row++)
+        {
+            if (this.grid.TryTopUnder(row, box.Min.X, box.Max.X, box.Min.Z, box.Max.Z, out float top) && top >= probe)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -141,7 +157,8 @@ public sealed class PlayerBody
 
     /// <summary>
     /// Runs one tick of a walk: the horizontal velocity of the intent, with the water factor of the start of the
-    /// tick, and the jump bit (D-233, D-261). The player of PR-15 calls <see cref="Move"/> directly.
+    /// tick, and the jump bit (D-233, D-261). The walk follows a slope (D-363). The player of PR-15 calls
+    /// <see cref="Move"/> directly.
     /// </summary>
     /// <param name="intent">The intent of the tick.</param>
     /// <param name="yaw">The yaw sum of the loop after the intent, in hundredths of a degree (D-227).</param>
@@ -149,29 +166,36 @@ public sealed class PlayerBody
     {
         bool inWater = this.IsInWater();
         float speedFactor = inWater ? WaterSpeedFactor : 1.0f;
-        this.Move(WalkVelocity(intent, yaw) * speedFactor, (intent.Buttons & Button.Jump) != 0, inWater);
+        this.Move(WalkVelocity(intent, yaw) * speedFactor, (intent.Buttons & Button.Jump) != 0, inWater, true);
     }
 
     /// <summary>
-    /// Runs one tick with a horizontal velocity. The jump comes first, then gravity, and then one sweep with the whole
-    /// displacement. Water scales the jump and gravity (D-262). The caller scales the horizontal velocity.
+    /// Runs one tick with a horizontal velocity. On the ground over a ramp, the velocity first takes the slope
+    /// factor (D-362). The jump comes next, then gravity, and then one sweep with the whole displacement. Water
+    /// scales the jump and gravity (D-262). The caller scales the horizontal velocity for water. A body that follows
+    /// the slope and leaves the ground in the sweep then moves down onto the slope, by at most the drop of a slope of
+    /// 1:2 over the step, so a body still falls from a ledge of one block (D-363).
     /// </summary>
     /// <param name="horizontal">The horizontal velocity of the tick, in meters per second. Its Y component is zero.</param>
     /// <param name="jump">Whether the tick asks for a jump. A jump needs the ground.</param>
     /// <param name="inWater">The water probe of the start of the tick (D-264).</param>
-    public void Move(Vector3 horizontal, bool jump, bool inWater)
+    /// <param name="followSlope">Whether the body stays on a slope on the way down: true for a walk, a sprint, and a stagger, and false for a roll (D-363, D-364, D-366).</param>
+    public void Move(Vector3 horizontal, bool jump, bool inWater, bool followSlope)
     {
         float jumpFactor = inWater ? WaterJumpFactor : 1.0f;
         float gravityFactor = inWater ? WaterGravityFactor : 1.0f;
 
-        if (jump && this.IsOnGround())
+        bool onGround = this.IsOnGround();
+        Vector3 velocity = onGround ? this.AlongSlope(horizontal) : horizontal;
+        bool jumped = jump && onGround;
+        if (jumped)
         {
             this.VerticalVelocity = JumpVelocity * jumpFactor;
         }
 
         this.VerticalVelocity -= Gravity * gravityFactor * TickSeconds;
 
-        Vector3 delta = new(horizontal.X * TickSeconds, this.VerticalVelocity * TickSeconds, horizontal.Z * TickSeconds);
+        Vector3 delta = new(velocity.X * TickSeconds, this.VerticalVelocity * TickSeconds, velocity.Z * TickSeconds);
         SweepResult result = SweptAabb.Sweep(this.grid, this.Box, delta);
         this.Position += result.Allowed;
 
@@ -180,10 +204,26 @@ public sealed class PlayerBody
         {
             this.VerticalVelocity = 0.0f;
         }
+
+        if (!followSlope || !onGround || jumped || this.IsOnGround())
+        {
+            return;
+        }
+
+        // A step down a slope leaves the feet over the slope by the drop of the step. A sweep down by the largest
+        // such drop finds the slope, and a sweep that finds nothing moves nothing, so the body falls as before.
+        float step = DetMath.Abs(result.Allowed.X) + DetMath.Abs(result.Allowed.Z);
+        float reach = (step / Ramp.SteepestRun) + GroundProbe;
+        SweepResult down = SweptAabb.Sweep(this.grid, this.Box, new Vector3(0.0f, -reach, 0.0f));
+        if (down.BlockedY)
+        {
+            this.Position += down.Allowed;
+            this.VerticalVelocity = 0.0f;
+        }
     }
 
     /// <summary>
-    /// The horizontal velocity of a walk (D-233): the walk speed, or the sprint speed when the sprint bit is set. The
+    /// The horizontal velocity of the walk (D-233): the walk speed, or the sprint speed when the sprint bit is set. The
     /// strafe and the forward fractions clamp to a length of one, so a diagonal is never faster than a straight line,
     /// and the pair rotates by the yaw.
     /// </summary>
@@ -218,6 +258,37 @@ public sealed class PlayerBody
         }
 
         return YawFrame(strafe / length, forward / length, yaw, 1.0f);
+    }
+
+    /// <summary>
+    /// A horizontal velocity scaled so that its speed along the slope under the feet center is its horizontal speed
+    /// (D-362). The body rises 1 / run meters per meter along the rise, so the speed along the slope is the length of
+    /// the horizontal velocity and the rise speed together. A velocity with no ramp under the feet center, in the rows
+    /// from the ground probe to the feet, stays as it is.
+    /// </summary>
+    private Vector3 AlongSlope(Vector3 horizontal)
+    {
+        int x = (int)DetMath.Floor(this.Position.X);
+        int z = (int)DetMath.Floor(this.Position.Z);
+        int highRow = (int)DetMath.Floor(this.Position.Y);
+        for (int row = (int)DetMath.Floor(this.Position.Y - GroundProbe); row <= highRow; row++)
+        {
+            if (!this.grid.TryGetRamp(x, row, z, out Ramp ramp))
+            {
+                continue;
+            }
+
+            float flatSquared = (horizontal.X * horizontal.X) + (horizontal.Z * horizontal.Z);
+            if (flatSquared == 0.0f)
+            {
+                return horizontal;
+            }
+
+            float rise = (ramp.RisesAlongX ? horizontal.X : horizontal.Z) / ramp.Run;
+            return horizontal * DetMath.Sqrt(flatSquared / (flatSquared + (rise * rise)));
+        }
+
+        return horizontal;
     }
 
     /// <summary>One movement byte as a fraction from -1 to 1. A byte of -128 clamps to -127 (D-233).</summary>

@@ -2,6 +2,95 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 168: 2026-09-14, Codex
+
+Author: Codex
+Session: review PR-64 as PR #71 at effective head `b5bf2de`. Branch `feat/pr-64-ramp-cells`.
+
+### What this session did, and why
+
+- Reviewed the complete code and test diff for the ramp cells in Core.
+- Verified the provider gate. Session 167 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Checked the ramp ids, slope math, collision sweep, player motion, ray march, reachability search, simulation version, and bit-identity course against D-362 to D-367 and the PR-64 roadmap exit tests.
+- Found no in-scope defect. Wrote `docs/reviews/pr-71.md` with the verdict `Ready for owner merge` for `b5bf2de`.
+- Read the existing Gitar comment. It approved the head and raised no issue.
+
+### State of the build
+
+- `main` and the merge base are `e1076ca`. The effective head is `b5bf2de`. The later `d489060` commit changes only `docs/session-handoff.md` under D-184.
+- The focused ramp suite passed 173 tests with 0 failures. A local full-suite and build attempt produced no completion result after more than one minute. Session 167 reports the full local gates as passed.
+- Revision-matched CI on `b5bf2de` passed CI, smoke, bit identity on all three platforms, compare, bots, det-lint, asset QA, night gate, and STE check. Gitar approved with no issue comment.
+- `evaluate` failed and `review-gate` skipped before this review record existed, as D-251 predicts. They must refresh after the review commit reaches the PR.
+
+### In flight
+
+PR #71 is ready for owner merge after the fresh review-gate check passes. The owner then merges, and a docs PR records the merge (D-297). PR-65 follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- The effective head is `b5bf2de`, not this metadata commit (D-184).
+- The PR is GitHub #71 and roadmap PR-64. PR-65 is the ramp mesh work, and PR-66 is the ramp generator work.
+- The local full-suite and build attempts produced no completion result. Do not report those local attempts as passed.
+- The next ids are D-368, OQ-174, F-101, PR-68, and Session 169.
+
+### Open questions that block progress
+
+None blocks PR #71. The PR-65 session asks the owner for the tile of a ramp face before the code (D-367). Exit test 4 of PR-65 needs owner approval of a contact sheet with ramps. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Wait for the fresh review-gate check. The owner merges PR #71 after the check passes. A fresh session then opens PR-65 and asks the owner for the tile of a ramp face first (D-367).
+
+## Session 167: 2026-09-14, Claude Code
+
+Author: Claude Code
+Session: open PR-64, the ramp cells in Core, as PR #71, with the owner answers D-362 to D-367. Branch `feat/pr-64-ramp-cells`.
+
+### What this session did, and why
+
+- The owner merged PR #70, the merge record of PR-67, as `e1076ca` at 00:19 UTC on 2026-09-15, and asked for the next item. The branch came from `origin/main` at `e1076ca`.
+- Before the code, the owner answered six questions in two batches (D-345). D-362: the speed along the slope is the flat speed, and the recommendation was the flat horizontal speed. D-363: a walk and a sprint stay on the slope on the way down, and a roll leaves it, in the words of the owner. D-364: no slide. D-365: a jump from a ramp as from flat ground, which revises in part D-235, the ground probe only. D-366: a roll starts on a ramp and climbs it. D-367: the ramp ids 8 to 43 in the block byte.
+- `Ramp` reads a ramp id. `VoxelGrid` takes the ramp ids, and `TryGetRamp` and `TryTopUnder` read them. The solid rule reads a ramp as solid.
+- `SweptAabb` stands a box on the highest point of the slope under its footprint. It lifts a box onto a slope that rises under the end of a move along X or Z, by at most the rise of a slope of 1:2 over the move and with room above, and never onto a block (D-165). `PlayerBody` takes the slope factor of D-362, and `Move` takes `followSlope` for the walk down of D-363.
+- `GridRay` meets the slope inside a ramp cell by the sign of the height over the slope at the entry and the exit of the cell. `Reachability.RampWalk` joins cells whose slopes meet on the shared face, a chain of ramps included, and `Landing` limits the drop and the step from a ramp.
+- The simulation version is 10. The bit-identity sweep gains a ramp course along each rise with each run, and the known answer moves from `efcce6816cec980e` to `24c37100cd99edf4`. Before the ramp run and the version rise, the new code passed the suite with `efcce6816cec980e`, so no grid without a ramp moved.
+- Tests: `RampTests`, `RampMotionTests`, `RampRayTests`, and `RampSearchTests`, on the course of `RampCourse`. The first form of `CameraNeverEntersARamp` read a boom hit on the side of a ramp as a hit on the slope and failed. The test now asserts the camera contract, and it counts the hits on a slope.
+- The automated pass of gitar approved `b5bf2de` at 01:45 UTC with no comment, so 0 comments needed an answer (D-250). Its comment shows the trial pause note, and the completed check run on the head made a `Gitar review` comment unnecessary.
+- Session 157 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `e1076ca`. The effective head of PR #71 is `b5bf2de`, the one code commit. This entry is in a metadata commit above it (D-184).
+- Remote head: `origin/feat/pr-64-ramp-cells` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 1049 tests, 0 failures, with the five Smoke tests on the local Godot build. `det-lint`: 0 findings, Core 0 in 66 files, Game 0 in 32 files. `asset-qa`: 0 findings. `ste-check`: 0 findings in 16 files. The Godot build check passed, and `bit-identity` prints `24c37100cd99edf4`.
+- The PR bot sweep ran locally: the random walker and the greedy descender over seeds 1 to 100, 0 softlocks and 0 crashes, and the descender reached the bottom on every seed.
+- CI on `b5bf2de`: CI, smoke, and bit identity passed on the three platforms, with the compare job. Asset-qa, bots, det-lint, the night gate, STE check, and gitar passed, the last at 01:50 UTC. No macOS leg ended "not acquired". `evaluate` fails and `review-gate` is grey, because no review record exists yet (D-251). Every run on `b5bf2de` completed before the push of this entry, so that push cancels nothing (D-356).
+- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC runs on `main` with the dig restart, and it can start hours late (F-95).
+
+### In flight
+
+PR #71: the Codex review per the `pr-review` skill at the effective head `b5bf2de` (T-4). The owner then merges, and a docs PR records the merge (D-297). PR-65 follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- The GitHub PR #71 is PR-64. The roadmap id PR-65 is the ramp meshes in Game, and PR-66 digs the ramps.
+- The effective head is `b5bf2de`, and not the metadata commit of this entry (D-184).
+- `VoxelGrid.IsSolid` reads a ramp as solid. The mesher of PR-13 draws a ramp as a cube with the tile of its id until PR-65, and `DigCanvas.IsAir` reads a ramp as rock until PR-66.
+- `GreedyDescender` jumps at each rise of one row on its path, and the walk onto the low end of a ramp is such a rise. The jump lands on the slope. PR-66 runs the bots on ramps.
+- The lift onto a slope reads the footprint at the end of the whole move. A move that a block cuts short can leave the body up to half the move over the slope, and the next tick lands it.
+- A stagger passes `followSlope` true and a roll passes false (D-363, D-364).
+- D-110: the private helpers of `SweptAabb` call only public methods of `VoxelGrid` and `Ramp`. A helper that calls another helper breaks the rule.
+- zsh reserves the variable name `status`, so a command chain that sets it stops with "read-only variable".
+- The next ids are D-368, OQ-174, F-101, PR-68, and Session 168.
+
+### Open questions that block progress
+
+None blocks PR #71. The PR-65 session asks the owner for the tile of a ramp face before the code, because a ramp has no block kind of its own (D-367). Exit test 4 of PR-65 needs the owner approval of a contact sheet with the ramps. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #71 per the `pr-review` skill at the effective head `b5bf2de` and writes `docs/reviews/pr-71.md`. The owner then merges, and a docs PR records the merge (D-297). A fresh session then opens PR-65, and it asks the owner for the tile of a ramp face first (D-367).
+
 ## Session 166: 2026-09-14, Claude Code
 
 Author: Claude Code
@@ -405,46 +494,3 @@ None blocks PR #65, and exit test 6 needs the owner play test. OQ-9 blocks PR-16
 ### Next concrete action
 
 A Codex session reviews PR #65 per the `pr-review` skill at the effective head `6f0d6f2` and writes `docs/reviews/pr-65.md`. The owner plays floor 1 for exit test 6, then merges, and a docs PR records the merge (D-297). A fresh session then opens PR-67.
-
-## Session 157: 2026-09-14, Claude Code
-
-Author: Claude Code
-Session: record the owner answers on the dig sizes, the ramps, and the chamber tiers, D-341 to D-351, in the same invocation as Sessions 152, 154, and 156 (D-297). Branch `docs/dig-sizes-and-ramps`.
-
-### What this session did, and why
-
-- The owner merged PR #63, the PR-15 merge record, as `f487401` at 14:07 UTC on 2026-09-14.
-- The owner then asked whether the tunnels of the demo have the real size of the first playable, because they feel very cramped, and whether ramps with different slopes can replace steps. The demo runs the real generator on floor 1 of seed 1: drifts of 3 by 3, a gallery of 5 by 3, chambers 3 to 4 high, and one-block steps that need a jump (D-165, D-253). F-97 records it.
-- The owner answered eleven questions in three batches, D-341 to D-351: the wide sizes, the sizes in the floor template, one floor size and one room count on every band, ramps with true slopes of 1:2, 1:3, and 1:4, no one-block steps in tunnels, chamber tiers 2 blocks high by a chance per kind, and the dig work before PR-16.
-- The preset named chamber boxes of 5 to 15 in all. D-341 gives each kind its old range times one and a half, rounded up. The owner can correct a range in the PR-63 session.
-- D-351 splits the work into four roadmap items by concern (G-10): PR-63 the dig sizes, PR-64 the ramp cells in Core, PR-65 the ramp meshes in Game, and PR-66 the ramps and the tiers in the generator. The design doc and the Phase 2 roadmap carry the entries, and PR-16 reads ramps in its move rule and its first exit test.
-- The Effect columns of D-78, D-165, D-252, D-253, and D-255 carry the marks of the parts that changed (D-186).
-- Session 147 moved to the archive, because the file held eleven entries with this one.
-
-### State of the build
-
-- `main` is at `f487401`, the squash merge of PR #63. This branch holds one docs commit above it.
-- Remote head: `origin/docs/dig-sizes-and-ramps` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `ste-check`: 0 findings in 16 files. `dotnet test`: 855 tests, 0 failures, with the five Smoke tests on the local Godot build. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `f487401`.
-- The scheduled night of 2026-09-14 started at 14:57 UTC as run 34858986484 at `f487401`, 6 h 50 min after the cron, and ran still at 15:06 UTC. Until a night passes, the night gate reads run 34759337453 at `4a1048c`, which turns red at 14:13 UTC on 2026-09-15 (F-95).
-
-### In flight
-
-This PR: docs alone. The `review-override` label goes on after the last push and the automated pass (D-188, D-190). PR-63 is next, and a fresh session opens it (D-121). OQ-9 can take its answer at any time before PR-16.
-
-### Traps and gotchas
-
-- The demo floor is the output of the real generator, so a change to a dig size moves the simulation version and the bit-identity known answer (G-20).
-- `FloorSizeGrowsWithDepth` and `TunnelCrossSection` in `ProcgenTests.cs` hold D-252 and the old constants. PR-63 replaces the first and updates the second.
-- No measurement shows that 5 to 9 rooms fit a floor of 64 by 64 with the chambers of D-341. PR-63 files a question when the seed sweep fails (D-344).
-- A ramp needs a direction, a slope, and a place along the slope, and the block id of D-164 is one byte. The PR-64 session decides the encoding before the code.
-- The owner answers the motion on a ramp in the PR-64 session, and the shape of a tier in the PR-66 session, before the code (D-345, D-350).
-- The next ids are D-352, OQ-172, F-98, PR-67, and Session 158.
-
-### Open questions that block progress
-
-None blocks this PR or PR-63. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges this PR. A fresh session then opens PR-63 per the Phase 2 roadmap.

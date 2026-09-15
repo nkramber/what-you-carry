@@ -154,14 +154,16 @@ public sealed class VoxelGridTests
         Assert.Equal(6, (int)BlockId.Rubble);
         Assert.Equal(7, (int)BlockId.Plank);
 
+        // The ids 8 to 43 are the ramps of D-367, so the first unknown id is 44.
         VoxelGrid grid = new(1, 1, 1);
-        ContextException error = Assert.Throws<ContextException>(() => grid.Set(0, 0, 0, (BlockId)8));
-        Assert.Contains("block=8", error.Message, StringComparison.Ordinal);
+        ContextException error = Assert.Throws<ContextException>(() => grid.Set(0, 0, 0, (BlockId)44));
+        Assert.Contains("block=44", error.Message, StringComparison.Ordinal);
+        Assert.Contains("D-367", error.Message, StringComparison.Ordinal);
         Assert.Throws<ContextException>(() => grid.Set(0, 0, 0, (BlockId)255));
         Assert.Equal(BlockId.Air, grid.Get(0, 0, 0));
     }
 
-    /// <summary>PR-59 exit test 3. Every declared id has a solid rule: air and still water let a body through, and every other block stops it (D-239, D-258).</summary>
+    /// <summary>PR-59 exit test 3. Every declared id has a solid rule: air and still water let a body through, and every other block stops it (D-239, D-258). A ramp reads as solid, and the collision reads its slope (D-367).</summary>
     [Fact]
     public void EveryBlockIdIsDeclared()
     {
@@ -175,7 +177,10 @@ public sealed class VoxelGridTests
             Assert.Equal(!passable, grid.IsAnySolid(0, 0, 0, 0, 0, 0));
         }
 
-        Assert.Throws<ContextException>(() => grid.Set(0, 0, 0, (BlockId)8));
+        grid.Set(0, 0, 0, new Ramp(RampRise.PlusZ, 3, 1).Id);
+        Assert.True(grid.IsSolid(0, 0, 0));
+        Assert.True(grid.IsAnySolid(0, 0, 0, 0, 0, 0));
+        Assert.Throws<ContextException>(() => grid.Set(0, 0, 0, (BlockId)44));
     }
 
     /// <summary>The range query reads every cell of the range, treats the outside as solid, and holds no cell for an empty range.</summary>

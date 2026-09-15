@@ -31,9 +31,11 @@ public sealed class BitIdentityTests
     /// and the sweep gained a projectile run and the arc test (D-320, D-322, D-325). PR-63 moved it from `2258ba8b9cc94b3f`
     /// when the sweep floors took the dig sizes of D-341 and the simulation version rose to 8 (D-342, G-20). PR-67 moved it
     /// from `b00814dbf25e61e8` when the simulation version rose to 9 (D-359, G-20). The sweep floors dig inside the job
-    /// budget and stay the same, and the replay header holds the version, so only the version moved the hash.
+    /// budget and stay the same, and the replay header holds the version, so only the version moved the hash. PR-64 moved it
+    /// from `efcce6816cec980e` when the simulation version rose to 10 and the sweep gained the ramp courses (D-345, D-367,
+    /// G-20). The ramp collision with the version at 9 and no ramp run gave the old answer, so no grid without a ramp moved.
     /// </remarks>
-    private const string ExpectedHash = "efcce6816cec980e";
+    private const string ExpectedHash = "24c37100cd99edf4";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -145,5 +147,9 @@ public sealed class BitIdentityTests
         Assert.Contains("DetailPass.WorkingMine", sweep, StringComparison.Ordinal);
         Assert.Contains("DetailPass.OlderWorkings", sweep, StringComparison.Ordinal);
         Assert.Contains("DetailPass.Deep", sweep, StringComparison.Ordinal);
+
+        // PR-64 exit test 6: no dug floor holds a ramp before PR-66, so the sweep builds ramp courses and walks, rolls, and marches over them.
+        Assert.Contains("AddRampRun(", sweep, StringComparison.Ordinal);
+        Assert.Contains("new Ramp(", sweep, StringComparison.Ordinal);
     }
 }

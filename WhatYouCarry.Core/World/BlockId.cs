@@ -6,7 +6,8 @@ namespace WhatYouCarry.Core.World;
 /// <remarks>
 /// The ids take the order of D-210 (D-259). A number here is part of the grid, so it never changes once a floor
 /// holds it. Every block but air and still water is solid (D-239, D-258). PR-7 declared the first two, and
-/// PR-59 declared the rest.
+/// PR-59 declared the rest. The ids 8 to 43 are the ramp cells of PR-64, and <see cref="Ramp"/> reads them
+/// (D-367). They have no names here, because each one is a rise, a run, and a place.
 /// </remarks>
 public enum BlockId : byte
 {

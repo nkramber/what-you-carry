@@ -158,18 +158,20 @@ public sealed class Player
             this.swingHits = [];
         }
 
+        // A stagger and a walk stay on a slope. A roll leaves a slope on the way down, and gravity takes over (D-363,
+        // D-364, D-366).
         if (staggered)
         {
-            this.Body.Move(new Vector3(0.0f, 0.0f, 0.0f), false, inWater);
+            this.Body.Move(new Vector3(0.0f, 0.0f, 0.0f), false, inWater, true);
         }
         else if (this.RollRemaining > 0)
         {
-            this.Body.Move(this.RollVelocity, false, inWater);
+            this.Body.Move(this.RollVelocity, false, inWater, false);
         }
         else
         {
             float speedFactor = inWater ? PlayerBody.WaterSpeedFactor : 1.0f;
-            this.Body.Move(PlayerBody.WalkVelocity(intent, yaw) * speedFactor, (intent.Buttons & Button.Jump) != 0, inWater);
+            this.Body.Move(PlayerBody.WalkVelocity(intent, yaw) * speedFactor, (intent.Buttons & Button.Jump) != 0, inWater, true);
         }
 
         if (this.SwingTick != NoSwing)

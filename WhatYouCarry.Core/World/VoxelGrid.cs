@@ -1,4 +1,5 @@
 using System.Globalization;
+using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Logging;
 
 namespace WhatYouCarry.Core.World;
@@ -77,10 +78,11 @@ public sealed class VoxelGrid
 
         // An explicit bound, because Enum.IsDefined reads the enum through reflection, and Core has none (G-2).
         // `EveryDeclaredBlockIsAccepted` walks the declared values, so a new value fails the test until this
-        // bound names it.
-        if (block < BlockId.Air || block > BlockId.Plank)
+        // bound names it. The ramp ids of D-367 follow the declared blocks.
+        bool declaredBlock = block >= BlockId.Air && block <= BlockId.Plank;
+        if (!declaredBlock && !Ramp.IsRamp(block))
         {
-            ContextException error = new($"The block id {(int)block} is not a declared block. The declared ids are 0 to 7, from air to plank (D-239, D-259).");
+            ContextException error = new($"The block id {(int)block} is not a declared block. The declared ids are 0 to 7, from air to plank, and {Ramp.FirstId} to {Ramp.LastId} for the ramps (D-259, D-367).");
             error.AddContext("block", ((long)block).ToString(CultureInfo.InvariantCulture));
             throw error;
         }
@@ -90,7 +92,9 @@ public sealed class VoxelGrid
 
     /// <summary>
     /// Answers whether a body stops at the cell. Every block but air and still water is solid, and every cell
-    /// outside the grid is solid, so the edge of the world is a wall (D-237, D-258).
+    /// outside the grid is solid, so the edge of the world is a wall (D-237, D-258). A ramp is solid under its
+    /// slope alone, and this answer reads it as solid. The collision reads the slope through <see cref="TryGetRamp"/>
+    /// (D-367).
     /// </summary>
     public bool IsSolid(int x, int y, int z)
     {
@@ -102,7 +106,71 @@ public sealed class VoxelGrid
         return IsSolidBlock(this.blocks[this.Index(x, y, z)]);
     }
 
-    /// <summary>Answers whether a body stops at a block: every block but air and still water (D-239, D-258).</summary>
+    /// <summary>
+    /// Answers whether the cell holds a ramp, and gives the ramp when it does (D-367). A cell outside the grid
+    /// holds no ramp, because the outside is whole rock (D-237).
+    /// </summary>
+    public bool TryGetRamp(int x, int y, int z, out Ramp ramp)
+    {
+        if (this.Contains(x, y, z))
+        {
+            BlockId block = (BlockId)this.blocks[this.Index(x, y, z)];
+            if (Ramp.IsRamp(block))
+            {
+                ramp = Ramp.FromId(block);
+                return true;
+            }
+        }
+
+        ramp = default;
+        return false;
+    }
+
+    /// <summary>
+    /// The highest solid height in one row under a footprint, when the row holds a solid part under it: the top of a
+    /// block, or the highest point of the slope of a ramp under the footprint (D-367). A cell outside the grid is
+    /// rock, with its top at the top of its row (D-237).
+    /// </summary>
+    public bool TryTopUnder(int row, float minX, float maxX, float minZ, float maxZ, out float top)
+    {
+        // The cells that a footprint covers on one axis run from floor(min) to ceil(max) - 1, so a max on a cell
+        // face names the cell below the face.
+        int lowX = (int)DetMath.Floor(minX);
+        int highX = -(int)DetMath.Floor(-maxX) - 1;
+        int lowZ = (int)DetMath.Floor(minZ);
+        int highZ = -(int)DetMath.Floor(-maxZ) - 1;
+        bool found = false;
+        top = 0.0f;
+        for (int z = lowZ; z <= highZ; z++)
+        {
+            for (int x = lowX; x <= highX; x++)
+            {
+                float cellTop;
+                if (this.TryGetRamp(x, row, z, out Ramp ramp))
+                {
+                    cellTop = ramp.HighestUnder(x, row, z, minX, maxX, minZ, maxZ);
+                }
+                else if (this.IsSolid(x, row, z))
+                {
+                    cellTop = row + 1;
+                }
+                else
+                {
+                    continue;
+                }
+
+                if (!found || cellTop > top)
+                {
+                    top = cellTop;
+                    found = true;
+                }
+            }
+        }
+
+        return found;
+    }
+
+    /// <summary>Answers whether a body stops at a block: every block but air and still water, a ramp included (D-239, D-258, D-367).</summary>
     public static bool IsSolidBlock(BlockId block)
     {
         return IsSolidBlock((byte)block);
