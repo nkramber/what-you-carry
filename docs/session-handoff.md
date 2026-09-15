@@ -19,9 +19,9 @@ Session: review PR #73, the ramp meshes in Game, at effective head `720c7a9`. Br
 ### State of the build
 
 - `main` is at `a4bf6d6`. The effective head of PR #73 is `720c7a9`. The later `f4747ac` commit changes only `docs/session-handoff.md` and `docs/session-handoff-archive.md` under D-184.
-- Remote head: `origin/feat/pr-65-ramp-meshes` is `f4747ac` before the review push. The final remote head will be recorded after the push.
+- Remote head: `origin/feat/pr-65-ramp-meshes` is `5e62041` after the review push, verified with `git fetch`, clean status, and `gh pr view`.
 - The focused suite passed 86 tests. Local full build and gate commands produced no completion result because the .NET process hung without output. Session 170 reports the full gates and revision-matched CI as passed on `720c7a9`.
-- The GitHub API refresh failed with a connection error after the initial PR read. No new remote result was available at the end of the review.
+- GitHub checks after the review push are in progress, including `evaluate`; no completed post-review verdict is available yet.
 
 ### In flight
 
@@ -41,7 +41,7 @@ None blocks PR #73. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks P
 
 ### Next concrete action
 
-Push the review record and this handoff. Verify the remote head and the refreshed review-gate check. The owner then merges PR #73. A fresh session opens PR-66 and asks the owner for the shape of a tier first (D-350).
+Wait for the post-review checks, including `evaluate` and `review-gate`, to complete. The owner then merges PR #73. A fresh session opens PR-66 and asks the owner for the shape of a tier first (D-350).
 
 ## Session 170: 2026-09-15, Claude Code
 
