@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 185: 2026-09-16, Codex
+
+Author: Codex
+Session: re-review PR #78 at effective head `337d706`. Branch `feat/context-budget`.
+
+### What this session did, and why
+
+- Re-reviewed the P2-1 correction, its response, the documented lookup command, and its regression tests.
+- Confirmed that the command finds D-379 to D-382, the relevant revisions, OQ-9, and OQ-44.
+- Updated `docs/reviews/pr-78.md`. P2-1 is fixed at `337d706`, and the earlier verdict remains in the record.
+
+### State of the build
+
+- `main` is at `58e4fc8`. The effective head is `337d706`. Later commits change metadata only (D-184).
+- The focused `ReviewGateRulesTests`, `RegisterLookupTests`, and `ContextBudgetTests` run passed 27 tests. The documented command and `git diff --check` passed.
+- The owner directed this session to exclude CI status from the review verdict.
+- Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
+
+### In flight
+
+PR #78 is ready for owner merge at effective head `337d706`. P2-1 is fixed with regression coverage.
+
+### Traps and gotchas
+
+- The review verdict covers effective head `337d706`. Later commits change metadata only.
+- The lookup command needs every relevant D-# and OQ-# in its `d` and `q` values.
+- The next ids are D-383, OQ-177, F-102, PR-70, and Session 186.
+
+### Open questions that block progress
+
+None blocks PR #78.
+
+### Next concrete action
+
+The owner merges PR #78.
+
 ## Session 184: 2026-09-16, Claude Code
 
 Author: Claude Code
