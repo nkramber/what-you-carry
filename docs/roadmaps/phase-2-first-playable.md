@@ -395,6 +395,8 @@ Gate: exit tests 1 to 4 pass.
 
 ### PR-68: The shaft landing fix
 
+Status: merged 2026-09-16 as PR #75, commit `ac534d9`. Exit tests 1, 2, and 3 passed before the merge. CI, smoke, and bit identity passed on the three platforms, with the compare job, and asset-qa, bots, det-lint, and STE check passed. The hand night of run 35067529373 passed at `cb3c2e2`, with the two bot sets of 5000 seeds and the sweep of 100000 seeds. The `night-gate` job stayed red, because that commit is not on `main`, and D-372 carried the merge. The review found no defect.
+
 Scope:
 
 - `Core/Procgen`: the dig gives every shaft a landing that a body reaches from the spawn (D-370). The fix names the cause, and it does not weaken the sweep of PR-9.
@@ -416,6 +418,30 @@ Check clause: none.
 Gate: exit tests 1 to 3 pass. The `night-gate` job stays red, because a hand night on the branch writes a record that the base branch does not hold (D-275). D-372 merges PR-68 with that gate red.
 
 > *In plain English:* one floor in a hundred thousand drops the player down a shaft into a space with no way back. This change joins every shaft landing to the rest of the floor, and that floor becomes a test.
+
+### PR-69: The night record guards the ref
+
+Scope:
+
+- `.github/workflows/night.yml`: the two publish steps take the condition `github.ref == 'refs/heads/main'` beside `always()` (D-373). A night on another ref runs every step and writes no record.
+- The remark of the file names the guard and the reason: the record of `main` is the state of the `night-gate` job, and a branch night must not replace it.
+- `docs/design.md` and this roadmap state that a branch night proves a fix through its run log alone.
+
+Out of scope: one record for each commit, a second record file for a branch, and the history of the orphan branch (OQ-176 lists them). The read rule of D-275 does not change.
+
+Exit tests:
+
+1. `RepositoryShapeTests` asserts that both publish steps of `night.yml` hold the ref condition.
+2. A hand night on a branch runs to the end and leaves the record of `night-results` as it was. The run log names the sweep result.
+3. A hand night on `main` writes the record, and the `night-gate` job of an open PR turns green.
+
+Review focus: the workflow condition, and the test that pins it.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* a night on a side branch can wipe the record that tells every pull request the main line is healthy. This change lets a side branch run the night, and that record stays as it was.
 
 ### PR-66: Ramps and chamber tiers in the generator
 
@@ -646,21 +672,22 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 14. ✅ PR-67 merged 2026-09-14 as PR #69.
 15. ✅ PR-64 merged 2026-09-15 as PR #71.
 16. ✅ PR-65 merged 2026-09-15 as PR #73.
-17. PR-68. ✅ OQ-174 answered 2026-09-15: D-370.
-18. PR-66.
-19. Owner: answer OQ-9, at least the first family.
-20. PR-16.
-21. Owner: answer OQ-4 and OQ-6.
-22. PR-17.
-23. Owner: answer OQ-44.
-24. PR-18.
-25. PR-19.
-26. Owner: answer OQ-48.
-27. PR-20.
-28. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
-29. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-30. Tier 4 pass on the screenshot fixture (D-133).
-31. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+17. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ OQ-174 answered 2026-09-15: D-370.
+18. PR-69. ✅ OQ-176 answered 2026-09-16: D-373.
+19. PR-66.
+20. Owner: answer OQ-9, at least the first family.
+21. PR-16.
+22. Owner: answer OQ-4 and OQ-6.
+23. PR-17.
+24. Owner: answer OQ-44.
+25. PR-18.
+26. PR-19.
+27. Owner: answer OQ-48.
+28. PR-20.
+29. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
+30. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+31. Tier 4 pass on the screenshot fixture (D-133).
+32. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
@@ -676,6 +703,15 @@ Open:
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-161: the M-3 run on the Steam Deck. Blocks exit test 7 of PR-13 and M-3.
+
+Resolved 2026-09-16:
+
+- OQ-175 (D-372): the night gate of PR-68. PR-68.
+- OQ-176 (D-373): the night record of a branch run. PR-69.
+
+Resolved 2026-09-15:
+
+- OQ-174 (D-370): the unreachable shaft landing on the wide sizes. PR-68.
 
 Resolved 2026-09-14:
 
