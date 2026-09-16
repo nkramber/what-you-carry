@@ -15,17 +15,18 @@ Read the newest entry of `docs/session-handoff.md` now, before any other file. P
 5. `docs/questions.md`: the open questions register, OQ-1 onward. File a new question there.
 6. `docs/reviews/`: one review file per PR, plus audits and audit responses.
 7. `docs/roadmaps/`: the entry of your PR and its exit tests.
-8. `docs/session-handoff-archive.md`: sessions older than the 10 in the handoff. Read it only when the handoff points to it.
+8. `docs/session-handoff-archive.md`: older sessions. Read it only when the handoff points to it.
 
-Never read `docs/decisions.md` or `docs/questions.md` in full. Look up all D-# and OQ-# ids of the task in one early command (D-378):
+Never read `docs/decisions.md` or `docs/questions.md` in full. Look up the ids of the task in one early command (D-378). Replace the example numbers in `d` and `q` with every D-# and OQ-# number of the task:
 
 ```
-grep -n -E '^\| D-(146|375) \|' docs/decisions.md
-grep -n -E '\bD-(146|375)\b' docs/decisions.md | grep -E 'Revis|Supersed' | cut -c1-160
-grep -n -E '^[0-9]+\. \*\*OQ-(9|44)\.' docs/questions.md
+d='146|375'; q='9|44'
+grep -n -E "^\| D-($d) \|" docs/decisions.md
+grep -n -E "\bD-($d)\b" docs/decisions.md | grep -E 'Revis|Supersed' | cut -c1-160
+grep -n -E "^[0-9]+\. \*\*OQ-($q)\." docs/questions.md
 ```
 
-The second line finds each revision of those ids (D-186).
+The third line finds each revision of those ids (D-186).
 
 ## Tenets
 
@@ -58,7 +59,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 
 ## Session handoff
 
-At the end of a session, fetch the remote. Print the highest session number with `grep -m1 '^## Session ' docs/session-handoff.md`, and add one (D-187, D-377). Add a new entry at the top with one edit (D-146). Then run `handoff-rotate` (D-379). It keeps the 10 newest entries and moves each older entry to the top of `docs/session-handoff-archive.md`. Commit the entry with the review record or the work it describes (D-182). Push, then fetch, and check that the status shows no `[ahead N]` (D-199). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. The session line of the entry names the PR branch in the form Branch `<branch>` (D-376). Each entry has six parts:
+At the end of a session, fetch the remote. Print the highest session number with `grep -m1 '^## Session ' docs/session-handoff.md`, and add one (D-187, D-377). Add a new entry at the top with one edit (D-146). Then run `handoff-rotate` (D-379). It moves each entry after the tenth to the archive top. Commit the entry with the review record or the work it describes (D-182). Push, then fetch, and check that the status shows no `[ahead N]` (D-199). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. The session line of the entry names the PR branch in the form Branch `<branch>` (D-376). Each entry has six parts:
 
 - What the session did, and why.
 - The state of the build, with the remote head (D-199).

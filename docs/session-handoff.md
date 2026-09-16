@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 184: 2026-09-16, Claude Code
+
+Author: Claude Code
+Session: answer review finding P2-1 of PR #78, in the author session of the PR (D-375). Branch `feat/context-budget`.
+
+### What this session did, and why
+
+- Session 183 reviewed PR #78 at `3eb7142` and gave `Changes required` for P2-1: the D-378 lookup command held fixed ids, and no sentence told the reader to replace them. The owner asked for the answer in this author session.
+- The finding reproduced, with full merit. A size cut of `CLAUDE.md` had removed the words "with the ids in place of the examples".
+- The command now starts with `d='146|375'; q='9|44'`, and its three patterns read `$d` and `$q`. The sentence before it tells the reader to set every D-# and OQ-# number of the task. Two archive sentences are shorter, so the agent files hold 14591 bytes, 2 fewer than on `main`.
+- `RegisterLookupTests` reads the command from `AGENTS.md` and applies it to the registers. It finds the rows of D-379 to D-382, OQ-9, and OQ-44, and the revisers D-377 and D-381 of D-187 and D-374. All three tests fail on the `AGENTS.md` of `3eb7142`.
+- `docs/reviews/pr-78-response.md` records the disposition and the regression check.
+
+### State of the build
+
+- `main` is at `58e4fc8`. The correction commit, which holds this entry and the response file, is the new effective head (D-184). Pending the repeat review and the owner merge.
+- Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1146 tests, 0 failures. `ste-check`: 0 findings in 19 files. `det-lint`: 0 findings.
+
+### In flight
+
+PR #78: the gitar pass on the correction head, then the repeat Codex review of P2-1 per `pr-review`. The owner then merges.
+
+### Traps and gotchas
+
+- The correction changes `AGENTS.md` and a test, so it moves the effective head past `3eb7142` (D-184). The review of `3eb7142` no longer covers the head.
+- The lookup patterns sit in double quotes, so the shell expands `$d` and `$q`. The same lines work in bash and in zsh.
+- The next ids are D-383, OQ-177, F-102, PR-70, and Session 185.
+
+### Open questions that block progress
+
+None blocks PR #78.
+
+### Next concrete action
+
+A Codex session runs the repeat review of P2-1 per the `pr-review` skill at the correction head and sets the verdict. The owner then merges PR #78.
+
 ## Session 183: 2026-09-16, Codex
 
 Author: Codex
@@ -379,52 +416,3 @@ None blocks PR #75. D-372 resolves OQ-175. The PR-66 session asks the owner for 
 ### Next concrete action
 
 The owner merges PR #75 with the red `night-gate` under D-372. A fresh session then opens PR-66 and asks the owner for the shape of a tier first (D-350).
-
-## Session 174: 2026-09-16, Claude Code
-
-Author: Claude Code
-Session: finish PR-68, the shaft landing fix of D-370, and open it as PR #75, with the owner answer D-372. Branch `feat/pr-68-shaft-landing`.
-
-### What this session did, and why
-
-- Session 173 left the fix in the working tree with no commit, no push, and no PR. This session ran the gates, corrected one stale test, committed, pushed, and opened the PR.
-- The full suite found a failure that Session 173 never ran. `SimulationTests.TheConstantsHold` pins the simulation version, and it still read 10. The assert now reads 11, and its remark names the pillar rule of F-101 in place of the dig restart of PR-67, which PR-64 already left stale.
-- The owner answered the night gate of this PR. D-372: PR-68 merges although the `night-gate` job is red, as D-371 merged the PR-65 merge record. OQ-175 records the question.
-- The `night-gate` job cannot go green on this PR. D-275 fails a record whose commit is not an ancestor of the base branch, so a hand night on this branch reads as foreign. `main` holds the defect, and seed 79146 is deterministic, so every night on `main` fails until this fix merges. The two rules make a deadlock, and D-372 breaks it.
-- The PR-68 gate line of the Phase 2 roadmap names the red `night-gate` and D-372.
-- The automated pass of gitar approved `2d4be05` with one finding of the Quality kind (D-250). `CheckShaftLandings` threw on two conditions and named one cause, so a landing that a pillar or a heap of rubble takes away read as an unreachable cell. Each condition now has its own message and a `cause` key (D-113, T-2). A second pass, which the comment `Gitar review` started, approved `cb3c2e2` with that finding closed and no new one (D-303).
-- A hand run of `night.yml` on this branch passed at `cb3c2e2` and gives the CI evidence of exit test 2: run 35067529373, 1 hour 18 minutes (D-370). The two bot sets of 5000 seeds and the sweep of 100000 seeds all passed. The record on `night-results` now reads `cb3c2e2` with the status success, and the `night-gate` job stays red, because that commit is not on `main` (D-275). The first dispatch, run 35066777588, stood at `2d4be05`. A cancel of it before its start left the record untouched.
-- Session 164 and Session 163 moved to the archive, because the file held twelve entries with this one.
-
-### State of the build
-
-- `main` is at `7345c9c`. The effective head of PR #75 is `cb3c2e2`, the answer to the automated pass. `2d4be05` below it holds the fix and the registers. This entry is in a metadata commit above it (D-184).
-- Remote head: `origin/feat/pr-68-shaft-landing` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 1116 tests, 0 failures, with the five Smoke tests on the local Godot build. `det-lint`: 0 findings, Core 0 in 66 files, Game 0 in 36 files. `asset-qa`: 0 findings, 2 models, 0 overlays, 3 animations. `ste-check`: 0 findings in 16 files. The Godot build check passed, and `bit-identity` prints `a0b32bad006b3dfe`.
-- The night sweep of 100000 seeds passed on this head in a local run of Session 173: 2 tests and 0 failures in 43 minutes. That is the local evidence of exit test 2.
-- The bot sweep of seeds 1 to 100 passed on both policies: 0 softlocks and 0 crashes.
-- CI on `cb3c2e2`: CI, smoke, and bit identity passed on the three platforms, with the compare job. Asset-qa, bots, det-lint, and STE check passed, and the automated pass of gitar approved the head. No macOS leg ended "not acquired". `night-gate` fails, and D-372 carries the merge. `evaluate` fails and `review-gate` is grey, because no review record exists yet (D-251). Every run on `cb3c2e2` completed before the push of this entry, so that push cancels nothing (D-356).
-
-### In flight
-
-PR #75: the Codex review per the `pr-review` skill at the effective head `cb3c2e2` (T-4). The owner then merges with the red `night-gate` (D-372), and a docs PR records the merge (D-297). PR-66 follows in a fresh session (D-121).
-
-### Traps and gotchas
-
-- The GitHub PR #75 is PR-68. The roadmap id PR-66 digs the ramps and the tiers, and it comes next.
-- The effective head is `cb3c2e2`, and not the metadata commit of this entry (D-184). The register lines of D-372 and OQ-175 are outside the metadata set, so they sit in the code commit.
-- `night-gate` is red on this PR by design, and D-372 carries the merge. A reviewer reads that line as an answer and not as a miss.
-- The hand night replaced the one record on `night-results`. It now reads `cb3c2e2` with the status success, in place of the `4bc8cd4` failure. The gate stays red for every PR either way, because the new record commit is not on `main`.
-- The simulation version is 11, and the bit-identity known answer is `a0b32bad006b3dfe`. A test that pins the version by a literal breaks on the next rise. `SimulationTests.TheConstantsHold` is the one such test.
-- `IsUnderShaft` reads every shaft of the plan and not the shafts over the chamber alone. A column under any shaft loses its pillar, which costs a few pillars and keeps the rule simple (T-1).
-- Rubble is solid, so a collapse in a shaft column can fill a landing by the same path as a pillar. The sweep of 100000 seeds found no such floor, and `CheckShaftLandings` now makes any such floor a loud error (T-2).
-- The PR sweep reads 5000 seeds and never reads seed 79146, so a PR run passes while a night fails.
-- The next ids are D-373, OQ-176, F-102, PR-69, and Session 175.
-
-### Open questions that block progress
-
-None blocks PR #75. D-370 carries the fix, and D-372 carries the merge. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #75 per the `pr-review` skill at the effective head `cb3c2e2` and writes `docs/reviews/pr-75.md`. The owner then merges with the red `night-gate` (D-372), and a docs PR records the merge (D-297). A fresh session then opens PR-66, and it asks the owner for the shape of a tier first (D-350).
