@@ -1,5 +1,46 @@
 # Session handoff archive
 
+## Session 166: 2026-09-14, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-67 as PR #69, in the same invocation as Session 164 (D-297). Branch `docs/pr-67-dig-restart-merge-record`.
+
+### What this session did, and why
+
+- Session 165 approved `80ee5d9` in `docs/reviews/pr-69.md` with no finding. `review-gate` and `evaluate` passed on the tip `28a6705` at 22:55 UTC.
+- The owner merged PR #69 as `f2a04e6` at 23:25 UTC on 2026-09-14, and the tree of `f2a04e6` equals the tip `28a6705`. The three commits after `80ee5d9`, `0e69c58`, `bc991cc`, and `28a6705`, change only metadata paths (D-184).
+- `main` now holds the job budget of D-359, the four digs of D-360, and the new chamber draw of D-361. `docs/design.md` marks PR-67 and F-98 done, and sequence item 11 names the merge. The Phase 2 roadmap gains the status line of PR-67 and the mark in sequence item 14.
+- Session 165 left ten entries in the file, so Session 156 moved to the archive with this one.
+
+### State of the build
+
+- `main` is at `f2a04e6`, the squash merge of PR #69. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-67-dig-restart-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- CI on `f2a04e6`: CI, smoke, and bit identity passed on the three platforms, and asset-qa, bots, det-lint, and STE check passed, the last at 23:39 UTC. No macOS leg ended "not acquired".
+- `dotnet build`: 0 warnings, 0 errors on `f2a04e6`. `dotnet test`: 877 tests, 0 failures, with the five Smoke tests on the local Godot build. `ste-check`: 0 findings in 16 files. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `f2a04e6`.
+- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC is the first on the dig restart, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone. The `review-override` label goes on after the last push and the automated pass (D-188, D-190). PR-64, the ramp cells in Core, follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- The GitHub PR #69 is PR-67. The GitHub PR #67 was the concurrency PR, and its merge record used the branch `docs/pr-67-merge-record`.
+- The merge marks use the UTC date of the merge, 2026-09-14. This entry uses the local date, also 2026-09-14.
+- The Codex review of Session 165 ran in this checkout, and its local build, full test, and STE check gave no completion result there. This session rebuilt `f2a04e6` before its checks.
+- The simulation version is 9, so a run record of version 8 fails with the notice of D-151 (D-260).
+- The bit-identity known answer is `efcce6816cec980e`. A version rise alone moves it, because the replay header holds the version.
+- The next ids are D-362, OQ-174, F-101, PR-68, and Session 167.
+
+### Open questions that block progress
+
+None blocks this PR. The PR-64 session asks the owner for the motion on a ramp before the code: the speed on a slope, the jump, the roll, and the stagger. It also decides the encoding of a ramp cell (D-345). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. A fresh session then opens PR-64, and it asks the owner for the motion on a ramp first (D-345).
+
 ## Session 165: 2026-09-14, Codex
 
 Author: Codex

@@ -2,6 +2,53 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 176: 2026-09-16, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-68 as PR #75, and the owner answer D-373 on the night record, in the same invocation as Session 174 (D-297). Branch `docs/pr-68-merge-record`, PR #76.
+
+### What this session did, and why
+
+- Session 174 opened PR-68 as PR #75. Session 175 approved `cb3c2e2` in `docs/reviews/pr-75.md` with no finding. The owner merged PR #75 as `ac534d9` at 13:47 UTC on 2026-09-16.
+- `docs/design.md` marks PR-68 done and closes the F-101 row with the cause and the fix. The Phase 2 roadmap gains the PR-68 status line and the mark in sequence item 17.
+- The owner asked why a night ever runs on a branch commit. The answer named a real gap. D-275 guards the read of the night record, and no guard reads the ref on the write.
+- The hand night of PR-68 replaced the one record of `night-results` with a branch commit. That cost nothing over the `4bc8cd4` failure. The same write over a fresh success turns the `night-gate` job of every PR red. The publish step also keeps no history, because it starts a new orphan branch each night.
+- D-373: the two publish steps of `night.yml` take the condition `github.ref == 'refs/heads/main'`. A night on another ref runs every step and writes no record, and its run log carries the evidence. OQ-176 records the question, and D-274 gains a revision note for the ref alone. PR-69 carries the code, at sequence item 18 before PR-66.
+- The scheduled night of 2026-09-16 started at 13:23 UTC on `7345c9c`, the commit before the merge, because the 08:07 cron ran 5 hours 16 minutes late (F-95). That commit holds the defect, so the run would fail and write a failure record. A cancel of it freed the one Mac runner, and the cancel wrote a cancelled record.
+- The night of run 35104616127 passed on `main` at `ac534d9` and ended at 15:22 UTC. The two bot sets of 5000 seeds and the sweep of 100000 seeds passed. The record reads `ac534d9` with the status success, and that commit is on `main`, so the `night-gate` job is green again.
+- The roadmap kept no resolved line for OQ-174 and OQ-175. This session added them beside OQ-176.
+- Session 166 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `ac534d9`, the squash merge of PR #75. This branch holds one docs commit above it, `975f5b6`, and this entry stands in a metadata commit over it (D-184).
+- Remote head: `origin/docs/pr-68-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet test`: 1111 tests, 0 failures, without the Smoke category. `ste-check`: 0 findings in 16 files. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `ac534d9`.
+- CI on `975f5b6`: CI and bit identity passed on the three platforms, with the compare job. Asset-qa, det-lint, and STE check passed. The `night-gate` job passed, the first green one since the night of 2026-09-15 (F-101). `evaluate` fails and `review-gate` is grey, because this PR carries the `review-override` label in place of a review record (D-188, D-190, D-251).
+- The record on the branch `night-results` holds `ac534d9` with the status success, from 15:22 UTC on 2026-09-16. It goes stale 48 hours after that time (D-177).
+
+### In flight
+
+PR #76: documentation alone. The `review-override` label carries the review (D-188, D-190). The owner merges it. PR-69 follows in a fresh session (D-121), and PR-66 comes after it.
+
+### Traps and gotchas
+
+- The GitHub PR #75 is PR-68, and the GitHub PR #76 is this merge record. The roadmap id PR-69 guards the night record, and PR-66 digs the ramps and the tiers.
+- The merge mark of PR-68 uses the UTC date of the merge, 2026-09-16. D-373, OQ-176, and this entry use the local date, also 2026-09-16.
+- A night on a branch still overwrites the record of `main` until PR-69 lands. Run a night on `main` after a branch night, or leave the branch night for last.
+- Dispatch a hand night only after the macOS legs of CI, smoke, and bit identity finish. The night and those three legs take the one self-hosted Mac runner, and a night holds it for about 80 minutes.
+- A queued night cancels with no harm, because the record steps never run before the job starts. A night that already started writes a record on any outcome, a cancel included.
+- A squash merge gives the branch commits no place in the history of `main`, so a night record from a branch always fails the ancestry check of D-275.
+- The next ids are D-374, OQ-177, F-102, PR-70, and Session 177.
+
+### Open questions that block progress
+
+None blocks PR #76. D-373 resolves OQ-176, and PR-69 carries it. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #76 with the `review-override` label. A fresh session then opens PR-69: it gives the two publish steps of `night.yml` the ref condition of D-373, and it adds the test of exit test 1. PR-66 follows, and it asks the owner for the shape of a tier first (D-350).
+
 ## Session 175: 2026-09-16, Codex
 
 Author: Codex
@@ -416,44 +463,3 @@ None blocks PR #71. The PR-65 session asks the owner for the tile of a ramp face
 ### Next concrete action
 
 A Codex session reviews PR #71 per the `pr-review` skill at the effective head `b5bf2de` and writes `docs/reviews/pr-71.md`. The owner then merges, and a docs PR records the merge (D-297). A fresh session then opens PR-65, and it asks the owner for the tile of a ramp face first (D-367).
-
-## Session 166: 2026-09-14, Claude Code
-
-Author: Claude Code
-Session: record the merge of PR-67 as PR #69, in the same invocation as Session 164 (D-297). Branch `docs/pr-67-dig-restart-merge-record`.
-
-### What this session did, and why
-
-- Session 165 approved `80ee5d9` in `docs/reviews/pr-69.md` with no finding. `review-gate` and `evaluate` passed on the tip `28a6705` at 22:55 UTC.
-- The owner merged PR #69 as `f2a04e6` at 23:25 UTC on 2026-09-14, and the tree of `f2a04e6` equals the tip `28a6705`. The three commits after `80ee5d9`, `0e69c58`, `bc991cc`, and `28a6705`, change only metadata paths (D-184).
-- `main` now holds the job budget of D-359, the four digs of D-360, and the new chamber draw of D-361. `docs/design.md` marks PR-67 and F-98 done, and sequence item 11 names the merge. The Phase 2 roadmap gains the status line of PR-67 and the mark in sequence item 14.
-- Session 165 left ten entries in the file, so Session 156 moved to the archive with this one.
-
-### State of the build
-
-- `main` is at `f2a04e6`, the squash merge of PR #69. This branch holds one docs commit above it.
-- Remote head: `origin/docs/pr-67-dig-restart-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- CI on `f2a04e6`: CI, smoke, and bit identity passed on the three platforms, and asset-qa, bots, det-lint, and STE check passed, the last at 23:39 UTC. No macOS leg ended "not acquired".
-- `dotnet build`: 0 warnings, 0 errors on `f2a04e6`. `dotnet test`: 877 tests, 0 failures, with the five Smoke tests on the local Godot build. `ste-check`: 0 findings in 16 files. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `f2a04e6`.
-- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC is the first on the dig restart, and it can start hours late (F-95).
-
-### In flight
-
-This PR: docs alone. The `review-override` label goes on after the last push and the automated pass (D-188, D-190). PR-64, the ramp cells in Core, follows in a fresh session (D-121).
-
-### Traps and gotchas
-
-- The GitHub PR #69 is PR-67. The GitHub PR #67 was the concurrency PR, and its merge record used the branch `docs/pr-67-merge-record`.
-- The merge marks use the UTC date of the merge, 2026-09-14. This entry uses the local date, also 2026-09-14.
-- The Codex review of Session 165 ran in this checkout, and its local build, full test, and STE check gave no completion result there. This session rebuilt `f2a04e6` before its checks.
-- The simulation version is 9, so a run record of version 8 fails with the notice of D-151 (D-260).
-- The bit-identity known answer is `efcce6816cec980e`. A version rise alone moves it, because the replay header holds the version.
-- The next ids are D-362, OQ-174, F-101, PR-68, and Session 167.
-
-### Open questions that block progress
-
-None blocks this PR. The PR-64 session asks the owner for the motion on a ramp before the code: the speed on a slope, the jump, the roll, and the stagger. It also decides the encoding of a ramp cell (D-345). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges this PR with the `review-override` label. A fresh session then opens PR-64, and it asks the owner for the motion on a ramp first (D-345).
