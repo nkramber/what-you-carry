@@ -18,6 +18,7 @@ Session: re-review PR #78 at effective head `337d706`. Branch `feat/context-budg
 - `main` is at `58e4fc8`. The effective head is `337d706`. Later commits change metadata only (D-184).
 - The focused `ReviewGateRulesTests`, `RegisterLookupTests`, and `ContextBudgetTests` run passed 27 tests. The documented command and `git diff --check` passed.
 - The owner directed this session to exclude CI status from the review verdict.
+- The first review publication, `00c29f6852990e0a05a063a45a99f25b1343c41d`, matched the remote head when `gh pr view` checked it.
 - Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
 
 ### In flight
