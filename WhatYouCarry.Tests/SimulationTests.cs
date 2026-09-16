@@ -117,12 +117,12 @@ public sealed class SimulationTests
         Assert.Throws<ContextException>(() => Intent.Decode(frame, -1));
     }
 
-    /// <summary>The loop runs at 60 Hz, and the simulation version is 9 since the dig restart of PR-67 changed each floor that needs more than 1000 jobs (D-73, D-151, D-260, D-359, G-20).</summary>
+    /// <summary>The loop runs at 60 Hz, and the simulation version is 11 since the pillar rule of F-101 moved every floor that held a pillar in the column of a shaft (D-73, D-151, D-260, G-20).</summary>
     [Fact]
     public void TheConstantsHold()
     {
         Assert.Equal(60, SimulationLoop.TicksPerSecond);
-        Assert.Equal(10, SimulationVersion.Value);
+        Assert.Equal(11, SimulationVersion.Value);
     }
 
     /// <summary>One intent is one tick, and the loop starts at tick zero.</summary>

@@ -28,9 +28,9 @@ namespace WhatYouCarry.Core.Procgen;
 /// digs is an error (D-360).
 /// </para>
 /// <para>
-/// The generator confirms its own construction: every chamber has a reachable floor cell, or the floor is an
-/// error that names the seed, the floor, and the chamber (D-112, T-2). PR-9 exit test 1 asserts the same from
-/// outside over thousands of seeds.
+/// The generator confirms its own construction: every chamber has a reachable floor cell, and the spawn reaches the
+/// landing of every shaft, or the floor is an error that names the seed, the floor, and the chamber or the shaft
+/// (D-112, F-101, T-2). PR-9 exit test 1 asserts the same from outside over thousands of seeds.
 /// </para>
 /// </remarks>
 public static class FloorGenerator
@@ -100,6 +100,7 @@ public static class FloorGenerator
         Cell spawnCell = new(first.Anchor.X, first.FloorRow, first.Anchor.Z);
         Reachability reach = Reachability.From(grid, spawnCell);
         Cell stairwell = FarthestChamberCell(plan.Chambers, grid, reach);
+        CheckShaftLandings(plan.Shafts, grid, reach);
         Vector3 spawn = new(first.Anchor.X + 0.5f, first.FloorRow + 1.0f, first.Anchor.Z + 0.5f);
         return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Tunnels, plan.Shafts, detail);
     }
@@ -194,5 +195,36 @@ public static class FloorGenerator
         }
 
         return stairwell;
+    }
+
+    /// <summary>
+    /// Confirms that the spawn reaches the landing of every shaft: the floor under the top air row of the space below
+    /// the hole. The dig proves two air rows over each landing before it carves, and the detail pass keeps them free,
+    /// so an unreachable landing is a defect of the construction and never a floor that ships (D-112, F-101, T-2).
+    /// </summary>
+    /// <exception cref="ContextException">A shaft lands on a cell that the spawn does not reach.</exception>
+    private static void CheckShaftLandings(IReadOnlyList<Shaft> shafts, VoxelGrid grid, Reachability reach)
+    {
+        foreach (Shaft shaft in shafts)
+        {
+            int landingRow = shaft.LandingAirRow;
+            while (landingRow >= 0 && !grid.IsSolid(shaft.Center.X, landingRow, shaft.Center.Z))
+            {
+                landingRow--;
+            }
+
+            Cell landing = new(shaft.Center.X, landingRow, shaft.Center.Z);
+            if (Reachability.IsFloor(grid, landing) && reach.IsReachable(landing))
+            {
+                continue;
+            }
+
+            ContextException error = new($"The shaft of chamber {shaft.ChamberIndex} at the column ({shaft.Center.X}, {shaft.Center.Z}) lands at row {landingRow}, and the spawn does not reach that cell (D-253, F-101).");
+            error.AddContext("chamber", ((long)shaft.ChamberIndex).ToString(CultureInfo.InvariantCulture));
+            error.AddContext("shaftX", ((long)shaft.Center.X).ToString(CultureInfo.InvariantCulture));
+            error.AddContext("shaftZ", ((long)shaft.Center.Z).ToString(CultureInfo.InvariantCulture));
+            error.AddContext("landingRow", ((long)landingRow).ToString(CultureInfo.InvariantCulture));
+            throw error;
+        }
     }
 }

@@ -34,8 +34,10 @@ public sealed class BitIdentityTests
     /// budget and stay the same, and the replay header holds the version, so only the version moved the hash. PR-64 moved it
     /// from `efcce6816cec980e` when the simulation version rose to 10 and the sweep gained the ramp courses (D-345, D-367,
     /// G-20). The ramp collision with the version at 9 and no ramp run gave the old answer, so no grid without a ramp moved.
+    /// PR-68 moved it from `24c37100cd99edf4` when the simulation version rose to 11, because the pillar rule of F-101
+    /// moves every floor that holds a pillar in the column of a shaft (D-260, G-20).
     /// </remarks>
-    private const string ExpectedHash = "24c37100cd99edf4";
+    private const string ExpectedHash = "a0b32bad006b3dfe";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

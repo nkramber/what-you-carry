@@ -20,7 +20,8 @@ namespace WhatYouCarry.Core.Procgen;
 /// <para>
 /// A pool is a small rectangle of chamber floor cells that turn to still water, over rock. Every pool cell keeps
 /// a dry floor cell of the chamber beside it, so a body leaves the pool by one jump (D-258, D-262). A pillar is
-/// one column of a chamber whose eight neighbors are chamber floor, so the chamber stays one connected floor. A
+/// one column of a chamber whose eight neighbors are chamber floor, so the chamber stays one connected floor. No
+/// pillar stands in a column that a shaft drops through, because it fills the landing of that shaft (F-101). A
 /// collapse fills the last stamp of a walker that ended in rock with a heap of rubble, from one row to the height
 /// of its tunnel. It touches only a walker with no dependent, in cells that this walker alone dug, so no other
 /// walker, chamber, or drift loses its way.
@@ -157,7 +158,7 @@ public static class DetailPass
             for (int attempt = 0; attempt < tries; attempt++)
             {
                 Column center = chamber.Footprint[rng.NextInt(chamber.Footprint.Count)];
-                if (!IsInterior(canvas, chamber, center, 1) || IsAnchor(plan, center))
+                if (!IsInterior(canvas, chamber, center, 1) || IsAnchor(plan, center) || IsUnderShaft(plan, center))
                 {
                     continue;
                 }
@@ -327,6 +328,27 @@ public static class DetailPass
         foreach (Chamber chamber in plan.Chambers)
         {
             if (chamber.Anchor == column)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Answers whether a shaft drops through the column. The hole of a shaft is three by three, and the dig proves two
+    /// air rows over the landing of each of its nine columns before it carves (D-253). A pillar of the chamber below
+    /// fills that landing, and a body that drops through the shaft then stands on the pillar with no path back to it
+    /// (F-101).
+    /// </summary>
+    private static bool IsUnderShaft(DigPlan plan, Column column)
+    {
+        foreach (Shaft shaft in plan.Shafts)
+        {
+            int alongX = shaft.Center.X - column.X;
+            int alongZ = shaft.Center.Z - column.Z;
+            if (alongX >= -DigPlan.ShaftRadius && alongX <= DigPlan.ShaftRadius && alongZ >= -DigPlan.ShaftRadius && alongZ <= DigPlan.ShaftRadius)
             {
                 return true;
             }
