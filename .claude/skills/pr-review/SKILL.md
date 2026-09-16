@@ -47,6 +47,7 @@ Do not approve through reciprocal review of selected hunks.
 ## Establish the review scope
 
 - Follow the read order in `AGENTS.md`.
+- Load `.claude/skills/one-pr-one-session/SKILL.md`, and bind the session to this PR in the reviewer role (D-375).
 - Load `.claude/skills/ste-writing/SKILL.md` before any review text (D-139).
 - Read the PR request, its acceptance criteria, prior review, and applicable focused roadmap.
 - Resolve decision revisions through the `Effect` column in `docs/decisions.md` (D-186). `Superseded by D-N` replaces the whole answer. `Revised in part by D-N` changes only the named part, and the rest of that decision stays current.
@@ -140,7 +141,7 @@ For example, D-152 supersedes the three-file save design in D-94.
 - Check each roadmap prerequisite against the first gate that needs it.
 - Distinguish proposed work, implemented work, measured behavior, and owner approval.
 - Verify material external claims against dated primary sources.
-- Check the document dispositions required by D-118.
+- Check each line of the documents matrix in the PR description against the diff. Each reason must be true and specific (D-118, D-376).
 - Confirm `AGENTS.md` and `CLAUDE.md` remain identical when either changes (D-122).
 - Check attribution restrictions in commits, PR text, comments, and deliverables (D-137).
 

@@ -43,11 +43,11 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 - Record each answer in `docs/decisions.md` with the next D-# id and the date. Never renumber.
 - Mark a change to an earlier decision in its `Effect` column (D-186). Use `Superseded by D-N` when the whole answer changes. Use `Revised in part by D-N` when one part changes, and name the part that changed and the parts that stand.
 - A citation of a superseded decision must name the superseding decision. A decision revised in part stays citable.
-- One session is one harness invocation and one code PR (D-121). A documentation PR can follow the merge of that code PR in the same session (D-297). Each PR has its own handoff entry (D-146).
+- One session is one harness invocation, one PR, and one role (D-121, D-375). Load `.claude/skills/one-pr-one-session/SKILL.md` before all PR work: implementation, a new or continued PR, a review, an answer to findings, or the documents of a PR. No PR exists only to record an earlier PR. Each PR has its own handoff entry (D-146).
 
 ## Session handoff
 
-At the end of a session, fetch the remote and read `docs/session-handoff.md` again. Take the highest session number and add one (D-187). Then add a new entry at the top (D-146). Keep the 10 newest entries in that file. Move any older entry to the top of `docs/session-handoff-archive.md`. Set the author field to `Claude Code` or `Codex`. Commit the entry with the review record or the work it describes (D-182). Push, then fetch, and check that the status shows no `[ahead N]` (D-199). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. Each entry has six parts:
+At the end of a session, fetch the remote and read `docs/session-handoff.md` again. Take the highest session number and add one (D-187). Then add a new entry at the top (D-146). Keep the 10 newest entries in that file. Move any older entry to the top of `docs/session-handoff-archive.md`. Set the author field to `Claude Code` or `Codex`. Commit the entry with the review record or the work it describes (D-182). Push, then fetch, and check that the status shows no `[ahead N]` (D-199). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. The session line of the entry names the PR branch in the form Branch `<branch>` (D-376). Each entry has six parts:
 
 - What the session did, and why.
 - The state of the build, with the remote head (D-199).
@@ -109,6 +109,7 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Build: `dotnet build WhatYouCarry.slnx`
 - Test: `dotnet test WhatYouCarry.slnx --no-build`
 - STE check, the reference check, and the session number check: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .`
+- Documentation gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- doc-gate --root . --base origin/main --head HEAD --body <file> --title "<title>" --branch <branch>`
 - Determinism and string lint: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --root .`
 - Asset QA: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- asset-qa --root .`
 - Texture generator: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- texture-gen --root .`
@@ -149,5 +150,5 @@ A PR merges only when every line holds:
 - [ ] `docs/design.md` matches intent.
 - [ ] Each check that does not exist yet has a line that names the PR that creates it (D-148, G-19).
 - [ ] `docs/session-handoff.md` is current.
-- [ ] For each document not changed, the PR says "no change needed because ...".
+- [ ] The `doc-gate` job is green: the handoff entry names this branch, and the documents matrix gives each category a disposition and a reason (D-375, D-376).
 - [ ] No attribution anywhere (T-6).

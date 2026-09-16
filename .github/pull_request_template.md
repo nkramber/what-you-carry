@@ -19,16 +19,19 @@ Each line holds before the owner merges (`CLAUDE.md`, PR gate).
 - [ ] `docs/questions.md` has every new question.
 - [ ] `docs/design.md` matches intent.
 - [ ] Every check that does not exist yet has a line above with the PR that creates it (D-148, G-19).
-- [ ] `docs/session-handoff.md` is current.
+- [ ] `docs/session-handoff.md` is current, and its newest entry names the branch of this PR (D-376).
+- [ ] The `doc-gate` job is green (D-375, D-376). No part of this PR waits for a later PR.
 - [ ] No attribution anywhere (T-6). No commit subject or body names an agent, harness, or model as the source of the work (D-176).
 
 ## Documents
 
-One line per document. Say what changed, or say "no change needed because ..." (D-118).
+One line for each category, in this order (D-375, D-376). Start the line with `Changed:`, `Reviewed; no change needed:`, or `Not applicable:`. Then give a reason of five words or more that names the part of the document and the cause. The `doc-gate` job reads this section.
 
 - `docs/design.md`:
 - `docs/decisions.md`:
 - `docs/questions.md`:
 - `docs/roadmaps/`:
+- `docs/runbooks/`:
 - `docs/session-handoff.md`:
 - `CLAUDE.md` and `AGENTS.md`:
+- `.claude/skills/`:

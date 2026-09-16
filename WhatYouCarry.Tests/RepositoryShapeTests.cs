@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using WhatYouCarry.Tools.DocGate;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
@@ -223,7 +224,8 @@ public sealed class RepositoryShapeTests
             Assert.True(workflow.Contains("\n" + PullRequestConcurrency + "\n", StringComparison.Ordinal), $"The workflow '{name}' does not carry the concurrency group of D-356.");
         }
 
-        Assert.Equal(9, pullRequestWorkflows.Count);
+        // The doc gate of D-376 is the tenth.
+        Assert.Equal(10, pullRequestWorkflows.Count);
     }
 
     [Fact]
@@ -301,6 +303,84 @@ public sealed class RepositoryShapeTests
         Assert.Contains("if [ \"${conclusion}\" != \"success\" ]; then", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("\"${conclusion}\" = \"failure\"", workflow, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void DocGateWorkflowReadsTheDescriptionAsData()
+    {
+        // D-376: the gate runs again on a description edit, and the description and the title reach the shell
+        // through the environment alone, so no PR text runs as a command.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/doc-gate.yml");
+        Assert.Contains("types: [opened, edited, reopened, synchronize]", workflow, StringComparison.Ordinal);
+        Assert.Contains("PR_BODY: ${{ github.event.pull_request.body }}", workflow, StringComparison.Ordinal);
+        Assert.Contains("PR_TITLE: ${{ github.event.pull_request.title }}", workflow, StringComparison.Ordinal);
+        Assert.Contains("-- doc-gate --root", workflow, StringComparison.Ordinal);
+        string[] runLines = workflow.Split('\n').Where(line => line.TrimStart().StartsWith("run:", StringComparison.Ordinal)).ToArray();
+        Assert.Equal(2, runLines.Length);
+        Assert.All(runLines, line => Assert.DoesNotContain("${{", line, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void PullRequestTemplateHoldsEveryDocumentCategory()
+    {
+        // D-376: the template gives one matrix line for each category that the doc gate requires, in the same order.
+        string template = RepositoryRoot.ReadFile(".github/pull_request_template.md");
+        int matrix = template.IndexOf("\n" + DocGateRules.MatrixHeading + "\n", StringComparison.Ordinal);
+        Assert.True(matrix >= 0, "The PR template has no documents matrix heading.");
+        int previous = matrix;
+        foreach (DocumentCategory category in DocGateRules.Categories)
+        {
+            int line = template.IndexOf("\n- " + category.Label + ":", StringComparison.Ordinal);
+            Assert.True(line > previous, $"The PR template has no matrix line for {category.Label} after the one before it.");
+            previous = line;
+        }
+    }
+
+    [Fact]
+    public void EverySkillHasValidFrontMatter()
+    {
+        // D-131, D-155: each project skill is .claude/skills/<name>/SKILL.md. Its front matter opens the file, names
+        // the directory, and gives a description, or the harness cannot load it.
+        string directory = Path.Combine(RepositoryRoot.Find(), ".claude", "skills");
+        string[] skills = Directory.GetDirectories(directory).OrderBy(path => path, StringComparer.Ordinal).ToArray();
+        Assert.Contains(skills, path => Path.GetFileName(path) == OnePrOneSessionSkill);
+        foreach (string skill in skills)
+        {
+            string name = Path.GetFileName(skill);
+            string file = Path.Combine(skill, "SKILL.md");
+            Assert.True(File.Exists(file), $"The skill directory '{name}' has no SKILL.md.");
+            string[] lines = File.ReadAllText(file).Split('\n');
+            int close = Array.IndexOf(lines, "---", 1);
+            Assert.True(lines[0] == "---" && close > 0, $"The skill '{name}' does not open with front matter.");
+            string[] frontMatter = lines[1..close];
+            Assert.Contains($"name: {name}", frontMatter);
+            string? description = frontMatter.FirstOrDefault(line => line.StartsWith("description: ", StringComparison.Ordinal));
+            Assert.True(description is not null && description.Length > "description: ".Length + 40, $"The skill '{name}' has no description of at least 40 characters.");
+        }
+    }
+
+    [Fact]
+    public void AgentFilesRequireTheSessionSkill()
+    {
+        // D-375: the root instructions name the skill path for all PR work, and they do not copy the skill.
+        string agents = RepositoryRoot.ReadFile("AGENTS.md");
+        Assert.Contains($".claude/skills/{OnePrOneSessionSkill}/SKILL.md", agents, StringComparison.Ordinal);
+        Assert.DoesNotContain("Blocked: start a new clean session for this PR.", agents, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SessionSkillStaysSmall()
+    {
+        // D-375: every PR session loads this skill, so its size is a cost on each session. The limit holds the size
+        // measured at the first version, 2026-09-16, with room for a short correction. A larger skill needs a decision.
+        string skill = RepositoryRoot.ReadFile($".claude/skills/{OnePrOneSessionSkill}/SKILL.md");
+        Assert.True(skill.Length <= SessionSkillCharacterLimit, $"The skill holds {skill.Length} characters, and the limit is {SessionSkillCharacterLimit}.");
+        Assert.Contains("`Blocked: start a new clean session for this PR.`", skill, StringComparison.Ordinal);
+        Assert.Contains("`This session is bound to PR #N and is complete. End this session. Start a new clean session before beginning another PR.`", skill, StringComparison.Ordinal);
+    }
+
+    private const string OnePrOneSessionSkill = "one-pr-one-session";
+
+    private const int SessionSkillCharacterLimit = 7000;
 
     [Fact]
     public void ReviewGateModeFileHoldsAdvisory()

@@ -1,0 +1,43 @@
+# The documentation gate (D-375, D-376). Each PR carries its own handoff entry and a documents matrix in its
+# description, and no PR records the merge of an earlier PR. The rules live in WhatYouCarry.Tools, command doc-gate.
+# This file only gathers the inputs. The description and the title reach the tool through the environment and a
+# file, never through the shell text, so no text of a PR runs as a command.
+#
+# The event is pull_request, so the tool comes from the PR head. A PR can change the rules that judge it, and the
+# cross-provider review of WhatYouCarry.Tools and .github/ covers that change (T-4, D-190). The edited type runs
+# the gate again when the author corrects the description.
+name: Doc gate
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+# A newer event on a PR cancels the older run of this workflow for that PR, so the one Mac runner serves the newest
+# head (D-356, F-99). A push to main takes the group of its own commit, so every merge commit keeps its run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
+
+jobs:
+  doc-gate:
+    runs-on: ubuntu-latest
+    env:
+      PR_BODY: ${{ github.event.pull_request.body }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Write the PR description to a file
+        run: printf '%s\n' "$PR_BODY" > "$RUNNER_TEMP/pr-body.md"
+      - name: Evaluate the documents of the PR
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- doc-gate --root "$GITHUB_WORKSPACE" --base "origin/${BASE_REF}" --head "$HEAD_SHA" --body "$RUNNER_TEMP/pr-body.md" --title "$PR_TITLE" --branch "$HEAD_REF"
