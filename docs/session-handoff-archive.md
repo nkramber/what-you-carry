@@ -1,5 +1,47 @@
 # Session handoff archive
 
+## Session 171: 2026-09-15, Codex
+
+Author: Codex
+Session: review PR #73, the ramp meshes in Game, at effective head `720c7a9`. Branch `feat/pr-65-ramp-meshes`.
+
+### What this session did, and why
+
+- Reviewed the complete code and test diff for the ramp mesh, face coverage, ambient occlusion, mesh triangle, greedy sweep, and contact-sheet changes.
+- Verified the provider gate. Session 170 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Checked the ramp slope planes, side and end coverage, chunk borders, triangle winding, texture density, occlusion, mesh budget path, contact-sheet layout, and no-ramp mesh preservation against D-368, D-369, and the PR-65 exit tests.
+- The focused mesher and contact-sheet suite passed 86 tests. Found no in-scope defect.
+- Wrote `docs/reviews/pr-73.md` with the verdict `Ready for owner merge` for `720c7a9`.
+- Read the existing automated-review comment. It approved the head and raised no issue.
+
+### State of the build
+
+- `main` is at `a4bf6d6`. The effective head of PR #73 is `720c7a9`. The later `f4747ac` commit changes only `docs/session-handoff.md` and `docs/session-handoff-archive.md` under D-184.
+- Remote head: `origin/feat/pr-65-ramp-meshes` is `5e62041` after the review push, verified with `git fetch`, clean status, and `gh pr view`.
+- The focused suite passed 86 tests. Local full build and gate commands produced no completion result because the .NET process hung without output. Session 170 reports the full gates and revision-matched CI as passed on `720c7a9`.
+- GitHub checks after the review push are in progress, including `evaluate`; no completed post-review verdict is available yet.
+
+### In flight
+
+PR #73 is ready for owner merge after the review commit reaches the PR and the review-gate refreshes. PR-66 follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- The GitHub PR #73 is roadmap PR-65. The roadmap id PR-66 digs the ramps and tiers.
+- The effective head is `720c7a9`, not the metadata tip `f4747ac` (D-184).
+- A mesh with the side of a ramp holds triangle faces. Read `TriangleCount` for triangles, because `QuadCount` counts quads alone.
+- The local .NET hang is an execution-context limitation, not a passed check. Use the revision-matched CI evidence from Session 170.
+- The next ids are D-370, OQ-174, F-101, PR-68, and Session 172.
+
+### Open questions that block progress
+
+None blocks PR #73. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+Wait for the post-review checks, including `evaluate` and `review-gate`, to complete. The owner then merges PR #73. A fresh session opens PR-66 and asks the owner for the shape of a tier first (D-350).
+
+
 ## Session 170: 2026-09-15, Claude Code
 
 Author: Claude Code
