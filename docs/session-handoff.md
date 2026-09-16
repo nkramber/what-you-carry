@@ -16,6 +16,7 @@ Session: bind each session to one PR, and make each PR carry all of its document
 - The PR template gains the eight matrix lines and two gate lines. `docs/design.md` section 3.14 gains the enforcement table, and G-22 states the rule. The `design-doc-style` and `pr-review` skills gain one line each.
 - Five fresh evaluators ran the skill in a dry run, with no hint of the expected result. A merge record request and a second PR request after a compaction both stopped with the blocked line. A clean start and a reviewer session bound to one PR. A draft description with a deferral failed the gate.
 - The evaluators found two gaps, and this PR closes both. One deferral phrase of an evaluator passed the patterns, and a new pattern and a test now hold it. An exit test that needs a night on `main` after the merge had no place, and D-375 and the skill now give it one: the next session writes the result in its own handoff entry.
+- The owner then noted that an answer to gitar or review findings needs no new session. Start gate step 2 had blocked a session whose PR got to the hand-over, so an author could not answer findings on its own PR. Step 2 now blocks a merged or closed PR alone, and D-375 and the design table state the rule.
 - Session 168 moved to the archive, because the file held eleven entries with this one.
 
 ### State of the build
@@ -35,6 +36,7 @@ This PR changes `WhatYouCarry.Tools` and `.github/`, so it needs the Codex revie
 - The `doc-gate` job runs on `pull_request` from the PR head, so this PR runs the new rules on itself.
 - A roadmap or design mark `Done in PR #N` moves the effective head (D-184). Write it after the PR opens and before the gitar pass. The handoff and the review record do not move it.
 - The deferral check reads a fixed list of phrases. A new form of deferral passes it, and the reviewer catches it.
+- An author session can answer the findings of its own PR after the hand-over. It never starts another PR.
 - The harness exposes no session identity. The start gate of the skill and the owner hold the clean session rule.
 - The memory note on merge dates applies to the history alone. A new PR writes no merge date.
 - The next ids are D-377, OQ-177, F-102, PR-70, and Session 179.
