@@ -14,6 +14,9 @@ Session: answer review finding P2-1 of PR #77, in the author session of the PR. 
 - `DocGateRules.CheckMatrix` now reports more than one line for a category. `DuplicateMatrixLineFails` fails on the old code and passes with the correction.
 - D-376, the enforcement table, and the skill now say exactly one line for each category.
 - The review also asked to reject an unknown label if the section is an exact list. `docs/reviews/pr-77-response.md` refutes that part: the categories are a floor, and a label with a typo already fails as a missing category.
+- A `Gitar review` comment at 20:20:17 UTC ran a review of `f0befdd`. Gitar replied "On it" at 20:20:39, and it replaced the dashboard comment at 20:21:01 with an approval and no open finding. That review was current, and it kept the old summary word for word.
+- The `gitar-review` skill read the unchanged summary as a stale review. A second request at 20:21:24 got the reply "You've sent several Gitar comments in a short window", and a wait that watched the dashboard alone ran ten minutes with no result.
+- The owner asked for a correction of the skill. The summary is no longer a condition of a current review. After a request, the author reads the Gitar reply first, a refusal waits ten minutes, and each check reads the newest dashboard id. Command B prints the reply.
 - Session 170 moved to the archive, because the file held eleven entries with this one.
 
 ### State of the build
@@ -24,11 +27,12 @@ Session: answer review finding P2-1 of PR #77, in the author session of the PR. 
 
 ### In flight
 
-PR #77: the gitar pass on the correction head, then the repeat Codex review of P2-1 per the `pr-review` skill. The owner then merges.
+PR #77: the gitar pass on the head after the skill correction, then the repeat Codex review of P2-1 per the `pr-review` skill. The owner then merges.
 
 ### Traps and gotchas
 
 - The correction commit holds code, so it moves the effective head past `887f94f` (D-184). The review of `887f94f` no longer covers the head.
+- The `gitar-review` skill is the same file in each repo that uses gitar. Put the same correction in the copy of each other repo.
 - A duplicate line stops the other checks of that category, because the gate cannot know which line holds. Each other category keeps its checks.
 - The next ids are D-377, OQ-177, F-102, PR-70, and Session 181.
 

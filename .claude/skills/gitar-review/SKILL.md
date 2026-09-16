@@ -33,21 +33,23 @@ Do these steps after each push.
 3. Record the head and the push time from command A.
 4. Wait for Gitar to post or edit the dashboard comment. On 2026-09-16, this took one to four minutes.
 5. Run command B, and apply the rule in "Prove that a review is current".
-6. When the review is current, go to step 11.
+6. When the review is current, go to step 13.
 7. When the review is stale, or you cannot prove that it is current, comment `Gitar review` on the pull request.
-8. Wait for the Gitar reply "On it". When no reply comes in five minutes, comment `Gitar review` again.
-9. Do not push while the manual review runs. A push at this time makes the review stale.
-10. When Gitar edits the dashboard comment, go to step 5.
-11. Open the collapsed `Code Review` block of the dashboard comment. Read the summary.
-12. List the review threads with command C. Read each open thread.
-13. Read each finding as a claim, not a fact. Reproduce its trigger. Read the rule or the decision it names.
-14. Decide the merit of the finding: full, partial, or none.
-15. For full merit, make the smallest change that fixes the finding. Commit it.
-16. For no merit, reply on the thread with the reason and the evidence. Then resolve the thread.
-17. For partial merit, fix the part with merit. Refute the rest in the same reply.
-18. When you have commits, go to step 1. After the push, reply on each thread with the commit that fixes it.
-19. Stop when a current review approves, or when a current review adds no finding and each finding has its answer.
-20. Tell the owner that the pull request is ready to merge.
+8. Read the Gitar reply to that comment with command B. When the reply is "On it", go to step 11.
+9. When the reply is "You've sent several Gitar comments in a short window", no review started. Wait ten minutes, then go to step 7.
+10. When no reply comes in five minutes, go to step 7.
+11. Do not push while the manual review runs. A push at this time makes the review stale.
+12. When Gitar edits or replaces the dashboard comment, go to step 5.
+13. Open the collapsed `Code Review` block of the dashboard comment. Read the summary.
+14. List the review threads with command C. Read each open thread.
+15. Read each finding as a claim, not a fact. Reproduce its trigger. Read the rule or the decision it names.
+16. Decide the merit of the finding: full, partial, or none.
+17. For full merit, make the smallest change that fixes the finding. Commit it.
+18. For no merit, reply on the thread with the reason and the evidence. Then resolve the thread.
+19. For partial merit, fix the part with merit. Refute the rest in the same reply.
+20. When you have commits, go to step 1. After the push, reply on each thread with the commit that fixes it.
+21. Stop when a current review approves, or when a current review adds no finding and each finding has its answer.
+22. Tell the owner that the pull request is ready to merge.
 
 ## Prove that a review is current
 
@@ -55,8 +57,10 @@ A review is current only when each of these conditions is true:
 
 - The head from command B is the head that you recorded in step 3.
 - The dashboard comment has an edit time later than the push time that you recorded in step 3.
-- After a `Gitar review` comment, the dashboard comment has an edit time later than that comment.
-- The summary of the review describes the change of the newest push.
+- After a `Gitar review` comment, Gitar replied "On it", and the dashboard comment has an edit time later than that reply.
+- You read the newest dashboard comment. Gitar can delete the dashboard comment and post a new one with a new id.
+
+The summary is not a condition. A review that adds no finding can keep the summary of the older review, word for word. On 2026-09-16, the review of a correction push did this, and its three times proved it current. Do not ask for a review again only because the summary did not change.
 
 When one condition is false, the review is stale. When you cannot check one condition, treat the review as stale. A request for a manual review costs little. A merge on a stale review costs more.
 
@@ -75,8 +79,10 @@ When one condition is false, the review is stale. When you cannot check one cond
 - A manual review can edit the dashboard comment and attach no Gitar check to the new head. Apply the rule in "Prove that a review is current".
 - The pause note can come beside a full review. Open the collapsed `Code Review` block before you comment `Gitar review`.
 - A request before a push gets a review of the old head. Push first, then ask.
-- Gitar limits requests. When Gitar replies "You've sent several Gitar comments in a short window", wait ten minutes. Then comment `Gitar review` one time.
+- Gitar limits requests. When Gitar replies "You've sent several Gitar comments in a short window", wait ten minutes. Then comment `Gitar review` one time. On 2026-09-16, a second request one minute after a finished review got this reply.
 - Do not send a second `Gitar review` comment while the first review runs.
+- Gitar refuses a request in a reply, and the dashboard comment does not change. A wait that watches the dashboard comment alone then never ends. Read the reply first.
+- Gitar can replace the dashboard comment during a review. A saved comment id then returns HTTP 404, or it shows an old edit time. Read the newest id in each check.
 - The REST API names the author `gitar-bot[bot]`, and the GraphQL API names it `gitar-bot`.
 - The issue comments API returns 30 comments on each page. Use `--paginate`, or you can read an old dashboard comment.
 - The owner can merge a pull request before a finding gets its answer. A commit on that branch then never gets to `main`. Carry the fix to a new branch from `main`. Reply on the old thread with the new pull request.
@@ -111,6 +117,12 @@ echo "head:      $(gh pr view "$n" --json headRefOid --jq .headRefOid)"
 # The time of the newest "Gitar review" comment, if any.
 echo "requested: $(gh api --paginate "repos/$repo/issues/$n/comments" \
   --jq '.[] | select(.body | test("^\\s*gitar review\\s*$"; "i")) | .created_at' | tail -1)"
+
+# The time and the first line of the newest Gitar reply to a request: "On it", or a refusal.
+echo "reply:     $(gh api --paginate "repos/$repo/issues/$n/comments" \
+  --jq '.[] | select(.user.login == "gitar-bot[bot]")
+        | select(.body | test("^> gitar review"; "i"))
+        | "\(.created_at) \(.body | split("\n")[2])"' | tail -1)"
 
 # The id and the last edit time of the newest dashboard comment.
 echo "dashboard: $(gh api --paginate "repos/$repo/issues/$n/comments" \
