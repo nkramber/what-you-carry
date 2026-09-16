@@ -1,5 +1,93 @@
 # Session handoff archive
 
+## Session 164: 2026-09-14, Claude Code
+
+Author: Claude Code
+Session: open PR-67, the dig restart, as PR #69, with the owner answers D-359 to D-361. Branch `feat/pr-67-dig-restart`.
+
+### What this session did, and why
+
+- The owner merged PR #68, the merge record of the concurrency PR, as `d65823c` at 21:27 UTC on 2026-09-14, and asked for the next item. The branch came from `origin/main` at `d65823c`.
+- Before the questions, a scratch program outside the repository dug the 675000 floors of F-98 with a copy of the Core of `main`. The same 7 floors ran the 10000 jobs. The median need is 1 job, one floor in 5500 needs more than 1000, and the largest need that passed is 9952. A replay of each floor over 300 jobs, with a restart at budgets from 500 to 10000, dug every floor on its second dig.
+- The owner chose three answers on the recommendation. D-359 sets a job budget of 1000 and supersedes the cap of D-279. D-360 gives a floor 4 digs before the error. D-361 draws the chamber kinds again on each restart.
+- `DigPlan.TryDigUntilComplete` replaces `DigUntilComplete` and `MaxJobs`. `FloorGenerator.DigChambers` digs again on an empty grid from the next draws, up to `FloorGenerator.MaxDigs`, and the error names the digs, the budget, and the chambers. The simulation version is 9 (D-260).
+- The bit-identity known answer moved from `b00814dbf25e61e8` to `efcce6816cec980e`. The replay header holds the version, and this head with the version set back to 8 prints `b00814dbf25e61e8`, so the version alone moved it.
+- `DigRestartTests` replaces `DigPlanJobCapTests`. On a scratch worktree of `main`, the generator fails on all 7 floors of F-98 with "The dig plan ran 10000 jobs" (T-3).
+- D-279 carries `Superseded by D-359`, so each other line that cites D-279 names D-359: F-92, F-98, the PR-63 entry, OQ-147, OQ-172, D-353, and the two roadmaps (D-178).
+- The automated pass of gitar approved `80ee5d9` at 22:17 UTC with no comment, so 0 comments needed an answer (D-250). Its comment shows the trial pause note, and the completed check run on the head made a `Gitar review` comment unnecessary.
+- Session 154 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `d65823c`. The effective head of PR #69 is `80ee5d9`, the one code commit. This entry is in a metadata commit above it (D-184).
+- Remote head: `origin/feat/pr-67-dig-restart` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 877 tests, 0 failures, with the five Smoke tests on the local Godot build. `det-lint`: 0 findings, Core 0 in 65 files, Game 0 in 32 files. `asset-qa`: 0 findings. `ste-check`: 0 findings in 16 files. The Godot build check passed, and `bit-identity` prints `efcce6816cec980e`.
+- The scratch sweep of this head over the 675000 floors of F-98: 0 generator errors, 674877 floors on the first dig and 123 on the second, and the largest total job count is 1019, on seed 517241 floor 12.
+- The PR bot sweep ran locally: the random walker and the greedy descender over seeds 1 to 100, 0 softlocks and 0 crashes, and the descender reached the bottom on every seed.
+- CI on `80ee5d9`: CI, smoke, and bit identity passed on the three platforms, with the compare job. Asset-qa, bots, det-lint, the night gate, STE check, and gitar passed, the last at 22:28 UTC. No macOS leg ended "not acquired". `evaluate` fails and `review-gate` is grey, because no review record exists yet (D-251). Every run on `80ee5d9` completed before the push of this entry, so that push cancels nothing (D-356).
+- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC runs on `main` with the cap of D-279, which D-359 supersedes after the merge, and it can start hours late (F-95).
+
+### In flight
+
+PR #69: the Codex review per the `pr-review` skill at the effective head `80ee5d9` (T-4). The owner then merges, and a docs PR records the merge (D-297). PR-64 follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- The GitHub PR #69 is PR-67. The GitHub PR #67 was the concurrency PR.
+- The effective head is `80ee5d9`, and not the metadata commit of this entry (D-184).
+- The bit-identity known answer moves with the simulation version alone, because the replay header holds the version. A first reading in this session said that the answer stays, and the tests refuted it.
+- A floor that needed 1001 to 10000 jobs digs another floor now, so a run record of version 8 fails with the notice of D-151.
+- `EveryTailFloorDigs` and `TheBudgetEndsTheFirstDigOfAHeavyFloor` pin dig 2 on ten floors. A change to the dig can move a floor to another dig, and the assert names the seed and the floor.
+- The scratch programs are not in the repository. D-359 to D-361 and the PR description hold the measurement.
+- The next ids are D-362, OQ-174, F-101, PR-68, and Session 165.
+
+### Open questions that block progress
+
+None blocks PR #69. The PR-64 session asks the owner for the motion on a ramp before the code: the speed on a slope, the jump, the roll, and the stagger. It also decides the encoding of a ramp cell (D-345). PR-64 has no measurement or hardware exit test. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+A Codex session reviews PR #69 per the `pr-review` skill at the effective head `80ee5d9` and writes `docs/reviews/pr-69.md`. The owner then merges, and a docs PR records the merge (D-297). A fresh session then opens PR-64, and it asks the owner for the motion on a ramp first (D-345).
+
+## Session 163: 2026-09-14, Claude Code
+
+Author: Claude Code
+Session: record the merge of the concurrency PR as PR #67, in the same invocation as Session 161 (D-297). Branch `docs/pr-67-merge-record`.
+
+### What this session did, and why
+
+- Session 162 approved `d774ab9` in `docs/reviews/pr-67.md` with no finding. The owner merged PR #67 as `10ba70c` at 20:58 UTC on 2026-09-14, and the tree of `10ba70c` equals the review tip `d8bc858`.
+- `main` now holds the concurrency groups of D-356, the evidence rule of D-357, and the re-run rule of D-358. `docs/design.md` marks F-99 and F-100 done, and F-99 keeps the note that the groups do not stop a lost leg.
+- The file held twelve entries with this one, so Sessions 153 and 152 moved to the archive.
+
+### State of the build
+
+- `main` is at `10ba70c`, the squash merge of PR #67. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-67-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- CI on `10ba70c`: CI, smoke, and bit identity passed on the three platforms, and asset-qa, bots, det-lint, and STE check passed, the last at 21:11 UTC. No macOS leg ended "not acquired".
+- `ste-check`: 0 findings in 16 files. `dotnet test`: 875 tests, 0 failures, with the five Smoke tests on the local Godot build. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `10ba70c`.
+- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC is the first on the new sizes, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone. The `review-override` label goes on after the last push and the automated pass (D-188, D-190). PR-67, the dig restart, follows in a fresh session (D-121, D-353).
+
+### Traps and gotchas
+
+- The GitHub PR #67 is the concurrency PR. The roadmap id PR-67 is the dig restart.
+- The merge marks use the UTC date of the merge, 2026-09-14. This entry uses the local date, also 2026-09-14.
+- The review gate runs its workflow from `main` (D-197), so its concurrency group acts from this PR on. It runs on a push and on a label event, and a newer one cancels an older review gate run of that PR that is still in progress (D-356).
+- A self-hosted leg can end "not acquired" (F-100). Re-run the failed jobs of that run (D-358). The runner log is under `/Volumes/SSD-1TB/actions-runner/_diag` on the Mac mini.
+- The next ids are D-359, OQ-174, F-101, PR-68, and Session 164.
+
+### Open questions that block progress
+
+None blocks this PR. PR-67 asks the owner for the job budget and the count of digs before the code (D-353). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. A fresh session then opens PR-67, and it asks the owner for the job budget and the count of digs first (D-353).
+
 ## Session 162: 2026-09-14, Codex
 
 Author: Codex
