@@ -19,7 +19,8 @@ Session: review PR #77 at effective head `887f94f` and record the duplicate matr
 
 - `main` and the merge base are `9b27afc`. The effective head is `887f94f`. Commit `6800376` changes only `docs/session-handoff.md` after that head (D-184).
 - The focused `DocGateTests` suite passed 14 tests. The duplicate-line probe passed the invalid fixture, which confirms P2-1.
-- CI on the PR tip passed the three-platform tests, bit identity, compare, bots, asset QA, `det-lint`, `doc-gate`, night gate, and STE check. `evaluate` failed and `review-gate` skipped before this review record.
+- Before publication, CI on PR tip `6800376` passed the three-platform tests, bit identity, compare, bots, asset QA, `det-lint`, `doc-gate`, night gate, and STE check. `evaluate` failed and `review-gate` skipped before this review record.
+- After metadata commit `faab1be`, the refreshed checks were pending. The branch head matched `origin/feat/one-pr-one-session` after fetch and `gh pr view`.
 - Local fetch first hit a sandbox permission error for `.git/FETCH_HEAD`. A permitted fetch succeeded and confirmed `origin/main` and the PR head.
 
 ### In flight
