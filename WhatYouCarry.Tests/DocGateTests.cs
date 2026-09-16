@@ -134,6 +134,18 @@ public sealed class DocGateTests
     }
 
     [Fact]
+    public void DuplicateMatrixLineFails()
+    {
+        // PR #77 review P2-1: a second line for a category, after a valid first line, made the disposition ambiguous and passed.
+        string body = Body() + "- `docs/design.md`: Not applicable: no design changes affect this pull request.\n";
+
+        DocGateResult result = DocGateRules.Evaluate(Facts(body, CodeAndDocs));
+
+        Assert.False(result.Passes);
+        Assert.Contains(result.Problems, problem => problem.Contains("2 lines for `docs/design.md`", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void MatrixLineThatDisagreesWithTheDiffFails()
     {
         string claimsNoChange = Body(("`docs/design.md`", "Reviewed; no change needed: section 3.14 already names the rule."));

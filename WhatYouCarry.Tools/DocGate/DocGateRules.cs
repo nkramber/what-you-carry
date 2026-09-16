@@ -132,14 +132,20 @@ public static class DocGateRules
         foreach (DocumentCategory category in Categories)
         {
             string prefix = $"- {category.Label}:";
-            string? line = lines.Find(candidate => candidate.StartsWith(prefix, StringComparison.Ordinal));
-            if (line is null)
+            List<string> matches = lines.FindAll(candidate => candidate.StartsWith(prefix, StringComparison.Ordinal));
+            if (matches.Count == 0)
             {
                 problems.Add($"The documents matrix has no line for {category.Label}.");
                 continue;
             }
 
-            string text = line[prefix.Length..].Trim();
+            if (matches.Count > 1)
+            {
+                problems.Add($"The documents matrix has {matches.Count} lines for {category.Label}, and a category has one line. Two lines make its disposition ambiguous.");
+                continue;
+            }
+
+            string text = matches[0][prefix.Length..].Trim();
             string? disposition = Array.Find([Changed, NoChangeNeeded, NotApplicable], value => text.StartsWith(value, StringComparison.Ordinal));
             if (disposition is null)
             {

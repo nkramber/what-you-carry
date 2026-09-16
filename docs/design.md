@@ -194,7 +194,7 @@ The lifecycle of a PR (D-375, D-376). The `one-pr-one-session` skill holds the p
 |---|---|---|
 | The PR changes `docs/session-handoff.md` | Machine | `doc-gate` |
 | The newest handoff entry names the PR branch | Machine | `doc-gate` |
-| The documents matrix gives each category a disposition and a reason of five words or more | Machine | `doc-gate` |
+| The documents matrix gives each category exactly one line, with a disposition and a reason of five words or more | Machine | `doc-gate` |
 | Each matrix line agrees with the changed paths | Machine | `doc-gate` |
 | The description and the newest handoff entry put no documents off to later work | Machine, by a fixed list of phrases | `doc-gate` |
 | No PR title or branch names a merge record | Machine | `doc-gate` |

@@ -36,7 +36,7 @@ The role is author, reviewer, or correction author. Substantive work is an edit,
 
 ## The documents matrix
 
-The `## Documents` section of the PR description holds one line for each category, in the order of the PR template. Each line starts with one of three values, then a reason of five words or more:
+The `## Documents` section of the PR description holds exactly one line for each category, in the order of the PR template. Each line starts with one of three values, then a reason of five words or more:
 
 - `Changed: <reason>`
 - `Reviewed; no change needed: <reason>`
