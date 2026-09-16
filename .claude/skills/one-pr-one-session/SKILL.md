@@ -75,11 +75,12 @@ A PR cannot know its merge commit or its merge time. Git and GitHub hold both, a
 Each status poll costs a model call over the whole context. After each push, wait on the checks with one command (D-380):
 
 ```
-gh pr checks <N> --watch --fail-fast --interval 60 > "${TMPDIR:-/tmp}/checks-<N>.txt" 2>&1; tail -n 40 "${TMPDIR:-/tmp}/checks-<N>.txt"
+gh pr checks <N> --watch --interval 60 > /dev/null 2>&1; gh pr checks <N>
 ```
 
 - Run the command in the background when the harness permits that. Read its result one time, when it ends.
 - Run no other status command while the wait runs.
+- The command waits for every check. Do not add `--fail-fast`, because `evaluate` fails until a review record exists (D-251).
 - The result names each failed job. For a job that ends "not acquired", apply D-358, then wait again with the same command.
 - A time limit of the harness can stop the wait. Then start the same command again.
 - For gitar, follow `gitar-review`. Put each wait of that skill in one shell loop that prints only the final state.

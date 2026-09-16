@@ -13,7 +13,7 @@ Session: cut the agent context cost of each session, with the owner instructions
 - D-377: the first action prints the newest handoff entry alone, and the read order adds the newest entry of the branch. The end of a session takes the number from the top heading after a fetch. D-187 gains a revision note for the second full read.
 - D-378: `AGENTS.md` holds one lookup command for all D-# and OQ-# ids of a task, with a line that finds each revision (D-186). A check on five superseded decisions printed the superseding id of each.
 - D-379: the `handoff-rotate` command moves each entry after the tenth to the archive top with its text intact. Nine tests cover it, and a seed loop of 300 seeds proves the text and the order. A mutation that dropped one moved entry failed three tests.
-- D-380: the `one-pr-one-session` skill waits on checks with one `gh pr checks --watch --fail-fast` command. `gitar-review` does not change, because other repositories use the same file.
+- D-380: the `one-pr-one-session` skill waits on checks with one `gh pr checks --watch` command, then prints the final state once. The first run on this PR used `--fail-fast` and stopped at once on `evaluate`, which fails until a review record exists (D-251). The skill now waits for every check. `gitar-review` does not change, because other repositories use the same file.
 - D-381: `pr-review` keeps the reviewer procedure, and the new `review-response` skill holds the author procedure. D-374 gains a revision note.
 - D-382: `ContextBudgetTests` caps the agent files at 15000 bytes, each skill at 12000 (`pr-review` 31000), the handoff at 60000, and its newest entry at 7000.
 - The rule paragraph of this file moved from between Session 181 and Session 180 to the file header, so it no longer moves with the entries.
@@ -24,7 +24,7 @@ Session: cut the agent context cost of each session, with the owner instructions
 - `main` is at `58e4fc8`, the base of this branch. Pending owner merge.
 - Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1143 tests, 0 failures. `ste-check`: 0 findings in 19 files. `det-lint`: 0 findings. No Core, Game, content, or asset path changed, so the simulation version, `bit-identity`, and `asset-qa` stand.
-- Start paths, bytes before and after: an implementation author 74615 to 35920, an author who answers findings 109690 to 44408, a reviewer 109690 to 66363.
+- Start paths, bytes before and after: an implementation author 74615 to 36154, an author who answers findings 109690 to 44642, a reviewer 109690 to 66597.
 
 ### In flight
 
