@@ -182,7 +182,7 @@ The document protocol (D-118, D-120, D-125, D-129, D-132):
 - `docs/design.md`: this file. Update it when intent changes.
 - `docs/decisions.md`: the decision register. One file until about 300 rows (D-141).
 - `docs/questions.md`: the open questions register, OQ-1 onward (D-144).
-- `docs/session-handoff.md`: the 10 newest sessions, newest first. Each session adds an entry. Older entries move to `docs/session-handoff-archive.md` (D-146).
+- `docs/session-handoff.md`: the 10 newest sessions, newest first. A session reads the newest entry first (D-377). Each session adds an entry, and the `handoff-rotate` command moves older entries to `docs/session-handoff-archive.md` (D-146, D-379).
 - `docs/reviews/`: one file per PR.
 - `docs/roadmaps/`: focused roadmaps, linked from section 7.
 - `CLAUDE.md` and `AGENTS.md`: identical pointer files (D-122).
@@ -200,6 +200,10 @@ The lifecycle of a PR (D-375, D-376). The `one-pr-one-session` skill holds the p
 | No PR title or branch names a merge record | Machine | `doc-gate` |
 | The handoff and the review record do not move the effective head | Machine | `review-gate` metadata set (D-184), and a test that pins the handoff path in that set |
 | The skill has valid front matter, stays under 7000 characters, and the agent files name its path | Machine | `dotnet test` shape tests |
+| The agent files, each skill, the handoff, and its newest entry stay under a byte ceiling | Machine | `dotnet test` context budget tests (D-382) |
+| The handoff keeps 10 entries, newest first, and each older entry moves to the archive with its text intact | Machine, when the session runs the command | `handoff-rotate` and its seed-loop test (D-379) |
+| A session reads the newest handoff entry, looks up register ids in one command, and waits on checks with one command | Agent | The read order of `AGENTS.md` and the `one-pr-one-session` skill (D-377, D-378, D-380) |
+| A reviewer loads `pr-review`, and an author who answers findings loads `review-response` | Agent | The skill descriptions and `AGENTS.md` (D-381) |
 | No live document cites a superseded decision as current | Machine | `ste-check` reference check (D-178) |
 | A reason is true and specific | Agent and owner | The author writes it, and the cross-provider review checks it |
 | The design doc, the registers, and the roadmap agree with the PR | Agent | The author, then the cross-provider review |
@@ -212,7 +216,7 @@ The lifecycle of a PR (D-375, D-376). The `one-pr-one-session` skill holds the p
 What we pay:
 
 - Owner time: near full time (D-107).
-- Tokens: a generous budget on two harnesses (D-107). The amount per PR is unknown until M-4.
+- Tokens: a generous budget on two harnesses (D-107). The amount per PR is unknown until M-4. The token audit of 2026-09-16 measured 10 sessions of each harness. The median input was 32.3 million tokens for a Claude Code session and 4.3 million for a Codex session, most of it from the cache. D-377 to D-382 act on the largest causes.
 - CI: GitHub-hosted Linux x64 and Windows x64 minutes on every PR (D-100). Wall time per PR is unknown until M-1.
 - The Mac Mini as a self-hosted macOS arm64 runner: power, and RAM shared with the editor and the harness (D-100, D-105).
 - Purchases that do not exist yet (D-142):

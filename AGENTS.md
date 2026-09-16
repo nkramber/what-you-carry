@@ -4,18 +4,29 @@
 
 ## First action
 
-Read `docs/session-handoff.md` now, before any other file and before any tool call. It tells you the state of the build, what is in flight, and the next concrete action. Then read the rest of this file.
+Read the newest entry of `docs/session-handoff.md` now, before any other file. Print that entry alone with `awk '/^## Session /{n++} n==1' docs/session-handoff.md`. Then read the rest of this file.
 
 ## Read order
 
-1. `docs/session-handoff.md`: the state and the next action.
+1. `docs/session-handoff.md`: the newest entry, and the newest entry that names your branch. Read an older entry only when one of the two points to it (D-377).
 2. This file: the tenets and the rules.
-3. `docs/design.md`: the design, the guardrails (section 6), and the roadmap (section 7).
+3. `docs/design.md`: the guardrails (section 6) in full. Find another section with `grep -n '^##' docs/design.md`.
 4. `docs/decisions.md`: every owner decision, D-1 onward. Cite a D-# id when you apply one.
 5. `docs/questions.md`: the open questions register, OQ-1 onward. File a new question there.
 6. `docs/reviews/`: one review file per PR, plus audits and audit responses.
-7. `docs/roadmaps/`: focused roadmaps, when they exist.
-8. `docs/session-handoff-archive.md`: sessions older than the 10 in the handoff. Read it only when the handoff points to it.
+7. `docs/roadmaps/`: the entry of your PR and its exit tests.
+8. `docs/session-handoff-archive.md`: older sessions. Read it only when the handoff points to it.
+
+Never read `docs/decisions.md` or `docs/questions.md` in full. Look up the ids of the task in one early command (D-378). Replace the example numbers in `d` and `q` with every D-# and OQ-# number of the task:
+
+```
+d='146|375'; q='9|44'
+grep -n -E "^\| D-($d) \|" docs/decisions.md
+grep -n -E "\bD-($d)\b" docs/decisions.md | grep -E 'Revis|Supersed' | cut -c1-160
+grep -n -E "^[0-9]+\. \*\*OQ-($q)\." docs/questions.md
+```
+
+The third line finds each revision of those ids (D-186).
 
 ## Tenets
 
@@ -43,11 +54,12 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 - Record each answer in `docs/decisions.md` with the next D-# id and the date. Never renumber.
 - Mark a change to an earlier decision in its `Effect` column (D-186). Use `Superseded by D-N` when the whole answer changes. Use `Revised in part by D-N` when one part changes, and name the part that changed and the parts that stand.
 - A citation of a superseded decision must name the superseding decision. A decision revised in part stays citable.
+- A reviewer loads `pr-review`. An author who answers review findings loads `review-response` (D-381).
 - One session is one harness invocation, one PR, and one role (D-121, D-375). Load `.claude/skills/one-pr-one-session/SKILL.md` before all PR work: implementation, a new or continued PR, a review, an answer to findings, or the documents of a PR. No PR exists only to record an earlier PR. Each PR has its own handoff entry (D-146).
 
 ## Session handoff
 
-At the end of a session, fetch the remote and read `docs/session-handoff.md` again. Take the highest session number and add one (D-187). Then add a new entry at the top (D-146). Keep the 10 newest entries in that file. Move any older entry to the top of `docs/session-handoff-archive.md`. Set the author field to `Claude Code` or `Codex`. Commit the entry with the review record or the work it describes (D-182). Push, then fetch, and check that the status shows no `[ahead N]` (D-199). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. The session line of the entry names the PR branch in the form Branch `<branch>` (D-376). Each entry has six parts:
+At the end of a session, fetch the remote. Print the highest session number with `grep -m1 '^## Session ' docs/session-handoff.md`, and add one (D-187, D-377). Add a new entry at the top with one edit (D-146). Then run `handoff-rotate` (D-379). It moves each entry after the tenth to the archive top. Commit the entry with the review record or the work it describes (D-182). Push, then fetch, and check that the status shows no `[ahead N]` (D-199). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. The session line of the entry names the PR branch in the form Branch `<branch>` (D-376). Each entry has six parts:
 
 - What the session did, and why.
 - The state of the build, with the remote head (D-199).
@@ -58,12 +70,12 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 
 ## Text rules
 
-- All project skills live in `.claude/skills/` (D-131, D-155). Create every new project skill there.
-- Read each required skill from `.claude/skills/<skill-name>/SKILL.md`, even if it is absent from the skill list.
+- All project skills live in `.claude/skills/` (D-131, D-155). Create each new skill there. Read each required skill from `.claude/skills/<skill-name>/SKILL.md`, even if the skill list does not name it.
 - Every `.md`, skill, and agent file follows ASD-STE100 (D-139). Load the `ste-writing` skill before you write.
 - Load the `design-doc-style` skill before you edit `docs/design.md` or a focused roadmap.
 - One term per concept. The `ste-writing` skill lists the project terms.
 - Document file names in `docs/` are lowercase (D-129).
+- A test caps the bytes of the agent files, each skill, and the handoff (D-382).
 
 ## Code rules
 
@@ -86,6 +98,7 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 
 - Trunk is `main`. Work on a short branch. The owner squash-merges (D-126).
 - Commit subjects use a conventional prefix: `feat`, `fix`, `docs`, `test`, `chore`.
+- After a push, wait on the checks with the one command of the `one-pr-one-session` skill, and never poll (D-380).
 - One concern per PR (G-10).
 - A newer push to a PR cancels the older runs of each workflow for that PR (D-356). CI on the tip counts for the effective head when every later commit is a metadata commit (D-357).
 - When a self-hosted job of a PR run ends with the annotation "not acquired", re-run the failed jobs of that run. The re-run counts as CI for that head (D-358).
@@ -95,11 +108,8 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 An automated reviewer, gitar, comments on every PR after a push (D-250). The author answers every comment before the hand-over to the other provider, or before the override request on a documentation PR.
 
 - Load the `gitar-review` skill after each push. It holds the author procedure, the proof that a review is current, and the commands (D-374).
-- A comment with no merit gets a reply with the reason, and the author resolves its thread.
-- A comment with merit gets the change, a commit, a push, and a reply.
-- The PR is ready when a current review approves it, or when every comment has its answer and a current review adds none. Tell the owner then.
-- When the review of the head is stale, or you cannot prove that it is current, post the comment `Gitar review` on the PR. A pause note alone is not the trigger (D-303, D-374).
-- The reviewing provider reads the existing PR comments into its review and never addresses gitar. The `pr-review` skill holds that rule.
+- When the pass ends, tell the owner that the PR is ready for the other provider, or for the override.
+- The reviewing provider reads the PR comments into its review and never addresses gitar (`pr-review`).
 - A reply names no provider, harness, or model as the source of work (T-6).
 
 ## Build and test commands
@@ -109,6 +119,7 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Build: `dotnet build WhatYouCarry.slnx`
 - Test: `dotnet test WhatYouCarry.slnx --no-build`
 - STE check, the reference check, and the session number check: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .`
+- Handoff rotation: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- handoff-rotate --root .`
 - Documentation gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- doc-gate --root . --base origin/main --head HEAD --body <file> --title "<title>" --branch <branch>`
 - Determinism and string lint: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --root .`
 - Asset QA: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- asset-qa --root .`
@@ -118,17 +129,17 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Smoke session, local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke`
 - Test exit session, a headless smoke session that presses Escape or Start at a tick: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke --press escape 100`. The other name is `start`.
-- Play session, a local run after the build: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game`. The window opens in borderless fullscreen at the resolution of the display (D-310), and the session captures the mouse. The Escape key or the Start button of a controller ends the session (D-311). The engine flag `--windowed` opens a window in place of the fullscreen.
+- Play session, a local run after the build: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game`. It opens borderless fullscreen at the display resolution and captures the mouse (D-310). Escape or the Start button ends it (D-311). The engine flag `--windowed` opens a window.
 - Bot session with a frame log, for M-3: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt`
 - Contact sheet, a local run with a window: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
 
-The Game layer checks the user arguments after `--` at boot (D-313, D-317). A bad argument ends the boot with exit code 1, and the error line names it. A bad argument is an unknown word or flag, a repeated flag, a flag with too few words, or a flag that the session ignores. The contact sheet takes no other flag, and `--smoke` and `--bot` exclude each other.
+The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet takes no other flag, and `--smoke` and `--bot` exclude each other.
 
-The name `Godot` is not on the command path of this machine, so the check needs the full path above. `det-lint` reads Core with the determinism rules and the Game project with the string rule, and it reports one count for each (D-222). `asset-qa` reads every model, overlay, and animation under `content/` and runs the clip check, the overlay check, and the file case check (D-135). `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. The tests of the Smoke category start the Godot build at the path above, or the one that `WYC_GODOT` names. A local `dotnet test` needs one of the two builds. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
+`Godot` is not on the command path of this machine, so use the full path above. `det-lint` reports one count for Core and one for Game (D-222). The PR gate names what `det-lint` and `asset-qa` read. `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. A local `dotnet test` needs the Godot build at the path above, or the one that `WYC_GODOT` names, for the Smoke category. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
 
-`texture-gen` writes `content/textures/atlas.png` from the palette and the rules under `content/textures/` (D-305). A test fails when the committed atlas differs from the output, so commit the atlas after each palette or rule change. The contact sheet needs a window, so it runs on a desktop and not in CI (D-306). A headless run of it ends with exit code 1.
+`texture-gen` writes `content/textures/atlas.png` from the palette and the rules under `content/textures/` (D-305). Commit the atlas after each palette or rule change, because a test compares it with the output. The contact sheet needs a window, so it never runs in CI, and a headless run exits 1 (D-306).
 
-The layout is one directory per project at the root. `project.godot` lives in `WhatYouCarry.Game/`, next to its project file. The solution file stays at the root. Each project file names its target framework, because the Godot editor writes `net8.0` into a project file that has none.
+Each project has one directory at the root, beside the solution file, and `project.godot` sits in `WhatYouCarry.Game/`. Each project file names its target framework, because the Godot editor writes `net8.0` into a project file that has none.
 
 ## PR gate
 
