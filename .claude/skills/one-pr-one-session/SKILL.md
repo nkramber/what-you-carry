@@ -14,7 +14,7 @@ This skill does not copy `AGENTS.md`. The rules and the PR gate stay there.
 Do these steps before the first edit, commit, or review of the session.
 
 1. Look for substantive work on another PR or another repository in this conversation.
-2. Look for a PR in this conversation that already got to its hand-over or its merge.
+2. Look for a PR in this conversation that the owner already merged or closed.
 3. If you find either, stop, and reply `Blocked: start a new clean session for this PR.`
 4. Write the binding: the repository, the branch, the PR number or the PR intent, and the role.
 5. Confirm that the PR has one concern (G-10).
@@ -28,6 +28,7 @@ The role is author, reviewer, or correction author. Substantive work is an edit,
 ## Stay bound
 
 - Work on the bound PR alone. More than one clean session can work on one PR, one after the other.
+- After the hand-over, the same session can answer the gitar findings and the review findings of the bound PR. That work needs no new session.
 - When a request asks for a second PR, reply `Blocked: start a new clean session for this PR.` Do not start that work.
 - Put work outside the scope in the next concrete action of the handoff entry, for a fresh session.
 - A reviewer session writes the review record and its handoff entry on the PR branch, and nothing more (`pr-review`).
@@ -82,10 +83,10 @@ Before the hand-over to the other provider, or to the override, confirm items 1 
 7. Each other line of the PR gate in `AGENTS.md` holds.
 8. No required work waits for a second PR.
 
-At the end of the role, run the session end gate (D-199). Then write this line, with the PR number in place of N:
+At the hand-over and at the merge, run the session end gate (D-199). Then write this line, with the PR number in place of N:
 
 `This session is bound to PR #N and is complete. End this session. Start a new clean session before beginning another PR.`
 
-Do not offer to start the next PR.
+Do not offer to start the next PR. The owner can bring findings on the same PR back to this session.
 
 `docs/design.md` section 3.14 gives the enforcement of each rule: machine, agent, owner, or not observable.

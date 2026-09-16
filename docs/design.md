@@ -204,7 +204,7 @@ The lifecycle of a PR (D-375, D-376). The `one-pr-one-session` skill holds the p
 | A reason is true and specific | Agent and owner | The author writes it, and the cross-provider review checks it |
 | The design doc, the registers, and the roadmap agree with the PR | Agent | The author, then the cross-provider review |
 | A session starts clean and works on one PR | Agent and owner | The start gate of the skill. The owner starts a new session for each PR |
-| A session stops at the hand-over or the merge of its PR | Agent and owner | The closing line of the skill. The owner starts the next session |
+| A session starts no other PR after the hand-over, and it stops at the merge. It can answer the findings of its own PR after the hand-over | Agent and owner | The closing line of the skill. The owner starts the session of the next PR |
 | The identity of a session, and whether a context came from a compaction or a fork | Not observable | The harness exposes no session id, and the repository defines none |
 
 ## 4. Cost model (what we pay, what we do not know)
