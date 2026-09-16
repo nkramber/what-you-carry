@@ -2,6 +2,51 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 178: 2026-09-16, Claude Code
+
+Author: Claude Code
+Session: bind each session to one PR, and make each PR carry all of its documents, with the owner instructions D-375 and D-376. Branch `feat/one-pr-one-session`.
+
+### What this session did, and why
+
+- The owner asked for a strict rule: one PR in one clean session, and no PR that only records an earlier PR. The goal is a lower token cost, because 24 of the 76 PRs recorded the merge of the PR before them.
+- D-375 binds a session to one repository, one branch, one PR, and one role. It supersedes D-297 and revises in part D-121, the count of PRs only. Before the merge, the documents say `Done in PR #N` and "pending owner merge". Git holds the merge commit and the merge time.
+- D-376 adds the `doc-gate` job and the command of the same name in `WhatYouCarry.Tools`. The job fails when the PR does not change the handoff, when the newest entry names another branch, or when the documents matrix is incomplete. It also fails when a matrix line disagrees with the diff, on a phrase that puts documents off to later work, or on a merge record title or branch.
+- The skill `.claude/skills/one-pr-one-session/SKILL.md` holds the start gate, the documents matrix, the status marks, and the completion gate. It is 5620 bytes. `AGENTS.md` and `CLAUDE.md` name its path in one line, and they stay identical (D-122).
+- The PR template gains the eight matrix lines and two gate lines. `docs/design.md` section 3.14 gains the enforcement table, and G-22 states the rule. The `design-doc-style` and `pr-review` skills gain one line each.
+- Five fresh evaluators ran the skill in a dry run, with no hint of the expected result. A merge record request and a second PR request after a compaction both stopped with the blocked line. A clean start and a reviewer session bound to one PR. A draft description with a deferral failed the gate.
+- The evaluators found two gaps, and this PR closes both. The phrase "follows in a docs PR after the merge" passed the deferral patterns, and a test now holds it. An exit test that needs a night on `main` after the merge had no place, and D-375 and the skill now give it one: the next session writes the result in its own handoff entry.
+- Session 168 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `9b27afc`, the base revision of this branch. The code commit of this branch is the effective head, and this entry is in a metadata commit above it (D-184). Pending owner merge.
+- Remote head: `origin/feat/one-pr-one-session` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1129 tests, 0 failures. `det-lint`: 0 findings, Core 0 in 66 files, Game 0 in 36 files. `ste-check`: 0 findings in 18 files. `git diff --check` is clean, and the YAML of `doc-gate.yml` parses.
+- No Core, Game, content, or asset change, so the simulation version stays 11, `bit-identity` stays `a0b32bad006b3dfe`, and `asset-qa` and the smoke session do not read this change.
+
+### In flight
+
+This PR changes `WhatYouCarry.Tools` and `.github/`, so it needs the Codex review per the `pr-review` skill at the effective head (T-4, D-190). The `review-override` label does not apply. The owner then merges. PR-69 follows in a fresh session.
+
+### Traps and gotchas
+
+- The `doc-gate` job reads the PR description. Edit the description, and the job runs again on the edited event.
+- The `doc-gate` job runs on `pull_request` from the PR head, so this PR runs the new rules on itself.
+- A roadmap or design mark `Done in PR #N` moves the effective head (D-184). Write it after the PR opens and before the gitar pass. The handoff and the review record do not move it.
+- The deferral check reads a fixed list of phrases. A new form of deferral passes it, and the reviewer catches it.
+- The harness exposes no session identity. The start gate of the skill and the owner hold the clean session rule.
+- The memory note on merge dates applies to the history alone. A new PR writes no merge date.
+- The next ids are D-377, OQ-177, F-102, PR-70, and Session 179.
+
+### Open questions that block progress
+
+None blocks this PR. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+A Codex session reviews this PR per the `pr-review` skill at the effective head and writes the review record on this branch. The owner then merges. A fresh session then opens PR-69 under D-375 and D-376.
+
 ## Session 177: 2026-09-16, Claude Code
 
 Author: Claude Code
@@ -415,42 +460,3 @@ None blocks this PR. The PR-65 session asks the owner for the tile of a ramp fac
 ### Next concrete action
 
 The owner merges this PR with the `review-override` label. A fresh session then opens PR-65, and it asks the owner for the tile of a ramp face first (D-367).
-
-## Session 168: 2026-09-14, Codex
-
-Author: Codex
-Session: review PR-64 as PR #71 at effective head `b5bf2de`. Branch `feat/pr-64-ramp-cells`.
-
-### What this session did, and why
-
-- Reviewed the complete code and test diff for the ramp cells in Core.
-- Verified the provider gate. Session 167 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
-- Checked the ramp ids, slope math, collision sweep, player motion, ray march, reachability search, simulation version, and bit-identity course against D-362 to D-367 and the PR-64 roadmap exit tests.
-- Found no in-scope defect. Wrote `docs/reviews/pr-71.md` with the verdict `Ready for owner merge` for `b5bf2de`.
-- Read the existing Gitar comment. It approved the head and raised no issue.
-
-### State of the build
-
-- `main` and the merge base are `e1076ca`. The effective head is `b5bf2de`. The later `d489060` commit changes only `docs/session-handoff.md` under D-184.
-- The focused ramp suite passed 173 tests with 0 failures. A local full-suite and build attempt produced no completion result after more than one minute. Session 167 reports the full local gates as passed.
-- Revision-matched CI on `b5bf2de` passed CI, smoke, bit identity on all three platforms, compare, bots, det-lint, asset QA, night gate, and STE check. Gitar approved with no issue comment.
-- `evaluate` failed and `review-gate` skipped before this review record existed, as D-251 predicts. They must refresh after the review commit reaches the PR.
-
-### In flight
-
-PR #71 is ready for owner merge after the fresh review-gate check passes. The owner then merges, and a docs PR records the merge (D-297). PR-65 follows in a fresh session (D-121).
-
-### Traps and gotchas
-
-- The effective head is `b5bf2de`, not this metadata commit (D-184).
-- The PR is GitHub #71 and roadmap PR-64. PR-65 is the ramp mesh work, and PR-66 is the ramp generator work.
-- The local full-suite and build attempts produced no completion result. Do not report those local attempts as passed.
-- The next ids are D-368, OQ-174, F-101, PR-68, and Session 169.
-
-### Open questions that block progress
-
-None blocks PR #71. The PR-65 session asks the owner for the tile of a ramp face before the code (D-367). Exit test 4 of PR-65 needs owner approval of a contact sheet with ramps. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Wait for the fresh review-gate check. The owner merges PR #71 after the check passes. A fresh session then opens PR-65 and asks the owner for the tile of a ramp face first (D-367).
