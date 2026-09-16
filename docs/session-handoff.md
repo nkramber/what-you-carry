@@ -24,7 +24,7 @@ Session: cut the agent context cost of each session, with the owner instructions
 - `main` is at `58e4fc8`, the base of this branch. Pending owner merge.
 - Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1143 tests, 0 failures. `ste-check`: 0 findings in 19 files. `det-lint`: 0 findings. No Core, Game, content, or asset path changed, so the simulation version, `bit-identity`, and `asset-qa` stand.
-- Start paths, bytes before and after: an implementation author 74615 to about 34500, an author who answers findings 109690 to about 43000, a reviewer 109690 to about 65000.
+- Start paths, bytes before and after: an implementation author 74615 to 35920, an author who answers findings 109690 to 44408, a reviewer 109690 to 66363.
 
 ### In flight
 
