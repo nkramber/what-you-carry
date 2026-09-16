@@ -17,13 +17,15 @@ Session: answer review finding P2-1 of PR #78, in the author session of the PR (
 
 ### State of the build
 
-- `main` is at `58e4fc8`. The correction commit, which holds this entry and the response file, is the new effective head (D-184). Pending the repeat review and the owner merge.
+- `main` is at `58e4fc8`. The effective head is `337d706`, the correction commit, and this entry sits in a metadata commit above it (D-184). Pending the repeat review and the owner merge.
 - Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1146 tests, 0 failures. `ste-check`: 0 findings in 19 files. `det-lint`: 0 findings.
+- CI on `337d706` did not complete in this session. The owner told the session not to wait on CI, so no CI result exists here for that head. The push of this entry cancels the runs of `337d706`, and CI on the tip counts for it (D-356, D-357). The reviewer reads that result.
+- The automated pass of gitar: automatic reviews stay paused. A `Gitar review` comment at 22:17:56 UTC got "On it" at 22:18:20, and a new dashboard comment approved `337d706` at 22:18:43 with no finding and no thread (D-303, D-374).
 
 ### In flight
 
-PR #78: the gitar pass on the correction head, then the repeat Codex review of P2-1 per `pr-review`. The owner then merges.
+PR #78: the repeat Codex review of P2-1 per `pr-review` at `337d706`, with the CI result of the tip. The owner then merges.
 
 ### Traps and gotchas
 
