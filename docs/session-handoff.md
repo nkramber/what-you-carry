@@ -2,6 +2,46 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 175: 2026-09-16, Codex
+
+Author: Codex
+Session: review PR-68 as PR #75, the shaft landing fix, at effective head `cb3c2e2`. Branch `feat/pr-68-shaft-landing`.
+
+### What this session did, and why
+
+- Read the PR description, complete diff, affected Core callers, tests, roadmap, design, decisions, questions, and every PR comment.
+- Checked the provider gate. Session 174 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Verified that the pillar pass skips every column in a shaft hole, and that the generator checks each landing for a floor cell and reachability.
+- Verified the seed 79146 regression, the simulation version rise, the bit-identity update, and the automated pass correction at `cb3c2e2`.
+- Found no in-scope defect. Wrote `docs/reviews/pr-75.md` with the verdict `Ready for owner merge` for `cb3c2e2`.
+
+### State of the build
+
+- `main` and the merge base are `7345c9c`. The effective head of PR #75 is `cb3c2e2`. The later `ec4ce65` commit changes only `docs/session-handoff.md` and `docs/session-handoff-archive.md` under D-184.
+- Remote head: the review record and this handoff are pushed to `origin/feat/pr-68-shaft-landing`, and `gh pr view` verifies the remote head.
+- `git diff --check` and the byte-identity check of `AGENTS.md` and `CLAUDE.md` passed.
+- The local build produced no output or completion result and was interrupted. Revision-matched CI passed CI, Smoke, Bit identity, compare, Bots, Asset QA, det-lint, and STE check. The hand night and local 100000-seed sweep passed. `night-gate` stays red by D-372.
+
+### In flight
+
+PR #75 is ready for owner merge. The owner merges with the red `night-gate` under D-372. The first scheduled night on `main` restores the base-branch night evidence. PR-66 follows in a fresh session.
+
+### Traps and gotchas
+
+- The GitHub PR is #75, and the roadmap item is PR-68.
+- The effective head is `cb3c2e2`, not this metadata commit (D-184).
+- The local .NET build gave no completion result. Do not report that attempt as a passed gate.
+- `CheckShaftLandings` treats a missing solid landing as a contextual construction error. It gives a separate cause from an unreachable floor cell (D-113, T-2).
+- The next ids are D-373, OQ-176, F-102, PR-69, and Session 176.
+
+### Open questions that block progress
+
+None blocks PR #75. D-372 resolves OQ-175. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #75 with the red `night-gate` under D-372. A fresh session then opens PR-66 and asks the owner for the shape of a tier first (D-350).
+
 ## Session 174: 2026-09-16, Claude Code
 
 Author: Claude Code
@@ -417,44 +457,3 @@ None blocks this PR. The PR-64 session asks the owner for the motion on a ramp b
 ### Next concrete action
 
 The owner merges this PR with the `review-override` label. A fresh session then opens PR-64, and it asks the owner for the motion on a ramp first (D-345).
-
-## Session 165: 2026-09-14, Codex
-
-Author: Codex
-Session: review PR #69, the dig restart, at effective head `80ee5d9`. Branch `feat/pr-67-dig-restart`.
-
-### What this session did, and why
-
-- Read the PR description, complete diff, affected Core callers, tests, roadmap, design, decisions, questions, prior records, and every PR comment.
-- Checked the provider gate. Session 164 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
-- Verified the restart state machine. Each failed dig uses the next draws of the same Procgen stream and a new empty grid, and the first complete plan supplies the shafts and detail.
-- The focused restart suite passed 4 tests. The tests cover a complete first dig, budget exhaustion, retry output, and the four-dig contextual error.
-- Found no in-scope defect. Wrote `docs/reviews/pr-69.md` with the verdict `Ready for owner merge` for `80ee5d9`.
-
-### State of the build
-
-- `main` and the merge base are `d65823c`. The effective head is `80ee5d9`. The later tips `0e69c58` and `bc991cc` change only metadata paths under D-184.
-- Remote head: `origin/feat/pr-67-dig-restart` at `bc991cc`, verified with `gh pr view`. The branch has no ahead count.
-- The focused restart tests passed 4 tests. A local full-suite, build, and STE-check attempt produced no completion result. The review records those attempts as unverified.
-- Revision-matched CI on `80ee5d9` passed CI, smoke, bit identity on all three platforms, compare, bots, det-lint, asset QA, night gate, and STE check. Gitar approved with no issue comment.
-- `evaluate` failed and `review-gate` was neutral before this review record existed, as D-251 predicts. They must refresh after the review commit reaches the PR.
-
-### In flight
-
-PR #69 is ready for owner merge after the fresh required checks pass. The owner then merges, and a docs PR records the merge (D-297). PR-64 follows in a fresh session.
-
-### Traps and gotchas
-
-- The GitHub PR is #69, but the roadmap item is PR-67.
-- The effective head is `80ee5d9`, not the metadata tips `0e69c58` and `bc991cc` (D-184).
-- The first `git fetch origin` after the review failed because the checkout could not open `.git/FETCH_HEAD`. The initial fetch and PR read succeeded before the failure.
-- The local test host first failed with a socket permission error. The elevated focused run passed. The elevated full suite produced no completion result.
-- The next ids are D-362, OQ-174, F-101, PR-68, and Session 166.
-
-### Open questions that block progress
-
-None blocks PR #69. PR-64 asks the owner for the motion on a ramp before the code. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Wait for the fresh required checks. Verify that `review-gate` passes for effective head `80ee5d9`.
