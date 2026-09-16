@@ -202,7 +202,7 @@ public static class FloorGenerator
     /// the hole. The dig proves two air rows over each landing before it carves, and the detail pass keeps them free,
     /// so an unreachable landing is a defect of the construction and never a floor that ships (D-112, F-101, T-2).
     /// </summary>
-    /// <exception cref="ContextException">A shaft lands on a cell that the spawn does not reach.</exception>
+    /// <exception cref="ContextException">A shaft lands on a cell that is no floor cell, or that the spawn does not reach.</exception>
     private static void CheckShaftLandings(IReadOnlyList<Shaft> shafts, VoxelGrid grid, Reachability reach)
     {
         foreach (Shaft shaft in shafts)
@@ -214,12 +214,17 @@ public static class FloorGenerator
             }
 
             Cell landing = new(shaft.Center.X, landingRow, shaft.Center.Z);
-            if (Reachability.IsFloor(grid, landing) && reach.IsReachable(landing))
+            bool onFloor = Reachability.IsFloor(grid, landing);
+            if (onFloor && reach.IsReachable(landing))
             {
                 continue;
             }
 
-            ContextException error = new($"The shaft of chamber {shaft.ChamberIndex} at the column ({shaft.Center.X}, {shaft.Center.Z}) lands at row {landingRow}, and the spawn does not reach that cell (D-253, F-101).");
+            // The two causes need two messages. A pillar or a heap of rubble takes the landing away, and the cell
+            // is then no floor cell. A landing that stands alone keeps its two air rows, and the search misses it.
+            string cause = onFloor ? "the spawn does not reach that cell" : "that cell is no floor cell with two air rows over it";
+            ContextException error = new($"The shaft of chamber {shaft.ChamberIndex} at the column ({shaft.Center.X}, {shaft.Center.Z}) lands at row {landingRow}, and {cause} (D-253, F-101).");
+            error.AddContext("cause", onFloor ? "unreachable" : "noFloorCell");
             error.AddContext("chamber", ((long)shaft.ChamberIndex).ToString(CultureInfo.InvariantCulture));
             error.AddContext("shaftX", ((long)shaft.Center.X).ToString(CultureInfo.InvariantCulture));
             error.AddContext("shaftZ", ((long)shaft.Center.Z).ToString(CultureInfo.InvariantCulture));
