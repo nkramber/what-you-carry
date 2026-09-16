@@ -84,6 +84,17 @@ public sealed class DocGateTests
     }
 
     [Fact]
+    public void RuntimeBehaviorTextIsNotADeferral()
+    {
+        // A sentence about what a job does is not a promise of documents in later work.
+        string body = Body() + "\n## Behavior\n\nThe night job will update the record on main after each run.\n";
+
+        DocGateResult result = DocGateRules.Evaluate(Facts(body, CodeAndDocs));
+
+        Assert.True(result.Passes, string.Join("\n", result.Problems));
+    }
+
+    [Fact]
     public void DeferredDocumentsInTheNewestHandoffEntryFail()
     {
         // The next action of Session 174 took this form under D-297, which D-375 supersedes.

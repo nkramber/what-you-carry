@@ -54,7 +54,7 @@ public static class DocGateRules
         new(@"\b(follow-?up|later|next|second|separate|another) (docs|documentation) PR\b", RegexOptions.IgnoreCase),
         new(@"\b(docs|documentation) PR (records|will record|to record|that records|after)\b", RegexOptions.IgnoreCase),
         new(@"\b(follows|comes|lands) in a (docs|documentation) PR\b", RegexOptions.IgnoreCase),
-        new(@"\bwill update\b", RegexOptions.IgnoreCase),
+        new(@"\bwill update\b[^.]{0,40}\b(docs?|documents?|documentation|design|roadmaps?|handoff|decisions|questions|register|skills?)\b", RegexOptions.IgnoreCase),
         new(@"\b(update|record|write)\b[^.]{0,40}\b(after the merge|after merge|in a later PR)\b", RegexOptions.IgnoreCase),
         new(@"\b(TBD|TODO)\b"),
     ];
