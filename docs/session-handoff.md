@@ -1,6 +1,179 @@
 # Session handoff
 
+## Session 181: 2026-09-16, Codex
+
+Author: Codex
+Session: re-review PR #77 at effective head `b91bd24` and record the corrected verdict. Branch `feat/one-pr-one-session`.
+
+### What this session did, and why
+
+- Recomputed the effective head. `b91bd24` changes the Gitar review skill, so it moves the head beyond the duplicate-line correction `f0befdd` (D-184).
+- Confirmed Claude Code authored the PR from Session 178. Codex passes the provider gate (T-4, D-101).
+- Verified P2-1 remains fixed. `DuplicateMatrixLineFails` passes, the live description passes `doc-gate`, and the same description with the conflicting line fails.
+- Verified the current Gitar dashboard follows the request and reply for `b91bd24`. It approves and has no open finding.
+- Updated `docs/reviews/pr-77.md`. It retains P2-1 and the earlier verdict, and records the new verdict for `b91bd24`.
+- Session 171 moved to the archive, because this entry made eleven entries.
+
+### State of the build
+
+- `main` and the merge base are `9b27afc`. The effective PR head is `b91bd24`.
+- Remote head: `origin/feat/one-pr-one-session` at the commit that holds this entry and the review record, checked with `gh pr view` before the session ended.
+- `DocGateTests`, `ReviewGateRulesTests`, and `ReviewGateGitTests`: 46 passed. The live `doc-gate` description passed, and the duplicate-line variant failed with one problem.
+- Local `dotnet test WhatYouCarry.slnx --no-build` produced no completion after four minutes and was cancelled. The CI platform tests on `b91bd24` passed.
+- Before the review update, CI on `b91bd24` passed asset QA, bots, compare, det-lint, doc-gate, platform tests, night gate, and STE check. `evaluate` and `review-gate` failed while the review record held the earlier verdict.
+- The current Gitar dashboard approves and reports the earlier finding closed with no new finding.
+
+### In flight
+
+PR #77 is ready for owner merge. The owner merges it.
+
+### Traps and gotchas
+
+- The effective head is `b91bd24`, because the Gitar skill changed after `f0befdd` (D-184).
+- Two platform jobs from an older run remained pending, while later matching platform results passed.
+- The next ids are D-377, OQ-177, F-102, PR-70, and Session 182.
+
+### Open questions that block progress
+
+None blocks PR #77. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+The owner merges PR #77. A fresh session then works on PR-66 and asks the owner for the tier shape first (D-350).
+
+
+
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
+
+## Session 180: 2026-09-16, Claude Code
+
+Author: Claude Code
+Session: answer review finding P2-1 of PR #77, in the author session of the PR. Branch `feat/one-pr-one-session`.
+
+### What this session did, and why
+
+- Session 179 reviewed PR #77 at `887f94f` and gave `Changes required` for P2-1: the documents matrix accepts duplicate category lines. The owner asked for the answer in the author session, and D-375 permits that work after the hand-over.
+- The trigger reproduced. A second `docs/design.md` line that contradicts the first passed `doc-gate` with 0 problems.
+- `DocGateRules.CheckMatrix` now reports more than one line for a category. `DuplicateMatrixLineFails` fails on the old code and passes with the correction.
+- D-376, the enforcement table, and the skill now say exactly one line for each category.
+- The review also asked to reject an unknown label if the section is an exact list. `docs/reviews/pr-77-response.md` refutes that part: the categories are a floor, and a label with a typo already fails as a missing category.
+- A `Gitar review` comment at 20:20:17 UTC ran a review of `f0befdd`. Gitar replied "On it" at 20:20:39, and it replaced the dashboard comment at 20:21:01 with an approval and no open finding. That review was current, and it kept the old summary word for word.
+- The `gitar-review` skill read the unchanged summary as a stale review. A second request at 20:21:24 got the reply "You've sent several Gitar comments in a short window", and a wait that watched the dashboard alone ran ten minutes with no result.
+- The owner asked for a correction of the skill. The summary is no longer a condition of a current review. After a request, the author reads the Gitar reply first, a refusal waits ten minutes, and each check reads the newest dashboard id. Command B prints the reply.
+- Session 170 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `9b27afc`. The correction commit, which holds this entry and the response file, is the new effective head. Pending the repeat review and the owner merge.
+- Remote head: `origin/feat/one-pr-one-session` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `DocGateTests`, `ReviewGateRulesTests`, and `ReviewGateGitTests`: 46 passed. `ste-check`: 0 findings in 18 files. `doc-gate` passes on the current PR description and fails on the description with the duplicate line.
+
+### In flight
+
+PR #77: the gitar pass on the head after the skill correction, then the repeat Codex review of P2-1 per the `pr-review` skill. The owner then merges.
+
+### Traps and gotchas
+
+- The correction commit holds code, so it moves the effective head past `887f94f` (D-184). The review of `887f94f` no longer covers the head.
+- The `gitar-review` skill is the same file in each repo that uses gitar. Put the same correction in the copy of each other repo.
+- A duplicate line stops the other checks of that category, because the gate cannot know which line holds. Each other category keeps its checks.
+- The next ids are D-377, OQ-177, F-102, PR-70, and Session 181.
+
+### Open questions that block progress
+
+None blocks PR #77. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+A Codex session runs the repeat review of P2-1 per the `pr-review` skill at the correction head and sets the verdict. The owner then merges PR #77.
+
+## Session 179: 2026-09-16, Codex
+
+Author: Codex
+Session: review PR #77 at effective head `887f94f` and record the duplicate matrix finding. Branch `feat/one-pr-one-session`.
+
+### What this session did, and why
+
+- Reviewed PR #77, which adds the one-PR session rule and the `doc-gate` command and workflow (D-375, D-376).
+- Confirmed the provider gate. Session 178 identifies Claude Code as the author, so Codex is eligible under T-4 and D-101.
+- Read the full diff, tests, workflow, design, decisions, questions, description, and current Gitar dashboard.
+- Found P2-1: the matrix checker accepts duplicate category lines. A direct fixture with conflicting `docs/design.md` dispositions passed with 0 problems.
+- Wrote `docs/reviews/pr-77.md` with the verdict `Changes required` for `887f94f`.
+
+### State of the build
+
+- `main` and the merge base are `9b27afc`. The effective head is `887f94f`. Commit `6800376` changes only `docs/session-handoff.md` after that head (D-184).
+- The focused `DocGateTests` suite passed 14 tests. The duplicate-line probe passed the invalid fixture, which confirms P2-1.
+- Before publication, CI on PR tip `6800376` passed the three-platform tests, bit identity, compare, bots, asset QA, `det-lint`, `doc-gate`, night gate, and STE check. `evaluate` failed and `review-gate` skipped before this review record.
+- After metadata commit `faab1be`, the refreshed checks were pending. The branch head matched `origin/feat/one-pr-one-session` after fetch and `gh pr view`.
+- Local fetch first hit a sandbox permission error for `.git/FETCH_HEAD`. A permitted fetch succeeded and confirmed `origin/main` and the PR head.
+
+### In flight
+
+PR #77 needs a correction for P2-1 and a repeat review. The owner then decides when to merge.
+
+### Traps and gotchas
+
+- `DocGateRules.CheckMatrix` calls `List.Find`, so duplicate matching lines after the first do not get checked.
+- The metadata tip `6800376` does not replace effective head `887f94f` under D-184.
+- `evaluate` and `review-gate` must refresh after the review record reaches the PR.
+- The next ids are D-377, OQ-177, F-102, PR-70, and Session 180.
+
+### Open questions that block progress
+
+None blocks PR #77. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+The author corrects P2-1, runs the duplicate-line regression test, and requests a repeat review of PR #77.
+
+## Session 178: 2026-09-16, Claude Code
+
+Author: Claude Code
+Session: bind each session to one PR, and make each PR carry all of its documents, with the owner instructions D-375 and D-376. Branch `feat/one-pr-one-session`.
+
+### What this session did, and why
+
+- The owner asked for a strict rule: one PR in one clean session, and no PR that only records an earlier PR. The goal is a lower token cost, because 24 of the 76 PRs recorded the merge of the PR before them.
+- D-375 binds a session to one repository, one branch, one PR, and one role. It supersedes D-297 and revises in part D-121, the count of PRs only. Before the merge, the documents say `Done in PR #N` and "pending owner merge". Git holds the merge commit and the merge time.
+- D-376 adds the `doc-gate` job and the command of the same name in `WhatYouCarry.Tools`. The job fails when the PR does not change the handoff, when the newest entry names another branch, or when the documents matrix is incomplete. It also fails when a matrix line disagrees with the diff, on a phrase that puts documents off to later work, or on a merge record title or branch.
+- The skill `.claude/skills/one-pr-one-session/SKILL.md` holds the start gate, the documents matrix, the status marks, and the completion gate. It is 5620 bytes. `AGENTS.md` and `CLAUDE.md` name its path in one line, and they stay identical (D-122).
+- The PR template gains the eight matrix lines and two gate lines. `docs/design.md` section 3.14 gains the enforcement table, and G-22 states the rule. The `design-doc-style` and `pr-review` skills gain one line each.
+- Five fresh evaluators ran the skill in a dry run, with no hint of the expected result. A merge record request and a second PR request after a compaction both stopped with the blocked line. A clean start and a reviewer session bound to one PR. A draft description with a deferral failed the gate.
+- The evaluators found two gaps, and this PR closes both. One deferral phrase of an evaluator passed the patterns, and a new pattern and a test now hold it. An exit test that needs a night on `main` after the merge had no place, and D-375 and the skill now give it one: the next session writes the result in its own handoff entry.
+- The owner then noted that an answer to gitar or review findings needs no new session. Start gate step 2 had blocked a session whose PR got to the hand-over, so an author could not answer findings on its own PR. Step 2 now blocks a merged or closed PR alone, and D-375 and the design table state the rule.
+- Automatic gitar reviews are paused. A `Gitar review` comment at 19:47 UTC ran a manual review of `00816c8`, which approved with 1 finding, and the finding had merit. The pattern `will update` matched any sentence about a job. `887f94f` ties the pattern to a document, and `RuntimeBehaviorTextIsNotADeferral` fails on the old pattern (D-250, D-303).
+- Session 168 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `9b27afc`, the base revision of this branch. The effective head is `887f94f`, the answer to the gitar finding, and this entry is in a metadata commit above it (D-184). Pending owner merge.
+- Remote head: `origin/feat/one-pr-one-session` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1129 tests, 0 failures. `det-lint`: 0 findings, Core 0 in 66 files, Game 0 in 36 files. `ste-check`: 0 findings in 18 files. `git diff --check` is clean, and the YAML of `doc-gate.yml` parses.
+- No Core, Game, content, or asset change, so the simulation version stays 11, `bit-identity` stays `a0b32bad006b3dfe`, and `asset-qa` and the smoke session do not read this change.
+
+### In flight
+
+This PR changes `WhatYouCarry.Tools` and `.github/`, so it needs the Codex review per the `pr-review` skill at the effective head (T-4, D-190). The `review-override` label does not apply. The owner then merges. PR-69 follows in a fresh session.
+
+### Traps and gotchas
+
+- The `doc-gate` job reads the PR description. Edit the description, and the job runs again on the edited event.
+- The `doc-gate` job runs on `pull_request` from the PR head, so this PR runs the new rules on itself.
+- A roadmap or design mark `Done in PR #N` moves the effective head (D-184). Write it after the PR opens and before the gitar pass. The handoff and the review record do not move it.
+- The deferral check reads a fixed list of phrases. A new form of deferral passes it, and the reviewer catches it.
+- An author session can answer the findings of its own PR after the hand-over. It never starts another PR.
+- The harness exposes no session identity. The start gate of the skill and the owner hold the clean session rule.
+- The memory note on merge dates applies to the history alone. A new PR writes no merge date.
+- The next ids are D-377, OQ-177, F-102, PR-70, and Session 179.
+
+### Open questions that block progress
+
+None blocks this PR. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+A Codex session reviews this PR per the `pr-review` skill at the effective head and writes the review record on this branch. The owner then merges. A fresh session then opens PR-69 under D-375 and D-376.
 
 ## Session 177: 2026-09-16, Claude Code
 
@@ -281,176 +454,3 @@ None blocks this PR. D-370 resolves OQ-174. The PR-68 session diagnoses the shaf
 ### Next concrete action
 
 The owner merges this PR with the `review-override` label and the red `night-gate` (D-371). A fresh session then opens PR-68: it digs seed 79146, floor 7, finds why the shaft lands on an unreachable floor, corrects the dig, adds the regression test, and runs a night before the merge (D-370).
-
-## Session 171: 2026-09-15, Codex
-
-Author: Codex
-Session: review PR #73, the ramp meshes in Game, at effective head `720c7a9`. Branch `feat/pr-65-ramp-meshes`.
-
-### What this session did, and why
-
-- Reviewed the complete code and test diff for the ramp mesh, face coverage, ambient occlusion, mesh triangle, greedy sweep, and contact-sheet changes.
-- Verified the provider gate. Session 170 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
-- Checked the ramp slope planes, side and end coverage, chunk borders, triangle winding, texture density, occlusion, mesh budget path, contact-sheet layout, and no-ramp mesh preservation against D-368, D-369, and the PR-65 exit tests.
-- The focused mesher and contact-sheet suite passed 86 tests. Found no in-scope defect.
-- Wrote `docs/reviews/pr-73.md` with the verdict `Ready for owner merge` for `720c7a9`.
-- Read the existing automated-review comment. It approved the head and raised no issue.
-
-### State of the build
-
-- `main` is at `a4bf6d6`. The effective head of PR #73 is `720c7a9`. The later `f4747ac` commit changes only `docs/session-handoff.md` and `docs/session-handoff-archive.md` under D-184.
-- Remote head: `origin/feat/pr-65-ramp-meshes` is `5e62041` after the review push, verified with `git fetch`, clean status, and `gh pr view`.
-- The focused suite passed 86 tests. Local full build and gate commands produced no completion result because the .NET process hung without output. Session 170 reports the full gates and revision-matched CI as passed on `720c7a9`.
-- GitHub checks after the review push are in progress, including `evaluate`; no completed post-review verdict is available yet.
-
-### In flight
-
-PR #73 is ready for owner merge after the review commit reaches the PR and the review-gate refreshes. PR-66 follows in a fresh session (D-121).
-
-### Traps and gotchas
-
-- The GitHub PR #73 is roadmap PR-65. The roadmap id PR-66 digs the ramps and tiers.
-- The effective head is `720c7a9`, not the metadata tip `f4747ac` (D-184).
-- A mesh with the side of a ramp holds triangle faces. Read `TriangleCount` for triangles, because `QuadCount` counts quads alone.
-- The local .NET hang is an execution-context limitation, not a passed check. Use the revision-matched CI evidence from Session 170.
-- The next ids are D-370, OQ-174, F-101, PR-68, and Session 172.
-
-### Open questions that block progress
-
-None blocks PR #73. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Wait for the post-review checks, including `evaluate` and `review-gate`, to complete. The owner then merges PR #73. A fresh session opens PR-66 and asks the owner for the shape of a tier first (D-350).
-
-## Session 170: 2026-09-15, Claude Code
-
-Author: Claude Code
-Session: open PR-65, the ramp meshes in Game, as PR #73, with the owner answers D-368 and D-369. Branch `feat/pr-65-ramp-meshes`.
-
-### What this session did, and why
-
-- The owner merged PR #72, the merge record of PR-64, as `a4bf6d6` at 03:30 UTC on 2026-09-15, and asked for the next item. The branch came from `origin/main` at `a4bf6d6`.
-- Before the code, the owner answered the tile of a ramp face (D-367). D-368: every face of a ramp takes the raw stone tile, because the floor of each tunnel and chamber is raw stone in all three bands. The recommendation stood.
-- `FaceShape` reads the part of each side of a cell that its solid fills, in twelfths of a block. `GreedyMesher.FaceVisible` hides a face only when the side of the neighbor covers it, so a wall beside a ramp shows over the slope.
-- `RampFaces` gives the slopes, merged in each row by plane and occlusion through `GreedySweep`, and each end, side, and bottom of a ramp cell that shows. The block faces now read their masks through `GreedySweep` too. The side of a run comes to a point at the low end, so `MeshData` gains `AddTriangle` and `TriangleCount`, and `QuadCount` counts the calls of `AddQuad`.
-- `AmbientOcclusion.Occludes` reads the upper half of a ramp run as a block and the lower half as air. `CornerLevel` moved from the mesher to `AmbientOcclusion`, so the slopes and the block faces share it.
-- The contact sheet adds a ramp of each slope in the whole render, with the camera at the foot. The owner approved the sheet as drawn, and D-369 closes exit test 4.
-- A scratch test outside the repository hashed every chunk mesh of floors 1, 6, and 11 of seeds 1 to 8. `main` at `a4bf6d6` and this head both give `364F7B57EACE4F4F2D3034FD1C5A2A85339839351A0341BF8C838EFA157BCD89` over 210966 indices, so a grid with no ramp keeps every bit of its mesh.
-- The first `det-lint` run found the plain string `"length"` in the error context of `GreedySweep`, and a named constant replaced it before the commit.
-- The automated pass of gitar approved `720c7a9` at 04:55 UTC with no comment, so 0 comments needed an answer (D-250). Its comment shows the trial pause note, and the completed check run on the head made a `Gitar review` comment unnecessary.
-- Session 160 moved to the archive, because the file held eleven entries with this one.
-
-### State of the build
-
-- `main` is at `a4bf6d6`. The effective head of PR #73 is `720c7a9`, the one code commit. This entry is in a metadata commit above it (D-184).
-- Remote head: `origin/feat/pr-65-ramp-meshes` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 1115 tests, 0 failures, with the five Smoke tests on the local Godot build. After the last edits of the decisions and the roadmap, a run without the Smoke category passed 1110 tests. `det-lint`: 0 findings, Core 0 in 66 files, Game 0 in 36 files. `asset-qa`: 0 findings. `ste-check`: 0 findings in 16 files. The Godot build check passed, and `bit-identity` prints `24c37100cd99edf4`, because Core does not change.
-- CI on `720c7a9`: CI, smoke, and bit identity passed on the three platforms, with the compare job. Asset-qa, bots, det-lint, the night gate, STE check, and gitar passed, the last at 05:07 UTC. No macOS leg ended "not acquired". `evaluate` fails and `review-gate` is grey, because no review record exists yet (D-251). Every run on `720c7a9` completed before the push of this entry, so that push cancels nothing (D-356).
-- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC is the first on the ramp code and the dig restart, and it can start hours late (F-95).
-
-### In flight
-
-PR #73: the Codex review per the `pr-review` skill at the effective head `720c7a9` (T-4). The owner then merges, and a docs PR records the merge (D-297). PR-66 follows in a fresh session (D-121).
-
-### Traps and gotchas
-
-- The GitHub PR #73 is PR-65. The roadmap id PR-66 digs the ramps and the tiers.
-- D-368 and D-369 carry 2026-09-14, the local date of the owner answers. This entry carries 2026-09-15, the local date when it was written.
-- The effective head is `720c7a9`, and not the metadata commit of this entry (D-184).
-- A mesh with the side of a ramp holds triangle faces. Read `TriangleCount` for the triangles, because `QuadCount` counts quads alone, and a test that reads faces by a stride of four vertices breaks on such a mesh.
-- A slope reads the occlusion of the cell over the ramp. An end or a side of a ramp cell reads the occlusion of the whole side of its cell, also where the face is lower than the cell.
-- The contact sheet is 2400 by 2000 pixels. The area to the right of the block cells is empty and renders black.
-- The Godot build check writes a `.uid` file for each new script in Game. Commit the file with the script.
-- `det-lint` reads a plain string literal in Game as a string that a player sees, also in an error context. Put a context key in a named constant.
-- The simulation version stays 10, and the bit-identity known answer stays `24c37100cd99edf4`.
-- The next ids are D-370, OQ-174, F-101, PR-68, and Session 171.
-
-### Open questions that block progress
-
-None blocks PR #73. The PR-66 session asks the owner for the shape of a tier before the code (D-350), and the gate of PR-66 needs the owner to confirm the ramps and the tiers in play. OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #73 per the `pr-review` skill at the effective head `720c7a9` and writes `docs/reviews/pr-73.md`. The owner then merges, and a docs PR records the merge (D-297). A fresh session then opens PR-66, and it asks the owner for the shape of a tier first (D-350).
-
-## Session 169: 2026-09-14, Claude Code
-
-Author: Claude Code
-Session: record the merge of PR-64 as PR #71, in the same invocation as Session 167 (D-297). Branch `docs/pr-64-merge-record`.
-
-### What this session did, and why
-
-- Session 168 approved `b5bf2de` in `docs/reviews/pr-71.md` with no finding.
-- The owner merged PR #71 as `43f14eb` at 03:05 UTC on 2026-09-15, and the tree of `43f14eb` equals the review tip `78470d0`. The two commits after `b5bf2de`, `d489060` and `78470d0`, change only metadata paths (D-184).
-- `main` now holds the ramp cells of D-367 and the motion on a ramp of D-362 to D-366. `docs/design.md` marks PR-64 done, and sequence item 11 names the merge. The Phase 2 roadmap gains the status line of PR-64 and the mark in sequence item 15. F-97 stays open for PR-65 and PR-66.
-- The file held twelve entries with this one, so Sessions 159 and 158 moved to the archive.
-
-### State of the build
-
-- `main` is at `43f14eb`, the squash merge of PR #71. This branch holds one docs commit above it.
-- Remote head: `origin/docs/pr-64-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- CI on `43f14eb`: CI, smoke, and bit identity passed on the three platforms, and asset-qa, bots, det-lint, and STE check passed, the last at 03:19 UTC. No macOS leg ended "not acquired".
-- `ste-check`: 0 findings in 16 files. `dotnet test`: 1049 tests, 0 failures, with the five Smoke tests on the local Godot build. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `43f14eb`.
-- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC is the first on the ramp code and the dig restart, and it can start hours late (F-95).
-
-### In flight
-
-This PR: docs alone. The `review-override` label goes on after the last push and the automated pass (D-188, D-190). PR-65, the ramp meshes in Game, follows in a fresh session (D-121).
-
-### Traps and gotchas
-
-- The GitHub PR #71 is PR-64. The roadmap id PR-65 is the ramp meshes in Game, and PR-66 digs the ramps and the tiers.
-- The merge marks use the UTC date of the merge, 2026-09-15. This entry uses the local date, 2026-09-14.
-- The Codex review of Session 168 ran the focused ramp suite of 173 tests, and its local full suite and build gave no completion result there. Session 167 ran the full gates on the effective head.
-- The simulation version is 10, so a run record of version 9 fails with the notice of D-151 (D-260).
-- The bit-identity known answer is `24c37100cd99edf4`. A version rise alone moves it, because the replay header holds the version.
-- The mesher of PR-13 draws a ramp as a cube with the tile of its id. PR-65 draws the slope and its two sides.
-- The next ids are D-368, OQ-174, F-101, PR-68, and Session 170.
-
-### Open questions that block progress
-
-None blocks this PR. The PR-65 session asks the owner for the tile of a ramp face before the code (D-367), and exit test 4 of PR-65 needs the owner approval of a contact sheet with the ramps. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges this PR with the `review-override` label. A fresh session then opens PR-65, and it asks the owner for the tile of a ramp face first (D-367).
-
-## Session 168: 2026-09-14, Codex
-
-Author: Codex
-Session: review PR-64 as PR #71 at effective head `b5bf2de`. Branch `feat/pr-64-ramp-cells`.
-
-### What this session did, and why
-
-- Reviewed the complete code and test diff for the ramp cells in Core.
-- Verified the provider gate. Session 167 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
-- Checked the ramp ids, slope math, collision sweep, player motion, ray march, reachability search, simulation version, and bit-identity course against D-362 to D-367 and the PR-64 roadmap exit tests.
-- Found no in-scope defect. Wrote `docs/reviews/pr-71.md` with the verdict `Ready for owner merge` for `b5bf2de`.
-- Read the existing Gitar comment. It approved the head and raised no issue.
-
-### State of the build
-
-- `main` and the merge base are `e1076ca`. The effective head is `b5bf2de`. The later `d489060` commit changes only `docs/session-handoff.md` under D-184.
-- The focused ramp suite passed 173 tests with 0 failures. A local full-suite and build attempt produced no completion result after more than one minute. Session 167 reports the full local gates as passed.
-- Revision-matched CI on `b5bf2de` passed CI, smoke, bit identity on all three platforms, compare, bots, det-lint, asset QA, night gate, and STE check. Gitar approved with no issue comment.
-- `evaluate` failed and `review-gate` skipped before this review record existed, as D-251 predicts. They must refresh after the review commit reaches the PR.
-
-### In flight
-
-PR #71 is ready for owner merge after the fresh review-gate check passes. The owner then merges, and a docs PR records the merge (D-297). PR-65 follows in a fresh session (D-121).
-
-### Traps and gotchas
-
-- The effective head is `b5bf2de`, not this metadata commit (D-184).
-- The PR is GitHub #71 and roadmap PR-64. PR-65 is the ramp mesh work, and PR-66 is the ramp generator work.
-- The local full-suite and build attempts produced no completion result. Do not report those local attempts as passed.
-- The next ids are D-368, OQ-174, F-101, PR-68, and Session 169.
-
-### Open questions that block progress
-
-None blocks PR #71. The PR-65 session asks the owner for the tile of a ramp face before the code (D-367). Exit test 4 of PR-65 needs owner approval of a contact sheet with ramps. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-Wait for the fresh review-gate check. The owner merges PR #71 after the check passes. A fresh session then opens PR-65 and asks the owner for the tile of a ramp face first (D-367).

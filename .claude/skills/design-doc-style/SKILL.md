@@ -33,6 +33,7 @@ The design doc is one file: `docs/design.md`. Its roadmap section is the high-le
 - Every roadmap entry ends with a plain-English paragraph. The paragraph explains the item to a reader who does not know the code.
 - Every external fact has a source and a date.
 - The numbers continue across revisions. Never renumber.
+- A PR marks its own item `✅ Done in PR #N.` before the gitar pass and the review. Write no merge date and no merge commit, because the PR cannot know them (D-375).
 - "One concern per pull request" applies to the plan items.
 - A refuted premise stays in the doc with a dated correction.
 - Ids: F-# findings, PR-# code changes, M-# measurements, I-# integrations, D-# owner decisions (in `docs/decisions.md`), OQ-# open questions (in `docs/questions.md`), G-# guardrails, L-# lessons. A review file or an audit file uses its own local ids, and they never enter the design doc register.

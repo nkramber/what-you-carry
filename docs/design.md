@@ -175,7 +175,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 ### 3.14 Process
 
-Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation and one code PR (D-121). A documentation PR can follow the merge of that code PR in the same session (D-297). Each PR has its own handoff entry (D-146). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250).
+Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one role (D-121, D-375). The PR carries its code, tests, registers, design and roadmap state, review record, and handoff entry. No PR exists only to record an earlier PR (D-375). Each PR has its own handoff entry (D-146). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250).
 
 The document protocol (D-118, D-120, D-125, D-129, D-132):
 
@@ -186,6 +186,26 @@ The document protocol (D-118, D-120, D-125, D-129, D-132):
 - `docs/reviews/`: one file per PR.
 - `docs/roadmaps/`: focused roadmaps, linked from section 7.
 - `CLAUDE.md` and `AGENTS.md`: identical pointer files (D-122).
+- The PR description: the documents matrix, one line for each category (D-376).
+
+The lifecycle of a PR (D-375, D-376). The `one-pr-one-session` skill holds the procedure. A PR cannot know its merge commit or its merge time, so its documents say "Done in PR #N" and "pending owner merge", and git holds the merge. The table gives the enforcement of each rule.
+
+| Rule | Enforcement | Mechanism |
+|---|---|---|
+| The PR changes `docs/session-handoff.md` | Machine | `doc-gate` |
+| The newest handoff entry names the PR branch | Machine | `doc-gate` |
+| The documents matrix gives each category exactly one line, with a disposition and a reason of five words or more | Machine | `doc-gate` |
+| Each matrix line agrees with the changed paths | Machine | `doc-gate` |
+| The description and the newest handoff entry put no documents off to later work | Machine, by a fixed list of phrases | `doc-gate` |
+| No PR title or branch names a merge record | Machine | `doc-gate` |
+| The handoff and the review record do not move the effective head | Machine | `review-gate` metadata set (D-184), and a test that pins the handoff path in that set |
+| The skill has valid front matter, stays under 7000 characters, and the agent files name its path | Machine | `dotnet test` shape tests |
+| No live document cites a superseded decision as current | Machine | `ste-check` reference check (D-178) |
+| A reason is true and specific | Agent and owner | The author writes it, and the cross-provider review checks it |
+| The design doc, the registers, and the roadmap agree with the PR | Agent | The author, then the cross-provider review |
+| A session starts clean and works on one PR | Agent and owner | The start gate of the skill. The owner starts a new session for each PR |
+| A session starts no other PR after the hand-over, and it stops at the merge. It can answer the findings of its own PR after the hand-over | Agent and owner | The closing line of the skill. The owner starts the session of the next PR |
+| The identity of a session, and whether a context came from a compaction or a fork | Not observable | The harness exposes no session id, and the repository defines none |
 
 ## 4. Cost model (what we pay, what we do not know)
 
@@ -353,6 +373,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 19. **G-19.** A PR that creates a check passes that check. A PR names any check that does not exist yet, with the PR that creates it (D-148).
 20. **G-20.** Every Core behavior change bumps the simulation version constant, and the review confirms it (D-151).
 21. **G-21.** No `System.Random`, `DateTime`, `Stopwatch`, or `Environment.TickCount` in Core. The seed and the tick are the only sources of randomness and time (D-69, D-73).
+22. **G-22.** One session works on one PR. The PR carries all of its documents, and no PR exists only to record an earlier PR. The `doc-gate` job checks the parts that a machine can read (D-375, D-376).
 
 ## 7. Roadmap
 

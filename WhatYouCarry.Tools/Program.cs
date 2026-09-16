@@ -3,6 +3,7 @@ using WhatYouCarry.Tools.AssetQa;
 using WhatYouCarry.Tools.BitIdentity;
 using WhatYouCarry.Tools.BotRunner;
 using WhatYouCarry.Tools.DetLint;
+using WhatYouCarry.Tools.DocGate;
 using WhatYouCarry.Tools.NightGate;
 using WhatYouCarry.Tools.ReviewGate;
 using WhatYouCarry.Tools.SteCheck;
@@ -12,7 +13,7 @@ namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, ste-check, det-lint, asset-qa, texture-gen, bit-identity, bot-run, night-record, night-gate.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, doc-gate, ste-check, det-lint, asset-qa, texture-gen, bit-identity, bot-run, night-record, night-gate.";
 
     public static int Main(string[] args)
     {
@@ -28,6 +29,8 @@ public static class Program
         {
             case "review-gate":
                 return ReviewGateCommand.Run(commandArgs);
+            case "doc-gate":
+                return DocGateCommand.Run(commandArgs);
             case "ste-check":
                 return SteCheckCommand.Run(commandArgs);
             case "det-lint":
