@@ -413,7 +413,7 @@ Review focus: procgen, determinism, test quality.
 
 Check clause: none.
 
-Gate: exit tests 1 to 3 pass.
+Gate: exit tests 1 to 3 pass. The `night-gate` job stays red, because a hand night on the branch writes a record that the base branch does not hold (D-275). D-372 merges PR-68 with that gate red.
 
 > *In plain English:* one floor in a hundred thousand drops the player down a shaft into a space with no way back. This change joins every shaft landing to the rest of the floor, and that floor becomes a test.
 

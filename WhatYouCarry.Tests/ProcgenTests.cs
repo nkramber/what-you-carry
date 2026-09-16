@@ -228,6 +228,33 @@ public sealed class ProcgenTests
         Assert.True(report.Pillars > 0 && report.Pools > 0 && report.Collapses > 0, $"The sweep placed {report.Pillars} pillars, {report.Pools} pools, and {report.Collapses} rubble cells.");
     }
 
+    /// <summary>
+    /// PR-68 exit test 1 (F-101). The night of 2026-09-15 found seed 79146, floor 7 with a pillar in the column of its
+    /// shaft, so the shaft landed on the top of that pillar, five rows over the chamber floor, and no path led there.
+    /// Every shaft of that floor lands on a floor cell that the spawn reaches.
+    /// </summary>
+    [Fact]
+    public void ShaftOfSeed79146LandsOnAReachableFloor()
+    {
+        FloorPlan plan = Plan(79146);
+
+        Assert.Equal(7, plan.Floor);
+        Assert.NotEmpty(plan.Shafts);
+        Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
+        foreach (Shaft shaft in plan.Shafts)
+        {
+            int floorRow = shaft.LandingAirRow;
+            while (!plan.Grid.IsSolid(shaft.Center.X, floorRow, shaft.Center.Z))
+            {
+                floorRow--;
+            }
+
+            Cell landing = new(shaft.Center.X, floorRow, shaft.Center.Z);
+            Assert.True(Reachability.IsFloor(plan.Grid, landing), $"The shaft at {shaft.Center} lands at row {floorRow}, and that cell is no floor cell.");
+            Assert.True(reach.IsReachable(landing), $"The shaft at {shaft.Center} lands at row {floorRow}, and the spawn does not reach it.");
+        }
+    }
+
     /// <summary>PR-9 exit test 2. Over one thousand seeds, no two chambers share a block, and every chamber block is air.</summary>
     [Fact]
     public void NoChamberOverlap()
