@@ -1,5 +1,51 @@
 # Session handoff archive
 
+## Session 172: 2026-09-15, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-65 as PR #73, the night failure of F-101, and the owner answers D-370 and D-371, in the same invocation as Session 170 (D-297). Branch `docs/pr-65-merge-record`.
+
+### What this session did, and why
+
+- Session 171 approved `720c7a9` in `docs/reviews/pr-73.md` with no finding. The owner merged PR #73 as `4bc8cd4` at 05:45 UTC on 2026-09-15, and the tree of `4bc8cd4` equals the tip `5062ea2`. The three commits after `720c7a9` change only metadata paths (D-184).
+- `main` now holds the ramp meshes of D-368 and the contact sheet of D-369. `docs/design.md` marks PR-65 done, and sequence item 11 names the merge. The Phase 2 roadmap gains the status line of PR-65 and the mark in sequence item 16.
+- The night of 2026-09-15 at `4bc8cd4` failed. `EveryChamberReachable` and `DetailKeepsEveryChamberReachable` report seed 79146, floor 7: the shaft at column (25, 48) lands on an unreachable floor at row 8. The bot sweeps of that night passed, and the dig reported no error.
+- A scratch test outside the repository dug that seed and floor at four revisions. At `4bc8cd4`, at `e1076ca`, and at `d65823c` the grid hash is `ff14f981092fdf5a`, and the landing is unreachable. At `d2ef347`, before PR-63, the grid is 72 by 16 by 72 with no shaft. The dig sizes of PR-63 make this floor, and PR-64, PR-65, and PR-67 did not.
+- The last green night, at `f487401` on 2026-09-14, ran before PR-63 merged, so the night of 2026-09-15 is the first night on the wide sizes. The PR sweep of 5000 seeds never reads seed 79146.
+- The owner answered two questions. D-370: PR-68, a fix PR of its own, comes before PR-66, and seed 79146 becomes a regression test. D-371: this merge record merges at once, although the `night-gate` job is red.
+- F-101 records the night failure, and OQ-174 records the question. The Phase 2 roadmap gains the PR-68 entry, the F-101 row, and the sequence item 17, and `docs/design.md` gains the PR-68 entry.
+- Session 162 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `4bc8cd4`, the squash merge of PR #73. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-65-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- CI on `4bc8cd4`: CI, smoke, and bit identity passed on the three platforms, with the compare job. Asset-qa, bots, det-lint, and STE check passed, the last at 05:57 UTC. The night of 2026-09-15 failed at 14:40 UTC (F-101).
+- `dotnet test`: 1115 tests, 0 failures, with the five Smoke tests on the local Godot build. `ste-check`: 0 findings in 16 files. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `4bc8cd4`.
+- The record on the branch `night-results` holds `4bc8cd4` with the status failure, so the `night-gate` job fails on every PR until a night passes (D-115, D-177).
+
+### In flight
+
+This PR: docs alone. The `review-override` label goes on after the last push and the automated pass (D-188, D-190). The owner merges it with the red `night-gate` (D-371). PR-68 follows in a fresh session (D-121, D-370), and PR-66 comes after it.
+
+### Traps and gotchas
+
+- The GitHub PR #73 is PR-65. The roadmap id PR-68 is the shaft landing fix, and PR-66 digs the ramps and the tiers.
+- The merge marks use the UTC date of the merge, 2026-09-15. D-370, D-371, and this entry use the local date, also 2026-09-15.
+- The `night-gate` job fails on every PR until a night passes. `night.yml` takes a manual event, so PR-68 can run one before it merges.
+- The reachability failure is no regression of PR-64, PR-65, or PR-67. The grid hash of seed 79146, floor 7 is the same at three revisions, and the floor first appears with the dig sizes of PR-63.
+- The PR sweep of 5000 seeds never reads seed 79146, so a PR run passes while the night fails.
+- The simulation version stays 10, and the bit-identity known answer stays `24c37100cd99edf4`.
+- The next ids are D-372, OQ-175, F-102, PR-69, and Session 173.
+
+### Open questions that block progress
+
+None blocks this PR. D-370 resolves OQ-174. The PR-68 session diagnoses the shaft landing of seed 79146 and runs a night before the merge. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label and the red `night-gate` (D-371). A fresh session then opens PR-68: it digs seed 79146, floor 7, finds why the shaft lands on an unreachable floor, corrects the dig, adds the regression test, and runs a night before the merge (D-370).
+
 ## Session 171: 2026-09-15, Codex
 
 Author: Codex

@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: Review a pull request at principal-engineer depth, or answer a review as the author. Require the opposite provider, precise evidence, regression checks, and a revision-specific verdict. A finding is a claim, not a fact, and the author can refute one with evidence. Use for PR reviews, repeat reviews after fixes, and any request to address, answer, or fix review findings or review feedback.
+description: Review a pull request at principal-engineer depth as the reviewing provider. Require the opposite provider, precise evidence, regression checks, and a revision-specific verdict. Use for PR reviews and repeat reviews after fixes. The author answers a review with the review-response skill.
 ---
 
 # PR review skill
@@ -8,6 +8,7 @@ description: Review a pull request at principal-engineer depth, or answer a revi
 Review the change as the engineer accountable for its effect on the whole system.
 Judge correctness, contracts, failure recovery, test quality, and future maintenance.
 Apply this standard to code, content, tools, CI, skills, and document PRs.
+The author answers a review, and the automated pass of gitar, with the `review-response` skill (D-381).
 A green test suite or a persuasive PR description does not establish correctness.
 
 ## Mandatory provider gate
@@ -50,7 +51,7 @@ Do not approve through reciprocal review of selected hunks.
 - Load `.claude/skills/one-pr-one-session/SKILL.md`, and bind the session to this PR in the reviewer role (D-375).
 - Load `.claude/skills/ste-writing/SKILL.md` before any review text (D-139).
 - Read the PR request, its acceptance criteria, prior review, and applicable focused roadmap.
-- Resolve decision revisions through the `Effect` column in `docs/decisions.md` (D-186). `Superseded by D-N` replaces the whole answer. `Revised in part by D-N` changes only the named part, and the rest of that decision stays current.
+- Look up each cited D-# and OQ-# with the one lookup command of `AGENTS.md` (D-378). Resolve decision revisions through the `Effect` column in `docs/decisions.md` (D-186). `Superseded by D-N` replaces the whole answer. `Revised in part by D-N` changes only the named part, and the rest of that decision stays current.
 - Check `docs/questions.md` for unresolved choices that affect this change (D-124, D-144).
 - Read every existing comment on the PR: the automated pass of gitar and the author's replies (D-250). Take each one into the review as a claim to verify, and never as a finding of your own. See "Do not address the automated reviewer".
 - Record the PR number, target branch, base commit, merge base, and head commit.
@@ -439,18 +440,6 @@ A new trigger for the same class of defect is a new finding with a new id. Asses
 
 Stop at the third assessment of one id. Write the pattern in the review record, and ask the owner whether this PR carries the whole surface, or a later PR does. A fourth correction of one finding is a scope question, and not a defect.
 
-## The automated pass
-
-An automated reviewer, gitar, reviews every PR after a push (D-250). The author gets a current review of the head and answers every finding before the hand-over to the other provider. On a documentation PR, the author does this before the override request. This pass comes before the cross-provider review and never replaces it (T-4).
-
-Load `.claude/skills/gitar-review/SKILL.md` after each push, and follow its procedure (D-374). That skill holds the steps, the proof that a review is current, the traps, and the commands. This section gives only the rules of this repo, and each rule wins over that skill:
-
-- The author alone answers gitar. The reviewing provider never replies to gitar (see "Do not address the automated reviewer").
-- A reply names no provider, harness, or model as the source of the work (T-6, D-176).
-- When the pass ends, tell the owner that the PR is ready for the other provider, or for the override. It is not ready to merge yet.
-- Record the pass in the handoff entry. Give the count of findings, the count with merit, and the commit that answered each one.
-- Record each `Gitar review` comment in the handoff entry too (D-303).
-
 ## Do not address the automated reviewer
 
 The reviewing provider reads the existing PR comments and takes them into its own review context (D-250). It never replies to gitar, never resolves a thread, and never writes a comment on the PR.
@@ -459,60 +448,6 @@ The reviewing provider reads the existing PR comments and takes them into its ow
 - An author reply is evidence, and the review checks it: the trigger, the contract, and the commit it names.
 - An automated comment that the author refuted with evidence is not a finding. An automated comment that the author fixed is a fix to verify. An automated comment that stays open without an answer blocks the verdict, because the author's pass is not complete (D-250).
 - The automated pass does not make gitar an author. The provider gate reads the providers of the substantive commits alone.
-
-## Address review findings
-
-Use this section when you answer a review. The author does this work, not the reviewer.
-
-**A finding is a claim, not a fact.** A review can be wrong. Assess each finding against the evidence before you change anything. A finding carries no authority that the evidence does not give it.
-
-1. Run `git fetch` and `git status --short --branch`. If the checkout is ahead of the remote with the reviewer's commit, push it first. Record that in the response file (F-59).
-2. Read the finding, then read the file and the lines it names.
-3. Reproduce the trigger. A finding that does not reproduce has no merit.
-4. Read the contract the finding cites. Check the `Effect` column of `docs/decisions.md` for a later revision.
-5. Decide the disposition: full merit, partial merit, or no merit.
-6. Correct every finding that has merit. Use the smallest change that restores the contract.
-7. Record each disposition in `docs/reviews/pr-<number>-response.md`.
-8. Commit the response, the corrections, and the handoff entry, then run the session end gate (D-182, D-183, D-199).
-
-Push back when the evidence supports it. State the reason and show the proof:
-
-| Reason to push back | What to show |
-|---|---|
-| The finding reads a rule too broadly. | Quote the rule. Name the other files that the broad reading also condemns. |
-| The finding cites a superseded decision. | Quote the `Effect` column and name the current decision. |
-| The finding calls a partial revision a supersession. | Quote the `Revised in part by` marker and the part that still stands (D-186). |
-| The trigger does not reproduce. | Give the command, the revision, and the result. |
-| The correction breaks another contract. | Name the contract and the caller that it breaks. |
-| The finding states a style preference. | Name the contract that the code does not break. |
-| The finding repeats a risk that a decision already accepted. | Quote the D-# id and its accepted risk. |
-| The finding asks for work outside the PR scope. | Quote the roadmap entry and the exit tests. Name the PR that holds the work. |
-| The finding reopens one id for the third time. | Name the three triggers and ask the owner to settle the scope (D-124). |
-
-A disagreement belongs in the response file, with the evidence. Never delete a finding from the review record.
-The reviewer sets a refuted finding to `withdrawn` and keeps the evidence that refuted it.
-
-Never accept a finding only to close the review faster. A wrong correction costs more than a written disagreement.
-Never widen a correction past the contract that the finding names.
-Ask the owner when a finding and an owner decision conflict. Quote both (D-124, D-138).
-
-Partial merit is common. Correct the part that has merit, and refute the rest in the same entry.
-
-## The response file
-
-The author answers a review in `docs/reviews/pr-<number>-response.md`.
-This file is a convention, not a gate. `review-gate` does not read it (D-179, D-181, D-185).
-Write one when the verdict is `Changes required` or `Blocked`. A clean first pass needs none.
-
-The response file states, for each finding:
-
-- The disposition: full merit, partial merit, or no merit.
-- The evidence, when the disposition is partial merit or no merit.
-- The correction that landed, with the file and the decision id.
-- The regression check that ran, and its result.
-
-The response also lists each new D-# and F-# id, and the final PR head.
-A disagreement with a finding belongs here, with the evidence. Do not remove the finding from the review file.
 
 ## Commit the record
 

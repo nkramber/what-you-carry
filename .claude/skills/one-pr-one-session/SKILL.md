@@ -70,6 +70,20 @@ A PR cannot know its merge commit or its merge time. Git and GitHub hold both, a
 - A later session reads the merge from git. It does not open a PR to record the merge.
 - Some exit tests need a run on `main` after the merge. The PR names each one. The next session reads the result and writes it in its own handoff entry.
 
+## Wait for checks
+
+Each status poll costs a model call over the whole context. After each push, wait on the checks with one command (D-380):
+
+```
+gh pr checks <N> --watch --fail-fast --interval 60 > "${TMPDIR:-/tmp}/checks-<N>.txt" 2>&1; tail -n 40 "${TMPDIR:-/tmp}/checks-<N>.txt"
+```
+
+- Run the command in the background when the harness permits that. Read its result one time, when it ends.
+- Run no other status command while the wait runs.
+- The result names each failed job. For a job that ends "not acquired", apply D-358, then wait again with the same command.
+- A time limit of the harness can stop the wait. Then start the same command again.
+- For gitar, follow `gitar-review`. Put each wait of that skill in one shell loop that prints only the final state.
+
 ## Procedure: the completion gate
 
 Before the hand-over to the other provider, or to the override, confirm items 1 to 5, 7, and 8. Before the owner merge, confirm all eight.
