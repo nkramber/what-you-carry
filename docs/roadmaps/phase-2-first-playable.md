@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-369. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -31,6 +31,7 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-96 | The art stayed a first pass, and no item raised it to finished quality | PR-62 |
 | F-97 | The tunnels felt cramped in play, and every rise in a tunnel needed a jump | PR-63, PR-64, PR-65, PR-66, PR-16 |
 | F-98 | On the wide sizes, about one floor in 96000 ran the dig job cap with a chamber still in rock | PR-63, PR-67, PR-66 |
+| F-101 | The night of 2026-09-15 found a shaft that lands on an unreachable floor on the wide sizes: seed 79146, floor 7 | PR-68, PR-66 |
 
 ## 3. Guardrails for this phase
 
@@ -365,6 +366,8 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-65: Ramp meshes in Game
 
+Status: merged 2026-09-15 as PR #73, commit `4bc8cd4`. Exit tests 1 to 4 passed before the merge, on the effective head `720c7a9`. The review found no defect. The generator digs no ramp before PR-66, so no floor of play draws one yet.
+
 Scope:
 
 - `WhatYouCarry.Game/World/GreedyMesher.cs`, `RampFaces.cs`, `FaceShape.cs`, and `GreedySweep.cs`: a ramp cell gives a sloped face and each side and end that shows (D-345). A face beside a ramp shows unless the ramp covers it. Each face of a ramp takes the raw stone tile at 32 texels per meter (D-308, D-368), and the slopes of one plane merge.
@@ -389,6 +392,30 @@ Check clause: none.
 Gate: exit tests 1 to 4 pass.
 
 > *In plain English:* the game can draw only whole blocks today. This change draws the sloped blocks of PR-64 with the same textures and shade as the walls.
+
+### PR-68: The shaft landing fix
+
+Scope:
+
+- `Core/Procgen`: the dig gives every shaft a landing that a body reaches from the spawn (D-370). The fix names the cause, and it does not weaken the sweep of PR-9.
+- Seed 79146, floor 7 becomes a regression test. The floor comes from the dig sizes of D-341, D-343, and D-344 (F-101).
+- The simulation version rises when the dug floors move (D-260, G-20).
+
+Out of scope: the ramps and the tiers of PR-66, and the mesh of PR-65.
+
+Exit tests:
+
+1. A regression test digs seed 79146, floor 7, and asserts a reachable landing for every shaft. It fails on `4bc8cd4`.
+2. `EveryChamberReachable` and `DetailKeepsEveryChamberReachable` pass over the night sweep of 100000 seeds. `night.yml` takes a manual event, so the run comes before the merge.
+3. The PR sweep, the bot sweep, and the property tests pass.
+
+Review focus: procgen, determinism, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* one floor in a hundred thousand drops the player down a shaft into a space with no way back. This change joins every shaft landing to the rest of the floor, and that floor becomes a test.
 
 ### PR-66: Ramps and chamber tiers in the generator
 
@@ -618,21 +645,22 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 13. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ OQ-172 answered 2026-09-14: D-353.
 14. ✅ PR-67 merged 2026-09-14 as PR #69.
 15. ✅ PR-64 merged 2026-09-15 as PR #71.
-16. PR-65.
-17. PR-66.
-18. Owner: answer OQ-9, at least the first family.
-19. PR-16.
-20. Owner: answer OQ-4 and OQ-6.
-21. PR-17.
-22. Owner: answer OQ-44.
-23. PR-18.
-24. PR-19.
-25. Owner: answer OQ-48.
-26. PR-20.
-27. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
-28. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-29. Tier 4 pass on the screenshot fixture (D-133).
-30. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+16. ✅ PR-65 merged 2026-09-15 as PR #73.
+17. PR-68. ✅ OQ-174 answered 2026-09-15: D-370.
+18. PR-66.
+19. Owner: answer OQ-9, at least the first family.
+20. PR-16.
+21. Owner: answer OQ-4 and OQ-6.
+22. PR-17.
+23. Owner: answer OQ-44.
+24. PR-18.
+25. PR-19.
+26. Owner: answer OQ-48.
+27. PR-20.
+28. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
+29. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+30. Tier 4 pass on the screenshot fixture (D-133).
+31. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
