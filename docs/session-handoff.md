@@ -2,6 +2,45 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 179: 2026-09-16, Codex
+
+Author: Codex
+Session: review PR #77 at effective head `887f94f` and record the duplicate matrix finding. Branch `feat/one-pr-one-session`.
+
+### What this session did, and why
+
+- Reviewed PR #77, which adds the one-PR session rule and the `doc-gate` command and workflow (D-375, D-376).
+- Confirmed the provider gate. Session 178 identifies Claude Code as the author, so Codex is eligible under T-4 and D-101.
+- Read the full diff, tests, workflow, design, decisions, questions, description, and current Gitar dashboard.
+- Found P2-1: the matrix checker accepts duplicate category lines. A direct fixture with conflicting `docs/design.md` dispositions passed with 0 problems.
+- Wrote `docs/reviews/pr-77.md` with the verdict `Changes required` for `887f94f`.
+
+### State of the build
+
+- `main` and the merge base are `9b27afc`. The effective head is `887f94f`. Commit `6800376` changes only `docs/session-handoff.md` after that head (D-184).
+- The focused `DocGateTests` suite passed 14 tests. The duplicate-line probe passed the invalid fixture, which confirms P2-1.
+- CI on the PR tip passed the three-platform tests, bit identity, compare, bots, asset QA, `det-lint`, `doc-gate`, night gate, and STE check. `evaluate` failed and `review-gate` skipped before this review record.
+- Local fetch first hit a sandbox permission error for `.git/FETCH_HEAD`. A permitted fetch succeeded and confirmed `origin/main` and the PR head.
+
+### In flight
+
+PR #77 needs a correction for P2-1 and a repeat review. The owner then decides when to merge.
+
+### Traps and gotchas
+
+- `DocGateRules.CheckMatrix` calls `List.Find`, so duplicate matching lines after the first do not get checked.
+- The metadata tip `6800376` does not replace effective head `887f94f` under D-184.
+- `evaluate` and `review-gate` must refresh after the review record reaches the PR.
+- The next ids are D-377, OQ-177, F-102, PR-70, and Session 180.
+
+### Open questions that block progress
+
+None blocks PR #77. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+The author corrects P2-1, runs the duplicate-line regression test, and requests a repeat review of PR #77.
+
 ## Session 178: 2026-09-16, Claude Code
 
 Author: Claude Code
@@ -421,45 +460,3 @@ None blocks PR #73. The PR-66 session asks the owner for the shape of a tier bef
 ### Next concrete action
 
 A Codex session reviews PR #73 per the `pr-review` skill at the effective head `720c7a9` and writes `docs/reviews/pr-73.md`. The owner then merges, and a docs PR records the merge (D-297). A fresh session then opens PR-66, and it asks the owner for the shape of a tier first (D-350).
-
-## Session 169: 2026-09-14, Claude Code
-
-Author: Claude Code
-Session: record the merge of PR-64 as PR #71, in the same invocation as Session 167 (D-297). Branch `docs/pr-64-merge-record`.
-
-### What this session did, and why
-
-- Session 168 approved `b5bf2de` in `docs/reviews/pr-71.md` with no finding.
-- The owner merged PR #71 as `43f14eb` at 03:05 UTC on 2026-09-15, and the tree of `43f14eb` equals the review tip `78470d0`. The two commits after `b5bf2de`, `d489060` and `78470d0`, change only metadata paths (D-184).
-- `main` now holds the ramp cells of D-367 and the motion on a ramp of D-362 to D-366. `docs/design.md` marks PR-64 done, and sequence item 11 names the merge. The Phase 2 roadmap gains the status line of PR-64 and the mark in sequence item 15. F-97 stays open for PR-65 and PR-66.
-- The file held twelve entries with this one, so Sessions 159 and 158 moved to the archive.
-
-### State of the build
-
-- `main` is at `43f14eb`, the squash merge of PR #71. This branch holds one docs commit above it.
-- Remote head: `origin/docs/pr-64-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
-- CI on `43f14eb`: CI, smoke, and bit identity passed on the three platforms, and asset-qa, bots, det-lint, and STE check passed, the last at 03:19 UTC. No macOS leg ended "not acquired".
-- `ste-check`: 0 findings in 16 files. `dotnet test`: 1049 tests, 0 failures, with the five Smoke tests on the local Godot build. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `43f14eb`.
-- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC is the first on the ramp code and the dig restart, and it can start hours late (F-95).
-
-### In flight
-
-This PR: docs alone. The `review-override` label goes on after the last push and the automated pass (D-188, D-190). PR-65, the ramp meshes in Game, follows in a fresh session (D-121).
-
-### Traps and gotchas
-
-- The GitHub PR #71 is PR-64. The roadmap id PR-65 is the ramp meshes in Game, and PR-66 digs the ramps and the tiers.
-- The merge marks use the UTC date of the merge, 2026-09-15. This entry uses the local date, 2026-09-14.
-- The Codex review of Session 168 ran the focused ramp suite of 173 tests, and its local full suite and build gave no completion result there. Session 167 ran the full gates on the effective head.
-- The simulation version is 10, so a run record of version 9 fails with the notice of D-151 (D-260).
-- The bit-identity known answer is `24c37100cd99edf4`. A version rise alone moves it, because the replay header holds the version.
-- The mesher of PR-13 draws a ramp as a cube with the tile of its id. PR-65 draws the slope and its two sides.
-- The next ids are D-368, OQ-174, F-101, PR-68, and Session 170.
-
-### Open questions that block progress
-
-None blocks this PR. The PR-65 session asks the owner for the tile of a ramp face before the code (D-367), and exit test 4 of PR-65 needs the owner approval of a contact sheet with the ramps. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-The owner merges this PR with the `review-override` label. A fresh session then opens PR-65, and it asks the owner for the tile of a ramp face first (D-367).

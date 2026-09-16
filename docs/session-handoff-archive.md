@@ -1,5 +1,47 @@
 # Session handoff archive
 
+## Session 169: 2026-09-14, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-64 as PR #71, in the same invocation as Session 167 (D-297). Branch `docs/pr-64-merge-record`.
+
+### What this session did, and why
+
+- Session 168 approved `b5bf2de` in `docs/reviews/pr-71.md` with no finding.
+- The owner merged PR #71 as `43f14eb` at 03:05 UTC on 2026-09-15, and the tree of `43f14eb` equals the review tip `78470d0`. The two commits after `b5bf2de`, `d489060` and `78470d0`, change only metadata paths (D-184).
+- `main` now holds the ramp cells of D-367 and the motion on a ramp of D-362 to D-366. `docs/design.md` marks PR-64 done, and sequence item 11 names the merge. The Phase 2 roadmap gains the status line of PR-64 and the mark in sequence item 15. F-97 stays open for PR-65 and PR-66.
+- The file held twelve entries with this one, so Sessions 159 and 158 moved to the archive.
+
+### State of the build
+
+- `main` is at `43f14eb`, the squash merge of PR #71. This branch holds one docs commit above it.
+- Remote head: `origin/docs/pr-64-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- CI on `43f14eb`: CI, smoke, and bit identity passed on the three platforms, and asset-qa, bots, det-lint, and STE check passed, the last at 03:19 UTC. No macOS leg ended "not acquired".
+- `ste-check`: 0 findings in 16 files. `dotnet test`: 1049 tests, 0 failures, with the five Smoke tests on the local Godot build. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `43f14eb`.
+- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC is the first on the ramp code and the dig restart, and it can start hours late (F-95).
+
+### In flight
+
+This PR: docs alone. The `review-override` label goes on after the last push and the automated pass (D-188, D-190). PR-65, the ramp meshes in Game, follows in a fresh session (D-121).
+
+### Traps and gotchas
+
+- The GitHub PR #71 is PR-64. The roadmap id PR-65 is the ramp meshes in Game, and PR-66 digs the ramps and the tiers.
+- The merge marks use the UTC date of the merge, 2026-09-15. This entry uses the local date, 2026-09-14.
+- The Codex review of Session 168 ran the focused ramp suite of 173 tests, and its local full suite and build gave no completion result there. Session 167 ran the full gates on the effective head.
+- The simulation version is 10, so a run record of version 9 fails with the notice of D-151 (D-260).
+- The bit-identity known answer is `24c37100cd99edf4`. A version rise alone moves it, because the replay header holds the version.
+- The mesher of PR-13 draws a ramp as a cube with the tile of its id. PR-65 draws the slope and its two sides.
+- The next ids are D-368, OQ-174, F-101, PR-68, and Session 170.
+
+### Open questions that block progress
+
+None blocks this PR. The PR-65 session asks the owner for the tile of a ramp face before the code (D-367), and exit test 4 of PR-65 needs the owner approval of a contact sheet with the ramps. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges this PR with the `review-override` label. A fresh session then opens PR-65, and it asks the owner for the tile of a ramp face first (D-367).
+
 ## Session 168: 2026-09-14, Codex
 
 Author: Codex
