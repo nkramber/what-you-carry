@@ -21,14 +21,16 @@ Session: cut the agent context cost of each session, with the owner instructions
 
 ### State of the build
 
-- `main` is at `58e4fc8`, the base of this branch. Pending owner merge.
+- `main` is at `58e4fc8`, the base of this branch. The effective head is `3eb7142`, PR #78, and this entry sits in a metadata commit above it (D-184). Pending owner merge.
 - Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
 - `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1143 tests, 0 failures. `ste-check`: 0 findings in 19 files. `det-lint`: 0 findings. No Core, Game, content, or asset path changed, so the simulation version, `bit-identity`, and `asset-qa` stand.
+- CI on `3eb7142`: CI, smoke, and bit identity passed on the three platforms, with the compare job. Asset-qa, bots, det-lint, doc-gate, night-gate, and STE check passed. `evaluate` fails and `review-gate` skips, because no review record exists yet (D-251). Every run completed before the push of this entry, so that push cancels nothing (D-356).
+- The automated pass of gitar: the automatic review approved `ca570e2` at 21:30:30 UTC, one push behind the head, with automatic reviews paused. A `Gitar review` comment at 21:31:21 UTC got "On it" at 21:31:40, and the dashboard approved `3eb7142` at 21:32:03 with no finding and no thread (D-303, D-374).
 - Start paths, bytes before and after: an implementation author 74615 to 36154, an author who answers findings 109690 to 44642, a reviewer 109690 to 66597.
 
 ### In flight
 
-This PR changes `WhatYouCarry.Tools` and `WhatYouCarry.Tests`, so it needs the Codex review per `pr-review` at the effective head (T-4). The `review-override` label does not apply. The owner then merges.
+PR #78 changes `WhatYouCarry.Tools` and `WhatYouCarry.Tests`, so it needs the Codex review per `pr-review` at the effective head (T-4). The `review-override` label does not apply. The owner then merges.
 
 ### Traps and gotchas
 
