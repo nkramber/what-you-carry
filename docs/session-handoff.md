@@ -2,6 +2,47 @@
 
 Rule (D-146): this file keeps the 10 newest sessions, newest first. At the end of a session, add a new entry at the top. Move any entry beyond the tenth to the top of `docs/session-handoff-archive.md`. Read the first entry first.
 
+## Session 177: 2026-09-16, Claude Code
+
+Author: Claude Code
+Session: add the `gitar-review` skill, and make `pr-review` and `AGENTS.md` link to it. The owner told the session to commit and push to `main` directly, with no PR.
+
+### What this session did, and why
+
+- The owner added the `gitar-review` skill and asked that `pr-review` link to it, with no copy and no wrong text.
+- The section "The automated pass" of `pr-review` held a second copy of the procedure. Three parts were wrong. It gave the pause note as the trigger, it gave no proof that a review is current, and it asked for a push after each fix.
+- That section now loads `gitar-review` and keeps only the rules of this repo. The author alone answers gitar, a reply names no source of work, a PR is ready for the other provider or the override, and the handoff records the pass.
+- `AGENTS.md` and `CLAUDE.md` said that `pr-review` holds both procedures, and they gave the pause note as the trigger. Both files now load `gitar-review` and use the trigger of that skill. The two files stay identical (D-122).
+- D-374 records the owner instruction. D-250 and D-303 gain a note of the part that D-374 revises (D-186).
+- The skill file `.claude/skills/gitar-review/SKILL.md` enters the repo in this commit.
+- Session 167 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` held `0d2a709`, the squash merge of PR #76. This session adds one docs commit on `main`, and that commit holds this entry.
+- Remote head: `origin/main` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet test`: 1111 tests, 0 failures, without the Smoke category. `ste-check`: 0 findings in 17 files, after one change in `gitar-review` (see the traps).
+- No code changed. `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `ac534d9`.
+
+### In flight
+
+Nothing. The commit went to `main` with no PR, on the owner instruction, so no gitar pass and no `review-override` label apply to it.
+
+### Traps and gotchas
+
+- The memory note of a check run as the proof of a current gitar pass is out of date. A paused gitar attaches a check with the pause note. Apply "Prove that a review is current" in `gitar-review`.
+- Line 42 of `gitar-review` failed STE 3.6 with "is not resolved". It now reads "Read each open thread." Put the same change in the copy of each other repo.
+- `gitar-review` is the same file in each repo that uses gitar. Put a rule of this repo in `pr-review` or `AGENTS.md`, and not in `gitar-review`.
+- The next ids are D-375, OQ-177, F-102, PR-70, and Session 178.
+
+### Open questions that block progress
+
+None blocks this change. The list of Session 176 stands: the PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+A fresh session opens PR-69: it gives the two publish steps of `night.yml` the ref condition of D-373, and it adds the test of exit test 1. After each push, that session loads `gitar-review`. PR-66 follows, and it asks the owner for the shape of a tier first (D-350).
+
 ## Session 176: 2026-09-16, Claude Code
 
 Author: Claude Code
@@ -413,53 +454,3 @@ None blocks PR #71. The PR-65 session asks the owner for the tile of a ramp face
 ### Next concrete action
 
 Wait for the fresh review-gate check. The owner merges PR #71 after the check passes. A fresh session then opens PR-65 and asks the owner for the tile of a ramp face first (D-367).
-
-## Session 167: 2026-09-14, Claude Code
-
-Author: Claude Code
-Session: open PR-64, the ramp cells in Core, as PR #71, with the owner answers D-362 to D-367. Branch `feat/pr-64-ramp-cells`.
-
-### What this session did, and why
-
-- The owner merged PR #70, the merge record of PR-67, as `e1076ca` at 00:19 UTC on 2026-09-15, and asked for the next item. The branch came from `origin/main` at `e1076ca`.
-- Before the code, the owner answered six questions in two batches (D-345). D-362: the speed along the slope is the flat speed, and the recommendation was the flat horizontal speed. D-363: a walk and a sprint stay on the slope on the way down, and a roll leaves it, in the words of the owner. D-364: no slide. D-365: a jump from a ramp as from flat ground, which revises in part D-235, the ground probe only. D-366: a roll starts on a ramp and climbs it. D-367: the ramp ids 8 to 43 in the block byte.
-- `Ramp` reads a ramp id. `VoxelGrid` takes the ramp ids, and `TryGetRamp` and `TryTopUnder` read them. The solid rule reads a ramp as solid.
-- `SweptAabb` stands a box on the highest point of the slope under its footprint. It lifts a box onto a slope that rises under the end of a move along X or Z, by at most the rise of a slope of 1:2 over the move and with room above, and never onto a block (D-165). `PlayerBody` takes the slope factor of D-362, and `Move` takes `followSlope` for the walk down of D-363.
-- `GridRay` meets the slope inside a ramp cell by the sign of the height over the slope at the entry and the exit of the cell. `Reachability.RampWalk` joins cells whose slopes meet on the shared face, a chain of ramps included, and `Landing` limits the drop and the step from a ramp.
-- The simulation version is 10. The bit-identity sweep gains a ramp course along each rise with each run, and the known answer moves from `efcce6816cec980e` to `24c37100cd99edf4`. Before the ramp run and the version rise, the new code passed the suite with `efcce6816cec980e`, so no grid without a ramp moved.
-- Tests: `RampTests`, `RampMotionTests`, `RampRayTests`, and `RampSearchTests`, on the course of `RampCourse`. The first form of `CameraNeverEntersARamp` read a boom hit on the side of a ramp as a hit on the slope and failed. The test now asserts the camera contract, and it counts the hits on a slope.
-- The automated pass of gitar approved `b5bf2de` at 01:45 UTC with no comment, so 0 comments needed an answer (D-250). Its comment shows the trial pause note, and the completed check run on the head made a `Gitar review` comment unnecessary.
-- Session 157 moved to the archive, because the file held eleven entries with this one.
-
-### State of the build
-
-- `main` is at `e1076ca`. The effective head of PR #71 is `b5bf2de`, the one code commit. This entry is in a metadata commit above it (D-184).
-- Remote head: `origin/feat/pr-64-ramp-cells` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test`: 1049 tests, 0 failures, with the five Smoke tests on the local Godot build. `det-lint`: 0 findings, Core 0 in 66 files, Game 0 in 32 files. `asset-qa`: 0 findings. `ste-check`: 0 findings in 16 files. The Godot build check passed, and `bit-identity` prints `24c37100cd99edf4`.
-- The PR bot sweep ran locally: the random walker and the greedy descender over seeds 1 to 100, 0 softlocks and 0 crashes, and the descender reached the bottom on every seed.
-- CI on `b5bf2de`: CI, smoke, and bit identity passed on the three platforms, with the compare job. Asset-qa, bots, det-lint, the night gate, STE check, and gitar passed, the last at 01:50 UTC. No macOS leg ended "not acquired". `evaluate` fails and `review-gate` is grey, because no review record exists yet (D-251). Every run on `b5bf2de` completed before the push of this entry, so that push cancels nothing (D-356).
-- The night gate reads run 34858986484 at `f487401` until 15:58 UTC on 2026-09-16. The scheduled night of 2026-09-15 at 08:07 UTC runs on `main` with the dig restart, and it can start hours late (F-95).
-
-### In flight
-
-PR #71: the Codex review per the `pr-review` skill at the effective head `b5bf2de` (T-4). The owner then merges, and a docs PR records the merge (D-297). PR-65 follows in a fresh session (D-121).
-
-### Traps and gotchas
-
-- The GitHub PR #71 is PR-64. The roadmap id PR-65 is the ramp meshes in Game, and PR-66 digs the ramps.
-- The effective head is `b5bf2de`, and not the metadata commit of this entry (D-184).
-- `VoxelGrid.IsSolid` reads a ramp as solid. The mesher of PR-13 draws a ramp as a cube with the tile of its id until PR-65, and `DigCanvas.IsAir` reads a ramp as rock until PR-66.
-- `GreedyDescender` jumps at each rise of one row on its path, and the walk onto the low end of a ramp is such a rise. The jump lands on the slope. PR-66 runs the bots on ramps.
-- The lift onto a slope reads the footprint at the end of the whole move. A move that a block cuts short can leave the body up to half the move over the slope, and the next tick lands it.
-- A stagger passes `followSlope` true and a roll passes false (D-363, D-364).
-- D-110: the private helpers of `SweptAabb` call only public methods of `VoxelGrid` and `Ramp`. A helper that calls another helper breaks the rule.
-- zsh reserves the variable name `status`, so a command chain that sets it stops with "read-only variable".
-- The next ids are D-368, OQ-174, F-101, PR-68, and Session 168.
-
-### Open questions that block progress
-
-None blocks PR #71. The PR-65 session asks the owner for the tile of a ramp face before the code, because a ramp has no block kind of its own (D-367). Exit test 4 of PR-65 needs the owner approval of a contact sheet with the ramps. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
-
-### Next concrete action
-
-A Codex session reviews PR #71 per the `pr-review` skill at the effective head `b5bf2de` and writes `docs/reviews/pr-71.md`. The owner then merges, and a docs PR records the merge (D-297). A fresh session then opens PR-65, and it asks the owner for the tile of a ramp face first (D-367).

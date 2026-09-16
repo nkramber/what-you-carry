@@ -94,12 +94,13 @@ At the end of a session, fetch the remote and read `docs/session-handoff.md` aga
 
 An automated reviewer, gitar, comments on every PR after a push (D-250). The author answers every comment before the hand-over to the other provider, or before the override request on a documentation PR.
 
+- Load the `gitar-review` skill after each push. It holds the author procedure, the proof that a review is current, and the commands (D-374).
 - A comment with no merit gets a reply with the reason, and the author resolves its thread.
 - A comment with merit gets the change, a commit, a push, and a reply.
-- The PR is ready when gitar approves it, or when every comment has its answer and a new pass adds none. Tell the owner then.
-- When gitar reports a pause of its automatic reviews for the period, post the comment `Gitar review` on the PR. That runs the pass on demand (D-303).
-- The reviewing provider reads the existing PR comments into its review and never addresses gitar.
-- The `pr-review` skill holds both procedures. A reply names no provider, harness, or model as the source of work (T-6).
+- The PR is ready when a current review approves it, or when every comment has its answer and a current review adds none. Tell the owner then.
+- When the review of the head is stale, or you cannot prove that it is current, post the comment `Gitar review` on the PR. A pause note alone is not the trigger (D-303, D-374).
+- The reviewing provider reads the existing PR comments into its review and never addresses gitar. The `pr-review` skill holds that rule.
+- A reply names no provider, harness, or model as the source of work (T-6).
 
 ## Build and test commands
 

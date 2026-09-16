@@ -440,22 +440,15 @@ Stop at the third assessment of one id. Write the pattern in the review record, 
 
 ## The automated pass
 
-An automated reviewer, gitar, comments on every PR after a push (D-250). The author answers every comment before the hand-over to the other provider, or before the override request on a documentation PR. This pass comes before the cross-provider review and never replaces it (T-4).
+An automated reviewer, gitar, reviews every PR after a push (D-250). The author gets a current review of the head and answers every finding before the hand-over to the other provider. On a documentation PR, the author does this before the override request. This pass comes before the cross-provider review and never replaces it (T-4).
 
-Do these steps after each push.
+Load `.claude/skills/gitar-review/SKILL.md` after each push, and follow its procedure (D-374). That skill holds the steps, the proof that a review is current, the traps, and the commands. This section gives only the rules of this repo, and each rule wins over that skill:
 
-1. Wait for the pass. It ends with a comment on the PR that says approved or that requests changes, and a line comment for each issue. When the comment reports a pause of the automatic reviews for the period, post the comment `Gitar review` on the PR. The pass then runs on demand (D-303).
-2. Read each comment as a claim, not a fact. Reproduce the trigger and read the contract it names, as for a review finding.
-3. For a comment with no merit, reply on its thread with the reason, and resolve the thread.
-4. For a comment with merit, make the smallest change that restores the contract, commit, push, and reply on the thread with the commit.
-5. Wait for the next pass, and repeat from step 2 for each new comment.
-6. Stop when the pass approves the PR, or when every comment has its answer and a new pass adds none. Tell the owner that the PR is ready for the other provider, or for the override.
-
-A reply names no provider, harness, or model as the source of the work (T-6, D-176). It states the evidence: the command, the test, the decision id, or the commit. Never accept a comment only to close the pass faster, and never widen a change past the contract that the comment names.
-
-A resolve needs the thread id. The GitHub API lists the review threads of a PR, and `gh api graphql` resolves one with the `resolveReviewThread` mutation. A comment on the PR itself has no thread, and the reply is a comment on the PR.
-
-Record the pass in the handoff entry: the count of comments, the count with merit, and the commit that answered each one.
+- The author alone answers gitar. The reviewing provider never replies to gitar (see "Do not address the automated reviewer").
+- A reply names no provider, harness, or model as the source of the work (T-6, D-176).
+- When the pass ends, tell the owner that the PR is ready for the other provider, or for the override. It is not ready to merge yet.
+- Record the pass in the handoff entry. Give the count of findings, the count with merit, and the commit that answered each one.
+- Record each `Gitar review` comment in the handoff entry too (D-303).
 
 ## Do not address the automated reviewer
 
