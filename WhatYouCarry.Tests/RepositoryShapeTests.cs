@@ -195,6 +195,19 @@ public sealed class RepositoryShapeTests
         Assert.Equal("The night workflow has no upload-artifact step.", UploadStepDefect(workflow.Replace("actions/upload-artifact@v4", "actions/other@v4", StringComparison.Ordinal)));
     }
 
+    [Fact]
+    public void TheNightRecordStepsRunOnMainAlone()
+    {
+        // D-373: the record of main is the state that the night-gate job reads (D-275). Both record steps take the
+        // ref condition beside always(), so a night on another ref runs in full and writes no record.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        const string guard = "if: always() && github.ref == 'refs/heads/main'";
+        Assert.Contains(guard, StepText(workflow, "Write the night record"), StringComparison.Ordinal);
+        Assert.Contains(guard, StepText(workflow, "Publish the night record"), StringComparison.Ordinal);
+        Assert.DoesNotContain("if: always()\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("(D-373)", workflow, StringComparison.Ordinal);
+    }
+
     /// <summary>The concurrency block that every workflow on a pull request carries (D-356).</summary>
     private const string PullRequestConcurrency = """
         concurrency:
@@ -235,6 +248,15 @@ public sealed class RepositoryShapeTests
         string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
         Assert.DoesNotContain("concurrency:", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("cancel-in-progress", workflow, StringComparison.Ordinal);
+    }
+
+    /// <summary>The text of one workflow step, from its name line to the next step or the end of the workflow.</summary>
+    private static string StepText(string workflow, string stepName)
+    {
+        int start = workflow.IndexOf($"- name: {stepName}", StringComparison.Ordinal);
+        Assert.True(start >= 0, $"The step '{stepName}' is absent.");
+        int end = workflow.IndexOf("- name:", start + 1, StringComparison.Ordinal);
+        return end < 0 ? workflow[start..] : workflow[start..end];
     }
 
     /// <summary>The first defect of the upload step in a night workflow text, or null when the step is right (D-280).</summary>
