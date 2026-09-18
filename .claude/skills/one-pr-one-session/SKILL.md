@@ -9,6 +9,11 @@ A session works on one PR (D-375). The PR carries its code, tests, decisions, qu
 
 This skill does not copy `AGENTS.md`. The rules and the PR gate stay there.
 
+| Reference file | Load it at this step |
+|---|---|
+| `references/enforcement.md` | A question about who enforces a rule: a machine, the agent, or the owner |
+| `references/merge-prompt.md` | The hand-over and the merge, to write the prompt of the next session |
+
 ## Procedure: the start gate
 
 Do these steps before the first edit, commit, or review of the session.
@@ -68,22 +73,11 @@ A PR cannot know its merge commit or its merge time. Git and GitHub hold both, a
 - Write the mark after the PR opens, and before the gitar pass. A design doc or roadmap commit moves the effective head (D-184).
 - The handoff entry names the branch and the state "pending owner merge". The handoff and the review record are metadata, so they do not move the effective head.
 - A later session reads the merge from git. It does not open a PR to record the merge.
-- Some exit tests need a run on `main` after the merge. The PR names each one. The next session reads the result and writes it in its own handoff entry.
+- An exit test that needs a run on `main` after the merge stays in the PR. The next session runs it and states the result in its own handoff entry.
 
-## Wait for checks
+## Wait for the checks
 
-Each status poll costs a model call over the whole context. After each push, wait on the checks with one command (D-380):
-
-```
-gh pr checks <N> --watch --interval 60 > /dev/null 2>&1; gh pr checks <N>
-```
-
-- Run the command in the background when the harness permits that. Read its result one time, when it ends.
-- Run no other status command while the wait runs.
-- The command waits for every check. Do not add `--fail-fast`, because `evaluate` fails until a review record exists (D-251).
-- The result names each failed job. For a job that ends "not acquired", apply D-358, then wait again with the same command.
-- A time limit of the harness can stop the wait. Then start the same command again.
-- For gitar, follow `gitar-review`. Put each wait of that skill in one shell loop that prints only the final state.
+Each status poll costs a model call over the whole context. After each push, wait with the one command under "Wait for the checks" in `docs/runbooks/session-context.md` (D-380). Run no other status command while the wait runs, and read the result one time. For a job that ends "not acquired", apply D-358, and then wait again. For gitar, follow `gitar-review`.
 
 ## Procedure: the completion gate
 
@@ -102,6 +96,4 @@ At the hand-over and at the merge, run the session end gate (D-199). Then write 
 
 `This session is bound to PR #N and is complete. End this session. Start a new clean session before beginning another PR.`
 
-Do not offer to start the next PR. The owner can bring findings on the same PR back to this session.
-
-`docs/design.md` section 3.14 gives the enforcement of each rule: machine, agent, owner, or not observable.
+Write the prompt of the next session with `references/merge-prompt.md`. Do not offer to start the next PR. The owner can bring findings on the same PR back to this session.

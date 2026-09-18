@@ -48,3 +48,26 @@ The design doc is one file: `docs/design.md`. Its roadmap section is the high-le
 ## Focused roadmaps
 
 A focused roadmap covers one area, for example procgen or the projectile simulation. It uses the same sections 1, 2, 6, 7, 8, 9, and 10. It links to the design doc for the system map and the cost model. Its PR-# ids continue the global sequence. It never restates a decision. It cites the D-# id.
+
+## The entry list of a focused roadmap
+
+Each roadmap entry holds these parts, in this order. A reader of the entry then knows the work, its limits, and its gate.
+
+| Part | Form | Rule |
+|---|---|---|
+| The heading | `### PR-<number>: <title>` | The title states the change in five words or less. |
+| The status line | `✅ Done in PR #N.` | The PR writes it before the gitar pass. It gives no merge date and no merge commit (D-375). An entry with no PR yet has no status line. |
+| Scope | A bullet for each changed path or subsystem | Each bullet names the file or the area, what changes, and the D-# id that asks for it. |
+| Out of scope | One line | It names the work that a later PR holds, and that PR or roadmap item. |
+| Exit tests | A numbered list | Each test is one check that a machine or the owner can run, and its pass condition is clear. |
+| Review focus | One line | It names the two or three areas that the cross-provider review reads first. |
+| Check clause | One line | It names each PR gate check that does not exist yet, and the PR that creates it (D-148, G-19). It reads `none.` when every check exists. |
+| Gate | One line | It names the exit tests that pass before the merge, and any check that stays red with its D-# id. |
+| Plain English | A block quote that starts `> *In plain English:*` | It explains the entry to a reader who does not know the code. Max 25 words per sentence. |
+
+Rules for the parts:
+
+- An exit test that needs a run on `main` after the merge says so. The next session reads the result and writes it in its own handoff entry (D-375).
+- An exit test that needs the owner says so, and it names what the owner confirms.
+- The status line of an entry never moves to a later PR. The PR that does the work writes it.
+- A new entry takes the next PR-# of the global sequence. Never renumber an entry.
