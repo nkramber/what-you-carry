@@ -421,7 +421,7 @@ Gate: exit tests 1 to 3 pass. The `night-gate` job stays red, because a hand nig
 
 ### PR-69: The night record guards the ref
 
-✅ Done in PR #80. Exit test 1 passes, and it fails on the workflow of the base. Exit test 2 runs as a hand night on this branch, and the PR states its result. Exit test 3 needs a hand night on `main`, which no branch can give. The session that runs it states the result in its own handoff entry.
+✅ Done in PR #80. Exit test 1 passes, and it fails on the workflow of the base. Exit test 2 passes. The hand night of this branch ran every sweep to the end, and both record steps skipped. The record on `night-results` stayed at `24f47be`, the success of `3434055`. Exit test 3 needs a hand night on `main`, which no branch can give. The session that runs it states the result in its own handoff entry.
 
 Scope:
 
