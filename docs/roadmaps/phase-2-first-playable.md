@@ -421,6 +421,8 @@ Gate: exit tests 1 to 3 pass. The `night-gate` job stays red, because a hand nig
 
 ### PR-69: The night record guards the ref
 
+✅ Done in PR #80. Exit test 1 passes, and it fails on the workflow of the base. Exit test 2 passes. The hand night of this branch ran every sweep to the end, and both record steps skipped. The record on `night-results` stayed at `24f47be`, the success of `3434055`. Exit test 3 needs a hand night on `main`, which no branch can give. The session that runs it states the result in its own handoff entry.
+
 Scope:
 
 - `.github/workflows/night.yml`: the two publish steps take the condition `github.ref == 'refs/heads/main'` beside `always()` (D-373). A night on another ref runs every step and writes no record.
@@ -673,7 +675,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 15. ✅ PR-64 merged 2026-09-15 as PR #71.
 16. ✅ PR-65 merged 2026-09-15 as PR #73.
 17. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ OQ-174 answered 2026-09-15: D-370.
-18. PR-69. ✅ OQ-176 answered 2026-09-16: D-373.
+18. PR-69. ✅ Done in PR #80. ✅ OQ-176 answered 2026-09-16: D-373.
 19. PR-66.
 20. Owner: answer OQ-9, at least the first family.
 21. PR-16.

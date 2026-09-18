@@ -1,6 +1,6 @@
 ---
 name: gitar-review
-description: Get a Gitar review of the head of a pull request, wait three minutes after each push, prove that the review is current, and answer every finding. Verify each finding as a claim, then fix and reply, or refute, reply, and resolve. Load after each push to a pull request, documents alone included.
+description: Get a Gitar review of the head of a pull request. Wait three minutes after each push, prove that the review is current, and answer every finding. Verify each finding as a claim, then fix and reply, or refute, reply, and resolve. Load after each push to a pull request, documents alone included.
 ---
 
 # Gitar review skill

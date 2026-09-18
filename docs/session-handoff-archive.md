@@ -1,5 +1,133 @@
 # Session handoff archive
 
+## Session 177: 2026-09-16, Claude Code
+
+Author: Claude Code
+Session: add the `gitar-review` skill, and make `pr-review` and `AGENTS.md` link to it. The owner told the session to commit and push to `main` directly, with no PR.
+
+### What this session did, and why
+
+- The owner added the `gitar-review` skill and asked that `pr-review` link to it, with no copy and no wrong text.
+- The section "The automated pass" of `pr-review` held a second copy of the procedure. Three parts were wrong. It gave the pause note as the trigger, it gave no proof that a review is current, and it asked for a push after each fix.
+- That section now loads `gitar-review` and keeps only the rules of this repo. The author alone answers gitar, a reply names no source of work, a PR is ready for the other provider or the override, and the handoff records the pass.
+- `AGENTS.md` and `CLAUDE.md` said that `pr-review` holds both procedures, and they gave the pause note as the trigger. Both files now load `gitar-review` and use the trigger of that skill. The two files stay identical (D-122).
+- D-374 records the owner instruction. D-250 and D-303 gain a note of the part that D-374 revises (D-186).
+- The skill file `.claude/skills/gitar-review/SKILL.md` enters the repo in this commit.
+- Session 167 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` held `0d2a709`, the squash merge of PR #76. This session adds one docs commit on `main`, and that commit holds this entry.
+- Remote head: `origin/main` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet test`: 1111 tests, 0 failures, without the Smoke category. `ste-check`: 0 findings in 17 files, after one change in `gitar-review` (see the traps).
+- No code changed. `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `ac534d9`.
+
+### In flight
+
+Nothing. The commit went to `main` with no PR, on the owner instruction, so no gitar pass and no `review-override` label apply to it.
+
+### Traps and gotchas
+
+- The memory note of a check run as the proof of a current gitar pass is out of date. A paused gitar attaches a check with the pause note. Apply "Prove that a review is current" in `gitar-review`.
+- Line 42 of `gitar-review` failed STE 3.6 with "is not resolved". It now reads "Read each open thread." Put the same change in the copy of each other repo.
+- `gitar-review` is the same file in each repo that uses gitar. Put a rule of this repo in `pr-review` or `AGENTS.md`, and not in `gitar-review`.
+- The next ids are D-375, OQ-177, F-102, PR-70, and Session 178.
+
+### Open questions that block progress
+
+None blocks this change. The list of Session 176 stands: the PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+A fresh session opens PR-69: it gives the two publish steps of `night.yml` the ref condition of D-373, and it adds the test of exit test 1. After each push, that session loads `gitar-review`. PR-66 follows, and it asks the owner for the shape of a tier first (D-350).
+
+## Session 176: 2026-09-16, Claude Code
+
+Author: Claude Code
+Session: record the merge of PR-68 as PR #75, and the owner answer D-373 on the night record, in the same invocation as Session 174 (D-297). Branch `docs/pr-68-merge-record`, PR #76.
+
+### What this session did, and why
+
+- Session 174 opened PR-68 as PR #75. Session 175 approved `cb3c2e2` in `docs/reviews/pr-75.md` with no finding. The owner merged PR #75 as `ac534d9` at 13:47 UTC on 2026-09-16.
+- `docs/design.md` marks PR-68 done and closes the F-101 row with the cause and the fix. The Phase 2 roadmap gains the PR-68 status line and the mark in sequence item 17.
+- The owner asked why a night ever runs on a branch commit. The answer named a real gap. D-275 guards the read of the night record, and no guard reads the ref on the write.
+- The hand night of PR-68 replaced the one record of `night-results` with a branch commit. That cost nothing over the `4bc8cd4` failure. The same write over a fresh success turns the `night-gate` job of every PR red. The publish step also keeps no history, because it starts a new orphan branch each night.
+- D-373: the two publish steps of `night.yml` take the condition `github.ref == 'refs/heads/main'`. A night on another ref runs every step and writes no record, and its run log carries the evidence. OQ-176 records the question, and D-274 gains a revision note for the ref alone. PR-69 carries the code, at sequence item 18 before PR-66.
+- The scheduled night of 2026-09-16 started at 13:23 UTC on `7345c9c`, the commit before the merge, because the 08:07 cron ran 5 hours 16 minutes late (F-95). That commit holds the defect, so the run would fail and write a failure record. A cancel of it freed the one Mac runner, and the cancel wrote a cancelled record.
+- The night of run 35104616127 passed on `main` at `ac534d9` and ended at 15:22 UTC. The two bot sets of 5000 seeds and the sweep of 100000 seeds passed. The record reads `ac534d9` with the status success, and that commit is on `main`, so the `night-gate` job is green again.
+- The roadmap kept no resolved line for OQ-174 and OQ-175. This session added them beside OQ-176.
+- Session 166 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` is at `ac534d9`, the squash merge of PR #75. This branch holds one docs commit above it, `975f5b6`, and this entry stands in a metadata commit over it (D-184).
+- Remote head: `origin/docs/pr-68-merge-record` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet test`: 1111 tests, 0 failures, without the Smoke category. `ste-check`: 0 findings in 16 files. No code changed, so `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `ac534d9`.
+- CI on `975f5b6`: CI and bit identity passed on the three platforms, with the compare job. Asset-qa, det-lint, and STE check passed. The `night-gate` job passed, the first green one since the night of 2026-09-15 (F-101). `evaluate` fails and `review-gate` is grey, because this PR carries the `review-override` label in place of a review record (D-188, D-190, D-251).
+- The record on the branch `night-results` holds `ac534d9` with the status success, from 15:22 UTC on 2026-09-16. It goes stale 48 hours after that time (D-177).
+
+### In flight
+
+PR #76: documentation alone. The `review-override` label carries the review (D-188, D-190). The owner merges it. PR-69 follows in a fresh session (D-121), and PR-66 comes after it.
+
+### Traps and gotchas
+
+- The GitHub PR #75 is PR-68, and the GitHub PR #76 is this merge record. The roadmap id PR-69 guards the night record, and PR-66 digs the ramps and the tiers.
+- The merge mark of PR-68 uses the UTC date of the merge, 2026-09-16. D-373, OQ-176, and this entry use the local date, also 2026-09-16.
+- A night on a branch still overwrites the record of `main` until PR-69 lands. Run a night on `main` after a branch night, or leave the branch night for last.
+- Dispatch a hand night only after the macOS legs of CI, smoke, and bit identity finish. The night and those three legs take the one self-hosted Mac runner, and a night holds it for about 80 minutes.
+- A queued night cancels with no harm, because the record steps never run before the job starts. A night that already started writes a record on any outcome, a cancel included.
+- A squash merge gives the branch commits no place in the history of `main`, so a night record from a branch always fails the ancestry check of D-275.
+- The next ids are D-374, OQ-177, F-102, PR-70, and Session 177.
+
+### Open questions that block progress
+
+None blocks PR #76. D-373 resolves OQ-176, and PR-69 carries it. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #76 with the `review-override` label. A fresh session then opens PR-69: it gives the two publish steps of `night.yml` the ref condition of D-373, and it adds the test of exit test 1. PR-66 follows, and it asks the owner for the shape of a tier first (D-350).
+
+## Session 175: 2026-09-16, Codex
+
+Author: Codex
+Session: review PR-68 as PR #75, the shaft landing fix, at effective head `cb3c2e2`. Branch `feat/pr-68-shaft-landing`.
+
+### What this session did, and why
+
+- Read the PR description, complete diff, affected Core callers, tests, roadmap, design, decisions, questions, and every PR comment.
+- Checked the provider gate. Session 174 identifies Claude Code as the author, so Codex is the eligible reviewer under T-4 and D-101.
+- Verified that the pillar pass skips every column in a shaft hole, and that the generator checks each landing for a floor cell and reachability.
+- Verified the seed 79146 regression, the simulation version rise, the bit-identity update, and the automated pass correction at `cb3c2e2`.
+- Found no in-scope defect. Wrote `docs/reviews/pr-75.md` with the verdict `Ready for owner merge` for `cb3c2e2`.
+
+### State of the build
+
+- `main` and the merge base are `7345c9c`. The effective head of PR #75 is `cb3c2e2`. The later `ec4ce65` commit changes only `docs/session-handoff.md` and `docs/session-handoff-archive.md` under D-184.
+- Remote head: the review record and this handoff are pushed to `origin/feat/pr-68-shaft-landing`, and `gh pr view` verifies the remote head.
+- `git diff --check` and the byte-identity check of `AGENTS.md` and `CLAUDE.md` passed.
+- The local build produced no output or completion result and was interrupted. Revision-matched CI passed CI, Smoke, Bit identity, compare, Bots, Asset QA, det-lint, and STE check. The hand night and local 100000-seed sweep passed. `night-gate` stays red by D-372.
+
+### In flight
+
+PR #75 is ready for owner merge. The owner merges with the red `night-gate` under D-372. The first scheduled night on `main` restores the base-branch night evidence. PR-66 follows in a fresh session.
+
+### Traps and gotchas
+
+- The GitHub PR is #75, and the roadmap item is PR-68.
+- The effective head is `cb3c2e2`, not this metadata commit (D-184).
+- The local .NET build gave no completion result. Do not report that attempt as a passed gate.
+- `CheckShaftLandings` treats a missing solid landing as a contextual construction error. It gives a separate cause from an unreachable floor cell (D-113, T-2).
+- The next ids are D-373, OQ-176, F-102, PR-69, and Session 176.
+
+### Open questions that block progress
+
+None blocks PR #75. D-372 resolves OQ-175. The PR-66 session asks the owner for the shape of a tier before the code (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3. OQ-159 and OQ-160 bind constants and block nothing. OQ-99 is open, and it blocks nothing.
+
+### Next concrete action
+
+The owner merges PR #75 with the red `night-gate` under D-372. A fresh session then opens PR-66 and asks the owner for the shape of a tier first (D-350).
+
 ## Session 174: 2026-09-16, Claude Code
 
 Author: Claude Code
