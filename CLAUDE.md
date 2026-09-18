@@ -71,11 +71,12 @@ At the end of a session, fetch the remote. Print the highest session number with
 ## Text rules
 
 - All project skills live in `.claude/skills/` (D-131, D-155). Create each new skill there. Read each required skill from `.claude/skills/<skill-name>/SKILL.md`, even if the skill list does not name it.
+- A skill can hold reference files under `.claude/skills/<skill-name>/references/`. The skill file names each one and the step that needs it. Load a reference file at that step, and not before (D-383, D-385).
 - Every `.md`, skill, and agent file follows ASD-STE100 (D-139). Load the `ste-writing` skill before you write.
 - Load the `design-doc-style` skill before you edit `docs/design.md` or a focused roadmap.
 - One term per concept. The `ste-writing` skill lists the project terms.
 - Document file names in `docs/` are lowercase (D-129).
-- A test caps the bytes of the agent files, each skill, and the handoff (D-382).
+- A test caps the bytes of the agent files, the handoff, and every `.md` file under `.claude/skills/`, a reference file included (D-382, D-384). The `ste-writing` skill states each ceiling.
 
 ## Code rules
 

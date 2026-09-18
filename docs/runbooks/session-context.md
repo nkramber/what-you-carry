@@ -73,6 +73,10 @@ gh pr checks <number> --watch --interval 60 > /dev/null 2>&1; gh pr checks <numb
 
 Run no other status command while the wait runs. Read the result one time, when the command ends. The command waits for every check, so do not add `--fail-fast`. The `evaluate` check fails until a review record exists (D-251).
 
+- Run the command in the background when the harness permits that.
+- A time limit of the harness can stop the wait. Start the same command again.
+- The result names each failed job. For a job that ends "not acquired", apply D-358, and then wait again with the same command.
+
 ## Wait for gitar
 
 The `gitar-review` skill holds the procedure and the proof that a review is current (D-374). This section holds the two commands of the wait. Do the full push wait of three minutes after each push, and do it also when gitar paused the automatic reviews (D-160).
