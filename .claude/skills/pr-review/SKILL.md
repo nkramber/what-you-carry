@@ -39,13 +39,9 @@ Steps 2 and 3 use the targeted reads, the comment export, and the staged read of
 
 ## The three verdicts
 
-| Verdict | Required condition |
-|---|---|
-| Blocked | Provider independence, the review target, a necessary owner decision, or required evidence remains unresolved. |
-| Changes required | The eligible review found in-scope defects or contract violations that need correction. |
-| Ready for owner merge | The provider gate passes, the complete scope has review coverage, all required checks pass, and no blocking finding remains. |
+A review ends with one of three verdicts: `Blocked`, `Changes required`, or `Ready for owner merge`. The file `references/review-record.md` gives the condition of each one.
 
-Write one verdict name in the `## Verdict` section, exactly as the table spells it. The `review-gate` job reads that section, and it fails a section that names two verdicts (D-269). A line under `## Out of scope` never gives the verdict `Changes required`.
+Write one verdict name in the `## Verdict` section, exactly as that file spells it. The `review-gate` job reads that section, and it fails a section that names two verdicts (D-269). A line under `## Out of scope` never gives the verdict `Changes required`.
 
 The owner alone merges the PR (D-102, D-126). Approval applies to the recorded revision alone.
 
