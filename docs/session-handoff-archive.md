@@ -1,5 +1,46 @@
 # Session handoff archive
 
+## Session 177: 2026-09-16, Claude Code
+
+Author: Claude Code
+Session: add the `gitar-review` skill, and make `pr-review` and `AGENTS.md` link to it. The owner told the session to commit and push to `main` directly, with no PR.
+
+### What this session did, and why
+
+- The owner added the `gitar-review` skill and asked that `pr-review` link to it, with no copy and no wrong text.
+- The section "The automated pass" of `pr-review` held a second copy of the procedure. Three parts were wrong. It gave the pause note as the trigger, it gave no proof that a review is current, and it asked for a push after each fix.
+- That section now loads `gitar-review` and keeps only the rules of this repo. The author alone answers gitar, a reply names no source of work, a PR is ready for the other provider or the override, and the handoff records the pass.
+- `AGENTS.md` and `CLAUDE.md` said that `pr-review` holds both procedures, and they gave the pause note as the trigger. Both files now load `gitar-review` and use the trigger of that skill. The two files stay identical (D-122).
+- D-374 records the owner instruction. D-250 and D-303 gain a note of the part that D-374 revises (D-186).
+- The skill file `.claude/skills/gitar-review/SKILL.md` enters the repo in this commit.
+- Session 167 moved to the archive, because the file held eleven entries with this one.
+
+### State of the build
+
+- `main` held `0d2a709`, the squash merge of PR #76. This session adds one docs commit on `main`, and that commit holds this entry.
+- Remote head: `origin/main` at the commit that holds this entry, checked with the session end gate before the session ended.
+- `dotnet test`: 1111 tests, 0 failures, without the Smoke category. `ste-check`: 0 findings in 17 files, after one change in `gitar-review` (see the traps).
+- No code changed. `det-lint`, `asset-qa`, and `bit-identity` stand as CI recorded them on `ac534d9`.
+
+### In flight
+
+Nothing. The commit went to `main` with no PR, on the owner instruction, so no gitar pass and no `review-override` label apply to it.
+
+### Traps and gotchas
+
+- The memory note of a check run as the proof of a current gitar pass is out of date. A paused gitar attaches a check with the pause note. Apply "Prove that a review is current" in `gitar-review`.
+- Line 42 of `gitar-review` failed STE 3.6 with "is not resolved". It now reads "Read each open thread." Put the same change in the copy of each other repo.
+- `gitar-review` is the same file in each repo that uses gitar. Put a rule of this repo in `pr-review` or `AGENTS.md`, and not in `gitar-review`.
+- The next ids are D-375, OQ-177, F-102, PR-70, and Session 178.
+
+### Open questions that block progress
+
+None blocks this change. The list of Session 176 stands: the PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+A fresh session opens PR-69: it gives the two publish steps of `night.yml` the ref condition of D-373, and it adds the test of exit test 1. After each push, that session loads `gitar-review`. PR-66 follows, and it asks the owner for the shape of a tier first (D-350).
+
 ## Session 176: 2026-09-16, Claude Code
 
 Author: Claude Code
