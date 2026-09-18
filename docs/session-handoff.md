@@ -25,7 +25,7 @@ Session: PR-69, the night record ref guard. Branch `feat/night-record-ref`.
 
 ### In flight
 
-- GitHub PR #80 holds the guard, the test, the trunk repair, and the records. The pass of gitar approved head `e315f6c` with no finding, and the PR waits for the review of the other provider.
+- GitHub PR #80 is pending owner merge on branch `feat/night-record-ref`. It holds the guard, the test, the trunk repair, and the records. The pass of gitar approved effective head `63bb4a3` with no finding and no open thread. The PR waits for the review of the other provider, which comes from Codex.
 - Exit test 2 of PR-69 passes. The hand night of this branch ran every sweep to the end in 78 minutes, both record steps skipped, and the record on `night-results` stayed at `24f47be`, the success of `3434055`.
 - Exit test 3 of PR-69 needs a hand night on `main`, which no branch can give.
 
