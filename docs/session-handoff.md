@@ -17,15 +17,20 @@ Session: PR-70, the skill port. Branch `feat/skill-port`.
 
 ### State of the build
 
-- Base and merge base: `ea338f4`, the merge of PR #80. Effective head: `be07a42`. The handoff commit that follows it is metadata under D-184.
-- `dotnet test` on `fdecf91`: 1149 passed, 0 failed, with the filter `Category!=Smoke`. `ste-check` reports 0 findings over 34 files.
+- Base and merge base: `ea338f4`, the merge of PR #80. Effective head: `be07a42`. The tip `a5e7f7f` changes the handoff paths alone, so it is metadata under D-184.
+- `dotnet test` locally: 1149 passed, 0 failed, with the filter `Category!=Smoke`. `ste-check` reports 0 findings over 34 files. `doc-gate` passes over 34 changed paths.
+- GitHub PR #81 is open. Every check passes on the tip: Gitar, CI on three platforms, Smoke on three platforms, Bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, and night-gate. `evaluate` fails because no review record exists (D-251), and `review-gate` shows grey.
 - The night of `main` at `ea338f4` ended success at 2026-09-19T00:45:48Z. The record on `night-results` moved from `24f47be` to `40f148d`, and it names `ea338f4`.
-- Exit test 3 of PR-69 passes in its first part: a hand night on `main` writes the record. The second part, a green `night-gate` job on an open PR, reads this record on the first push of this PR.
-- The GitHub PR does not exist yet at the time of this entry. The next action opens it.
+- Exit test 3 of PR-69 passes in full. The hand night on `main` wrote the record, and the `night-gate` job of PR #81 read that record and turned green.
+- Remote head: `origin/feat/skill-port` is at `a5e7f7f`, and the status shows no `[ahead N]`.
 
 ### In flight
 
-PR-70 holds the port, the two decisions, the roadmap entry, and this entry. It has three commits and no push yet. The automated pass of gitar and the cross-provider review come after the first push.
+GitHub PR #81 holds the port, the two decisions, the roadmap entry, and this entry. It is pending owner merge.
+
+The automated pass of gitar is complete on the effective head `be07a42`. The review of `a5e7f7f` approved with the verdict "No issues found", and it opened no review thread. The pass needed no `Gitar review` comment, because the automatic review started 5 seconds after the PR opened. One CI analysis comment named the missing `docs/reviews/pr-81.md`. That comment has its answer on the PR: `review-gate` reads a record that no reviewer wrote yet, which is the state that D-251 states. Findings with merit: zero. No commit answers a finding.
+
+The cross-provider review comes next. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
 
 ### Traps and gotchas
 
@@ -42,7 +47,7 @@ None blocks PR-70. OQ-177 and OQ-178 have their answers in D-386 and D-387. D-38
 
 ### Next concrete action
 
-Push the branch, open the PR with the prepared description, and run the automated pass of gitar. Then hand the PR to Codex for the cross-provider review.
+Codex reviews GitHub PR #81 at effective head `be07a42`, per `.claude/skills/pr-review/SKILL.md`, and writes `docs/reviews/pr-81.md`. That review reads the split of each skill against the file it replaced, and the front matter rule of the checker. After the merge, a new clean session starts PR-66, the ramps and the chamber tiers. D-387 needs an owner action in the GitHub settings, and it needs no PR.
 
 ## Session 187: 2026-09-18, Codex
 
