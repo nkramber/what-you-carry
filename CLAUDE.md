@@ -71,28 +71,16 @@ At the end of a session, fetch the remote. Print the highest session number with
 ## Text rules
 
 - All project skills live in `.claude/skills/` (D-131, D-155). Create each new skill there. Read each required skill from `.claude/skills/<skill-name>/SKILL.md`, even if the skill list does not name it.
+- A skill can hold reference files under `.claude/skills/<skill-name>/references/`. The skill file names each one and the step that needs it. Load a reference file at that step, and not before (D-383, D-385).
 - Every `.md`, skill, and agent file follows ASD-STE100 (D-139). Load the `ste-writing` skill before you write.
 - Load the `design-doc-style` skill before you edit `docs/design.md` or a focused roadmap.
 - One term per concept. The `ste-writing` skill lists the project terms.
 - Document file names in `docs/` are lowercase (D-129).
-- A test caps the bytes of the agent files, each skill, and the handoff (D-382).
+- A test caps the bytes of the agent files, the handoff, and every `.md` file under `.claude/skills/`, a reference file included (D-382, D-384). The `ste-writing` skill states each ceiling.
 
 ## Code rules
 
-- C# only, tools included. Do not use GDScript (D-64, D-65).
-- `WhatYouCarry.Core` has no engine dependency (G-1).
-- `WhatYouCarry.Assets` has no engine dependency. It holds the model reader, the animation reader, and the pose math, and Game and Tools read a model through it (D-299).
-- No `System.Math` transcendentals, no `Vector<T>`, no SIMD, no reflection in Core. Use `DetMath` (G-2).
-- float in Core (D-70). The simulation runs on one thread at 60 Hz (D-72, D-73).
-- Godot physics and navigation never feed the simulation (G-3).
-- JSON for all content, validated by a schema. No `.tres` files (D-91, D-92).
-- All strings that the player sees live in the string table (D-98).
-- Nullable reference types on, warnings as errors (D-68).
-- xUnit. Property tests are seed loops. Each failure names its seed (D-66).
-- Every dependency needs a decision entry (G-16).
-- Core approves each type and member that it uses outside this project, by name and overload arity (D-207, D-208). A new entry needs a decision.
-- Verify each new allowlist entry before the PR opens: remove the entry, run `det-lint`, and check that a finding appears. A dead entry widens the boundary in silence.
-- Every optimization needs a profile before and a measurement after (G-17).
+The `csharp-conventions` skill holds the code rules. It covers the language, the build, the project boundaries, and determinism. It also covers the Core allowlist procedure, the errors, the content, the strings, the tests, and the shape of the code. Load `.claude/skills/csharp-conventions/SKILL.md` before you write or review C#.
 
 ## Git rules
 

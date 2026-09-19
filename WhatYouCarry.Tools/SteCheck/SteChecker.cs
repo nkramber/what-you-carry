@@ -23,6 +23,13 @@ public static class SteChecker
     {
         string? length = SteRules.CheckLength(sentence, out string lengthRule);
         Add(findings, path, sentence, lengthRule, length);
+        if (sentence.IsFrontMatter)
+        {
+            // D-386: the front matter takes rule 6.3 alone. A description names the triggers of a skill, and a
+            // trigger list is not a sentence that the grammar rules can read.
+            return;
+        }
+
         Add(findings, path, sentence, SteRules.RuleSemicolon, SteRules.CheckSemicolon(sentence));
         Add(findings, path, sentence, SteRules.RuleContraction, SteRules.CheckContraction(sentence));
         Add(findings, path, sentence, SteRules.RulePassive, SteRules.CheckPassive(sentence));

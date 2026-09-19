@@ -445,6 +445,39 @@ Gate: exit tests 1 to 3 pass.
 
 > *In plain English:* a night on a side branch can wipe the record that tells every pull request the main line is healthy. This change lets a side branch run the night, and that record stays as it was.
 
+### PR-70: The skill port
+
+Scope:
+
+- `.claude/skills/gitar-review/`: the skill takes the effective head and the metadata set of D-184, so a commit of metadata keeps a pass current. The traps move to `references/traps.md`. The push wait and the comment export point at the new runbook.
+- `.claude/skills/ste-writing/`: the skill takes a glossary table of the process terms and a section that states each byte ceiling. The names of the project areas move to `references/technical-names.md`, and the 53 rules to `references/the-53-rules.md`.
+- `.claude/skills/pr-review/`: the skill file holds the procedure alone, and seven reference files hold the detail of each case. The read of the PR takes the comment export command and the staged read of the diff.
+- `.claude/skills/one-pr-one-session/`: the skill file keeps the binding, the start gate, the documents matrix, and the completion gate (D-385). The transitional prompt of the merge and the enforcement table move to reference files. Section 3.14 of `docs/design.md` names the enforcement file.
+- `.claude/skills/design-doc-style/`: the skill takes the entry list of a focused roadmap, with the form and the rule of each part.
+- `.claude/skills/csharp-conventions/`: a new skill holds the code rules of the agent files, and both agent files keep a pointer to it (D-383).
+- `docs/runbooks/session-context.md`: a new runbook holds the targeted reads, the commit command, the two waits, the comment export, and the staged read of a diff.
+- `WhatYouCarry.Tests/ContextBudgetTests.cs`: every `.md` file under `.claude/skills/` takes the ceiling of 12000 bytes, a reference file included, and the ceiling of 31000 bytes for `pr-review` ends (D-384).
+- `WhatYouCarry.Tools/SteCheck/`: the checker reads the front matter of a file and holds it to rule 6.3 alone (D-386). An open `---` with no close is a thematic break, and the file then has no front matter.
+
+Out of scope: the branch protection rule of D-387, which the owner applies in the GitHub settings. No code of this repository enforces it.
+
+Exit tests:
+
+1. `ContextBudgetTests` asserts the ceiling over every `.md` file under `.claude/skills/`, reference files included, and it names D-384 on a failure.
+2. `SteCheckTests` asserts that a long front matter description gives one finding of rule 6.3. A passive form and a contraction in the front matter give none, and the body of the same file keeps every rule.
+3. `SteCheckTests` asserts that a file that opens with an unclosed `---` line has no front matter, so the grammar rules read its body.
+4. `RepositoryShapeTests` passes: each new skill has valid front matter, and `one-pr-one-session` stays under 7000 characters.
+5. `ste-check` reports no finding over every document, the new runbook and every reference file included.
+6. No live document names a section of `pr-review` that the split moved, and no command reads a moved section by a line range.
+
+Review focus: the faithfulness of each moved section, the front matter rule of the checker, and the pointers between the skills, the runbook, and the design doc.
+
+Check clause: none.
+
+Gate: exit tests 1 to 6 pass.
+
+> *In plain English:* every session reads the same instructions before it starts work, and those files grew too large to read cheaply. This change splits them, so a session loads the detail of one step at the step that needs it.
+
 ### PR-66: Ramps and chamber tiers in the generator
 
 Scope:
@@ -676,20 +709,21 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 16. ✅ PR-65 merged 2026-09-15 as PR #73.
 17. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ OQ-174 answered 2026-09-15: D-370.
 18. PR-69. ✅ Done in PR #80. ✅ OQ-176 answered 2026-09-16: D-373.
-19. PR-66.
-20. Owner: answer OQ-9, at least the first family.
-21. PR-16.
-22. Owner: answer OQ-4 and OQ-6.
-23. PR-17.
-24. Owner: answer OQ-44.
-25. PR-18.
-26. PR-19.
-27. Owner: answer OQ-48.
-28. PR-20.
-29. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
-30. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-31. Tier 4 pass on the screenshot fixture (D-133).
-32. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+19. PR-70. ✅ OQ-177 and OQ-178 answered 2026-09-18: D-386 and D-387.
+20. PR-66.
+21. Owner: answer OQ-9, at least the first family.
+22. PR-16.
+23. Owner: answer OQ-4 and OQ-6.
+24. PR-17.
+25. Owner: answer OQ-44.
+26. PR-18.
+27. PR-19.
+28. Owner: answer OQ-48.
+29. PR-20.
+30. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
+31. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+32. Tier 4 pass on the screenshot fixture (D-133).
+33. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
@@ -705,6 +739,11 @@ Open:
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-161: the M-3 run on the Steam Deck. Blocks exit test 7 of PR-13 and M-3.
+
+Resolved 2026-09-18:
+
+- OQ-177 (D-386): the front matter and the STE rules. PR-70.
+- OQ-178 (D-387): a merge with red checks. It needs no code of this repository.
 
 Resolved 2026-09-16:
 

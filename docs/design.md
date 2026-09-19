@@ -188,28 +188,7 @@ The document protocol (D-118, D-120, D-125, D-129, D-132):
 - `CLAUDE.md` and `AGENTS.md`: identical pointer files (D-122).
 - The PR description: the documents matrix, one line for each category (D-376).
 
-The lifecycle of a PR (D-375, D-376). The `one-pr-one-session` skill holds the procedure. A PR cannot know its merge commit or its merge time, so its documents say "Done in PR #N" and "pending owner merge", and git holds the merge. The table gives the enforcement of each rule.
-
-| Rule | Enforcement | Mechanism |
-|---|---|---|
-| The PR changes `docs/session-handoff.md` | Machine | `doc-gate` |
-| The newest handoff entry names the PR branch | Machine | `doc-gate` |
-| The documents matrix gives each category exactly one line, with a disposition and a reason of five words or more | Machine | `doc-gate` |
-| Each matrix line agrees with the changed paths | Machine | `doc-gate` |
-| The description and the newest handoff entry put no documents off to later work | Machine, by a fixed list of phrases | `doc-gate` |
-| No PR title or branch names a merge record | Machine | `doc-gate` |
-| The handoff and the review record do not move the effective head | Machine | `review-gate` metadata set (D-184), and a test that pins the handoff path in that set |
-| The skill has valid front matter, stays under 7000 characters, and the agent files name its path | Machine | `dotnet test` shape tests |
-| The agent files, each skill, the handoff, and its newest entry stay under a byte ceiling | Machine | `dotnet test` context budget tests (D-382) |
-| The handoff keeps 10 entries, newest first, and each older entry moves to the archive with its text intact | Machine, when the session runs the command | `handoff-rotate` and its seed-loop test (D-379) |
-| A session reads the newest handoff entry, looks up register ids in one command, and waits on checks with one command | Agent | The read order of `AGENTS.md` and the `one-pr-one-session` skill (D-377, D-378, D-380) |
-| A reviewer loads `pr-review`, and an author who answers findings loads `review-response` | Agent | The skill descriptions and `AGENTS.md` (D-381) |
-| No live document cites a superseded decision as current | Machine | `ste-check` reference check (D-178) |
-| A reason is true and specific | Agent and owner | The author writes it, and the cross-provider review checks it |
-| The design doc, the registers, and the roadmap agree with the PR | Agent | The author, then the cross-provider review |
-| A session starts clean and works on one PR | Agent and owner | The start gate of the skill. The owner starts a new session for each PR |
-| A session starts no other PR after the hand-over, and it stops at the merge. It can answer the findings of its own PR after the hand-over | Agent and owner | The closing line of the skill. The owner starts the session of the next PR |
-| The identity of a session, and whether a context came from a compaction or a fork | Not observable | The harness exposes no session id, and the repository defines none |
+The lifecycle of a PR (D-375, D-376). The `one-pr-one-session` skill holds the procedure. A PR cannot know its merge commit or its merge time, so its documents say "Done in PR #N" and "pending owner merge", and git holds the merge. The file `.claude/skills/one-pr-one-session/references/enforcement.md` holds the table of every rule and its enforcement: a machine, the agent, the owner, or not observable (D-383).
 
 ## 4. Cost model (what we pay, what we do not know)
 
@@ -340,7 +319,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-99 | The macOS leg of Bit identity on the PR #65 review tip `d66fd24` never started: the self-hosted runner did not acquire the job in 20 minutes, and the compare job skipped. Four pushes in 15 minutes queued about 12 macOS jobs on the one Mac runner | 2026-09-14 | ✅ D-355 to D-358, merged in GitHub PR #67 on 2026-09-14. A newer event on a PR cancels the older run of each PR workflow, and CI on the tip counts for the effective head. `RepositoryShapeTests` holds the groups. The groups do not stop a lost leg, and F-100 holds that cause |
 | F-100 | The macOS leg of Bit identity on the PR #67 head `66ebefb` ended "not acquired" after 8 minutes, with three macOS jobs queued and no older run. Inside that window, the runner log shows an `acquirejob` HTTP 409 Conflict with "job assignment is invalid: MissingKey" and a skipped job message at 19:39 and 19:41 UTC, then a message for the cancelled job at 19:42 UTC. Inside the F-99 window, the log shows the same conflict at 17:40, 17:42, and 17:51 UTC. On 2026-09-14 the runner, at v2.337.0, the latest release that day, ran 54 jobs by 19:48 UTC and skipped 18 job messages after a conflict. A re-run of the failed jobs at 19:45 UTC passed | 2026-09-14 | ✅ D-358, merged in GitHub PR #67 on 2026-09-14: the author re-runs the failed jobs of a run with a lost self-hosted leg, and the re-run counts as CI for that head. The runner can still skip a job message after a conflict |
 | F-101 | The night of 2026-09-15 at the merge commit `4bc8cd4` failed. `EveryChamberReachable` and `DetailKeepsEveryChamberReachable` report seed 79146, floor 7: the shaft at column (25, 48) lands on an unreachable floor at row 8. The bot sweeps of that night passed, and the dig itself reported no error. The floor comes from the dig sizes of PR-63. At `d2ef347`, before PR-63, that seed and floor give a grid of 72 by 16 by 72 with no shaft. At `e1076ca` and at `d65823c`, after PR-63 and without PR-64 and PR-67, the grid is 64 by 20 by 64 with the hash `ff14f981092fdf5a` and the same unreachable landing, which is the grid of `4bc8cd4`. The PR sweep of 5000 seeds never reads seed 79146, and the last green night, at `f487401` on 2026-09-14, ran before PR-63 merged. The cause is the detail pass: `RaisePillars` raised a pillar of chamber 3 at the floor cell (25, 3, 48), which is the column of the shaft of chamber 1 at (25, 48), so the top of that pillar filled the landing air row 8 that `TryDigShaft` proved free before it carved | 2026-09-15 | ✅ D-370, merged in GitHub PR #75 on 2026-09-16. `RaisePillars` raises no pillar in a column that a shaft drops through, and `FloorGenerator.CheckShaftLandings` makes any other cause a loud error. Seed 79146 is a regression test, and the hand night of 100000 seeds passed at `cb3c2e2`. D-371 merged the PR-65 merge record with the gate red, and D-372 merged this PR with it red |
-| F-102 | `main` at `3434055` failed two tests. The front matter description of the `gitar-review` skill held one sentence of 27 words, and rule 6.3 of the STE checker holds a descriptive sentence to 25. `docs/session-handoff.md` held 11 entries, and D-379 keeps 10. GitHub PR #79 merged on 2026-09-16 with `ste-check`, `doc-gate`, and the three build legs red, so the trunk carried both faults into every later branch | 2026-09-17 | ✅ PR-69 splits the description into two sentences and runs `handoff-rotate`. OQ-177 asks whether the checker reads front matter, and OQ-178 asks about a merge with red checks |
+| F-102 | `main` at `3434055` failed two tests. The front matter description of the `gitar-review` skill held one sentence of 27 words, and rule 6.3 of the STE checker holds a descriptive sentence to 25. `docs/session-handoff.md` held 11 entries, and D-379 keeps 10. GitHub PR #79 merged on 2026-09-16 with `ste-check`, `doc-gate`, and the three build legs red, so the trunk carried both faults into every later branch | 2026-09-17 | ✅ PR-69 splits the description into two sentences and runs `handoff-rotate`. PR-70 holds the checker to rule 6.3 on the front matter (OQ-177, D-386). The owner applies a branch protection rule on `main` (OQ-178, D-387) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -519,10 +498,15 @@ Make the dig give every shaft a landing that a body reaches from the spawn (D-37
 Gate: the seed regression test passes, and a night sweep of 100000 seeds passes.
 > *In plain English:* one floor in a hundred thousand drops the player down a shaft into a space with no way back. This change joins every shaft landing to the rest of the floor, and that floor becomes a test.
 
-**PR-69: The night record guards the ref.** 🔧
+**PR-69: The night record guards the ref.** ✅ Done in PR #80.
 Give the two publish steps of `night.yml` the condition `github.ref == 'refs/heads/main'` (D-373). A night on another ref runs every step and writes no record, so it cannot replace the record that the `night-gate` job reads for `main`. A branch night proves a fix through its run log alone. The read rule of D-275 does not change.
 Gate: a test pins the condition on both steps, a branch night leaves the record as it was, and a night on `main` writes it.
 > *In plain English:* a night on a side branch can wipe the record that tells every pull request the main line is healthy. This change lets a side branch run the night, and that record stays as it was.
+
+**PR-70: The skill port.** 🔧
+Split the agent instructions, so a session loads the detail of one step at the step that needs it (D-383). The `gitar-review` skill takes the effective head and the metadata set of D-184, so a commit of metadata keeps a pass current. The `ste-writing` skill takes a glossary of the process terms and a table of the byte ceilings. The `pr-review` skill keeps the procedure and moves each case to a reference file. The `one-pr-one-session` skill keeps the binding, the start gate, the documents matrix, and the completion gate (D-385). A new skill, `csharp-conventions`, holds the code rules, and both agent files point to it. A new runbook, `docs/runbooks/session-context.md`, holds the targeted reads, the commit command, the two waits, the comment export, and the staged read of a diff. Every `.md` file under `.claude/skills/` takes one byte ceiling (D-384). The STE checker holds the front matter of a file to rule 6.3 alone (D-386).
+Gate: the context budget test reads every skill file, the checker test pins the front matter rule, and `ste-check` reports no finding.
+> *In plain English:* every session reads the same instructions before it starts work, and those files grew too large to read cheaply. This change splits them, so a session reads the detail of one step only when it reaches that step.
 
 **PR-66: Ramps and chamber tiers in the generator.** 🔧
 Dig ramps in place of one-block steps, so a tunnel changes height by a ramp or a shaft alone (D-345, D-347). Each ramp takes a slope from the list of its floor template (D-346). The tier chance of each chamber kind gives some chambers a tier 2 blocks over the floor, and a ramp joins the two (D-348 to D-350). The detail pass of PR-59 keeps every ramp clear. The PR-9 and PR-59 property tests, the bot sweep, and the night sweep run again. The simulation version rises (G-20).
@@ -727,7 +711,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 8. M-1, M-2. ✅ M-1 table complete 2026-09-10 (D-276, D-277). ✅ M-2 table complete 2026-09-11, seven nights (D-283).
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
-11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75.
+11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
 12. PR-19, PR-20, PR-62.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.

@@ -208,6 +208,42 @@ public sealed class SteCheckTests
         }
     }
 
+    /// <summary>
+    /// D-386: the front matter takes rule 6.3 alone. The 27-word description of a skill turned the trunk red on
+    /// 2026-09-17 (F-102), and a trigger list cannot pass the grammar rules. The body of the same file keeps every rule.
+    /// </summary>
+    [Fact]
+    public void FrontMatterTakesTheSentenceLimitAlone()
+    {
+        const string longDescription = "description: Review a pull request and write the record, then answer each finding of the automated pass, "
+            + "and use it for a repeat review after the author corrects the code.";
+        string file = "---\nname: fixture\n" + longDescription + "\n---\n\nThe tool runs.\n";
+        List<Finding> findings = SteChecker.Check("fixture.md", file);
+        Finding single = Assert.Single(findings);
+        Assert.Equal(SteRules.RuleDescriptiveLength, single.Rule);
+        Assert.Equal(3, single.Line);
+
+        // The grammar rules do not read the front matter: a passive form, a contraction, a helper verb, an -ing form,
+        // and a semicolon all pass there.
+        string quiet = "---\nname: fixture\ndescription: The file was written by the tool; it doesn't run.\n---\n\nThe tool runs.\n";
+        Assert.Empty(SteChecker.Check("fixture.md", quiet));
+
+        // The body of a file with front matter keeps every rule.
+        string body = "---\nname: fixture\ndescription: A short line.\n---\n\nThe file was written by the tool.\n";
+        Assert.Contains(SteChecker.Check("fixture.md", body), finding => finding.Rule == SteRules.RulePassive);
+    }
+
+    /// <summary>
+    /// A file that opens with a thematic break and never closes it has no front matter. Without this rule the whole
+    /// file reads as front matter, and no grammar rule sees it.
+    /// </summary>
+    [Fact]
+    public void AnUnclosedOpeningBreakIsNotFrontMatter()
+    {
+        string file = "---\n\nThe file was written by the tool.\n";
+        Assert.Contains(SteChecker.Check("fixture.md", file), finding => finding.Rule == SteRules.RulePassive);
+    }
+
     private static string Report(List<Finding> findings)
     {
         return $"{findings.Count} finding(s):\n{string.Join('\n', findings)}";
