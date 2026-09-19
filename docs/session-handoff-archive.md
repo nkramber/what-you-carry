@@ -1,5 +1,45 @@
 # Session handoff archive
 
+## Session 179: 2026-09-16, Codex
+
+Author: Codex
+Session: review PR #77 at effective head `887f94f` and record the duplicate matrix finding. Branch `feat/one-pr-one-session`.
+
+### What this session did, and why
+
+- Reviewed PR #77, which adds the one-PR session rule and the `doc-gate` command and workflow (D-375, D-376).
+- Confirmed the provider gate. Session 178 identifies Claude Code as the author, so Codex is eligible under T-4 and D-101.
+- Read the full diff, tests, workflow, design, decisions, questions, description, and current Gitar dashboard.
+- Found P2-1: the matrix checker accepts duplicate category lines. A direct fixture with conflicting `docs/design.md` dispositions passed with 0 problems.
+- Wrote `docs/reviews/pr-77.md` with the verdict `Changes required` for `887f94f`.
+
+### State of the build
+
+- `main` and the merge base are `9b27afc`. The effective head is `887f94f`. Commit `6800376` changes only `docs/session-handoff.md` after that head (D-184).
+- The focused `DocGateTests` suite passed 14 tests. The duplicate-line probe passed the invalid fixture, which confirms P2-1.
+- Before publication, CI on PR tip `6800376` passed the three-platform tests, bit identity, compare, bots, asset QA, `det-lint`, `doc-gate`, night gate, and STE check. `evaluate` failed and `review-gate` skipped before this review record.
+- After metadata commit `faab1be`, the refreshed checks were pending. The branch head matched `origin/feat/one-pr-one-session` after fetch and `gh pr view`.
+- Local fetch first hit a sandbox permission error for `.git/FETCH_HEAD`. A permitted fetch succeeded and confirmed `origin/main` and the PR head.
+
+### In flight
+
+PR #77 needs a correction for P2-1 and a repeat review. The owner then decides when to merge.
+
+### Traps and gotchas
+
+- `DocGateRules.CheckMatrix` calls `List.Find`, so duplicate matching lines after the first do not get checked.
+- The metadata tip `6800376` does not replace effective head `887f94f` under D-184.
+- `evaluate` and `review-gate` must refresh after the review record reaches the PR.
+- The next ids are D-377, OQ-177, F-102, PR-70, and Session 180.
+
+### Open questions that block progress
+
+None blocks PR #77. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+
+### Next concrete action
+
+The author corrects P2-1, runs the duplicate-line regression test, and requests a repeat review of PR #77.
+
 ## Session 178: 2026-09-16, Claude Code
 
 Author: Claude Code

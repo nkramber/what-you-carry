@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 189: 2026-09-19, Codex
+
+Author: Codex
+Session: PR-81, the cross-provider review. Branch `feat/skill-port`.
+
+### What this session did, and why
+
+- Reviewed PR #81 at effective head `be07a42`. The PR ports and splits the repository skills, adds the session runbook and code-conventions skill, and updates the STE front-matter rule.
+- Inspected the complete diff, the PR description, the roadmap entry, the cited decisions and questions, the automated comments, and the changed checker and test files.
+- Found no actionable defect. The review record is `docs/reviews/pr-81.md`.
+
+### State of the build
+
+- The focused context-budget and STE tests passed 19 of 19. `ste-check` found 0 findings in 34 files.
+- The broader filtered suite stalled after compilation and was canceled after a bounded wait. Remote CI, smoke, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, night-gate, and Gitar passed on the tip `64bc3da`.
+- The review record reached remote head `d08e8d9` after the lease-protected metadata update.
+
+### In flight
+
+The owner can merge after the review record reaches the PR branch and `review-gate` turns green.
+
+### Traps and gotchas
+
+- The effective head is `be07a42`. The later commits change only the metadata set.
+- The local broad suite gave no result. Treat that run as incomplete evidence, not as a pass.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Run the session end gate, then wait for the review-gate check.
+
 ## Session 188: 2026-09-18, Claude Code
 
 Author: Claude Code
@@ -39,7 +73,8 @@ The cross-provider review comes next. Codex is the eligible reviewer, because Cl
 - `docs/design.md` marked PR-69 as planned after PR #80 merged. This PR corrects that mark to `✅ Done in PR #80.` The correction is a stale fact, and it is not a record of an earlier PR (D-375).
 - The `review-response` skill read two sections of `pr-review` with a `sed` command over a line range. The split breaks such a command. That skill now names `references/commit-and-push.md`, and D-381 carries a partial revision mark.
 - A reference file is under the byte ceiling of D-384 too. The `ste-writing` skill states every ceiling in one table.
-- The next ids are D-388, OQ-179, F-103, PR-71, and Session 189.
+- A later commit on this branch put its handoff entry at the end of the file, and CI turned red on all three legs. `HandoffRotateTests.RepositoryFilesHoldTheRule` states the cause: the file keeps the newest entry first (D-146). A repair commit moved that entry to the top, word for word, and ran `handoff-rotate`. Add a new entry at the top, and never at the end.
+- The next ids are D-388, OQ-179, F-103, PR-71, and Session 190.
 
 ### Open questions that block progress
 
@@ -365,76 +400,3 @@ None blocks PR #77. The PR-66 session asks the owner for the shape of a tier fir
 ### Next concrete action
 
 A Codex session runs the repeat review of P2-1 per the `pr-review` skill at the correction head and sets the verdict. The owner then merges PR #77.
-
-## Session 179: 2026-09-16, Codex
-
-Author: Codex
-Session: review PR #77 at effective head `887f94f` and record the duplicate matrix finding. Branch `feat/one-pr-one-session`.
-
-### What this session did, and why
-
-- Reviewed PR #77, which adds the one-PR session rule and the `doc-gate` command and workflow (D-375, D-376).
-- Confirmed the provider gate. Session 178 identifies Claude Code as the author, so Codex is eligible under T-4 and D-101.
-- Read the full diff, tests, workflow, design, decisions, questions, description, and current Gitar dashboard.
-- Found P2-1: the matrix checker accepts duplicate category lines. A direct fixture with conflicting `docs/design.md` dispositions passed with 0 problems.
-- Wrote `docs/reviews/pr-77.md` with the verdict `Changes required` for `887f94f`.
-
-### State of the build
-
-- `main` and the merge base are `9b27afc`. The effective head is `887f94f`. Commit `6800376` changes only `docs/session-handoff.md` after that head (D-184).
-- The focused `DocGateTests` suite passed 14 tests. The duplicate-line probe passed the invalid fixture, which confirms P2-1.
-- Before publication, CI on PR tip `6800376` passed the three-platform tests, bit identity, compare, bots, asset QA, `det-lint`, `doc-gate`, night gate, and STE check. `evaluate` failed and `review-gate` skipped before this review record.
-- After metadata commit `faab1be`, the refreshed checks were pending. The branch head matched `origin/feat/one-pr-one-session` after fetch and `gh pr view`.
-- Local fetch first hit a sandbox permission error for `.git/FETCH_HEAD`. A permitted fetch succeeded and confirmed `origin/main` and the PR head.
-
-### In flight
-
-PR #77 needs a correction for P2-1 and a repeat review. The owner then decides when to merge.
-
-### Traps and gotchas
-
-- `DocGateRules.CheckMatrix` calls `List.Find`, so duplicate matching lines after the first do not get checked.
-- The metadata tip `6800376` does not replace effective head `887f94f` under D-184.
-- `evaluate` and `review-gate` must refresh after the review record reaches the PR.
-- The next ids are D-377, OQ-177, F-102, PR-70, and Session 180.
-
-### Open questions that block progress
-
-None blocks PR #77. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
-
-### Next concrete action
-
-The author corrects P2-1, runs the duplicate-line regression test, and requests a repeat review of PR #77.
-## Session 189: 2026-09-19, Codex
-
-Author: Codex
-Session: PR-81, the cross-provider review. Branch `feat/skill-port`.
-
-### What this session did, and why
-
-- Reviewed PR #81 at effective head `be07a42`. The PR ports and splits the repository skills, adds the session runbook and code-conventions skill, and updates the STE front-matter rule.
-- Inspected the complete diff, the PR description, the roadmap entry, the cited decisions and questions, the automated comments, and the changed checker and test files.
-- Found no actionable defect. The review record is `docs/reviews/pr-81.md`.
-
-### State of the build
-
-- The focused context-budget and STE tests passed 19 of 19. `ste-check` found 0 findings in 34 files.
-- The broader filtered suite stalled after compilation and was canceled after a bounded wait. Remote CI, smoke, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, night-gate, and Gitar passed on the tip `64bc3da`.
-- The review record reached remote head `d08e8d9` after the lease-protected metadata update.
-
-### In flight
-
-The owner can merge after the review record reaches the PR branch and `review-gate` turns green.
-
-### Traps and gotchas
-
-- The effective head is `be07a42`. The later commits change only the metadata set.
-- The local broad suite gave no result. Treat that run as incomplete evidence, not as a pass.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Run the session end gate, then wait for the review-gate check.
