@@ -22,11 +22,16 @@ Session: PR-66, the ramps and the chamber tiers of the generator. Branch `feat/p
 - `dotnet test` locally: 1157 passed, 0 failed, with the filter `Category!=Smoke`. `det-lint` reports 0 findings in Core and 0 in Game. `ste-check` reports 0 findings over 34 files.
 - The simulation version is 12, and the bit-identity answer is `15904316a1b4ec07`. The sweep floors are 32 by 12 by 32, and the shaft route needs 4 rows under a chamber, so the sweep reads no shaft route.
 - Measurements over 1000 to 60000 floors: 52 percent of floors hold a tier, 2.5 percent hold a shaft against 0.045 percent on the base, zero one-block steps, and no generator error over 40000 floors. One floor costs 29 milliseconds against 21 on the base.
-- Remote head: `origin/feat/pr-66-ramps-and-tiers` at the commit of this entry.
+- Remote head: `origin/feat/pr-66-ramps-and-tiers` reached `97efa5c`, and the status showed no `[ahead N]`. This entry follows it as a metadata commit, so the effective head stays `97efa5c` (D-184).
+- Every check of PR #82 passes on `97efa5c`: Gitar, the three build legs, the three smoke legs, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, and night-gate. `evaluate` fails and `review-gate` shows grey, because no review record exists yet (D-251).
 
 ### In flight
 
-GitHub PR #82 holds the ramps, the tiers, the shaft pass, the seven decisions, the two questions, F-103, and this entry. The automated pass of gitar comes next, and then the cross-provider review. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
+GitHub PR #82 holds the ramps, the tiers, the shaft pass, the seven decisions, the two questions, F-103, and this entry. It waits for the owner merge.
+
+The automated pass of gitar is complete on the effective head `97efa5c`. The first review of `5b58a2e` approved with one finding: the `<remarks>` block of `DigShaftRoutes` closed a paragraph that no `<para>` opened. The finding has full merit, and `97efa5c` fixes it. A count of the tags over the file balances, because the missing open and the missing close cancel each other, so a check of the nesting inside each documentation block found the block. That check found no other block over Core, Tests, and Tools. The review of `97efa5c` approved with the verdict "No issues remain", and its one thread is resolved with the commit that fixed it. Findings with merit: one.
+
+The cross-provider review comes next. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
 
 ### Traps and gotchas
 
