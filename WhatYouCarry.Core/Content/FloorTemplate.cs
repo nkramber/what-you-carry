@@ -19,7 +19,7 @@ namespace WhatYouCarry.Core.Content;
 /// floor row, and the top row (D-352).
 /// </para>
 /// </remarks>
-public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long RoomCountMin, long RoomCountMax, long DifficultyBudget, string Band, int SizeX, int SizeY, int SizeZ, int GalleryWidth, int GalleryHeight, int DriftWidth, int DriftHeight, int ChamberHeightMin, int ChamberHeightMax)
+public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long RoomCountMin, long RoomCountMax, long DifficultyBudget, string Band, int SizeX, int SizeY, int SizeZ, int GalleryWidth, int GalleryHeight, int DriftWidth, int DriftHeight, int ChamberHeightMin, int ChamberHeightMax, IReadOnlyList<int> RampSlopeRuns)
 {
     /// <summary>The smallest size along X or Z that the dig plan can carve, in blocks.</summary>
     public const int MinSizeXZ = 24;
@@ -55,6 +55,7 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
         "driftHeight",
         "chamberHeightMin",
         "chamberHeightMax",
+        "rampSlopeRuns",
     ];
 
     /// <summary>The names that a floor template can carry.</summary>
@@ -107,6 +108,8 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
             throw ContentError.Make(path, "chamberHeightMin", "is above chamberHeightMax, and no chamber height fits then");
         }
 
+        IReadOnlyList<int> rampSlopeRuns = RampSlopes(path, members);
+
         return new FloorTemplate(
             ContentValidator.Value(path, members, "id", JsonMemberKind.Text),
             minDepth,
@@ -123,7 +126,39 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
             driftWidth,
             driftHeight,
             chamberHeightMin,
-            chamberHeightMax);
+            chamberHeightMax,
+            rampSlopeRuns);
+    }
+
+    /// <summary>
+    /// The ramp slope runs of the band, in file order (D-346). Each run is from the steepest to the shallowest
+    /// of <see cref="Ramp"/>, and no run appears twice.
+    /// </summary>
+    /// <exception cref="Logging.ContextException">The field holds no list of numbers, the list is empty, a run is outside its bounds, or a run repeats.</exception>
+    private static IReadOnlyList<int> RampSlopes(string path, IReadOnlyList<JsonMember> members)
+    {
+        string text = ContentValidator.Value(path, members, "rampSlopeRuns", JsonMemberKind.NumberList);
+        List<int> runs = [];
+        foreach (long item in ContentValidator.Numbers(path, "rampSlopeRuns", text))
+        {
+            int run = (int)item;
+            if (run < Ramp.SteepestRun || run > Ramp.ShallowestRun)
+            {
+                throw ContentError.Make(path, "rampSlopeRuns", $"holds the run {run}, and a ramp rises one block over {Ramp.SteepestRun} to {Ramp.ShallowestRun} cells (D-346, D-367)");
+            }
+
+            foreach (int earlier in runs)
+            {
+                if (earlier == run)
+                {
+                    throw ContentError.Make(path, "rampSlopeRuns", $"holds the run {run} twice, and a run that repeats weights its slope twice in the draw (D-390)");
+                }
+            }
+
+            runs.Add(run);
+        }
+
+        return runs;
     }
 
     /// <summary>One size field, inside its bounds (D-164, D-252).</summary>

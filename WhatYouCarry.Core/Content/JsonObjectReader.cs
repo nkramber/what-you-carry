@@ -93,19 +93,9 @@ public static class JsonObjectReader
                     break;
                 case JsonTokenType.StartArray:
                     // The run record header carries an empty loadout and an empty tree until Phase 3 has the
-                    // types (D-229). A list with an item comes from a later format, and it is an error here and
-                    // never a list that the reader steps over.
-                    if (!reader.Read())
-                    {
-                        throw ContentError.Make(path, name, "holds a list that the file ends inside");
-                    }
-
-                    if (reader.TokenType != JsonTokenType.EndArray)
-                    {
-                        throw ContentError.Make(path, name, "holds a list with an item, and no Phase 1 type reads one");
-                    }
-
-                    members.Add(new JsonMember(name, string.Empty, JsonMemberKind.EmptyList));
+                    // types (D-229). A list with items holds numbers alone, and the floor template reads one for
+                    // its ramp slopes (D-346). A list with another kind of item is an error here.
+                    members.Add(ReadList(path, name, ref reader));
                     break;
                 case JsonTokenType.Null:
                     members.Add(new JsonMember(name, string.Empty, JsonMemberKind.Null));
@@ -120,6 +110,44 @@ public static class JsonObjectReader
         catch (JsonException error)
         {
             throw ContentError.MakeForFile(path, $"the file is not valid JSON. {error.Message}");
+        }
+    }
+
+    /// <summary>
+    /// One list value, from the token after the open bracket. An empty list gives <see cref="JsonMemberKind.EmptyList"/>,
+    /// and a list of numbers gives <see cref="JsonMemberKind.NumberList"/> with the item texts, separated by commas.
+    /// </summary>
+    /// <exception cref="Logging.ContextException">The file ends inside the list, or an item is not a number.</exception>
+    private static JsonMember ReadList(string path, string name, ref Utf8JsonReader reader)
+    {
+        StringBuilder items = new();
+        int count = 0;
+        while (true)
+        {
+            if (!reader.Read())
+            {
+                throw ContentError.Make(path, name, "holds a list that the file ends inside");
+            }
+
+            if (reader.TokenType == JsonTokenType.EndArray)
+            {
+                return count == 0
+                    ? new JsonMember(name, string.Empty, JsonMemberKind.EmptyList)
+                    : new JsonMember(name, items.ToString(), JsonMemberKind.NumberList);
+            }
+
+            if (reader.TokenType != JsonTokenType.Number)
+            {
+                throw ContentError.Make(path, name, "holds a list with an item that is not a number, and a list of this format holds numbers alone");
+            }
+
+            if (count > 0)
+            {
+                items.Append(',');
+            }
+
+            items.Append(Encoding.UTF8.GetString(reader.ValueSpan));
+            count++;
         }
     }
 }
@@ -144,4 +172,7 @@ public enum JsonMemberKind
 
     /// <summary>A JSON null. The run record header writes one for the amulet (D-229).</summary>
     Null = 4,
+
+    /// <summary>A JSON list of numbers. The floor template reads one for its ramp slopes (D-346).</summary>
+    NumberList = 5,
 }

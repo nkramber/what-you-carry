@@ -22,6 +22,13 @@ namespace WhatYouCarry.Core.Procgen;
 /// chamber is reachable by construction, and the reachability search of PR-9 exit test 1 confirms it.
 /// </para>
 /// <para>
+/// A third rule holds for every unit but a ramp: no column of the unit takes a floor row one row over or one row
+/// under the floor of a walkable space in a neighboring column. Such a pair is a one-block step, and a tunnel
+/// changes height by a ramp or by a shaft alone (D-347). A ramp cell is no plain floor, so a step beside one is
+/// the ramp itself. <see cref="CanCarveWithoutStep"/> holds that rule, and the ramp dig uses
+/// <see cref="CanCarve"/> alone.
+/// </para>
+/// <para>
 /// A shaft is the one carve that removes a floor on purpose: a three by three hole in a chamber floor, ringed by
 /// chamber floor on every side, over air that an earlier unit dug. <see cref="CarveShaft"/> takes it apart from
 /// the rules, and the dig plan proves the ring before it calls.
@@ -104,6 +111,40 @@ public sealed class DigCanvas
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Answers whether the unit passes <see cref="CanCarve"/> and makes no one-block step with the floor of a
+    /// walkable space in a neighboring column (D-347). Every unit but a ramp takes this answer.
+    /// </summary>
+    public bool CanCarveWithoutStep(IReadOnlyList<DigColumn> unit)
+    {
+        if (!this.CanCarve(unit))
+        {
+            return false;
+        }
+
+        foreach (DigColumn column in unit)
+        {
+            Column[] neighbors = [new(column.X + 1, column.Z), new(column.X - 1, column.Z), new(column.X, column.Z + 1), new(column.X, column.Z - 1)];
+            foreach (Column neighbor in neighbors)
+            {
+                if (this.IsPlainFloor(neighbor, column.Floor + 1) || this.IsPlainFloor(neighbor, column.Floor - 1))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>Answers whether the cell of a column is a block of plain rock with air over it: the floor of a space that a body walks on. A ramp cell is no plain floor (D-345).</summary>
+    private bool IsPlainFloor(Column column, int row)
+    {
+        return !this.IsAir(column.X, row, column.Z)
+            && this.IsAir(column.X, row + 1, column.Z)
+            && !this.Grid.TryGetRamp(column.X, row, column.Z, out _);
     }
 
     /// <summary>Carves the air of every column of a unit that <see cref="CanCarve"/> accepted.</summary>

@@ -27,11 +27,11 @@ public sealed class ContentTests
     }
 
     private const string Floor = """
-        {"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8}
+        {"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4]}
         """;
 
     private const string ChamberKindText = """
-        {"id":"k","weight":10,"boxCountMin":1,"boxCountMax":3,"boxSizeMin":3,"boxSizeMax":6}
+        {"id":"k","weight":10,"boxCountMin":1,"boxCountMax":3,"boxSizeMin":3,"boxSizeMax":6,"tierChance":25}
         """;
 
     private const string StringTable = """
@@ -47,7 +47,7 @@ public sealed class ContentTests
     public void AbsentFieldNamesField()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8}""")
+            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4]}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -94,7 +94,7 @@ public sealed class ContentTests
     public void UnknownFieldFails()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"extra":1}""")
+            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4],"extra":1}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -292,7 +292,7 @@ public sealed class ContentTests
     public void AFieldOfTheWrongKindIsAnError()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":1,"minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8}""")
+            .Add("floors/a.json", """{"id":1,"minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4]}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -311,13 +311,21 @@ public sealed class ContentTests
         Assert.Equal(new JsonMember("amulet", string.Empty, JsonMemberKind.Null), members[1]);
     }
 
-    /// <summary>A list with an item, a nested object, and a list that the file ends inside are each an error that names the field (D-229).</summary>
+    /// <summary>A list of numbers reads as one member with the item texts, which the floor template splits into its ramp slope runs (D-346).</summary>
+    [Fact]
+    public void AListOfNumbersReads()
+    {
+        IReadOnlyList<JsonMember> members = JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes("{\"rampSlopeRuns\":[2,3,4]}"));
+        Assert.Equal(new JsonMember("rampSlopeRuns", "2,3,4", JsonMemberKind.NumberList), Assert.Single(members));
+    }
+
+    /// <summary>A list of another kind, a nested object, and a list that the file ends inside are each an error that names the field (D-229, D-346).</summary>
     [Theory]
-    [InlineData("{\"loadout\":[1]}", "with an item")]
-    [InlineData("{\"loadout\":[[]]}", "with an item")]
+    [InlineData("{\"loadout\":[[]]}", "not a number")]
+    [InlineData("{\"loadout\":[\"a\"]}", "not a number")]
     [InlineData("{\"loadout\":{}}", "no Phase 1 type uses")]
     [InlineData("{\"loadout\":[", "not valid JSON")]
-    public void AListWithAnItemIsAnError(string text, string reason)
+    public void AListOfAnotherKindIsAnError(string text, string reason)
     {
         ContextException error = Assert.Throws<ContextException>(() => JsonObjectReader.Read("header", Encoding.UTF8.GetBytes(text)));
         Assert.Contains("header", error.Message, StringComparison.Ordinal);

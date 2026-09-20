@@ -101,16 +101,52 @@ public sealed class ProcgenTests
     /// </summary>
     private static readonly Lazy<SweepReport> ReachabilitySweep = new(RunReachabilitySweep);
 
-    private sealed record SweepReport(IReadOnlyList<string> ChamberFailures, IReadOnlyList<string> DetailFailures, int Pillars, int Pools, int Collapses);
+    private sealed record SweepReport(
+        IReadOnlyList<string> ChamberFailures,
+        IReadOnlyList<string> DetailFailures,
+        IReadOnlyList<string> RampFailures,
+        IReadOnlyList<string> TierFailures,
+        int Pillars,
+        int Pools,
+        int Collapses,
+        IReadOnlyDictionary<int, int> RampRuns,
+        IReadOnlyDictionary<TierShape, int> TierShapes,
+        IReadOnlyDictionary<string, TierTally> TiersByKind,
+        int Floors,
+        int FloorsWithATier,
+        IReadOnlyDictionary<int, int> RampWidths,
+        int Shafts,
+        int FloorsWithAShaft,
+        IReadOnlyList<string> ShaftFailures);
+
+    /// <summary>The chambers of one kind over a sweep: how many the sweep dug, how many drew a tier, and how many took one (D-350, D-391).</summary>
+    private sealed class TierTally
+    {
+        public int Chambers { get; set; }
+
+        public int Drawn { get; set; }
+
+        public int Built { get; set; }
+    }
 
     private static SweepReport RunReachabilitySweep()
     {
         int seeds = SweepSeeds(ReachabilitySeedsPerPr, ReachabilitySeedsPerNight);
         List<string> chamberFailures = [];
         List<string> detailFailures = [];
+        List<string> rampFailures = [];
+        List<string> tierFailures = [];
         int pillars = 0;
         int pools = 0;
         int collapses = 0;
+        Dictionary<int, int> rampRuns = [];
+        Dictionary<TierShape, int> tierShapes = [];
+        Dictionary<string, TierTally> tiersByKind = [];
+        Dictionary<int, int> rampWidths = [];
+        List<string> shaftFailures = [];
+        int shaftCount = 0;
+        int floorsWithAShaft = 0;
+        int floorsWithATier = 0;
         for (int seed = 1; seed <= seeds; seed++)
         {
             FloorPlan plan = Plan(seed);
@@ -138,6 +174,13 @@ public sealed class ProcgenTests
                         continue;
                     }
 
+                    // A tier and its ramp stand on the chamber floor, so those columns hold no chamber floor cell.
+                    // The tier check below reads the floor of the tier itself (D-348, D-349).
+                    if (chamber.LowestAirRow(column) != chamber.FloorRow + 1)
+                    {
+                        continue;
+                    }
+
                     floorCells++;
                     if (!Reachability.IsFloor(plan.Grid, cell))
                     {
@@ -155,8 +198,10 @@ public sealed class ProcgenTests
                 }
             }
 
+            floorsWithAShaft += plan.Shafts.Count > 0 ? 1 : 0;
             foreach (Shaft shaft in plan.Shafts)
             {
+                shaftCount++;
                 Column landing = shaft.Center;
                 int floorRow = shaft.LandingAirRow;
                 while (!plan.Grid.IsSolid(landing.X, floorRow, landing.Z))
@@ -168,8 +213,21 @@ public sealed class ProcgenTests
                 {
                     chamberFailures.Add($"{context}: the shaft at {shaft.Center} lands on an unreachable floor at row {floorRow}.");
                 }
+
+                // F-101: a pillar in a column of the hole fills the landing, and no path leads to the top of it.
+                foreach (Cell pillar in plan.Detail.Pillars)
+                {
+                    int alongX = pillar.X - shaft.Center.X;
+                    int alongZ = pillar.Z - shaft.Center.Z;
+                    if (alongX >= -DigPlan.ShaftRadius && alongX <= DigPlan.ShaftRadius && alongZ >= -DigPlan.ShaftRadius && alongZ <= DigPlan.ShaftRadius)
+                    {
+                        shaftFailures.Add($"{context}: the pillar at {pillar} stands in the hole of the shaft at {shaft.Center}.");
+                    }
+                }
             }
 
+            CheckRamps(plan, context, reach, rampFailures, rampRuns);
+            floorsWithATier += CheckTiers(plan, context, reach, tierFailures, tierShapes, tiersByKind, rampWidths) ? 1 : 0;
             pillars += plan.Detail.Pillars.Count;
             pools += plan.Detail.Pools.Count;
             collapses += plan.Detail.Collapses.Count;
@@ -199,7 +257,143 @@ public sealed class ProcgenTests
             }
         }
 
-        return new SweepReport(chamberFailures, detailFailures, pillars, pools, collapses);
+        return new SweepReport(chamberFailures, detailFailures, rampFailures, tierFailures, pillars, pools, collapses, rampRuns, tierShapes, tiersByKind, seeds, floorsWithATier, rampWidths, shaftCount, floorsWithAShaft, shaftFailures);
+    }
+
+    /// <summary>
+    /// Reads every ramp of one floor against the slopes of its template (PR-66 exit test 3). Each ramp cell holds a
+    /// ramp block of the run of the ramp, the places rise from the low end to the high end, and the grid holds no
+    /// ramp block outside a ramp of the plan.
+    /// </summary>
+    private static void CheckRamps(FloorPlan plan, string context, Reachability reach, List<string> failures, Dictionary<int, int> runs)
+    {
+        int cells = 0;
+        foreach (DugRamp ramp in plan.Ramps)
+        {
+            cells += ramp.Cells.Count;
+            runs[ramp.Run] = runs.TryGetValue(ramp.Run, out int seen) ? seen + 1 : 1;
+            if (!plan.Template.RampSlopeRuns.Contains(ramp.Run))
+            {
+                failures.Add($"{context}: the ramp at {ramp.LowEnd} has the run {ramp.Run}, and the template '{plan.Template.Id}' lists {string.Join(", ", plan.Template.RampSlopeRuns)}.");
+                continue;
+            }
+
+            if (ramp.Cells.Count % (ramp.Run * ramp.Rise) != 0)
+            {
+                failures.Add($"{context}: the ramp at {ramp.LowEnd} holds {ramp.Cells.Count} cells, and a ramp of the run {ramp.Run} and the rise {ramp.Rise} holds a multiple of {ramp.Run * ramp.Rise}.");
+            }
+
+            foreach (Cell cell in ramp.Cells)
+            {
+                if (!plan.Grid.TryGetRamp(cell.X, cell.Y, cell.Z, out Ramp block))
+                {
+                    failures.Add($"{context}: the ramp cell {cell} holds the block {(int)plan.Grid.Get(cell.X, cell.Y, cell.Z)}, which is no ramp.");
+                    continue;
+                }
+
+                if (block.Run != ramp.Run)
+                {
+                    failures.Add($"{context}: the ramp cell {cell} has the run {block.Run}, and its ramp has the run {ramp.Run}.");
+                }
+
+                if (!Reachability.IsFloor(plan.Grid, cell))
+                {
+                    failures.Add($"{context}: the ramp cell {cell} has no two open cells over it.");
+                }
+                else if (!reach.IsReachable(cell))
+                {
+                    failures.Add($"{context}: the ramp cell {cell} is not reachable from the spawn.");
+                }
+            }
+
+            if (Reachability.IsFloor(plan.Grid, ramp.LowEnd) && reach.IsReachable(ramp.LowEnd) && !reach.IsReachable(ramp.HighEnd))
+            {
+                failures.Add($"{context}: the ramp from {ramp.LowEnd} reaches the spawn, and its high end {ramp.HighEnd} does not.");
+            }
+        }
+
+        int blocks = 0;
+        for (int y = 0; y < plan.Grid.SizeY; y++)
+        {
+            for (int z = 0; z < plan.Grid.SizeZ; z++)
+            {
+                for (int x = 0; x < plan.Grid.SizeX; x++)
+                {
+                    blocks += Ramp.IsRamp(plan.Grid.Get(x, y, z)) ? 1 : 0;
+                }
+            }
+        }
+
+        if (blocks != cells)
+        {
+            failures.Add($"{context}: the grid holds {blocks} ramp blocks, and the plan holds {cells} ramp cells.");
+        }
+    }
+
+    /// <summary>
+    /// Reads every tier of one floor (PR-66 exit tests 4 and 5): its floor stands two blocks over the chamber floor,
+    /// its ramp joins the two, every tier cell is a reachable floor cell, and the tally holds the draw of each kind.
+    /// Gives true when the floor holds one tier or more (D-392).
+    /// </summary>
+    private static bool CheckTiers(FloorPlan plan, string context, Reachability reach, List<string> failures, Dictionary<TierShape, int> shapes, Dictionary<string, TierTally> byKind, Dictionary<int, int> widths)
+    {
+        int built = 0;
+        foreach (Chamber chamber in plan.Chambers)
+        {
+            if (!byKind.TryGetValue(chamber.Kind.Id, out TierTally? tally))
+            {
+                tally = new TierTally();
+                byKind[chamber.Kind.Id] = tally;
+            }
+
+            tally.Chambers++;
+            tally.Drawn += chamber.TierDrawn ? 1 : 0;
+            if (chamber.TierDrawn && chamber.Kind.TierChance == 0)
+            {
+                failures.Add($"{context}: the chamber {chamber.Index} of kind '{chamber.Kind.Id}' drew a tier, and the kind has the tier chance 0.");
+            }
+
+            ChamberTier? tier = chamber.Tier;
+            if (tier is null)
+            {
+                continue;
+            }
+
+            tally.Built++;
+            built++;
+            int width = tier.Ramp.Cells.Count / (tier.Ramp.Run * tier.Ramp.Rise);
+            widths[width] = widths.TryGetValue(width, out int seenWidth) ? seenWidth + 1 : 1;
+            if (chamber.Kind.TierChance == 0)
+            {
+                failures.Add($"{context}: the chamber {chamber.Index} of kind '{chamber.Kind.Id}' holds a tier, and the kind has the tier chance 0.");
+            }
+
+            shapes[tier.Shape] = shapes.TryGetValue(tier.Shape, out int seen) ? seen + 1 : 1;
+            if (tier.FloorRow != chamber.FloorRow + ChamberTier.Rise)
+            {
+                failures.Add($"{context}: the tier of chamber {chamber.Index} stands at row {tier.FloorRow}, and its chamber floor is row {chamber.FloorRow}.");
+            }
+
+            if (tier.Ramp.LowEnd.Y != chamber.FloorRow || tier.Ramp.HighEnd.Y != tier.FloorRow || tier.Ramp.Rise != ChamberTier.Rise)
+            {
+                failures.Add($"{context}: the ramp of the tier of chamber {chamber.Index} runs from {tier.Ramp.LowEnd} to {tier.Ramp.HighEnd} with the rise {tier.Ramp.Rise}.");
+            }
+
+            foreach (Column column in tier.Floor)
+            {
+                Cell cell = new(column.X, tier.FloorRow, column.Z);
+                if (!Reachability.IsFloor(plan.Grid, cell))
+                {
+                    failures.Add($"{context}: the tier cell {cell} of chamber {chamber.Index} is no floor cell.");
+                }
+                else if (!reach.IsReachable(cell))
+                {
+                    failures.Add($"{context}: the tier cell {cell} of chamber {chamber.Index} is not reachable from the spawn.");
+                }
+            }
+        }
+
+        return built > 0;
     }
 
     /// <summary>
@@ -229,30 +423,219 @@ public sealed class ProcgenTests
     }
 
     /// <summary>
-    /// PR-68 exit test 1 (F-101). The night of 2026-09-15 found seed 79146, floor 7 with a pillar in the column of its
-    /// shaft, so the shaft landed on the top of that pillar, five rows over the chamber floor, and no path led there.
-    /// Every shaft of that floor lands on a floor cell that the spawn reaches.
+    /// PR-66 exit test 3. Over the sweep, every ramp has a slope that its floor template lists, every cell of it
+    /// holds a ramp block of that run with two open cells over it, and the grid holds no ramp block outside a ramp
+    /// of the plan. Each of the three slopes of D-346 appears.
     /// </summary>
     [Fact]
-    public void ShaftOfSeed79146LandsOnAReachableFloor()
+    public void RampsUseTheTemplateSlopes()
     {
-        FloorPlan plan = Plan(79146);
-
-        Assert.Equal(7, plan.Floor);
-        Assert.NotEmpty(plan.Shafts);
-        Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
-        foreach (Shaft shaft in plan.Shafts)
+        SweepReport report = ReachabilitySweep.Value;
+        Assert.True(report.RampFailures.Count == 0, string.Join("\n", report.RampFailures.Take(10)));
+        foreach (int run in new[] { Ramp.SteepestRun, 3, Ramp.ShallowestRun })
         {
-            int floorRow = shaft.LandingAirRow;
-            while (!plan.Grid.IsSolid(shaft.Center.X, floorRow, shaft.Center.Z))
+            Assert.True(report.RampRuns.TryGetValue(run, out int count) && count > 0, $"The sweep dug no ramp of the run {run}. It dug {Tally(report.RampRuns)}.");
+        }
+    }
+
+    /// <summary>
+    /// PR-66 exit test 4. Over the sweep, the share of the chambers of each kind that draw a tier lands near the
+    /// tier chance of that kind, and no chamber of a kind of chance 0 draws one (D-350). A chamber that draws a
+    /// tier and fits no shape holds none, so the share of the chambers that take one is lower (D-391).
+    /// </summary>
+    [Fact]
+    public void TierChanceMatchesTheKind()
+    {
+        SweepReport report = ReachabilitySweep.Value;
+        Assert.True(report.TierFailures.Count == 0, string.Join("\n", report.TierFailures.Take(10)));
+        foreach (ChamberKind kind in TestWorld.Content.Chambers)
+        {
+            if (!report.TiersByKind.TryGetValue(kind.Id, out TierTally? tally) || tally.Chambers < TierRateChambers)
             {
-                floorRow--;
+                continue;
             }
 
-            Cell landing = new(shaft.Center.X, floorRow, shaft.Center.Z);
-            Assert.True(Reachability.IsFloor(plan.Grid, landing), $"The shaft at {shaft.Center} lands at row {floorRow}, and that cell is no floor cell.");
-            Assert.True(reach.IsReachable(landing), $"The shaft at {shaft.Center} lands at row {floorRow}, and the spawn does not reach it.");
+            int drawn = 100 * tally.Drawn / tally.Chambers;
+            int low = kind.TierChance - TierRateTolerance;
+            int high = kind.TierChance + TierRateTolerance;
+            Assert.True(drawn >= low && drawn <= high, $"The kind '{kind.Id}' has the tier chance {kind.TierChance}, and {tally.Drawn} of {tally.Chambers} chambers drew a tier, which is {drawn} percent.");
+            if (kind.TierChance > 0)
+            {
+                Assert.True(tally.Built > 0, $"The kind '{kind.Id}' has the tier chance {kind.TierChance}, and none of its {tally.Chambers} chambers took a tier.");
+            }
         }
+    }
+
+    /// <summary>
+    /// PR-66 exit test 5. Over the sweep, every tier floor stands two blocks over its chamber floor, a ramp joins
+    /// the two, and every tier cell is a floor cell that the spawn reaches (D-348, D-349). Each of the four shapes
+    /// of D-388 appears.
+    /// </summary>
+    [Fact]
+    public void TierIsTwoBlocksUp()
+    {
+        SweepReport report = ReachabilitySweep.Value;
+        Assert.True(report.TierFailures.Count == 0, string.Join("\n", report.TierFailures.Take(10)));
+        foreach (TierShape shape in new[] { TierShape.Rectangle, TierShape.CutLine, TierShape.RaisedBox, TierShape.Island })
+        {
+            Assert.True(report.TierShapes.TryGetValue(shape, out int count) && count > 0, $"The sweep built no tier of the shape {shape}. It built {Tally(report.TierShapes)}.");
+        }
+    }
+
+    /// <summary>
+    /// PR-66 exit test 6 (D-392, D-393). Over the sweep, a floor holds a tier far more often than the tier chances
+    /// alone give, because a floor with no tier from the draws takes one in the first chamber of a tiered kind that
+    /// fits. Every tier ramp is 3 or 2 cells wide, and the widest that fits comes first.
+    /// </summary>
+    /// <remarks>
+    /// The measurement of 2026-09-19 over 1000 floors gives 524 tiers, 51 percent of floors with one, and the widths
+    /// 329 of 3 cells and 195 of 2. The draws alone gave 184 tiers and 18 percent of floors. The floor of the test
+    /// leaves room under the measured rate, because the rate reads the shapes of every chamber of every band.
+    /// </remarks>
+    [Fact]
+    public void EveryFloorTakesATierWhenOneFits()
+    {
+        SweepReport report = ReachabilitySweep.Value;
+        Assert.True(report.TierFailures.Count == 0, string.Join("\n", report.TierFailures.Take(10)));
+        int share = 100 * report.FloorsWithATier / report.Floors;
+        Assert.True(share >= FloorsWithATierFloor, $"{report.FloorsWithATier} of {report.Floors} floors hold a tier, which is {share} percent, and the test reads {FloorsWithATierFloor} percent.");
+        foreach (KeyValuePair<int, int> width in report.RampWidths)
+        {
+            Assert.True(width.Key <= TierPlan.WidestRamp && width.Key >= TierPlan.NarrowestRamp, $"The sweep built {width.Value} tier ramps of {width.Key} cells across, and a tier ramp is {TierPlan.NarrowestRamp} to {TierPlan.WidestRamp} cells (D-393).");
+        }
+
+        Assert.True(report.RampWidths.TryGetValue(TierPlan.WidestRamp, out int widest) && widest > 0, $"The sweep built no tier ramp of {TierPlan.WidestRamp} cells across. It built {Tally(report.RampWidths)}.");
+    }
+
+    /// <summary>
+    /// PR-66 exit test 7 (F-103, D-394). Over the sweep, the share of floors with a shaft holds over the floor that
+    /// D-394 sets. The dig routes a drift under a chamber, so a shaft of that chamber has a landing.
+    /// </summary>
+    /// <remarks>
+    /// The measurement of 2026-09-20 over 3000 floors gives 76 shafts and 2.5 percent of floors with one. The base
+    /// `27db615` gives 9 shafts over 20000 floors, which is 0.045 percent. The floor of the test leaves room under
+    /// the measured share.
+    /// </remarks>
+    [Fact]
+    public void EveryFloorTakesAShaftWhenOneFits()
+    {
+        SweepReport report = ReachabilitySweep.Value;
+        Assert.True(report.ShaftFailures.Count == 0, string.Join("\n", report.ShaftFailures.Take(10)));
+        int share = 100 * report.FloorsWithAShaft / report.Floors;
+        Assert.True(share >= FloorsWithAShaftFloor, $"{report.FloorsWithAShaft} of {report.Floors} floors hold a shaft, which is {share} percent, and the test reads {FloorsWithAShaftFloor} percent.");
+    }
+
+    /// <summary>The lowest share of floors with a shaft that the sweep accepts, in percent (D-394).</summary>
+    private const int FloorsWithAShaftFloor = 2;
+
+    /// <summary>The lowest share of floors with a tier that the sweep accepts, in percent (D-392).</summary>
+    private const int FloorsWithATierFloor = 40;
+
+    /// <summary>The count of chambers of one kind that a rate test needs before it reads the rate.</summary>
+    private const int TierRateChambers = 200;
+
+    /// <summary>The tolerance of the tier rate of one kind, in points of percent.</summary>
+    private const int TierRateTolerance = 6;
+
+    /// <summary>One tally as text, for the message of a failure.</summary>
+    private static string Tally<TKey>(IReadOnlyDictionary<TKey, int> counts)
+    {
+        List<string> parts = [];
+        foreach (KeyValuePair<TKey, int> pair in counts.OrderBy(pair => pair.Key?.ToString(), StringComparer.Ordinal))
+        {
+            parts.Add($"{pair.Key}: {pair.Value}");
+        }
+
+        return parts.Count == 0 ? "none" : string.Join(", ", parts);
+    }
+
+    /// <summary>
+    /// PR-66 exit test 2 (D-347). Over the seeds of a property sweep, no dug floor holds two walkable cells in
+    /// neighboring columns one row apart that are both plain blocks. A tunnel changes height by a ramp or by a
+    /// shaft alone, and a jump clears one block for rubble and ledges alone, so the check reads the dug floor
+    /// before the detail pass (D-165, D-258).
+    /// </summary>
+    [Fact]
+    public void TunnelsHaveNoStep()
+    {
+        List<string> failures = [];
+        for (int seed = 1; seed <= PropertySeeds && failures.Count < 10; seed++)
+        {
+            int floor = FloorOf(seed);
+            VoxelGrid grid = DugGrid(seed, floor);
+            for (int y = 1; y < grid.SizeY - 2; y++)
+            {
+                for (int z = 1; z < grid.SizeZ - 1; z++)
+                {
+                    for (int x = 1; x < grid.SizeX - 1; x++)
+                    {
+                        Cell low = new(x, y, z);
+                        if (!IsPlainFloor(grid, low))
+                        {
+                            continue;
+                        }
+
+                        Cell[] neighbors = [new(x + 1, y + 1, z), new(x - 1, y + 1, z), new(x, y + 1, z + 1), new(x, y + 1, z - 1)];
+                        foreach (Cell high in neighbors)
+                        {
+                            if (IsPlainFloor(grid, high))
+                            {
+                                failures.Add($"Seed {seed}, floor {floor}: the cell {low} and the cell {high} are plain floor cells one row apart.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Assert.True(failures.Count == 0, string.Join("\n", failures.Take(10)));
+    }
+
+    /// <summary>Answers whether a body stands on the cell and the cell holds no ramp: a one-block step up to it is a step and not a walk (D-345, D-347).</summary>
+    private static bool IsPlainFloor(VoxelGrid grid, Cell cell)
+    {
+        return Reachability.IsFloor(grid, cell) && !grid.TryGetRamp(cell.X, cell.Y, cell.Z, out _);
+    }
+
+    /// <summary>The grid of one floor after the dig and the tiers, and before the shafts and the detail pass.</summary>
+    private static VoxelGrid DugGrid(int seed, int floor)
+    {
+        FloorTemplate template = FloorGenerator.TemplateFor(floor, TestWorld.Content);
+        Rng rng = Rng.ForStream((ulong)seed, RngStream.Procgen, floor);
+        for (int dig = 0; dig < FloorGenerator.MaxDigs; dig++)
+        {
+            DigCanvas canvas = new(new VoxelGrid(template.SizeX, template.SizeY, template.SizeZ));
+            DigPlan plan = new(rng, canvas, template, ChamberBudget.Draw(rng, template, TestWorld.Content.Chambers));
+            plan.DigFirstChamber();
+            if (plan.TryDigUntilComplete(out _))
+            {
+                plan.BuildTiers();
+                return canvas.Grid;
+            }
+        }
+
+        throw new ContextException($"No dig of seed {seed}, floor {floor} dug every chamber.");
+    }
+
+    /// <summary>
+    /// PR-68 exit test 1 (F-101). No pillar stands in a column of the hole of a shaft, over every shaft of the
+    /// sweep. A pillar there fills the landing of the shaft, so a body that drops through it stands on the top of
+    /// the pillar and no path leads back (D-253).
+    /// </summary>
+    /// <remarks>
+    /// The night of 2026-09-15 found the case at seed 79146, floor 7. The dig of PR-66 changed every floor, and
+    /// that seed digs no shaft now, so the test reads the rule over the shafts of the sweep in place of that one
+    /// floor. The measurement of 2026-09-20 finds about one shaft in 3300 floors, so the sweep of a PR reads few
+    /// and the sweep of a night reads about thirty (D-116).
+    /// </remarks>
+    [Fact]
+    public void NoPillarStandsInTheHoleOfAShaft()
+    {
+        Assert.Empty(Plan(79146).Shafts);
+
+        SweepReport report = ReachabilitySweep.Value;
+        Assert.True(report.ShaftFailures.Count == 0, string.Join("\n", report.ShaftFailures.Take(10)));
+        Assert.True(report.ChamberFailures.Count == 0, string.Join("\n", report.ChamberFailures.Take(10)));
     }
 
     /// <summary>PR-9 exit test 2. Over one thousand seeds, no two chambers share a block, and every chamber block is air.</summary>
@@ -479,7 +862,7 @@ public sealed class ProcgenTests
             foreach (FloorTemplate template in TestWorld.Content.Floors)
             {
                 FloorPlan plan = FloorGenerator.Generate((ulong)seed, (int)template.MinDepth, TestWorld.Content);
-                int[] counts = new int[8];
+                int[] counts = new int[Ramp.LastId + 1];
                 for (int y = 0; y < plan.Grid.SizeY; y++)
                 {
                     for (int z = 0; z < plan.Grid.SizeZ; z++)
@@ -714,8 +1097,8 @@ public sealed class ProcgenTests
             }
         }
 
-        FloorTemplate tight = new("tight", 1, 1, 1, 1, 10, "test", 24, 12, 24, 7, 5, 5, 4, 5, 8);
-        ChamberKind heavy = new("heavy", 100, 1, 1, 3, 3);
+        FloorTemplate tight = new("tight", 1, 1, 1, 1, 10, "test", 24, 12, 24, 7, 5, 5, 4, 5, 8, [2, 3, 4]);
+        ChamberKind heavy = new("heavy", 100, 1, 1, 3, 3, 0);
         ContextException error = Assert.Throws<ContextException>(() => ChamberBudget.Draw(Rng.ForStream(1UL, RngStream.Procgen, 1), tight, [heavy]));
         Assert.Contains("floorTemplate=tight", error.Message, StringComparison.Ordinal);
         Assert.Contains("windowBottom=9", error.Message, StringComparison.Ordinal);

@@ -5,6 +5,7 @@ using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Core.Bots;
 
@@ -15,7 +16,8 @@ namespace WhatYouCarry.Core.Bots;
 /// </summary>
 /// <remarks>
 /// The walk goes waypoint by waypoint along the path of <see cref="Reachability"/>. A step up is a jump in
-/// place, then a move once the feet clear the step (D-165). A drop is a walk off the edge. The look stays at
+/// place, then a move once the feet clear the step (D-165). The rule reads the height of the next top against
+/// the feet, because a body on a ramp stands inside its own row (D-345). A drop is a walk off the edge. The look stays at
 /// yaw zero, so forward is minus Z and right is plus X (D-234), and the movement bytes point at the next cell.
 /// The policy draws nothing, so it holds no stream.
 /// </remarks>
@@ -85,14 +87,13 @@ public sealed class GreedyDescender : IBotPolicy
         }
 
         Cell next = this.path[this.waypoint];
-        bool stepUp = next.Y == this.path[this.waypoint - 1].Y + 1;
-        Cell here = FloorCellOf(loop.Body);
-        if (stepUp && loop.Body.IsOnGround() && here.Y < next.Y)
+        bool stepUp = NeedsAJump(loop, next);
+        if (stepUp && loop.Body.IsOnGround())
         {
             return new Intent(loop.Tick, 0, 0, 0, 0, Button.Jump);
         }
 
-        if (stepUp && !loop.Body.IsOnGround() && loop.Body.Position.Y < next.Y + 1.0f)
+        if (stepUp && !loop.Body.IsOnGround())
         {
             return new Intent(loop.Tick, 0, 0, 0, 0, 0);
         }
@@ -101,6 +102,28 @@ public sealed class GreedyDescender : IBotPolicy
         float deltaX = next.X + 0.5f - loop.Body.Position.X;
         float deltaZ = next.Z + 0.5f - loop.Body.Position.Z;
         return new Intent(loop.Tick, 0, 0, Toward(deltaX), (sbyte)(-Toward(deltaZ)), 0);
+    }
+
+    /// <summary>
+    /// Answers whether the body needs a jump to reach the floor of the next cell (D-165). The rule reads the
+    /// height of that floor against the feet, and not the row of the cell, because a body on a ramp stands
+    /// inside its own row and the floor of a ramp cell lies between its row and the next (D-345).
+    /// </summary>
+    /// <remarks>
+    /// The floor of a ramp cell is its slope where the body enters it, so a walk along a ramp needs no jump: the
+    /// slope meets the floor of the cell before it at their shared face (D-362). A walk onto the side of a ramp
+    /// meets the slope higher up, and that rise needs a jump like any other.
+    /// </remarks>
+    private static bool NeedsAJump(SimulationLoop loop, Cell next)
+    {
+        float floor = next.Y + 1.0f;
+        if (loop.Grid.TryGetRamp(next.X, next.Y, next.Z, out Ramp slope))
+        {
+            float along = DetMath.Clamp(slope.Along(next.X, next.Z, loop.Body.Position.X, loop.Body.Position.Z), 0.0f, 1.0f);
+            floor = slope.SlopeAt(next.Y, along);
+        }
+
+        return floor - loop.Body.Position.Y > Arrival;
     }
 
     /// <summary>Answers whether the body stands centered on the cell.</summary>

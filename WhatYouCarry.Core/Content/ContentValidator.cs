@@ -90,6 +90,59 @@ public static class ContentValidator
         throw ContentError.Make(path, name, "is absent, and this type requires it");
     }
 
+    /// <summary>
+    /// The whole numbers of a list value, which the reader gives as the item texts with a comma between them. The
+    /// scan reads the text letter by letter, because Core holds no string member that splits one (G-21).
+    /// </summary>
+    /// <exception cref="ContextException">The text holds a letter that is no digit, no minus sign, and no comma, or a number of more than four digits.</exception>
+    public static IReadOnlyList<long> Numbers(string path, string name, string text)
+    {
+        List<long> numbers = [];
+        long value = 0;
+        bool digits = false;
+        bool negative = false;
+        for (int index = 0; index <= text.Length; index++)
+        {
+            char letter = index < text.Length ? text[index] : ',';
+            if (letter == ',')
+            {
+                if (!digits)
+                {
+                    throw ContentError.Make(path, name, "holds a list item with no digit");
+                }
+
+                numbers.Add(negative ? -value : value);
+                value = 0;
+                digits = false;
+                negative = false;
+                continue;
+            }
+
+            if (letter == '-' && !digits && !negative)
+            {
+                negative = true;
+                continue;
+            }
+
+            if (letter < '0' || letter > '9')
+            {
+                throw ContentError.Make(path, name, $"holds the letter '{letter}' in a list of whole numbers");
+            }
+
+            value = (value * 10) + (letter - '0');
+            digits = true;
+            if (value > LargestListNumber)
+            {
+                throw ContentError.Make(path, name, $"holds a list item over {LargestListNumber}, and no field of a list takes one");
+            }
+        }
+
+        return numbers;
+    }
+
+    /// <summary>The largest whole number that a list value takes. No field of a list needs a larger one.</summary>
+    public const long LargestListNumber = 9999;
+
     /// <summary>The name of one kind in a message. The switch is explicit, so no reflection reads the enum (G-2).</summary>
     private static string KindName(JsonMemberKind kind)
     {
@@ -100,6 +153,7 @@ public static class ContentValidator
             case JsonMemberKind.Truth: return "true or false";
             case JsonMemberKind.EmptyList: return "empty list";
             case JsonMemberKind.Null: return "null";
+            case JsonMemberKind.NumberList: return "list of numbers";
             default: return "unknown";
         }
     }

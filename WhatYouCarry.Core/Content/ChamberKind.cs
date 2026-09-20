@@ -13,7 +13,12 @@ namespace WhatYouCarry.Core.Content;
 /// <see cref="BoxSizeMin"/> to <see cref="BoxSizeMax"/>. A box side is at least three, so a chamber is never
 /// narrower than a tunnel (D-166). PR-16 maps the weight to enemy spawns (D-167).
 /// </remarks>
-public sealed record ChamberKind(string Id, long Weight, int BoxCountMin, int BoxCountMax, int BoxSizeMin, int BoxSizeMax)
+/// <remarks>
+/// The tier chance is the chance in percent that a chamber of the kind holds a tier: a raised floor 2 blocks
+/// over the chamber floor, with a ramp up to it (D-348, D-349, D-350). A kind of chance zero never holds one.
+/// A chamber that cannot fit a tier and its ramp holds none, whatever the draw gives (D-391).
+/// </remarks>
+public sealed record ChamberKind(string Id, long Weight, int BoxCountMin, int BoxCountMax, int BoxSizeMin, int BoxSizeMax, int TierChance)
 {
     /// <summary>The smallest box side, in blocks: the tunnel cross-section of D-166.</summary>
     public const int SmallestBoxSide = 3;
@@ -33,6 +38,7 @@ public sealed record ChamberKind(string Id, long Weight, int BoxCountMin, int Bo
         "boxCountMax",
         "boxSizeMin",
         "boxSizeMax",
+        "tierChance",
     ];
 
     /// <summary>The names that a chamber kind can carry.</summary>
@@ -70,7 +76,8 @@ public sealed record ChamberKind(string Id, long Weight, int BoxCountMin, int Bo
             countMin,
             countMax,
             sizeMin,
-            sizeMax);
+            sizeMax,
+            Bounded(path, members, "tierChance", 0, 100));
     }
 
     /// <summary>One whole-number field inside an inclusive range.</summary>

@@ -2,6 +2,58 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 190: 2026-09-20, Claude Code
+
+Author: Claude Code
+Session: PR-66, the ramps and the chamber tiers of the generator. Branch `feat/pr-66-ramps-and-tiers`.
+
+### What this session did, and why
+
+- Made the transitional prompt of the merge an automatic rule. The message `Merged PR #N` of the owner starts it, and the owner asks for no prompt. The trigger and the block sit in `references/merge-prompt.md`, and `SKILL.md` takes two short lines. The block names the merge commit, the next PR, each open question, and each owner answer that the roadmap names and no OQ-# holds. `RepositoryShapeTests.SessionSkillTriggersTheTransitionalPrompt` reads both halves.
+- Asked the owner the shape of a tier before any generator code, as D-350 and the roadmap require. D-388 to D-391 hold those four answers. D-392 and D-393 followed, because the measured tier rate fell far under the chances of D-350.
+- Dug true ramps in place of the one-block steps of the old code, and added the third carve rule of `DigCanvas`: no unit takes a floor row one row over or under the floor of a walkable space beside it (D-347).
+- Built the tiers after the whole dig, with the four shapes, the drawn share, the ramp of a slope that fits, and the shrink of D-388 to D-391.
+- Raised F-103, the shafts of a floor. The owner answered D-394, and a pass now digs a drift under a chamber so a shaft of that chamber has a landing.
+- Repaired every defect that the full suite and the wide sweeps found. The traps below name each one.
+
+### State of the build
+
+- Base and merge base: `27db615`, the merge of PR #81.
+- `dotnet test` locally: 1157 passed, 0 failed, with the filter `Category!=Smoke`. `det-lint` reports 0 findings in Core and 0 in Game. `ste-check` reports 0 findings over 34 files.
+- The simulation version is 12, and the bit-identity answer is `15904316a1b4ec07`. The sweep floors are 32 by 12 by 32, and the shaft route needs 4 rows under a chamber, so the sweep reads no shaft route.
+- Measurements over 1000 to 60000 floors: 52 percent of floors hold a tier, 2.5 percent hold a shaft against 0.045 percent on the base, zero one-block steps, and no generator error over 40000 floors. One floor costs 29 milliseconds against 21 on the base.
+- Remote head: `origin/feat/pr-66-ramps-and-tiers` reached `97efa5c`, and the status showed no `[ahead N]`. This entry follows it as a metadata commit, so the effective head stays `97efa5c` (D-184).
+- Every check of PR #82 passes on `97efa5c`: Gitar, the three build legs, the three smoke legs, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, and night-gate. `evaluate` fails and `review-gate` shows grey, because no review record exists yet (D-251).
+
+### In flight
+
+GitHub PR #82 holds the ramps, the tiers, the shaft pass, the seven decisions, the two questions, F-103, and this entry. It waits for the owner merge.
+
+The automated pass of gitar is complete on the effective head `97efa5c`. The first review of `5b58a2e` approved with one finding: the `<remarks>` block of `DigShaftRoutes` closed a paragraph that no `<para>` opened. The finding has full merit, and `97efa5c` fixes it. A count of the tags over the file balances, because the missing open and the missing close cancel each other, so a check of the nesting inside each documentation block found the block. That check found no other block over Core, Tests, and Tools. The review of `97efa5c` approved with the verdict "No issues remain", and its one thread is resolved with the commit that fixed it. Findings with merit: one.
+
+The cross-provider review comes next. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
+
+### Traps and gotchas
+
+- A tier built mid-dig walls the walkers in. The tier of the first chamber barred the gallery walker, and 5 percent of floors then ran the whole job budget. `BuildTiers` runs after the dig for that reason.
+- A down ramp writes its slope into the row of the walker. The first version replaced the floor of a chamber or of an older tunnel, and the body at the spawn stood in a slope. A ramp cell now digs into solid rock alone.
+- A chamber takes the cells of a tunnel ramp into its floor, because a ramp cell is solid. A tier over such a column stood on a slope, and the low end of a tier ramp met one. Both read `ChamberSpace.IsSloped` now. Seed 8911, floor 2 held that defect, and the guard of `CheckTiers` named it.
+- The hole of a shaft takes the floor of each of its nine columns away. One hole landed on the high end of a ramp and took its landing, so seed 177, floor 13 held a ramp that led nowhere. A shaft now takes no column of a ramp or of an end of one.
+- The greedy descender read the row of the next cell to decide a jump. It jumped in place on every ramp, and it never jumped from a ramp onto a block of the same row. The walk now reads the floor height of the next cell against the feet, and the slope where the body enters a ramp cell.
+- The camera test of PR-8 read a whole ramp cell as solid. The camera rests over a slope in open air, and the ray of D-246 stops at the slope.
+- The seven floors of F-98 dig inside the budget now. The restart test takes new seeds, measured over 120000 floors: about one floor in 3300 runs the budget.
+- Seed 79146, floor 7 digs no shaft, so the F-101 test reads the rule over every shaft of the sweep in place of that one floor.
+- A tunnel that crosses a chamber keeps its cross-section (D-342), so its swath takes no tier. That swath, and the straight corridor of the ramp, decide how many floors hold a tier.
+- The next ids are D-395, OQ-181, F-104, PR-71, and Session 191.
+
+### Open questions that block progress
+
+None. OQ-179 has its answers in D-388 to D-393, and OQ-180 has D-394.
+
+### Next concrete action
+
+Codex reviews GitHub PR #82, per `.claude/skills/pr-review/SKILL.md`, and writes `docs/reviews/pr-82.md`. The review reads the third carve rule of `DigCanvas`, the tier plan and its guards, the shaft pass, and the jump rule of the greedy descender. Exit test 10 needs the owner to play floor 1 and confirm the ramps and the tiers. About half of the floors hold a tier, so a floor with none needs a second floor or a named seed.
+
 ## Session 189: 2026-09-19, Codex
 
 Author: Codex
@@ -358,45 +410,37 @@ None blocks PR #77. The PR-66 session asks the owner for the shape of a tier fir
 ### Next concrete action
 
 The owner merges PR #77. A fresh session then works on PR-66 and asks the owner for the tier shape first (D-350).
+## Session 191: 2026-09-20, Codex
 
-## Session 180: 2026-09-16, Claude Code
-
-Author: Claude Code
-Session: answer review finding P2-1 of PR #77, in the author session of the PR. Branch `feat/one-pr-one-session`.
+Author: Codex
+Session: PR-82, the ramps, chamber tiers, and shaft routes. Branch `feat/pr-66-ramps-and-tiers`.
 
 ### What this session did, and why
 
-- Session 179 reviewed PR #77 at `887f94f` and gave `Changes required` for P2-1: the documents matrix accepts duplicate category lines. The owner asked for the answer in the author session, and D-375 permits that work after the hand-over.
-- The trigger reproduced. A second `docs/design.md` line that contradicts the first passed `doc-gate` with 0 problems.
-- `DocGateRules.CheckMatrix` now reports more than one line for a category. `DuplicateMatrixLineFails` fails on the old code and passes with the correction.
-- D-376, the enforcement table, and the skill now say exactly one line for each category.
-- The review also asked to reject an unknown label if the section is an exact list. `docs/reviews/pr-77-response.md` refutes that part: the categories are a floor, and a label with a typo already fails as a missing category.
-- A `Gitar review` comment at 20:20:17 UTC ran a review of `f0befdd`. Gitar replied "On it" at 20:20:39, and it replaced the dashboard comment at 20:21:01 with an approval and no open finding. That review was current, and it kept the old summary word for word.
-- The `gitar-review` skill read the unchanged summary as a stale review. A second request at 20:21:24 got the reply "You've sent several Gitar comments in a short window", and a wait that watched the dashboard alone ran ten minutes with no result.
-- The owner asked for a correction of the skill. The summary is no longer a condition of a current review. After a request, the author reads the Gitar reply first, a refusal waits ten minutes, and each check reads the newest dashboard id. Command B prints the reply.
-- Session 170 moved to the archive, because the file held eleven entries with this one.
+- Reviewed PR #82 as the cross-provider reviewer.
+- Inspected the complete diff, the generator contracts, the focused roadmap, the decisions, the questions, and all PR comments.
+- Found no actionable issue at effective head `97efa5c`.
 
 ### State of the build
 
-- `main` is at `9b27afc`. The correction commit, which holds this entry and the response file, is the new effective head. Pending the repeat review and the owner merge.
-- Remote head: `origin/feat/one-pr-one-session` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `DocGateTests`, `ReviewGateRulesTests`, and `ReviewGateGitTests`: 46 passed. `ste-check`: 0 findings in 18 files. `doc-gate` passes on the current PR description and fails on the description with the duplicate line.
+- Base and merge base: `27db615`.
+- The focused procgen test process compiled, then stalled in the shared large sweep and was canceled.
+- Revision-matched CI and the automated pass are recorded as passed at `97efa5c`. The review-gate and evaluate checks were expectedly neutral or failed before the review record existed.
+- The review record is `docs/reviews/pr-82.md`.
 
 ### In flight
 
-PR #77: the gitar pass on the head after the skill correction, then the repeat Codex review of P2-1 per the `pr-review` skill. The owner then merges.
+The review record and this handoff entry need one commit and a push. The owner play test remains exit test 10.
 
 ### Traps and gotchas
 
-- The correction commit holds code, so it moves the effective head past `887f94f` (D-184). The review of `887f94f` no longer covers the head.
-- The `gitar-review` skill is the same file in each repo that uses gitar. Put the same correction in the copy of each other repo.
-- A duplicate line stops the other checks of that category, because the gate cannot know which line holds. Each other category keeps its checks.
-- The next ids are D-377, OQ-177, F-102, PR-70, and Session 181.
+- The effective head excludes the later handoff and review-record commits under D-184.
+- The local large sweep did not finish in this execution context. Do not report it as a local pass.
 
 ### Open questions that block progress
 
-None blocks PR #77. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
+None. OQ-179 and OQ-180 are resolved by D-388 through D-394.
 
 ### Next concrete action
 
-A Codex session runs the repeat review of P2-1 per the `pr-review` skill at the correction head and sets the verdict. The owner then merges PR #77.
+Run the review session end gate after the commit and push.

@@ -29,8 +29,8 @@ namespace WhatYouCarry.Core.Procgen;
 /// </para>
 /// <para>
 /// The generator confirms its own construction: every chamber has a reachable floor cell, and the spawn reaches the
-/// landing of every shaft, or the floor is an error that names the seed, the floor, and the chamber or the shaft
-/// (D-112, F-101, T-2). PR-9 exit test 1 asserts the same from outside over thousands of seeds.
+/// landing of every shaft and every floor cell of every tier, or the floor is an error that names the seed, the
+/// floor, and the chamber, the shaft, or the tier (D-112, F-101, T-2). PR-9 exit test 1 asserts the same from outside over thousands of seeds.
 /// </para>
 /// </remarks>
 public static class FloorGenerator
@@ -92,6 +92,8 @@ public static class FloorGenerator
         FloorTemplate template = TemplateFor(floor, content);
         Rng rng = Rng.ForStream(runSeed, RngStream.Procgen, floor);
         DigPlan plan = DigChambers(rng, template, content, out DigCanvas canvas);
+        plan.DigShaftRoutes();
+        plan.BuildTiers();
         plan.DigShafts();
         DetailResult detail = DetailPass.Apply(rng, canvas, template, plan);
 
@@ -101,8 +103,9 @@ public static class FloorGenerator
         Reachability reach = Reachability.From(grid, spawnCell);
         Cell stairwell = FarthestChamberCell(plan.Chambers, grid, reach);
         CheckShaftLandings(plan.Shafts, grid, reach);
+        CheckTiers(plan.Chambers, grid, reach);
         Vector3 spawn = new(first.Anchor.X + 0.5f, first.FloorRow + 1.0f, first.Anchor.Z + 0.5f);
-        return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Tunnels, plan.Shafts, detail);
+        return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Tunnels, plan.Shafts, plan.Ramps, detail);
     }
 
     /// <summary>
@@ -195,6 +198,41 @@ public static class FloorGenerator
         }
 
         return stairwell;
+    }
+
+    /// <summary>
+    /// Confirms that the spawn reaches every floor cell of every tier. A tier takes one connected region of the
+    /// chamber floor with a ramp up to it, and the detail pass keeps that ramp and its two ends clear, so a tier
+    /// that no body reaches is a defect of the construction and never a floor that ships (D-112, D-348, T-2).
+    /// </summary>
+    /// <exception cref="ContextException">A tier holds a cell that is no floor cell, or that the spawn does not reach.</exception>
+    private static void CheckTiers(IReadOnlyList<Chamber> chambers, VoxelGrid grid, Reachability reach)
+    {
+        foreach (Chamber chamber in chambers)
+        {
+            if (chamber.Tier is null)
+            {
+                continue;
+            }
+
+            foreach (Column column in chamber.Tier.Floor)
+            {
+                Cell cell = new(column.X, chamber.Tier.FloorRow, column.Z);
+                if (Reachability.IsFloor(grid, cell) && reach.IsReachable(cell))
+                {
+                    continue;
+                }
+
+                string shape = TierShapes.NameOf(chamber.Tier.Shape);
+                ContextException error = new($"The tier of chamber {chamber.Index}, of the shape '{shape}', holds the cell ({cell.X}, {cell.Y}, {cell.Z}) that the spawn does not reach, and the ramp of the tier makes that impossible (D-348, D-391).");
+                error.AddContext("chamber", ((long)chamber.Index).ToString(CultureInfo.InvariantCulture));
+                error.AddContext("tierShape", shape);
+                error.AddContext("tierX", ((long)cell.X).ToString(CultureInfo.InvariantCulture));
+                error.AddContext("tierY", ((long)cell.Y).ToString(CultureInfo.InvariantCulture));
+                error.AddContext("tierZ", ((long)cell.Z).ToString(CultureInfo.InvariantCulture));
+                throw error;
+            }
+        }
     }
 
     /// <summary>

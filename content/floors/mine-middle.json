@@ -14,5 +14,6 @@
   "driftWidth": 5,
   "driftHeight": 4,
   "chamberHeightMin": 5,
-  "chamberHeightMax": 8
+  "chamberHeightMax": 8,
+  "rampSlopeRuns": [2, 3, 4]
 }

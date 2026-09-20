@@ -210,20 +210,21 @@ public static class BitIdentitySweep
     /// D-210 on floors 1, 2, and 3, two chamber kinds whose weights fill the budget, one projectile definition with a
     /// spread for the projectile run, and one weapon definition, which the attack bit of the sweep intents swings
     /// (D-320). The three swept floors then take every block of the detail pass, and a gallery and drifts of two
-    /// heights. The hash of the set has no meaning beyond its shape (D-221).
+    /// heights. Each template lists the three ramp slopes of D-346, and the large chamber kind takes a tier chance
+    /// of 50, so the sweep covers the ramps and the tiers of D-388 to D-391. The hash of the set has no meaning beyond its shape (D-221).
     /// </summary>
     public static ContentSet SweepContent()
     {
         FloorTemplate[] floors =
         [
-            new("sweep-working", 1, 1, 4, 8, 100, DetailPass.WorkingMine, 32, 12, 32, 7, 5, 5, 4, 5, 8),
-            new("sweep-older", 2, 2, 4, 8, 100, DetailPass.OlderWorkings, 32, 12, 32, 7, 5, 5, 4, 5, 8),
-            new("sweep-deep", 3, 3, 4, 8, 100, DetailPass.Deep, 32, 12, 32, 7, 5, 5, 4, 5, 8),
+            new("sweep-working", 1, 1, 4, 8, 100, DetailPass.WorkingMine, 32, 12, 32, 7, 5, 5, 4, 5, 8, [2, 3, 4]),
+            new("sweep-older", 2, 2, 4, 8, 100, DetailPass.OlderWorkings, 32, 12, 32, 7, 5, 5, 4, 5, 8, [2, 3, 4]),
+            new("sweep-deep", 3, 3, 4, 8, 100, DetailPass.Deep, 32, 12, 32, 7, 5, 5, 4, 5, 8, [2, 3, 4]),
         ];
         ChamberKind[] kinds =
         [
-            new("sweep-small", 10, 1, 2, 3, 5),
-            new("sweep-large", 25, 2, 3, 5, 8),
+            new("sweep-small", 10, 1, 2, 3, 5, 0),
+            new("sweep-large", 25, 2, 3, 5, 8, 50),
         ];
         ProjectileDefinition[] projectiles =
         [
@@ -330,6 +331,7 @@ public static class BitIdentitySweep
             hash.Add(plan.Stairwell.Z);
             hash.Add(plan.Chambers.Count);
             hash.Add(plan.Shafts.Count);
+            hash.Add(plan.Ramps.Count);
         }
     }
 
