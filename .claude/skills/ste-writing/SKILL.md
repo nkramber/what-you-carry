@@ -38,105 +38,55 @@ Source: ASD-STE100 Issue 8 (2021-04-30), Part 1, Writing rules. Issue 9 (2025-01
 - No phrasal verbs: "remove" not "take out" (9.3).
 - Do not use a technical name as a verb (1.7). Write "make a backup", not "backup the data".
 
-## The 53 rules in short form
+## The 53 rules
 
-### Section 1 - Words
-- 1.1 Use only approved dictionary words, technical names, and technical verbs.
-- 1.2 Use approved words only as the part of speech given.
-- 1.3 Use approved words only with their approved meaning.
-- 1.4 Use only approved forms of verbs and adjectives.
-- 1.5 You can use words that fit a technical name category.
-- 1.6 Use an unapproved word only when it is a technical name or part of one.
-- 1.7 Do not use technical names as verbs.
-- 1.8 Use technical names that agree with approved nomenclature.
-- 1.9 Select technical names that are short and easy to understand.
-- 1.10 Do not use slang or jargon as technical names.
-- 1.11 Do not use different technical names for the same item.
-- 1.12 You can use verbs that fit a technical verb category.
-- 1.13 Do not use technical verbs as nouns.
-- 1.14 Use American English spelling, unless an official directive says otherwise.
+The file `references/the-53-rules.md` gives every rule in short form, by section. Load it when a rule id needs its full text.
 
-### Section 2 - Noun clusters
-- 2.1 Write noun clusters of max three words.
-- 2.2 Write a long technical name in full, then give a short name or use hyphens.
-- 2.3 Use an article or demonstrative adjective before a noun.
+## Process terms
 
-### Section 3 - Verbs
-- 3.1 Use only verb forms given in the dictionary.
-- 3.2 Make only: infinitive, imperative, simple present, simple past, past participle as adjective, future.
-- 3.3 Use the past participle only as an adjective.
-- 3.4 Do not use helping verbs to make complex verb structures.
-- 3.5 Use the "-ing" form only as a technical name or in a technical name.
-- 3.6 Use the active voice in procedures. Use it as much as possible in descriptions.
-- 3.7 Use an approved verb to describe an action, not a noun.
+Use one term for one concept (rules 1.11 and 9.4). A session meets these terms in every document. Write the left term, and never a synonym.
 
-### Section 4 - Sentences
-- 4.1 Write short and clear sentences.
-- 4.2 Do not omit words or use contractions to make sentences shorter.
-- 4.3 Use a vertical list for complex text.
-- 4.4 Use connecting words to connect sentences with related topics.
+| Term | What it names |
+|---|---|
+| session handoff | `docs/session-handoff.md`, the entry of each session, newest first (D-146) |
+| decision register | `docs/decisions.md`, the owner decisions, D-1 onward |
+| questions register | `docs/questions.md`, the open questions, OQ-1 onward |
+| focused roadmap | one file under `docs/roadmaps/`, with the entry of each PR and its exit tests |
+| review record | `docs/reviews/pr-<number>.md`, the verdict of the cross-provider review (D-101) |
+| response file | `docs/reviews/pr-<number>-response.md`, the answer of the author to a review |
+| PR gate | the list in the agent files that every PR passes before the merge |
+| documents matrix | the `## Documents` section of the PR description, one line for each category (D-376) |
+| cross-provider review | the review by the provider that did not write the PR (T-4) |
+| automated pass | the review of gitar on a PR head, and the answer of the author to it (D-250) |
+| effective head | the newest commit that changes a path outside the metadata set (D-184) |
+| metadata set | `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184) |
+| property test | a seed loop that asserts an invariant, and names its seed on a failure (D-66) |
+| bot sweep | the bot policy runs of the night, at five thousand seeds |
+| seed sweep | the reachability sweep of the night, at one hundred thousand seeds |
+| smoke session | the headless Game session that the `smoke` job runs on three platforms (D-114) |
+| night record | `night.json` on the branch `night-results`, which the `night-gate` job reads (D-273) |
+| foundation gate | the gate that a phase passes before the next phase starts |
+| exit test | one numbered test of a roadmap entry, which the gate of that entry names |
 
-### Section 5 - Procedures
-- 5.1 Max 20 words in each sentence.
-- 5.2 One instruction in each sentence, unless actions occur at the same time.
-- 5.3 Write instructions in the imperative.
-- 5.4 Divide a descriptive statement from the command with a comma.
-- 5.5 Write notes only to give information, not instructions.
+## Technical names of the project areas
 
-### Section 6 - Descriptions
-- 6.1 Give information gradually.
-- 6.2 Use key words and phrases to organize the text.
-- 6.3 Max 25 words in each sentence.
-- 6.4 Use paragraphs to show related information.
-- 6.5 Each paragraph has only one topic.
-- 6.6 No paragraph has more than six sentences.
+The names of the game, the art, the save files, and the projects live in `references/technical-names.md`. Load it when you write about one of those areas.
 
-### Section 7 - Safety instructions
-- 7.1 Use a word such as "WARNING" or "CAUTION" to identify the risk level.
-- 7.2 Start a safety instruction with a clear command or condition.
-- 7.3 Give an explanation that shows the risk or the possible result.
+## The byte ceilings
 
-### Section 8 - Punctuation and word count
-- 8.1 Use all standard punctuation except the semicolon.
-- 8.2 Use hyphens to connect closely related words.
-- 8.3 Use parentheses for references, item identifiers, step identifiers, abbreviations, and singular/plural forms.
-- 8.4 In a vertical list, a colon counts as the end of a sentence.
-- 8.5 Text in parentheses counts as one word.
-- 8.6 Count each number, unit, abbreviation, identifier, quoted text, and title as one word.
-- 8.7 A hyphenated word counts as one word.
+A session reads these files early, and each byte costs tokens on every later model call. A test fails when a file is over its ceiling. A larger ceiling needs a decision (D-382).
 
-### Section 9 - Writing practices
-- 9.1 Use a different construction when a word-for-word replacement is not enough.
-- 9.2 Use each approved word correctly.
-- 9.3 Do not make phrasal verbs.
-- 9.4 Use a consistent style for terminology and wording.
+| File | Ceiling | Decision |
+|---|---|---|
+| `CLAUDE.md` and `AGENTS.md` | 15000 bytes each | D-382 |
+| Each `.md` file under `.claude/skills/`, a reference file included | 12000 bytes | D-384 |
+| `.claude/skills/one-pr-one-session/SKILL.md` | 7000 characters | D-375, D-385 |
+| The newest entry of `docs/session-handoff.md` | 7000 bytes | D-382 |
+| `docs/session-handoff.md` | 60000 bytes | D-382, D-379 |
 
-## Technical names in this project
+The `handoff-rotate` command keeps the handoff under its ceiling (D-379). The archive has no ceiling, because no session reads it without a pointer.
 
-The rules permit these as written. They are technical names (rule 1.5):
-
-- The game title: What You Carry.
-- Tools and platforms: Godot, C#, .NET, xUnit, dotnet format, GitHub Actions, Steam, Steamworks, Steam Deck, Blockbench, JSON, JSONL, Metal, Vulkan, MoltenVK.
-- The two harnesses: Claude Code, Codex.
-- Project names: WhatYouCarry.Core, WhatYouCarry.Game, WhatYouCarry.Assets, WhatYouCarry.Tools, WhatYouCarry.Tests, DetMath.
-- Game terms, the run: run, floor, stairwell, hunter, timer, boss, hub, bank, loadout, tick, seed, replay.
-- Game terms, the gear: satchel, quick slot, amulet, skill orb, skill tree, skill point, affix, rarity, tier, band, potion, mana.
-- Game terms, combat: cooldown, reload, hyper-armor, stagger, dodge, block, shield, intent.
-- Game terms, the world: voxel, greedy meshing, pathfinding, lighting, ambient occlusion.
-- Art terms: atlas, tile, palette, ramp, texture rule, texel, contact sheet, game zoom.
-- Process terms: session handoff, decision register, questions register, PR gate, cross-provider review, property test, bot sweep, seed sweep, smoke session, foundation gate.
-- Save terms: profile file, run record, basic kit, simulation version, content hash.
-- The standard itself: ASD-STE100, STE.
-- Code identifiers in backticks.
-
-Use one term per concept. Examples:
-
-- "ascend", not "extract" or "cash out".
-- "descend", not "go deeper".
-- "bank", not "stash" or "vault".
-- "satchel", not "backpack" or "bag".
-- "stairwell", not "exit" or "stairs".
-- "hunter", not "ghost" or "chaser".
+When a file reaches its ceiling, move the detail to a reference file or to a register. Do not delete a rule to win bytes.
 
 ## The checker
 

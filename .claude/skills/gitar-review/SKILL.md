@@ -12,6 +12,9 @@ Each repo that uses Gitar keeps a copy of this file. A rule of the repo wins ove
 ## Terms
 
 - **Head**: the newest commit of the pull request branch on GitHub.
+- **Metadata set**: the paths that hold a record of the work and no work: `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184).
+- **Metadata commit**: a commit that changes paths inside the metadata set alone.
+- **Effective head**: the newest commit that changes a path outside the metadata set (D-184). A metadata commit does not move it.
 - **Dashboard comment**: the Gitar comment on the pull request that holds the collapsed `Code Review` block. Gitar edits this comment for each review. Gitar can also delete it and post a new one with a new id.
 - **Pause note**: the note at the top of the dashboard comment that starts "Automatic reviews are paused".
 - **Manual review**: the review that a `Gitar review` comment starts.
@@ -25,13 +28,28 @@ Gitar reviews each push until it pauses automatic reviews. After the pause, a pu
 
 A manual review also goes stale when a push comes after the `Gitar review` comment. On 2026-09-16, four pull requests in two repos had a review older than the head. Each one had a push after the last request, or a push and no request.
 
+## The effective head
+
+This repository reviews the effective head, and not the tip (D-184). A commit of metadata records the work, and it changes no code, no content, no configuration, and no test. Such a commit keeps a pass current.
+
+- A push that changes a path outside the metadata set moves the effective head. Start the procedure below for that new head.
+- A push of metadata alone keeps the pass of the earlier head current. Do not ask for a review again.
+- The commit that holds the review record and the handoff entry is always a metadata commit (D-182). Without this rule that commit invalidates the pass that it publishes.
+- Read the effective head with the staged read of `docs/runbooks/session-context.md`. Take the newest commit that names a path outside the metadata set.
+
+```
+git log --format='%H %s' origin/main..HEAD --name-only
+```
+
+Every condition below reads the effective head where it says head. The tip of the branch can be newer.
+
 ## Procedure
 
 Do these steps after each push.
 
 1. Push all the commits of this round of changes. Push one time, not one time for each fix.
 2. Run command A. Continue only when the local head and the pull request head are the same commit.
-3. Record the head and the push time from command A.
+3. Record the effective head and the push time from command A. A push of metadata alone ends here, because the pass stays current.
 4. Do the push wait with command E. Always do the full push wait, also when Gitar paused automatic reviews.
 5. Do not comment `Gitar review` before the push wait ends.
 6. After the push wait, run the Gitar check part of command E. Then run command B.
@@ -46,7 +64,7 @@ Do these steps after each push.
 15. Do not push while the manual review runs. A push at this time makes the review stale.
 16. When Gitar edits or replaces the dashboard comment, go to step 9.
 17. Open the collapsed `Code Review` block of the dashboard comment. Read the summary.
-18. List the review threads with command C. Read each open thread.
+18. Export every comment and thread with command F. Read the file one time, and read each open thread.
 19. Read each finding as a claim, not a fact. Reproduce its trigger. Read the rule or the decision it names.
 20. Decide the merit of the finding: full, partial, or none.
 21. For full merit, make the smallest change that fixes the finding. Commit it.
@@ -73,7 +91,7 @@ On 2026-09-16, the Gitar check on the heads of #30, #31, and #32 started 8 to 31
 
 A review is current only when each of these conditions is true:
 
-- The head from command B is the head that you recorded in step 3.
+- The effective head from command B is the head that you recorded in step 3.
 - The dashboard comment has an edit time later than the push time that you recorded in step 3.
 - After a `Gitar review` comment, Gitar replied "On it", and the dashboard comment has an edit time later than that reply.
 - You read the newest dashboard comment. Gitar can delete the dashboard comment and post a new one with a new id.
@@ -92,20 +110,7 @@ When one condition is false, the review is stale. When you cannot check one cond
 
 ## Traps
 
-- A green Gitar check does not prove that no finding is open. Read the threads.
-- A green Gitar check on the head does not prove that the review is current. A paused Gitar attaches a check with the pause note.
-- A manual review can edit the dashboard comment and attach no Gitar check to the new head. Apply the rule in "Prove that a review is current".
-- The pause note can come beside a full review. Open the collapsed `Code Review` block before you comment `Gitar review`.
-- A request before a push gets a review of the old head. Push first, then ask.
-- A request during the push wait can start a second review beside the automatic review. It can also use the request limit of Gitar. Do the full push wait first.
-- Gitar limits requests. When Gitar replies "You've sent several Gitar comments in a short window", wait ten minutes. Then comment `Gitar review` one time. On 2026-09-16, a second request one minute after a finished review got this reply.
-- Do not send a second `Gitar review` comment while the first review runs.
-- Gitar refuses a request in a reply, and the dashboard comment does not change. A wait that watches the dashboard comment alone then never ends. Read the reply first.
-- Gitar can replace the dashboard comment during a review. A saved comment id then returns HTTP 404, or it shows an old edit time. Read the newest id in each check.
-- The REST API names the author `gitar-bot[bot]`, and the GraphQL API names it `gitar-bot`.
-- The issue comments API returns 30 comments on each page. Use `--paginate`, or you can read an old dashboard comment.
-- The owner can merge a pull request before a finding gets its answer. A commit on that branch then never gets to `main`. Carry the fix to a new branch from `main`. Reply on the old thread with the new pull request.
-- Gitar can confirm a fix in a reply and resolve its own thread. Read the thread before you resolve it yourself.
+The file `references/traps.md` lists the cases that cost a session a wrong answer. Read it before the first review of a pull request, and again when a wait does not end.
 
 ## Commands
 
@@ -197,14 +202,8 @@ gh pr comment "$n" --body "Gitar review"
 
 ### E. The push wait and the Gitar check
 
-```bash
-# The push wait. Replace <seconds> with the push time in seconds from command A.
-# The loop ends three minutes after the push. A tool that refuses a long command can run it in the background.
-push=<seconds>
-while [ $(( $(date +%s) - push )) -lt 180 ]; do sleep 15; done
+The runbook `docs/runbooks/session-context.md` holds both commands under "Wait for gitar". Do the full push wait of three minutes, and then read the Gitar check of the head.
 
-# The Gitar check on the head: the status, the conclusion, and the start time.
-h=$(gh pr view "$n" --json headRefOid --jq .headRefOid)
-gh api "repos/$repo/commits/$h/check-runs" \
-  --jq '.check_runs[] | select(.app.slug == "gitar-bot") | "\(.status) \(.conclusion) \(.started_at)"'
-```
+### F. The comment export
+
+One export reads every issue comment and every review thread into one file. The runbook holds the command under "The comment export". Read the file one time, and reply with the commands of section D.

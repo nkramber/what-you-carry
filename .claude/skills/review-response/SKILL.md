@@ -12,11 +12,8 @@ Use this skill when you answer a review of your own PR. The reviewing provider u
 - Load `.claude/skills/one-pr-one-session/SKILL.md`, and bind the session to the PR as the author or the correction author (D-375).
 - Load `.claude/skills/ste-writing/SKILL.md` before the response file or a reply (D-139).
 - Look up each D-# and OQ-# that the findings cite with the one lookup command of `AGENTS.md` (D-378).
-- Two sections of `pr-review` apply to the author too: "Commit the record" and "Session end gate". Print those two sections alone with this command:
-
-```
-sed -n '/^## Commit the record/,/^## Scope limits/p' .claude/skills/pr-review/SKILL.md
-```
+- Read `.claude/skills/pr-review/references/commit-and-push.md`. It holds the commit of a record, the session end gate, and the scope limits, and it applies to the author too.
+- The runbook `docs/runbooks/session-context.md` holds the targeted reads, the commit command, the check wait, and the comment export.
 
 ## Address review findings
 
@@ -76,7 +73,7 @@ An automated reviewer, gitar, reviews every PR after a push (D-250). The author 
 
 Load `.claude/skills/gitar-review/SKILL.md` after each push, and follow its procedure (D-374). That skill holds the steps, the proof that a review is current, the traps, and the commands. This section gives only the rules of this repo, and each rule wins over that skill:
 
-- The author alone answers gitar. The reviewing provider never replies to gitar (`pr-review`, "Do not address the automated reviewer").
+- The author alone answers gitar. The reviewing provider never replies to gitar (`pr-review`, `references/repeat-review.md`).
 - A reply names no provider, harness, or model as the source of the work (T-6, D-176).
 - When the pass ends, tell the owner that the PR is ready for the other provider, or for the override. It is not ready to merge yet.
 - Record the pass in the handoff entry. Give the count of findings, the count with merit, and the commit that answered each one.

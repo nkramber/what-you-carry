@@ -5,7 +5,7 @@ using System.Text;
 namespace WhatYouCarry.Tools.SteCheck;
 
 /// <summary>One sentence with its words. A word is a token that counts under rules 8.5 to 8.7.</summary>
-public sealed record Sentence(int Line, string Text, IReadOnlyList<string> Words, int WordCount, bool IsProceduralStep);
+public sealed record Sentence(int Line, string Text, IReadOnlyList<string> Words, int WordCount, bool IsProceduralStep, bool IsFrontMatter = false);
 
 /// <summary>
 /// Splits a prose line into sentences and words. A sentence ends at a period, an exclamation mark, a question mark,
@@ -108,7 +108,7 @@ public static class SentenceText
         }
 
         string text = Unmask(string.Join(' ', tokens));
-        sentences.Add(new Sentence(line.Line, text, words, words.Count, line.IsNumberedItem && line.InProceduralSection));
+        sentences.Add(new Sentence(line.Line, text, words, words.Count, line.IsNumberedItem && line.InProceduralSection, line.InFrontMatter));
     }
 
     /// <summary>An opaque span is one word. Any other token is a word when it holds a letter or a digit.</summary>
