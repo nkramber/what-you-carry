@@ -4,5 +4,6 @@
   "boxCountMin": 3,
   "boxCountMax": 5,
   "boxSizeMin": 8,
-  "boxSizeMax": 14
+  "boxSizeMax": 14,
+  "tierChance": 40
 }

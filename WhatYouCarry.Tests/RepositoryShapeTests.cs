@@ -400,6 +400,33 @@ public sealed class RepositoryShapeTests
         Assert.Contains("`This session is bound to PR #N and is complete. End this session. Start a new clean session before beginning another PR.`", skill, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void SessionSkillTriggersTheTransitionalPrompt()
+    {
+        // D-375, D-385: the merge message of the owner starts the transitional prompt, and no request from the owner
+        // does. The skill file names the trigger and the reference file. The reference file holds the block, and the
+        // block names the merge commit, the next PR, each open question, and each owner answer that no OQ-# holds.
+        string skill = RepositoryRoot.ReadFile($".claude/skills/{OnePrOneSessionSkill}/SKILL.md");
+        Assert.Contains("`Merged PR #N`", skill, StringComparison.Ordinal);
+        Assert.Contains("references/merge-prompt.md", skill, StringComparison.Ordinal);
+        string reference = RepositoryRoot.ReadFile($".claude/skills/{OnePrOneSessionSkill}/references/merge-prompt.md");
+        Assert.Contains("the owner merges the PR and says `Merged PR #x`", reference, StringComparison.Ordinal);
+        Assert.Contains("it does no other work", reference, StringComparison.Ordinal);
+        foreach (string part in MergePromptBlockParts)
+        {
+            Assert.Contains(part, reference, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>The four parts that the transitional prompt block names. A questions sweep alone misses the last one.</summary>
+    private static readonly string[] MergePromptBlockParts =
+    [
+        "merged to `main` as <sha>",
+        "Start PR-<n>:",
+        "Open questions for this PR:",
+        "Owner answers that the roadmap names and no OQ-# holds:",
+    ];
+
     private const string OnePrOneSessionSkill = "one-pr-one-session";
 
     private const int SessionSkillCharacterLimit = 7000;

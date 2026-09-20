@@ -480,14 +480,26 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-66: Ramps and chamber tiers in the generator
 
+Status: PENDING_STATUS
+
 Scope:
 
 - `Core/Procgen/DigPlan.cs`: `TryDigRamp` digs ramp cells in place of one-block steps, so a tunnel changes height by a ramp or a shaft alone (D-345, D-347). The Procgen stream picks the slope of each ramp from the list of the template (D-159, D-346).
-- `content/floors/*.json`: every template lists the slopes 1:2, 1:3, and 1:4 (D-346).
+- `content/floors/*.json`: every template lists the slopes 1:2, 1:3, and 1:4, as the runs 2, 3, and 4 (D-346).
 - Chamber tiers: a chamber with a tier gets a floor 2 blocks over its chamber floor, and a ramp joins the two (D-348, D-349). The tier chance of the chamber kind decides which chambers get one (D-350).
 - `content/chambers/*.json`: each kind names its tier chance. Great stope takes 50, cavern 40, stope, ore bin, and pump chamber 25, and the rest 0 (D-350).
+- `Core/Procgen/TierPlan.cs` and `Core/Procgen/TierShapes.cs`: a tier takes one of four shapes, at a drawn share of 25 to 40 percent (D-388, D-389). Its ramp takes a slope that fits, and the tier shrinks before it skips (D-390, D-391).
+- A floor whose draws build no tier takes one in the first chamber of a tiered kind that fits (D-392). The ramp of a tier takes the widest cross-section that fits, 3 cells or 2 (D-393).
+- `Core/Procgen/DigCanvas.cs`: `CanCarveWithoutStep` refuses a unit that makes a one-block step with the floor of a neighboring space (D-347). The ramp dig takes the two older rules, because the step at each end of a slope is the ramp.
+- `DigPlan.BuildTiers` runs after the whole dig. A tier fills two rows over the chamber floor, and a walker that met one mid-dig found its way barred. The pass reads the true entries of each chamber, and it keeps them open.
+- `Core/Content/JsonObjectReader.cs`: the reader takes a list of numbers, which the floor template reads for its slopes (D-346).
 - `Core/Procgen/DetailPass.cs`: rubble, pillars, posts, and pools keep every ramp and its two ends clear.
-- The owner answers the shape of a tier before the code: its share of the chamber, and the case of a chamber too small for a tier and its ramp.
+- `Core/Bots/GreedyDescender.cs`: the walk reads the floor height of the next cell against the feet, and not the row. A walk along a ramp needs no jump, and a walk onto the side of one needs a jump (D-165, D-345).
+- The camera test of PR-8 reads the slope of a ramp cell, like the ray of D-246. The camera rests over a slope, in open air.
+- The restart test of PR-67 takes new seeds, measured under this dig. The seven floors of F-98 dig inside the budget now, and about one floor in 3300 runs the budget.
+- `DigPlan.DigShaftRoutes` digs a drift under a chamber, so a shaft of that chamber has a landing (F-103, D-394). The drift starts at a cell of the trail, and it takes a ramp down when no cell lies low enough.
+- The hole of a shaft takes no column of a ramp, and no column of an end of one. The hole takes the floor of each of its columns away, and a ramp that ends there loses the floor that its slope meets (D-345).
+- The owner answers the shape of a tier before the code: its share of the chamber, and the case of a chamber too small for a tier and its ramp. OQ-179 holds the question, and D-388 to D-391 hold the answers.
 - The simulation version rises, and the bit-identity sweep takes a new known answer (G-20).
 
 Out of scope: enemy spawns on a tier (PR-16).
@@ -497,17 +509,19 @@ Exit tests:
 1. The PR-9 and PR-59 property tests pass with ramps and tiers: every chamber and tier reachable, no overlap, the stairwell reachable, and the budget within tolerance.
 2. `TunnelsHaveNoStep` asserts over the seed sweep that no tunnel floor changes height by a one-block step.
 3. `RampsUseTheTemplateSlopes` asserts over the seed sweep that every ramp has a slope of its template, and that each slope appears.
-4. `TierChanceMatchesTheKind` asserts over the seed sweep that each kind gets tiers near its chance, and none at chance 0.
+4. `TierChanceMatchesTheKind` asserts over the seed sweep that each kind draws tiers near its chance, and that no kind of chance 0 draws or holds one.
 5. `TierIsTwoBlocksUp` asserts that every tier floor is 2 blocks over its chamber floor, and that a ramp joins the two.
-6. The bot sweep and the night sweep report zero crashes and zero softlocks with ramps and tiers.
-7. The bit-identity job passes on the three platforms with the new known answer.
-8. The owner plays floor 1 and confirms the ramps and the tiers, recorded as a decision.
+6. `EveryFloorTakesATierWhenOneFits` asserts that over 40 percent of floors hold a tier, and that every tier ramp is 3 or 2 cells across (D-392, D-393).
+7. `EveryFloorTakesAShaftWhenOneFits` asserts that over 2 percent of floors hold a shaft, and that no pillar stands in the hole of one (F-103, D-394).
+8. The bot sweep and the night sweep report zero crashes and zero softlocks with ramps and tiers.
+9. The bit-identity job passes on the three platforms with the new known answer.
+10. The owner plays floor 1 and confirms the ramps and the tiers, recorded as a decision.
 
 Review focus: determinism, gameplay, test quality.
 
 Check clause: none.
 
-Gate: exit tests 1 to 8 pass.
+Gate: exit tests 1 to 10 pass.
 
 > *In plain English:* the mine joins its levels with smooth ramps of three slopes in place of steps. Some chambers get a raised floor, so a fight can use the high ground.
 

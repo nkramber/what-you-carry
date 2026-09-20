@@ -18,6 +18,10 @@ namespace WhatYouCarry.Core.Procgen;
 /// stone, and the deep takes ore veins in the raw stone.
 /// </para>
 /// <para>
+/// No pool, pillar, or heap of rubble takes a ramp, or one of the two floor cells at its ends (D-345, D-348). A
+/// wall block takes no air away, so the ramps need no rule for it: it replaces rock that has rock over it.
+/// </para>
+/// <para>
 /// A pool is a small rectangle of chamber floor cells that turn to still water, over rock. Every pool cell keeps
 /// a dry floor cell of the chamber beside it, so a body leaves the pool by one jump (D-258, D-262). A pillar is
 /// one column of a chamber whose eight neighbors are chamber floor, so the chamber stays one connected floor. No
@@ -109,7 +113,7 @@ public static class DetailPass
                             continue;
                         }
 
-                        if (!plan.IsDugByJobAlone(x, y, z, deadEnd.Job))
+                        if (!plan.IsDugByJobAlone(x, y, z, deadEnd.Job) || IsRampColumn(plan, new Column(x, z)))
                         {
                             safe = false;
                             break;
@@ -158,7 +162,7 @@ public static class DetailPass
             for (int attempt = 0; attempt < tries; attempt++)
             {
                 Column center = chamber.Footprint[rng.NextInt(chamber.Footprint.Count)];
-                if (!IsInterior(canvas, chamber, center, 1) || IsAnchor(plan, center) || IsUnderShaft(plan, center))
+                if (!IsInterior(canvas, chamber, center, 1) || IsAnchor(plan, center) || IsUnderShaft(plan, center) || IsRampColumn(plan, center))
                 {
                     continue;
                 }
@@ -202,7 +206,7 @@ public static class DetailPass
                     int floor = chamber.FloorRow;
                     bool dryRock = IsChamberFloor(canvas, chamber, column) && !canvas.IsAir(column.X, floor - 1, column.Z) && canvas.IsAir(column.X, floor + 1, column.Z);
                     bool hasDryNeighbor = HasDryNeighborOutside(canvas, chamber, column, corner, sizeX, sizeZ);
-                    if (!dryRock || IsAnchor(plan, column) || !hasDryNeighbor)
+                    if (!dryRock || IsAnchor(plan, column) || IsRampColumn(plan, column) || !hasDryNeighbor)
                     {
                         fits = false;
                         break;
@@ -275,14 +279,19 @@ public static class DetailPass
         }
     }
 
-    /// <summary>Answers whether the column is a floor cell of the chamber: in the footprint, with rock at the floor row.</summary>
+    /// <summary>
+    /// Answers whether the column is a floor cell of the chamber: in the footprint, with rock at the floor row and
+    /// air over it. A tier and its ramp fill the rows over the chamber floor of their own columns, so a body walks
+    /// on neither of those (D-348).
+    /// </summary>
     private static bool IsChamberFloor(DigCanvas canvas, Chamber chamber, Column column)
     {
         foreach (Column cell in chamber.Footprint)
         {
             if (cell == column)
             {
-                return canvas.Grid.Get(column.X, chamber.FloorRow, column.Z) == BlockId.RawStone;
+                return canvas.Grid.Get(column.X, chamber.FloorRow, column.Z) == BlockId.RawStone
+                    && canvas.IsAir(column.X, chamber.FloorRow + 1, column.Z);
             }
         }
 
@@ -316,6 +325,32 @@ public static class DetailPass
             if (!insidePool && IsChamberFloor(canvas, chamber, neighbor))
             {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Answers whether a ramp holds the column, or one of the two floor cells at its ends stands on it. A body
+    /// walks a ramp from end to end, so water, a pillar, or a heap of rubble on one of those columns takes the
+    /// way up or the way down (D-345, D-348).
+    /// </summary>
+    private static bool IsRampColumn(DigPlan plan, Column column)
+    {
+        foreach (DugRamp ramp in plan.Ramps)
+        {
+            if ((ramp.LowEnd.X == column.X && ramp.LowEnd.Z == column.Z) || (ramp.HighEnd.X == column.X && ramp.HighEnd.Z == column.Z))
+            {
+                return true;
+            }
+
+            foreach (Cell cell in ramp.Cells)
+            {
+                if (cell.X == column.X && cell.Z == column.Z)
+                {
+                    return true;
+                }
             }
         }
 

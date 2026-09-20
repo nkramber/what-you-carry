@@ -12,7 +12,7 @@ This skill does not copy `AGENTS.md`. The rules and the PR gate stay there.
 | Reference file | Load it at this step |
 |---|---|
 | `references/enforcement.md` | A question about who enforces a rule: a machine, the agent, or the owner |
-| `references/merge-prompt.md` | The hand-over and the merge, to write the prompt of the next session |
+| `references/merge-prompt.md` | The owner says `Merged PR #N`, to write the prompt of the next session |
 
 ## Procedure: the start gate
 
@@ -96,4 +96,4 @@ At the hand-over and at the merge, run the session end gate (D-199). Then write 
 
 `This session is bound to PR #N and is complete. End this session. Start a new clean session before beginning another PR.`
 
-Write the prompt of the next session with `references/merge-prompt.md`. Do not offer to start the next PR. The owner can bring findings on the same PR back to this session.
+When the owner says `Merged PR #N` for the bound PR, load `references/merge-prompt.md`, write the one transitional prompt of that file, and do no other work. That message is the one exception to step 2 of the start gate. Do not offer to start the next PR. The owner can bring findings on the same PR back to this session.

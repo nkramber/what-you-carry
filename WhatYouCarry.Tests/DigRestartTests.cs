@@ -29,17 +29,30 @@ public sealed class DigRestartTests
     ];
 
     /// <summary>
-    /// The three floors of the largest need in the floors that the night digs, measured 2026-09-14: 5890, 5662, and 5568
-    /// jobs under the old cap. Each dug under that cap, and each now runs out of the budget and digs again.
+    /// The floors whose first dig runs the job budget with a chamber still in rock, measured 2026-09-20 over the
+    /// first 20000 seeds of the PR-66 dig. About one floor in 3300 needs a second dig.
     /// </summary>
-    public static readonly (ulong Seed, int Floor)[] HeavyNightFloors =
+    /// <remarks>
+    /// The three heavy night floors of 2026-09-14, seed 43783 floor 14, seed 62900 floor 6, and seed 1365 floor 13,
+    /// held this place before PR-66. The ramps of D-347 and the tiers of D-348 changed every floor, so each of those
+    /// three digs inside the budget now, and this list replaces them.
+    /// </remarks>
+    public static readonly (ulong Seed, int Floor)[] BudgetFloors =
     [
-        (43783UL, 14),
-        (62900UL, 6),
-        (1365UL, 13),
+        (1818UL, 4),
+        (2327UL, 3),
+        (4839UL, 10),
     ];
 
-    /// <summary>PR-67 exit test 1. Each floor of F-98 digs every chamber of its budget on its second dig, and the generator gives that dig.</summary>
+    /// <summary>
+    /// PR-67 exit test 1. Each floor of F-98 digs every chamber of its budget, and the generator gives that dig.
+    /// Before PR-67 each of the seven ran the job cap of 10000 with a chamber in rock, and the floor was an error.
+    /// </summary>
+    /// <remarks>
+    /// The measurement of 2026-09-14 found every chamber on the second dig. The dig of PR-66 changed every floor,
+    /// and each of the seven now digs every chamber on its first dig. The guarantee that this test holds is the
+    /// complete floor, and <see cref="TheBudgetEndsTheFirstDigOfAHeavyFloor"/> reads the restart itself.
+    /// </remarks>
     [Fact]
     public void EveryTailFloorDigs()
     {
@@ -47,16 +60,16 @@ public sealed class DigRestartTests
         {
             FloorPlan plan = FloorGenerator.Generate(seed, floor, TestWorld.Content);
             Replay replay = ReplayDigs(seed, floor);
-            Assert.True(replay.Digs == 2, $"Seed {seed}, floor {floor}: every chamber came on dig {replay.Digs}, and the measurement of 2026-09-14 found it on dig 2.");
+            Assert.True(replay.Digs <= FloorGenerator.MaxDigs, $"Seed {seed}, floor {floor}: every chamber came on dig {replay.Digs}.");
             AssertSameChambers(seed, floor, replay.Plan, plan);
         }
     }
 
-    /// <summary>A heavy floor of the night runs its first dig to the budget with a chamber in rock, and its second dig digs every chamber (D-359).</summary>
+    /// <summary>A floor of <see cref="BudgetFloors"/> runs its first dig to the budget with a chamber in rock, and its second dig digs every chamber (D-359).</summary>
     [Fact]
     public void TheBudgetEndsTheFirstDigOfAHeavyFloor()
     {
-        foreach ((ulong seed, int floor) in HeavyNightFloors)
+        foreach ((ulong seed, int floor) in BudgetFloors)
         {
             Replay replay = ReplayDigs(seed, floor);
             Assert.True(replay.FirstDigJobs == DigPlan.JobBudget, $"Seed {seed}, floor {floor}: the first dig ran {replay.FirstDigJobs} jobs, and the budget is {DigPlan.JobBudget}.");

@@ -258,8 +258,26 @@ public sealed class CameraTests
     }
 
     /// <summary>
+    /// Answers whether a point lies inside the material of the grid. A ramp cell is solid under its slope and
+    /// open over it, so the answer reads the slope like the ray of D-246 (D-345, D-367). PR-66 gave the dug
+    /// floors their first ramps, and the camera boom stops at a slope and rests over one.
+    /// </summary>
+    private static bool InsideMaterial(VoxelGrid grid, Vector3 point)
+    {
+        int x = (int)MathF.Floor(point.X);
+        int y = (int)MathF.Floor(point.Y);
+        int z = (int)MathF.Floor(point.Z);
+        if (grid.TryGetRamp(x, y, z, out Ramp ramp))
+        {
+            return ramp.HeightOver(x, y, z, point.X, point.Y, point.Z) < 0.0f;
+        }
+
+        return grid.IsSolid(x, y, z);
+    }
+
+    /// <summary>
     /// PR-8 exit test 1. Over one thousand seeds on dug floors, with random look deltas and movement, the
-    /// camera position is never inside a solid block after any tick, and the aim ray starts at the camera.
+    /// camera position is never inside the material after any tick, and the aim ray starts at the camera.
     /// A failure names its seed (D-66).
     /// </summary>
     [Fact]
@@ -273,8 +291,7 @@ public sealed class CameraTests
             {
                 loop.Step(SimulationTests.RandomIntent(random, tick));
                 CameraPose pose = loop.Camera();
-                bool inside = loop.Grid.IsSolid((int)MathF.Floor(pose.Position.X), (int)MathF.Floor(pose.Position.Y), (int)MathF.Floor(pose.Position.Z));
-                Assert.False(inside, $"Seed {seed}, tick {tick}: the camera at {pose.Position} is inside a solid block.");
+                Assert.False(InsideMaterial(loop.Grid, pose.Position), $"Seed {seed}, tick {tick}: the camera at {pose.Position} is inside a solid block.");
                 Assert.Equal(pose.Position, loop.Aim(NoTargets).Origin);
             }
         }

@@ -30,6 +30,15 @@ public static class ChamberFootprint
     /// <summary>The footprint of one chamber of a kind, around an anchor, in scan order: Z outer, X inner.</summary>
     public static IReadOnlyList<Column> Make(Rng rng, ChamberKind kind, Column anchor)
     {
+        return Make(rng, kind, anchor, out _);
+    }
+
+    /// <summary>
+    /// The footprint of one chamber, with the boxes of its union in draw order (D-253). A tier of the shape
+    /// <see cref="TierShape.RaisedBox"/> raises the part of the footprint that one of those boxes holds (D-388).
+    /// </summary>
+    public static IReadOnlyList<Column> Make(Rng rng, ChamberKind kind, Column anchor, out IReadOnlyList<ChamberBox> boxes)
+    {
         int boxCount = kind.BoxCountMin + rng.NextInt(kind.BoxCountMax - kind.BoxCountMin + 1);
 
         // Each box is centered on a cell of the union, so the union reaches at most one box side per box from
@@ -38,6 +47,8 @@ public static class ChamberFootprint
         int side = (2 * radius) + 1;
         bool[] shape = new bool[side * side];
         List<int> cells = [];
+        List<ChamberBox> drawn = [];
+        boxes = drawn;
 
         for (int box = 0; box < boxCount; box++)
         {
@@ -48,6 +59,11 @@ public static class ChamberFootprint
             int sizeZ = kind.BoxSizeMin + rng.NextInt(kind.BoxSizeMax - kind.BoxSizeMin + 1);
             int startX = centerX - (sizeX / 2);
             int startZ = centerZ - (sizeZ / 2);
+            drawn.Add(new ChamberBox(
+                anchor.X + startX - radius,
+                anchor.X + startX + sizeX - 1 - radius,
+                anchor.Z + startZ - radius,
+                anchor.Z + startZ + sizeZ - 1 - radius));
             for (int z = startZ; z < startZ + sizeZ; z++)
             {
                 for (int x = startX; x < startX + sizeX; x++)
