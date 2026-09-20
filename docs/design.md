@@ -509,7 +509,7 @@ Split the agent instructions, so a session loads the detail of one step at the s
 Gate: the context budget test reads every skill file, the checker test pins the front matter rule, and `ste-check` reports no finding.
 > *In plain English:* every session reads the same instructions before it starts work, and those files grew too large to read cheaply. This change splits them, so a session reads the detail of one step only when it reaches that step.
 
-**PR-66: Ramps and chamber tiers in the generator.** 🔧
+**PR-66: Ramps and chamber tiers in the generator.** ✅ Done in PR #82.
 Dig ramps in place of one-block steps, so a tunnel changes height by a ramp or a shaft alone (D-345, D-347). Each ramp takes a slope from the list of its floor template (D-346). The tier chance of each chamber kind gives some chambers a tier 2 blocks over the floor, and a ramp joins the two (D-348 to D-350). The detail pass of PR-59 keeps every ramp clear. The PR-9 and PR-59 property tests, the bot sweep, and the night sweep run again. The simulation version rises (G-20).
 Gate: no tunnel over the seed sweep holds a one-block step, and every ramp slope comes from its template. The owner confirms the ramps and the tiers in play.
 > *In plain English:* the mine joins its levels with smooth ramps of three slopes in place of steps. Some chambers get a raised floor, so a fight can use the high ground.

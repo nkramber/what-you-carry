@@ -22,11 +22,11 @@ Session: PR-66, the ramps and the chamber tiers of the generator. Branch `feat/p
 - `dotnet test` locally: 1157 passed, 0 failed, with the filter `Category!=Smoke`. `det-lint` reports 0 findings in Core and 0 in Game. `ste-check` reports 0 findings over 34 files.
 - The simulation version is 12, and the bit-identity answer is `15904316a1b4ec07`. The sweep floors are 32 by 12 by 32, and the shaft route needs 4 rows under a chamber, so the sweep reads no shaft route.
 - Measurements over 1000 to 60000 floors: 52 percent of floors hold a tier, 2.5 percent hold a shaft against 0.045 percent on the base, zero one-block steps, and no generator error over 40000 floors. One floor costs 29 milliseconds against 21 on the base.
-- Remote head: PENDING.
+- Remote head: `origin/feat/pr-66-ramps-and-tiers` at the commit of this entry.
 
 ### In flight
 
-PENDING
+GitHub PR #82 holds the ramps, the tiers, the shaft pass, the seven decisions, the two questions, F-103, and this entry. The automated pass of gitar comes next, and then the cross-provider review. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
 
 ### Traps and gotchas
 
@@ -47,7 +47,7 @@ None. OQ-179 has its answers in D-388 to D-393, and OQ-180 has D-394.
 
 ### Next concrete action
 
-PENDING
+Codex reviews GitHub PR #82, per `.claude/skills/pr-review/SKILL.md`, and writes `docs/reviews/pr-82.md`. The review reads the third carve rule of `DigCanvas`, the tier plan and its guards, the shaft pass, and the jump rule of the greedy descender. Exit test 10 needs the owner to play floor 1 and confirm the ramps and the tiers. About half of the floors hold a tier, so a floor with none needs a second floor or a named seed.
 
 ## Session 189: 2026-09-19, Codex
 

@@ -480,7 +480,7 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-66: Ramps and chamber tiers in the generator
 
-Status: PENDING_STATUS
+Status: ✅ Done in PR #82.
 
 Scope:
 
