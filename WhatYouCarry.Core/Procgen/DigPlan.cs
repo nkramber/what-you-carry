@@ -286,6 +286,7 @@ public sealed class DigPlan
     /// spaces by chance alone: the measurement of 2026-09-20 found a landing under 4 floors of 2000.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The drift starts at a cell of the trail, so a walker stood there and the network holds it. The body that
     /// drops through the shaft therefore lands in a space that leads on, and the drop is the one-way move of D-253
     /// and never a trap. The pass digs no chamber, so the budget draw of D-167 stands.
@@ -293,6 +294,7 @@ public sealed class DigPlan
     /// <para>
     /// A cell of the trail over the room that the drift needs takes a ramp down first, of the steepest slope of the
     /// template (D-346). The drift then walks under the chamber at the lower row, and the shaft joins the two.
+    /// </para>
     /// </remarks>
     public void DigShaftRoutes()
     {
