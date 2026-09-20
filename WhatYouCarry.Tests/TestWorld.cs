@@ -28,6 +28,12 @@ internal static class TestWorld
     /// <summary>The content set of this checkout, loaded once. Every loop test digs its floors from it.</summary>
     public static readonly ContentSet Content = new ContentLoader(new RepositoryContentSource()).Load();
 
+    /// <summary>
+    /// The same content set with no enemy family, so a floor of it holds no enemy (D-395). A test of a rule that
+    /// reads a long run needs it, because the scavengers of D-399 kill a body that does not fight back.
+    /// </summary>
+    public static readonly ContentSet PeacefulContent = Content with { Enemies = [] };
+
     /// <summary>A grid with one row of stone at the bottom and air above it.</summary>
     public static VoxelGrid FlatFloor()
     {
@@ -85,10 +91,14 @@ internal static class TestWorld
         throw new InvalidOperationException("No column of the random grid has two air cells over the floor.");
     }
 
-    /// <summary>A loop at tick zero on floor 1 of the seed, dug from the repository content.</summary>
+    /// <summary>
+    /// A loop at tick zero on floor 1 of the seed, dug from the repository content with no enemy family, so a long
+    /// run reads the rule under test and never ends by a death (D-395, D-403). A test of the enemies builds its
+    /// loop from <see cref="Content"/>.
+    /// </summary>
     public static SimulationLoop NewLoop(ulong seed)
     {
-        return new SimulationLoop(seed, Content);
+        return new SimulationLoop(seed, PeacefulContent);
     }
 
     /// <summary>A body at rest at the spawn of the flat floor.</summary>

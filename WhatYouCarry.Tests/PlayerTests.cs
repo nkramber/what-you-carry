@@ -640,7 +640,7 @@ public sealed class PlayerTests
     public void ADescentKeepsHealthAlone()
     {
         SimulationLoop loop = TestWorld.NewLoop(2UL);
-        GreedyDescender policy = new(TestWorld.Content);
+        GreedyDescender policy = new(TestWorld.PeacefulContent);
         loop.Player.TakeHit(40);
         for (int tick = 0; tick < (int)BotRun.FloorBudget && loop.Floor == SimulationLoop.FirstFloor; tick++)
         {
@@ -672,7 +672,7 @@ public sealed class PlayerTests
         for (int seed = 1; seed <= 20; seed++)
         {
             MemorySink sink = new();
-            RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.Content.Hash, (ulong)seed));
+            RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.PeacefulContent.Hash, (ulong)seed));
             SimulationLoop live = TestWorld.NewLoop((ulong)seed);
             Random random = new(seed);
             int swings = 0;
@@ -692,7 +692,7 @@ public sealed class PlayerTests
             }
 
             Assert.True(swings > 0 && rolls > 0, $"Seed {seed}: the record holds {swings} swings and {rolls} rolls, and the test needs both.");
-            ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.Content, new JsonlLogger(new CollectingSink()));
+            ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink()));
             Assert.True(live.Hash().Value == replay.Loop.Hash().Value, $"Seed {seed}: the live hash is {live.Hash()}, and the replay gives {replay.Loop.Hash()}.");
         }
     }

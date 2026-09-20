@@ -529,23 +529,30 @@ Gate: exit tests 1 to 10 pass.
 
 Scope:
 
-- `Core/Pathfinding/GridPathfinder.cs`: an A* search over walkable cells with the move rule of D-165 as D-345 revises it: one block up, any drop, or a walk along a ramp (D-76).
-- `Core/Ai/HumanoidBrain.cs`: target selection, approach along a path, and attack with the same melee rules as the player (D-30, D-31). The brain retreats when the swing is on cooldown.
-- `content/enemies/<family>.json`: the first humanoid family from OQ-9, with the `enemy` content type and validator (D-168). Its weight maps to the room weights of D-167.
-- Spawn placement: the generator of PR-9 fills room weights with enemies of this family.
-- `Core/Bots/FullClearer.cs`: a policy that hunts every enemy on the floor before the stairwell (D-149).
+- `Core/Pathfinding/GridMoves.cs`: the move rule of D-165 as D-345 revises it, moved out of `Reachability`: one block up, any drop, or a walk along a ramp (D-76). The generator and the AI read one rule, so a floor that the generator calls reachable holds no path that an enemy cannot walk (D-111).
+- `Core/Pathfinding/GridPathfinder.cs`: an A* search over that rule. Every move costs one, and the estimate is the steps along X and Z. Two cells of one estimate pop in the order that they entered (G-9). One pathfinder holds the arrays of one grid, and every search reuses them (D-109).
+- `Core/Pathfinding/PathWalk.cs` and `PathFollower.cs`: the rules that walk a body along a cell path, and the state of one walker. The last meters of a chase are a straight walk at the body of the target (F-104). A walk that gains nothing for four seconds jumps (F-105).
+- `Core/Ai/HumanoidBrain.cs`: the wake on sight inside 20 meters with a clear ray (D-400). It gives up after 5 seconds with no ray. It walks a path, swings inside the attack range, and retreats while the cooldown runs (D-402).
+- `Core/Entities/Enemy.cs`, `Core/Combat/Swing.cs`, and `Core/Combat/Stagger.cs`: the enemy carries the box of D-165, the swing state machine, and the stagger of D-326. The player of PR-15 now reads the same two types (D-31, D-111).
+- `content/enemies/scavenger.json` with the `enemy` content type and its validator (D-168, D-397, D-399, D-402). The loader rejects a family that names no weapon of the set.
+- `Core/Procgen/EnemyPlacement.cs`: every chamber past the first takes enemies for its weight, from a running total, and the chamber of the player spawn takes none (D-167, D-398). The pass draws nothing, so every floor digs as it dug before (D-159).
+- `Core/Simulation/SimulationLoop.cs`: the enemies and their brains run after the player, in spawn order. The blade of the player takes every living enemy as a target, and the blade of an enemy takes the player (D-325).
+- `Core/Bots/FullClearer.cs`: a policy that hunts every enemy of the floor before the stairwell (D-149). `BotIntent` and `BotReflex` hold the intent shape and the roll that both bot policies read (D-111).
+- `Core/Bots/BotRun.cs`: the `death` end state of D-403. `Core/Bots/GreedyDescender.cs` swings at what stands in reach and rolls from a blade (D-404).
+- `Game/Render/EnemyNodes.cs`: every living enemy draws with the body model of PR-13 and the sword of PR-15, at the position of the simulation, with no clip (D-401).
+- The simulation version rises to 13, and the bit-identity sweep takes a new known answer and one enemy family (G-20).
 
-Out of scope: ranged enemy attacks (PR-24), monsters, a second family.
+Out of scope: ranged enemy attacks (PR-24), monsters, and a second family with the rule that mixes two families on one floor (PR-36 to PR-42). Also out of scope: an enemy model and its clips (PR-62), and the stagger and roll numbers of armor weight (PR-22).
 
 Exit tests:
 
 1. `PathfinderRespectsMoveRule` asserts a path uses one-block steps, drops, and ramps, and never a two-block step.
-2. `PathfinderFindsStairwell` over one thousand seeds asserts a path from every spawn to the stairwell.
-3. `EnemyUsesPlayerRules` asserts an enemy swing has the same windup, active, and recovery as the player's sword.
-4. `EnemyCountMatchesBudget` asserts the spawned weight within 10 percent of the floor budget (D-167).
-5. `FullClearerClearsFloor` asserts zero enemies alive when the policy reaches the stairwell.
-6. `AiIsDeterministic` replays a record with enemies and asserts one state hash on three platforms.
-7. The bot sweep with enemies active reports zero crashes and zero softlocks.
+2. `PathfinderFindsStairwell` over one thousand seeds asserts a path from every spawn to the stairwell, of the count of moves that the reachability search gives.
+3. `EnemyUsesPlayerRules` asserts an enemy swing has the same windup, active, and recovery as the player's sword, and the same box.
+4. `EnemyCountMatchesBudget` asserts the spawned weight within 10 percent of the floor budget less the weight of the chamber that holds the player spawn (D-167, D-398).
+5. `FullClearerClearsFloor` asserts zero enemies alive when the policy takes the stairwell choice at the stairwell.
+6. `AiIsDeterministic` replays a record with enemies and asserts one state hash, and the bit-identity sweep folds that replay on three platforms.
+7. The bot sweep with enemies active reports zero crashes and zero softlocks. A death is its own end state and fails no gate (D-403).
 
 Review focus: determinism, gameplay, test quality.
 
@@ -553,7 +560,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 7 pass.
 
-> *In plain English:* the first enemies find their way through the dungeon and fight by the same rules you do.
+> *In plain English:* the first enemies find their way through the dungeon and fight by the same rules you do. They wait at their posts until they see you, and they back off between swings.
 
 ### PR-17: Floor timer, hunter, and escalation
 
@@ -724,8 +731,8 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 17. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ OQ-174 answered 2026-09-15: D-370.
 18. PR-69. ✅ Done in PR #80. ✅ OQ-176 answered 2026-09-16: D-373.
 19. PR-70. ✅ OQ-177 and OQ-178 answered 2026-09-18: D-386 and D-387.
-20. PR-66.
-21. Owner: answer OQ-9, at least the first family.
+20. PR-66. ✅ Done in PR #82. ✅ OQ-179 and OQ-180 answered 2026-09-19 and 2026-09-20: D-388 to D-394.
+21. ✅ OQ-9 answered 2026-09-20: D-395 and D-396.
 22. PR-16.
 23. Owner: answer OQ-4 and OQ-6.
 24. PR-17.
@@ -747,12 +754,17 @@ Open:
 
 - OQ-4: timer lengths. Blocks PR-17.
 - OQ-6: the hunter. Blocks PR-17.
-- OQ-9: the enemy families. Blocks PR-16.
 - OQ-44: the transition hitch budget. Blocks PR-18.
 - OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-161: the M-3 run on the Steam Deck. Blocks exit test 7 of PR-13 and M-3.
+
+Resolved 2026-09-20:
+
+- OQ-9 (D-395, D-396): the eight enemy families, and the scavenger as the first one. PR-16.
+- OQ-179 (D-388 to D-393): the shape of a tier. PR-66.
+- OQ-180 (D-394): the shafts of a floor. PR-66.
 
 Resolved 2026-09-18:
 

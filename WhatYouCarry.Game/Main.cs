@@ -81,6 +81,12 @@ public partial class Main : Node3D
     /// <summary>The message of the line at the end of the smoke session.</summary>
     public const string EndMessage = "The smoke session ends.";
 
+    /// <summary>The line of a session whose run ended before its own end, by an ascend or by a death (D-322, D-403).</summary>
+    public const string RunEndedMessage = "The run ended, and the session ends with it.";
+
+    /// <summary>The field of a session log line that names how the run ended (D-403).</summary>
+    public const string EndStateField = "endState";
+
     /// <summary>The message of the line at the end of the bot session.</summary>
     public const string BotEndMessage = "The bot session ends.";
 
@@ -146,6 +152,8 @@ public partial class Main : Node3D
     private Camera3D? camera;
     private ShaderMaterial? worldMaterial;
     private GreedyDescender? bot;
+    private EnemyNodes? enemyNodes;
+    private int drawnFloor;
     private ScriptedPress? press;
     private FrameLog? frames;
     private string frameLogPath = string.Empty;
@@ -201,6 +209,15 @@ public partial class Main : Node3D
             return;
         }
 
+        if (this.loop.Ended)
+        {
+            // A run that ended takes no intent (D-322). A death is an outcome of a fight and never a fault of the
+            // code, so the session ends clean and its log names the end kind (D-403).
+            this.logger.Write(LogContextKind.Run, LogLevel.Info, RunEndedMessage, this.EndFields());
+            this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
+            return;
+        }
+
         Intent intent;
         if (this.smoke)
         {
@@ -230,6 +247,18 @@ public partial class Main : Node3D
         this.currentFeet = this.loop.Body.Position;
         this.previousPose = this.currentPose;
         this.currentPose = this.loop.Camera();
+
+        // A descent digs a new floor with its own enemies, so the trees of the old floor go and the new ones come.
+        if (this.enemyNodes is not null)
+        {
+            if (this.loop.Floor != this.drawnFloor)
+            {
+                this.enemyNodes.Rebuild(this.loop.Enemies);
+                this.drawnFloor = this.loop.Floor;
+            }
+
+            this.enemyNodes.AfterTick(this.loop.Enemies);
+        }
 
         // The walk reads the horizontal distance of the tick, and its amount follows the speed (D-333).
         float stepX = this.currentFeet.X - this.previousFeet.X;
@@ -290,6 +319,8 @@ public partial class Main : Node3D
         // seen from above, as a positive rotation about Y does (D-234).
         this.playerNodes.Root.RotationDegrees = new Vector3(0.0f, this.loop.Yaw / 100.0f, 0.0f);
 
+        this.enemyNodes?.Draw(this.loop.Enemies, fraction);
+
         CameraPose pose = RenderInterpolation.Between(this.previousPose, this.currentPose, fraction);
         Vector3 cameraPosition = RenderInterpolation.ToGodot(pose.Position);
         this.camera.LookAtFromPosition(
@@ -326,11 +357,12 @@ public partial class Main : Node3D
         return fields;
     }
 
-    /// <summary>The run fields of the loop, and the frame count and the 99th percentile when a frame log runs.</summary>
+    /// <summary>The run fields of the loop, how the run ended, and the frame count and the 99th percentile when a frame log runs.</summary>
     private LogFields EndFields()
     {
         SimulationLoop loop = this.loop ?? throw new InvalidOperationException(StepFailedMessage);
         LogFields fields = RunFields(loop.Seed, loop.Floor, loop.Tick);
+        fields.Add(EndStateField, RunEnds.TextOf(loop.End));
         if (this.frames is not null && this.frames.Frames.Count > 0)
         {
             fields.Add(FramesField, (long)this.frames.Frames.Count);
@@ -401,6 +433,14 @@ public partial class Main : Node3D
         this.clips = playerClips;
         this.camera = PlaceholderScene.Camera();
         this.AddChild(nodes.Root);
+
+        // Every enemy draws with the body model until PR-62 gives its family one (D-401). The rest pose stands on
+        // the feet, so the root offset reads the lowest corner of that pose.
+        float restLowest = ModelPose.LowestPoint(AssetPaths.BodyModel, bodyModel, BodyPose.RestRotations());
+        EnemyNodes enemies = new(this, bodyModel, swordModel, modelMaterial, restLowest);
+        enemies.Rebuild(loop.Enemies);
+        this.enemyNodes = enemies;
+        this.drawnFloor = loop.Floor;
         this.AddChild(this.camera);
         this.AddChild(PlaceholderScene.Light());
 

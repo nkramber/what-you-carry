@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Core.Procgen;
 

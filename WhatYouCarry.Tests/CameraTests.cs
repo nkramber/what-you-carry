@@ -319,7 +319,7 @@ public sealed class CameraTests
             ];
 
             MemorySink sink = new();
-            RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.Content.Hash, (ulong)seed));
+            RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.PeacefulContent.Hash, (ulong)seed));
             StateHash liveHash = StateHash.Start();
             StateHash twinHash = StateHash.Start();
             for (uint tick = 0; tick < 200; tick++)
@@ -335,7 +335,7 @@ public sealed class CameraTests
             Assert.True(liveHash.Value == twinHash.Value, $"Seed {seed}: two live runs give the aim-ray hashes {liveHash} and {twinHash}.");
 
             ReplayCameraFold replayed = new(targets);
-            ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.Content, new JsonlLogger(new CollectingSink()), replayed);
+            ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink()), replayed);
             Assert.True(liveHash.Value == replayed.Hash.Value, $"Seed {seed}: the live aim-ray hash is {liveHash}, and the replay folds {replayed.Hash}.");
             Assert.True(live.Camera() == replay.Loop.Camera(), $"Seed {seed}: the live camera is {live.Camera()}, and the replay camera is {replay.Loop.Camera()}.");
             Assert.True(live.Aim(targets) == replay.Loop.Aim(targets), $"Seed {seed}: the live aim ray is {live.Aim(targets)}, and the replay aim ray is {replay.Loop.Aim(targets)}.");

@@ -4,6 +4,7 @@ using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
+using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
@@ -42,7 +43,7 @@ public sealed class StairwellTests
     /// <summary>The floor cell under the feet center of a body.</summary>
     private static Cell FloorCellOf(PlayerBody body)
     {
-        return GreedyDescender.FloorCellOf(body);
+        return PathWalk.FloorCellOf(body.Position);
     }
 
     /// <summary>
@@ -84,7 +85,7 @@ public sealed class StairwellTests
     {
         const ulong seed = 1UL;
         MemorySink sink = new();
-        RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.Content.Hash, seed));
+        RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.PeacefulContent.Hash, seed));
         SimulationLoop loop = TestWorld.NewLoop(seed);
         Assert.Equal(1, loop.Floor);
         Assert.False(loop.Ended);
@@ -110,7 +111,7 @@ public sealed class StairwellTests
         Assert.Equal(2, loop.Plan.Floor);
         Assert.False(loop.Ended);
         Assert.Equal(descendTick + 1, loop.Tick);
-        FloorPlan expected = FloorGenerator.Generate(seed, 2, TestWorld.Content);
+        FloorPlan expected = FloorGenerator.Generate(seed, 2, TestWorld.PeacefulContent);
         Assert.Equal(expected.Spawn, loop.Body.Position);
         Assert.Equal(expected.Stairwell, loop.Plan.Stairwell);
         Assert.True(SameBlocks(expected.Grid, loop.Grid), "Floor 2 of the loop is not the floor 2 of the generator.");
@@ -133,7 +134,7 @@ public sealed class StairwellTests
         Assert.Contains("floor=2", afterEnd.Message, StringComparison.Ordinal);
 
         CollectingSink logs = new();
-        ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.Content, new JsonlLogger(logs));
+        ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.PeacefulContent, new JsonlLogger(logs));
         Assert.Equal(2, replay.Loop.Floor);
         Assert.True(replay.Loop.Ended);
         Assert.Equal(loop.Tick, replay.Loop.Tick);
@@ -143,7 +144,7 @@ public sealed class StairwellTests
 
         // A frame after the end is an error that names the frame, and never a tick that runs.
         List<byte> longer = [.. sink.Bytes, .. new Intent(loop.Tick, 0, 0, 0, 0, 0).Encode()];
-        ContextException extra = Assert.Throws<ContextException>(() => RunReplayer.Replay(longer, TestWorld.Content, new JsonlLogger(new CollectingSink())));
+        ContextException extra = Assert.Throws<ContextException>(() => RunReplayer.Replay(longer, TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink())));
         Assert.Contains($"frame={replay.FrameCount}", extra.Message, StringComparison.Ordinal);
     }
 
@@ -214,7 +215,8 @@ public sealed class StairwellTests
 
     /// <summary>
     /// The hash of a loop state with a floor and an end of the caller's choice, in the declared order: the run end is
-    /// one byte of its kind, an ascend here, and the player follows the projectiles (D-322, PR-15).
+    /// one byte of its kind, an ascend here, the player follows the projectiles, and the enemies with their brains
+    /// follow the player (D-322, PR-15, PR-16).
     /// </summary>
     private static Core.Determinism.StateHash HashWith(SimulationLoop loop, int floor, bool ended)
     {
@@ -232,6 +234,13 @@ public sealed class StairwellTests
         hash.Add(ended ? (byte)RunEnd.Ascend : (byte)RunEnd.None);
         loop.Projectiles.AddTo(ref hash);
         loop.Player.AddTo(ref hash);
+        hash.Add(loop.Enemies.Count);
+        for (int index = 0; index < loop.Enemies.Count; index++)
+        {
+            loop.Enemies[index].AddTo(ref hash);
+            loop.Brains[index].AddTo(ref hash);
+        }
+
         return hash;
     }
 }

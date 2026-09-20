@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.World;
 using Xunit;
@@ -37,7 +38,7 @@ public sealed class RampSearchTests
         for (int place = 0; place < run; place++)
         {
             Cell ramp = course.CellAt(RampCourse.RampStart + place, 1, 4);
-            Assert.True(Reachability.IsFloor(course.Grid, ramp));
+            Assert.True(GridMoves.IsFloor(course.Grid, ramp));
             Assert.Equal(RampCourse.RampStart + place - 3, up.Distance(ramp));
             Assert.Equal(12 - RampCourse.RampStart - place, down.Distance(ramp));
         }
@@ -76,25 +77,25 @@ public sealed class RampSearchTests
         Assert.Equal(5, reach.Distance(new Cell(6, 1, 2)));
 
         // The walks of the ramp in each direction, and the step onto its side.
-        Assert.Equal(1, Reachability.RampWalk(grid, 3, 0, 2, 4, 2));
-        Assert.Equal(0, Reachability.RampWalk(grid, 4, 1, 2, 3, 2));
-        Assert.Equal(1, Reachability.RampWalk(grid, 5, 1, 2, 6, 2));
-        Assert.Equal(1, Reachability.RampWalk(grid, 6, 1, 2, 5, 2));
-        Assert.Equal(-1, Reachability.RampWalk(grid, 4, 0, 1, 4, 2));
-        Assert.Equal(1, Reachability.Landing(grid, 4, 0, 1, 4, 2));
+        Assert.Equal(1, GridMoves.RampWalk(grid, 3, 0, 2, 4, 2));
+        Assert.Equal(0, GridMoves.RampWalk(grid, 4, 1, 2, 3, 2));
+        Assert.Equal(1, GridMoves.RampWalk(grid, 5, 1, 2, 6, 2));
+        Assert.Equal(1, GridMoves.RampWalk(grid, 6, 1, 2, 5, 2));
+        Assert.Equal(-1, GridMoves.RampWalk(grid, 4, 0, 1, 4, 2));
+        Assert.Equal(1, GridMoves.Landing(grid, 4, 0, 1, 4, 2));
 
         // The column top is two blocks over the floor and more than one block over the slope, so nothing reaches it.
-        Assert.Equal(-1, Reachability.Landing(grid, 4, 1, 2, 4, 3));
+        Assert.Equal(-1, GridMoves.Landing(grid, 4, 1, 2, 4, 3));
         Assert.False(reach.IsReachable(new Cell(4, 2, 3)));
 
         // A drop off the side of the high place lands on the floor.
-        Assert.Equal(0, Reachability.Landing(grid, 5, 1, 2, 5, 3));
+        Assert.Equal(0, GridMoves.Landing(grid, 5, 1, 2, 5, 3));
 
         // A ceiling at row 3 over the floor before the low end stops the walk both ways, and the jump has no room.
         grid.Set(3, 3, 2, BlockId.RawStone);
-        Assert.Equal(-1, Reachability.RampWalk(grid, 3, 0, 2, 4, 2));
-        Assert.Equal(-1, Reachability.RampWalk(grid, 4, 1, 2, 3, 2));
-        Assert.Equal(-1, Reachability.Landing(grid, 3, 0, 2, 4, 2));
+        Assert.Equal(-1, GridMoves.RampWalk(grid, 3, 0, 2, 4, 2));
+        Assert.Equal(-1, GridMoves.RampWalk(grid, 4, 1, 2, 3, 2));
+        Assert.Equal(-1, GridMoves.Landing(grid, 3, 0, 2, 4, 2));
     }
 
     /// <summary>The top of one ramp joins the low end of a ramp one row up, in both directions, when the lower cell has a third open cell over it.</summary>
@@ -121,15 +122,15 @@ public sealed class RampSearchTests
         grid.Set(7, 1, 1, BlockId.RawStone);
         grid.Set(7, 2, 1, BlockId.RawStone);
 
-        Assert.Equal(2, Reachability.RampWalk(grid, 3, 1, 1, 4, 1));
-        Assert.Equal(1, Reachability.RampWalk(grid, 4, 2, 1, 3, 1));
+        Assert.Equal(2, GridMoves.RampWalk(grid, 3, 1, 1, 4, 1));
+        Assert.Equal(1, GridMoves.RampWalk(grid, 4, 2, 1, 3, 1));
 
         Reachability reach = Reachability.From(grid, new Cell(0, 0, 1));
         Assert.Equal(7, reach.Distance(new Cell(7, 2, 1)));
         Assert.Equal(7, Reachability.From(grid, new Cell(7, 2, 1)).Distance(new Cell(0, 0, 1)));
 
         grid.Set(3, 4, 1, BlockId.RawStone);
-        Assert.Equal(-1, Reachability.RampWalk(grid, 3, 1, 1, 4, 1));
-        Assert.Equal(-1, Reachability.RampWalk(grid, 4, 2, 1, 3, 1));
+        Assert.Equal(-1, GridMoves.RampWalk(grid, 3, 1, 1, 4, 1));
+        Assert.Equal(-1, GridMoves.RampWalk(grid, 4, 2, 1, 3, 1));
     }
 }

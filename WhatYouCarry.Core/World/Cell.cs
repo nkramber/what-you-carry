@@ -1,4 +1,4 @@
-namespace WhatYouCarry.Core.Procgen;
+namespace WhatYouCarry.Core.World;
 
 /// <summary>One cell of the grid, by its block coordinates (D-78, D-234).</summary>
 public readonly record struct Cell(int X, int Y, int Z);

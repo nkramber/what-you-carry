@@ -1,10 +1,13 @@
 using System.Collections.Generic;
 using System.Globalization;
+using WhatYouCarry.Core.Ai;
 using WhatYouCarry.Core.Camera;
+using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Projectiles;
@@ -21,14 +24,22 @@ namespace WhatYouCarry.Core.Simulation;
 /// The state is the seed, the tick, the yaw and pitch sums in hundredths of a degree, the buttons of the last
 /// intent (D-227), then the position and the vertical velocity of the player body (PR-7), then the floor number
 /// and the run end (PR-9, D-322), then the projectiles in flight (PR-10), then the player: the health, the dodge
-/// cooldown, the roll, the swing, the stagger, and the guard (PR-15). The yaw wraps at a full turn, and the pitch
+/// cooldown, the roll, the swing, the stagger, and the guard (PR-15), and then the enemies and their brains
+/// (PR-16). The yaw wraps at a full turn, and the pitch
 /// stops at 80 degrees up and 80 degrees down (D-241). A positive pitch looks up (D-248). The camera and the aim
 /// ray come from the state on demand, and they are not state (D-245).
 /// </para>
 /// <para>
 /// The attack bit swings the main weapon: the first weapon definition of the content set, until the loadout of
 /// PR-30 (D-320). No intent fires a projectile before PR-24, and the projectiles of a floor end with the floor.
-/// No enemy exists before PR-16, so the blade has no target box yet.
+/// The blade of the player takes the box of every living enemy as a target (D-325).
+/// </para>
+/// <para>
+/// The enemies of a floor come from the spawns of its plan (D-398). Each one carries a brain of PR-16, and the
+/// brains run in spawn order after the player. A brain reads the state of the player after the tick of the
+/// player, so an enemy answers the move of this tick and never the move of the last one. The hits of the player
+/// land on the enemies before the enemies move, and the hits of the enemies land on the player after they move.
+/// A dead enemy takes no tick, is no target, and holds its place in the list, so an owner id never moves (D-322).
 /// </para>
 /// <para>
 /// The floor comes from the seed, the floor number, and the content set, so the grid and the spawn are inputs
@@ -61,10 +72,10 @@ public sealed class SimulationLoop
     /// <summary>The owner id of the player in the projectile simulation.</summary>
     public const int PlayerOwner = 0;
 
-    /// <summary>The target boxes of the blade. PR-16 takes them from the enemies, and no enemy exists before it.</summary>
-    private static readonly EntityBox[] NoTargets = [];
-
     private readonly ContentSet content;
+    private List<Enemy> enemies = [];
+    private List<HumanoidBrain> brains = [];
+    private GridPathfinder pathfinder;
     private bool ascended;
 
     /// <summary>A loop at tick zero for one run, on floor 1 of the seed, with the player at rest at the spawn point.</summary>
@@ -77,6 +88,8 @@ public sealed class SimulationLoop
         this.Plan = FloorGenerator.Generate(seed, FirstFloor, content);
         this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, this.Weapon, Player.MaxHealth);
         this.Projectiles = new ProjectileSimulation(this.Plan.Grid, content.Projectiles);
+        this.pathfinder = new GridPathfinder(this.Plan.Grid);
+        this.Populate();
     }
 
     /// <summary>
@@ -118,6 +131,30 @@ public sealed class SimulationLoop
     /// <summary>The projectiles that ended on the last tick, in flight order. The Game layer reads the hit points from it. It is not state.</summary>
     public IReadOnlyList<ProjectileEnd> LastEnds { get; private set; } = [];
 
+    /// <summary>The enemies of the floor, in spawn order. A dead one holds its place, so an owner id never moves (D-322, D-398).</summary>
+    public IReadOnlyList<Enemy> Enemies => this.enemies;
+
+    /// <summary>The brains of the enemies, in the same order (D-400).</summary>
+    public IReadOnlyList<HumanoidBrain> Brains => this.brains;
+
+    /// <summary>The count of enemies of the floor that still have health.</summary>
+    public int LivingEnemies
+    {
+        get
+        {
+            int living = 0;
+            foreach (Enemy enemy in this.enemies)
+            {
+                if (!enemy.IsDead)
+                {
+                    living++;
+                }
+            }
+
+            return living;
+        }
+    }
+
     /// <summary>The floor number, from one (D-3). The state holds it, and the hash reads it after the body.</summary>
     public int Floor { get; private set; } = FirstFloor;
 
@@ -148,7 +185,7 @@ public sealed class SimulationLoop
             ContextException ended = new($"The run ended at tick {this.Tick} on floor {this.Floor}, and the loop takes no intent after the end (D-50, D-322).");
             ended.AddContext("tick", ((long)this.Tick).ToString(CultureInfo.InvariantCulture));
             ended.AddContext("floor", ((long)this.Floor).ToString(CultureInfo.InvariantCulture));
-            ended.AddContext("end", EndText(this.End));
+            ended.AddContext("end", RunEnds.TextOf(this.End));
             throw ended;
         }
 
@@ -196,7 +233,9 @@ public sealed class SimulationLoop
         this.Yaw = yaw;
         this.Pitch = pitch;
         this.Buttons = intent.Buttons;
-        this.Player.Step(intent, previousButtons, yaw, NoTargets);
+        this.Player.Step(intent, previousButtons, yaw, this.LivingBoxes());
+        this.StrikeEnemies();
+        this.StepBrains();
 
         EntityBox[] boxes = [new EntityBox(PlayerOwner, this.Body.Box)];
         this.LastEnds = this.Projectiles.Step(boxes);
@@ -223,7 +262,7 @@ public sealed class SimulationLoop
     /// The aim ray for the state of this tick: the crosshair from the camera, pulled toward a target when the
     /// last intent set the controller aim bit (D-243, D-244, D-247).
     /// </summary>
-    /// <param name="targets">The target points, which PR-16 takes from the enemies.</param>
+    /// <param name="targets">The target points. <see cref="AimTargets"/> gives them for the enemies of the floor.</param>
     public AimRay Aim(IReadOnlyList<Vector3> targets)
     {
         CameraPose pose = this.Camera();
@@ -234,8 +273,8 @@ public sealed class SimulationLoop
     /// <summary>
     /// The hash of the whole state, in the declared field order (D-160): the five fields of D-227, then the
     /// position and the vertical velocity of the body, then the floor number and the run end as one byte, then the
-    /// projectiles in flight order, then the player. A new field goes after these, so the order of every earlier one
-    /// stands.
+    /// projectiles in flight order, then the player, then the count of enemies and each enemy with its brain. A new
+    /// field goes after these, so the order of every earlier one stands.
     /// </summary>
     public StateHash Hash()
     {
@@ -253,27 +292,164 @@ public sealed class SimulationLoop
         hash.Add((byte)this.End);
         this.Projectiles.AddTo(ref hash);
         this.Player.AddTo(ref hash);
+        hash.Add(this.enemies.Count);
+        for (int index = 0; index < this.enemies.Count; index++)
+        {
+            this.enemies[index].AddTo(ref hash);
+            this.brains[index].AddTo(ref hash);
+        }
+
         return hash;
     }
 
-    /// <summary>The name of a run end in a message. The switch is explicit, so no reflection reads the enum (G-2).</summary>
-    private static string EndText(RunEnd end)
+    /// <summary>The aim points of the living enemies, in spawn order: the middle of each box (D-243, D-244).</summary>
+    public IReadOnlyList<Vector3> AimTargets()
     {
-        switch (end)
+        List<Vector3> targets = [];
+        foreach (Enemy enemy in this.enemies)
         {
-            case RunEnd.Ascend: return "ascend";
-            case RunEnd.Death: return "death";
-            default: return "none";
+            if (enemy.IsDead)
+            {
+                continue;
+            }
+
+            Aabb box = enemy.Body.Box;
+            targets.Add(new Vector3((box.Min.X + box.Max.X) * 0.5f, (box.Min.Y + box.Max.Y) * 0.5f, (box.Min.Z + box.Max.Z) * 0.5f));
+        }
+
+        return targets;
+    }
+
+    /// <summary>The target boxes of the living enemies, in spawn order. A dead enemy is no target (D-322).</summary>
+    private IReadOnlyList<EntityBox> LivingBoxes()
+    {
+        List<EntityBox> boxes = [];
+        foreach (Enemy enemy in this.enemies)
+        {
+            if (!enemy.IsDead)
+            {
+                boxes.Add(enemy.TargetBox);
+            }
+        }
+
+        return boxes;
+    }
+
+    /// <summary>
+    /// Deals the hits of the blade of the player on this tick to the enemies that it met, in hit order. An enemy
+    /// that the same swing already hit takes no second hit, because the swing holds the owner ids that it hit
+    /// (D-325).
+    /// </summary>
+    /// <exception cref="ContextException">A hit names an owner id that no enemy of this floor carries (T-2).</exception>
+    private void StrikeEnemies()
+    {
+        foreach (SwordHit hit in this.Player.LastHits)
+        {
+            this.EnemyOf(hit.Owner).TakeHit(hit.Damage);
         }
     }
 
-    /// <summary>Digs the next floor from the run seed and the next floor number, and puts a player at rest at its spawn with the same health (D-257, D-335).</summary>
+    /// <summary>
+    /// Runs the brain of every living enemy, in spawn order, and deals the hits of their blades to the player. A
+    /// run that ended inside this loop takes no more hits, because the player of a dead run takes none (D-322).
+    /// </summary>
+    private void StepBrains()
+    {
+        IReadOnlyList<EntityBox> playerBox = [new EntityBox(PlayerOwner, this.Body.Box)];
+        for (int index = 0; index < this.enemies.Count; index++)
+        {
+            Enemy enemy = this.enemies[index];
+            if (enemy.IsDead)
+            {
+                continue;
+            }
+
+            this.brains[index].Step(this.Grid, this.pathfinder, this.Body.Position, playerBox);
+            foreach (SwordHit hit in enemy.LastHits)
+            {
+                if (hit.Owner != PlayerOwner)
+                {
+                    ContextException error = new($"The enemy {enemy.Owner} hit the owner id {hit.Owner} on tick {this.Tick}, and the player is the one target of an enemy blade in PR-16.");
+                    error.AddContext("owner", ((long)enemy.Owner).ToString(CultureInfo.InvariantCulture));
+                    error.AddContext("hitOwner", ((long)hit.Owner).ToString(CultureInfo.InvariantCulture));
+                    throw error;
+                }
+
+                if (!this.Player.IsDead)
+                {
+                    this.Player.TakeHit(hit.Damage);
+                }
+            }
+        }
+    }
+
+    /// <summary>The enemy of one owner id.</summary>
+    /// <exception cref="ContextException">No enemy of this floor carries the id (T-2).</exception>
+    private Enemy EnemyOf(int owner)
+    {
+        foreach (Enemy enemy in this.enemies)
+        {
+            if (enemy.Owner == owner)
+            {
+                return enemy;
+            }
+        }
+
+        ContextException error = new($"The blade of the player hit the owner id {owner} on tick {this.Tick}, and floor {this.Floor} holds no enemy of that id.");
+        error.AddContext("hitOwner", ((long)owner).ToString(CultureInfo.InvariantCulture));
+        error.AddContext("tick", ((long)this.Tick).ToString(CultureInfo.InvariantCulture));
+        error.AddContext("floor", ((long)this.Floor).ToString(CultureInfo.InvariantCulture));
+        error.AddContext("enemies", ((long)this.enemies.Count).ToString(CultureInfo.InvariantCulture));
+        throw error;
+    }
+
+    /// <summary>
+    /// Puts one enemy and one brain at each spawn of the plan, in spawn order (D-398). The owner id of the first
+    /// enemy is one, because the player holds zero. The feet center of a spawn is the center of the cell over its
+    /// floor cell.
+    /// </summary>
+    private void Populate()
+    {
+        // A new pair of lists, and never a clear of the old ones, because Core approves no member that it does not
+        // need (D-207, D-208).
+        this.enemies = [];
+        this.brains = [];
+        foreach (EnemySpawn spawn in this.Plan.EnemySpawns)
+        {
+            Vector3 feet = new(spawn.Cell.X + 0.5f, spawn.Cell.Y + 1.0f, spawn.Cell.Z + 0.5f);
+            Enemy enemy = new(this.Grid, feet, spawn.Family, WeaponOf(this.content, spawn.Family), this.enemies.Count + 1);
+            this.enemies.Add(enemy);
+            this.brains.Add(new HumanoidBrain(enemy, spawn.Cell));
+        }
+    }
+
+    /// <summary>The weapon that an enemy family names (D-397). The loader proves that the set holds it.</summary>
+    /// <exception cref="ContextException">The content set holds no weapon of that id (T-2).</exception>
+    private static WeaponDefinition WeaponOf(ContentSet content, EnemyDefinition family)
+    {
+        foreach (WeaponDefinition weapon in content.Weapons)
+        {
+            if (weapon.Id == family.Weapon)
+            {
+                return weapon;
+            }
+        }
+
+        ContextException error = new($"The enemy family '{family.Id}' names the weapon '{family.Weapon}', and the content set holds no weapon of that id (D-397).");
+        error.AddContext("enemyFamily", family.Id);
+        error.AddContext("weapon", family.Weapon);
+        throw error;
+    }
+
+    /// <summary>Digs the next floor from the run seed and the next floor number, and puts a player at rest at its spawn with the same health, with the enemies of the new floor (D-257, D-335, D-398).</summary>
     private void Descend()
     {
         int next = this.Floor + 1;
         this.Plan = FloorGenerator.Generate(this.Seed, next, this.content);
         this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, this.Weapon, this.Player.Health);
         this.Projectiles = new ProjectileSimulation(this.Plan.Grid, this.content.Projectiles);
+        this.pathfinder = new GridPathfinder(this.Plan.Grid);
         this.Floor = next;
+        this.Populate();
     }
 }

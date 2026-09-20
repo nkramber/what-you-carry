@@ -3,6 +3,7 @@ using System.Globalization;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.World;
 
@@ -19,7 +20,8 @@ namespace WhatYouCarry.Core.Procgen;
 /// the tunnels, the ramps, and the shafts. The <see cref="DetailPass"/> then adds the blocks of the band, the pools, the pillars,
 /// and the collapses (D-254). The spawn is the center of the anchor cell of the first chamber. The stairwell is
 /// the floor cell with the longest walkable path from the spawn after the detail, in the chamber whose nearest
-/// floor cell lies farthest (D-256).
+/// floor cell lies farthest (D-256). <see cref="EnemyPlacement"/> then fills every chamber past the first with
+/// enemies for its weight (D-167, D-398).
 /// </para>
 /// <para>
 /// A dig that runs the job budget of <see cref="DigPlan.JobBudget"/> with a chamber still in rock starts again on an
@@ -105,7 +107,8 @@ public static class FloorGenerator
         CheckShaftLandings(plan.Shafts, grid, reach);
         CheckTiers(plan.Chambers, grid, reach);
         Vector3 spawn = new(first.Anchor.X + 0.5f, first.FloorRow + 1.0f, first.Anchor.Z + 0.5f);
-        return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Tunnels, plan.Shafts, plan.Ramps, detail);
+        IReadOnlyList<EnemySpawn> enemies = EnemyPlacement.Place(grid, plan.Chambers, reach, floor, content.Enemies);
+        return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Tunnels, plan.Shafts, plan.Ramps, detail, enemies);
     }
 
     /// <summary>
@@ -158,7 +161,7 @@ public static class FloorGenerator
             foreach (Column column in chamber.Footprint)
             {
                 Cell cell = new(column.X, chamber.FloorRow, column.Z);
-                if (!Reachability.IsFloor(grid, cell) || !reach.IsReachable(cell))
+                if (!GridMoves.IsFloor(grid, cell) || !reach.IsReachable(cell))
                 {
                     continue;
                 }
@@ -218,7 +221,7 @@ public static class FloorGenerator
             foreach (Column column in chamber.Tier.Floor)
             {
                 Cell cell = new(column.X, chamber.Tier.FloorRow, column.Z);
-                if (Reachability.IsFloor(grid, cell) && reach.IsReachable(cell))
+                if (GridMoves.IsFloor(grid, cell) && reach.IsReachable(cell))
                 {
                     continue;
                 }
@@ -252,7 +255,7 @@ public static class FloorGenerator
             }
 
             Cell landing = new(shaft.Center.X, landingRow, shaft.Center.Z);
-            bool onFloor = Reachability.IsFloor(grid, landing);
+            bool onFloor = GridMoves.IsFloor(grid, landing);
             if (onFloor && reach.IsReachable(landing))
             {
                 continue;

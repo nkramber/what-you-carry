@@ -2,6 +2,87 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 192: 2026-09-20, Claude Code
+
+Author: Claude Code
+Session: PR-16, the first enemy family, the AI, and the pathfinder. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Repaired `main`. The entry of Session 191 sat at the end of `docs/session-handoff.md`, so `HandoffRotateTests` failed on every CI leg of any branch (D-146). The entry moved to the top, word for word, and `handoff-rotate` ran.
+- Asked the owner OQ-9 before any enemy content, as the roadmap and D-124 require. D-395 to D-405 hold eleven answers over four batches: the eight families, the scavenger as the first one, its gear, its numbers, its cadence, the empty spawn chamber, the wake rule, the drawing, the `death` end state, the descender that fights, and the wedge fix inside this PR.
+- Moved the move rule of D-165 and D-345 out of `Reachability` into `Core/Pathfinding/GridMoves.cs`, and wrote the A* search of D-76 over it. The generator and the AI now read one rule.
+- Wrote the scavenger, the brain, the spawn pass, the full clearer, and the drawing of each enemy. The player of PR-15 now reads the shared `Swing` and `Stagger` of `Core/Combat`.
+- Found and fixed F-104 and F-105, two walk defects that only the new movement reaches. The measured softlock rate of a bot fell from about 10 percent to zero over 2000 seeds of each policy.
+
+### State of the build
+
+- Base and merge base: `e1c20ea`, the merge of PR #82.
+- `dotnet test` locally: 1172 passed, 0 failed, with the filter `Category!=Smoke`. The Smoke category passed 5 of 5 against the pinned binary. `det-lint` reports 0 findings in Core and 0 in Game. `ste-check` reports 0 findings over 34 files. `asset-qa` reports 0 findings.
+- The simulation version is 13, and the bit-identity answer is `d701dca6d5cee4d8`.
+- The bot sweep of seeds 1 to 100 passed for all three policies: 0 crashes and 0 softlocks. Over 2000 seeds, the descender reaches the bottom on 129 and the clearer on 421, and neither reads a crash or a softlock.
+- Exit test 8 of PR-66, the night sweep on `main` at `e1c20ea`: not run yet. The night and the PR macOS legs share the one Mac runner, so the dispatch waits for the PR checks.
+- Remote head: not pushed yet.
+
+### In flight
+
+The branch holds the whole PR-16 scope, the eleven decisions, the two findings, and this entry. The PR opens next, then the checks, then the automated pass of gitar, then the cross-provider review. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
+
+### Traps and gotchas
+
+- A walk to the cell of a body that moves never closes. Two walkers each aimed at the cell of the other and swung around each other 2 meters apart for a whole floor (F-104). A search now starts at the cell that the body walks into, and the last 4 meters of a chase are a straight walk at the body.
+- A drift check that reads the X and the Z of a waypoint and not its row misses a body that fell two rows under its path. The body then jumped at a step of two blocks until the floor budget ran out (F-105).
+- A roll away from every blade loses a duel: the roll covers 3 meters, and the enemy closes again during the 45-tick cooldown. `BotIntent.Roll` rolls through the enemy, which took the descender from 2 bottoms in 200 seeds to 43.
+- A step up onto the side of a ramp is a legal move. A ban on it read as a fix for F-105 and was not one, and `TheSearchFollowsTheBodyRuleOnRamps` names the case.
+- `TestWorld.NewLoop` now digs a floor with no enemy family, so a test of the camera, the body, or the replay reads its own rule. A test of the enemies builds its loop from `TestWorld.Content`.
+- The smoke session dies at tick 273 of its 600-tick script on seed 1, and it ends clean with exit code 0 and the end kind in its line. The smoke gate covers fewer ticks than it did, and a stronger smoke script belongs to a later PR.
+- The sweep enemy of the bit-identity content swings a second weapon of 1 damage, because a run that ends by death takes no more intents and the sweep record holds 600 of them.
+- The owner chose the wedge fix inside PR-16 (D-405). This PR therefore carries the walk fixes beside the enemies, which widens it past one concern (G-10).
+- The next ids are D-406, OQ-181, F-106, PR-71, and Session 193.
+
+### Open questions that block progress
+
+None. OQ-9 has its answers in D-395 and D-396.
+
+### Next concrete action
+
+Open the PR, wait on the checks, answer the automated pass of gitar, and then dispatch the night on `main` at `e1c20ea` for exit test 8 of PR-66. Codex then reviews the PR and writes `docs/reviews/pr-<number>.md`.
+
+## Session 191: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-82, the ramps, chamber tiers, and shaft routes. Branch `feat/pr-66-ramps-and-tiers`.
+
+### What this session did, and why
+
+- Reviewed PR #82 as the cross-provider reviewer.
+- Inspected the complete diff, the generator contracts, the focused roadmap, the decisions, the questions, and all PR comments.
+- Found no actionable issue at effective head `97efa5c`.
+
+### State of the build
+
+- Base and merge base: `27db615`.
+- The focused procgen test process compiled, then stalled in the shared large sweep and was canceled.
+- Revision-matched CI and the automated pass are recorded as passed at `97efa5c`. The review-gate and evaluate checks were expectedly neutral or failed before the review record existed.
+- The review record is `docs/reviews/pr-82.md`.
+
+### In flight
+
+The review record and this handoff entry need one commit and a push. The owner play test remains exit test 10.
+
+### Traps and gotchas
+
+- The effective head excludes the later handoff and review-record commits under D-184.
+- The local large sweep did not finish in this execution context. Do not report it as a local pass.
+
+### Open questions that block progress
+
+None. OQ-179 and OQ-180 are resolved by D-388 through D-394.
+
+### Next concrete action
+
+Run the review session end gate after the commit and push.
+
 ## Session 190: 2026-09-20, Claude Code
 
 Author: Claude Code
@@ -323,124 +404,3 @@ None.
 ### Next concrete action
 
 The author loads `review-response`, updates the lookup command in both agent files, and adds a regression check.
-
-## Session 182: 2026-09-16, Claude Code
-
-Author: Claude Code
-Session: cut the agent context cost of each session, with the owner instructions D-377 to D-382. Branch `feat/context-budget`.
-
-### What this session did, and why
-
-- A token audit of this repository read 10 recent sessions of each harness. Most input came from the model calls after a status poll (17.2% Claude Code, 22.8% Codex) and after handoff and archive work (17.3%, 27.5%). Register text and one large review skill added more. The owner told the session to apply every P0 and P1 fix of the audit.
-- D-377: the first action prints the newest handoff entry alone, and the read order adds the newest entry of the branch. The end of a session takes the number from the top heading after a fetch. D-187 gains a revision note for the second full read.
-- D-378: `AGENTS.md` holds one lookup command for all D-# and OQ-# ids of a task, with a line that finds each revision (D-186). A check on five superseded decisions printed the superseding id of each.
-- D-379: the `handoff-rotate` command moves each entry after the tenth to the archive top with its text intact. Nine tests cover it, and a seed loop of 300 seeds proves the text and the order. A mutation that dropped one moved entry failed three tests.
-- D-380: the `one-pr-one-session` skill waits on checks with one `gh pr checks --watch` command, then prints the final state once. The first run on this PR used `--fail-fast` and stopped at once on `evaluate`, which fails until a review record exists (D-251). The skill now waits for every check. `gitar-review` does not change, because other repositories use the same file.
-- D-381: `pr-review` keeps the reviewer procedure, and the new `review-response` skill holds the author procedure. D-374 gains a revision note.
-- D-382: `ContextBudgetTests` caps the agent files at 15000 bytes, each skill at 12000 (`pr-review` 31000), the handoff at 60000, and its newest entry at 7000.
-- The rule paragraph of this file moved from between Session 181 and Session 180 to the file header, so it no longer moves with the entries.
-- `CLAUDE.md` holds the new rules in 14586 bytes, 7 fewer than before. The gitar bullets that copied the `gitar-review` skill are gone (D-374), and some build prose is shorter with no rule lost.
-
-### State of the build
-
-- `main` is at `58e4fc8`, the base of this branch. The effective head is `3eb7142`, PR #78, and this entry sits in a metadata commit above it (D-184). Pending owner merge.
-- Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1143 tests, 0 failures. `ste-check`: 0 findings in 19 files. `det-lint`: 0 findings. No Core, Game, content, or asset path changed, so the simulation version, `bit-identity`, and `asset-qa` stand.
-- CI on `3eb7142`: CI, smoke, and bit identity passed on the three platforms, with the compare job. Asset-qa, bots, det-lint, doc-gate, night-gate, and STE check passed. `evaluate` fails and `review-gate` skips, because no review record exists yet (D-251). Every run completed before the push of this entry, so that push cancels nothing (D-356).
-- The automated pass of gitar: the automatic review approved `ca570e2` at 21:30:30 UTC, one push behind the head, with automatic reviews paused. A `Gitar review` comment at 21:31:21 UTC got "On it" at 21:31:40, and the dashboard approved `3eb7142` at 21:32:03 with no finding and no thread (D-303, D-374).
-- Start paths, bytes before and after: an implementation author 74615 to 36154, an author who answers findings 109690 to 44642, a reviewer 109690 to 66597.
-
-### In flight
-
-PR #78 changes `WhatYouCarry.Tools` and `WhatYouCarry.Tests`, so it needs the Codex review per `pr-review` at the effective head (T-4). The `review-override` label does not apply. The owner then merges.
-
-### Traps and gotchas
-
-- The start rules changed in this PR. A reviewer of this branch reads the new `AGENTS.md` of the branch, and `main` keeps the old text until the merge.
-- `ContextBudgetTests` reads the newest handoff entry. An entry over 7000 bytes fails `dotnet test`, so keep each entry short.
-- Run `handoff-rotate` after the new entry, not before. It exits 1 and changes nothing on a duplicate number, a wrong order, or an archive top that is not older.
-- G-17 asks for a measurement after the change. The first three substantial sessions on `main` with these rules count the calls after a status poll, the handoff bytes read at the start, and the calls after archive work. Each writes the counts in its own handoff entry.
-- The next ids are D-383, OQ-177, F-102, PR-70, and Session 183.
-
-### Open questions that block progress
-
-None blocks this PR. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
-
-### Next concrete action
-
-A Codex session reviews this PR per the `pr-review` skill at the effective head and writes the review record on this branch. The owner then merges. A fresh session then opens PR-69.
-
-## Session 181: 2026-09-16, Codex
-
-Author: Codex
-Session: re-review PR #77 at effective head `b91bd24` and record the corrected verdict. Branch `feat/one-pr-one-session`.
-
-### What this session did, and why
-
-- Recomputed the effective head. `b91bd24` changes the Gitar review skill, so it moves the head beyond the duplicate-line correction `f0befdd` (D-184).
-- Confirmed Claude Code authored the PR from Session 178. Codex passes the provider gate (T-4, D-101).
-- Verified P2-1 remains fixed. `DuplicateMatrixLineFails` passes, the live description passes `doc-gate`, and the same description with the conflicting line fails.
-- Verified the current Gitar dashboard follows the request and reply for `b91bd24`. It approves and has no open finding.
-- Updated `docs/reviews/pr-77.md`. It retains P2-1 and the earlier verdict, and records the new verdict for `b91bd24`.
-- Session 171 moved to the archive, because this entry made eleven entries.
-
-### State of the build
-
-- `main` and the merge base are `9b27afc`. The effective PR head is `b91bd24`.
-- Remote head: `origin/feat/one-pr-one-session` at the commit that holds this entry and the review record, checked with `gh pr view` before the session ended.
-- `DocGateTests`, `ReviewGateRulesTests`, and `ReviewGateGitTests`: 46 passed. The live `doc-gate` description passed, and the duplicate-line variant failed with one problem.
-- Local `dotnet test WhatYouCarry.slnx --no-build` produced no completion after four minutes and was cancelled. The CI platform tests on `b91bd24` passed.
-- Before the review update, CI on `b91bd24` passed asset QA, bots, compare, det-lint, doc-gate, platform tests, night gate, and STE check. `evaluate` and `review-gate` failed while the review record held the earlier verdict.
-- The current Gitar dashboard approves and reports the earlier finding closed with no new finding.
-
-### In flight
-
-PR #77 is ready for owner merge. The owner merges it.
-
-### Traps and gotchas
-
-- The effective head is `b91bd24`, because the Gitar skill changed after `f0befdd` (D-184).
-- Two platform jobs from an older run remained pending, while later matching platform results passed.
-- The next ids are D-377, OQ-177, F-102, PR-70, and Session 182.
-
-### Open questions that block progress
-
-None blocks PR #77. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
-
-### Next concrete action
-
-The owner merges PR #77. A fresh session then works on PR-66 and asks the owner for the tier shape first (D-350).
-## Session 191: 2026-09-20, Codex
-
-Author: Codex
-Session: PR-82, the ramps, chamber tiers, and shaft routes. Branch `feat/pr-66-ramps-and-tiers`.
-
-### What this session did, and why
-
-- Reviewed PR #82 as the cross-provider reviewer.
-- Inspected the complete diff, the generator contracts, the focused roadmap, the decisions, the questions, and all PR comments.
-- Found no actionable issue at effective head `97efa5c`.
-
-### State of the build
-
-- Base and merge base: `27db615`.
-- The focused procgen test process compiled, then stalled in the shared large sweep and was canceled.
-- Revision-matched CI and the automated pass are recorded as passed at `97efa5c`. The review-gate and evaluate checks were expectedly neutral or failed before the review record existed.
-- The review record is `docs/reviews/pr-82.md`.
-
-### In flight
-
-The review record and this handoff entry need one commit and a push. The owner play test remains exit test 10.
-
-### Traps and gotchas
-
-- The effective head excludes the later handoff and review-record commits under D-184.
-- The local large sweep did not finish in this execution context. Do not report it as a local pass.
-
-### Open questions that block progress
-
-None. OQ-179 and OQ-180 are resolved by D-388 through D-394.
-
-### Next concrete action
-
-Run the review session end gate after the commit and push.

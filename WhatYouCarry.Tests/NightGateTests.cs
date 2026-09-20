@@ -272,7 +272,7 @@ public sealed class NightGateTests
 
     private static string Record(DateTimeOffset endedAt, string status, string commit = Commit)
     {
-        return NightRecordCommand.Build(commit, endedAt.UtcDateTime, status);
+        return NightRecordCommand.Build(commit, endedAt.UtcDateTime, status, string.Empty);
     }
 
     private static Dictionary<string, string> Files(params (string Path, string Content)[] files)

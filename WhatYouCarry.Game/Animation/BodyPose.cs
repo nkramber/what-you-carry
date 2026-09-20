@@ -15,6 +15,15 @@ namespace WhatYouCarry.Game.Animation;
 /// </remarks>
 public static class BodyPose
 {
+    /// <summary>
+    /// The rest pose: every bone at zero. An enemy of PR-16 draws in it, because PR-16 plays no clip for an enemy
+    /// (D-401).
+    /// </summary>
+    public static IReadOnlyDictionary<string, CoreVector3> RestRotations()
+    {
+        return new Dictionary<string, CoreVector3>();
+    }
+
     /// <summary>The rotations of every bone that the pose turns, in degrees, by bone name.</summary>
     public static IReadOnlyDictionary<string, CoreVector3> Rotations(Player player, PlayerClips clips, float walked, float walkAmount)
     {

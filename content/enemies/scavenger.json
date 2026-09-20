@@ -1,0 +1,13 @@
+{
+  "id": "scavenger",
+  "minDepth": 1,
+  "maxDepth": 5,
+  "weight": 10,
+  "health": 40,
+  "weapon": "sword-basic",
+  "sightCentimetres": 2000,
+  "giveUpTicks": 300,
+  "attackRangeCentimetres": 140,
+  "attackCooldownTicks": 30,
+  "speedCentimetresPerSecond": 500
+}
