@@ -527,6 +527,8 @@ Gate: exit tests 1 to 10 pass.
 
 ### PR-16: First enemy family, AI, and pathfinder
 
+✅ Done in PR #83.
+
 Scope:
 
 - `Core/Pathfinding/GridMoves.cs`: the move rule of D-165 as D-345 revises it, moved out of `Reachability`: one block up, any drop, or a walk along a ramp (D-76). The generator and the AI read one rule, so a floor that the generator calls reachable holds no path that an enemy cannot walk (D-111).

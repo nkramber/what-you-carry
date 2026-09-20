@@ -21,12 +21,12 @@ Session: PR-16, the first enemy family, the AI, and the pathfinder. Branch `feat
 - `dotnet test` locally: 1172 passed, 0 failed, with the filter `Category!=Smoke`. The Smoke category passed 5 of 5 against the pinned binary. `det-lint` reports 0 findings in Core and 0 in Game. `ste-check` reports 0 findings over 34 files. `asset-qa` reports 0 findings.
 - The simulation version is 13, and the bit-identity answer is `d701dca6d5cee4d8`.
 - The bot sweep of seeds 1 to 100 passed for all three policies: 0 crashes and 0 softlocks. Over 2000 seeds, the descender reaches the bottom on 129 and the clearer on 421, and neither reads a crash or a softlock.
-- Exit test 8 of PR-66, the night sweep on `main` at `e1c20ea`: not run yet. The night and the PR macOS legs share the one Mac runner, so the dispatch waits for the PR checks.
-- Remote head: not pushed yet.
+- Exit test 8 of PR-66, the night sweep on `main` at `e1c20ea`: dispatched after the PR checks. The night and the PR macOS legs share the one Mac runner.
+- Remote head: `origin/feat/pr-16-enemies-and-pathfinder` at `1648ed4`, and GitHub PR #83 holds it.
 
 ### In flight
 
-The branch holds the whole PR-16 scope, the eleven decisions, the two findings, and this entry. The PR opens next, then the checks, then the automated pass of gitar, then the cross-provider review. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
+GitHub PR #83 holds the whole PR-16 scope, the eleven decisions, the two findings, and this entry. The checks run next, then the automated pass of gitar, then the cross-provider review. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
 
 ### Traps and gotchas
 
@@ -46,7 +46,7 @@ None. OQ-9 has its answers in D-395 and D-396.
 
 ### Next concrete action
 
-Open the PR, wait on the checks, answer the automated pass of gitar, and then dispatch the night on `main` at `e1c20ea` for exit test 8 of PR-66. Codex then reviews the PR and writes `docs/reviews/pr-<number>.md`.
+Codex reviews GitHub PR #83 and writes `docs/reviews/pr-83.md`, per `.claude/skills/pr-review/SKILL.md`. The review reads the move rule of `GridMoves`, the A* search, the brain, the spawn pass, and the two walk fixes of F-104 and F-105. Exit test 8 of PR-66 needs the night on `main` at `e1c20ea` to report zero crashes and zero softlocks.
 
 ## Session 191: 2026-09-20, Codex
 
