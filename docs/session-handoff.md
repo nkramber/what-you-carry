@@ -60,7 +60,7 @@ Session: PR-16, the first enemy family, the AI, and the pathfinder. Branch `feat
 - Exit test 8 of PR-66, the night sweep on `main` at `e1c20ea`: pass. Run 35542505776 ended `success`. The random walker ran out its budget on all 5000 seeds, the greedy descender reached the bottom on all 5000, and neither read a softlock or a crash. The reachability sweep of 100000 seeds passed in the same job. So the ramps and the tiers hold over the night.
 - That night ran the workflow of `main`, which plays two policies and writes no death count. The third policy and the death count of D-403 are on this branch, so the next night after the merge plays three.
 - Remote head: `origin/feat/pr-16-enemies-and-pathfinder` reached `e766b23`, and the status showed no `[ahead N]`. That commit and the one before it change `docs/session-handoff.md` alone, so the effective head is `8452dbd` (D-184). The commit `8452dbd` changes `docs/design.md` and `docs/roadmaps/`, which sit outside the metadata set, so it moves the effective head.
-- Every check of PR #83 passes on `8452dbd`: Gitar, the three build legs, the three smoke legs, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, and night-gate. `evaluate` fails and `review-gate` shows grey, because no review record exists yet (D-251).
+- Every check of PR #83 passes at the tip `cc70827`: Gitar, the three build legs, the three smoke legs, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, and night-gate. The build legs took 11 minutes 39 seconds on Linux, 8 minutes 4 seconds on macOS, and 16 minutes 1 second on Windows. `evaluate` and `review-gate` fail, because the review record holds the verdict `Blocked` (D-179, D-181, D-185).
 
 ### In flight
 
