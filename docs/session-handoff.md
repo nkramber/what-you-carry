@@ -434,7 +434,7 @@ Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pat
 
 ### In flight
 
-The repeat-review record needs one metadata commit and push.
+The repeat-review record is pushed in metadata commit `8c385ce`.
 
 ### Traps and gotchas
 
@@ -448,4 +448,4 @@ None.
 
 ### Next concrete action
 
-Commit and push this repeat-review record and handoff entry. Recheck the fresh CI jobs before the owner merge.
+Recheck the fresh CI jobs before the owner merge.
