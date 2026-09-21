@@ -5,9 +5,10 @@ namespace WhatYouCarry.Tools.HandoffRotate;
 
 /// <summary>
 /// <c>handoff-rotate --root &lt;checkout&gt;</c>. Keeps the 10 newest handoff entries and moves each older entry to the
-/// top of the archive (D-146, D-379). It prints the moved session numbers and the next session number (D-187).
-/// Exit 0 means the files hold the rule. Exit 1 means a file breaks the order, or a file is absent, and nothing
-/// changed. Exit 2 means the command itself is wrong.
+/// top of the archive (D-146, D-379). An entry that sits under an older one goes back to its place by number, and
+/// the command names it (D-406). It prints the moved session numbers and the next session number (D-187).
+/// Exit 0 means the files hold the rule. Exit 1 means a file holds one session number two times, or a file is
+/// absent, and nothing changed. Exit 2 means the command itself is wrong.
 /// </summary>
 public static class HandoffRotateCommand
 {
@@ -45,9 +46,18 @@ public static class HandoffRotateCommand
             return 1;
         }
 
+        string sorted = rotation.Reordered.Count == 0
+            ? string.Empty
+            : $" Session {string.Join(", Session ", rotation.Reordered)} changed place, because an entry sat under an older one, and the file holds the order now (D-146, D-406).";
+
         if (rotation.Moved.Count == 0)
         {
-            Console.Out.WriteLine($"{Name}: the handoff holds {HandoffRotateRules.KeepCount} entries or fewer. Nothing moved. The next session number is {rotation.NextSession}.");
+            if (rotation.Reordered.Count > 0)
+            {
+                File.WriteAllText(handoffPath, rotation.Handoff);
+            }
+
+            Console.Out.WriteLine($"{Name}: the handoff holds {HandoffRotateRules.KeepCount} entries or fewer. Nothing moved.{sorted} The next session number is {rotation.NextSession}.");
             return 0;
         }
 
@@ -55,7 +65,7 @@ public static class HandoffRotateCommand
         // next run names that state and changes nothing.
         File.WriteAllText(archivePath, rotation.Archive);
         File.WriteAllText(handoffPath, rotation.Handoff);
-        Console.Out.WriteLine($"{Name}: moved Session {string.Join(", Session ", rotation.Moved)} to '{HandoffRotateRules.ArchivePath}'. The next session number is {rotation.NextSession}.");
+        Console.Out.WriteLine($"{Name}: moved Session {string.Join(", Session ", rotation.Moved)} to '{HandoffRotateRules.ArchivePath}'.{sorted} The next session number is {rotation.NextSession}.");
         return 0;
     }
 }

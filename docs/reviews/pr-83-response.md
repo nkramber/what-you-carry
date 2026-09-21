@@ -52,8 +52,10 @@ three build legs failed again on the same assertion at the tip `bb58054`. That e
 way, word for word, and `handoff-rotate` moved Session 184 to the archive.
 
 The rule has now caught an entry at the end of the file four times: Session 191 on the base of this PR, and
-Sessions 193 and 194 on this branch. A change to the tool, so that `handoff-rotate` moves an entry that it finds
-out of order in place of a report alone, is work for a PR of its own.
+Sessions 193 and 194 on this branch. The owner asked for the tool fix inside this PR, and D-406 and F-106 hold it:
+`handoff-rotate` puts an entry that sits under an older one back in its place and names it, and
+`RepositoryFilesHoldTheRule` asserts that the committed file needs no sort. That change moves the effective head,
+so the automated pass and the cross-provider review both read a new head.
 
 ## The state of the verdict
 

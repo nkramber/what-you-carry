@@ -59,7 +59,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 
 ## Session handoff
 
-At the end of a session, fetch the remote. Print the highest session number with `grep -m1 '^## Session ' docs/session-handoff.md`, and add one (D-187, D-377). Add a new entry at the top with one edit (D-146). Then run `handoff-rotate` (D-379). It moves each entry after the tenth to the archive top. Commit the entry with the review record or the work it describes (D-182). Push, then fetch, and check that the status shows no `[ahead N]` (D-199). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. The session line of the entry names the PR branch in the form Branch `<branch>` (D-376). Each entry has six parts:
+At the end of a session, fetch the remote. Print the highest session number with `grep -m1 '^## Session ' docs/session-handoff.md`, and add one (D-187, D-377). Add a new entry at the top with one edit (D-146). Then run `handoff-rotate` (D-379). It moves each entry after the tenth to the archive top. It also puts an entry that sits under an older one back in its place, and it names that entry (D-406). Commit the entry with the review record or the work it describes (D-182). Push, then fetch, and check that the status shows no `[ahead N]` (D-199). Another provider can add an entry above yours while you work. Add your own entry, and never append to an older one. The session line of the entry names the PR branch in the form Branch `<branch>` (D-376). Each entry has six parts:
 
 - What the session did, and why.
 - The state of the build, with the remote head (D-199).

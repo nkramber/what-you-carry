@@ -543,6 +543,7 @@ Scope:
 - `Core/Bots/BotRun.cs`: the `death` end state of D-403. `Core/Bots/GreedyDescender.cs` swings at what stands in reach and rolls from a blade (D-404).
 - `Game/Render/EnemyNodes.cs`: every living enemy draws with the body model of PR-13 and the sword of PR-15, at the position of the simulation, with no clip (D-401).
 - The simulation version rises to 13, and the bit-identity sweep takes a new known answer and one enemy family (G-20).
+- `Tools/HandoffRotate`: the rotation puts a handoff entry that sits under an older one back in its place, and it names the entry (D-406, F-106). Four sessions added an entry at the end of the file, and each one reddened the three build legs of its branch. The owner asked for this fix inside this PR.
 
 Out of scope: ranged enemy attacks (PR-24), monsters, and a second family with the rule that mixes two families on one floor (PR-36 to PR-42). Also out of scope: an enemy model and its clips (PR-62), and the stagger and roll numbers of armor weight (PR-22).
 
@@ -562,7 +563,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 7 pass.
 
-> *In plain English:* the first enemies find their way through the dungeon and fight by the same rules you do. They wait at their posts until they see you, and they back off between swings.
+> *In plain English:* the first enemies find their way through the dungeon and fight by the same rules you do. They wait at their posts until they see you, and they back off between swings. The handoff tool also repairs an entry that lands in the wrong place, which broke the build four times.
 
 ### PR-17: Floor timer, hunter, and escalation
 

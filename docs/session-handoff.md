@@ -117,11 +117,13 @@ The cross-provider review comes next. Codex is the eligible reviewer, because Cl
 - The smoke session dies at tick 273 of its 600-tick script on seed 1, and it ends clean with exit code 0 and the end kind in its line. The smoke gate covers fewer ticks than it did, and a stronger smoke script belongs to a later PR.
 - The sweep enemy of the bit-identity content swings a second weapon of 1 damage, because a run that ends by death takes no more intents and the sweep record holds 600 of them.
 - The owner chose the wedge fix inside PR-16 (D-405). This PR therefore carries the walk fixes beside the enemies, which widens it past one concern (G-10).
-- The next ids are D-406, OQ-181, F-106, PR-71, and Session 193.
+- A handoff entry added at the end of the file reds the three build legs, and four sessions did it (F-106). The owner asked for the tool fix inside this PR, so `handoff-rotate` now puts such an entry back in its place and names it (D-406). `RepositoryFilesHoldTheRule` asserts that the committed file needs no sort, so the check still names a file that breaks D-146.
+- That tool change moves the effective head off `8452dbd`, so the automated pass and the cross-provider review both read the new head.
+- The next ids are D-407, OQ-181, F-107, PR-71, and Session 195.
 
 ### Open questions that block progress
 
-None. OQ-9 has its answers in D-395 and D-396.
+None. OQ-9 has its answers in D-395 and D-396, and the handoff loop has its answer in D-406.
 
 ### Next concrete action
 
