@@ -433,7 +433,7 @@ Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pat
 
 ### In flight
 
-The approving repeat-review record needs one metadata commit and push.
+The approving repeat-review record is pushed in metadata commit `a07243a`.
 
 ### Traps and gotchas
 
@@ -447,4 +447,4 @@ None.
 
 ### Next concrete action
 
-Commit and push this repeat-review record and handoff entry. Verify the remote head and review-gate result.
+Verify the remote review-gate result after the record publishes.
