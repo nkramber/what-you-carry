@@ -413,3 +413,38 @@ None blocks PR #78.
 ### Next concrete action
 
 The owner merges PR #78.
+## Session 195: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reopened PR #83 after the D-406 handoff rotation correction.
+- Reviewed the new substantive diff at effective head `f698cd9`.
+- Verified the handoff tests and all required implementation checks.
+- Updated `docs/reviews/pr-83.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `HandoffRotateTests` passed, 9 of 9.
+- The three build legs, three smoke legs, bit identity, compare, bots, asset-qa, det-lint, STE, doc-gate, and night-gate pass for the corrected tip.
+- `evaluate` and `review-gate` wait for this review record. The effective head is `f698cd9`.
+
+### In flight
+
+The approving repeat-review record needs one metadata commit and push.
+
+### Traps and gotchas
+
+- D-406 changes substantive tool and test paths, so the effective head moved from `8452dbd` to `f698cd9`.
+- Duplicate session numbers remain an error case.
+- The owner merges the PR.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Commit and push this repeat-review record and handoff entry. Verify the remote head and review-gate result.
