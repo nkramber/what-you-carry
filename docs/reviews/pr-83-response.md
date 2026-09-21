@@ -47,9 +47,28 @@ The correction moves the Session 193 entry to the top of the file, word for word
 `handoff-rotate`, which moved Session 183 to the archive. No word of the entry changed. The correction touches
 `docs/session-handoff.md` and `docs/session-handoff-archive.md` alone, so the effective head stands.
 
-This is the third time the rule caught an entry at the end of the file. Session 191 had the same defect on the
-base of this PR, and this session corrected that one before any other work. A change to the tool, so that
-`handoff-rotate` moves an entry that it finds out of order, is work for a PR of its own.
+The repeat review of Session 194 put its entry at the end of the file in the same way, under Session 184, and the
+three build legs failed again on the same assertion at the tip `bb58054`. That entry moved to the top in the same
+way, word for word, and `handoff-rotate` moved Session 184 to the archive.
+
+The rule has now caught an entry at the end of the file four times: Session 191 on the base of this PR, and
+Sessions 193 and 194 on this branch. A change to the tool, so that `handoff-rotate` moves an entry that it finds
+out of order in place of a report alone, is work for a PR of its own.
+
+## The state of the verdict
+
+The repeat review of `docs/reviews/pr-83.md` reports `No finding` and holds the verdict `Blocked`, because fresh
+required CI for the tip was pending. Two owner decisions read that condition another way:
+
+- D-179: the check fails when "the head that the file records is not the effective head... A review-file commit
+  therefore does not invalidate the review."
+- D-184: the metadata set holds `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md`.
+  "Without it the required review commit invalidates the review" that it carries.
+
+The effective head is `8452dbd`, and it has not moved since before the first review. The verdict of the record
+names that same commit. Every commit after it changes a metadata path alone. A verdict that waits for fresh CI on
+the tip cannot settle, because each review commit moves the tip and restarts CI. The owner decides how to settle
+this, and the author sets no verdict (T-4, D-381).
 
 ## What the author does not change
 

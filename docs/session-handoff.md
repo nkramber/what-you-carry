@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 194: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reopened PR #83 after the response to Session 193.
+- Verified the response, the handoff-order correction, and the focused handoff test.
+- Updated `docs/reviews/pr-83.md` and kept the verdict blocked because fresh required CI remains pending.
+
+### State of the build
+
+- `HandoffRotateTests` passed, 9 of 9.
+- The response reports the completed broad suite and Smoke results. The corrected tip has completed passing jobs for bots, smoke, asset-qa, det-lint, STE, doc-gate, and night-gate.
+- Fresh Linux, macOS, and Windows CI jobs remain pending. The effective code head remains `8452dbd`.
+
+### In flight
+
+The repeat-review record is pushed in metadata commit `8c385ce`.
+
+### Traps and gotchas
+
+- Later commits remain metadata-only, so the effective code head stays `8452dbd`.
+- The review gate cannot pass while this record has a blocked verdict.
+- Pending CI is incomplete evidence.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Recheck the fresh CI jobs before the owner merge.
+
 ## Session 193: 2026-09-20, Codex
 
 Author: Codex
@@ -376,76 +411,3 @@ None blocks PR #78.
 ### Next concrete action
 
 The owner merges PR #78.
-
-## Session 184: 2026-09-16, Claude Code
-
-Author: Claude Code
-Session: answer review finding P2-1 of PR #78, in the author session of the PR (D-375). Branch `feat/context-budget`.
-
-### What this session did, and why
-
-- Session 183 reviewed PR #78 at `3eb7142` and gave `Changes required` for P2-1: the D-378 lookup command held fixed ids, and no sentence told the reader to replace them. The owner asked for the answer in this author session.
-- The finding reproduced, with full merit. A size cut of `CLAUDE.md` had removed the words "with the ids in place of the examples".
-- The command now starts with `d='146|375'; q='9|44'`, and its three patterns read `$d` and `$q`. The sentence before it tells the reader to set every D-# and OQ-# number of the task. Two archive sentences are shorter, so the agent files hold 14591 bytes, 2 fewer than on `main`.
-- `RegisterLookupTests` reads the command from `AGENTS.md` and applies it to the registers. It finds the rows of D-379 to D-382, OQ-9, and OQ-44, and the revisers D-377 and D-381 of D-187 and D-374. All three tests fail on the `AGENTS.md` of `3eb7142`.
-- `docs/reviews/pr-78-response.md` records the disposition and the regression check.
-
-### State of the build
-
-- `main` is at `58e4fc8`. The effective head is `337d706`, the correction commit, and this entry sits in a metadata commit above it (D-184). Pending the repeat review and the owner merge.
-- Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1146 tests, 0 failures. `ste-check`: 0 findings in 19 files. `det-lint`: 0 findings.
-- CI on `337d706` did not complete in this session. The owner told the session not to wait on CI, so no CI result exists here for that head. The push of this entry cancels the runs of `337d706`, and CI on the tip counts for it (D-356, D-357). The reviewer reads that result.
-- The automated pass of gitar: automatic reviews stay paused. A `Gitar review` comment at 22:17:56 UTC got "On it" at 22:18:20, and a new dashboard comment approved `337d706` at 22:18:43 with no finding and no thread (D-303, D-374).
-
-### In flight
-
-PR #78: the repeat Codex review of P2-1 per `pr-review` at `337d706`, with the CI result of the tip. The owner then merges.
-
-### Traps and gotchas
-
-- The correction changes `AGENTS.md` and a test, so it moves the effective head past `3eb7142` (D-184). The review of `3eb7142` no longer covers the head.
-- The lookup patterns sit in double quotes, so the shell expands `$d` and `$q`. The same lines work in bash and in zsh.
-- The next ids are D-383, OQ-177, F-102, PR-70, and Session 185.
-
-### Open questions that block progress
-
-None blocks PR #78.
-
-### Next concrete action
-
-A Codex session runs the repeat review of P2-1 per the `pr-review` skill at the correction head and sets the verdict. The owner then merges PR #78.
-## Session 194: 2026-09-20, Codex
-
-Author: Codex
-Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
-
-### What this session did, and why
-
-- Reopened PR #83 after the response to Session 193.
-- Verified the response, the handoff-order correction, and the focused handoff test.
-- Updated `docs/reviews/pr-83.md` and kept the verdict blocked because fresh required CI remains pending.
-
-### State of the build
-
-- `HandoffRotateTests` passed, 9 of 9.
-- The response reports the completed broad suite and Smoke results. The corrected tip has completed passing jobs for bots, smoke, asset-qa, det-lint, STE, doc-gate, and night-gate.
-- Fresh Linux, macOS, and Windows CI jobs remain pending. The effective code head remains `8452dbd`.
-
-### In flight
-
-The repeat-review record is pushed in metadata commit `8c385ce`.
-
-### Traps and gotchas
-
-- Later commits remain metadata-only, so the effective code head stays `8452dbd`.
-- The review gate cannot pass while this record has a blocked verdict.
-- Pending CI is incomplete evidence.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Recheck the fresh CI jobs before the owner merge.
