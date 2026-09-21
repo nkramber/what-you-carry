@@ -4,7 +4,7 @@
 # there under load. The 03:00 UTC run of 2026-09-11 never came (F-94), and the 08:07 UTC run of that day started
 # 4 h 40 min late, at 12:47 UTC (F-95).
 # Five thousand bot runs per policy, and the reachability sweep of PR-9 at one hundred thousand seeds. The last
-# two steps write night.json with the commit, the end time, the status, and the death count of each bot policy,
+# two steps write night.json with the commit, the end time, the status, and the death and ascend counts of each bot policy,
 # to the orphan branch night-results, which holds that one file (D-273). When the build itself fails, the
 # publish step writes the failure record in shell, so the branch never keeps a stale success. PR-58 adds the
 # gate that reads it. The two record steps run on main alone (D-373). A night on another ref runs in full and
@@ -44,6 +44,9 @@ jobs:
       - name: Timer tester, five thousand seeds
         # D-426: the tester waits through each expiry, so every run lasts at least three minutes of simulated time.
         run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy timer-tester --seeds 1-5000 --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt"
+      - name: Coward, five thousand seeds
+        # D-434: the coward ascends at the first stairwell, so each run lasts one floor.
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy coward --seeds 1-5000 --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt"
       - name: Reachability sweep, one hundred thousand seeds
         env:
           WYC_NIGHT_SWEEP: "1"

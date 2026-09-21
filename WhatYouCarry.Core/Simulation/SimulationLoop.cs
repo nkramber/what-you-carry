@@ -94,6 +94,7 @@ public sealed class SimulationLoop
     private Hunter? hunter;
     private int nextOwner;
     private List<TimerEvent> lastEvents = [];
+    private FloorPlan? offeredFloor;
 
     /// <summary>A loop at tick zero for one run, on floor 1 of the seed, with the player at rest at the spawn point.</summary>
     /// <exception cref="ContextException">The content set holds no weapon definition, or it cannot dig floor 1.</exception>
@@ -293,6 +294,34 @@ public sealed class SimulationLoop
         {
             this.Descend();
         }
+    }
+
+    /// <summary>
+    /// Takes the plan of the next floor from the worker, so the descent does not dig it (D-72, D-429). The plan is
+    /// an input like the grid, and not state (D-236), so the hash does not read it. A descent with no plan on offer
+    /// digs the floor on the simulation thread.
+    /// </summary>
+    /// <param name="plan">The plan that <see cref="NextFloorWorker.Generate"/> dug for the seed of this run and the next floor.</param>
+    /// <exception cref="ContextException">The plan is not for the next floor, or the run ended (T-2).</exception>
+    public void OfferNextFloor(FloorPlan plan)
+    {
+        if (this.Ended)
+        {
+            ContextException ended = new($"The run ended on floor {this.Floor}, and a run that ended takes no next floor.");
+            ended.AddContext("floor", ((long)this.Floor).ToString(CultureInfo.InvariantCulture));
+            ended.AddContext("offeredFloor", ((long)plan.Floor).ToString(CultureInfo.InvariantCulture));
+            throw ended;
+        }
+
+        if (plan.Floor != this.Floor + 1)
+        {
+            ContextException wrongFloor = new($"The loop is on floor {this.Floor}, and the offered plan is for floor {plan.Floor}. The worker digs the next floor alone (D-429).");
+            wrongFloor.AddContext("floor", ((long)this.Floor).ToString(CultureInfo.InvariantCulture));
+            wrongFloor.AddContext("offeredFloor", ((long)plan.Floor).ToString(CultureInfo.InvariantCulture));
+            throw wrongFloor;
+        }
+
+        this.offeredFloor = plan;
     }
 
     /// <summary>The camera pose for the state of this tick (D-245). Every call with one state gives one pose.</summary>
@@ -623,11 +652,12 @@ public sealed class SimulationLoop
         throw error;
     }
 
-    /// <summary>Digs the next floor from the run seed and the next floor number, and puts a player at rest at its spawn with the same health, with the enemies, a new timer, and no hunter (D-44, D-257, D-335, D-398).</summary>
+    /// <summary>Takes the next floor from the worker, or digs it from the run seed and the next floor number when no plan is on offer (D-429), and puts a player at rest at its spawn with the same health, with the enemies, a new timer, and no hunter (D-44, D-257, D-335, D-398).</summary>
     private void Descend()
     {
         int next = this.Floor + 1;
-        this.Plan = FloorGenerator.Generate(this.Seed, next, this.content);
+        this.Plan = this.offeredFloor ?? FloorGenerator.Generate(this.Seed, next, this.content);
+        this.offeredFloor = null;
         this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, this.Weapon, this.Player.Health);
         this.Projectiles = new ProjectileSimulation(this.Plan.Grid, this.content.Projectiles);
         this.pathfinder = new GridPathfinder(this.Plan.Grid);

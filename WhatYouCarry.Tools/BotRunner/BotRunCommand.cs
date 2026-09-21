@@ -39,7 +39,7 @@ public static class BotRunCommand
     /// <summary>The largest count of seeds in one command. The night runs five thousand, and a range past this is a typo.</summary>
     public const ulong LargestSpan = 1000000;
 
-    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer|timer-tester> --seeds <from>-<to> --output <directory> --root <checkout> [--summary <file>]";
+    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer|timer-tester|coward> --seeds <from>-<to> --output <directory> --root <checkout> [--summary <file>]";
 
     public static int Run(string[] args)
     {
@@ -93,7 +93,7 @@ public static class BotRunCommand
         ContentSet content = new ContentLoader(new DirectoryContentSource(Path.Combine(root, "content"))).Load();
         Directory.CreateDirectory(output);
 
-        int[] counts = new int[5];
+        int[] counts = new int[6];
         SortedDictionary<string, int> causes = new(StringComparer.Ordinal);
         bool promises = false;
         // The count and not the seed drives the loop, so a range that ends at the largest seed cannot wrap.
@@ -115,11 +115,11 @@ public static class BotRunCommand
             WriteLog(result, new JsonlLogger(sink));
         }
 
-        Console.Out.WriteLine($"bot-run: policy {policy}, seeds {from}-{to}, bottom {counts[(int)BotRunEnd.Bottom]}, budget {counts[(int)BotRunEnd.Budget]}, softlock {counts[(int)BotRunEnd.Softlock]}, death {counts[(int)BotRunEnd.Death]}, crash {counts[(int)BotRunEnd.Crash]}.");
+        Console.Out.WriteLine($"bot-run: policy {policy}, seeds {from}-{to}, bottom {counts[(int)BotRunEnd.Bottom]}, ascend {counts[(int)BotRunEnd.Ascend]}, budget {counts[(int)BotRunEnd.Budget]}, softlock {counts[(int)BotRunEnd.Softlock]}, death {counts[(int)BotRunEnd.Death]}, crash {counts[(int)BotRunEnd.Crash]}.");
         if (summary is not null)
         {
             // One line for each policy, appended, so the night gathers every policy into its record (D-403).
-            File.AppendAllText(summary, DeathLine(policy, counts[(int)BotRunEnd.Death], causes), new UTF8Encoding(false));
+            File.AppendAllText(summary, DeathLine(policy, counts[(int)BotRunEnd.Death], counts[(int)BotRunEnd.Ascend], causes), new UTF8Encoding(false));
         }
 
 
@@ -138,8 +138,9 @@ public static class BotRunCommand
             case GreedyDescender.PolicyName: return new GreedyDescender(content);
             case FullClearer.PolicyName: return new FullClearer(content);
             case TimerTester.PolicyName: return new TimerTester();
+            case Coward.PolicyName: return new Coward();
             default:
-                ContextException error = new($"No bot policy has the name '{name}'. The policies are {RandomWalker.PolicyName}, {GreedyDescender.PolicyName}, {FullClearer.PolicyName}, and {TimerTester.PolicyName}.");
+                ContextException error = new($"No bot policy has the name '{name}'. The policies are {RandomWalker.PolicyName}, {GreedyDescender.PolicyName}, {FullClearer.PolicyName}, {TimerTester.PolicyName}, and {Coward.PolicyName}.");
                 error.AddContext("policy", name);
                 throw error;
         }
@@ -201,13 +202,15 @@ public static class BotRunCommand
     }
 
     /// <summary>
-    /// One summary line of a policy: its name, an equals sign, and the count of deaths (D-403), then one
-    /// <c>cause:count</c> word for each cause, in the ordinal order of the causes (D-411).
+    /// One summary line of a policy: its name, an equals sign, and the count of deaths (D-403), then the word
+    /// <c>ascends=count</c> (D-430), then one <c>cause:count</c> word for each cause, in the ordinal order of the
+    /// causes (D-411).
     /// </summary>
-    public static string DeathLine(string policy, int deaths, SortedDictionary<string, int> causes)
+    public static string DeathLine(string policy, int deaths, int ascends, SortedDictionary<string, int> causes)
     {
         StringBuilder line = new();
         line.Append(policy).Append('=').Append(deaths.ToString(CultureInfo.InvariantCulture));
+        line.Append(' ').Append(NightRecordCommand.AscendsWord).Append('=').Append(ascends.ToString(CultureInfo.InvariantCulture));
         foreach (KeyValuePair<string, int> cause in causes)
         {
             line.Append(' ').Append(cause.Key).Append(':').Append(cause.Value.ToString(CultureInfo.InvariantCulture));
@@ -242,7 +245,7 @@ public static class BotRunCommand
         }
     }
 
-    /// <summary>The text of an end state in the log (D-270, D-403).</summary>
+    /// <summary>The text of an end state in the log (D-270, D-403, D-430).</summary>
     public static string EndStateText(BotRunEnd end)
     {
         switch (end)
@@ -252,6 +255,7 @@ public static class BotRunCommand
             case BotRunEnd.Softlock: return "softlock";
             case BotRunEnd.Crash: return "crash";
             case BotRunEnd.Death: return "death";
+            case BotRunEnd.Ascend: return "ascend";
             default: throw new ArgumentOutOfRangeException(nameof(end), $"The end state {(int)end} has no name.");
         }
     }

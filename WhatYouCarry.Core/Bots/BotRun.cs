@@ -1,18 +1,20 @@
 using System;
 using System.Collections.Generic;
 using WhatYouCarry.Core.Content;
+using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Simulation;
 
 namespace WhatYouCarry.Core.Bots;
 
 /// <summary>
 /// One headless bot run (D-115, D-127): a loop from the seed, one intent per tick from the policy, no sleep
-/// between ticks, and one of the five end states of D-270 and D-403 with the budgets of D-271.
+/// between ticks, and one of the six end states of D-270, D-403, and D-430 with the budgets of D-271.
 /// </summary>
 /// <remarks>
 /// <para>
 /// A run ends at the bottom when the loop ends by an ascend, which the descender does by the ascend bit at the
-/// stairwell of the last floor. A policy that promises no progress runs out its wander budget and ends by budget.
+/// stairwell of the last floor. An ascend on an earlier floor ends the run as an ascend, the sixth end state
+/// (D-430), which the coward takes at the first stairwell. A policy that promises no progress runs out its wander budget and ends by budget.
 /// A policy that promises progress ends as a softlock when the floor timer expires with no floor change, so the
 /// floor budget of such a policy is the length of the timer (D-420). A bot that is stuck then never dies to the
 /// Overseer, and a softlock never hides behind a death. Any
@@ -47,12 +49,14 @@ public static class BotRun
         try
         {
             SimulationLoop loop = new(seed, content);
+            int deepest = FloorGenerator.DeepestFloor(content);
             floorsReached = loop.Floor;
             while (true)
             {
                 if (loop.End == RunEnd.Ascend)
                 {
-                    return new BotRunResult(policy.Name, seed, BotRunEnd.Bottom, floorsReached, ticks, string.Empty, string.Empty, events);
+                    BotRunEnd ascend = loop.Floor >= deepest ? BotRunEnd.Bottom : BotRunEnd.Ascend;
+                    return new BotRunResult(policy.Name, seed, ascend, floorsReached, ticks, string.Empty, string.Empty, events);
                 }
 
                 if (loop.End == RunEnd.Death)
@@ -110,6 +114,9 @@ public enum BotRunEnd
 
     /// <summary>The health of the player reached zero (D-322, D-403).</summary>
     Death = 4,
+
+    /// <summary>The run ascended at the stairwell of a floor above the last one (D-430).</summary>
+    Ascend = 5,
 }
 
 /// <summary>

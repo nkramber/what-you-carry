@@ -429,7 +429,7 @@ Gate: the projectile property tests pass over the test-only definitions. PR-24 a
 > *In plain English:* bullets and arrows are real objects that fly, drop, and can miss. Tests prove a fast bullet never passes through a wall.
 
 **PR-11: Bot harness (Tier 2).** ✅ Merged 2026-09-10 as PR #34.
-Implement the headless runner at one hundred times speed and the first two policies: random walker and greedy descender (D-127, D-149). Later PRs add a policy with the system it exercises: full-clearer with PR-16, timer-tester with PR-17, coward with PR-18. Each run writes a structured run log with the policy name, seed, and end state. Add a few hundred runs to the PR job and ten thousand to the night job (D-115). The night job publishes a result record. PR-58 adds the gate that reads it (D-177). The runs end as bottom, budget, softlock, crash, or death, and the night job writes its record to the branch `night-results` (D-270 to D-273, D-403).
+Implement the headless runner at one hundred times speed and the first two policies: random walker and greedy descender (D-127, D-149). Later PRs add a policy with the system it exercises: full-clearer with PR-16, timer-tester with PR-17, coward with PR-18. Each run writes a structured run log with the policy name, seed, and end state. Add a few hundred runs to the PR job and ten thousand to the night job (D-115). The night job publishes a result record. PR-58 adds the gate that reads it (D-177). The runs end as bottom, ascend, budget, softlock, crash, or death, and the night job writes its record to the branch `night-results` (D-270 to D-273, D-403).
 Gate: ten thousand night runs of the two policies complete with zero crashes and zero softlocks.
 > *In plain English:* simple robots play thousands of runs every night without graphics. They find crashes and dead ends before a person ever sees them.
 
@@ -531,9 +531,9 @@ Implement the visible per-floor timer with lengths in data (D-44, D-46, D-407). 
 Gate: a timer-tester bot always dies to the hunter, and a greedy descender rarely meets it.
 > *In plain English:* each floor has a clock. When it runs out, an unstoppable hunter arrives and gets faster, so a wait is never the safe choice.
 
-**PR-18: Stairwell and floor transition.** 🔧
-Implement the stairwell with the untimed descend-or-ascend prompt (D-50, D-140). Implement the floor transition with the next floor generated on a worker during the current floor (D-72). A test asserts the worker output equals a synchronous generation for the same seed. Add the coward bot policy, and extend the smoke session to the stairwell (D-149).
-Gate: the transition shows no frame over the hitch budget on the Deck.
+**PR-18: Stairwell and floor transition.** ✅ Done in PR #85.
+Implement the stairwell with the untimed descend-or-ascend prompt, open while the body stands on the stairwell cell (D-50, D-140, D-431). Implement the floor transition with the next floor generated on a worker during the current floor (D-72, D-429). A test asserts the worker output equals a synchronous generation for the same seed. Add the coward bot policy and the `ascend` end state (D-149, D-430, D-433), and extend the smoke session to the stairwell (D-436).
+Gate: the transition shows no frame over 22 milliseconds on the Deck (D-427, D-435).
 > *In plain English:* you reach the stairs, choose to go down or leave, and the next floor already exists, so there is no pause.
 
 **PR-19: HUD and controller navigation.** 🔧

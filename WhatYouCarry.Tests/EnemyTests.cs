@@ -189,7 +189,8 @@ public sealed class EnemyTests
 
     /// <summary>
     /// PR-16 exit test 5. When the full clearer takes the stairwell choice, every enemy that it did not drop is
-    /// dead. The policy drops an enemy that no path reaches and one that a hunt gains nothing on (D-149).
+    /// dead. The policy drops an enemy that no path reaches and one that a hunt gains nothing on (D-149). A policy
+    /// that the timer sends to the stairwell leaves the rest alive, which D-439 allows.
     /// </summary>
     /// <remarks>
     /// A floor can strand the policy away from an enemy, because a shaft drops a body into a space that no move
@@ -214,7 +215,8 @@ public sealed class EnemyTests
                 {
                     foreach (Enemy enemy in loop.Enemies)
                     {
-                        Assert.True(enemy.IsDead || policy.Dropped.Contains(enemy.Owner), $"Seed {seed}, floor {loop.Floor}: the clearer took the stairwell with the enemy {enemy.Owner} alive, and the hunt did not drop it.");
+                        // A clearer that the timer sends to the stairwell leaves the rest of the floor alive (D-439).
+                        Assert.True(enemy.IsDead || policy.Dropped.Contains(enemy.Owner) || policy.IsLeaving, $"Seed {seed}, floor {loop.Floor}: the clearer took the stairwell with the enemy {enemy.Owner} alive, the hunt did not drop it, and the time was not short.");
                     }
 
                     floorsCleared++;

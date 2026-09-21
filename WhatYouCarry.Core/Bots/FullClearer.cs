@@ -47,6 +47,14 @@ namespace WhatYouCarry.Core.Bots;
 /// A hunt that comes no nearer and lands no hit for <see cref="StalledTicks"/> ticks drops its enemy too. A wall
 /// and a ledge can hold the two apart, and the floor budget of a run must never pay for one of them.
 /// </para>
+/// <para>
+/// The policy leaves when the time runs short (D-439). Once each second it measures the walk that the floor still
+/// asks for: the path to the stairwell, or, during a hunt, the path to the enemy and from the enemy to the
+/// stairwell. When the timer left is no more than that walk, it stops the hunt for the rest of the floor. The
+/// night of 2026-09-21 found two floors, seeds 2100 and 2109, where the clear ended near 5,750 ticks and the walk
+/// to the stairwell wound around the floor past expiry. On seed 2109 the last hunt dropped off a ledge that no
+/// move climbs back, so the way back looped around the floor. A player leaves in time, and so does the policy.
+/// </para>
 /// </remarks>
 public sealed class FullClearer : IBotPolicy
 {
@@ -62,6 +70,21 @@ public sealed class FullClearer : IBotPolicy
     /// <summary>How much nearer the body must come for a hunt to count as a gain, in meters.</summary>
     public const float Gain = 0.5f;
 
+    /// <summary>The ticks between two measures of the walk to the stairwell: one second (D-439).</summary>
+    public const int ReserveCheckTicks = 60;
+
+    /// <summary>The ticks of one cell of path at the walk speed: one meter at four meters each second (D-439).</summary>
+    public const int TicksPerCell = 15;
+
+    /// <summary>
+    /// The factor on the straight walk of a path. A path has jumps, ramps, and turns, and a body on it goes slower
+    /// than the walk speed: the walk back on seed 2109 took about 37 ticks for each cell (D-439).
+    /// </summary>
+    public const int WalkAllowance = 3;
+
+    /// <summary>The ticks that the walk estimate keeps in hand past the walk: ten seconds (D-439).</summary>
+    public const int ReserveMarginTicks = 600;
+
     private readonly PathFollower follower = new();
     private List<int> unreachable = [];
     private readonly int lastFloor;
@@ -73,6 +96,7 @@ public sealed class FullClearer : IBotPolicy
     private float nearest;
     private int targetHealth;
     private bool attackHeld;
+    private bool leaving;
 
     /// <summary>The owner id that no enemy carries, which marks a policy with no target.</summary>
     private const int NoTarget = -1;
@@ -104,6 +128,9 @@ public sealed class FullClearer : IBotPolicy
     /// <inheritdoc/>
     public bool PromisesProgress => true;
 
+    /// <summary>Answers whether the policy stopped the hunt on this floor, because the time left is short (D-439).</summary>
+    public bool IsLeaving => this.leaving;
+
     /// <inheritdoc/>
     public Intent Next(SimulationLoop loop)
     {
@@ -112,6 +139,15 @@ public sealed class FullClearer : IBotPolicy
             this.pathfinder = new GridPathfinder(loop.Grid);
             this.pathFloor = loop.Floor;
             this.unreachable = [];
+            this.leaving = false;
+            this.Forget();
+        }
+
+        if (!this.leaving && this.TimeIsShort(loop))
+        {
+            // The walk to the stairwell takes all the time left, so the hunt ends here. The path of the hunt leads
+            // elsewhere, so the walk starts fresh.
+            this.leaving = true;
             this.Forget();
         }
 
@@ -123,6 +159,11 @@ public sealed class FullClearer : IBotPolicy
             int onto = HumanoidBrain.YawToward(loop.Body.Position, swinging.Body.Position);
             this.attackHeld = false;
             return BotIntent.Roll(loop.Tick, loop.Yaw, onto);
+        }
+
+        if (this.leaving)
+        {
+            return this.WalkToStairwell(loop);
         }
 
         Enemy? inReach = this.NearestLiving(loop, loop.Weapon.ReachCentimetres / 100.0f);
@@ -177,6 +218,70 @@ public sealed class FullClearer : IBotPolicy
         }
 
         return walk;
+    }
+
+    /// <summary>
+    /// Answers whether the timer left is no more than the walk that the floor still asks for, once each
+    /// <see cref="ReserveCheckTicks"/> ticks (D-439). The walk counts the path cells to the stairwell, or, during a
+    /// hunt, the cells to the enemy and from the enemy to the stairwell when that sum is larger. Each cell costs
+    /// <see cref="TicksPerCell"/> times <see cref="WalkAllowance"/>, and <see cref="ReserveMarginTicks"/> comes on
+    /// top. A body in the air or off a floor cell has no start for a search, and a floor with no path to the
+    /// stairwell has no walk, so both answer no and the check runs again one second later.
+    /// </summary>
+    private bool TimeIsShort(SimulationLoop loop)
+    {
+        if (loop.Tick % ReserveCheckTicks != 0 || this.pathfinder is null || !loop.Body.IsOnGround())
+        {
+            return false;
+        }
+
+        Cell start = PathWalk.FloorCellOf(loop.Body.Position);
+        if (!GridMoves.IsFloor(loop.Grid, start) || !this.pathfinder.TryFind(start, loop.Plan.Stairwell, out IReadOnlyList<Cell> path))
+        {
+            return false;
+        }
+
+        long cells = path.Count;
+        long hunt = this.HuntCells(loop, start);
+        if (hunt > cells)
+        {
+            cells = hunt;
+        }
+
+        long walk = (cells * TicksPerCell * WalkAllowance) + ReserveMarginTicks;
+        return loop.Timer.Remaining <= walk;
+    }
+
+    /// <summary>
+    /// The path cells of the hunt of the held target: from the body to the floor cell of the enemy, and from there
+    /// to the stairwell. Zero when no target lives, or when the enemy stands off a floor cell or no path joins the
+    /// three cells, because a hunt with no path has no walk to count (D-439).
+    /// </summary>
+    private long HuntCells(SimulationLoop loop, Cell start)
+    {
+        GridPathfinder? search = this.pathfinder;
+        if (search is null || this.target == NoTarget)
+        {
+            return 0;
+        }
+
+        foreach (Enemy enemy in loop.Enemies)
+        {
+            if (enemy.Owner != this.target || enemy.IsDead)
+            {
+                continue;
+            }
+
+            Cell prey = PathWalk.FloorCellOf(enemy.Body.Position);
+            if (GridMoves.IsFloor(loop.Grid, prey)
+                && search.TryFind(start, prey, out IReadOnlyList<Cell> there)
+                && search.TryFind(prey, loop.Plan.Stairwell, out IReadOnlyList<Cell> back))
+            {
+                return there.Count + back.Count;
+            }
+        }
+
+        return 0;
     }
 
     /// <summary>The living enemy nearest the body inside one distance, or null when none stands that near.</summary>

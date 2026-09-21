@@ -1020,7 +1020,7 @@ public sealed class ProcgenTests
     }
 
     /// <summary>The hash of every block of a grid, in array order.</summary>
-    private static StateHash GridHash(VoxelGrid grid)
+    internal static StateHash GridHash(VoxelGrid grid)
     {
         StateHash hash = StateHash.Start();
         hash.Add(grid.SizeX);

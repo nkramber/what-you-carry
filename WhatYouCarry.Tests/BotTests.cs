@@ -211,6 +211,47 @@ public sealed class BotTests
         Assert.True(bottoms > 0, "No run of one hundred seeds reached the bottom, so no bot can leave a floor.");
     }
 
+    /// <summary>
+    /// The full clearer leaves in time (D-439). On seeds 2100 and 2109 the night of 2026-09-21 read a softlock: the
+    /// clear ended near 5,750 ticks, and the walk to the stairwell wound past expiry. The runs now end at the bottom
+    /// or by a death, and never as a softlock.
+    /// </summary>
+    [Theory]
+    [InlineData(2100UL)]
+    [InlineData(2109UL)]
+    public void FullClearerLeavesInTime(ulong seed)
+    {
+        BotRunResult result = BotRun.Play(new FullClearer(TestWorld.Content), seed, TestWorld.Content);
+        Assert.True(
+            result.End == BotRunEnd.Bottom || result.End == BotRunEnd.Death,
+            $"Seed {seed}: the full clearer ended as {result.End} on floor {result.FloorsReached} after {result.Ticks} ticks. {result.Error}");
+    }
+
+    /// <summary>
+    /// The clearer stops the hunt when the timer left is no more than the walk to the stairwell, and it hunts while
+    /// the time is long (D-439). A floor with a short timer makes it leave at once.
+    /// </summary>
+    [Fact]
+    public void FullClearerLeavesWhenTheTimeIsShort()
+    {
+        List<FloorTemplate> shortFloors = [];
+        foreach (FloorTemplate floor in TestWorld.Content.Floors)
+        {
+            shortFloors.Add(floor with { TimerSeconds = 5, BossTimerSeconds = 0 });
+        }
+
+        ContentSet hurried = TestWorld.Content with { Floors = shortFloors };
+        SimulationLoop quick = new(1, hurried);
+        FullClearer leaver = new(hurried);
+        quick.Step(leaver.Next(quick));
+        Assert.True(leaver.IsLeaving, "The clearer hunts with five seconds on the timer.");
+
+        SimulationLoop slow = new(1, TestWorld.Content);
+        FullClearer hunter = new(TestWorld.Content);
+        slow.Step(hunter.Next(slow));
+        Assert.False(hunter.IsLeaving, "The clearer leaves with three minutes on the timer.");
+    }
+
     /// <summary>PR-11 exit test 7. The night record holds the commit, the end time, and the status, and a bad commit or status is an error (D-273).</summary>
     [Fact]
     public void NightResultIsPublished()
@@ -233,14 +274,22 @@ public sealed class BotTests
 
             Assert.Equal(2, Program.Main(["night-record", "--commit", "abc", "--status", "success", "--output", file]));
             Assert.Equal(2, Program.Main(["night-record", "--commit", commit, "--status", "green", "--output", file]));
-            Assert.Equal("{\"commit\":\"" + commit + "\",\"endedAt\":\"2026-09-10T03:00:00Z\",\"status\":\"failure\",\"deaths\":{},\"deathCauses\":{}}\n", NightRecordCommand.Build(commit, new DateTime(2026, 9, 10, 3, 0, 0, DateTimeKind.Utc), "failure", string.Empty));
+            Assert.Equal("{\"commit\":\"" + commit + "\",\"endedAt\":\"2026-09-10T03:00:00Z\",\"status\":\"failure\",\"deaths\":{},\"deathCauses\":{},\"ascends\":{}}\n", NightRecordCommand.Build(commit, new DateTime(2026, 9, 10, 3, 0, 0, DateTimeKind.Utc), "failure", string.Empty));
 
             // The record carries the count of deaths of each policy, in the order of the summary lines (D-403).
             SortedDictionary<string, int> greedyCauses = new(StringComparer.Ordinal) { ["scavenger"] = 10, ["overseer"] = 2 };
             SortedDictionary<string, int> clearerCauses = new(StringComparer.Ordinal) { ["scavenger"] = 7 };
-            string summary = BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, greedyCauses) + BotRunCommand.DeathLine(FullClearer.PolicyName, 7, clearerCauses);
-            Assert.Equal("greedy-descender=12 overseer:2 scavenger:10\n", BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, greedyCauses));
+            string summary = BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, 0, greedyCauses) + BotRunCommand.DeathLine(FullClearer.PolicyName, 7, 0, clearerCauses);
+            Assert.Equal("greedy-descender=12 ascends=0 overseer:2 scavenger:10\n", BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, 0, greedyCauses));
             Assert.Equal("{\"greedy-descender\":12,\"full-clearer\":7}", NightRecordCommand.DeathsObject(summary));
+
+            // The record carries the count of ascends of each policy (D-430). A line of an older night holds no
+            // ascend word, so its policy has no entry, and the record states no count that the night did not measure.
+            string withCoward = summary + BotRunCommand.DeathLine(Coward.PolicyName, 3, 4997, new SortedDictionary<string, int>(StringComparer.Ordinal) { ["scavenger"] = 3 });
+            Assert.Equal("{\"greedy-descender\":0,\"full-clearer\":0,\"coward\":4997}", NightRecordCommand.AscendsObject(withCoward));
+            Assert.Equal("{\"coward\":{\"scavenger\":3}}", NightRecordCommand.CausesObject("coward=3 ascends=4997 scavenger:3\n"));
+            Assert.Equal("{}", NightRecordCommand.AscendsObject("greedy-descender=3 overseer:1\n"));
+            Assert.Throws<FormatException>(() => NightRecordCommand.AscendsObject("coward=3 ascends=many"));
 
             // The record carries the count of each cause for each policy, in ordinal cause order (D-411). A line of
             // an older night holds no cause word and reads as no cause (D-177).

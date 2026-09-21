@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Game;
@@ -119,6 +120,38 @@ public sealed class SmokeSessionTests
     }
 
     /// <summary>
+    /// The greedy descender walks the body of the first seed to the stairwell and descends inside the budget of the
+    /// session, on the content of the game, and the prompt opens on the way (PR-18, D-436). The script then plays on
+    /// floor 2, and a death there is a clean end (D-403).
+    /// </summary>
+    [Fact]
+    public void WalkAfterTheScriptDescends()
+    {
+        SimulationLoop loop = new(Main.FirstSeed, TestWorld.Content);
+        GreedyDescender walker = new(TestWorld.Content);
+        bool promptOpened = false;
+        uint floorStart = 0;
+        while (!SmokeSession.IsComplete(loop, loop.Tick - floorStart) && !(loop.Ended && loop.Floor > SimulationLoop.FirstFloor))
+        {
+            Assert.False(SmokeSession.IsStuck(loop), $"The walk did not descend by tick {loop.Tick}.");
+            Assert.False(loop.Ended, $"The run ended as {loop.End} at tick {loop.Tick} on floor {loop.Floor}.");
+            int floor = loop.Floor;
+            loop.Step(loop.Floor == SimulationLoop.FirstFloor ? walker.Next(loop) : SmokeSession.ScriptIntent(loop.Tick, floorStart));
+            promptOpened = promptOpened || StairwellPrompt.IsOpen(loop);
+            if (loop.Floor != floor)
+            {
+                floorStart = loop.Tick;
+            }
+        }
+
+        Assert.Equal(SimulationLoop.FirstFloor + 1, loop.Floor);
+        Assert.True(promptOpened, "The stairwell prompt never opened on the walk.");
+        Assert.True(loop.Ended || loop.Tick - floorStart == SmokeSession.Ticks, $"The session ended at tick {loop.Tick}, {loop.Tick - floorStart} ticks after the descent.");
+        Assert.Throws<ArgumentOutOfRangeException>(() => SmokeSession.ScriptIntent(floorStart - 1, floorStart));
+        Assert.Equal(floorStart + 5, SmokeSession.ScriptIntent(floorStart + 5, floorStart).Tick);
+    }
+
+    /// <summary>
     /// PR-12 exit test 4. The engine boots headless, plays the script, and quits with exit code 0, with no
     /// error line in the log and no engine error. The end line carries the last tick.
     /// </summary>
@@ -134,11 +167,36 @@ public sealed class SmokeSessionTests
         Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal) && line.Contains("\"tick\":0,", StringComparison.Ordinal));
 
-        // The script ends the session at its last tick, and a run that the scavengers of D-399 end first ends it
-        // sooner with the end kind in its line. Both are a clean end, and neither one writes an error line (D-403).
-        bool scriptEnd = Array.Exists(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal) && line.Contains($"\"tick\":{SmokeSession.Ticks},", StringComparison.Ordinal));
+        AssertCleanEnd(lines, run.Output);
+    }
+
+    /// <summary>
+    /// PR-18 exit test 7. The engine boots headless, the walk opens the stairwell prompt on floor 1 and descends, the
+    /// chunk swap shows floor 2, and the session quits with exit code 0 and no error line (D-431, D-436).
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task SmokeReachesStairwell()
+    {
+        EngineRun run = await RunEngine("smoke session to the stairwell", ["--headless", "--fixed-fps", "60"], [SmokeSession.Flag]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitSuccess, $"The smoke session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.PromptOpenMessage}\"", StringComparison.Ordinal) && line.Contains("\"floor\":1,", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.SwapMessage}\"", StringComparison.Ordinal) && line.Contains("\"floor\":2,", StringComparison.Ordinal) && line.Contains($"\"{Main.FromWorkerField}\":true", StringComparison.Ordinal));
+        AssertCleanEnd(lines, run.Output);
+    }
+
+    /// <summary>
+    /// Asserts the end of a smoke session: the script ends it on floor 2, or a death ends it sooner with the end kind
+    /// in its line. Both are a clean end, and neither one writes an error line (D-403, D-436).
+    /// </summary>
+    private static void AssertCleanEnd(string[] lines, string output)
+    {
+        bool scriptEnd = Array.Exists(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal) && line.Contains("\"floor\":2,", StringComparison.Ordinal));
         bool runEnd = Array.Exists(lines, line => line.Contains($"\"message\":\"{Main.RunEndedMessage}\"", StringComparison.Ordinal) && line.Contains($"\"{Main.EndStateField}\":\"death\"", StringComparison.Ordinal));
-        Assert.True(scriptEnd || runEnd, $"The smoke session ended with neither the script line at tick {SmokeSession.Ticks} nor the run end line.{Environment.NewLine}{run.Output}");
+        Assert.True(scriptEnd || runEnd, $"The smoke session ended with neither the script line on floor 2 nor the run end line.{Environment.NewLine}{output}");
     }
 
     /// <summary>
