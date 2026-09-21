@@ -426,11 +426,11 @@ Session: PR-83, cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder
 - Focused tests passed, 6 of 6.
 - The broad non-smoke test run compiled but stalled without a result.
 - GitHub checks pass for completed jobs, but Linux and Windows CI remain pending. The review-gate check waits for this review record.
-- Remote code head remains `8452dbd`. The review record and this entry are pending push.
+- Remote code head remains `8452dbd`. Metadata commit `9fb8fda` carries the review record and this entry.
 
 ### In flight
 
-The review record and this handoff entry need one metadata commit and push to the PR branch.
+The review record and this handoff entry are pushed to the PR branch.
 
 ### Traps and gotchas
 
@@ -444,4 +444,4 @@ None.
 
 ### Next concrete action
 
-Commit the review record and this handoff entry, push them, fetch, and verify the remote head and branch status.
+Recheck the pending Linux and Windows CI jobs before the owner merge.
