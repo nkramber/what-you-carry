@@ -73,6 +73,16 @@ public sealed class GameShapeTests
         Assert.Contains("common/physics_ticks_per_second=60", project, StringComparison.Ordinal);
     }
 
+    /// <summary>The game starts with no engine splash image, by the owner's request in PR #85.</summary>
+    [Fact]
+    public void BootShowsNoSplashImage()
+    {
+        string project = RepositoryRoot.ReadFile("WhatYouCarry.Game/project.godot");
+        int application = project.IndexOf("[application]", StringComparison.Ordinal);
+        Assert.True(application >= 0, "The project has no application section.");
+        Assert.Contains("boot_splash/show_image=false", SectionAfter(project, application), StringComparison.Ordinal);
+    }
+
     /// <summary>
     /// PR-60 exit test 1. The project opens the window in the borderless fullscreen of the engine, and it sets no
     /// window size, so the viewport takes the resolution of the display (D-310). The exclusive mode changes the
