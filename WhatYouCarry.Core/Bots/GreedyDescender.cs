@@ -42,17 +42,14 @@ public sealed class GreedyDescender : IBotPolicy
 
     /// <summary>A descender that ascends at the stairwell of the deepest floor that the content covers (D-3, D-252).</summary>
     public GreedyDescender(ContentSet content)
+        : this(FloorGenerator.DeepestFloor(content))
     {
-        int deepest = 0;
-        foreach (FloorTemplate template in content.Floors)
-        {
-            if (template.MaxDepth > deepest)
-            {
-                deepest = (int)template.MaxDepth;
-            }
-        }
+    }
 
-        this.lastFloor = deepest;
+    /// <summary>A descender that ascends at the stairwell of one floor. The coward walks with it to floor 1 (D-433).</summary>
+    internal GreedyDescender(int lastFloor)
+    {
+        this.lastFloor = lastFloor;
     }
 
     /// <inheritdoc/>

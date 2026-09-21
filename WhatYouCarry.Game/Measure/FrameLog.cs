@@ -11,6 +11,10 @@ namespace WhatYouCarry.Game.Measure;
 /// percentile over them. The game keeps one on the flag, writes the lines to the named file at the end of the
 /// session, and puts the percentile in the end line of the log.
 /// </summary>
+/// <remarks>
+/// The log also marks the frame of each floor transition. The slowest frame of the window around a mark is the
+/// hitch of that transition, which exit test 6 of PR-18 holds under the budget of D-427 (D-435).
+/// </remarks>
 public sealed class FrameLog
 {
     /// <summary>The user argument that starts the log. Its one word is the file path.</summary>
@@ -19,9 +23,19 @@ public sealed class FrameLog
     /// <summary>The count of microseconds in one second.</summary>
     public const long MicrosecondsPerSecond = 1000000;
 
+    /// <summary>
+    /// The count of frames before a transition mark and after it that the window of the mark holds: half a second
+    /// at 60 frames per second, and a third of a second at 90. The swap of the chunks and the rebuild of the enemies
+    /// fall in the first frames after the mark (D-435).
+    /// </summary>
+    public const int TransitionWindowFrames = 30;
+
     private const string NoFrames = "The frame log holds no frame, and a percentile needs at least one.";
+    private const string NoWindowFrames = "The window of a transition mark holds no frame.";
+    private const string MarkField = "mark";
 
     private readonly List<long> frames = [];
+    private readonly List<int> marks = [];
 
     /// <summary>Every frame time so far, in microseconds, in frame order.</summary>
     public IReadOnlyList<long> Frames => this.frames;
@@ -62,6 +76,47 @@ public sealed class FrameLog
         Array.Sort(sorted);
         int rank = (int)Math.Ceiling(0.99 * sorted.Length);
         return sorted[rank - 1];
+    }
+
+    /// <summary>The count of transition marks so far.</summary>
+    public int Transitions => this.marks.Count;
+
+    /// <summary>Marks a floor transition at the next frame. The frames before it and after it form its window.</summary>
+    public void MarkTransition()
+    {
+        this.marks.Add(this.frames.Count);
+    }
+
+    /// <summary>
+    /// The slowest frame of the window of each transition mark, in microseconds, in mark order. The window holds up
+    /// to <see cref="TransitionWindowFrames"/> frames before the mark and as many from the mark on.
+    /// </summary>
+    /// <exception cref="ContextException">A window holds no frame, so the log cannot state the hitch of that transition (T-2).</exception>
+    public IReadOnlyList<long> TransitionMaxima()
+    {
+        List<long> maxima = [];
+        for (int index = 0; index < this.marks.Count; index++)
+        {
+            int mark = this.marks[index];
+            int first = Math.Max(0, mark - TransitionWindowFrames);
+            int end = Math.Min(this.frames.Count, mark + TransitionWindowFrames);
+            if (first >= end)
+            {
+                ContextException error = new(NoWindowFrames);
+                error.AddContext(MarkField, index.ToString(CultureInfo.InvariantCulture));
+                throw error;
+            }
+
+            long slowest = this.frames[first];
+            for (int frame = first + 1; frame < end; frame++)
+            {
+                slowest = Math.Max(slowest, this.frames[frame]);
+            }
+
+            maxima.Add(slowest);
+        }
+
+        return maxima;
     }
 
     /// <summary>The text of the file: one frame time per line, in microseconds.</summary>

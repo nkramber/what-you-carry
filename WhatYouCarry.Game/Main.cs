@@ -20,6 +20,7 @@ using WhatYouCarry.Game.Models;
 using WhatYouCarry.Game.Render;
 using WhatYouCarry.Game.Review;
 using WhatYouCarry.Game.Smoke;
+using WhatYouCarry.Game.Ui;
 using WhatYouCarry.Game.World;
 using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 
@@ -55,6 +56,12 @@ namespace WhatYouCarry.Game;
 /// pose of the player state: the stagger clip, the roll clip, or the walk with the swing clip over it (D-331, D-333).
 /// The walk reads the horizontal distance of each tick. The body faces the camera yaw (D-332), and the lowest box
 /// corner of the pose stands on the feet.
+/// </para>
+/// <para>
+/// The chunk swap digs the next floor on one task during each floor, offers the plan to the loop before each tick,
+/// and uploads its chunks a few at a time (D-72, D-429). A descent swaps the chunks in one frame, and the
+/// interpolation starts again at the spawn, so no frame draws the body between two floors. The stairwell prompt
+/// shows its text while the body stands on the stairwell cell (D-431).
 /// </para>
 /// <para>
 /// The contact sheet flag starts no loop. It renders every block material and the body with the sword at game zoom
@@ -108,6 +115,30 @@ public partial class Main : Node3D
     /// <summary>The message of the error line of a frame log that the game could not write.</summary>
     public const string FrameLogFailedMessage = "The frame log could not be written, and the game quits.";
 
+    /// <summary>The message of the line of the tick whose state opens the stairwell prompt (D-431).</summary>
+    public const string PromptOpenMessage = "The stairwell prompt opens.";
+
+    /// <summary>The message of the line of the frame whose tick descended and swapped the chunks (D-429).</summary>
+    public const string SwapMessage = "The floor transition swaps the world.";
+
+    /// <summary>The message of the error line of a smoke session whose walk passed its budget on floor 1.</summary>
+    public const string SmokeStuckMessage = "The smoke session passed its budget to descend on floor 1, and the game quits.";
+
+    /// <summary>The message of the error line of a transition test with a frame over the hitch budget of D-427.</summary>
+    public const string HitchOverBudgetMessage = "A frame near a floor transition is over the hitch budget, and the game quits.";
+
+    /// <summary>The message of the error line of a transition test whose run ended before its count of transitions.</summary>
+    public const string TransitionsShortMessage = "The run ended before the count of transitions of the session, and the game quits.";
+
+    /// <summary>The name of the field of the swap line that tells whether the loop took the plan of the worker (D-429).</summary>
+    public const string FromWorkerField = "fromWorker";
+
+    /// <summary>The name of the field of the end line that holds the count of transitions of the frame log.</summary>
+    public const string TransitionsField = "transitions";
+
+    /// <summary>The name of the field of the end line that holds the slowest frame near a transition, in microseconds.</summary>
+    public const string TransitionMicrosMaxField = "transitionMicrosMax";
+
     /// <summary>The message of the line at the end of the contact sheet.</summary>
     public const string ContactSheetEndMessage = "The contact sheet is written.";
 
@@ -152,6 +183,13 @@ public partial class Main : Node3D
     private Camera3D? camera;
     private ShaderMaterial? worldMaterial;
     private GreedyDescender? bot;
+    private GreedyDescender? smokeWalker;
+    private ChunkSwap? chunks;
+    private StairwellPromptNodes? prompt;
+    private bool promptOpen;
+    private int transitions = 1;
+    private bool transitionTest;
+    private uint floorStartTick;
     private EnemyNodes? enemyNodes;
     private int drawnFloor;
     private ScriptedPress? press;
@@ -212,16 +250,28 @@ public partial class Main : Node3D
         if (this.loop.Ended)
         {
             // A run that ended takes no intent (D-322). A death is an outcome of a fight and never a fault of the
-            // code, so the session ends clean and its log names the end kind (D-403).
+            // code, so the session ends clean and its log names the end kind (D-403). A transition test that ends
+            // early measured fewer transitions than it asked for, so it fails (D-435).
+            if (this.transitionTest)
+            {
+                this.logger.Write(LogContextKind.Run, LogLevel.Error, TransitionsShortMessage, this.EndFields());
+                this.Quit(ExitFailure);
+                return;
+            }
+
             this.logger.Write(LogContextKind.Run, LogLevel.Info, RunEndedMessage, this.EndFields());
             this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
             return;
         }
 
         Intent intent;
-        if (this.smoke)
+        if (this.smokeWalker is not null && this.loop.Floor == SimulationLoop.FirstFloor)
         {
-            intent = SmokeSession.IntentAt(this.loop.Tick);
+            intent = this.smokeWalker.Next(this.loop);
+        }
+        else if (this.smoke)
+        {
+            intent = SmokeSession.ScriptIntent(this.loop.Tick, this.floorStartTick);
         }
         else if (this.bot is not null)
         {
@@ -234,6 +284,7 @@ public partial class Main : Node3D
 
         try
         {
+            this.chunks?.BeforeTick(this.loop);
             this.loop.Step(intent);
         }
         catch (Exception error)
@@ -247,6 +298,27 @@ public partial class Main : Node3D
         this.currentFeet = this.loop.Body.Position;
         this.previousPose = this.currentPose;
         this.currentPose = this.loop.Camera();
+
+        if (this.chunks is not null && this.chunks.AfterTick(this.loop))
+        {
+            // The body stands at the spawn of the new floor, so no frame draws it between two floors.
+            this.previousFeet = this.currentFeet;
+            this.previousPose = this.currentPose;
+            this.floorStartTick = this.loop.Tick;
+            this.frames?.MarkTransition();
+            LogFields swap = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+            swap.Add(FromWorkerField, this.chunks.LastSwapFromWorker);
+            this.logger.Write(LogContextKind.Run, LogLevel.Info, SwapMessage, swap);
+        }
+
+        bool open = StairwellPrompt.IsOpen(this.loop);
+        if (open && !this.promptOpen)
+        {
+            this.logger.Write(LogContextKind.Run, LogLevel.Info, PromptOpenMessage, RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick));
+        }
+
+        this.promptOpen = open;
+        this.prompt?.Show(open);
 
         // A descent digs a new floor with its own enemies, so the trees of the old floor go and the new ones come.
         if (this.enemyNodes is not null)
@@ -267,17 +339,22 @@ public partial class Main : Node3D
         this.walked += stride;
         this.walkAmount = WalkCycle.Amount(stride / PlayerBody.TickSeconds);
 
-        if (this.smoke && this.loop.Tick >= SmokeSession.Ticks)
+        uint ticksOnFloor = this.loop.Tick - this.floorStartTick;
+        if (this.smoke && SmokeSession.IsComplete(this.loop, ticksOnFloor))
         {
             this.logger.Write(LogContextKind.Run, LogLevel.Info, EndMessage, this.EndFields());
             this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
         }
-        else if (this.bot is not null && BotSession.IsComplete(this.loop))
+        else if (this.smoke && SmokeSession.IsStuck(this.loop))
         {
-            this.logger.Write(LogContextKind.Run, LogLevel.Info, BotEndMessage, this.EndFields());
-            this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
+            this.logger.Write(LogContextKind.Run, LogLevel.Error, SmokeStuckMessage, this.EndFields());
+            this.Quit(ExitFailure);
         }
-        else if (this.bot is not null && BotSession.IsStuck(this.loop))
+        else if (this.bot is not null && BotSession.IsComplete(this.loop, this.transitions, ticksOnFloor))
+        {
+            this.EndBotSession();
+        }
+        else if (this.bot is not null && BotSession.IsStuck(this.loop, this.transitions, ticksOnFloor))
         {
             this.logger.Write(LogContextKind.Run, LogLevel.Error, BotStuckMessage, this.EndFields());
             this.Quit(ExitFailure);
@@ -293,6 +370,7 @@ public partial class Main : Node3D
         }
 
         this.frames?.Add(delta);
+        this.chunks?.UploadSome();
 
         float fraction = (float)Engine.GetPhysicsInterpolationFraction();
         CoreVector3 feet = RenderInterpolation.Between(this.previousFeet, this.currentFeet, fraction);
@@ -369,7 +447,52 @@ public partial class Main : Node3D
             fields.Add(FrameMicrosP99Field, this.frames.Percentile99());
         }
 
+        if (this.frames is not null && this.frames.Transitions > 0)
+        {
+            fields.Add(TransitionsField, (long)this.frames.Transitions);
+            fields.Add(TransitionMicrosMaxField, Slowest(this.frames.TransitionMaxima()));
+        }
+
         return fields;
+    }
+
+    /// <summary>The largest of the values. The list holds one value for each transition, so it is never empty.</summary>
+    private static long Slowest(IReadOnlyList<long> values)
+    {
+        long slowest = values[0];
+        foreach (long value in values)
+        {
+            slowest = Math.Max(slowest, value);
+        }
+
+        return slowest;
+    }
+
+    /// <summary>
+    /// Ends the bot session clean. A transition test fails when the frame log holds fewer transitions than the
+    /// count of the session, or a transition whose slowest frame is over the hitch budget (D-427, D-435).
+    /// </summary>
+    private void EndBotSession()
+    {
+        if (this.transitionTest && this.frames is not null)
+        {
+            bool tooFew = this.frames.Transitions < this.transitions;
+            bool over = false;
+            foreach (long slowest in this.frames.TransitionMaxima())
+            {
+                over = over || slowest > BotSession.HitchBudgetMicros;
+            }
+
+            if (tooFew || over)
+            {
+                this.logger.Write(LogContextKind.Run, LogLevel.Error, tooFew ? TransitionsShortMessage : HitchOverBudgetMessage, this.EndFields());
+                this.Quit(ExitFailure);
+                return;
+            }
+        }
+
+        this.logger.Write(LogContextKind.Run, LogLevel.Info, BotEndMessage, this.EndFields());
+        this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
     }
 
     /// <summary>
@@ -396,6 +519,13 @@ public partial class Main : Node3D
         string projectDirectory = ProjectSettings.GlobalizePath(ProjectRoot);
         string contentDirectory = Path.GetFullPath(Path.Combine(projectDirectory, ParentDirectory, ContentDirectoryName));
         ContentSet content = new ContentLoader(new DirectoryContentSource(contentDirectory)).Load();
+        this.transitionTest = arguments.Has(BotSession.TransitionsFlag);
+        if (this.transitionTest)
+        {
+            // A run with the enemies dies before ten floors, so the transition test walks floors with none (D-437).
+            content = content with { Enemies = [] };
+        }
+
         WeaponDefinition weapon = SimulationLoop.MainWeapon(content);
         BlockbenchModel bodyModel = BlockbenchLoader.Parse(AssetPaths.BodyModel, AssetFile.Read(contentDirectory, AssetPaths.BodyModel));
         BlockbenchModel swordModel = BlockbenchLoader.Parse(weapon.Model, AssetFile.Read(contentDirectory, weapon.Model));
@@ -412,6 +542,12 @@ public partial class Main : Node3D
         if (BotSession.IsRequested(arguments))
         {
             this.bot = new GreedyDescender(content);
+            this.transitions = BotSession.TransitionsOf(arguments);
+        }
+
+        if (this.smoke)
+        {
+            this.smokeWalker = new GreedyDescender(content);
         }
 
         this.currentFeet = loop.Body.Position;
@@ -420,10 +556,10 @@ public partial class Main : Node3D
         this.previousPose = this.currentPose;
 
         this.worldMaterial = WorldMaterial.Create(atlas);
-        foreach (MeshInstance3D chunk in ChunkNodes.Build(loop.Grid, this.worldMaterial))
-        {
-            this.AddChild(chunk);
-        }
+        this.chunks = new ChunkSwap(this, this.worldMaterial, new NextFloorWorker(content), loop.Seed);
+        this.chunks.Start(loop);
+        this.prompt = StairwellPromptNodes.Build(content.Strings);
+        this.AddChild(this.prompt.Layer);
 
         StandardMaterial3D modelMaterial = ModelMaterial(atlas);
         ModelNodeTree nodes = ModelNodes.Build(bodyModel, modelMaterial);

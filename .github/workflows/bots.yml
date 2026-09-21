@@ -1,4 +1,4 @@
-# Plays one hundred headless bot runs per policy on every PR (D-115, D-127; PR-11 exit test 5, PR-16 exit test 7, D-421).
+# Plays one hundred headless bot runs per policy on every PR (D-115, D-127; PR-11 exit test 5, PR-16 exit test 7, D-421, D-434).
 # A crash, or a softlock on a policy that promises progress, fails the job. A death is its own end state, and it
 # fails no job, because a fight can kill a bot (D-403). The night workflow plays the long runs (D-177).
 name: Bots
@@ -35,3 +35,5 @@ jobs:
         run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy full-clearer --seeds 1-100 --output bot-logs --root .
       - name: Timer tester, one hundred seeds
         run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy timer-tester --seeds 1-100 --output bot-logs --root .
+      - name: Coward, one hundred seeds
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy coward --seeds 1-100 --output bot-logs --root .

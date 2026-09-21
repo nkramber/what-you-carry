@@ -1,0 +1,239 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Threading.Tasks;
+using Godot;
+using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Procgen;
+using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Core.World;
+using WhatYouCarry.Game.Render;
+
+namespace WhatYouCarry.Game.World;
+
+/// <summary>
+/// The floor transition of the world meshes (D-72, D-429). During floor n, one task digs floor n+1 with the
+/// worker, the loop takes the plan, and the chunks of floor n+1 are uploaded a few at a time into hidden nodes.
+/// At the descent the old nodes go and the new ones show in one frame.
+/// </summary>
+/// <remarks>
+/// <para>
+/// The task reads the seed, the floor number, and the content alone, so it touches no state of the loop (D-429).
+/// The loop reads the result on the simulation thread through <see cref="SimulationLoop.OfferNextFloor"/>, and
+/// the worker gives the same grid as a dig at the descent, so the task changes no tick.
+/// </para>
+/// <para>
+/// A descent that comes before the task or the upload ends builds the rest of the chunks in that frame. The
+/// frame is then slow, and the frame log shows it (D-427). A task that failed throws its error at the offer, with
+/// the seed and the floor, so no failure of the worker is lost (T-2).
+/// </para>
+/// </remarks>
+public sealed class ChunkSwap
+{
+    /// <summary>
+    /// The count of chunks that one frame uploads. A maximum floor holds 64 chunks (D-291), so the upload takes 16
+    /// frames. That is the first value, and a later change needs a measurement on the Deck (D-109).
+    /// </summary>
+    public const int ChunksPerFrame = 4;
+
+    private const string TaskFailedMessage = "The worker failed to dig the next floor.";
+    private const string SeedField = "seed";
+    private const string FloorField = "floor";
+    private const string CauseField = "cause";
+
+    private readonly Node parent;
+    private readonly Material material;
+    private readonly NextFloorWorker worker;
+    private readonly ulong seed;
+    private List<MeshInstance3D> shown = [];
+    private int shownFloor;
+    private Task<FloorPlan>? digging;
+    private int diggingFloor;
+    private FloorPlan? staged;
+    private List<MeshInstance3D> stagedNodes = [];
+    private int stagedChunk;
+
+    /// <summary>A swap that adds its nodes under the parent, with the world material on each.</summary>
+    public ChunkSwap(Node parent, Material material, NextFloorWorker worker, ulong seed)
+    {
+        this.parent = parent;
+        this.material = material;
+        this.worker = worker;
+        this.seed = seed;
+    }
+
+    /// <summary>The nodes of the floor on screen, in chunk order.</summary>
+    public IReadOnlyList<MeshInstance3D> Shown => this.shown;
+
+    /// <summary>Answers whether the last swap showed the plan of the worker, and not a floor that the loop dug at the descent.</summary>
+    public bool LastSwapFromWorker { get; private set; }
+
+    /// <summary>Answers whether every chunk of the next floor is uploaded and waits in hidden nodes.</summary>
+    public bool NextFloorReady => this.staged is not null && this.stagedChunk == ChunkCount(this.staged.Grid);
+
+    /// <summary>Shows the floor of the loop, built in this frame, and starts the task of the next floor.</summary>
+    public void Start(SimulationLoop loop)
+    {
+        this.shown = this.BuildAll(loop.Grid, true);
+        this.shownFloor = loop.Floor;
+        this.StartDig(loop.Floor + 1);
+    }
+
+    /// <summary>
+    /// Offers the plan of the next floor to the loop when the task ended and no plan is on offer. Call it before
+    /// each tick.
+    /// </summary>
+    /// <exception cref="ContextException">The task failed. The error names the seed, the floor, and the cause.</exception>
+    public void BeforeTick(SimulationLoop loop)
+    {
+        if (this.digging is null || !this.digging.IsCompleted || this.staged is not null)
+        {
+            return;
+        }
+
+        FloorPlan plan = this.TakeResult();
+        loop.OfferNextFloor(plan);
+        this.staged = plan;
+        this.stagedNodes = [];
+        this.stagedChunk = 0;
+    }
+
+    /// <summary>Uploads up to <see cref="ChunksPerFrame"/> chunks of the next floor into hidden nodes. Call it once each frame.</summary>
+    public void UploadSome()
+    {
+        if (this.staged is null)
+        {
+            return;
+        }
+
+        VoxelGrid grid = this.staged.Grid;
+        int count = ChunkCount(grid);
+        int end = Math.Min(this.stagedChunk + ChunksPerFrame, count);
+        for (; this.stagedChunk < end; this.stagedChunk++)
+        {
+            this.AddChunk(grid, this.stagedChunk, false, this.stagedNodes);
+        }
+    }
+
+    /// <summary>
+    /// Swaps the nodes when the loop descended on the last tick: the old nodes go, and the nodes of the new floor
+    /// show. The chunks that the upload did not reach are built in this frame. The task of the floor after it starts.
+    /// </summary>
+    /// <returns>True when the tick descended and the swap ran.</returns>
+    public bool AfterTick(SimulationLoop loop)
+    {
+        if (loop.Floor == this.shownFloor)
+        {
+            return false;
+        }
+
+        foreach (MeshInstance3D node in this.shown)
+        {
+            node.QueueFree();
+        }
+
+        if (this.staged is not null && ReferenceEquals(this.staged, loop.Plan))
+        {
+            // The loop took the offered plan, so the hidden nodes show its grid.
+            int count = ChunkCount(this.staged.Grid);
+            for (; this.stagedChunk < count; this.stagedChunk++)
+            {
+                this.AddChunk(this.staged.Grid, this.stagedChunk, false, this.stagedNodes);
+            }
+
+            foreach (MeshInstance3D node in this.stagedNodes)
+            {
+                node.Visible = true;
+            }
+
+            this.shown = this.stagedNodes;
+            this.LastSwapFromWorker = true;
+        }
+        else
+        {
+            // The descent came before the task ended, so the loop dug the floor itself, and no node holds it yet.
+            // A task that is still running ends in its own time, and its result is never read.
+            this.shown = this.BuildAll(loop.Grid, true);
+            this.LastSwapFromWorker = false;
+        }
+
+        this.shownFloor = loop.Floor;
+        this.staged = null;
+        this.stagedNodes = [];
+        this.stagedChunk = 0;
+        this.digging = null;
+        this.StartDig(loop.Floor + 1);
+        return true;
+    }
+
+    /// <summary>The count of chunks of a grid, in the order of <see cref="ChunkNodes"/>: Z outer, X inner.</summary>
+    private static int ChunkCount(VoxelGrid grid)
+    {
+        return ChunkLayout.CountX(grid) * ChunkLayout.CountZ(grid);
+    }
+
+    /// <summary>Starts the task that digs one floor, when the content covers it. The stairwell of the deepest floor has none under it.</summary>
+    private void StartDig(int floor)
+    {
+        if (!this.worker.Covers(floor))
+        {
+            return;
+        }
+
+        NextFloorWorker dig = this.worker;
+        ulong runSeed = this.seed;
+        this.diggingFloor = floor;
+        this.digging = Task.Run(() => dig.Generate(runSeed, floor));
+    }
+
+    /// <summary>The plan of the task that ended.</summary>
+    /// <exception cref="ContextException">The task failed or the engine cancelled it.</exception>
+    private FloorPlan TakeResult()
+    {
+        Task<FloorPlan> task = this.digging ?? throw new InvalidOperationException(TaskFailedMessage);
+        if (task.IsCompletedSuccessfully)
+        {
+            return task.Result;
+        }
+
+        string cause = task.Exception?.InnerException?.Message ?? task.Status.ToString();
+        ContextException error = new(TaskFailedMessage);
+        error.AddContext(SeedField, this.seed.ToString(CultureInfo.InvariantCulture));
+        error.AddContext(FloorField, this.diggingFloor.ToString(CultureInfo.InvariantCulture));
+        error.AddContext(CauseField, cause);
+        throw error;
+    }
+
+    /// <summary>The nodes of every chunk of a grid that shows a face.</summary>
+    private List<MeshInstance3D> BuildAll(VoxelGrid grid, bool visible)
+    {
+        List<MeshInstance3D> nodes = [];
+        int count = ChunkCount(grid);
+        for (int chunk = 0; chunk < count; chunk++)
+        {
+            this.AddChunk(grid, chunk, visible, nodes);
+        }
+
+        return nodes;
+    }
+
+    /// <summary>Meshes one chunk by its index and adds its node under the parent. A chunk with no visible face gets no node.</summary>
+    private void AddChunk(VoxelGrid grid, int chunk, bool visible, List<MeshInstance3D> nodes)
+    {
+        int countX = ChunkLayout.CountX(grid);
+        MeshData data = GreedyMesher.MeshChunk(grid, chunk % countX, chunk / countX);
+        if (data.TriangleCount == 0)
+        {
+            return;
+        }
+
+        MeshInstance3D node = new()
+        {
+            Mesh = ArrayMeshBuilder.Build(data),
+            MaterialOverride = this.material,
+            Visible = visible,
+        };
+        this.parent.AddChild(node);
+        nodes.Add(node);
+    }
+}

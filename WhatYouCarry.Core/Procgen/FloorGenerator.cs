@@ -60,6 +60,21 @@ public static class FloorGenerator
         }
     }
 
+    /// <summary>The deepest floor that the templates of the content cover: the floor whose stairwell ends the run at the bottom (D-3, D-270).</summary>
+    public static int DeepestFloor(ContentSet content)
+    {
+        int deepest = 0;
+        foreach (FloorTemplate template in content.Floors)
+        {
+            if (template.MaxDepth > deepest)
+            {
+                deepest = (int)template.MaxDepth;
+            }
+        }
+
+        return deepest;
+    }
+
     /// <summary>The one template whose depth range holds the floor. The error names the floor in its text, and <see cref="Generate"/> adds it as a field.</summary>
     /// <exception cref="ContextException">The floor is below one, or the count of templates that cover it is not one.</exception>
     public static FloorTemplate TemplateFor(int floor, ContentSet content)

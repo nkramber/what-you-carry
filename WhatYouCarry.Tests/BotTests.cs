@@ -233,14 +233,22 @@ public sealed class BotTests
 
             Assert.Equal(2, Program.Main(["night-record", "--commit", "abc", "--status", "success", "--output", file]));
             Assert.Equal(2, Program.Main(["night-record", "--commit", commit, "--status", "green", "--output", file]));
-            Assert.Equal("{\"commit\":\"" + commit + "\",\"endedAt\":\"2026-09-10T03:00:00Z\",\"status\":\"failure\",\"deaths\":{},\"deathCauses\":{}}\n", NightRecordCommand.Build(commit, new DateTime(2026, 9, 10, 3, 0, 0, DateTimeKind.Utc), "failure", string.Empty));
+            Assert.Equal("{\"commit\":\"" + commit + "\",\"endedAt\":\"2026-09-10T03:00:00Z\",\"status\":\"failure\",\"deaths\":{},\"deathCauses\":{},\"ascends\":{}}\n", NightRecordCommand.Build(commit, new DateTime(2026, 9, 10, 3, 0, 0, DateTimeKind.Utc), "failure", string.Empty));
 
             // The record carries the count of deaths of each policy, in the order of the summary lines (D-403).
             SortedDictionary<string, int> greedyCauses = new(StringComparer.Ordinal) { ["scavenger"] = 10, ["overseer"] = 2 };
             SortedDictionary<string, int> clearerCauses = new(StringComparer.Ordinal) { ["scavenger"] = 7 };
-            string summary = BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, greedyCauses) + BotRunCommand.DeathLine(FullClearer.PolicyName, 7, clearerCauses);
-            Assert.Equal("greedy-descender=12 overseer:2 scavenger:10\n", BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, greedyCauses));
+            string summary = BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, 0, greedyCauses) + BotRunCommand.DeathLine(FullClearer.PolicyName, 7, 0, clearerCauses);
+            Assert.Equal("greedy-descender=12 ascends=0 overseer:2 scavenger:10\n", BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, 0, greedyCauses));
             Assert.Equal("{\"greedy-descender\":12,\"full-clearer\":7}", NightRecordCommand.DeathsObject(summary));
+
+            // The record carries the count of ascends of each policy (D-430). A line of an older night holds no
+            // ascend word, so its policy has no entry, and the record states no count that the night did not measure.
+            string withCoward = summary + BotRunCommand.DeathLine(Coward.PolicyName, 3, 4997, new SortedDictionary<string, int>(StringComparer.Ordinal) { ["scavenger"] = 3 });
+            Assert.Equal("{\"greedy-descender\":0,\"full-clearer\":0,\"coward\":4997}", NightRecordCommand.AscendsObject(withCoward));
+            Assert.Equal("{\"coward\":{\"scavenger\":3}}", NightRecordCommand.CausesObject("coward=3 ascends=4997 scavenger:3\n"));
+            Assert.Equal("{}", NightRecordCommand.AscendsObject("greedy-descender=3 overseer:1\n"));
+            Assert.Throws<FormatException>(() => NightRecordCommand.AscendsObject("coward=3 ascends=many"));
 
             // The record carries the count of each cause for each policy, in ordinal cause order (D-411). A line of
             // an older night holds no cause word and reads as no cause (D-177).

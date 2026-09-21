@@ -165,6 +165,29 @@ public sealed class UserArgumentsTests
     }
 
     /// <summary>
+    /// The transitions flag counts the descents of the bot session into the frame log, so it stops the boot without
+    /// either of them, and the error names the flag that is absent (D-317, D-435).
+    /// </summary>
+    [Fact]
+    public void TransitionsNeedTheBotAndTheFrameLog()
+    {
+        AssertStops(UserArguments.TransitionsNeedBotAndLogMessage, [BotSession.TransitionsFlag, "10"], BotSession.TransitionsFlag, BotSession.Flag);
+        AssertStops(UserArguments.TransitionsNeedBotAndLogMessage, [BotSession.TransitionsFlag, "10", FrameLog.Flag, "frames.txt"], BotSession.TransitionsFlag, BotSession.Flag);
+        AssertStops(UserArguments.TransitionsNeedBotAndLogMessage, [BotSession.Flag, BotSession.TransitionsFlag, "10"], BotSession.TransitionsFlag, FrameLog.Flag);
+        AssertStops(UserArguments.ShortFlagMessage, [BotSession.Flag, FrameLog.Flag, "frames.txt", BotSession.TransitionsFlag], BotSession.TransitionsFlag);
+
+        UserArguments ten = UserArguments.Parse([BotSession.Flag, FrameLog.Flag, "frames.txt", BotSession.TransitionsFlag, "10"]);
+        Assert.Equal(10, BotSession.TransitionsOf(ten));
+        Assert.Equal(1, BotSession.TransitionsOf(UserArguments.Parse([BotSession.Flag])));
+        foreach (string bad in new[] { "0", "15", "-1", "ten", "1.5" })
+        {
+            UserArguments arguments = UserArguments.Parse([BotSession.Flag, FrameLog.Flag, "frames.txt", BotSession.TransitionsFlag, bad]);
+            ContextException error = Assert.Throws<ContextException>(() => BotSession.TransitionsOf(arguments));
+            Assert.Contains(error.Context, field => field.Value == bad);
+        }
+    }
+
+    /// <summary>
     /// A read of a flag outside the table is an error that names it, and never an absent flag (T-2). A read of the words of
     /// a flag that the arguments do not hold is an error that names the flag.
     /// </summary>

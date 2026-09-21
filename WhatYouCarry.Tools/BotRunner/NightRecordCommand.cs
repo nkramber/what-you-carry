@@ -9,12 +9,13 @@ namespace WhatYouCarry.Tools.BotRunner;
 /// <summary>
 /// <c>night-record --commit &lt;sha&gt; --status &lt;success|failure|cancelled&gt; --output &lt;file&gt; [--summary
 /// &lt;file&gt;]</c>. Writes the record of one night, scheduled or by hand: the commit it tested, the end time, the
-/// status, and the count of deaths of each bot policy (D-177, D-273, D-274, D-403). The night job commits the file
+/// status, the count of deaths of each bot policy, and the count of ascends of each policy (D-177, D-273, D-274,
+/// D-403, D-430). The night job commits the file
 /// to the branch <c>night-results</c>, and the <c>night-gate</c> command reads it.
 /// </summary>
 /// <remarks>
-/// The summary file holds one line for each policy, in the form <c>policy=count</c> and then one <c>cause:count</c>
-/// word for each cause (D-411), which
+/// The summary file holds one line for each policy, in the form <c>policy=count</c>, then the word
+/// <c>ascends=count</c> (D-430), and then one <c>cause:count</c> word for each cause (D-411), which
 /// <see cref="BotRunCommand.DeathLine"/> writes. An absent file gives a record with no death counts, and the gate
 /// reads the status alone, so every record that an older night wrote still parses (D-177).
 /// </summary>
@@ -30,6 +31,12 @@ public static class NightRecordCommand
 
     /// <summary>The field that holds the count of deaths of each cause for each policy, by policy name and then by cause (D-411).</summary>
     public const string DeathCausesName = "deathCauses";
+
+    /// <summary>The field that holds the count of ascends above the last floor of each policy, by policy name (D-430).</summary>
+    public const string AscendsName = "ascends";
+
+    /// <summary>The name of the ascend word of a summary line (D-430).</summary>
+    public const string AscendsWord = "ascends";
 
     /// <summary>The statuses that a night can end with. The gate passes on success alone (D-177).</summary>
     public static readonly string[] Statuses = ["success", "failure", "cancelled"];
@@ -100,7 +107,7 @@ public static class NightRecordCommand
     public static string Build(string commit, DateTime endedAt, string status, string summary)
     {
         string time = endedAt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-        return $"{{\"{CommitName}\":\"{commit}\",\"{EndedAtName}\":\"{time}\",\"{StatusName}\":\"{status}\",\"{DeathsName}\":{DeathsObject(summary)},\"{DeathCausesName}\":{CausesObject(summary)}}}\n";
+        return $"{{\"{CommitName}\":\"{commit}\",\"{EndedAtName}\":\"{time}\",\"{StatusName}\":\"{status}\",\"{DeathsName}\":{DeathsObject(summary)},\"{DeathCausesName}\":{CausesObject(summary)},\"{AscendsName}\":{AscendsObject(summary)}}}\n";
     }
 
     /// <summary>The death counts of the summary text as one JSON object, in the order of the lines.</summary>
@@ -117,6 +124,35 @@ public static class NightRecordCommand
             }
 
             text.Append('"').Append(line.Policy).Append("\":").Append(line.Deaths.ToString(CultureInfo.InvariantCulture));
+            first = false;
+        }
+
+        return text.Append('}').ToString();
+    }
+
+    /// <summary>
+    /// The ascend counts of the summary text as one JSON object, in the order of the lines (D-430). A line of an
+    /// older night holds no ascend word, so its policy has no entry, and the record states no count that the night
+    /// did not measure (T-2).
+    /// </summary>
+    /// <exception cref="FormatException">A line is not one name, one equals sign, and one whole number, with other words after it (T-2).</exception>
+    public static string AscendsObject(string summary)
+    {
+        StringBuilder text = new("{");
+        bool first = true;
+        foreach (SummaryLine line in ReadSummary(summary))
+        {
+            if (line.Ascends is null)
+            {
+                continue;
+            }
+
+            if (!first)
+            {
+                text.Append(',');
+            }
+
+            text.Append('"').Append(line.Policy).Append("\":").Append(line.Ascends.Value.ToString(CultureInfo.InvariantCulture));
             first = false;
         }
 
@@ -158,8 +194,8 @@ public static class NightRecordCommand
     }
 
     /// <summary>
-    /// The lines of the summary text. A blank line is skipped. A line of an older night holds no cause word, and it
-    /// reads as a policy with no cause (D-177).
+    /// The lines of the summary text. A blank line is skipped. A line of an older night holds no cause word and no
+    /// ascend word, and it reads as a policy with no cause and no ascend count (D-177).
     /// </summary>
     /// <exception cref="FormatException">A line is not one name, one equals sign, and one whole number, with cause words after it (T-2).</exception>
     private static List<SummaryLine> ReadSummary(string summary)
@@ -180,8 +216,22 @@ public static class NightRecordCommand
                 throw new FormatException($"The bot summary line '{trimmed}' is not one policy name, one equals sign, and one count of zero or more (D-403).");
             }
 
+            long? ascends = null;
+            int firstCause = 1;
+            string ascendPrefix = AscendsWord + "=";
+            if (words.Length > 1 && words[1].StartsWith(ascendPrefix, StringComparison.Ordinal))
+            {
+                if (!long.TryParse(words[1][ascendPrefix.Length..], NumberStyles.Integer, CultureInfo.InvariantCulture, out long ascendCount) || ascendCount < 0)
+                {
+                    throw new FormatException($"The ascend word '{words[1]}' of the bot summary line '{trimmed}' is not '{ascendPrefix}' and one count of zero or more (D-430).");
+                }
+
+                ascends = ascendCount;
+                firstCause = 2;
+            }
+
             List<CauseCount> causes = [];
-            for (int index = 1; index < words.Length; index++)
+            for (int index = firstCause; index < words.Length; index++)
             {
                 int colon = words[index].LastIndexOf(':');
                 if (colon < 1 || !long.TryParse(words[index][(colon + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out long count) || count < 0)
@@ -192,14 +242,14 @@ public static class NightRecordCommand
                 causes.Add(new CauseCount(words[index][..colon], count));
             }
 
-            lines.Add(new SummaryLine(words[0][..mark], deaths, causes));
+            lines.Add(new SummaryLine(words[0][..mark], deaths, ascends, causes));
         }
 
         return lines;
     }
 
-    /// <summary>One line of the summary: the policy, its count of deaths, and the count of each cause.</summary>
-    private sealed record SummaryLine(string Policy, long Deaths, List<CauseCount> Causes);
+    /// <summary>One line of the summary: the policy, its count of deaths, its count of ascends or null on an older line, and the count of each cause.</summary>
+    private sealed record SummaryLine(string Policy, long Deaths, long? Ascends, List<CauseCount> Causes);
 
     /// <summary>The count of deaths of one cause.</summary>
     private sealed record CauseCount(string Cause, long Count);

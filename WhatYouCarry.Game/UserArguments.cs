@@ -49,6 +49,9 @@ public sealed class UserArguments
     /// <summary>The message of the error for the smoke flag with the bot flag (D-317).</summary>
     public const string SmokeTakesNoBotMessage = "The smoke script gives every intent, so the smoke flag takes no bot flag.";
 
+    /// <summary>The message of the error for the transitions flag with no bot flag or no frame log flag (D-317, D-435).</summary>
+    public const string TransitionsNeedBotAndLogMessage = "The transitions flag counts the descents of the bot session into the frame log, so it needs the bot flag and the frame log flag.";
+
     /// <summary>The message of the error for a read of the words of a flag that the arguments do not hold.</summary>
     public const string AbsentFlagMessage = "The user arguments hold no such flag.";
 
@@ -64,6 +67,7 @@ public sealed class UserArguments
     {
         [SmokeSession.Flag] = 0,
         [BotSession.Flag] = 0,
+        [BotSession.TransitionsFlag] = 1,
         [FrameLog.Flag] = 1,
         [ContactSheet.Flag] = 1,
         [TestExit.PressFlag] = 2,
@@ -166,9 +170,10 @@ public sealed class UserArguments
     /// <summary>
     /// Stops the boot on a flag that the session ignores (D-317). The contact sheet starts no loop, so it ignores every
     /// other flag. The smoke script gives the intent of every tick, so the bot of the bot flag never drives the loop.
+    /// The transitions flag counts the descents of the bot session into the frame log, so it needs both (D-435).
     /// The error names both flags.
     /// </summary>
-    /// <exception cref="ContextException">The contact sheet flag with another flag, or the smoke flag with the bot flag.</exception>
+    /// <exception cref="ContextException">The contact sheet flag with another flag, the smoke flag with the bot flag, or the transitions flag with no bot flag or no frame log flag.</exception>
     private static void RejectIgnoredFlags(Dictionary<string, string[]> flags)
     {
         if (flags.ContainsKey(ContactSheet.Flag))
@@ -193,6 +198,14 @@ public sealed class UserArguments
             withBot.AddContext(FlagField, SmokeSession.Flag);
             withBot.AddContext(OtherField, BotSession.Flag);
             throw withBot;
+        }
+
+        if (flags.ContainsKey(BotSession.TransitionsFlag) && !(flags.ContainsKey(BotSession.Flag) && flags.ContainsKey(FrameLog.Flag)))
+        {
+            ContextException alone = new(TransitionsNeedBotAndLogMessage);
+            alone.AddContext(FlagField, BotSession.TransitionsFlag);
+            alone.AddContext(OtherField, flags.ContainsKey(BotSession.Flag) ? FrameLog.Flag : BotSession.Flag);
+            throw alone;
         }
     }
 

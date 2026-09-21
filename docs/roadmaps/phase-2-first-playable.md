@@ -602,29 +602,31 @@ Gate: exit tests 1 to 7 pass.
 
 Scope:
 
-- `Core/Simulation/StairwellPrompt.cs`: the untimed descend-or-ascend choice on arrival, driven by an intent button or a bot policy (D-50, D-140).
-- `Core/Simulation/NextFloorWorker.cs`: generates floor n+1 on one worker thread during floor n, from the run seed and the floor number (D-72). It hands the grid to the simulation at the transition. The worker reads no simulation state.
-- `WhatYouCarry.Game/World/ChunkSwap.cs`: uploads the next floor's meshes over several frames before the transition, so the swap is one frame.
-- `Core/Bots/Coward.cs`: a policy that ascends at the first stairwell (D-149).
-- The smoke session of PR-12 extends to the stairwell and one descend.
+- `Core/Simulation/StairwellPrompt.cs`: the untimed descend-or-ascend choice (D-50, D-140). The prompt is open while the body stands on the stairwell cell, and it closes when the body leaves (D-431). It does not hold the player, and the Overseer and the waves still attack (D-417). An intent button or a bot policy answers it.
+- `Core/Simulation/NextFloorWorker.cs`: a pure function of the run seed and the floor number over the content set (D-72, D-429). Core approves no threading type. `SimulationLoop.OfferNextFloor` takes the plan before the descent, and a headless run digs at the descent.
+- `WhatYouCarry.Game/World/ChunkSwap.cs`: runs the worker on one task during each floor and offers the plan to the loop. It uploads the chunks of the next floor over several frames into hidden nodes. The swap at the descent is one frame.
+- `Core/Bots/Coward.cs`: a policy that ascends at the first stairwell (D-149). It promises progress (D-433). The PR bot job and the night run it (D-434).
+- `Core/Bots/BotRun.cs`: an ascend on floors 1 to 14 ends as `ascend`, the sixth end state, and the night record counts the ascends of each policy (D-430).
+- The smoke session of PR-12 walks floor 1 with the greedy descender, opens the prompt, and descends. The script then plays on floor 2 (D-436).
+- The bot session takes the flag `--transitions <count>`. The frame log marks each transition, and the session fails on a frame over the hitch budget (D-427, D-435). The session loads no enemy family (D-437).
 
-Out of scope: the hub (PR-30), the ending (PR-35).
+Out of scope: the hub (PR-30), the ending (PR-35), the button names and the placement of the prompt text (PR-19).
 
 Exit tests:
 
 1. `WorkerEqualsSynchronous` asserts the worker's grid hash equals a synchronous generation for the same seed and floor.
 2. `WorkerReadsNoSimulationState` asserts the worker's inputs are the seed and the floor number only, by a type test on its signature.
-3. `PromptIsUntimed` asserts the timer holds while the prompt is open (D-140).
+3. `PromptIsUntimed` asserts that the prompt is open and the timer holds on each tick that the prompt is open (D-140, D-432).
 4. `AscendEndsRun` asserts the `ascend` end state and no next floor.
-5. `CowardAscendsFirst` asserts the `ascend` end state at floor 1 for the coward policy.
-6. `TransitionUnderHitchBudget` on the Deck asserts no frame over the OQ-44 budget across ten transitions.
+5. `CowardAscendsFirst` asserts the `ascend` end state at floor 1 for the coward policy (D-430).
+6. `TransitionUnderHitchBudget` on the Deck asserts no frame over 22 milliseconds across ten transitions (D-427). The owner runs the command in `CLAUDE.md` on the Deck (D-428, D-435), and the session exits 0. The result goes in the handoff of the session that reads it.
 7. `SmokeReachesStairwell` runs the extended smoke session and asserts exit code 0.
 
 Review focus: determinism, Core boundary, presentation, test quality.
 
 Check clause: none.
 
-Gate: exit tests 1 to 7 pass.
+Gate: exit tests 1 to 5 and 7 pass. Exit test 6 needs the Deck of the owner.
 
 > *In plain English:* you reach the stairs, choose to go down or leave, and the next floor already exists, so there is no pause.
 
@@ -712,7 +714,7 @@ Gate: exit tests 1 to 4 pass.
 
 Procedure: on the Steam Deck OLED of the owner (D-296), run the PR-13 build and then the PR-18 build over one full floor. The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target comes from D-295. A miss files a question that binds the next render PR (F-3).
 
-The bot session and the frame log come from PR-13 (OQ-161). The command in `CLAUDE.md` starts the game with the two flags `--bot` and `--frame-log <path>`. The session ends at the first descent. The file holds one frame time per line, in microseconds. The end line of the log carries the count of frames and the 99th percentile. The seed of the session is the first seed of `Main` until the hub of PR-30 picks one per run. The three seeds of the table wait for a seed flag or for PR-30.
+The bot session and the frame log come from PR-13 (OQ-161). The command in `CLAUDE.md` starts the game with the two flags `--bot` and `--frame-log <path>`. The session ends one second after the first descent (PR-18). The build reaches the Deck as the checkout in desktop mode (D-428). The file holds one frame time per line, in microseconds. The end line of the log carries the count of frames and the 99th percentile. The seed of the session is the first seed of `Main` until the hub of PR-30 picks one per run. The three seeds of the table wait for a seed flag or for PR-30.
 
 ## 5. Sequence
 
@@ -742,7 +744,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 22. PR-16.
 23. ✅ OQ-4 and OQ-6 answered 2026-09-20: D-407 to D-409. The escalation, the exit tests, and the rules of the hunt: D-410 to D-421.
 24. PR-17. ✅ Done in PR #84.
-25. Owner: answer OQ-44.
+25. Owner: answer OQ-44. ✅ Answered 2026-09-21: D-427. The PR-18 answers: D-428 to D-437.
 26. PR-18.
 27. PR-19.
 28. Owner: answer OQ-48.
@@ -758,11 +760,14 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 2. Each 
 
 Open:
 
-- OQ-44: the transition hitch budget. Blocks PR-18.
 - OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
-- OQ-161: the M-3 run on the Steam Deck. Blocks exit test 7 of PR-13 and M-3.
+
+Resolved 2026-09-21:
+
+- OQ-44 (D-427): the transition hitch budget. PR-18.
+- OQ-161 (D-428): the M-3 run on the Steam Deck. PR-13, PR-18, and M-3.
 
 Resolved 2026-09-20:
 
