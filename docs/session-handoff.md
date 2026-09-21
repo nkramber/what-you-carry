@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 197: 2026-09-21, Codex
+
+Author: Codex
+Session: PR-17, the floor timer, the hunter, and the escalation, reviewer. Branch `feat/pr-17-timer-and-hunter`. PR #84, changes required.
+
+### What this session did, and why
+
+- Reviewed PR #84 at effective head `f000599` as the opposite provider.
+- Found P1-1 in `Escalation`: an empty post list can crash at the first due wave, although D-410 and D-418 require a skipped wave.
+- Added the review record at `docs/reviews/pr-84.md`.
+
+### State of the build
+
+- The focused timer suite passed 16 of 16 tests.
+- The full suite did not finish during the review window and was interrupted.
+- The remote PR head before this review record is `390e0b1`.
+
+### In flight
+
+- The author must handle P1-1 and add the empty-post wave regression test.
+
+### Traps and gotchas
+
+- `TestWorld.PeacefulContent` has no enemy family and can produce an empty post list.
+- The review record uses effective head `f000599`. The metadata commit does not change that head.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author fixes P1-1 and reruns the focused and full test suites.
+
 ## Session 196: 2026-09-20, Claude Code
 
 Author: Claude Code
@@ -384,39 +418,3 @@ None blocks PR-70. OQ-177 and OQ-178 have their answers in D-386 and D-387. D-38
 ### Next concrete action
 
 Codex reviews GitHub PR #81 at effective head `be07a42`, per `.claude/skills/pr-review/SKILL.md`, and writes `docs/reviews/pr-81.md`. That review reads the split of each skill against the file it replaced, and the front matter rule of the checker. After the merge, a new clean session starts PR-66, the ramps and the chamber tiers. D-387 needs an owner action in the GitHub settings, and it needs no PR.
-
-## Session 187: 2026-09-18, Codex
-
-Author: Codex
-Session: review GitHub PR #80, the night record ref guard. Branch `feat/night-record-ref`.
-
-### What this session did, and why
-
-- Checked the complete PR diff, the workflow contract, the regression test, the roadmap, and the GitHub comments.
-- Verified the author as Claude Code from Session 186. Codex is the eligible reviewer under T-4 and D-101.
-- Found no in-scope defect. Added `docs/reviews/pr-80.md` for effective head `63bb4a3`.
-
-### State of the build
-
-- Base and merge base: `3434055`. Effective head: `63bb4a3`. The later `cadcfbb` commit changes only `docs/session-handoff.md` (D-184).
-- Local `dotnet test` built the projects, then produced no test result after discovery. The run was stopped, so it is incomplete local evidence.
-- GitHub checks on the metadata tip passed CI, Smoke, Bit identity, compare, Bots, Asset QA, det-lint, STE check, doc-gate, and night-gate. `evaluate` failed before publication because no review record existed (D-251).
-- Remote head: `origin/feat/night-record-ref` reached `fb9177b` with the review record and this entry. Every check passed, including `review-gate`. A final metadata update follows this head.
-
-### In flight
-
-GitHub PR #80 is ready for owner merge at effective head `63bb4a3`. Exit test 3 of PR-69 needs a hand night on `main` after merge, and the session that runs it states the result in its handoff entry (D-375).
-
-### Traps and gotchas
-
-- The current PR branch is `feat/night-record-ref`. Keep the review head at `63bb4a3`; the handoff-only commit does not change it (D-184).
-- The full local test run did not complete. Revision-matched GitHub checks passed on the later metadata tip under D-357.
-- The next ids are D-386, OQ-179, F-103, PR-70, and Session 188.
-
-### Open questions that block progress
-
-None blocks PR #80. OQ-177 and OQ-178 bind PR-70 and block nothing.
-
-### Next concrete action
-
-The owner merges GitHub PR #80. A new clean session starts PR-70, the skill port of D-383 to D-385.

@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 187: 2026-09-18, Codex
+
+Author: Codex
+Session: review GitHub PR #80, the night record ref guard. Branch `feat/night-record-ref`.
+
+### What this session did, and why
+
+- Checked the complete PR diff, the workflow contract, the regression test, the roadmap, and the GitHub comments.
+- Verified the author as Claude Code from Session 186. Codex is the eligible reviewer under T-4 and D-101.
+- Found no in-scope defect. Added `docs/reviews/pr-80.md` for effective head `63bb4a3`.
+
+### State of the build
+
+- Base and merge base: `3434055`. Effective head: `63bb4a3`. The later `cadcfbb` commit changes only `docs/session-handoff.md` (D-184).
+- Local `dotnet test` built the projects, then produced no test result after discovery. The run was stopped, so it is incomplete local evidence.
+- GitHub checks on the metadata tip passed CI, Smoke, Bit identity, compare, Bots, Asset QA, det-lint, STE check, doc-gate, and night-gate. `evaluate` failed before publication because no review record existed (D-251).
+- Remote head: `origin/feat/night-record-ref` reached `fb9177b` with the review record and this entry. Every check passed, including `review-gate`. A final metadata update follows this head.
+
+### In flight
+
+GitHub PR #80 is ready for owner merge at effective head `63bb4a3`. Exit test 3 of PR-69 needs a hand night on `main` after merge, and the session that runs it states the result in its handoff entry (D-375).
+
+### Traps and gotchas
+
+- The current PR branch is `feat/night-record-ref`. Keep the review head at `63bb4a3`; the handoff-only commit does not change it (D-184).
+- The full local test run did not complete. Revision-matched GitHub checks passed on the later metadata tip under D-357.
+- The next ids are D-386, OQ-179, F-103, PR-70, and Session 188.
+
+### Open questions that block progress
+
+None blocks PR #80. OQ-177 and OQ-178 bind PR-70 and block nothing.
+
+### Next concrete action
+
+The owner merges GitHub PR #80. A new clean session starts PR-70, the skill port of D-383 to D-385.
+
 ## Session 186: 2026-09-17, Claude Code
 
 Author: Claude Code
