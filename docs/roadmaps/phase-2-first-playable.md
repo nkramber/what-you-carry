@@ -570,10 +570,10 @@ Gate: exit tests 1 to 7 pass.
 Scope:
 
 - `Core/Simulation/FloorTimer.cs`: a tick countdown per floor, with lengths per floor band and boss floors in the floor template (D-44, D-46, D-407). It pauses at the stairwell and runs in boss fights (D-140).
-- `Core/Entities/Hunter.cs`: one unkillable entity that spawns at expiry, paths to the player, and follows a speed curve that grows until escape is impossible (D-45, D-408). Its id is `overseer` (D-409).
-- `Core/Simulation/Escalation.cs`: waves of the floor families after expiry, on a schedule in the floor template data (D-45, D-410).
-- `Core/Bots/BotRun.cs`: the `death` end state carries its cause, and the night record counts the deaths of each cause for each policy (D-411).
-- `Core/Bots/TimerTester.cs`: a policy that waits until expiry, then runs for the stairwell (D-149).
+- `Core/Entities/Hunter.cs`: one unkillable entity that spawns at expiry, paths to the player, and follows a speed curve that grows until escape is impossible (D-45, D-408). Its id is `overseer` (D-409). It swings `overseer-pick` (D-413), takes no damage (D-414), spawns out of sight (D-415), and always knows where the player is (D-416).
+- `Core/Simulation/Escalation.cs`: waves of the floor families after expiry, on a schedule in the floor template data (D-45, D-410). The waves spawn at the posts of the plan and hunt at once (D-418, D-419).
+- `Core/Bots/BotRun.cs`: the `death` end state carries its cause, and the night record counts the deaths of each cause for each policy (D-411). A policy that promises progress reads softlock at expiry (D-420).
+- `Core/Bots/TimerTester.cs`: a policy that stands at the floor entry through the expiry and never fights (D-149, D-421).
 - Timer events in the run log for M-5.
 
 Out of scope: the timer display (PR-19), the hunter model and sound (PR-14, PR-20 fixtures until then).
@@ -738,7 +738,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 20. PR-66. ✅ Done in PR #82. ✅ OQ-179 and OQ-180 answered 2026-09-19 and 2026-09-20: D-388 to D-394.
 21. ✅ OQ-9 answered 2026-09-20: D-395 and D-396.
 22. PR-16.
-23. ✅ OQ-4 and OQ-6 answered 2026-09-20: D-407 to D-409. The escalation and the exit tests: D-410 to D-412.
+23. ✅ OQ-4 and OQ-6 answered 2026-09-20: D-407 to D-409. The escalation, the exit tests, and the rules of the hunt: D-410 to D-421.
 24. PR-17.
 25. Owner: answer OQ-44.
 26. PR-18.
