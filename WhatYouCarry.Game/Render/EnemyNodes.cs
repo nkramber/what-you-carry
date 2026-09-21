@@ -8,8 +8,9 @@ using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 namespace WhatYouCarry.Game.Render;
 
 /// <summary>
-/// The model of every enemy of a floor (D-401). Each one draws with the body model of PR-13 and the sword of
-/// PR-15, at the position of the simulation, and PR-62 gives the family a model of its own.
+/// The model of every enemy of a floor and of the Overseer (D-401). Each one draws with the body model of PR-13 and
+/// the sword of PR-15, at the position of the simulation. PR-62 gives a family a model of its own, and PR-14 gives
+/// one to the Overseer (D-409, D-423).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -20,7 +21,9 @@ namespace WhatYouCarry.Game.Render;
 /// </para>
 /// <para>
 /// A dead enemy holds its place in the list of the loop, so an owner id never moves (D-322). Its node hides
-/// instead, and no node is built or freed inside a floor. A descent builds the trees of the next floor.
+/// instead, and no node is freed inside a floor. A wave enemy joins the end of the list after expiry, and the tick
+/// after it builds its tree (D-410). The Overseer gets its tree on the tick that it spawns (D-415). A descent frees
+/// every tree and builds the trees of the next floor.
 /// </para>
 /// </remarks>
 public sealed class EnemyNodes
@@ -33,6 +36,9 @@ public sealed class EnemyNodes
     private readonly List<CoreVector3> previous = [];
     private readonly List<CoreVector3> current = [];
     private readonly float lowest;
+    private ModelNodeTree? hunterTree;
+    private CoreVector3 hunterPrevious;
+    private CoreVector3 hunterCurrent;
 
     /// <summary>The trees of the enemies of one floor, under one parent node.</summary>
     /// <param name="parent">The node that holds every enemy tree.</param>
@@ -49,8 +55,11 @@ public sealed class EnemyNodes
         this.lowest = lowest;
     }
 
-    /// <summary>The count of trees that stand under the parent now.</summary>
+    /// <summary>The count of enemy trees that stand under the parent now.</summary>
     public int Count => this.trees.Count;
+
+    /// <summary>Answers whether the tree of the Overseer stands under the parent now.</summary>
+    public bool HasHunter => this.hunterTree is not null;
 
     /// <summary>
     /// Builds one tree for each enemy of a floor, and frees the trees of the floor before it. A descent calls it
@@ -67,32 +76,77 @@ public sealed class EnemyNodes
         this.trees.Clear();
         this.previous.Clear();
         this.current.Clear();
-        foreach (Enemy enemy in enemies)
+        if (this.hunterTree is not null)
         {
-            ModelNodeTree tree = ModelNodes.Build(this.body, this.material);
-            ModelNodes.Hold(tree, EquipmentSlots.Weapon, ModelNodes.Build(this.sword, this.material).Root);
-            this.trees.Add(tree);
-            this.previous.Add(enemy.Body.Position);
-            this.current.Add(enemy.Body.Position);
-            this.parent.AddChild(tree.Root);
+            this.parent.RemoveChild(this.hunterTree.Root);
+            this.hunterTree.Root.QueueFree();
+            this.hunterTree = null;
         }
+
+        this.Grow(enemies);
     }
 
-    /// <summary>Reads the position of every enemy after a tick, so the next frames draw between the two newest ones.</summary>
-    public void AfterTick(IReadOnlyList<Enemy> enemies)
+    /// <summary>
+    /// Reads the position of every enemy and of the Overseer after a tick, so the next frames draw between the two
+    /// newest ones. A wave enemy or an Overseer with no tree yet gets one, at its position of this tick.
+    /// </summary>
+    public void AfterTick(IReadOnlyList<Enemy> enemies, Hunter? hunter)
     {
         for (int index = 0; index < this.trees.Count && index < enemies.Count; index++)
         {
             this.previous[index] = this.current[index];
             this.current[index] = enemies[index].Body.Position;
         }
+
+        this.Grow(enemies);
+        if (hunter is null)
+        {
+            return;
+        }
+
+        if (this.hunterTree is null)
+        {
+            this.hunterTree = this.BuildTree();
+            this.hunterCurrent = hunter.Body.Position;
+        }
+
+        this.hunterPrevious = this.hunterCurrent;
+        this.hunterCurrent = hunter.Body.Position;
+    }
+
+    /// <summary>Builds one tree for each enemy past the last tree, in list order, at its position now.</summary>
+    private void Grow(IReadOnlyList<Enemy> enemies)
+    {
+        for (int index = this.trees.Count; index < enemies.Count; index++)
+        {
+            this.trees.Add(this.BuildTree());
+            this.previous.Add(enemies[index].Body.Position);
+            this.current.Add(enemies[index].Body.Position);
+        }
+    }
+
+    /// <summary>One tree of the body model with the sword in the weapon slot, under the parent (D-397, D-401).</summary>
+    private ModelNodeTree BuildTree()
+    {
+        ModelNodeTree tree = ModelNodes.Build(this.body, this.material);
+        ModelNodes.Hold(tree, EquipmentSlots.Weapon, ModelNodes.Build(this.sword, this.material).Root);
+        this.parent.AddChild(tree.Root);
+        return tree;
     }
 
     /// <summary>Places every tree for one frame: the position between the two newest ticks, the yaw of the enemy, and a hidden node for a dead one.</summary>
     /// <param name="enemies">The enemies of the floor, in the order that <see cref="Rebuild"/> read.</param>
+    /// <param name="hunter">The Overseer of the floor, or null before expiry.</param>
     /// <param name="fraction">The part of the tick that the frame stands at, from zero to one.</param>
-    public void Draw(IReadOnlyList<Enemy> enemies, float fraction)
+    public void Draw(IReadOnlyList<Enemy> enemies, Hunter? hunter, float fraction)
     {
+        if (this.hunterTree is not null && hunter is not null)
+        {
+            CoreVector3 hunterFeet = RenderInterpolation.Between(this.hunterPrevious, this.hunterCurrent, fraction);
+            this.hunterTree.Root.Position = RenderInterpolation.ToGodot(hunterFeet) + new Vector3(0.0f, -this.lowest, 0.0f);
+            this.hunterTree.Root.RotationDegrees = new Vector3(0.0f, hunter.Yaw / 100.0f, 0.0f);
+        }
+
         for (int index = 0; index < this.trees.Count && index < enemies.Count; index++)
         {
             Enemy enemy = enemies[index];

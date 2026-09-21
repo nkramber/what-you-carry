@@ -35,6 +35,9 @@ public sealed class ContentLoader
     /// <summary>The directory that holds every enemy family (D-395).</summary>
     public const string EnemyDirectory = "enemies/";
 
+    /// <summary>The directory that holds the one hunter of the timer (D-45, D-409).</summary>
+    public const string HunterDirectory = "hunter/";
+
     /// <summary>
     /// The directory of the models and the animations, which Core never reads (OQ-159, D-298). Every content
     /// source skips it, so an animation file there is not a content file of this loader.
@@ -86,6 +89,7 @@ public sealed class ContentLoader
         List<ProjectileDefinition> projectiles = [];
         List<WeaponDefinition> weapons = [];
         List<EnemyDefinition> enemies = [];
+        List<HunterDefinition> hunters = [];
         Strings? strings = null;
 
         foreach (ContentFile file in files)
@@ -116,6 +120,10 @@ public sealed class ContentLoader
             {
                 enemies.Add(EnemyDefinition.FromMembers(file.Path, members));
             }
+            else if (file.Path.StartsWith(HunterDirectory, System.StringComparison.Ordinal))
+            {
+                hunters.Add(HunterDefinition.FromMembers(file.Path, members));
+            }
             else
             {
                 // A file that no type claims is a defect of the content set, and never a file to step over.
@@ -132,7 +140,8 @@ public sealed class ContentLoader
 
         CheckUniqueIds(floors, chambers, projectiles, weapons, enemies);
         CheckEnemyWeapons(enemies, weapons);
-        return new ContentSet(hash, floors, chambers, projectiles, weapons, enemies, strings);
+        HunterDefinition hunter = OneHunter(hunters, weapons);
+        return new ContentSet(hash, floors, chambers, projectiles, weapons, enemies, hunter, strings);
     }
 
     /// <summary>Two records of one type must not share an id, because a lookup would then take either one.</summary>
@@ -195,6 +204,32 @@ public sealed class ContentLoader
     }
 
     /// <summary>
+    /// The one hunter of the set (D-56). A set with no hunter or with two is a fault, because the timer spawns one
+    /// hunter at expiry (D-45). The hunter names a weapon of the set (D-413).
+    /// </summary>
+    private static HunterDefinition OneHunter(List<HunterDefinition> hunters, List<WeaponDefinition> weapons)
+    {
+        if (hunters.Count != 1)
+        {
+            ContextException error = new($"The content set holds {hunters.Count} hunter files under '{HunterDirectory}', and it holds exactly one, because the timer spawns one hunter at expiry (D-45, D-56).");
+            error.AddContext("directory", HunterDirectory);
+            error.AddContext("hunters", ((long)hunters.Count).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            throw error;
+        }
+
+        HunterDefinition hunter = hunters[0];
+        foreach (WeaponDefinition weapon in weapons)
+        {
+            if (weapon.Id == hunter.Weapon)
+            {
+                return hunter;
+            }
+        }
+
+        throw ContentError.Make(HunterDirectory + hunter.Id, "weapon", $"names '{hunter.Weapon}', and the content set holds no weapon of that id (D-413)");
+    }
+
+    /// <summary>
     /// Every enemy family names a weapon of the set (D-31, D-397). An id that no weapon carries is a fault of the
     /// content set, and a spawn with no weapon would swing nothing (T-2).
     /// </summary>
@@ -221,4 +256,4 @@ public sealed class ContentLoader
 }
 
 /// <summary>Every record of one content set, and the hash that the run record header carries (D-151, D-163).</summary>
-public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, IReadOnlyList<EnemyDefinition> Enemies, Strings Strings);
+public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, IReadOnlyList<EnemyDefinition> Enemies, HunterDefinition Hunter, Strings Strings);

@@ -1,0 +1,9 @@
+{
+  "id": "overseer",
+  "weapon": "overseer-pick",
+  "attackRangeCentimetres": 180,
+  "attackCooldownTicks": 60,
+  "startSpeedCentimetresPerSecond": 350,
+  "speedGainCentimetresPerSecond": 100,
+  "speedGainTicks": 1200
+}

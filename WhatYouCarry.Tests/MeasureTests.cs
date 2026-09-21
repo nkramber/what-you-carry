@@ -86,7 +86,7 @@ public sealed class MeasureTests
 
         Assert.True(BotSession.IsComplete(loop), $"The bot is stuck on floor 1 of seed {Main.FirstSeed} at tick {loop.Tick}.");
         Assert.Equal(SimulationLoop.FirstFloor + 1, loop.Floor);
-        Assert.Equal(BotRun.FloorBudget, BotSession.TickBudget);
+        Assert.True(BotSession.TickBudget > loop.Timer.Length, "The timer of floor 1 expires before the budget of the session (D-407).");
     }
 
     /// <summary>The world shader declares every uniform that the material sets, and its fade radius equals the constant.</summary>

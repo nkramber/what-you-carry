@@ -257,7 +257,7 @@ public partial class Main : Node3D
                 this.drawnFloor = this.loop.Floor;
             }
 
-            this.enemyNodes.AfterTick(this.loop.Enemies);
+            this.enemyNodes.AfterTick(this.loop.Enemies, this.loop.Hunter);
         }
 
         // The walk reads the horizontal distance of the tick, and its amount follows the speed (D-333).
@@ -319,7 +319,7 @@ public partial class Main : Node3D
         // seen from above, as a positive rotation about Y does (D-234).
         this.playerNodes.Root.RotationDegrees = new Vector3(0.0f, this.loop.Yaw / 100.0f, 0.0f);
 
-        this.enemyNodes?.Draw(this.loop.Enemies, fraction);
+        this.enemyNodes?.Draw(this.loop.Enemies, this.loop.Hunter, fraction);
 
         CameraPose pose = RenderInterpolation.Between(this.previousPose, this.currentPose, fraction);
         Vector3 cameraPosition = RenderInterpolation.ToGodot(pose.Position);

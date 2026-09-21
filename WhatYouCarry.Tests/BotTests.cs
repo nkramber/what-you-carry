@@ -5,6 +5,7 @@ using System.Text.Json;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Tools;
 using WhatYouCarry.Tools.BotRunner;
@@ -67,6 +68,38 @@ public sealed class BotTests
     }
 
     /// <summary>
+    /// A timer tester run logs the expiry, the spawn of the Overseer, and each wave between its start and its end, and
+    /// the end line of a death names its cause (D-411, D-421, M-5).
+    /// </summary>
+    [Fact]
+    public void TheRunLogHoldsTheTimerEventsAndTheCause()
+    {
+        string output = TempDirectory("timer");
+        try
+        {
+            Assert.Equal(0, Program.Main(["bot-run", "--policy", TimerTester.PolicyName, "--seeds", "1-1", "--output", output, "--root", RepositoryRoot.Find()]));
+            string[] lines = File.ReadAllLines(Path.Combine(output, "timer-tester-1.jsonl"));
+            List<string> events = [];
+            for (int index = 1; index < lines.Length - 1; index++)
+            {
+                using JsonDocument line = JsonDocument.Parse(lines[index]);
+                events.Add(line.RootElement.GetProperty(BotRunCommand.EventName).GetString()!);
+            }
+
+            Assert.Equal(["expiry", "hunter-spawn"], events.GetRange(0, 2));
+            using JsonDocument end = JsonDocument.Parse(lines[^1]);
+            Assert.Equal("death", end.RootElement.GetProperty(BotRunCommand.EndStateName).GetString());
+            string cause = end.RootElement.GetProperty(BotRunCommand.CauseName).GetString()!;
+            Assert.True(cause == TestWorld.Content.Hunter.Id || cause == TestWorld.Content.Enemies[0].Id, $"The cause is '{cause}'.");
+            Assert.IsType<TimerTester>(BotRunCommand.CreatePolicy(TimerTester.PolicyName, 1UL, TestWorld.Content));
+        }
+        finally
+        {
+            Directory.Delete(output, recursive: true);
+        }
+    }
+
+    /// <summary>
     /// PR-11 exit test 1. The runner writes one log per run, and every log holds the policy, the seed, the end
     /// state, the floors reached, and the ticks, beside the required run fields of D-113.
     /// </summary>
@@ -85,9 +118,10 @@ public sealed class BotTests
             Assert.Equal(3, logs.Length);
             foreach (string log in logs)
             {
+                // A run past expiry writes a timer event line for each event between the start and the end (M-5).
                 string[] lines = File.ReadAllLines(log);
-                Assert.Equal(2, lines.Length);
-                using JsonDocument end = JsonDocument.Parse(lines[1]);
+                Assert.True(lines.Length >= 2, $"{Path.GetFileName(log)} holds {lines.Length} lines.");
+                using JsonDocument end = JsonDocument.Parse(lines[^1]);
                 JsonElement root = end.RootElement;
                 foreach (string field in new[] { "seed", "floor", "tick", "subsystem", "entities", BotRunCommand.PolicyName, BotRunCommand.EndStateName, BotRunCommand.FloorsReachedName })
                 {
@@ -110,14 +144,14 @@ public sealed class BotTests
         }
     }
 
-    /// <summary>PR-11 exit test 2. A policy that promises progress and makes none ends as a softlock at the floor budget (D-270, D-271).</summary>
+    /// <summary>PR-11 exit test 2. A policy that promises progress and makes none ends as a softlock when the floor timer expires (D-270, D-420).</summary>
     [Fact]
     public void SoftlockIsDetected()
     {
         // The floor holds no enemy, so the run reads the softlock rule alone and never a death (D-403).
         BotRunResult result = BotRun.Play(new StandStill(), 5UL, TestWorld.PeacefulContent);
         Assert.Equal(BotRunEnd.Softlock, result.End);
-        Assert.Equal(BotRun.FloorBudget, result.Ticks);
+        Assert.Equal(FloorTimer.For(FloorGenerator.TemplateFor(1, TestWorld.PeacefulContent), 1).Length, result.Ticks);
         Assert.Equal(1, result.FloorsReached);
         Assert.Equal("stand-still", result.Policy);
         Assert.Equal(string.Empty, result.Error);
@@ -199,11 +233,21 @@ public sealed class BotTests
 
             Assert.Equal(2, Program.Main(["night-record", "--commit", "abc", "--status", "success", "--output", file]));
             Assert.Equal(2, Program.Main(["night-record", "--commit", commit, "--status", "green", "--output", file]));
-            Assert.Equal("{\"commit\":\"" + commit + "\",\"endedAt\":\"2026-09-10T03:00:00Z\",\"status\":\"failure\",\"deaths\":{}}\n", NightRecordCommand.Build(commit, new DateTime(2026, 9, 10, 3, 0, 0, DateTimeKind.Utc), "failure", string.Empty));
+            Assert.Equal("{\"commit\":\"" + commit + "\",\"endedAt\":\"2026-09-10T03:00:00Z\",\"status\":\"failure\",\"deaths\":{},\"deathCauses\":{}}\n", NightRecordCommand.Build(commit, new DateTime(2026, 9, 10, 3, 0, 0, DateTimeKind.Utc), "failure", string.Empty));
 
             // The record carries the count of deaths of each policy, in the order of the summary lines (D-403).
-            string summary = BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12) + BotRunCommand.DeathLine(FullClearer.PolicyName, 7);
+            SortedDictionary<string, int> greedyCauses = new(StringComparer.Ordinal) { ["scavenger"] = 10, ["overseer"] = 2 };
+            SortedDictionary<string, int> clearerCauses = new(StringComparer.Ordinal) { ["scavenger"] = 7 };
+            string summary = BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, greedyCauses) + BotRunCommand.DeathLine(FullClearer.PolicyName, 7, clearerCauses);
+            Assert.Equal("greedy-descender=12 overseer:2 scavenger:10\n", BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12, greedyCauses));
             Assert.Equal("{\"greedy-descender\":12,\"full-clearer\":7}", NightRecordCommand.DeathsObject(summary));
+
+            // The record carries the count of each cause for each policy, in ordinal cause order (D-411). A line of
+            // an older night holds no cause word and reads as no cause (D-177).
+            Assert.Equal("{\"greedy-descender\":{\"overseer\":2,\"scavenger\":10},\"full-clearer\":{\"scavenger\":7}}", NightRecordCommand.CausesObject(summary));
+            Assert.Equal("{\"greedy-descender\":{}}", NightRecordCommand.CausesObject("greedy-descender=3\n"));
+            Assert.Throws<FormatException>(() => NightRecordCommand.CausesObject("greedy-descender=3 overseer"));
+            Assert.Throws<FormatException>(() => NightRecordCommand.CausesObject("greedy-descender=3 overseer:x"));
             Assert.Equal("{}", NightRecordCommand.DeathsObject("\n  \n"));
             Assert.Throws<FormatException>(() => NightRecordCommand.DeathsObject("greedy-descender=many"));
             Assert.Throws<FormatException>(() => NightRecordCommand.DeathsObject("=3"));

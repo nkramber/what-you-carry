@@ -1098,7 +1098,7 @@ public sealed class ProcgenTests
             }
         }
 
-        FloorTemplate tight = new("tight", 1, 1, 1, 1, 10, "test", 24, 12, 24, 7, 5, 5, 4, 5, 8, [2, 3, 4]);
+        FloorTemplate tight = new("tight", 1, 1, 1, 1, 10, "test", 24, 12, 24, 7, 5, 5, 4, 5, 8, [2, 3, 4], 180, 120, 30, 12);
         ChamberKind heavy = new("heavy", 100, 1, 1, 3, 3, 0);
         ContextException error = Assert.Throws<ContextException>(() => ChamberBudget.Draw(Rng.ForStream(1UL, RngStream.Procgen, 1), tight, [heavy]));
         Assert.Contains("floorTemplate=tight", error.Message, StringComparison.Ordinal);

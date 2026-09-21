@@ -642,7 +642,7 @@ public sealed class PlayerTests
         SimulationLoop loop = TestWorld.NewLoop(2UL);
         GreedyDescender policy = new(TestWorld.PeacefulContent);
         loop.Player.TakeHit(40);
-        for (int tick = 0; tick < (int)BotRun.FloorBudget && loop.Floor == SimulationLoop.FirstFloor; tick++)
+        for (int tick = 0; tick < (int)loop.Timer.Length && loop.Floor == SimulationLoop.FirstFloor; tick++)
         {
             Intent intent = policy.Next(loop);
             if ((intent.Buttons & Button.Interact) != 0)
@@ -714,13 +714,30 @@ public sealed class PlayerTests
         Assert.NotEqual(swinging.Hash(), rolling.Hash());
     }
 
-    /// <summary>A content set with no weapon definition is an error at the loop, because the attack bit swings the first one (D-320, T-2).</summary>
+    /// <summary>
+    /// The attack bit swings the weapon of the main weapon id, and a content set without it is an error at the loop
+    /// (D-422, T-2). The pick of the Overseer sorts first in path order, and the player never swings it.
+    /// </summary>
     [Fact]
-    public void ALoopWithoutAWeaponIsAnError()
+    public void ALoopWithoutTheMainWeaponIsAnError()
     {
-        ContentSet none = TestWorld.Content with { Weapons = [] };
+        Assert.Equal("overseer-pick", TestWorld.Content.Weapons[0].Id);
+        Assert.Equal(SimulationLoop.MainWeaponId, SimulationLoop.MainWeapon(TestWorld.Content).Id);
+        Assert.Equal(SimulationLoop.MainWeaponId, new SimulationLoop(1UL, TestWorld.Content).Weapon.Id);
+
+        List<WeaponDefinition> others = [];
+        foreach (WeaponDefinition weapon in TestWorld.Content.Weapons)
+        {
+            if (weapon.Id != SimulationLoop.MainWeaponId)
+            {
+                others.Add(weapon);
+            }
+        }
+
+        ContentSet none = TestWorld.Content with { Weapons = others };
         ContextException error = Assert.Throws<ContextException>(() => new SimulationLoop(1UL, none));
-        Assert.Contains("D-320", error.Message, StringComparison.Ordinal);
+        Assert.Contains("D-422", error.Message, StringComparison.Ordinal);
+        Assert.Contains("weapon=sword-basic", error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A death in a bot run ends the run as a crash that names the end kind, and never as the bottom (D-270, D-322).</summary>

@@ -25,7 +25,7 @@ namespace WhatYouCarry.Core.Simulation;
 /// intent (D-227), then the position and the vertical velocity of the player body (PR-7), then the floor number
 /// and the run end (PR-9, D-322), then the projectiles in flight (PR-10), then the player: the health, the dodge
 /// cooldown, the roll, the swing, the stagger, and the guard (PR-15), and then the enemies and their brains
-/// (PR-16). The yaw wraps at a full turn, and the pitch
+/// (PR-16), then the floor timer, the hunter, and the waves (PR-17). The yaw wraps at a full turn, and the pitch
 /// stops at 80 degrees up and 80 degrees down (D-241). A positive pitch looks up (D-248). The camera and the aim
 /// ray come from the state on demand, and they are not state (D-245).
 /// </para>
@@ -40,6 +40,17 @@ namespace WhatYouCarry.Core.Simulation;
 /// player, so an enemy answers the move of this tick and never the move of the last one. The hits of the player
 /// land on the enemies before the enemies move, and the hits of the enemies land on the player after they move.
 /// A dead enemy takes no tick, is no target, and holds its place in the list, so an owner id never moves (D-322).
+/// </para>
+/// <para>
+/// Each floor has a timer (D-44, D-407). On the tick whose step takes it to zero, the Overseer spawns out of the
+/// sight of the player (D-415), and it runs after the enemies on each later tick. The waves of the floor then come
+/// on each interval, as enemies with relentless brains at the posts of the plan (D-410, D-418, D-419). The
+/// countdown pauses at the stairwell, and the hunter and the waves go on there (D-140, D-417). Every owner id past
+/// the enemies of the plan goes to the hunter and the wave enemies in spawn order.
+/// </para>
+/// <para>
+/// A death carries its cause: the id of the family or of the hunter whose hit took the last health (D-411). The
+/// cause follows from the hits of the state, so the hash does not read it.
 /// </para>
 /// <para>
 /// The floor comes from the seed, the floor number, and the content set, so the grid and the spawn are inputs
@@ -72,11 +83,17 @@ public sealed class SimulationLoop
     /// <summary>The owner id of the player in the projectile simulation.</summary>
     public const int PlayerOwner = 0;
 
+    /// <summary>The id of the weapon that the attack bit swings, until the loadout of PR-30 (D-422).</summary>
+    public const string MainWeaponId = "sword-basic";
+
     private readonly ContentSet content;
     private List<Enemy> enemies = [];
     private List<HumanoidBrain> brains = [];
     private GridPathfinder pathfinder;
     private bool ascended;
+    private Hunter? hunter;
+    private int nextOwner;
+    private List<TimerEvent> lastEvents = [];
 
     /// <summary>A loop at tick zero for one run, on floor 1 of the seed, with the player at rest at the spawn point.</summary>
     /// <exception cref="ContextException">The content set holds no weapon definition, or it cannot dig floor 1.</exception>
@@ -89,22 +106,30 @@ public sealed class SimulationLoop
         this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, this.Weapon, Player.MaxHealth);
         this.Projectiles = new ProjectileSimulation(this.Plan.Grid, content.Projectiles);
         this.pathfinder = new GridPathfinder(this.Plan.Grid);
+        this.Timer = FloorTimer.For(this.Plan.Template, FirstFloor);
+        this.Escalation = new Escalation(this.Plan.Template);
         this.Populate();
     }
 
     /// <summary>
-    /// The main weapon of a content set: the first weapon definition, in the ordinal path order of the typed lists,
-    /// until the loadout of PR-30 (D-320). The Game layer reads the same rule for the model and the clips.
+    /// The main weapon of a content set: the weapon with the id <see cref="MainWeaponId"/>, until the loadout of
+    /// PR-30 (D-320, D-422). The Game layer reads the same rule for the model and the clips.
     /// </summary>
-    /// <exception cref="ContextException">The content set holds no weapon definition (T-2).</exception>
+    /// <exception cref="ContextException">The content set holds no weapon of that id (T-2).</exception>
     public static WeaponDefinition MainWeapon(ContentSet content)
     {
-        if (content.Weapons.Count == 0)
+        foreach (WeaponDefinition weapon in content.Weapons)
         {
-            throw new ContextException("The content set holds no weapon definition, and the attack bit swings the first one (D-320).");
+            if (weapon.Id == MainWeaponId)
+            {
+                return weapon;
+            }
         }
 
-        return content.Weapons[0];
+        ContextException error = new($"The content set holds no weapon with the id '{MainWeaponId}', and the attack bit swings it (D-422).");
+        error.AddContext("weapon", MainWeaponId);
+        error.AddContext("weapons", ((long)content.Weapons.Count).ToString(CultureInfo.InvariantCulture));
+        throw error;
     }
 
     /// <summary>The seed of the run. Every random stream of the run derives from it (D-159).</summary>
@@ -136,6 +161,21 @@ public sealed class SimulationLoop
 
     /// <summary>The brains of the enemies, in the same order (D-400).</summary>
     public IReadOnlyList<HumanoidBrain> Brains => this.brains;
+
+    /// <summary>The timer of the floor (D-44, D-407). A descent starts a new one.</summary>
+    public FloorTimer Timer { get; private set; }
+
+    /// <summary>The waves of the floor after expiry (D-410). A descent starts a new one.</summary>
+    public Escalation Escalation { get; private set; }
+
+    /// <summary>The Overseer of the floor, or null before expiry (D-45, D-415).</summary>
+    public Hunter? Hunter => this.hunter;
+
+    /// <summary>The cause of a death: the id of the family or of the hunter whose hit took the last health, or empty before a death (D-411).</summary>
+    public string DeathCause { get; private set; } = string.Empty;
+
+    /// <summary>The timer events of the last tick, in the order they came. The run log reads them. They are not state.</summary>
+    public IReadOnlyList<TimerEvent> LastEvents => this.lastEvents;
 
     /// <summary>The count of enemies of the floor that still have health.</summary>
     public int LivingEnemies
@@ -233,12 +273,15 @@ public sealed class SimulationLoop
         this.Yaw = yaw;
         this.Pitch = pitch;
         this.Buttons = intent.Buttons;
+        this.lastEvents = [];
         this.Player.Step(intent, previousButtons, yaw, this.LivingBoxes());
         this.StrikeEnemies();
         this.StepBrains();
+        this.StepHunter();
 
         EntityBox[] boxes = [new EntityBox(PlayerOwner, this.Body.Box)];
         this.LastEnds = this.Projectiles.Step(boxes);
+        this.StepTimer(intent.Tick);
         this.Tick++;
 
         StairwellAction action = StairwellTransition.Choose(intent.Buttons, this.Body, this.Plan.Stairwell);
@@ -299,6 +342,14 @@ public sealed class SimulationLoop
             this.brains[index].AddTo(ref hash);
         }
 
+        this.Timer.AddTo(ref hash);
+        hash.Add(this.hunter is not null);
+        if (this.hunter is not null)
+        {
+            this.hunter.AddTo(ref hash);
+        }
+
+        this.Escalation.AddTo(ref hash);
         return hash;
     }
 
@@ -320,7 +371,7 @@ public sealed class SimulationLoop
         return targets;
     }
 
-    /// <summary>The target boxes of the living enemies, in spawn order. A dead enemy is no target (D-322).</summary>
+    /// <summary>The target boxes of the living enemies, in spawn order, and then the box of the hunter. A dead enemy is no target (D-322).</summary>
     private IReadOnlyList<EntityBox> LivingBoxes()
     {
         List<EntityBox> boxes = [];
@@ -330,6 +381,11 @@ public sealed class SimulationLoop
             {
                 boxes.Add(enemy.TargetBox);
             }
+        }
+
+        if (this.hunter is not null)
+        {
+            boxes.Add(this.hunter.TargetBox);
         }
 
         return boxes;
@@ -345,6 +401,12 @@ public sealed class SimulationLoop
     {
         foreach (SwordHit hit in this.Player.LastHits)
         {
+            if (this.hunter is not null && hit.Owner == this.hunter.Owner)
+            {
+                this.hunter.TakeHit(hit.Damage);
+                continue;
+            }
+
             this.EnemyOf(hit.Owner).TakeHit(hit.Damage);
         }
     }
@@ -375,12 +437,123 @@ public sealed class SimulationLoop
                     throw error;
                 }
 
-                if (!this.Player.IsDead)
-                {
-                    this.Player.TakeHit(hit.Damage);
-                }
+                this.HitPlayer(hit.Damage, enemy.Definition.Id);
             }
         }
+    }
+
+    /// <summary>
+    /// Runs the tick of the hunter, when it spawned, and deals the hits of its pick to the player (D-413, D-416).
+    /// </summary>
+    /// <exception cref="ContextException">The pick hit an owner id that is not the player (T-2).</exception>
+    private void StepHunter()
+    {
+        if (this.hunter is null)
+        {
+            return;
+        }
+
+        IReadOnlyList<EntityBox> playerBox = [new EntityBox(PlayerOwner, this.Body.Box)];
+        this.hunter.Step(this.Grid, this.pathfinder, this.Body.Position, this.Timer.TicksAfterExpiry, playerBox);
+        foreach (SwordHit hit in this.hunter.LastHits)
+        {
+            if (hit.Owner != PlayerOwner)
+            {
+                ContextException error = new($"The hunter hit the owner id {hit.Owner} on tick {this.Tick}, and the player is the one target of its pick (D-413).");
+                error.AddContext("hunter", this.hunter.Definition.Id);
+                error.AddContext("hitOwner", ((long)hit.Owner).ToString(CultureInfo.InvariantCulture));
+                throw error;
+            }
+
+            this.HitPlayer(hit.Damage, this.hunter.Definition.Id);
+        }
+    }
+
+    /// <summary>
+    /// Deals one hit to the player, and records the cause when the hit takes the last health (D-411). A player of a
+    /// dead run takes no more hits (D-322).
+    /// </summary>
+    private void HitPlayer(long damage, string cause)
+    {
+        if (this.Player.IsDead)
+        {
+            return;
+        }
+
+        this.Player.TakeHit(damage);
+        if (this.Player.IsDead)
+        {
+            this.DeathCause = cause;
+        }
+    }
+
+    /// <summary>
+    /// Runs the timer of the floor for one tick (D-140, D-417). On the tick of expiry the Overseer spawns (D-415).
+    /// After expiry the waves come due on their interval (D-410, D-424). Each step logs its events.
+    /// </summary>
+    /// <param name="tick">The tick of the intent, which the events carry.</param>
+    /// <exception cref="ContextException">The floor holds no cell out of the sight of the player for the Overseer (D-415).</exception>
+    private void StepTimer(uint tick)
+    {
+        if (this.Ended)
+        {
+            return;
+        }
+
+        bool atStairwell = StairwellTransition.IsAtStairwell(this.Body, this.Plan.Stairwell);
+        if (this.Timer.Step(atStairwell))
+        {
+            this.lastEvents.Add(new TimerEvent(TimerEventKind.Expiry, this.Floor, tick, 0, 0));
+            Cell cell = Hunter.FindSpawn(this.Grid, this.pathfinder, this.Body.Position);
+            this.hunter = new Hunter(this.Grid, cell, this.content.Hunter, WeaponById(this.content, this.content.Hunter.Weapon, this.content.Hunter.Id), this.TakeOwner());
+            this.lastEvents.Add(new TimerEvent(TimerEventKind.HunterSpawn, this.Floor, tick, 0, 0));
+            return;
+        }
+
+        if (!this.Timer.Expired)
+        {
+            return;
+        }
+
+        WaveSpawns waves = this.Escalation.Step(this.Grid, this.Timer.TicksAfterExpiry, this.LivingWaveEnemies(), this.Plan.EnemySpawns, this.Body.Position);
+        if (waves.Wave == 0)
+        {
+            return;
+        }
+
+        foreach (EnemySpawn post in waves.Posts)
+        {
+            this.AddEnemy(post, true);
+        }
+
+        this.lastEvents.Add(new TimerEvent(TimerEventKind.Wave, this.Floor, tick, waves.Wave, waves.Posts.Count));
+        if (waves.Skipped > 0)
+        {
+            this.lastEvents.Add(new TimerEvent(TimerEventKind.WaveSkip, this.Floor, tick, waves.Wave, waves.Skipped));
+        }
+    }
+
+    /// <summary>The count of wave enemies of the floor that still have health (D-410).</summary>
+    private int LivingWaveEnemies()
+    {
+        int living = 0;
+        for (int index = 0; index < this.enemies.Count; index++)
+        {
+            if (this.brains[index].IsRelentless && !this.enemies[index].IsDead)
+            {
+                living++;
+            }
+        }
+
+        return living;
+    }
+
+    /// <summary>The next free owner id. The ids go to the enemies of the plan, the hunter, and the wave enemies in spawn order.</summary>
+    private int TakeOwner()
+    {
+        int owner = this.nextOwner;
+        this.nextOwner++;
+        return owner;
     }
 
     /// <summary>The enemy of one owner id.</summary>
@@ -395,7 +568,7 @@ public sealed class SimulationLoop
             }
         }
 
-        ContextException error = new($"The blade of the player hit the owner id {owner} on tick {this.Tick}, and floor {this.Floor} holds no enemy of that id.");
+        ContextException error = new($"The blade of the player hit the owner id {owner} on tick {this.Tick}, and floor {this.Floor} holds no enemy and no hunter of that id.");
         error.AddContext("hitOwner", ((long)owner).ToString(CultureInfo.InvariantCulture));
         error.AddContext("tick", ((long)this.Tick).ToString(CultureInfo.InvariantCulture));
         error.AddContext("floor", ((long)this.Floor).ToString(CultureInfo.InvariantCulture));
@@ -414,34 +587,43 @@ public sealed class SimulationLoop
         // need (D-207, D-208).
         this.enemies = [];
         this.brains = [];
+        this.hunter = null;
+        this.nextOwner = PlayerOwner + 1;
         foreach (EnemySpawn spawn in this.Plan.EnemySpawns)
         {
-            Vector3 feet = new(spawn.Cell.X + 0.5f, spawn.Cell.Y + 1.0f, spawn.Cell.Z + 0.5f);
-            Enemy enemy = new(this.Grid, feet, spawn.Family, WeaponOf(this.content, spawn.Family), this.enemies.Count + 1);
-            this.enemies.Add(enemy);
-            this.brains.Add(new HumanoidBrain(enemy, spawn.Cell));
+            this.AddEnemy(spawn, false);
         }
     }
 
-    /// <summary>The weapon that an enemy family names (D-397). The loader proves that the set holds it.</summary>
+    /// <summary>Puts one enemy and its brain at one post, with the next owner id: asleep for the plan, relentless for a wave (D-398, D-419).</summary>
+    private void AddEnemy(EnemySpawn spawn, bool wave)
+    {
+        Vector3 feet = new(spawn.Cell.X + 0.5f, spawn.Cell.Y + 1.0f, spawn.Cell.Z + 0.5f);
+        WeaponDefinition weapon = WeaponById(this.content, spawn.Family.Weapon, spawn.Family.Id);
+        Enemy enemy = new(this.Grid, feet, spawn.Family, weapon, this.TakeOwner());
+        this.enemies.Add(enemy);
+        this.brains.Add(new HumanoidBrain(enemy, spawn.Cell, wave));
+    }
+
+    /// <summary>The weapon that an enemy family or the hunter names (D-397, D-413). The loader proves that the set holds it.</summary>
     /// <exception cref="ContextException">The content set holds no weapon of that id (T-2).</exception>
-    private static WeaponDefinition WeaponOf(ContentSet content, EnemyDefinition family)
+    private static WeaponDefinition WeaponById(ContentSet content, string id, string holder)
     {
         foreach (WeaponDefinition weapon in content.Weapons)
         {
-            if (weapon.Id == family.Weapon)
+            if (weapon.Id == id)
             {
                 return weapon;
             }
         }
 
-        ContextException error = new($"The enemy family '{family.Id}' names the weapon '{family.Weapon}', and the content set holds no weapon of that id (D-397).");
-        error.AddContext("enemyFamily", family.Id);
-        error.AddContext("weapon", family.Weapon);
+        ContextException error = new($"'{holder}' names the weapon '{id}', and the content set holds no weapon of that id (D-397, D-413).");
+        error.AddContext("holder", holder);
+        error.AddContext("weapon", id);
         throw error;
     }
 
-    /// <summary>Digs the next floor from the run seed and the next floor number, and puts a player at rest at its spawn with the same health, with the enemies of the new floor (D-257, D-335, D-398).</summary>
+    /// <summary>Digs the next floor from the run seed and the next floor number, and puts a player at rest at its spawn with the same health, with the enemies, a new timer, and no hunter (D-44, D-257, D-335, D-398).</summary>
     private void Descend()
     {
         int next = this.Floor + 1;
@@ -450,6 +632,8 @@ public sealed class SimulationLoop
         this.Projectiles = new ProjectileSimulation(this.Plan.Grid, this.content.Projectiles);
         this.pathfinder = new GridPathfinder(this.Plan.Grid);
         this.Floor = next;
+        this.Timer = FloorTimer.For(this.Plan.Template, next);
+        this.Escalation = new Escalation(this.Plan.Template);
         this.Populate();
     }
 }

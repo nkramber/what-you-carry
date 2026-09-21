@@ -199,11 +199,12 @@ public sealed class RepositoryShapeTests
     public void NightAndBotWorkflowsRunEveryPolicyAndGatherTheDeaths()
     {
         // D-403: the record of a night carries the count of deaths of each policy, so every bot step writes one
-        // summary file and the record step reads it. D-149: the full clearer joins the two policies of PR-11.
+        // summary file and the record step reads it. D-149: the full clearer joins the two policies of PR-11, and the
+        // timer tester joins them in PR-17 (D-421, D-426).
         string night = RepositoryRoot.ReadFile(".github/workflows/night.yml");
         string bots = RepositoryRoot.ReadFile(".github/workflows/bots.yml");
         const string summary = "--summary \"${RUNNER_TEMP}/bot-deaths.txt\"";
-        string[] policies = ["random-walker", "greedy-descender", "full-clearer"];
+        string[] policies = ["random-walker", "greedy-descender", "full-clearer", "timer-tester"];
         foreach (string policy in policies)
         {
             Assert.Contains($"--policy {policy} --seeds 1-5000 --output bot-logs --root . {summary}", night, StringComparison.Ordinal);

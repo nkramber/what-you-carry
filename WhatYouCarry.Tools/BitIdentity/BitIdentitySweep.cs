@@ -214,16 +214,19 @@ public static class BitIdentitySweep
     /// of 50, so the sweep covers the ramps and the tiers of D-388 to D-391. One enemy family covers the three
     /// swept floors, so the replay run folds the spawns, the brains, and the swings of PR-16 (D-395 to D-402).
     /// That family swings the second weapon, which deals one damage, because a run that ends by death takes no
-    /// more intents and the record of the sweep holds a fixed count of them (D-322). The player still swings the
-    /// first weapon (D-320). The hash of the set has no meaning beyond its shape (D-221).
+    /// more intents and the record of the sweep holds a fixed count of them (D-322). The player swings the weapon of
+    /// the main weapon id (D-422). Each floor runs a timer of 3 seconds with waves each 2 seconds, so the replay of
+    /// 600 ticks runs past expiry and folds the Overseer and three waves (PR-17 exit test 7). The pick of the sweep
+    /// hunter deals one damage for the same reason as the club. The hash of the set has no meaning beyond its shape
+    /// (D-221).
     /// </summary>
     public static ContentSet SweepContent()
     {
         FloorTemplate[] floors =
         [
-            new("sweep-working", 1, 1, 4, 8, 100, DetailPass.WorkingMine, 32, 12, 32, 7, 5, 5, 4, 5, 8, [2, 3, 4]),
-            new("sweep-older", 2, 2, 4, 8, 100, DetailPass.OlderWorkings, 32, 12, 32, 7, 5, 5, 4, 5, 8, [2, 3, 4]),
-            new("sweep-deep", 3, 3, 4, 8, 100, DetailPass.Deep, 32, 12, 32, 7, 5, 5, 4, 5, 8, [2, 3, 4]),
+            new("sweep-working", 1, 1, 4, 8, 100, DetailPass.WorkingMine, 32, 12, 32, 7, 5, 5, 4, 5, 8, [2, 3, 4], 3, 2, 2, 12),
+            new("sweep-older", 2, 2, 4, 8, 100, DetailPass.OlderWorkings, 32, 12, 32, 7, 5, 5, 4, 5, 8, [2, 3, 4], 3, 2, 2, 12),
+            new("sweep-deep", 3, 3, 4, 8, 100, DetailPass.Deep, 32, 12, 32, 7, 5, 5, 4, 5, 8, [2, 3, 4], 3, 2, 2, 12),
         ];
         ChamberKind[] kinds =
         [
@@ -236,14 +239,16 @@ public static class BitIdentitySweep
         ];
         WeaponDefinition[] weapons =
         [
-            new("sweep-sword", 0, WeaponDefinition.OneHanded, 12, 6, 18, 34, 160, 9000, 50, 170, "models/sweep-sword.bbmodel", "models/sweep.swing.json"),
+            new(SimulationLoop.MainWeaponId, 0, WeaponDefinition.OneHanded, 12, 6, 18, 34, 160, 9000, 50, 170, "models/sweep-sword.bbmodel", "models/sweep.swing.json"),
             new("sweep-club", 0, WeaponDefinition.OneHanded, 12, 6, 18, 1, 160, 9000, 50, 170, "models/sweep-club.bbmodel", "models/sweep.swing.json"),
+            new("sweep-pick", 0, WeaponDefinition.TwoHanded, 30, 6, 30, 1, 200, 9000, 50, 170, "models/sweep-club.bbmodel", "models/sweep.swing.json"),
         ];
         EnemyDefinition[] enemies =
         [
             new("sweep-scavenger", 1, 3, 10, 40, "sweep-club", 2000, 300, 140, 30, 500),
         ];
-        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, enemies, Strings.FromMembers(Strings.FilePath, []));
+        HunterDefinition hunter = new("sweep-overseer", "sweep-pick", 180, 60, 350, 100, 1200);
+        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, enemies, hunter, Strings.FromMembers(Strings.FilePath, []));
     }
 
     /// <summary>
@@ -286,7 +291,7 @@ public static class BitIdentitySweep
     /// </summary>
     private static void AddSwordArcs(ref StateHash hash, ContentSet content)
     {
-        WeaponDefinition weapon = content.Weapons[0];
+        WeaponDefinition weapon = SimulationLoop.MainWeapon(content);
         Vector3 feet = new(10.0f, 1.0f, 10.0f);
         for (int yawStep = 0; yawStep < ArcYaws; yawStep++)
         {
