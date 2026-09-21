@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Game;
 using WhatYouCarry.Game.Measure;
+using WhatYouCarry.Game.Render;
 using WhatYouCarry.Game.World;
 using Xunit;
 
@@ -114,6 +118,33 @@ public sealed class MeasureTests
         trace.AddFrame(new TraceFrame(20000, 0, 0, 0, 0, 0, 0, true));
         trace.MarkTransition();
         Assert.Equal(new TransitionSummary(2, 1, 20000, 0, 0, 0, 0, 0, 0, 1), trace.Summaries[1]);
+    }
+
+    /// <summary>
+    /// The chunk swap meshes a floor on the worker task: the meshes of a task equal the meshes of each chunk on the
+    /// calling thread, in chunk order, and the run needs no engine. The first Deck run traced 38 to 46 milliseconds of
+    /// main-thread mesh work in one frame after each swap (D-109, D-427).
+    /// </summary>
+    [Fact]
+    public async Task ChunkSwapMeshesOnTheTask()
+    {
+        FloorPlan plan = FloorGenerator.Generate(1, 2, TestWorld.Content);
+        IReadOnlyList<MeshData> onTask = await Task.Run(() => ChunkSwap.MeshAll(plan.Grid));
+        Assert.Equal(ChunkLayout.Count(plan.Grid), onTask.Count);
+        int index = 0;
+        for (int chunkZ = 0; chunkZ < ChunkLayout.CountZ(plan.Grid); chunkZ++)
+        {
+            for (int chunkX = 0; chunkX < ChunkLayout.CountX(plan.Grid); chunkX++)
+            {
+                MeshData here = GreedyMesher.MeshChunk(plan.Grid, chunkX, chunkZ);
+                Assert.Equal(here.Positions, onTask[index].Positions);
+                Assert.Equal(here.Indices, onTask[index].Indices);
+                Assert.Equal(here.Colors, onTask[index].Colors);
+                index++;
+            }
+        }
+
+        Assert.Contains(onTask, mesh => mesh.TriangleCount > 0);
     }
 
     /// <summary>A mark with no frame in its window has no hitch, and the error says so (T-2).</summary>

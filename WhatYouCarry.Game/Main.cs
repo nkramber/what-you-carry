@@ -143,6 +143,9 @@ public partial class Main : Node3D
     /// <summary>The name of the field of the dig line that holds the time of the dig, in microseconds.</summary>
     public const string DigMicrosField = "digMicros";
 
+    /// <summary>The name of the field of the dig line that holds the time of the chunk meshes on the task, in microseconds.</summary>
+    public const string MeshMicrosField = "meshMicros";
+
     /// <summary>The name of the field of the end line that holds the count of transitions of the frame log.</summary>
     public const string TransitionsField = "transitions";
 
@@ -326,6 +329,7 @@ public partial class Main : Node3D
             {
                 LogFields dug = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
                 dug.Add(DigMicrosField, this.chunks.LastDigMicros);
+                dug.Add(MeshMicrosField, this.chunks.LastMeshMicros);
                 this.logger.Write(LogContextKind.Run, LogLevel.Info, DigMessage, dug);
             }
 

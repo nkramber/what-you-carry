@@ -14,14 +14,20 @@ namespace WhatYouCarry.Game.World;
 
 /// <summary>
 /// The floor transition of the world meshes (D-72, D-429). During floor n, one task digs floor n+1 with the
-/// worker, the loop takes the plan, and the chunks of floor n+1 are uploaded a few at a time into hidden nodes.
-/// At the descent the old nodes go and the new ones show in one frame.
+/// worker and meshes its chunks. The loop takes the plan, and the meshes of floor n+1 go into hidden nodes a few
+/// at a time. At the descent the old nodes go and the new ones show in one frame.
 /// </summary>
 /// <remarks>
 /// <para>
 /// The task reads the seed, the floor number, and the content alone, so it touches no state of the loop (D-429).
 /// The loop reads the result on the simulation thread through <see cref="SimulationLoop.OfferNextFloor"/>, and
 /// the worker gives the same grid as a dig at the descent, so the task changes no tick.
+/// </para>
+/// <para>
+/// The greedy mesher runs on the task and not on the main thread. The first Deck run of exit test 6 traced 38 to 46
+/// milliseconds for the four chunks that one frame meshed and uploaded, and the mesher took nearly all of it
+/// (D-109, D-427). The mesher reads the grid and writes value types alone, so the task needs no engine call. The
+/// main thread builds each engine mesh from the data of the task.
 /// </para>
 /// <para>
 /// A descent that comes before the task or the upload ends builds the rest of the chunks in that frame. The
@@ -33,7 +39,8 @@ public sealed class ChunkSwap
 {
     /// <summary>
     /// The count of chunks that one frame uploads. A maximum floor holds 64 chunks (D-291), so the upload takes 16
-    /// frames. That is the first value, and a later change needs a measurement on the Deck (D-109).
+    /// frames. The Deck trace measured the cost of the mesher, and the mesher now runs on the task, so each chunk of
+    /// the main thread is one engine mesh build. A later change needs a measurement on the Deck (D-109).
     /// </summary>
     public const int ChunksPerFrame = 4;
 
@@ -48,9 +55,10 @@ public sealed class ChunkSwap
     private readonly ulong seed;
     private List<MeshInstance3D> shown = [];
     private int shownFloor;
-    private Task<(FloorPlan Plan, long Micros)>? digging;
+    private Task<NextFloor>? digging;
     private int diggingFloor;
     private FloorPlan? staged;
+    private IReadOnlyList<MeshData> stagedMeshes = [];
     private List<MeshInstance3D> stagedNodes = [];
     private int stagedChunk;
 
@@ -72,11 +80,14 @@ public sealed class ChunkSwap
     /// <summary>The wall time of the last dig that the loop took, in microseconds, measured on the task. Zero before the first one.</summary>
     public long LastDigMicros { get; private set; }
 
+    /// <summary>The wall time of the meshes of the last floor that the loop took, in microseconds, measured on the task. Zero before the first one.</summary>
+    public long LastMeshMicros { get; private set; }
+
     /// <summary>Answers whether the last swap showed the plan of the worker, and not a floor that the loop dug at the descent.</summary>
     public bool LastSwapFromWorker { get; private set; }
 
     /// <summary>Answers whether every chunk of the next floor is uploaded and waits in hidden nodes.</summary>
-    public bool NextFloorReady => this.staged is not null && this.stagedChunk == ChunkCount(this.staged.Grid);
+    public bool NextFloorReady => this.staged is not null && this.stagedChunk == this.stagedMeshes.Count;
 
     /// <summary>Shows the floor of the loop, built in this frame, and starts the task of the next floor.</summary>
     public void Start(SimulationLoop loop)
@@ -99,16 +110,18 @@ public sealed class ChunkSwap
             return false;
         }
 
-        (FloorPlan plan, long micros) = this.TakeResult();
-        this.LastDigMicros = micros;
-        loop.OfferNextFloor(plan);
-        this.staged = plan;
+        NextFloor next = this.TakeResult();
+        this.LastDigMicros = next.DigMicros;
+        this.LastMeshMicros = next.MeshMicros;
+        loop.OfferNextFloor(next.Plan);
+        this.staged = next.Plan;
+        this.stagedMeshes = next.Meshes;
         this.stagedNodes = [];
         this.stagedChunk = 0;
         return true;
     }
 
-    /// <summary>Uploads up to <see cref="ChunksPerFrame"/> chunks of the next floor into hidden nodes. Call it once each frame.</summary>
+    /// <summary>Uploads up to <see cref="ChunksPerFrame"/> meshes of the next floor into hidden nodes. Call it once each frame.</summary>
     public void UploadSome()
     {
         if (this.staged is null)
@@ -116,13 +129,26 @@ public sealed class ChunkSwap
             return;
         }
 
-        VoxelGrid grid = this.staged.Grid;
-        int count = ChunkCount(grid);
-        int end = Math.Min(this.stagedChunk + ChunksPerFrame, count);
+        int end = Math.Min(this.stagedChunk + ChunksPerFrame, this.stagedMeshes.Count);
         for (; this.stagedChunk < end; this.stagedChunk++)
         {
-            this.AddChunk(grid, this.stagedChunk, false, this.stagedNodes);
+            this.AddNode(this.stagedMeshes[this.stagedChunk], false, this.stagedNodes);
         }
+    }
+
+    /// <summary>The mesh data of every chunk of a grid, in chunk order: Z outer, X inner. It calls no engine API, so a task can run it.</summary>
+    public static IReadOnlyList<MeshData> MeshAll(VoxelGrid grid)
+    {
+        List<MeshData> meshes = [];
+        for (int chunkZ = 0; chunkZ < ChunkLayout.CountZ(grid); chunkZ++)
+        {
+            for (int chunkX = 0; chunkX < ChunkLayout.CountX(grid); chunkX++)
+            {
+                meshes.Add(GreedyMesher.MeshChunk(grid, chunkX, chunkZ));
+            }
+        }
+
+        return meshes;
     }
 
     /// <summary>
@@ -145,10 +171,9 @@ public sealed class ChunkSwap
         if (this.staged is not null && ReferenceEquals(this.staged, loop.Plan))
         {
             // The loop took the offered plan, so the hidden nodes show its grid.
-            int count = ChunkCount(this.staged.Grid);
-            for (; this.stagedChunk < count; this.stagedChunk++)
+            for (; this.stagedChunk < this.stagedMeshes.Count; this.stagedChunk++)
             {
-                this.AddChunk(this.staged.Grid, this.stagedChunk, false, this.stagedNodes);
+                this.AddNode(this.stagedMeshes[this.stagedChunk], false, this.stagedNodes);
             }
 
             foreach (MeshInstance3D node in this.stagedNodes)
@@ -169,17 +194,12 @@ public sealed class ChunkSwap
 
         this.shownFloor = loop.Floor;
         this.staged = null;
+        this.stagedMeshes = [];
         this.stagedNodes = [];
         this.stagedChunk = 0;
         this.digging = null;
         this.StartDig(loop.Floor + 1);
         return true;
-    }
-
-    /// <summary>The count of chunks of a grid, in the order of <see cref="ChunkNodes"/>: Z outer, X inner.</summary>
-    private static int ChunkCount(VoxelGrid grid)
-    {
-        return ChunkLayout.CountX(grid) * ChunkLayout.CountZ(grid);
     }
 
     /// <summary>Starts the task that digs one floor, when the content covers it. The stairwell of the deepest floor has none under it.</summary>
@@ -195,17 +215,20 @@ public sealed class ChunkSwap
         this.diggingFloor = floor;
         this.digging = Task.Run(() =>
         {
-            Stopwatch watch = Stopwatch.StartNew();
+            long digStarted = Stopwatch.GetTimestamp();
             FloorPlan plan = dig.Generate(runSeed, floor);
-            return (plan, (long)watch.Elapsed.TotalMicroseconds);
+            long digMicros = (long)Stopwatch.GetElapsedTime(digStarted).TotalMicroseconds;
+            long meshStarted = Stopwatch.GetTimestamp();
+            IReadOnlyList<MeshData> meshes = MeshAll(plan.Grid);
+            return new NextFloor(plan, meshes, digMicros, (long)Stopwatch.GetElapsedTime(meshStarted).TotalMicroseconds);
         });
     }
 
-    /// <summary>The plan of the task that ended, and the wall time of its dig in microseconds.</summary>
+    /// <summary>The plan and the meshes of the task that ended, with the wall time of the dig and of the meshes.</summary>
     /// <exception cref="ContextException">The task failed or the engine cancelled it.</exception>
-    private (FloorPlan Plan, long Micros) TakeResult()
+    private NextFloor TakeResult()
     {
-        Task<(FloorPlan Plan, long Micros)> task = this.digging ?? throw new InvalidOperationException(TaskFailedMessage);
+        Task<NextFloor> task = this.digging ?? throw new InvalidOperationException(TaskFailedMessage);
         if (task.IsCompletedSuccessfully)
         {
             return task.Result;
@@ -219,24 +242,21 @@ public sealed class ChunkSwap
         throw error;
     }
 
-    /// <summary>The nodes of every chunk of a grid that shows a face.</summary>
+    /// <summary>The nodes of every chunk of a grid that shows a face, meshed on the main thread.</summary>
     private List<MeshInstance3D> BuildAll(VoxelGrid grid, bool visible)
     {
         List<MeshInstance3D> nodes = [];
-        int count = ChunkCount(grid);
-        for (int chunk = 0; chunk < count; chunk++)
+        foreach (MeshData data in MeshAll(grid))
         {
-            this.AddChunk(grid, chunk, visible, nodes);
+            this.AddNode(data, visible, nodes);
         }
 
         return nodes;
     }
 
-    /// <summary>Meshes one chunk by its index and adds its node under the parent. A chunk with no visible face gets no node.</summary>
-    private void AddChunk(VoxelGrid grid, int chunk, bool visible, List<MeshInstance3D> nodes)
+    /// <summary>Builds the engine mesh of one chunk and adds its node under the parent. A chunk with no visible face gets no node.</summary>
+    private void AddNode(MeshData data, bool visible, List<MeshInstance3D> nodes)
     {
-        int countX = ChunkLayout.CountX(grid);
-        MeshData data = GreedyMesher.MeshChunk(grid, chunk % countX, chunk / countX);
         if (data.TriangleCount == 0)
         {
             return;
@@ -252,3 +272,6 @@ public sealed class ChunkSwap
         nodes.Add(node);
     }
 }
+
+/// <summary>The result of the task: the plan of the next floor, the mesh data of each chunk in chunk order, and the wall time of the dig and of the meshes in microseconds.</summary>
+internal sealed record NextFloor(FloorPlan Plan, IReadOnlyList<MeshData> Meshes, long DigMicros, long MeshMicros);
