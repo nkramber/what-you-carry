@@ -22,7 +22,7 @@ Session: PR-84, repeat cross-provider review. Branch `feat/pr-17-timer-and-hunte
 
 ### In flight
 
-- The review record and this handoff need one commit and push.
+- The review record and this handoff are pushed at `1a2da98`.
 
 ### Traps and gotchas
 
