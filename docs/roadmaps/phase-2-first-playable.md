@@ -636,6 +636,8 @@ Gate: exit tests 1 to 5 and 7 pass. Exit test 6 needs the Deck of the owner.
 
 ### PR-19: HUD and controller navigation
 
+✅ Done in PR #86.
+
 Scope:
 
 - `WhatYouCarry.Game/Ui/Hud.cs`: health, the timer, damage numbers, a boss bar placeholder, and the stairwell prompt, as Control nodes built in C# (D-36, D-90). Every label reads the string table (G-8). The default font of the engine (D-441). The health stands at the bottom left (D-442), and the timer stands at the top center with a paused mark (D-443). The boss bar stands under the timer and hides until a boss exists (D-445).
