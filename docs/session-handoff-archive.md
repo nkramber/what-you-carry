@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 189: 2026-09-19, Codex
+
+Author: Codex
+Session: PR-81, the cross-provider review. Branch `feat/skill-port`.
+
+### What this session did, and why
+
+- Reviewed PR #81 at effective head `be07a42`. The PR ports and splits the repository skills, adds the session runbook and code-conventions skill, and updates the STE front-matter rule.
+- Inspected the complete diff, the PR description, the roadmap entry, the cited decisions and questions, the automated comments, and the changed checker and test files.
+- Found no actionable defect. The review record is `docs/reviews/pr-81.md`.
+
+### State of the build
+
+- The focused context-budget and STE tests passed 19 of 19. `ste-check` found 0 findings in 34 files.
+- The broader filtered suite stalled after compilation and was canceled after a bounded wait. Remote CI, smoke, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, night-gate, and Gitar passed on the tip `64bc3da`.
+- The review record reached remote head `d08e8d9` after the lease-protected metadata update.
+
+### In flight
+
+The owner can merge after the review record reaches the PR branch and `review-gate` turns green.
+
+### Traps and gotchas
+
+- The effective head is `be07a42`. The later commits change only the metadata set.
+- The local broad suite gave no result. Treat that run as incomplete evidence, not as a pass.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Run the session end gate, then wait for the review-gate check.
+
 ## Session 188: 2026-09-18, Claude Code
 
 Author: Claude Code

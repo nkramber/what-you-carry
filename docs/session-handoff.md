@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 199: 2026-09-21, Codex
+
+Author: Codex
+Session: PR-84, repeat cross-provider review. Branch `feat/pr-17-timer-and-hunter`. PR #84, ready for owner merge.
+
+### What this session did, and why
+
+- Reopened the review record after the author added the empty-post regression test.
+- Recomputed the effective head as `5242ff6`.
+- Verified that P1-1 does not reproduce and marked it withdrawn.
+- Set the current verdict to `Ready for owner merge`.
+
+### State of the build
+
+- The focused timer suite passed 17 of 17 tests.
+- The author reported 1208 of 1208 tests with the Smoke category.
+- Required implementation checks and the automated pass are green at the new head.
+
+### In flight
+
+- The review record and this handoff need one commit and push.
+
+### Traps and gotchas
+
+- The prior finding stays in the review record as withdrawn.
+- The effective head is the test commit `5242ff6`. The review commit remains metadata.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can merge PR #84 after the review-gate record turns green.
+
 ## Session 198: 2026-09-21, Claude Code
 
 Author: Claude Code
@@ -371,37 +406,3 @@ None. OQ-179 has its answers in D-388 to D-393, and OQ-180 has D-394.
 ### Next concrete action
 
 Codex reviews GitHub PR #82, per `.claude/skills/pr-review/SKILL.md`, and writes `docs/reviews/pr-82.md`. The review reads the third carve rule of `DigCanvas`, the tier plan and its guards, the shaft pass, and the jump rule of the greedy descender. Exit test 10 needs the owner to play floor 1 and confirm the ramps and the tiers. About half of the floors hold a tier, so a floor with none needs a second floor or a named seed.
-
-## Session 189: 2026-09-19, Codex
-
-Author: Codex
-Session: PR-81, the cross-provider review. Branch `feat/skill-port`.
-
-### What this session did, and why
-
-- Reviewed PR #81 at effective head `be07a42`. The PR ports and splits the repository skills, adds the session runbook and code-conventions skill, and updates the STE front-matter rule.
-- Inspected the complete diff, the PR description, the roadmap entry, the cited decisions and questions, the automated comments, and the changed checker and test files.
-- Found no actionable defect. The review record is `docs/reviews/pr-81.md`.
-
-### State of the build
-
-- The focused context-budget and STE tests passed 19 of 19. `ste-check` found 0 findings in 34 files.
-- The broader filtered suite stalled after compilation and was canceled after a bounded wait. Remote CI, smoke, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, night-gate, and Gitar passed on the tip `64bc3da`.
-- The review record reached remote head `d08e8d9` after the lease-protected metadata update.
-
-### In flight
-
-The owner can merge after the review record reaches the PR branch and `review-gate` turns green.
-
-### Traps and gotchas
-
-- The effective head is `be07a42`. The later commits change only the metadata set.
-- The local broad suite gave no result. Treat that run as incomplete evidence, not as a pass.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Run the session end gate, then wait for the review-gate check.
