@@ -6,7 +6,7 @@ namespace WhatYouCarry.Core.Bots;
 
 /// <summary>
 /// One headless bot run (D-115, D-127): a loop from the seed, one intent per tick from the policy, no sleep
-/// between ticks, and one of the four end states of D-270 with the budgets of D-271.
+/// between ticks, and one of the five end states of D-270 and D-403 with the budgets of D-271.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -17,8 +17,9 @@ namespace WhatYouCarry.Core.Bots;
 /// and the log names the fault (T-2).
 /// </para>
 /// <para>
-/// A death ends the run as a crash. The loop takes no intent after the end, and its error names the end kind, so a
-/// night never reads a death as the bottom. No end state of D-270 names a death (D-322).
+/// A run whose player reaches zero health ends as a death, which is the fifth end state (D-322, D-403). A death is
+/// a real outcome of a fight and never a fault of the code, so the bot gate and the night gate fail on a crash or
+/// a softlock alone. The count of deaths of a policy measures how hard the floors are.
 /// </para>
 /// <para>
 /// The run holds no file and writes no line. The runner in the Tools project writes the log from the result.
@@ -49,6 +50,11 @@ public static class BotRun
                     return new BotRunResult(policy.Name, seed, BotRunEnd.Bottom, floorsReached, ticks, string.Empty);
                 }
 
+                if (loop.End == RunEnd.Death)
+                {
+                    return new BotRunResult(policy.Name, seed, BotRunEnd.Death, floorsReached, ticks, string.Empty);
+                }
+
                 if (!policy.PromisesProgress && ticks >= WanderBudget)
                 {
                     return new BotRunResult(policy.Name, seed, BotRunEnd.Budget, floorsReached, ticks, string.Empty);
@@ -77,7 +83,7 @@ public static class BotRun
     }
 }
 
-/// <summary>How a bot run ended (D-270).</summary>
+/// <summary>How a bot run ended (D-270, D-403).</summary>
 public enum BotRunEnd
 {
     /// <summary>The run ascended at the stairwell of the last floor.</summary>
@@ -91,6 +97,9 @@ public enum BotRunEnd
 
     /// <summary>An exception ended the run. The result holds its text.</summary>
     Crash = 3,
+
+    /// <summary>The health of the player reached zero (D-322, D-403).</summary>
+    Death = 4,
 }
 
 /// <summary>The result of one bot run: the policy, the seed, the end state, the deepest floor, the ticks, and the exception text of a crash, or empty.</summary>

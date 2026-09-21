@@ -5,6 +5,7 @@ using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.World;
 using Xunit;
@@ -56,7 +57,7 @@ public sealed class ProcgenTests
         foreach (Column column in chamber.Footprint)
         {
             Cell cell = new(column.X, chamber.FloorRow, column.Z);
-            if (Reachability.IsFloor(grid, cell) && reach.IsReachable(cell))
+            if (GridMoves.IsFloor(grid, cell) && reach.IsReachable(cell))
             {
                 int distance = reach.Distance(cell);
                 if (nearest < 0 || distance < nearest)
@@ -182,7 +183,7 @@ public sealed class ProcgenTests
                     }
 
                     floorCells++;
-                    if (!Reachability.IsFloor(plan.Grid, cell))
+                    if (!GridMoves.IsFloor(plan.Grid, cell))
                     {
                         chamberFailures.Add($"{context}: the chamber {chamber.Index} cell {cell} has rock over it.");
                     }
@@ -296,7 +297,7 @@ public sealed class ProcgenTests
                     failures.Add($"{context}: the ramp cell {cell} has the run {block.Run}, and its ramp has the run {ramp.Run}.");
                 }
 
-                if (!Reachability.IsFloor(plan.Grid, cell))
+                if (!GridMoves.IsFloor(plan.Grid, cell))
                 {
                     failures.Add($"{context}: the ramp cell {cell} has no two open cells over it.");
                 }
@@ -306,7 +307,7 @@ public sealed class ProcgenTests
                 }
             }
 
-            if (Reachability.IsFloor(plan.Grid, ramp.LowEnd) && reach.IsReachable(ramp.LowEnd) && !reach.IsReachable(ramp.HighEnd))
+            if (GridMoves.IsFloor(plan.Grid, ramp.LowEnd) && reach.IsReachable(ramp.LowEnd) && !reach.IsReachable(ramp.HighEnd))
             {
                 failures.Add($"{context}: the ramp from {ramp.LowEnd} reaches the spawn, and its high end {ramp.HighEnd} does not.");
             }
@@ -382,7 +383,7 @@ public sealed class ProcgenTests
             foreach (Column column in tier.Floor)
             {
                 Cell cell = new(column.X, tier.FloorRow, column.Z);
-                if (!Reachability.IsFloor(plan.Grid, cell))
+                if (!GridMoves.IsFloor(plan.Grid, cell))
                 {
                     failures.Add($"{context}: the tier cell {cell} of chamber {chamber.Index} is no floor cell.");
                 }
@@ -594,7 +595,7 @@ public sealed class ProcgenTests
     /// <summary>Answers whether a body stands on the cell and the cell holds no ramp: a one-block step up to it is a step and not a walk (D-345, D-347).</summary>
     private static bool IsPlainFloor(VoxelGrid grid, Cell cell)
     {
-        return Reachability.IsFloor(grid, cell) && !grid.TryGetRamp(cell.X, cell.Y, cell.Z, out _);
+        return GridMoves.IsFloor(grid, cell) && !grid.TryGetRamp(cell.X, cell.Y, cell.Z, out _);
     }
 
     /// <summary>The grid of one floor after the dig and the tiers, and before the shafts and the detail pass.</summary>
@@ -670,7 +671,7 @@ public sealed class ProcgenTests
             FloorPlan plan = Plan(seed);
             string context = $"Seed {seed}, floor {plan.Floor}";
             Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
-            Assert.True(Reachability.IsFloor(plan.Grid, plan.Stairwell), $"{context}: the stairwell {plan.Stairwell} is not a floor cell.");
+            Assert.True(GridMoves.IsFloor(plan.Grid, plan.Stairwell), $"{context}: the stairwell {plan.Stairwell} is not a floor cell.");
             Assert.True(reach.IsReachable(plan.Stairwell), $"{context}: the stairwell {plan.Stairwell} is not reachable from {reach.Start}.");
             Assert.NotEqual(reach.Start, plan.Stairwell);
 
@@ -698,7 +699,7 @@ public sealed class ProcgenTests
             foreach (Column column in holder!.Footprint)
             {
                 Cell cell = new(column.X, holder.FloorRow, column.Z);
-                if (Reachability.IsFloor(plan.Grid, cell) && reach.IsReachable(cell))
+                if (GridMoves.IsFloor(plan.Grid, cell) && reach.IsReachable(cell))
                 {
                     Assert.True(reach.Distance(cell) <= stairwellDistance, $"{context}: the cell {cell} of the stairwell chamber lies farther than the stairwell.");
                 }
@@ -932,7 +933,7 @@ public sealed class ProcgenTests
                 poolsSeen++;
                 int row = pool.Y;
                 Cell below = new(pool.X, row - 1, pool.Z);
-                Assert.True(Reachability.IsFloor(plan.Grid, below), $"Seed {seed}, floor {plan.Floor}: the pool cell {pool} has no floor under its water.");
+                Assert.True(GridMoves.IsFloor(plan.Grid, below), $"Seed {seed}, floor {plan.Floor}: the pool cell {pool} has no floor under its water.");
                 Assert.True(reach.IsReachable(below), $"Seed {seed}, floor {plan.Floor}: the floor under the pool cell {pool} is not reachable.");
 
                 bool wayOut = false;
@@ -940,7 +941,7 @@ public sealed class ProcgenTests
                 foreach (Column neighbor in neighbors)
                 {
                     Cell floor = new(neighbor.X, row, neighbor.Z);
-                    if (plan.Grid.Get(floor.X, floor.Y, floor.Z) != BlockId.StillWater && Reachability.IsFloor(plan.Grid, floor) && reach.IsReachable(floor))
+                    if (plan.Grid.Get(floor.X, floor.Y, floor.Z) != BlockId.StillWater && GridMoves.IsFloor(plan.Grid, floor) && reach.IsReachable(floor))
                     {
                         wayOut = true;
                     }
@@ -1221,7 +1222,7 @@ public sealed class ProcgenTests
         Reachability fromLedge = Reachability.From(grid, new Cell(1, 4, 1));
         Assert.Equal(2, fromLedge.Distance(new Cell(3, 0, 1)));
         Assert.Equal(3, fromLedge.Distance(new Cell(2, 0, 1)));
-        Assert.Equal(0, Reachability.Landing(grid, 2, 4, 1, 3, 1));
+        Assert.Equal(0, GridMoves.Landing(grid, 2, 4, 1, 3, 1));
 
         // From the floor, the ledge is four blocks up, so no move reaches it.
         Reachability fromFloor = Reachability.From(grid, new Cell(4, 0, 1));
@@ -1232,8 +1233,8 @@ public sealed class ProcgenTests
         grid.Set(5, 1, 1, BlockId.RawStone);
         Reachability underCeiling = Reachability.From(grid, new Cell(4, 0, 1));
         Assert.False(underCeiling.IsReachable(new Cell(5, 1, 1)));
-        Assert.Equal(-1, Reachability.Landing(grid, 4, 0, 1, 5, 1));
-        Assert.Equal(1, Reachability.Landing(grid, 6, 0, 1, 5, 1));
+        Assert.Equal(-1, GridMoves.Landing(grid, 4, 0, 1, 5, 1));
+        Assert.Equal(1, GridMoves.Landing(grid, 6, 0, 1, 5, 1));
     }
 
     /// <summary>A floor below one, a floor that no template covers, and a floor that two templates cover are errors that name the floor (D-252, T-2).</summary>

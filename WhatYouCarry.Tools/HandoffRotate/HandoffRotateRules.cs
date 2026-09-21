@@ -12,14 +12,32 @@ public sealed record HandoffEntry(int Number, string Text);
 /// <summary>A handoff file split into the text before the first entry and the entries, in file order.</summary>
 public sealed record HandoffFile(string Preamble, IReadOnlyList<HandoffEntry> Entries);
 
-/// <summary>The two new file texts, the numbers of the moved entries, and the next session number (D-187).</summary>
-public sealed record HandoffRotation(string Handoff, string Archive, IReadOnlyList<int> Moved, int NextSession);
+/// <summary>
+/// The two new file texts, the numbers of the moved entries, the numbers of the entries that the sort put back in
+/// place, and the next session number (D-187, D-406).
+/// </summary>
+public sealed record HandoffRotation(string Handoff, string Archive, IReadOnlyList<int> Moved, IReadOnlyList<int> Reordered, int NextSession);
 
 /// <summary>
 /// The handoff rotation (D-146, D-379). The handoff keeps the 10 newest entries, newest first. Each older entry moves,
-/// with its text intact, to the top of the archive. A file that breaks the order is an error that names the file and
-/// the session numbers, and nothing moves (T-2).
+/// with its text intact, to the top of the archive.
 /// </summary>
+/// <remarks>
+/// <para>
+/// An entry that sits under an older one goes back to its place by number, with its text intact, and the rotation
+/// names it (D-406). A session that adds its entry at the end of the file then leaves the file in order. Four
+/// sessions put an entry at the end before this rule, and each one failed the three build legs of its branch
+/// (F-106).
+/// </para>
+/// <para>
+/// The sort is not a silent repair. <see cref="HandoffRotation.Reordered"/> names every entry that moved, the
+/// command prints it, and `RepositoryFilesHoldTheRule` asserts that the committed file needs no sort (T-2).
+/// </para>
+/// <para>
+/// Two entries of one number stay an error, and nothing moves. A number is the identity of a session, so the tool
+/// cannot know which of the two is newer (D-187).
+/// </para>
+/// </remarks>
 public static class HandoffRotateRules
 {
     public const int KeepCount = 10;
@@ -60,15 +78,17 @@ public static class HandoffRotateRules
             throw new InvalidOperationException($"'{HandoffPath}' has no '## Session <number>' heading, so the newest session is unknown.");
         }
 
-        CheckNewestFirst(handoff.Entries);
-        int nextSession = handoff.Entries[0].Number + 1;
-        if (handoff.Entries.Count <= KeepCount)
+        CheckNoDuplicate(handoff.Entries);
+        IReadOnlyList<HandoffEntry> ordered = SortNewestFirst(handoff.Entries, out IReadOnlyList<int> reordered);
+        int nextSession = ordered[0].Number + 1;
+        if (ordered.Count <= KeepCount)
         {
-            return new HandoffRotation(handoffText, archiveText, [], nextSession);
+            string sorted = reordered.Count == 0 ? handoffText : handoff.Preamble + JoinEntries(ordered) + "\n";
+            return new HandoffRotation(sorted, archiveText, [], reordered, nextSession);
         }
 
-        List<HandoffEntry> kept = handoff.Entries.Take(KeepCount).ToList();
-        List<HandoffEntry> moved = handoff.Entries.Skip(KeepCount).ToList();
+        List<HandoffEntry> kept = ordered.Take(KeepCount).ToList();
+        List<HandoffEntry> moved = ordered.Skip(KeepCount).ToList();
         HandoffFile archive = Parse(archiveText);
         if (archive.Entries.Count > 0 && archive.Entries[0].Number >= moved[^1].Number)
         {
@@ -91,25 +111,39 @@ public static class HandoffRotateRules
             newArchive = WithBlankLineEnd(archive.Preamble) + movedText + "\n\n" + oldEntries;
         }
 
-        return new HandoffRotation(newHandoff, newArchive, moved.Select(entry => entry.Number).ToList(), nextSession);
+        return new HandoffRotation(newHandoff, newArchive, moved.Select(entry => entry.Number).ToList(), reordered, nextSession);
     }
 
-    private static void CheckNewestFirst(IReadOnlyList<HandoffEntry> entries)
+    /// <summary>
+    /// The entries by number, newest first, with the text of each one intact. Names every entry whose place the
+    /// sort changed, in the order that the file held them (D-406). A swap of two entries names both.
+    /// </summary>
+    public static IReadOnlyList<HandoffEntry> SortNewestFirst(IReadOnlyList<HandoffEntry> entries, out IReadOnlyList<int> reordered)
     {
-        for (int index = 1; index < entries.Count; index++)
+        List<HandoffEntry> ordered = entries.OrderByDescending(entry => entry.Number).ToList();
+        List<int> moved = [];
+        for (int index = 0; index < entries.Count; index++)
         {
-            int newer = entries[index - 1].Number;
-            int older = entries[index].Number;
-            if (older == newer)
+            if (entries[index].Number != ordered[index].Number)
             {
-                throw new InvalidOperationException(
-                    $"'{HandoffPath}' holds Session {older} two times (D-187). Give the newer entry the next free number, then run the command again.");
+                moved.Add(entries[index].Number);
             }
+        }
 
-            if (older > newer)
+        reordered = moved;
+        return ordered;
+    }
+
+    /// <summary>Stops a file that holds one session number two times, because a number is the identity of a session (D-187, T-2).</summary>
+    private static void CheckNoDuplicate(IReadOnlyList<HandoffEntry> entries)
+    {
+        var seen = new HashSet<int>();
+        foreach (HandoffEntry entry in entries)
+        {
+            if (!seen.Add(entry.Number))
             {
                 throw new InvalidOperationException(
-                    $"'{HandoffPath}' puts Session {older} below Session {newer}. The file keeps the newest entry first (D-146). Correct the order, then run the command again.");
+                    $"'{HandoffPath}' holds Session {entry.Number} two times (D-187). Give the newer entry the next free number, then run the command again.");
             }
         }
     }

@@ -2,6 +2,168 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 194: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reopened PR #83 after the response to Session 193.
+- Verified the response, the handoff-order correction, and the focused handoff test.
+- Updated `docs/reviews/pr-83.md` and kept the verdict blocked because fresh required CI remains pending.
+
+### State of the build
+
+- `HandoffRotateTests` passed, 9 of 9.
+- The response reports the completed broad suite and Smoke results. The corrected tip has completed passing jobs for bots, smoke, asset-qa, det-lint, STE, doc-gate, and night-gate.
+- Fresh Linux, macOS, and Windows CI jobs remain pending. The effective code head remains `8452dbd`.
+
+### In flight
+
+The repeat-review record is pushed in metadata commit `8c385ce`.
+
+### Traps and gotchas
+
+- Later commits remain metadata-only, so the effective code head stays `8452dbd`.
+- The review gate cannot pass while this record has a blocked verdict.
+- Pending CI is incomplete evidence.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Recheck the fresh CI jobs before the owner merge.
+
+## Session 193: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reviewed PR #83 at effective head `8452dbd`.
+- Inspected the pathfinder, movement rules, enemy and combat state, AI, procgen, simulation, bots, workflows, tests, and PR comments.
+- Added `docs/reviews/pr-83.md` with no code finding and a blocked verdict because required CI remains pending.
+
+### State of the build
+
+- Focused tests passed, 6 of 6.
+- The broad non-smoke test run compiled but stalled without a result.
+- GitHub checks pass for completed jobs, but Linux and Windows CI remain pending. The review-gate check waits for this review record.
+- Remote code head remains `8452dbd`. Metadata commit `9fb8fda` carries the review record and this entry.
+
+### In flight
+
+The review record and this handoff entry are pushed to the PR branch.
+
+### Traps and gotchas
+
+- The effective head excludes later handoff-only commits.
+- A stalled test run is incomplete evidence, not a pass.
+- The review stays blocked until required CI completes.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Recheck the pending Linux and Windows CI jobs before the owner merge.
+
+## Session 192: 2026-09-20, Claude Code
+
+Author: Claude Code
+Session: PR-16, the first enemy family, the AI, and the pathfinder. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Repaired `main`. The entry of Session 191 sat at the end of `docs/session-handoff.md`, so `HandoffRotateTests` failed on every CI leg of any branch (D-146). The entry moved to the top, word for word, and `handoff-rotate` ran.
+- Asked the owner OQ-9 before any enemy content, as the roadmap and D-124 require. D-395 to D-405 hold eleven answers over four batches: the eight families, the scavenger as the first one, its gear, its numbers, its cadence, the empty spawn chamber, the wake rule, the drawing, the `death` end state, the descender that fights, and the wedge fix inside this PR.
+- Moved the move rule of D-165 and D-345 out of `Reachability` into `Core/Pathfinding/GridMoves.cs`, and wrote the A* search of D-76 over it. The generator and the AI now read one rule.
+- Wrote the scavenger, the brain, the spawn pass, the full clearer, and the drawing of each enemy. The player of PR-15 now reads the shared `Swing` and `Stagger` of `Core/Combat`.
+- Found and fixed F-104 and F-105, two walk defects that only the new movement reaches. The measured softlock rate of a bot fell from about 10 percent to zero over 2000 seeds of each policy.
+
+### State of the build
+
+- Base and merge base: `e1c20ea`, the merge of PR #82.
+- `dotnet test` locally: 1172 passed, 0 failed, with the filter `Category!=Smoke`. The Smoke category passed 5 of 5 against the pinned binary. `det-lint` reports 0 findings in Core and 0 in Game. `ste-check` reports 0 findings over 34 files. `asset-qa` reports 0 findings.
+- The simulation version is 13, and the bit-identity answer is `d701dca6d5cee4d8`.
+- The bot sweep of seeds 1 to 100 passed for all three policies: 0 crashes and 0 softlocks. Over 2000 seeds, the descender reaches the bottom on 129 and the clearer on 421, and neither reads a crash or a softlock.
+- Exit test 8 of PR-66, the night sweep on `main` at `e1c20ea`: pass. Run 35542505776 ended `success`. The random walker ran out its budget on all 5000 seeds, the greedy descender reached the bottom on all 5000, and neither read a softlock or a crash. The reachability sweep of 100000 seeds passed in the same job. So the ramps and the tiers hold over the night.
+- That night ran the workflow of `main`, which plays two policies and writes no death count. The third policy and the death count of D-403 are on this branch, so the next night after the merge plays three.
+- Remote head: `origin/feat/pr-16-enemies-and-pathfinder` reached `e766b23`, and the status showed no `[ahead N]`. That commit and the one before it change `docs/session-handoff.md` alone, so the effective head is `8452dbd` (D-184). The commit `8452dbd` changes `docs/design.md` and `docs/roadmaps/`, which sit outside the metadata set, so it moves the effective head.
+- Every check of PR #83 passes at the tip `cc70827`: Gitar, the three build legs, the three smoke legs, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, and night-gate. The build legs took 11 minutes 39 seconds on Linux, 8 minutes 4 seconds on macOS, and 16 minutes 1 second on Windows. `evaluate` and `review-gate` fail, because the review record holds the verdict `Blocked` (D-179, D-181, D-185).
+
+### In flight
+
+GitHub PR #83 holds the whole PR-16 scope, the eleven decisions, the two findings, and this entry. It waits for the owner merge.
+
+The review record `docs/reviews/pr-83.md` of Session 193 reports no code finding, and its verdict is `Blocked` for the effective head `8452dbd`, because required CI was pending and a local broad test run stalled. `docs/reviews/pr-83-response.md` answers both limits: the suite completed at 1172 passed and 0 failed at `0075b92`, and the three CI legs failed on the handoff order of D-146 alone. The entry of Session 193 sat under Session 183, and this session moved it to the top, word for word, and ran `handoff-rotate`. The verdict stays as the reviewing provider wrote it, because the author of a PR never sets it (T-4, D-381).
+
+The automated pass of gitar is complete on the effective head `8452dbd`. The `Code Review` block reads "Approved" with no finding. The `CI failed` block of the same comment names the missing `docs/reviews/pr-83.md`, and a PR reply answers it with D-251: the review gate stays red until the reviewing provider writes that file, and the author of a PR does not write it. Findings with merit: none.
+
+The cross-provider review comes next. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
+
+### Traps and gotchas
+
+- A walk to the cell of a body that moves never closes. Two walkers each aimed at the cell of the other and swung around each other 2 meters apart for a whole floor (F-104). A search now starts at the cell that the body walks into, and the last 4 meters of a chase are a straight walk at the body.
+- A drift check that reads the X and the Z of a waypoint and not its row misses a body that fell two rows under its path. The body then jumped at a step of two blocks until the floor budget ran out (F-105).
+- A roll away from every blade loses a duel: the roll covers 3 meters, and the enemy closes again during the 45-tick cooldown. `BotIntent.Roll` rolls through the enemy, which took the descender from 2 bottoms in 200 seeds to 43.
+- A step up onto the side of a ramp is a legal move. A ban on it read as a fix for F-105 and was not one, and `TheSearchFollowsTheBodyRuleOnRamps` names the case.
+- `TestWorld.NewLoop` now digs a floor with no enemy family, so a test of the camera, the body, or the replay reads its own rule. A test of the enemies builds its loop from `TestWorld.Content`.
+- The smoke session dies at tick 273 of its 600-tick script on seed 1, and it ends clean with exit code 0 and the end kind in its line. The smoke gate covers fewer ticks than it did, and a stronger smoke script belongs to a later PR.
+- The sweep enemy of the bit-identity content swings a second weapon of 1 damage, because a run that ends by death takes no more intents and the sweep record holds 600 of them.
+- The owner chose the wedge fix inside PR-16 (D-405). This PR therefore carries the walk fixes beside the enemies, which widens it past one concern (G-10).
+- A handoff entry added at the end of the file reds the three build legs, and four sessions did it (F-106). The owner asked for the tool fix inside this PR, so `handoff-rotate` now puts such an entry back in its place and names it (D-406). `RepositoryFilesHoldTheRule` asserts that the committed file needs no sort, so the check still names a file that breaks D-146.
+- That tool change moves the effective head off `8452dbd`, so the automated pass and the cross-provider review both read the new head.
+- The next ids are D-407, OQ-181, F-107, PR-71, and Session 195.
+
+### Open questions that block progress
+
+None. OQ-9 has its answers in D-395 and D-396, and the handoff loop has its answer in D-406.
+
+### Next concrete action
+
+Codex reviews GitHub PR #83 and writes `docs/reviews/pr-83.md`, per `.claude/skills/pr-review/SKILL.md`. The review reads the move rule of `GridMoves`, the A* search, the brain, the spawn pass, and the two walk fixes of F-104 and F-105. Exit test 8 of PR-66 needs the night on `main` at `e1c20ea` to report zero crashes and zero softlocks.
+
+## Session 191: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-82, the ramps, chamber tiers, and shaft routes. Branch `feat/pr-66-ramps-and-tiers`.
+
+### What this session did, and why
+
+- Reviewed PR #82 as the cross-provider reviewer.
+- Inspected the complete diff, the generator contracts, the focused roadmap, the decisions, the questions, and all PR comments.
+- Found no actionable issue at effective head `97efa5c`.
+
+### State of the build
+
+- Base and merge base: `27db615`.
+- The focused procgen test process compiled, then stalled in the shared large sweep and was canceled.
+- Revision-matched CI and the automated pass are recorded as passed at `97efa5c`. The review-gate and evaluate checks were expectedly neutral or failed before the review record existed.
+- The review record is `docs/reviews/pr-82.md`.
+
+### In flight
+
+The review record and this handoff entry need one commit and a push. The owner play test remains exit test 10.
+
+### Traps and gotchas
+
+- The effective head excludes the later handoff and review-record commits under D-184.
+- The local large sweep did not finish in this execution context. Do not report it as a local pass.
+
+### Open questions that block progress
+
+None. OQ-179 and OQ-180 are resolved by D-388 through D-394.
+
+### Next concrete action
+
+Run the review session end gate after the commit and push.
+
 ## Session 190: 2026-09-20, Claude Code
 
 Author: Claude Code
@@ -251,70 +413,33 @@ None blocks PR #78.
 ### Next concrete action
 
 The owner merges PR #78.
-
-## Session 184: 2026-09-16, Claude Code
-
-Author: Claude Code
-Session: answer review finding P2-1 of PR #78, in the author session of the PR (D-375). Branch `feat/context-budget`.
-
-### What this session did, and why
-
-- Session 183 reviewed PR #78 at `3eb7142` and gave `Changes required` for P2-1: the D-378 lookup command held fixed ids, and no sentence told the reader to replace them. The owner asked for the answer in this author session.
-- The finding reproduced, with full merit. A size cut of `CLAUDE.md` had removed the words "with the ids in place of the examples".
-- The command now starts with `d='146|375'; q='9|44'`, and its three patterns read `$d` and `$q`. The sentence before it tells the reader to set every D-# and OQ-# number of the task. Two archive sentences are shorter, so the agent files hold 14591 bytes, 2 fewer than on `main`.
-- `RegisterLookupTests` reads the command from `AGENTS.md` and applies it to the registers. It finds the rows of D-379 to D-382, OQ-9, and OQ-44, and the revisers D-377 and D-381 of D-187 and D-374. All three tests fail on the `AGENTS.md` of `3eb7142`.
-- `docs/reviews/pr-78-response.md` records the disposition and the regression check.
-
-### State of the build
-
-- `main` is at `58e4fc8`. The effective head is `337d706`, the correction commit, and this entry sits in a metadata commit above it (D-184). Pending the repeat review and the owner merge.
-- Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1146 tests, 0 failures. `ste-check`: 0 findings in 19 files. `det-lint`: 0 findings.
-- CI on `337d706` did not complete in this session. The owner told the session not to wait on CI, so no CI result exists here for that head. The push of this entry cancels the runs of `337d706`, and CI on the tip counts for it (D-356, D-357). The reviewer reads that result.
-- The automated pass of gitar: automatic reviews stay paused. A `Gitar review` comment at 22:17:56 UTC got "On it" at 22:18:20, and a new dashboard comment approved `337d706` at 22:18:43 with no finding and no thread (D-303, D-374).
-
-### In flight
-
-PR #78: the repeat Codex review of P2-1 per `pr-review` at `337d706`, with the CI result of the tip. The owner then merges.
-
-### Traps and gotchas
-
-- The correction changes `AGENTS.md` and a test, so it moves the effective head past `3eb7142` (D-184). The review of `3eb7142` no longer covers the head.
-- The lookup patterns sit in double quotes, so the shell expands `$d` and `$q`. The same lines work in bash and in zsh.
-- The next ids are D-383, OQ-177, F-102, PR-70, and Session 185.
-
-### Open questions that block progress
-
-None blocks PR #78.
-
-### Next concrete action
-
-A Codex session runs the repeat review of P2-1 per the `pr-review` skill at the correction head and sets the verdict. The owner then merges PR #78.
-
-## Session 183: 2026-09-16, Codex
+## Session 195: 2026-09-20, Codex
 
 Author: Codex
-Session: review PR #78 at effective head `3eb7142`. Branch `feat/context-budget`.
+Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
 
 ### What this session did, and why
 
-- Reviewed the full change and its tests, tools, skills, decisions, design, handoff, PR description, comments, and checks.
-- Found P2-1 in `docs/reviews/pr-78.md`: the register command searches fixed ids, so it misses decisions for other tasks.
+- Reopened PR #83 after the D-406 handoff rotation correction.
+- Reviewed the new substantive diff at effective head `f698cd9`.
+- Verified the handoff tests and all required implementation checks.
+- Updated `docs/reviews/pr-83.md` with the verdict `Ready for owner merge`.
 
 ### State of the build
 
-- `main` is at `58e4fc8`, the base. The effective head is `3eb7142`, and remote tip `77c6f66` changes only handoff metadata (D-184).
-- The focused rotation and context budget tests passed: 12 tests, 0 failures. The full non-Smoke test attempt did not complete locally and was cancelled.
-- CI on `3eb7142` passed, as recorded in the handoff update at `77c6f66`. Checks after that metadata push passed for the platforms and required workflows. `evaluate` failed before this review record, and `review-gate` skipped.
+- `HandoffRotateTests` passed, 9 of 9.
+- The three build legs, three smoke legs, bit identity, compare, bots, asset-qa, det-lint, STE, doc-gate, and night-gate pass for the corrected tip.
+- `evaluate` and `review-gate` wait for this review record. The effective head is `f698cd9`.
 
 ### In flight
 
-The author must correct P2-1 and request a Codex re-review. The owner merges after the finding closes.
+The approving repeat-review record is pushed in metadata commit `a07243a`.
 
 ### Traps and gotchas
 
-- The Gitar approval covers effective head `3eb7142`. Later commits changed metadata only.
-- The review commit must keep `3eb7142` as the effective head.
+- D-406 changes substantive tool and test paths, so the effective head moved from `8452dbd` to `f698cd9`.
+- Duplicate session numbers remain an error case.
+- The owner merges the PR.
 
 ### Open questions that block progress
 
@@ -322,125 +447,4 @@ None.
 
 ### Next concrete action
 
-The author loads `review-response`, updates the lookup command in both agent files, and adds a regression check.
-
-## Session 182: 2026-09-16, Claude Code
-
-Author: Claude Code
-Session: cut the agent context cost of each session, with the owner instructions D-377 to D-382. Branch `feat/context-budget`.
-
-### What this session did, and why
-
-- A token audit of this repository read 10 recent sessions of each harness. Most input came from the model calls after a status poll (17.2% Claude Code, 22.8% Codex) and after handoff and archive work (17.3%, 27.5%). Register text and one large review skill added more. The owner told the session to apply every P0 and P1 fix of the audit.
-- D-377: the first action prints the newest handoff entry alone, and the read order adds the newest entry of the branch. The end of a session takes the number from the top heading after a fetch. D-187 gains a revision note for the second full read.
-- D-378: `AGENTS.md` holds one lookup command for all D-# and OQ-# ids of a task, with a line that finds each revision (D-186). A check on five superseded decisions printed the superseding id of each.
-- D-379: the `handoff-rotate` command moves each entry after the tenth to the archive top with its text intact. Nine tests cover it, and a seed loop of 300 seeds proves the text and the order. A mutation that dropped one moved entry failed three tests.
-- D-380: the `one-pr-one-session` skill waits on checks with one `gh pr checks --watch` command, then prints the final state once. The first run on this PR used `--fail-fast` and stopped at once on `evaluate`, which fails until a review record exists (D-251). The skill now waits for every check. `gitar-review` does not change, because other repositories use the same file.
-- D-381: `pr-review` keeps the reviewer procedure, and the new `review-response` skill holds the author procedure. D-374 gains a revision note.
-- D-382: `ContextBudgetTests` caps the agent files at 15000 bytes, each skill at 12000 (`pr-review` 31000), the handoff at 60000, and its newest entry at 7000.
-- The rule paragraph of this file moved from between Session 181 and Session 180 to the file header, so it no longer moves with the entries.
-- `CLAUDE.md` holds the new rules in 14586 bytes, 7 fewer than before. The gitar bullets that copied the `gitar-review` skill are gone (D-374), and some build prose is shorter with no rule lost.
-
-### State of the build
-
-- `main` is at `58e4fc8`, the base of this branch. The effective head is `3eb7142`, PR #78, and this entry sits in a metadata commit above it (D-184). Pending owner merge.
-- Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
-- `dotnet build`: 0 warnings, 0 errors. `dotnet test` without the Smoke category: 1143 tests, 0 failures. `ste-check`: 0 findings in 19 files. `det-lint`: 0 findings. No Core, Game, content, or asset path changed, so the simulation version, `bit-identity`, and `asset-qa` stand.
-- CI on `3eb7142`: CI, smoke, and bit identity passed on the three platforms, with the compare job. Asset-qa, bots, det-lint, doc-gate, night-gate, and STE check passed. `evaluate` fails and `review-gate` skips, because no review record exists yet (D-251). Every run completed before the push of this entry, so that push cancels nothing (D-356).
-- The automated pass of gitar: the automatic review approved `ca570e2` at 21:30:30 UTC, one push behind the head, with automatic reviews paused. A `Gitar review` comment at 21:31:21 UTC got "On it" at 21:31:40, and the dashboard approved `3eb7142` at 21:32:03 with no finding and no thread (D-303, D-374).
-- Start paths, bytes before and after: an implementation author 74615 to 36154, an author who answers findings 109690 to 44642, a reviewer 109690 to 66597.
-
-### In flight
-
-PR #78 changes `WhatYouCarry.Tools` and `WhatYouCarry.Tests`, so it needs the Codex review per `pr-review` at the effective head (T-4). The `review-override` label does not apply. The owner then merges.
-
-### Traps and gotchas
-
-- The start rules changed in this PR. A reviewer of this branch reads the new `AGENTS.md` of the branch, and `main` keeps the old text until the merge.
-- `ContextBudgetTests` reads the newest handoff entry. An entry over 7000 bytes fails `dotnet test`, so keep each entry short.
-- Run `handoff-rotate` after the new entry, not before. It exits 1 and changes nothing on a duplicate number, a wrong order, or an archive top that is not older.
-- G-17 asks for a measurement after the change. The first three substantial sessions on `main` with these rules count the calls after a status poll, the handoff bytes read at the start, and the calls after archive work. Each writes the counts in its own handoff entry.
-- The next ids are D-383, OQ-177, F-102, PR-70, and Session 183.
-
-### Open questions that block progress
-
-None blocks this PR. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
-
-### Next concrete action
-
-A Codex session reviews this PR per the `pr-review` skill at the effective head and writes the review record on this branch. The owner then merges. A fresh session then opens PR-69.
-
-## Session 181: 2026-09-16, Codex
-
-Author: Codex
-Session: re-review PR #77 at effective head `b91bd24` and record the corrected verdict. Branch `feat/one-pr-one-session`.
-
-### What this session did, and why
-
-- Recomputed the effective head. `b91bd24` changes the Gitar review skill, so it moves the head beyond the duplicate-line correction `f0befdd` (D-184).
-- Confirmed Claude Code authored the PR from Session 178. Codex passes the provider gate (T-4, D-101).
-- Verified P2-1 remains fixed. `DuplicateMatrixLineFails` passes, the live description passes `doc-gate`, and the same description with the conflicting line fails.
-- Verified the current Gitar dashboard follows the request and reply for `b91bd24`. It approves and has no open finding.
-- Updated `docs/reviews/pr-77.md`. It retains P2-1 and the earlier verdict, and records the new verdict for `b91bd24`.
-- Session 171 moved to the archive, because this entry made eleven entries.
-
-### State of the build
-
-- `main` and the merge base are `9b27afc`. The effective PR head is `b91bd24`.
-- Remote head: `origin/feat/one-pr-one-session` at the commit that holds this entry and the review record, checked with `gh pr view` before the session ended.
-- `DocGateTests`, `ReviewGateRulesTests`, and `ReviewGateGitTests`: 46 passed. The live `doc-gate` description passed, and the duplicate-line variant failed with one problem.
-- Local `dotnet test WhatYouCarry.slnx --no-build` produced no completion after four minutes and was cancelled. The CI platform tests on `b91bd24` passed.
-- Before the review update, CI on `b91bd24` passed asset QA, bots, compare, det-lint, doc-gate, platform tests, night gate, and STE check. `evaluate` and `review-gate` failed while the review record held the earlier verdict.
-- The current Gitar dashboard approves and reports the earlier finding closed with no new finding.
-
-### In flight
-
-PR #77 is ready for owner merge. The owner merges it.
-
-### Traps and gotchas
-
-- The effective head is `b91bd24`, because the Gitar skill changed after `f0befdd` (D-184).
-- Two platform jobs from an older run remained pending, while later matching platform results passed.
-- The next ids are D-377, OQ-177, F-102, PR-70, and Session 182.
-
-### Open questions that block progress
-
-None blocks PR #77. The PR-66 session asks the owner for the shape of a tier first (D-350). OQ-9 blocks PR-16. OQ-4 and OQ-6 block PR-17. OQ-44 blocks PR-18. OQ-48 blocks PR-20. OQ-161 blocks exit test 7 of PR-13 and M-3.
-
-### Next concrete action
-
-The owner merges PR #77. A fresh session then works on PR-66 and asks the owner for the tier shape first (D-350).
-## Session 191: 2026-09-20, Codex
-
-Author: Codex
-Session: PR-82, the ramps, chamber tiers, and shaft routes. Branch `feat/pr-66-ramps-and-tiers`.
-
-### What this session did, and why
-
-- Reviewed PR #82 as the cross-provider reviewer.
-- Inspected the complete diff, the generator contracts, the focused roadmap, the decisions, the questions, and all PR comments.
-- Found no actionable issue at effective head `97efa5c`.
-
-### State of the build
-
-- Base and merge base: `27db615`.
-- The focused procgen test process compiled, then stalled in the shared large sweep and was canceled.
-- Revision-matched CI and the automated pass are recorded as passed at `97efa5c`. The review-gate and evaluate checks were expectedly neutral or failed before the review record existed.
-- The review record is `docs/reviews/pr-82.md`.
-
-### In flight
-
-The review record and this handoff entry need one commit and a push. The owner play test remains exit test 10.
-
-### Traps and gotchas
-
-- The effective head excludes the later handoff and review-record commits under D-184.
-- The local large sweep did not finish in this execution context. Do not report it as a local pass.
-
-### Open questions that block progress
-
-None. OQ-179 and OQ-180 are resolved by D-388 through D-394.
-
-### Next concrete action
-
-Run the review session end gate after the commit and push.
+Verify the remote review-gate result after the record publishes.

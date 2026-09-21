@@ -34,6 +34,12 @@ public static class SweptAabb
     public const float ContactSkin = 0.0009765625f;
 
     /// <summary>
+    /// How far below its feet a body probes for the ground, in meters: two contact skins, so a body that rests on a
+    /// block or on a slope always finds it (D-235, D-365).
+    /// </summary>
+    public const float GroundProbe = 2.0f * ContactSkin;
+
+    /// <summary>
     /// Moves a box by a displacement and gives back the part of it that the grid allows, and the axes that a
     /// solid part cut. The vertical part of the result holds the lifts onto a ramp.
     /// </summary>

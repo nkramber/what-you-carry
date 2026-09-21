@@ -23,8 +23,9 @@ public static class BotSession
     }
 
     /// <summary>
-    /// Answers whether the loop left the first floor, by a descent or by an ascend. A death is no completion, so the
-    /// next tick fails the session with an error line (D-322).
+    /// Answers whether the loop left the first floor, by a descent or by an ascend. A death is no completion of the
+    /// session, and the session ends clean on the next tick, because a death is an outcome of a fight and never a
+    /// fault of the code (D-322, D-403).
     /// </summary>
     public static bool IsComplete(SimulationLoop loop)
     {

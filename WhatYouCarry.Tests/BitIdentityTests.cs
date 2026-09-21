@@ -37,9 +37,12 @@ public sealed class BitIdentityTests
     /// PR-68 moved it from `24c37100cd99edf4` when the simulation version rose to 11, because the pillar rule of F-101
     /// moves every floor that holds a pillar in the column of a shaft (D-260, G-20). PR-66 moved it from
     /// `a0b32bad006b3dfe` when the simulation version rose to 12, the sweep floors took the ramps of D-347 and the
-    /// chamber tiers of D-348, and the sweep gained the count of the ramps of each floor (D-260, G-20).
+    /// chamber tiers of D-348, and the sweep gained the count of the ramps of each floor (D-260, G-20). PR-16 moved
+    /// it from `15904316a1b4ec07` when the simulation version rose to 13, the state gained the enemies and their
+    /// brains, the sweep content gained one enemy family with a second weapon for it, and the sweep gained the
+    /// enemy spawns of each floor (D-395 to D-405, G-20).
     /// </remarks>
-    private const string ExpectedHash = "15904316a1b4ec07";
+    private const string ExpectedHash = "d701dca6d5cee4d8";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

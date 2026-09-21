@@ -62,9 +62,6 @@ public sealed class PlayerBody
     /// <summary>The length of one tick, in seconds (D-73).</summary>
     public const float TickSeconds = 1.0f / SimulationLoop.TicksPerSecond;
 
-    /// <summary>How far below the feet the ground probe reads, in meters: two skins, so a resting body always finds its block (D-235).</summary>
-    public const float GroundProbe = 2.0f * SweptAabb.ContactSkin;
-
     /// <summary>The largest magnitude of a movement byte. A byte of -128 clamps to -127 (D-233).</summary>
     public const int MoveScale = 127;
 
@@ -117,7 +114,7 @@ public sealed class PlayerBody
     public bool IsOnGround()
     {
         Aabb box = this.Box;
-        float probe = box.Min.Y - GroundProbe;
+        float probe = box.Min.Y - SweptAabb.GroundProbe;
         int highRow = (int)DetMath.Floor(box.Min.Y);
         for (int row = (int)DetMath.Floor(probe); row <= highRow; row++)
         {
@@ -213,7 +210,7 @@ public sealed class PlayerBody
         // A step down a slope leaves the feet over the slope by the drop of the step. A sweep down by the largest
         // such drop finds the slope, and a sweep that finds nothing moves nothing, so the body falls as before.
         float step = DetMath.Abs(result.Allowed.X) + DetMath.Abs(result.Allowed.Z);
-        float reach = (step / Ramp.SteepestRun) + GroundProbe;
+        float reach = (step / Ramp.SteepestRun) + SweptAabb.GroundProbe;
         SweepResult down = SweptAabb.Sweep(this.grid, this.Box, new Vector3(0.0f, -reach, 0.0f));
         if (down.BlockedY)
         {
@@ -271,7 +268,7 @@ public sealed class PlayerBody
         int x = (int)DetMath.Floor(this.Position.X);
         int z = (int)DetMath.Floor(this.Position.Z);
         int highRow = (int)DetMath.Floor(this.Position.Y);
-        for (int row = (int)DetMath.Floor(this.Position.Y - GroundProbe); row <= highRow; row++)
+        for (int row = (int)DetMath.Floor(this.Position.Y - SweptAabb.GroundProbe); row <= highRow; row++)
         {
             if (!this.grid.TryGetRamp(x, row, z, out Ramp ramp))
             {

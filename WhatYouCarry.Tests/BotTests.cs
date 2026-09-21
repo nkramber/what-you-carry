@@ -97,7 +97,10 @@ public sealed class BotTests
                 Assert.Equal(BotRunCommand.Subsystem, root.GetProperty("subsystem").GetString());
                 string state = root.GetProperty(BotRunCommand.EndStateName).GetString()!;
                 string policy = root.GetProperty(BotRunCommand.PolicyName).GetString()!;
-                Assert.Equal(policy == RandomWalker.PolicyName ? "budget" : "bottom", state);
+                // The walker ends by its budget or by a death, and the descender at the bottom or by a death. A
+                // fight can kill either one, and a death is its own end state (D-403).
+                string[] ends = policy == RandomWalker.PolicyName ? ["budget", "death"] : ["bottom", "death"];
+                Assert.Contains(state, ends);
                 Assert.True(root.GetProperty("tick").GetInt64() > 0);
             }
         }
@@ -111,7 +114,8 @@ public sealed class BotTests
     [Fact]
     public void SoftlockIsDetected()
     {
-        BotRunResult result = BotRun.Play(new StandStill(), 5UL, TestWorld.Content);
+        // The floor holds no enemy, so the run reads the softlock rule alone and never a death (D-403).
+        BotRunResult result = BotRun.Play(new StandStill(), 5UL, TestWorld.PeacefulContent);
         Assert.Equal(BotRunEnd.Softlock, result.End);
         Assert.Equal(BotRun.FloorBudget, result.Ticks);
         Assert.Equal(1, result.FloorsReached);
@@ -138,16 +142,39 @@ public sealed class BotTests
         Assert.Contains("throws on purpose", end.RootElement.GetProperty(BotRunCommand.ErrorName).GetString(), StringComparison.Ordinal);
     }
 
-    /// <summary>PR-11 exit test 4. The greedy descender reaches the bottom on one hundred seeds: fifteen floors, and the ascend at the last stairwell. A failure names its seed (D-66).</summary>
+    /// <summary>
+    /// PR-11 exit test 4 and PR-16 exit test 7. Over one hundred seeds, every run of the greedy descender and of
+    /// the full clearer ends at the bottom or by a death, and never by a crash and never by a softlock. A run at
+    /// the bottom reached fifteen floors. A failure names its seed (D-66, D-403).
+    /// </summary>
+    /// <remarks>
+    /// Before PR-16 nothing could kill the player, and the descender reached the bottom on every seed. The
+    /// scavengers of D-399 now kill most runs, and a death is an outcome of a fight and never a fault of the code
+    /// (D-403). The test asserts that some runs still reach the bottom, so a floor that no bot can leave still
+    /// fails it.
+    /// </remarks>
     [Fact]
-    public void GreedyDescenderReachesBottom()
+    public void EveryPolicyEndsAtTheBottomOrByDeath()
     {
+        int bottoms = 0;
         for (ulong seed = 1; seed <= 100; seed++)
         {
-            BotRunResult result = BotRun.Play(new GreedyDescender(TestWorld.Content), seed, TestWorld.Content);
-            Assert.True(result.End == BotRunEnd.Bottom, $"Seed {seed}: the run ended as {result.End} on floor {result.FloorsReached} after {result.Ticks} ticks. {result.Error}");
-            Assert.Equal(15, result.FloorsReached);
+            IBotPolicy[] policies = [new GreedyDescender(TestWorld.Content), new FullClearer(TestWorld.Content)];
+            foreach (IBotPolicy policy in policies)
+            {
+                BotRunResult result = BotRun.Play(policy, seed, TestWorld.Content);
+                Assert.True(
+                    result.End == BotRunEnd.Bottom || result.End == BotRunEnd.Death,
+                    $"Seed {seed}: the run of '{policy.Name}' ended as {result.End} on floor {result.FloorsReached} after {result.Ticks} ticks. {result.Error}");
+                if (result.End == BotRunEnd.Bottom)
+                {
+                    Assert.Equal(15, result.FloorsReached);
+                    bottoms++;
+                }
+            }
         }
+
+        Assert.True(bottoms > 0, "No run of one hundred seeds reached the bottom, so no bot can leave a floor.");
     }
 
     /// <summary>PR-11 exit test 7. The night record holds the commit, the end time, and the status, and a bad commit or status is an error (D-273).</summary>
@@ -172,7 +199,14 @@ public sealed class BotTests
 
             Assert.Equal(2, Program.Main(["night-record", "--commit", "abc", "--status", "success", "--output", file]));
             Assert.Equal(2, Program.Main(["night-record", "--commit", commit, "--status", "green", "--output", file]));
-            Assert.Equal("{\"commit\":\"" + commit + "\",\"endedAt\":\"2026-09-10T03:00:00Z\",\"status\":\"failure\"}\n", NightRecordCommand.Build(commit, new DateTime(2026, 9, 10, 3, 0, 0, DateTimeKind.Utc), "failure"));
+            Assert.Equal("{\"commit\":\"" + commit + "\",\"endedAt\":\"2026-09-10T03:00:00Z\",\"status\":\"failure\",\"deaths\":{}}\n", NightRecordCommand.Build(commit, new DateTime(2026, 9, 10, 3, 0, 0, DateTimeKind.Utc), "failure", string.Empty));
+
+            // The record carries the count of deaths of each policy, in the order of the summary lines (D-403).
+            string summary = BotRunCommand.DeathLine(GreedyDescender.PolicyName, 12) + BotRunCommand.DeathLine(FullClearer.PolicyName, 7);
+            Assert.Equal("{\"greedy-descender\":12,\"full-clearer\":7}", NightRecordCommand.DeathsObject(summary));
+            Assert.Equal("{}", NightRecordCommand.DeathsObject("\n  \n"));
+            Assert.Throws<FormatException>(() => NightRecordCommand.DeathsObject("greedy-descender=many"));
+            Assert.Throws<FormatException>(() => NightRecordCommand.DeathsObject("=3"));
         }
         finally
         {
@@ -180,13 +214,20 @@ public sealed class BotTests
         }
     }
 
-    /// <summary>The random walker ends by its wander budget, and two walkers of one seed give one intent stream (D-270 to D-272).</summary>
+    /// <summary>
+    /// The random walker ends by its wander budget or by a death, and two walkers of one seed give one intent
+    /// stream (D-270 to D-272, D-403).
+    /// </summary>
+    /// <remarks>
+    /// The walker promises no progress, so it never reads a softlock. It wanders into the scavengers of D-399, and
+    /// a run that dies ends before its budget. The walker of seed 7 lived out its budget before PR-16.
+    /// </remarks>
     [Fact]
-    public void RandomWalkerIsDeterministicAndEndsByBudget()
+    public void RandomWalkerIsDeterministicAndEndsByBudgetOrDeath()
     {
         BotRunResult result = BotRun.Play(new RandomWalker(7UL), 7UL, TestWorld.Content);
-        Assert.Equal(BotRunEnd.Budget, result.End);
-        Assert.Equal(BotRun.WanderBudget, result.Ticks);
+        Assert.True(result.End == BotRunEnd.Budget || result.End == BotRunEnd.Death, $"The walker ended as {result.End} after {result.Ticks} ticks. {result.Error}");
+        Assert.True(result.Ticks <= BotRun.WanderBudget, $"The walker ran {result.Ticks} ticks, and its budget is {BotRun.WanderBudget}.");
         Assert.Equal(RandomWalker.PolicyName, result.Policy);
 
         SimulationLoop first = TestWorld.NewLoop(8UL);

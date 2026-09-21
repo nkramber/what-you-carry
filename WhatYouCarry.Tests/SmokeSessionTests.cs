@@ -99,7 +99,7 @@ public sealed class SmokeSessionTests
     [Fact]
     public void ScriptRunsOnTheLoopAndMovesTheBody()
     {
-        SimulationLoop loop = new(Main.FirstSeed, TestWorld.Content);
+        SimulationLoop loop = new(Main.FirstSeed, TestWorld.PeacefulContent);
         CoreVector3 spawn = loop.Body.Position;
 
         int swings = 0;
@@ -133,7 +133,12 @@ public sealed class SmokeSessionTests
         Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
         Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal) && line.Contains("\"tick\":0,", StringComparison.Ordinal));
-        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal) && line.Contains($"\"tick\":{SmokeSession.Ticks},", StringComparison.Ordinal));
+
+        // The script ends the session at its last tick, and a run that the scavengers of D-399 end first ends it
+        // sooner with the end kind in its line. Both are a clean end, and neither one writes an error line (D-403).
+        bool scriptEnd = Array.Exists(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal) && line.Contains($"\"tick\":{SmokeSession.Ticks},", StringComparison.Ordinal));
+        bool runEnd = Array.Exists(lines, line => line.Contains($"\"message\":\"{Main.RunEndedMessage}\"", StringComparison.Ordinal) && line.Contains($"\"{Main.EndStateField}\":\"death\"", StringComparison.Ordinal));
+        Assert.True(scriptEnd || runEnd, $"The smoke session ended with neither the script line at tick {SmokeSession.Ticks} nor the run end line.{Environment.NewLine}{run.Output}");
     }
 
     /// <summary>

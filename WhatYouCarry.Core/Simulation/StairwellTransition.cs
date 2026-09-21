@@ -1,6 +1,8 @@
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Entities;
+using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Procgen;
+using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Core.Simulation;
 
@@ -27,7 +29,7 @@ public static class StairwellTransition
         }
 
         int x = (int)DetMath.Floor(body.Position.X);
-        int y = (int)DetMath.Floor(body.Position.Y - PlayerBody.GroundProbe);
+        int y = (int)DetMath.Floor(body.Position.Y - SweptAabb.GroundProbe);
         int z = (int)DetMath.Floor(body.Position.Z);
         return x == stairwell.X && y == stairwell.Y && z == stairwell.Z;
     }

@@ -32,6 +32,9 @@ public sealed class ContentLoader
     /// <summary>The directory that holds every weapon definition (D-334).</summary>
     public const string WeaponDirectory = "weapons/";
 
+    /// <summary>The directory that holds every enemy family (D-395).</summary>
+    public const string EnemyDirectory = "enemies/";
+
     /// <summary>
     /// The directory of the models and the animations, which Core never reads (OQ-159, D-298). Every content
     /// source skips it, so an animation file there is not a content file of this loader.
@@ -82,6 +85,7 @@ public sealed class ContentLoader
         List<ChamberKind> chambers = [];
         List<ProjectileDefinition> projectiles = [];
         List<WeaponDefinition> weapons = [];
+        List<EnemyDefinition> enemies = [];
         Strings? strings = null;
 
         foreach (ContentFile file in files)
@@ -108,6 +112,10 @@ public sealed class ContentLoader
             {
                 weapons.Add(WeaponDefinition.FromMembers(file.Path, members));
             }
+            else if (file.Path.StartsWith(EnemyDirectory, System.StringComparison.Ordinal))
+            {
+                enemies.Add(EnemyDefinition.FromMembers(file.Path, members));
+            }
             else
             {
                 // A file that no type claims is a defect of the content set, and never a file to step over.
@@ -122,12 +130,13 @@ public sealed class ContentLoader
             throw error;
         }
 
-        CheckUniqueIds(floors, chambers, projectiles, weapons);
-        return new ContentSet(hash, floors, chambers, projectiles, weapons, strings);
+        CheckUniqueIds(floors, chambers, projectiles, weapons, enemies);
+        CheckEnemyWeapons(enemies, weapons);
+        return new ContentSet(hash, floors, chambers, projectiles, weapons, enemies, strings);
     }
 
     /// <summary>Two records of one type must not share an id, because a lookup would then take either one.</summary>
-    private static void CheckUniqueIds(List<FloorTemplate> floors, List<ChamberKind> chambers, List<ProjectileDefinition> projectiles, List<WeaponDefinition> weapons)
+    private static void CheckUniqueIds(List<FloorTemplate> floors, List<ChamberKind> chambers, List<ProjectileDefinition> projectiles, List<WeaponDefinition> weapons, List<EnemyDefinition> enemies)
     {
         for (int index = 0; index < floors.Count; index++)
         {
@@ -172,8 +181,44 @@ public sealed class ContentLoader
                 }
             }
         }
+
+        for (int index = 0; index < enemies.Count; index++)
+        {
+            for (int other = index + 1; other < enemies.Count; other++)
+            {
+                if (enemies[index].Id == enemies[other].Id)
+                {
+                    throw ContentError.Make(ContentLoader.EnemyDirectory, enemies[index].Id, "is the id of two enemy families");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Every enemy family names a weapon of the set (D-31, D-397). An id that no weapon carries is a fault of the
+    /// content set, and a spawn with no weapon would swing nothing (T-2).
+    /// </summary>
+    private static void CheckEnemyWeapons(List<EnemyDefinition> enemies, List<WeaponDefinition> weapons)
+    {
+        foreach (EnemyDefinition enemy in enemies)
+        {
+            bool found = false;
+            foreach (WeaponDefinition weapon in weapons)
+            {
+                if (weapon.Id == enemy.Weapon)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                throw ContentError.Make(ContentLoader.EnemyDirectory + enemy.Id, "weapon", $"names '{enemy.Weapon}', and the content set holds no weapon of that id (D-397)");
+            }
+        }
     }
 }
 
 /// <summary>Every record of one content set, and the hash that the run record header carries (D-151, D-163).</summary>
-public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, Strings Strings);
+public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, IReadOnlyList<EnemyDefinition> Enemies, Strings Strings);

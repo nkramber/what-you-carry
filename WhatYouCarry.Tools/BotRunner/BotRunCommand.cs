@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
@@ -9,7 +10,7 @@ using WhatYouCarry.Core.Logging;
 namespace WhatYouCarry.Tools.BotRunner;
 
 /// <summary>
-/// <c>bot-run --policy &lt;name&gt; --seeds &lt;from&gt;-&lt;to&gt; --output &lt;directory&gt; --root &lt;checkout&gt;</c>.
+/// <c>bot-run --policy &lt;name&gt; --seeds &lt;from&gt;-&lt;to&gt; --output &lt;directory&gt; --root &lt;checkout&gt; [--summary &lt;file&gt;]</c>.
 /// Plays one headless run per seed with the policy over the content of the checkout, and writes one JSONL run
 /// log per run to the output directory (D-115, D-127). Exit 0 means no crash, and no softlock on a policy that
 /// promises progress.
@@ -33,7 +34,7 @@ public static class BotRunCommand
     /// <summary>The largest count of seeds in one command. The night runs five thousand, and a range past this is a typo.</summary>
     public const ulong LargestSpan = 1000000;
 
-    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender> --seeds <from>-<to> --output <directory> --root <checkout>";
+    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer> --seeds <from>-<to> --output <directory> --root <checkout> [--summary <file>]";
 
     public static int Run(string[] args)
     {
@@ -41,6 +42,7 @@ public static class BotRunCommand
         string? seeds = null;
         string? output = null;
         string? root = null;
+        string? summary = null;
         int i = 0;
         while (i < args.Length)
         {
@@ -56,6 +58,7 @@ public static class BotRunCommand
                 case "--seeds": seeds = args[i + 1]; break;
                 case "--output": output = args[i + 1]; break;
                 case "--root": root = args[i + 1]; break;
+                case "--summary": summary = args[i + 1]; break;
                 default:
                     Console.Error.WriteLine($"Unexpected argument '{args[i]}'. {Usage}");
                     return 2;
@@ -85,7 +88,7 @@ public static class BotRunCommand
         ContentSet content = new ContentLoader(new DirectoryContentSource(Path.Combine(root, "content"))).Load();
         Directory.CreateDirectory(output);
 
-        int[] counts = new int[4];
+        int[] counts = new int[5];
         bool promises = false;
         // The count and not the seed drives the loop, so a range that ends at the largest seed cannot wrap.
         ulong span = to - from + 1;
@@ -102,7 +105,15 @@ public static class BotRunCommand
             WriteLog(result, new JsonlLogger(sink));
         }
 
-        Console.Out.WriteLine($"bot-run: policy {policy}, seeds {from}-{to}, bottom {counts[(int)BotRunEnd.Bottom]}, budget {counts[(int)BotRunEnd.Budget]}, softlock {counts[(int)BotRunEnd.Softlock]}, crash {counts[(int)BotRunEnd.Crash]}.");
+        Console.Out.WriteLine($"bot-run: policy {policy}, seeds {from}-{to}, bottom {counts[(int)BotRunEnd.Bottom]}, budget {counts[(int)BotRunEnd.Budget]}, softlock {counts[(int)BotRunEnd.Softlock]}, death {counts[(int)BotRunEnd.Death]}, crash {counts[(int)BotRunEnd.Crash]}.");
+        if (summary is not null)
+        {
+            // One line for each policy, appended, so the night gathers every policy into its record (D-403).
+            File.AppendAllText(summary, DeathLine(policy, counts[(int)BotRunEnd.Death]), new UTF8Encoding(false));
+        }
+
+
+        // A death is a real outcome of a fight, and never a fault of the code, so it fails no gate (D-403).
         bool failed = counts[(int)BotRunEnd.Crash] > 0 || (promises && counts[(int)BotRunEnd.Softlock] > 0);
         return failed ? 1 : 0;
     }
@@ -115,8 +126,9 @@ public static class BotRunCommand
         {
             case RandomWalker.PolicyName: return new RandomWalker(seed);
             case GreedyDescender.PolicyName: return new GreedyDescender(content);
+            case FullClearer.PolicyName: return new FullClearer(content);
             default:
-                ContextException error = new($"No bot policy has the name '{name}'. The policies are {RandomWalker.PolicyName} and {GreedyDescender.PolicyName}.");
+                ContextException error = new($"No bot policy has the name '{name}'. The policies are {RandomWalker.PolicyName}, {GreedyDescender.PolicyName}, and {FullClearer.PolicyName}.");
                 error.AddContext("policy", name);
                 throw error;
         }
@@ -156,7 +168,13 @@ public static class BotRunCommand
         logger.Write(LogContextKind.Run, result.End == BotRunEnd.Crash ? LogLevel.Error : LogLevel.Info, "The bot run ends.", end);
     }
 
-    /// <summary>The text of an end state in the log (D-270).</summary>
+    /// <summary>One summary line of a policy: its name, an equals sign, and the count of deaths (D-403).</summary>
+    public static string DeathLine(string policy, int deaths)
+    {
+        return $"{policy}={deaths.ToString(CultureInfo.InvariantCulture)}\n";
+    }
+
+    /// <summary>The text of an end state in the log (D-270, D-403).</summary>
     public static string EndStateText(BotRunEnd end)
     {
         switch (end)
@@ -165,6 +183,7 @@ public static class BotRunCommand
             case BotRunEnd.Budget: return "budget";
             case BotRunEnd.Softlock: return "softlock";
             case BotRunEnd.Crash: return "crash";
+            case BotRunEnd.Death: return "death";
             default: throw new ArgumentOutOfRangeException(nameof(end), $"The end state {(int)end} has no name.");
         }
     }

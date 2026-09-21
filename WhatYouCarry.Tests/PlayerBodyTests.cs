@@ -55,7 +55,7 @@ public sealed class PlayerBodyTests
         Assert.Equal(7.0f, PlayerBody.SprintSpeed);
         Assert.Equal(7.0f, PlayerBody.JumpVelocity);
         Assert.Equal(1.0f / 60.0f, PlayerBody.TickSeconds);
-        Assert.Equal(2.0f * SweptAabb.ContactSkin, PlayerBody.GroundProbe);
+        Assert.Equal(2.0f * SweptAabb.ContactSkin, SweptAabb.GroundProbe);
         Assert.Equal(127, PlayerBody.MoveScale);
     }
 
@@ -156,13 +156,13 @@ public sealed class PlayerBodyTests
 
         if (lands)
         {
-            Assert.InRange(body.Position.Y, stepTop, stepTop + PlayerBody.GroundProbe);
+            Assert.InRange(body.Position.Y, stepTop, stepTop + SweptAabb.GroundProbe);
             Assert.True(body.Box.Min.X >= 6.0f, $"The body is at {body.Position}, and not on the step.");
         }
         else
         {
             Assert.True(highestFeet < stepTop, $"The feet reached {highestFeet}, at or above the two-block step top {stepTop}.");
-            Assert.InRange(body.Position.Y, 1.0f, 1.0f + PlayerBody.GroundProbe);
+            Assert.InRange(body.Position.Y, 1.0f, 1.0f + SweptAabb.GroundProbe);
             Assert.InRange(body.Box.Max.X, 6.0f - Skin - 1e-5f, 6.0f - Skin + 1e-5f);
         }
 
@@ -202,7 +202,7 @@ public sealed class PlayerBodyTests
             Random random = new(seed);
 
             MemorySink sink = new();
-            RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.Content.Hash, (ulong)seed));
+            RunRecorder recorder = new(sink, RunRecord.NewHeader(TestWorld.PeacefulContent.Hash, (ulong)seed));
             SimulationLoop live = TestWorld.NewLoop((ulong)seed);
             SimulationLoop twin = TestWorld.NewLoop((ulong)seed);
             for (uint tick = 0; tick < 200; tick++)
@@ -214,7 +214,7 @@ public sealed class PlayerBodyTests
             }
 
             CollectingSink logs = new();
-            ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.Content, new JsonlLogger(logs));
+            ReplayResult replay = RunReplayer.Replay(sink.Bytes, TestWorld.PeacefulContent, new JsonlLogger(logs));
 
             Assert.True(live.Hash().Value == replay.Loop.Hash().Value, $"Seed {seed}: the live hash is {live.Hash()}, and the replay gives {replay.Loop.Hash()}.");
             Assert.True(live.Hash().Value == twin.Hash().Value, $"Seed {seed}: two live runs of one intent stream give {live.Hash()} and {twin.Hash()}.");
@@ -378,7 +378,7 @@ public sealed class PlayerBodyTests
         }
 
         Assert.True(fell);
-        Assert.InRange(body.Position.Y, TestWorld.FloorTop, TestWorld.FloorTop + PlayerBody.GroundProbe);
+        Assert.InRange(body.Position.Y, TestWorld.FloorTop, TestWorld.FloorTop + SweptAabb.GroundProbe);
         Assert.Equal(0.0f, body.VerticalVelocity);
         Assert.True(body.IsOnGround());
     }
@@ -398,7 +398,7 @@ public sealed class PlayerBodyTests
         }
 
         Assert.True(single.IsOnGround());
-        Assert.InRange(single.Position.Y, TestWorld.FloorTop, TestWorld.FloorTop + PlayerBody.GroundProbe);
+        Assert.InRange(single.Position.Y, TestWorld.FloorTop, TestWorld.FloorTop + SweptAabb.GroundProbe);
 
         // The first tick of a jump leaves the ground at the jump velocity less one tick of gravity.
         PlayerBody first = TestWorld.NewBody();
@@ -565,7 +565,7 @@ public sealed class PlayerBodyTests
         }
 
         Assert.True(climber.IsOnGround());
-        Assert.InRange(climber.Position.Y, 2.0f, 2.0f + PlayerBody.GroundProbe);
+        Assert.InRange(climber.Position.Y, 2.0f, 2.0f + SweptAabb.GroundProbe);
         Assert.False(climber.IsInWater());
     }
 

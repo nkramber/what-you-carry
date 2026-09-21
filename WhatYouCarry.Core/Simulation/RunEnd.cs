@@ -12,3 +12,18 @@ public enum RunEnd : byte
     /// <summary>The health of the player reached zero.</summary>
     Death = 2,
 }
+
+/// <summary>The name of a run end in a log line or a message (D-322, D-403).</summary>
+public static class RunEnds
+{
+    /// <summary>The name of one end. The switch is explicit, so no reflection reads the enum (G-2).</summary>
+    public static string TextOf(RunEnd end)
+    {
+        switch (end)
+        {
+            case RunEnd.Ascend: return "ascend";
+            case RunEnd.Death: return "death";
+            default: return "none";
+        }
+    }
+}

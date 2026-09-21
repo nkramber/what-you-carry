@@ -92,6 +92,12 @@ public sealed class HandoffRotateTests
         HandoffRotation rotation = HandoffRotateRules.Rotate(handoff, archive);
 
         Assert.Empty(rotation.Moved);
+
+        // The tool puts an entry that it finds out of order back in place, so the committed file must already hold
+        // the order. Without this line a file that breaks D-146 would reach the trunk and no check would name it
+        // (D-406, F-106).
+        Assert.Empty(rotation.Reordered);
+        Assert.Equal(handoff, rotation.Handoff);
         Assert.True(HandoffRotateRules.Parse(archive).Entries[0].Number < HandoffRotateRules.Parse(handoff).Entries[^1].Number);
     }
 
@@ -105,14 +111,45 @@ public sealed class HandoffRotateTests
         Assert.Contains("Session 12 two times (D-187)", error.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// An entry that sits under an older one goes back to its place by number, with its text intact, and the
+    /// rotation names it (D-146, D-406, F-106). A session that adds its entry at the end of the file then leaves
+    /// the file in order.
+    /// </summary>
     [Fact]
-    public void OlderEntryAboveNewerFails()
+    public void OlderEntryAboveNewerGoesBackInPlace()
     {
         string handoff = HandoffPreamble + Entry(5) + "\n\n" + Entry(6) + "\n";
 
-        var error = Assert.Throws<InvalidOperationException>(() => HandoffRotateRules.Rotate(handoff, ArchivePreamble));
+        HandoffRotation rotation = HandoffRotateRules.Rotate(handoff, ArchivePreamble);
 
-        Assert.Contains("puts Session 6 below Session 5", error.Message, StringComparison.Ordinal);
+        // Both entries changed place, so the rotation names both.
+        Assert.Equal([5, 6], rotation.Reordered);
+        Assert.Empty(rotation.Moved);
+        Assert.Equal(7, rotation.NextSession);
+        Assert.Equal(HandoffPreamble + Entry(6) + "\n\n" + Entry(5) + "\n", rotation.Handoff);
+
+        // A file that already holds the order needs no sort, and its text does not change.
+        HandoffRotation again = HandoffRotateRules.Rotate(rotation.Handoff, ArchivePreamble);
+        Assert.Empty(again.Reordered);
+        Assert.Equal(rotation.Handoff, again.Handoff);
+    }
+
+    /// <summary>An entry at the end of a full handoff goes back in place, and the rotation then moves the right entries (D-406).</summary>
+    [Fact]
+    public void AnEntryAtTheEndOfAFullHandoffGoesBackInPlace()
+    {
+        // Eleven entries, newest first, with the newest one moved to the end of the file.
+        string ordered = HandoffPreamble + Entries(111, 101);
+        HandoffFile parsed = HandoffRotateRules.Parse(ordered);
+        string outOfOrder = parsed.Preamble + string.Join("\n\n", parsed.Entries.Skip(1).Select(entry => entry.Text.TrimEnd())) + "\n\n" + parsed.Entries[0].Text.TrimEnd() + "\n";
+
+        HandoffRotation rotation = HandoffRotateRules.Rotate(outOfOrder, ArchivePreamble);
+
+        Assert.Equal(112, rotation.NextSession);
+        Assert.Equal([101], rotation.Moved);
+        Assert.Contains(111, rotation.Reordered);
+        Assert.Equal(HandoffRotateRules.Rotate(ordered, ArchivePreamble).Handoff, rotation.Handoff);
     }
 
     [Fact]

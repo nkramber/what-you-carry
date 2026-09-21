@@ -6,7 +6,8 @@ using WhatYouCarry.Core.World;
 namespace WhatYouCarry.Core.Procgen;
 
 /// <summary>
-/// One dug floor (D-253, D-256): the grid, the spawn point, the stairwell cell, the chambers, the tunnels, and the shafts.
+/// One dug floor (D-253, D-256): the grid, the spawn point, the stairwell cell, the chambers, the tunnels, the
+/// shafts, and the enemy spawns.
 /// </summary>
 /// <param name="Floor">The floor number, from one (D-3).</param>
 /// <param name="Template">The floor template of the band that holds the floor (D-252).</param>
@@ -18,7 +19,8 @@ namespace WhatYouCarry.Core.Procgen;
 /// <param name="Shafts">The shafts, in dig order.</param>
 /// <param name="Ramps">The ramps, in dig order: the tunnel ramps and then the tier ramps (D-345, D-348).</param>
 /// <param name="Detail">The pools, the pillars, and the collapses of the detail pass (D-254).</param>
-public sealed record FloorPlan(int Floor, FloorTemplate Template, VoxelGrid Grid, Vector3 Spawn, Cell Stairwell, IReadOnlyList<Chamber> Chambers, IReadOnlyList<TunnelStamp> Tunnels, IReadOnlyList<Shaft> Shafts, IReadOnlyList<DugRamp> Ramps, DetailResult Detail);
+/// <param name="EnemySpawns">The enemy spawns, in chamber order. The chamber of the player spawn holds none (D-398).</param>
+public sealed record FloorPlan(int Floor, FloorTemplate Template, VoxelGrid Grid, Vector3 Spawn, Cell Stairwell, IReadOnlyList<Chamber> Chambers, IReadOnlyList<TunnelStamp> Tunnels, IReadOnlyList<Shaft> Shafts, IReadOnlyList<DugRamp> Ramps, DetailResult Detail, IReadOnlyList<EnemySpawn> EnemySpawns);
 
 /// <summary>
 /// One chamber of a floor (D-253, D-255). Its air fills the rows above <paramref name="FloorRow"/> over every

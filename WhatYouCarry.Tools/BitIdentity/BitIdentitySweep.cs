@@ -211,7 +211,11 @@ public static class BitIdentitySweep
     /// spread for the projectile run, and one weapon definition, which the attack bit of the sweep intents swings
     /// (D-320). The three swept floors then take every block of the detail pass, and a gallery and drifts of two
     /// heights. Each template lists the three ramp slopes of D-346, and the large chamber kind takes a tier chance
-    /// of 50, so the sweep covers the ramps and the tiers of D-388 to D-391. The hash of the set has no meaning beyond its shape (D-221).
+    /// of 50, so the sweep covers the ramps and the tiers of D-388 to D-391. One enemy family covers the three
+    /// swept floors, so the replay run folds the spawns, the brains, and the swings of PR-16 (D-395 to D-402).
+    /// That family swings the second weapon, which deals one damage, because a run that ends by death takes no
+    /// more intents and the record of the sweep holds a fixed count of them (D-322). The player still swings the
+    /// first weapon (D-320). The hash of the set has no meaning beyond its shape (D-221).
     /// </summary>
     public static ContentSet SweepContent()
     {
@@ -233,8 +237,13 @@ public static class BitIdentitySweep
         WeaponDefinition[] weapons =
         [
             new("sweep-sword", 0, WeaponDefinition.OneHanded, 12, 6, 18, 34, 160, 9000, 50, 170, "models/sweep-sword.bbmodel", "models/sweep.swing.json"),
+            new("sweep-club", 0, WeaponDefinition.OneHanded, 12, 6, 18, 1, 160, 9000, 50, 170, "models/sweep-club.bbmodel", "models/sweep.swing.json"),
         ];
-        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, Strings.FromMembers(Strings.FilePath, []));
+        EnemyDefinition[] enemies =
+        [
+            new("sweep-scavenger", 1, 3, 10, 40, "sweep-club", 2000, 300, 140, 30, 500),
+        ];
+        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, enemies, Strings.FromMembers(Strings.FilePath, []));
     }
 
     /// <summary>
@@ -302,9 +311,10 @@ public static class BitIdentitySweep
     }
 
     /// <summary>
-    /// Digs each swept floor and folds every block, the spawn, the stairwell, and the chamber count (PR-9 exit
-    /// test 7). The three platforms must agree on every draw of the budget, every stamp of the walk, and every
-    /// cell of the reachability search that places the stairwell.
+    /// Digs each swept floor and folds every block, the spawn, the stairwell, the chamber count, and every enemy
+    /// spawn (PR-9 exit test 7, PR-16 exit test 6). The three platforms must agree on every draw of the budget,
+    /// every stamp of the walk, every cell of the reachability search that places the stairwell, and every cell
+    /// that the budget of D-167 gives an enemy.
     /// </summary>
     private static void AddFloors(ref StateHash hash, ContentSet content)
     {
@@ -332,6 +342,14 @@ public static class BitIdentitySweep
             hash.Add(plan.Chambers.Count);
             hash.Add(plan.Shafts.Count);
             hash.Add(plan.Ramps.Count);
+            hash.Add(plan.EnemySpawns.Count);
+            foreach (EnemySpawn spawn in plan.EnemySpawns)
+            {
+                hash.Add(spawn.Cell.X);
+                hash.Add(spawn.Cell.Y);
+                hash.Add(spawn.Cell.Z);
+                hash.Add(spawn.ChamberIndex);
+            }
         }
     }
 
@@ -432,7 +450,8 @@ public static class BitIdentitySweep
             uint rest = rng.NextUInt();
 
             // The buttons keep the assigned bits alone, because a set reserved bit is an error (D-232, D-243).
-            // The stairwell bits stay clear, so the sweep run stays on floor 1 and never ends (D-257).
+            // The stairwell bits stay clear, so the sweep run stays on floor 1 (D-257). The enemies of the sweep
+            // deal one damage each, so the run never ends by death either (D-322).
             ushort buttons = (ushort)((rest >> 16) & Button.AssignedMask & ~(Button.Interact | Button.Ascend));
             intents.Add(new Intent(tick, (short)look, (short)(look >> 16), (sbyte)rest, (sbyte)(rest >> 8), buttons));
         }

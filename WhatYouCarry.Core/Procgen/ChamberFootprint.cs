@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Core.Procgen;
 

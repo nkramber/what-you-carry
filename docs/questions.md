@@ -22,7 +22,7 @@ How to file a question (D-124, D-138):
 6. **OQ-6. The hunter.** Look, sound, first speed, and speed curve. Blocks PR-17.
 7. **OQ-7. Amulet abilities.** The first three actives and three passives. Blocks PR-28.
 8. **OQ-8. Tree branches.** The branch list. Blocks PR-29. Recommendation: melee, bows, guns, exotics, survival, amulet.
-9. **OQ-9. Enemy families.** The eight families and which are humanoid. Blocks PR-16 and PR-36 to PR-42.
+9. **OQ-9. Enemy families.** The eight families and which are humanoid. Blocks PR-16 and PR-36 to PR-42. Resolved 2026-09-20: D-395, four humanoid families and four monster families. D-396 makes the scavenger the first family of PR-16.
 10. **OQ-10. Weapon list.** The twelve weapons by class. Blocks PR-24 and PR-43 to PR-46.
 11. **OQ-11. Boss concepts.** Three bosses. Blocks PR-33 to PR-35.
 12. **OQ-12. The biome.** The one v1 biome concept. Blocks PR-9. Options: a collapsed deep mine, a drowned keep, a buried undercity, or a powder magazine. Recommendation: the mine. The descent is the logic of the biome, black powder needs no explanation, and torchlight is native. Resolved 2026-09-08: D-210, the collapsed deep mine.

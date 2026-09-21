@@ -54,17 +54,16 @@ public sealed class Player
     public const int DodgeCooldownTicks = 45;
 
     /// <summary>The ticks of one stagger (D-326).</summary>
-    public const int StaggerTicks = 20;
+    public const int StaggerTicks = Combat.Stagger.StaggerTicks;
 
     /// <summary>The ticks after a stagger ends in which no hit staggers the player (D-326).</summary>
-    public const int GuardTicks = 30;
+    public const int GuardTicks = Combat.Stagger.GuardTicks;
 
     /// <summary>The swing tick of a player that does not swing.</summary>
-    public const int NoSwing = -1;
+    public const int NoSwing = Swing.NoSwing;
 
-    private readonly WeaponDefinition weapon;
-    private List<int> swingHits = [];
-    private List<SwordHit> lastHits = [];
+    private readonly Swing swing;
+    private readonly Stagger stagger = new();
 
     /// <summary>A player at rest at the spawn point, with a main weapon and a health.</summary>
     /// <exception cref="ContextException">The health is outside 1 to <see cref="MaxHealth"/>, or the box at the spawn point overlaps a solid cell or reaches past the grid.</exception>
@@ -78,7 +77,7 @@ public sealed class Player
         }
 
         this.Body = new PlayerBody(grid, spawn);
-        this.weapon = weapon;
+        this.swing = new Swing(weapon);
         this.Health = health;
     }
 
@@ -86,7 +85,7 @@ public sealed class Player
     public PlayerBody Body { get; }
 
     /// <summary>The main weapon (D-20, D-320).</summary>
-    public WeaponDefinition Weapon => this.weapon;
+    public WeaponDefinition Weapon => this.swing.Weapon;
 
     /// <summary>The health, from zero to <see cref="MaxHealth"/> (D-315).</summary>
     public int Health { get; private set; }
@@ -104,19 +103,19 @@ public sealed class Player
     public Vector3 RollVelocity { get; private set; }
 
     /// <summary>The ticks of the swing that ran, from zero, or <see cref="NoSwing"/>. It is also the swing tick of the next tick.</summary>
-    public long SwingTick { get; private set; } = NoSwing;
+    public long SwingTick => this.swing.Tick;
 
     /// <summary>The ticks of the stagger that remain. Zero means no stagger.</summary>
-    public int StaggerRemaining { get; private set; }
+    public int StaggerRemaining => this.stagger.Remaining;
 
     /// <summary>The ticks of the guard that remain after a stagger. Zero means no guard.</summary>
-    public int GuardRemaining { get; private set; }
+    public int GuardRemaining => this.stagger.GuardRemaining;
 
     /// <summary>The owner ids that the swing hit, in hit order. A target takes one hit per swing (D-325).</summary>
-    public IReadOnlyList<int> SwingHits => this.swingHits;
+    public IReadOnlyList<int> SwingHits => this.swing.Hits;
 
-    /// <summary>The hits of the swing on the last tick, in target order. The Game layer and a later enemy read them. It is not state.</summary>
-    public IReadOnlyList<SwordHit> LastHits => this.lastHits;
+    /// <summary>The hits of the swing on the last tick, in target order. The Game layer and the loop read them. It is not state.</summary>
+    public IReadOnlyList<SwordHit> LastHits => this.swing.LastHits;
 
     /// <summary>Runs one tick.</summary>
     /// <param name="intent">The intent of the tick.</param>
@@ -133,11 +132,10 @@ public sealed class Player
             throw error;
         }
 
-        this.lastHits = [];
         bool attackPressed = (intent.Buttons & Button.Attack) != 0 && (previousButtons & Button.Attack) == 0;
         bool dodgePressed = (intent.Buttons & Button.Dodge) != 0 && (previousButtons & Button.Dodge) == 0;
         bool inWater = this.Body.IsInWater();
-        bool staggered = this.StaggerRemaining > 0;
+        bool staggered = this.stagger.Holds;
         if (this.DodgeCooldown > 0)
         {
             this.DodgeCooldown--;
@@ -145,17 +143,15 @@ public sealed class Player
 
         if (dodgePressed && !staggered && this.RollRemaining == 0 && this.DodgeCooldown == 0 && !inWater && this.Body.IsOnGround())
         {
-            this.SwingTick = NoSwing;
-            this.swingHits = [];
+            this.swing.Cancel();
             this.RollRemaining = RollTicks;
             this.DodgeCooldown = DodgeCooldownTicks;
             this.RollVelocity = PlayerBody.RollDirection(intent, yaw) * RollSpeed;
         }
 
-        if (attackPressed && !staggered && this.RollRemaining == 0 && this.SwingTick == NoSwing)
+        if (attackPressed && !staggered && this.RollRemaining == 0 && !this.swing.IsSwinging)
         {
-            this.SwingTick = 0;
-            this.swingHits = [];
+            this.swing.Start();
         }
 
         // A stagger and a walk stay on a slope. A roll leaves a slope on the way down, and gravity takes over (D-363,
@@ -174,39 +170,14 @@ public sealed class Player
             this.Body.Move(PlayerBody.WalkVelocity(intent, yaw) * speedFactor, (intent.Buttons & Button.Jump) != 0, inWater, true);
         }
 
-        if (this.SwingTick != NoSwing)
-        {
-            long step = this.SwingTick - this.weapon.WindupTicks;
-            if (step >= 0 && step < this.weapon.ActiveTicks)
-            {
-                this.Strike(step, yaw, targets);
-            }
-
-            this.SwingTick++;
-            if (this.SwingTick == this.weapon.SwingTicks)
-            {
-                this.SwingTick = NoSwing;
-                this.swingHits = [];
-            }
-        }
+        this.swing.Step(this.Body.Position, yaw, targets);
 
         if (this.RollRemaining > 0)
         {
             this.RollRemaining--;
         }
 
-        if (staggered)
-        {
-            this.StaggerRemaining--;
-            if (this.StaggerRemaining == 0)
-            {
-                this.GuardRemaining = GuardTicks;
-            }
-        }
-        else if (this.GuardRemaining > 0)
-        {
-            this.GuardRemaining--;
-        }
+        this.stagger.Step(staggered);
     }
 
     /// <summary>
@@ -241,12 +212,9 @@ public sealed class Player
             return;
         }
 
-        bool hyperArmor = this.SwingTick != NoSwing && this.weapon.IsTwoHanded;
-        if (this.StaggerRemaining == 0 && this.GuardRemaining == 0 && !hyperArmor)
+        if (this.stagger.TryStart(this.swing.HasHyperArmor))
         {
-            this.StaggerRemaining = StaggerTicks;
-            this.SwingTick = NoSwing;
-            this.swingHits = [];
+            this.swing.Cancel();
         }
     }
 
@@ -264,38 +232,10 @@ public sealed class Player
         hash.Add(this.SwingTick);
         hash.Add(this.StaggerRemaining);
         hash.Add(this.GuardRemaining);
-        hash.Add(this.swingHits.Count);
-        foreach (int owner in this.swingHits)
+        hash.Add(this.SwingHits.Count);
+        foreach (int owner in this.SwingHits)
         {
             hash.Add(owner);
-        }
-    }
-
-    /// <summary>
-    /// Tests the wedge of one active step against every target that the swing did not hit yet, from the yaw of this
-    /// tick (D-324, D-325). A box that the wedge meets takes the damage of the weapon once in the swing.
-    /// </summary>
-    private void Strike(long step, int yaw, IReadOnlyList<EntityBox> targets)
-    {
-        int fromYaw = yaw + MeleeWeapon.BladeOffset(this.weapon, step);
-        int toYaw = yaw + MeleeWeapon.BladeOffset(this.weapon, step + 1);
-        for (int index = 0; index < targets.Count; index++)
-        {
-            EntityBox target = targets[index];
-            bool alreadyHit = false;
-            for (int hit = 0; hit < this.swingHits.Count; hit++)
-            {
-                if (this.swingHits[hit] == target.Owner)
-                {
-                    alreadyHit = true;
-                }
-            }
-
-            if (!alreadyHit && MeleeWeapon.WedgeHits(this.weapon, this.Body.Position, fromYaw, toYaw, target.Box))
-            {
-                this.swingHits.Add(target.Owner);
-                this.lastHits.Add(new SwordHit(target.Owner, this.weapon.Damage));
-            }
         }
     }
 }
