@@ -395,38 +395,3 @@ None. OQ-9 has its answers in D-395 and D-396, and the handoff loop has its answ
 ### Next concrete action
 
 Codex reviews GitHub PR #83 and writes `docs/reviews/pr-83.md`, per `.claude/skills/pr-review/SKILL.md`. The review reads the move rule of `GridMoves`, the A* search, the brain, the spawn pass, and the two walk fixes of F-104 and F-105. Exit test 8 of PR-66 needs the night on `main` at `e1c20ea` to report zero crashes and zero softlocks.
-
-## Session 191: 2026-09-20, Codex
-
-Author: Codex
-Session: PR-82, the ramps, chamber tiers, and shaft routes. Branch `feat/pr-66-ramps-and-tiers`.
-
-### What this session did, and why
-
-- Reviewed PR #82 as the cross-provider reviewer.
-- Inspected the complete diff, the generator contracts, the focused roadmap, the decisions, the questions, and all PR comments.
-- Found no actionable issue at effective head `97efa5c`.
-
-### State of the build
-
-- Base and merge base: `27db615`.
-- The focused procgen test process compiled, then stalled in the shared large sweep and was canceled.
-- Revision-matched CI and the automated pass are recorded as passed at `97efa5c`. The review-gate and evaluate checks were expectedly neutral or failed before the review record existed.
-- The review record is `docs/reviews/pr-82.md`.
-
-### In flight
-
-The review record and this handoff entry need one commit and a push. The owner play test remains exit test 10.
-
-### Traps and gotchas
-
-- The effective head excludes the later handoff and review-record commits under D-184.
-- The local large sweep did not finish in this execution context. Do not report it as a local pass.
-
-### Open questions that block progress
-
-None. OQ-179 and OQ-180 are resolved by D-388 through D-394.
-
-### Next concrete action
-
-Run the review session end gate after the commit and push.
