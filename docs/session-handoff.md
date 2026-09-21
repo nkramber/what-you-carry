@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 198: 2026-09-21, Claude Code
+
+Author: Claude Code
+Session: PR-84, answer to the cross-provider review, author. Branch `feat/pr-17-timer-and-hunter`. Pending owner merge.
+
+### What this session did, and why
+
+- Answered the one finding of `docs/reviews/pr-84.md` in `docs/reviews/pr-84-response.md`.
+- P1-1 has partial merit. The crash does not reproduce, because both modulo expressions of `Escalation.TryNextPost` sit inside a loop that does not run for an empty list. The missing test was real.
+- Added `AFloorWithNoPostSkipsEveryWave` to `TimerTests`. It passed on the unchanged Core code. No Core change follows.
+
+### State of the build
+
+- The test commit moves the effective head, because `WhatYouCarry.Tests/` lies outside the metadata set (D-184). Read its hash from `git log`. It is the commit of this entry.
+- The full local suite passed 1208 of 1208 with the Smoke category, in 8 minutes 39 seconds. `TimerTests` passed 17 of 17.
+- The CI of the new head and the gitar pass follow the push.
+
+### In flight
+
+- The gitar pass of the new effective head.
+- The repeat review by the other provider.
+
+### Traps and gotchas
+
+- The review record keeps P1-1 open until the repeat review sets its status. The author never edits the review record.
+- The PR-16 night result stands in the entry of Session 196.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The other provider runs the repeat review of PR #84 at the new effective head.
+
 ## Session 197: 2026-09-21, Codex
 
 Author: Codex
@@ -370,51 +405,3 @@ None.
 ### Next concrete action
 
 Run the session end gate, then wait for the review-gate check.
-
-## Session 188: 2026-09-18, Claude Code
-
-Author: Claude Code
-Session: PR-70, the skill port. Branch `feat/skill-port`.
-
-### What this session did, and why
-
-- Ran the hand night on `main` for exit test 3 of PR-69, which no branch can give. The scheduled night of 2026-09-18 at `ea338f4` had failed after 27 minutes, because the self-hosted runner lost communication with the server. No record came from that run. The hand night ran every sweep to the end and wrote the record.
-- Ported the seven items of D-383. The `gitar-review` skill takes the effective head and the metadata set of D-184, so a commit of metadata keeps a pass current. The `ste-writing` skill takes a glossary of the process terms and a table of every byte ceiling. The `pr-review` skill keeps the procedure, and seven reference files hold each case. The `one-pr-one-session` skill keeps the binding, the start gate, the documents matrix, and the completion gate (D-385). The `design-doc-style` skill takes the entry list of a focused roadmap. A new runbook, `docs/runbooks/session-context.md`, holds the commands of a session. A new skill, `csharp-conventions`, holds the code rules, and both agent files point to it.
-- Applied D-384. Every `.md` file under `.claude/skills/` takes one ceiling of 12000 bytes, a reference file included, and the separate ceiling of `pr-review` ends.
-- Asked the two open questions that bind PR-70, and recorded the answers. D-386 answers OQ-177, and the STE checker now holds the front matter of a file to rule 6.3 alone. D-387 answers OQ-178, and the owner applies a branch protection rule on `main`.
-- Sizes: `pr-review/SKILL.md` fell from 30443 bytes to 4313, `ste-writing` from 10443 to 8496, and each agent file grew from 14695 to 13986 after the code rules moved out. No reference file is over 6927 bytes.
-
-### State of the build
-
-- Base and merge base: `ea338f4`, the merge of PR #80. Effective head: `be07a42`. The tip `a5e7f7f` changes the handoff paths alone, so it is metadata under D-184.
-- `dotnet test` locally: 1149 passed, 0 failed, with the filter `Category!=Smoke`. `ste-check` reports 0 findings over 34 files. `doc-gate` passes over 34 changed paths.
-- GitHub PR #81 is open. Every check passes on the tip: Gitar, CI on three platforms, Smoke on three platforms, Bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, and night-gate. `evaluate` fails because no review record exists (D-251), and `review-gate` shows grey.
-- The night of `main` at `ea338f4` ended success at 2026-09-19T00:45:48Z. The record on `night-results` moved from `24f47be` to `40f148d`, and it names `ea338f4`.
-- Exit test 3 of PR-69 passes in full. The hand night on `main` wrote the record, and the `night-gate` job of PR #81 read that record and turned green.
-- Remote head: `origin/feat/skill-port` reached `1d46c14` with this entry, and the status showed no `[ahead N]`. A final metadata commit follows that head with the correction below. The effective head stays `be07a42` through every one of them (D-184).
-
-### In flight
-
-GitHub PR #81 holds the port, the two decisions, the roadmap entry, and this entry. It is pending owner merge.
-
-The automated pass of gitar is complete on the effective head `be07a42`. Gitar reviewed two heads, `a5e7f7f` and `1d46c14`, and each review approved with the verdict "No issues found". Neither opened a review thread. The pass needed no `Gitar review` comment, because the automatic review started 5 seconds after the PR opened. Gitar replaced its dashboard comment between the two reviews, so the id changed from `5737986894` to `5738085529`. One CI analysis comment named the missing `docs/reviews/pr-81.md`. That comment has its answer on the PR: `review-gate` reads a record that no reviewer wrote yet, which is the state that D-251 states. Findings with merit: zero. No commit answers a finding.
-
-The cross-provider review comes next. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
-
-### Traps and gotchas
-
-- The scheduled night of 2026-09-18 failed with the annotation "The self-hosted runner lost communication with the server". That is not the "not acquired" case of D-358, and a re-run of the failed job is not the fix. A new dispatch on the same ref is. The runner was online and idle after the failure.
-- A full night takes 78 to 91 minutes on this runner. The failed run died at 27 minutes, so a short run time is the first sign of a lost runner.
-- `docs/design.md` marked PR-69 as planned after PR #80 merged. This PR corrects that mark to `✅ Done in PR #80.` The correction is a stale fact, and it is not a record of an earlier PR (D-375).
-- The `review-response` skill read two sections of `pr-review` with a `sed` command over a line range. The split breaks such a command. That skill now names `references/commit-and-push.md`, and D-381 carries a partial revision mark.
-- A reference file is under the byte ceiling of D-384 too. The `ste-writing` skill states every ceiling in one table.
-- A later commit on this branch put its handoff entry at the end of the file, and CI turned red on all three legs. `HandoffRotateTests.RepositoryFilesHoldTheRule` states the cause: the file keeps the newest entry first (D-146). A repair commit moved that entry to the top, word for word, and ran `handoff-rotate`. Add a new entry at the top, and never at the end.
-- The next ids are D-388, OQ-179, F-103, PR-71, and Session 190.
-
-### Open questions that block progress
-
-None blocks PR-70. OQ-177 and OQ-178 have their answers in D-386 and D-387. D-387 needs an owner action in the GitHub settings, and no code of this repository enforces it.
-
-### Next concrete action
-
-Codex reviews GitHub PR #81 at effective head `be07a42`, per `.claude/skills/pr-review/SKILL.md`, and writes `docs/reviews/pr-81.md`. That review reads the split of each skill against the file it replaced, and the front matter rule of the checker. After the merge, a new clean session starts PR-66, the ramps and the chamber tiers. D-387 needs an owner action in the GitHub settings, and it needs no PR.

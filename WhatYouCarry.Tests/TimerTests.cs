@@ -437,6 +437,44 @@ public sealed class TimerTests(ITestOutputHelper output)
         Assert.Equal(1, skipped.Skipped);
     }
 
+    /// <summary>
+    /// A floor with no post skips every due wave: the wave number rises, no enemy spawns, and every spawn of the wave
+    /// counts as skipped (D-410, D-418; PR #84 review P1-1). The loop logs the skip, and the run goes on.
+    /// </summary>
+    [Fact]
+    public void AFloorWithNoPostSkipsEveryWave()
+    {
+        VoxelGrid grid = WalledFloor();
+        FloorTemplate template = FloorGenerator.TemplateFor(1, TestWorld.Content) with { WaveIntervalSeconds = 1, WaveCap = 12 };
+        Vector3 player = new(3.5f, TestWorld.FloorTop, 2.5f);
+        Escalation escalation = new(template);
+        for (int wave = 1; wave <= 3; wave++)
+        {
+            WaveSpawns spawns = escalation.Step(grid, wave * 60, 0, [], player);
+            Assert.Equal(wave, spawns.Wave);
+            Assert.Empty(spawns.Posts);
+            Assert.Equal(wave, spawns.Skipped);
+            Assert.Equal(0, escalation.Cursor);
+        }
+
+        // The peaceful set holds no family, so its floors hold no post. The run passes the first wave with a skip.
+        ContentSet content = WithHarmlessWeapons(WithTimer(TestWorld.PeacefulContent, 1));
+        SimulationLoop loop = new(1UL, content);
+        Assert.Empty(loop.Plan.EnemySpawns);
+        IdleToExpiry(loop);
+        List<TimerEvent> events = [];
+        while (loop.Timer.TicksAfterExpiry < 30 * SimulationLoop.TicksPerSecond)
+        {
+            loop.Step(Idle(loop));
+            events.AddRange(loop.LastEvents);
+        }
+
+        Assert.False(loop.Ended);
+        Assert.Empty(loop.Enemies);
+        uint waveTick = loop.Tick - 1;
+        Assert.Equal([new TimerEvent(TimerEventKind.Wave, 1, waveTick, 1, 0), new TimerEvent(TimerEventKind.WaveSkip, 1, waveTick, 1, 1)], events);
+    }
+
     /// <summary>A flat floor of 16 by 16 blocks with a stone wall at x 8 that hides one half from the other.</summary>
     private static VoxelGrid WalledFloor()
     {
