@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -12,7 +13,8 @@ namespace WhatYouCarry.Tools.BotRunner;
 /// to the branch <c>night-results</c>, and the <c>night-gate</c> command reads it.
 /// </summary>
 /// <remarks>
-/// The summary file holds one line for each policy, in the form <c>policy=count</c>, which
+/// The summary file holds one line for each policy, in the form <c>policy=count</c> and then one <c>cause:count</c>
+/// word for each cause (D-411), which
 /// <see cref="BotRunCommand.DeathLine"/> writes. An absent file gives a record with no death counts, and the gate
 /// reads the status alone, so every record that an older night wrote still parses (D-177).
 /// </summary>
@@ -25,6 +27,9 @@ public static class NightRecordCommand
 
     /// <summary>The field that holds the count of deaths of each policy, by policy name (D-403).</summary>
     public const string DeathsName = "deaths";
+
+    /// <summary>The field that holds the count of deaths of each cause for each policy, by policy name and then by cause (D-411).</summary>
+    public const string DeathCausesName = "deathCauses";
 
     /// <summary>The statuses that a night can end with. The gate passes on success alone (D-177).</summary>
     public static readonly string[] Statuses = ["success", "failure", "cancelled"];
@@ -95,40 +100,109 @@ public static class NightRecordCommand
     public static string Build(string commit, DateTime endedAt, string status, string summary)
     {
         string time = endedAt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-        return $"{{\"{CommitName}\":\"{commit}\",\"{EndedAtName}\":\"{time}\",\"{StatusName}\":\"{status}\",\"{DeathsName}\":{DeathsObject(summary)}}}\n";
+        return $"{{\"{CommitName}\":\"{commit}\",\"{EndedAtName}\":\"{time}\",\"{StatusName}\":\"{status}\",\"{DeathsName}\":{DeathsObject(summary)},\"{DeathCausesName}\":{CausesObject(summary)}}}\n";
     }
 
     /// <summary>The death counts of the summary text as one JSON object, in the order of the lines.</summary>
-    /// <exception cref="FormatException">A line is not one name, one equals sign, and one whole number (T-2).</exception>
+    /// <exception cref="FormatException">A line is not one name, one equals sign, and one whole number, with cause words after it (T-2).</exception>
     public static string DeathsObject(string summary)
     {
         StringBuilder text = new("{");
         bool first = true;
-        foreach (string line in summary.Split('\n'))
+        foreach (SummaryLine line in ReadSummary(summary))
         {
-            string trimmed = line.Trim();
-            if (trimmed.Length == 0)
-            {
-                continue;
-            }
-
-            int mark = trimmed.IndexOf('=');
-            if (mark < 1 || !long.TryParse(trimmed[(mark + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out long count) || count < 0)
-            {
-                throw new FormatException($"The bot summary line '{trimmed}' is not one policy name, one equals sign, and one count of zero or more (D-403).");
-            }
-
             if (!first)
             {
                 text.Append(',');
             }
 
-            text.Append('"').Append(trimmed[..mark]).Append("\":").Append(count.ToString(CultureInfo.InvariantCulture));
+            text.Append('"').Append(line.Policy).Append("\":").Append(line.Deaths.ToString(CultureInfo.InvariantCulture));
             first = false;
         }
 
         return text.Append('}').ToString();
     }
+
+    /// <summary>
+    /// The death counts of each cause of the summary text as one JSON object: one object for each policy, in the
+    /// order of the lines, with the causes in the order of the words (D-411).
+    /// </summary>
+    /// <exception cref="FormatException">A line is not one name, one equals sign, and one whole number, with cause words after it (T-2).</exception>
+    public static string CausesObject(string summary)
+    {
+        StringBuilder text = new("{");
+        bool firstPolicy = true;
+        foreach (SummaryLine line in ReadSummary(summary))
+        {
+            if (!firstPolicy)
+            {
+                text.Append(',');
+            }
+
+            text.Append('"').Append(line.Policy).Append("\":{");
+            for (int index = 0; index < line.Causes.Count; index++)
+            {
+                if (index > 0)
+                {
+                    text.Append(',');
+                }
+
+                text.Append('"').Append(line.Causes[index].Cause).Append("\":").Append(line.Causes[index].Count.ToString(CultureInfo.InvariantCulture));
+            }
+
+            text.Append('}');
+            firstPolicy = false;
+        }
+
+        return text.Append('}').ToString();
+    }
+
+    /// <summary>
+    /// The lines of the summary text. A blank line is skipped. A line of an older night holds no cause word, and it
+    /// reads as a policy with no cause (D-177).
+    /// </summary>
+    /// <exception cref="FormatException">A line is not one name, one equals sign, and one whole number, with cause words after it (T-2).</exception>
+    private static List<SummaryLine> ReadSummary(string summary)
+    {
+        List<SummaryLine> lines = [];
+        foreach (string raw in summary.Split('\n'))
+        {
+            string trimmed = raw.Trim();
+            if (trimmed.Length == 0)
+            {
+                continue;
+            }
+
+            string[] words = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            int mark = words[0].IndexOf('=');
+            if (mark < 1 || !long.TryParse(words[0][(mark + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out long deaths) || deaths < 0)
+            {
+                throw new FormatException($"The bot summary line '{trimmed}' is not one policy name, one equals sign, and one count of zero or more (D-403).");
+            }
+
+            List<CauseCount> causes = [];
+            for (int index = 1; index < words.Length; index++)
+            {
+                int colon = words[index].LastIndexOf(':');
+                if (colon < 1 || !long.TryParse(words[index][(colon + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out long count) || count < 0)
+                {
+                    throw new FormatException($"The cause word '{words[index]}' of the bot summary line '{trimmed}' is not one cause, one colon, and one count of zero or more (D-411).");
+                }
+
+                causes.Add(new CauseCount(words[index][..colon], count));
+            }
+
+            lines.Add(new SummaryLine(words[0][..mark], deaths, causes));
+        }
+
+        return lines;
+    }
+
+    /// <summary>One line of the summary: the policy, its count of deaths, and the count of each cause.</summary>
+    private sealed record SummaryLine(string Policy, long Deaths, List<CauseCount> Causes);
+
+    /// <summary>The count of deaths of one cause.</summary>
+    private sealed record CauseCount(string Cause, long Count);
 
     /// <summary>True when the text is 40 lowercase hexadecimal digits, the form of a commit in the record.</summary>
     public static bool IsHash(string text)

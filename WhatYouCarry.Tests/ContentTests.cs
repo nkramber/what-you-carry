@@ -27,7 +27,7 @@ public sealed class ContentTests
     }
 
     private const string Floor = """
-        {"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4]}
+        {"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4],"timerSeconds":180,"bossTimerSeconds":120,"waveIntervalSeconds":30,"waveCap":12}
         """;
 
     private const string ChamberKindText = """
@@ -38,8 +38,14 @@ public sealed class ContentTests
         {"hub.descend":"Descend"}
         """;
 
+    private const string HunterText = """
+        {"id":"h","weapon":"w","attackRangeCentimetres":180,"attackCooldownTicks":60,"startSpeedCentimetresPerSecond":350,"speedGainCentimetresPerSecond":100,"speedGainTicks":1200}
+        """;
+
     private static MemorySource Valid() => new MemorySource()
         .Add("floors/a.json", Floor)
+        .Add("weapons/w.json", WeaponText)
+        .Add("hunter/h.json", HunterText)
         .Add(Strings.FilePath, StringTable);
 
     /// <summary>PR-5 exit test 1. An absent field names the file, the field, and the reason (D-92, T-2).</summary>
@@ -47,7 +53,7 @@ public sealed class ContentTests
     public void AbsentFieldNamesField()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4]}""")
+            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4],"timerSeconds":180,"bossTimerSeconds":120,"waveIntervalSeconds":30,"waveCap":12}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -94,7 +100,7 @@ public sealed class ContentTests
     public void UnknownFieldFails()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4],"extra":1}""")
+            .Add("floors/a.json", """{"id":"a","minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4],"timerSeconds":180,"bossTimerSeconds":120,"waveIntervalSeconds":30,"waveCap":12,"extra":1}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -111,8 +117,11 @@ public sealed class ContentTests
         Assert.Equal(3, set.Floors.Count);
         Assert.Equal(8, set.Chambers.Count);
         Assert.Equal(6, set.Projectiles.Count);
-        WeaponDefinition sword = Assert.Single(set.Weapons);
-        Assert.Equal("sword-basic", sword.Id);
+        Assert.Equal(2, set.Weapons.Count);
+        Assert.Equal("overseer-pick", set.Weapons[0].Id);
+        Assert.Equal("sword-basic", set.Weapons[1].Id);
+        Assert.Equal("overseer", set.Hunter.Id);
+        Assert.Equal("overseer-pick", set.Hunter.Weapon);
         Assert.True(set.Strings.Count > 0);
         Assert.Equal(64, set.Hash.Length);
 
@@ -155,17 +164,23 @@ public sealed class ContentTests
         Assert.Equal(first, second);
 
         MemorySource changed = new MemorySource()
+            .Add("weapons/w.json", WeaponText)
+            .Add("hunter/h.json", HunterText)
             .Add("floors/a.json", Floor.Replace("100", "101", StringComparison.Ordinal))
             .Add(Strings.FilePath, StringTable);
         Assert.NotEqual(first, new ContentLoader(changed).Load().Hash);
 
         // The order of the source does not change the hash, and the path does.
         MemorySource reordered = new MemorySource()
+            .Add("weapons/w.json", WeaponText)
+            .Add("hunter/h.json", HunterText)
             .Add(Strings.FilePath, StringTable)
             .Add("floors/a.json", Floor);
         Assert.Equal(first, new ContentLoader(reordered).Load().Hash);
 
         MemorySource renamed = new MemorySource()
+            .Add("weapons/w.json", WeaponText)
+            .Add("hunter/h.json", HunterText)
             .Add("floors/b.json", Floor)
             .Add(Strings.FilePath, StringTable);
         Assert.NotEqual(first, new ContentLoader(renamed).Load().Hash);
@@ -292,7 +307,7 @@ public sealed class ContentTests
     public void AFieldOfTheWrongKindIsAnError()
     {
         MemorySource source = new MemorySource()
-            .Add("floors/a.json", """{"id":1,"minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4]}""")
+            .Add("floors/a.json", """{"id":1,"minDepth":1,"maxDepth":5,"roomCountMin":4,"roomCountMax":8,"difficultyBudget":100,"band":"working-mine","sizeX":48,"sizeY":12,"sizeZ":48,"galleryWidth":7,"galleryHeight":5,"driftWidth":5,"driftHeight":4,"chamberHeightMin":5,"chamberHeightMax":8,"rampSlopeRuns":[2,3,4],"timerSeconds":180,"bossTimerSeconds":120,"waveIntervalSeconds":30,"waveCap":12}""")
             .Add(Strings.FilePath, StringTable);
 
         ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
@@ -522,12 +537,16 @@ public sealed class ContentTests
     public void TheSourceOrderDoesNotReachTheLists()
     {
         MemorySource forward = new MemorySource()
+            .Add("weapons/w.json", WeaponText)
+            .Add("hunter/h.json", HunterText)
             .Add("chambers/a.json", ChamberKindText.Replace("\"k\"", "\"a\"", StringComparison.Ordinal))
             .Add("chambers/b.json", ChamberKindText.Replace("\"k\"", "\"b\"", StringComparison.Ordinal))
             .Add("floors/a.json", Floor)
             .Add("floors/b.json", Floor.Replace("\"id\":\"a\"", "\"id\":\"b\"", StringComparison.Ordinal).Replace("\"minDepth\":1,\"maxDepth\":5", "\"minDepth\":6,\"maxDepth\":9", StringComparison.Ordinal))
             .Add(Strings.FilePath, StringTable);
         MemorySource backward = new MemorySource()
+            .Add("weapons/w.json", WeaponText)
+            .Add("hunter/h.json", HunterText)
             .Add(Strings.FilePath, StringTable)
             .Add("floors/b.json", Floor.Replace("\"id\":\"a\"", "\"id\":\"b\"", StringComparison.Ordinal).Replace("\"minDepth\":1,\"maxDepth\":5", "\"minDepth\":6,\"maxDepth\":9", StringComparison.Ordinal))
             .Add("floors/a.json", Floor)
@@ -691,4 +710,62 @@ public sealed class ContentTests
         Assert.StartsWith(WeaponDefinition.AssetDirectory, weapon.Model, StringComparison.Ordinal);
         Assert.StartsWith(WeaponDefinition.AssetDirectory, weapon.Animation, StringComparison.Ordinal);
     }
+
+    /// <summary>A content set holds exactly one hunter, and the hunter names a weapon of the set (D-45, D-56, D-413).</summary>
+    [Fact]
+    public void TheSetHoldsOneHunterWithAWeapon()
+    {
+        ContentSet set = new ContentLoader(Valid()).Load();
+        Assert.Equal(new HunterDefinition("h", "w", 180, 60, 350, 100, 1200), set.Hunter);
+
+        MemorySource none = new MemorySource()
+            .Add("floors/a.json", Floor)
+            .Add(Strings.FilePath, StringTable);
+        ContextException noHunter = Assert.Throws<ContextException>(() => new ContentLoader(none).Load());
+        Assert.Contains("hunters=0", noHunter.Message, StringComparison.Ordinal);
+
+        ContextException twoHunters = Assert.Throws<ContextException>(() => new ContentLoader(Valid().Add("hunter/i.json", HunterText.Replace("\"h\"", "\"i\"", StringComparison.Ordinal))).Load());
+        Assert.Contains("hunters=2", twoHunters.Message, StringComparison.Ordinal);
+
+        MemorySource noWeapon = new MemorySource()
+            .Add("floors/a.json", Floor)
+            .Add("hunter/h.json", HunterText)
+            .Add(Strings.FilePath, StringTable);
+        ContextException missing = Assert.Throws<ContextException>(() => new ContentLoader(noWeapon).Load());
+        Assert.Contains("D-413", missing.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Every field of the hunter is required, and each number is one or more (D-92, D-408).</summary>
+    [Theory]
+    [InlineData("\"attackRangeCentimetres\":180", "\"attackRangeCentimetres\":0", "attackRangeCentimetres")]
+    [InlineData("\"attackCooldownTicks\":60", "\"attackCooldownTicks\":0", "attackCooldownTicks")]
+    [InlineData("\"startSpeedCentimetresPerSecond\":350", "\"startSpeedCentimetresPerSecond\":0", "startSpeedCentimetresPerSecond")]
+    [InlineData("\"speedGainCentimetresPerSecond\":100", "\"speedGainCentimetresPerSecond\":0", "speedGainCentimetresPerSecond")]
+    [InlineData("\"speedGainTicks\":1200", "\"speedGainTicks\":0", "speedGainTicks")]
+    [InlineData(",\"speedGainTicks\":1200", "", "speedGainTicks")]
+    public void ABadHunterFieldFails(string from, string to, string field)
+    {
+        string text = HunterText.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(HunterText, text);
+        ContextException error = Assert.Throws<ContextException>(
+            () => HunterDefinition.FromMembers("hunter/h.json", JsonObjectReader.Read("hunter/h.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains(field, error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>The timer and wave fields of a floor template are required and bounded (D-407, D-410).</summary>
+    [Theory]
+    [InlineData("\"timerSeconds\":180", "\"timerSeconds\":0", "timerSeconds")]
+    [InlineData("\"bossTimerSeconds\":120", "\"bossTimerSeconds\":-1", "bossTimerSeconds")]
+    [InlineData("\"waveIntervalSeconds\":30", "\"waveIntervalSeconds\":0", "waveIntervalSeconds")]
+    [InlineData("\"waveCap\":12", "\"waveCap\":-1", "waveCap")]
+    [InlineData(",\"waveCap\":12", "", "waveCap")]
+    public void ABadTimerFieldFails(string from, string to, string field)
+    {
+        string text = Floor.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(Floor, text);
+        ContextException error = Assert.Throws<ContextException>(
+            () => FloorTemplate.FromMembers("floors/a.json", JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains(field, error.Message, StringComparison.Ordinal);
+    }
+
 }

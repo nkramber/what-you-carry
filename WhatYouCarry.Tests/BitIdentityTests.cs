@@ -40,9 +40,12 @@ public sealed class BitIdentityTests
     /// chamber tiers of D-348, and the sweep gained the count of the ramps of each floor (D-260, G-20). PR-16 moved
     /// it from `15904316a1b4ec07` when the simulation version rose to 13, the state gained the enemies and their
     /// brains, the sweep content gained one enemy family with a second weapon for it, and the sweep gained the
-    /// enemy spawns of each floor (D-395 to D-405, G-20).
+    /// enemy spawns of each floor (D-395 to D-405, G-20). PR-17 moved it from `d701dca6d5cee4d8` when the simulation
+    /// version rose to 14, the state gained the floor timer, the Overseer, and the waves, and the sweep content gained
+    /// a timer of 3 seconds, waves each 2 seconds, and a hunter with a pick of one damage, so the replay runs past
+    /// expiry (D-407 to D-425, G-20).
     /// </remarks>
-    private const string ExpectedHash = "d701dca6d5cee4d8";
+    private const string ExpectedHash = "6f7da3d2313688bd";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -147,8 +150,12 @@ public sealed class BitIdentityTests
         Assert.Contains("AddProjectileRun(", sweep, StringComparison.Ordinal);
 
         // PR-15 exit test 6: the sweep content holds a sword, so the sweep intents swing and roll in the replay, and the sweep folds the arc test.
-        Assert.Contains("new(\"sweep-sword\"", sweep, StringComparison.Ordinal);
+        Assert.Contains("new(SimulationLoop.MainWeaponId, 0,", sweep, StringComparison.Ordinal);
         Assert.Contains("MeleeWeapon.WedgeHits(", sweep, StringComparison.Ordinal);
+
+        // PR-17 exit test 7: the sweep content holds a hunter and a timer of 3 seconds, so the replay runs past expiry.
+        Assert.Contains("HunterDefinition hunter = new(\"sweep-overseer\"", sweep, StringComparison.Ordinal);
+        Assert.Contains("[2, 3, 4], 3, 2, 2, 12)", sweep, StringComparison.Ordinal);
 
         // PR-59 exit test 4: the sweep content names every band, so the folded floors hold every block of the detail pass.
         Assert.Contains("DetailPass.WorkingMine", sweep, StringComparison.Ordinal);

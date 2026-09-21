@@ -241,6 +241,10 @@ public sealed class StairwellTests
             loop.Brains[index].AddTo(ref hash);
         }
 
+        loop.Timer.AddTo(ref hash);
+        hash.Add(loop.Hunter is not null);
+        loop.Hunter?.AddTo(ref hash);
+        loop.Escalation.AddTo(ref hash);
         return hash;
     }
 }

@@ -15,5 +15,9 @@
   "driftHeight": 4,
   "chamberHeightMin": 5,
   "chamberHeightMax": 8,
-  "rampSlopeRuns": [2, 3, 4]
+  "rampSlopeRuns": [2, 3, 4],
+  "timerSeconds": 180,
+  "bossTimerSeconds": 120,
+  "waveIntervalSeconds": 30,
+  "waveCap": 12
 }

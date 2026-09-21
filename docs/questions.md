@@ -17,9 +17,9 @@ How to file a question (D-124, D-138):
 1. **OQ-1. The palette.** The owner designs or approves the 32-color palette (D-85). Blocks PR-14. Recommendation: start from a dark-weighted ramp of eight hues with four values each. Scope corrected 2026-09-07 (audit R-9, F-36): this question blocks PR-14 only, not PR-1. Resolved 2026-09-12: D-304.
 2. **OQ-2. The .NET version.** Which .NET LTS does Godot 4.7.2 support? Blocks PR-1. Recommendation: verify on the Godot download page at scaffold time and record the answer in D-62. Resolved 2026-09-07: D-169, .NET 8 LTS. Revised 2026-09-07: D-173, .NET 10 LTS.
 3. **OQ-3. Satchel slot count.** Blocks PR-23. Recommendation: six slots.
-4. **OQ-4. Timer lengths.** Per floor band and for boss floors (D-46, D-140). Blocks PR-17. Recommendation: three minutes on floors 1 to 5, four on 6 to 10, five on 11 to 15, plus two on boss floors.
+4. **OQ-4. Timer lengths.** Per floor band and for boss floors (D-46, D-140). Blocks PR-17. Recommendation: three minutes on floors 1 to 5, four on 6 to 10, five on 11 to 15, plus two on boss floors. Resolved 2026-09-20: D-407, the recommendation.
 5. **OQ-5. Stagger and weight.** Does heavy armor resist stagger (F-21)? Blocks PR-15. Recommendation: yes, heavy armor resists stagger and light armor does not. Resolved 2026-09-12: D-314.
-6. **OQ-6. The hunter.** Look, sound, first speed, and speed curve. Blocks PR-17.
+6. **OQ-6. The hunter.** Look, sound, first speed, and speed curve. Blocks PR-17. Resolved 2026-09-20: D-408 for the speed and the curve, and D-409 for the look and the sound.
 7. **OQ-7. Amulet abilities.** The first three actives and three passives. Blocks PR-28.
 8. **OQ-8. Tree branches.** The branch list. Blocks PR-29. Recommendation: melee, bows, guns, exotics, survival, amulet.
 9. **OQ-9. Enemy families.** The eight families and which are humanoid. Blocks PR-16 and PR-36 to PR-42. Resolved 2026-09-20: D-395, four humanoid families and four monster families. D-396 makes the scavenger the first family of PR-16.

@@ -205,7 +205,7 @@ public sealed class EnemyTests
             FullClearer policy = new(TestWorld.Content);
             SimulationLoop loop = new(seed, TestWorld.Content);
             int floor = loop.Floor;
-            for (uint tick = 0; tick < BotRun.FloorBudget && !loop.Ended; tick++)
+            for (uint tick = 0; tick < loop.Timer.Length && !loop.Ended; tick++)
             {
                 Intent intent = policy.Next(loop);
                 bool takesStairwell = (intent.Buttons & (Button.Interact | Button.Ascend)) != 0;

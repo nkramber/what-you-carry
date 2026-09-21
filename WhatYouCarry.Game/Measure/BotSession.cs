@@ -1,4 +1,3 @@
-using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Simulation;
 
 namespace WhatYouCarry.Game.Measure;
@@ -13,8 +12,11 @@ public static class BotSession
     /// <summary>The user argument that starts the session.</summary>
     public const string Flag = "--bot";
 
-    /// <summary>The ticks that the session gives the bot for the floor before it ends as a softlock (D-271).</summary>
-    public const uint TickBudget = BotRun.FloorBudget;
+    /// <summary>
+    /// The ticks that the session gives the bot for the floor before it ends as stuck: five minutes, the floor budget
+    /// of D-271. The timer of floor 1 expires first, so a stuck bot meets the Overseer before this budget (D-407).
+    /// </summary>
+    public const uint TickBudget = 18000;
 
     /// <summary>Answers whether the user arguments ask for the session.</summary>
     public static bool IsRequested(UserArguments userArguments)

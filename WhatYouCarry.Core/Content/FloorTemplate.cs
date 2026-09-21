@@ -5,7 +5,7 @@ using WhatYouCarry.Core.World;
 namespace WhatYouCarry.Core.Content;
 
 /// <summary>
-/// One floor template (D-6, D-46, D-166, D-167, D-210, D-252, D-341 to D-344). The floor generator reads one to dig a floor.
+/// One floor template (D-6, D-46, D-166, D-167, D-210, D-252, D-341 to D-344, D-407, D-410). The floor generator reads one to dig a floor, and the loop reads its timer and its waves.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -18,8 +18,13 @@ namespace WhatYouCarry.Core.Content;
 /// inside the rock shell of the floor. A dig height leaves three rows of the floor as rock and floor: the base row, one
 /// floor row, and the top row (D-352).
 /// </para>
+/// <para>
+/// The timer of a floor of the band runs <c>timerSeconds</c>, and a boss floor of D-6 runs <c>bossTimerSeconds</c>
+/// more (D-407). After expiry, a wave spawns each <c>waveIntervalSeconds</c>, up to <c>waveCap</c> living wave
+/// enemies (D-410, D-424). The loop counts in ticks, so each count of seconds is a whole number.
+/// </para>
 /// </remarks>
-public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long RoomCountMin, long RoomCountMax, long DifficultyBudget, string Band, int SizeX, int SizeY, int SizeZ, int GalleryWidth, int GalleryHeight, int DriftWidth, int DriftHeight, int ChamberHeightMin, int ChamberHeightMax, IReadOnlyList<int> RampSlopeRuns)
+public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long RoomCountMin, long RoomCountMax, long DifficultyBudget, string Band, int SizeX, int SizeY, int SizeZ, int GalleryWidth, int GalleryHeight, int DriftWidth, int DriftHeight, int ChamberHeightMin, int ChamberHeightMax, IReadOnlyList<int> RampSlopeRuns, long TimerSeconds, long BossTimerSeconds, long WaveIntervalSeconds, long WaveCap)
 {
     /// <summary>The smallest size along X or Z that the dig plan can carve, in blocks.</summary>
     public const int MinSizeXZ = 24;
@@ -56,6 +61,10 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
         "chamberHeightMin",
         "chamberHeightMax",
         "rampSlopeRuns",
+        "timerSeconds",
+        "bossTimerSeconds",
+        "waveIntervalSeconds",
+        "waveCap",
     ];
 
     /// <summary>The names that a floor template can carry.</summary>
@@ -110,6 +119,30 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
 
         IReadOnlyList<int> rampSlopeRuns = RampSlopes(path, members);
 
+        long timerSeconds = Number(path, members, "timerSeconds");
+        if (timerSeconds < 1)
+        {
+            throw ContentError.Make(path, "timerSeconds", $"is {timerSeconds}, and every floor has a time limit of one second or more (D-44, D-407)");
+        }
+
+        long bossTimerSeconds = Number(path, members, "bossTimerSeconds");
+        if (bossTimerSeconds < 0)
+        {
+            throw ContentError.Make(path, "bossTimerSeconds", $"is {bossTimerSeconds}, and a boss floor gets zero or more extra seconds (D-140, D-407)");
+        }
+
+        long waveIntervalSeconds = Number(path, members, "waveIntervalSeconds");
+        if (waveIntervalSeconds < 1)
+        {
+            throw ContentError.Make(path, "waveIntervalSeconds", $"is {waveIntervalSeconds}, and two waves cannot spawn on one tick (D-410)");
+        }
+
+        long waveCap = Number(path, members, "waveCap");
+        if (waveCap < 0)
+        {
+            throw ContentError.Make(path, "waveCap", $"is {waveCap}, and the cap of living wave enemies is zero or more (D-410)");
+        }
+
         return new FloorTemplate(
             ContentValidator.Value(path, members, "id", JsonMemberKind.Text),
             minDepth,
@@ -127,7 +160,11 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
             driftHeight,
             chamberHeightMin,
             chamberHeightMax,
-            rampSlopeRuns);
+            rampSlopeRuns,
+            timerSeconds,
+            bossTimerSeconds,
+            waveIntervalSeconds,
+            waveCap);
     }
 
     /// <summary>

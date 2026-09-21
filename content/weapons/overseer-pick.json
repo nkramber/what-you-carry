@@ -1,0 +1,15 @@
+{
+  "id": "overseer-pick",
+  "tier": 0,
+  "handedness": "two",
+  "windupTicks": 30,
+  "activeTicks": 6,
+  "recoveryTicks": 30,
+  "damage": 50,
+  "reachCentimetres": 200,
+  "arcHundredths": 9000,
+  "lowCentimetres": 50,
+  "highCentimetres": 170,
+  "model": "models/sword-basic.bbmodel",
+  "animation": "models/player.sword-swing.json"
+}

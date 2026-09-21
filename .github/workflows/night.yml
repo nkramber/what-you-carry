@@ -41,6 +41,9 @@ jobs:
         run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy greedy-descender --seeds 1-5000 --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt"
       - name: Full clearer, five thousand seeds
         run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy full-clearer --seeds 1-5000 --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt"
+      - name: Timer tester, five thousand seeds
+        # D-426: the tester waits through each expiry, so every run lasts at least three minutes of simulated time.
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy timer-tester --seeds 1-5000 --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt"
       - name: Reachability sweep, one hundred thousand seeds
         env:
           WYC_NIGHT_SWEEP: "1"

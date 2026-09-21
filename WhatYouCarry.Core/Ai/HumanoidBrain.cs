@@ -20,6 +20,10 @@ namespace WhatYouCarry.Core.Ai;
 /// give-up ticks of the family walks back to its post and sleeps again.
 /// </para>
 /// <para>
+/// A brain of an escalation wave is relentless: it hunts from the tick it spawns, with no sight check and no give-up
+/// (D-419). The wake and the give-up above stay the rule for the enemies of the floor plan.
+/// </para>
+/// <para>
 /// A hunting brain walks toward the floor cell of the player with a <see cref="PathFollower"/>, which holds the
 /// path and searches a new one when the goal moves. Over the last meters it walks straight at the body of the
 /// player, because a walk to a cell never closes on a body that moves (F-104).
@@ -47,14 +51,20 @@ public sealed class HumanoidBrain
     private int blindTicks;
     private bool sees;
 
-    /// <summary>A brain asleep at one post.</summary>
+    /// <summary>A brain at one post: asleep for an enemy of the floor plan, or hunting for a wave enemy (D-400, D-419).</summary>
     /// <param name="enemy">The enemy that this brain drives.</param>
     /// <param name="post">The floor cell that the enemy spawned on, which it returns to after a hunt (D-400).</param>
-    public HumanoidBrain(Enemy enemy, Cell post)
+    /// <param name="relentless">True for a wave enemy, which hunts from its spawn and never gives up (D-419).</param>
+    public HumanoidBrain(Enemy enemy, Cell post, bool relentless)
     {
         this.enemy = enemy;
         this.Post = post;
+        this.IsRelentless = relentless;
+        this.IsHunting = relentless;
     }
+
+    /// <summary>Answers whether the brain hunts with no sight check and no give-up: the brain of a wave enemy (D-419).</summary>
+    public bool IsRelentless { get; }
 
     /// <summary>The enemy that this brain drives.</summary>
     public Enemy Enemy => this.enemy;
@@ -100,12 +110,13 @@ public sealed class HumanoidBrain
         this.Approach(grid, pathfinder, feet, playerFeet, targets);
     }
 
-    /// <summary>Folds the brain into the hash, in the declared order (D-160): the hunt, the blind ticks, and the follower.</summary>
+    /// <summary>Folds the brain into the hash, in the declared order (D-160): the hunt, the blind ticks, the follower, and the relentless mark (D-419).</summary>
     public void AddTo(ref StateHash hash)
     {
         hash.Add(this.IsHunting ? 1 : 0);
         hash.Add(this.blindTicks);
         this.follower.AddTo(ref hash);
+        hash.Add(this.IsRelentless ? 1 : 0);
     }
 
     /// <summary>The yaw that faces one point from another, in hundredths of a degree, from 0 up to one full turn (D-234).</summary>
@@ -133,6 +144,12 @@ public sealed class HumanoidBrain
     private void Sense(VoxelGrid grid, Vector3 feet, Vector3 playerFeet, float distance)
     {
         this.sees = distance <= this.enemy.Definition.SightMetres && PathWalk.Sees(grid, feet, playerFeet);
+        if (this.IsRelentless)
+        {
+            // A wave enemy knows where the player is, so its hunt never ends (D-419).
+            return;
+        }
+
         if (!this.IsHunting)
         {
             if (this.sees)

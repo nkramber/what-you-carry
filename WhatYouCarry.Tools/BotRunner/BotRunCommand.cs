@@ -6,6 +6,7 @@ using System.Text;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Simulation;
 
 namespace WhatYouCarry.Tools.BotRunner;
 
@@ -30,11 +31,15 @@ public static class BotRunCommand
     public const string EndStateName = "endState";
     public const string FloorsReachedName = "floorsReached";
     public const string ErrorName = "error";
+    public const string CauseName = "cause";
+    public const string EventName = "timerEvent";
+    public const string WaveName = "wave";
+    public const string CountName = "count";
 
     /// <summary>The largest count of seeds in one command. The night runs five thousand, and a range past this is a typo.</summary>
     public const ulong LargestSpan = 1000000;
 
-    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer> --seeds <from>-<to> --output <directory> --root <checkout> [--summary <file>]";
+    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer|timer-tester> --seeds <from>-<to> --output <directory> --root <checkout> [--summary <file>]";
 
     public static int Run(string[] args)
     {
@@ -89,6 +94,7 @@ public static class BotRunCommand
         Directory.CreateDirectory(output);
 
         int[] counts = new int[5];
+        SortedDictionary<string, int> causes = new(StringComparer.Ordinal);
         bool promises = false;
         // The count and not the seed drives the loop, so a range that ends at the largest seed cannot wrap.
         ulong span = to - from + 1;
@@ -99,6 +105,10 @@ public static class BotRunCommand
             promises = bot.PromisesProgress;
             BotRunResult result = BotRun.Play(bot, seed, content);
             counts[(int)result.End]++;
+            if (result.End == BotRunEnd.Death)
+            {
+                causes[result.Cause] = causes.TryGetValue(result.Cause, out int earlier) ? earlier + 1 : 1;
+            }
 
             string path = Path.Combine(output, $"{policy}-{seed.ToString(CultureInfo.InvariantCulture)}.jsonl");
             using FileLogSink sink = new(path);
@@ -109,7 +119,7 @@ public static class BotRunCommand
         if (summary is not null)
         {
             // One line for each policy, appended, so the night gathers every policy into its record (D-403).
-            File.AppendAllText(summary, DeathLine(policy, counts[(int)BotRunEnd.Death]), new UTF8Encoding(false));
+            File.AppendAllText(summary, DeathLine(policy, counts[(int)BotRunEnd.Death], causes), new UTF8Encoding(false));
         }
 
 
@@ -127,16 +137,18 @@ public static class BotRunCommand
             case RandomWalker.PolicyName: return new RandomWalker(seed);
             case GreedyDescender.PolicyName: return new GreedyDescender(content);
             case FullClearer.PolicyName: return new FullClearer(content);
+            case TimerTester.PolicyName: return new TimerTester();
             default:
-                ContextException error = new($"No bot policy has the name '{name}'. The policies are {RandomWalker.PolicyName}, {GreedyDescender.PolicyName}, and {FullClearer.PolicyName}.");
+                ContextException error = new($"No bot policy has the name '{name}'. The policies are {RandomWalker.PolicyName}, {GreedyDescender.PolicyName}, {FullClearer.PolicyName}, and {TimerTester.PolicyName}.");
                 error.AddContext("policy", name);
                 throw error;
         }
     }
 
     /// <summary>
-    /// Writes the two lines of one run log: the start at tick zero on floor 1, and the end with the end state,
-    /// the deepest floor, the ticks, and the text of a crash (D-113).
+    /// Writes the lines of one run log: the start at tick zero on floor 1, one line for each timer event in tick
+    /// order (M-5), and the end with the end state, the deepest floor, the ticks, the cause of a death (D-411), and
+    /// the text of a crash (D-113).
     /// </summary>
     public static void WriteLog(BotRunResult result, JsonlLogger logger)
     {
@@ -151,6 +163,21 @@ public static class BotRunCommand
         start.Add(PolicyName, result.Policy);
         logger.Write(LogContextKind.Run, LogLevel.Info, "The bot run starts.", start);
 
+        foreach (TimerEvent timerEvent in result.Events)
+        {
+            LogFields line = new();
+            line.Add("seed", result.Seed);
+            line.Add("floor", (long)timerEvent.Floor);
+            line.Add("tick", (long)timerEvent.Tick);
+            line.Add("subsystem", Subsystem);
+            line.Add("entities", entities);
+            line.Add(PolicyName, result.Policy);
+            line.Add(EventName, EventText(timerEvent.Kind));
+            line.Add(WaveName, (long)timerEvent.Wave);
+            line.Add(CountName, (long)timerEvent.Count);
+            logger.Write(LogContextKind.Run, LogLevel.Info, EventMessage(timerEvent.Kind), line);
+        }
+
         LogFields end = new();
         end.Add("seed", result.Seed);
         end.Add("floor", (long)result.FloorsReached);
@@ -160,6 +187,11 @@ public static class BotRunCommand
         end.Add(PolicyName, result.Policy);
         end.Add(EndStateName, EndStateText(result.End));
         end.Add(FloorsReachedName, (long)result.FloorsReached);
+        if (result.End == BotRunEnd.Death)
+        {
+            end.Add(CauseName, result.Cause);
+        }
+
         if (result.End == BotRunEnd.Crash)
         {
             end.Add(ErrorName, result.Error);
@@ -168,10 +200,46 @@ public static class BotRunCommand
         logger.Write(LogContextKind.Run, result.End == BotRunEnd.Crash ? LogLevel.Error : LogLevel.Info, "The bot run ends.", end);
     }
 
-    /// <summary>One summary line of a policy: its name, an equals sign, and the count of deaths (D-403).</summary>
-    public static string DeathLine(string policy, int deaths)
+    /// <summary>
+    /// One summary line of a policy: its name, an equals sign, and the count of deaths (D-403), then one
+    /// <c>cause:count</c> word for each cause, in the ordinal order of the causes (D-411).
+    /// </summary>
+    public static string DeathLine(string policy, int deaths, SortedDictionary<string, int> causes)
     {
-        return $"{policy}={deaths.ToString(CultureInfo.InvariantCulture)}\n";
+        StringBuilder line = new();
+        line.Append(policy).Append('=').Append(deaths.ToString(CultureInfo.InvariantCulture));
+        foreach (KeyValuePair<string, int> cause in causes)
+        {
+            line.Append(' ').Append(cause.Key).Append(':').Append(cause.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        return line.Append('\n').ToString();
+    }
+
+    /// <summary>The text of a timer event kind in the log (M-5).</summary>
+    public static string EventText(TimerEventKind kind)
+    {
+        switch (kind)
+        {
+            case TimerEventKind.Expiry: return "expiry";
+            case TimerEventKind.HunterSpawn: return "hunter-spawn";
+            case TimerEventKind.Wave: return "wave";
+            case TimerEventKind.WaveSkip: return "wave-skip";
+            default: throw new ArgumentOutOfRangeException(nameof(kind), $"The timer event kind {(int)kind} has no name.");
+        }
+    }
+
+    /// <summary>The message of a timer event line.</summary>
+    private static string EventMessage(TimerEventKind kind)
+    {
+        switch (kind)
+        {
+            case TimerEventKind.Expiry: return "The floor timer expires.";
+            case TimerEventKind.HunterSpawn: return "The Overseer spawns.";
+            case TimerEventKind.Wave: return "A wave spawns.";
+            case TimerEventKind.WaveSkip: return "A wave skips spawns that found no post out of sight.";
+            default: throw new ArgumentOutOfRangeException(nameof(kind), $"The timer event kind {(int)kind} has no message.");
+        }
     }
 
     /// <summary>The text of an end state in the log (D-270, D-403).</summary>

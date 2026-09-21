@@ -112,7 +112,7 @@ Humanoid enemies wear and wield what they drop (D-16, D-31). Monsters have their
 
 ### 3.8 Economy
 
-Skill points come per kill, with a boss bonus (D-44). Each floor has a visible time limit. Deeper floors get more time (D-46). The timer runs in boss fights and pauses at the stairwell (D-140). When the timer expires, an unkillable hunter spawns and spawns escalate. The hunter accelerates until escape is impossible (D-45).
+Skill points come per kill, with a boss bonus (D-44). Each floor has a visible time limit. Deeper floors get more time (D-46). The timer runs in boss fights and pauses at the stairwell (D-140). When the timer expires, an unkillable hunter spawns and spawns escalate. The hunter accelerates until escape is impossible (D-45). The lengths per floor band and for boss floors are in D-407. The hunter is the Overseer (D-409), and its pace is in D-408. Waves of the floor families escalate after expiry (D-410).
 
 Death keeps a share of the run's skill points. The share scales with the depth reached (D-52). Ascension must beat death in points per hour at every depth. This is the sensitive number. M-5 measures it with matched trials in simulated time (D-154). The trials use a fixed seed set, a fixed initial state, paired ascend and die policies at every depth, and a bootstrap confidence interval.
 
@@ -526,8 +526,8 @@ Implement the A* grid pathfinder that understands jumps, drops, and ramps (D-76,
 Gate: the bot sweep passes with enemies active, and no run reads a crash or a softlock.
 > *In plain English:* the first enemies find their way through the dungeon and fight by the same rules you do.
 
-**PR-17: Floor timer, hunter, and escalation.** 🔧
-Implement the visible per-floor timer with lengths in data (D-44, D-46, OQ-4). Implement the hunter as one entity with a speed curve that grows until escape is impossible, and the escalation spawner (D-45, OQ-6). The timer pauses at the stairwell and runs in boss fights (D-140). Add the timer-tester bot policy (D-149).
+**PR-17: Floor timer, hunter, and escalation.** ✅ Done in PR #84.
+Implement the visible per-floor timer with lengths in data (D-44, D-46, D-407). Implement the hunter as one entity with a speed curve that grows until escape is impossible, and the escalation spawner (D-45, D-408 to D-410). A death carries its cause (D-411). The rules of the hunt and the waves are D-413 to D-419, and a bot that promises progress reads softlock at expiry (D-420). The timer pauses at the stairwell and runs in boss fights (D-140). Add the timer-tester bot policy (D-149).
 Gate: a timer-tester bot always dies to the hunter, and a greedy descender rarely meets it.
 > *In plain English:* each floor has a clock. When it runs out, an unstoppable hunter arrives and gets faster, so a wait is never the safe choice.
 

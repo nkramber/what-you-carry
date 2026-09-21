@@ -1,5 +1,203 @@
 # Session handoff archive
 
+## Session 189: 2026-09-19, Codex
+
+Author: Codex
+Session: PR-81, the cross-provider review. Branch `feat/skill-port`.
+
+### What this session did, and why
+
+- Reviewed PR #81 at effective head `be07a42`. The PR ports and splits the repository skills, adds the session runbook and code-conventions skill, and updates the STE front-matter rule.
+- Inspected the complete diff, the PR description, the roadmap entry, the cited decisions and questions, the automated comments, and the changed checker and test files.
+- Found no actionable defect. The review record is `docs/reviews/pr-81.md`.
+
+### State of the build
+
+- The focused context-budget and STE tests passed 19 of 19. `ste-check` found 0 findings in 34 files.
+- The broader filtered suite stalled after compilation and was canceled after a bounded wait. Remote CI, smoke, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, night-gate, and Gitar passed on the tip `64bc3da`.
+- The review record reached remote head `d08e8d9` after the lease-protected metadata update.
+
+### In flight
+
+The owner can merge after the review record reaches the PR branch and `review-gate` turns green.
+
+### Traps and gotchas
+
+- The effective head is `be07a42`. The later commits change only the metadata set.
+- The local broad suite gave no result. Treat that run as incomplete evidence, not as a pass.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Run the session end gate, then wait for the review-gate check.
+
+## Session 188: 2026-09-18, Claude Code
+
+Author: Claude Code
+Session: PR-70, the skill port. Branch `feat/skill-port`.
+
+### What this session did, and why
+
+- Ran the hand night on `main` for exit test 3 of PR-69, which no branch can give. The scheduled night of 2026-09-18 at `ea338f4` had failed after 27 minutes, because the self-hosted runner lost communication with the server. No record came from that run. The hand night ran every sweep to the end and wrote the record.
+- Ported the seven items of D-383. The `gitar-review` skill takes the effective head and the metadata set of D-184, so a commit of metadata keeps a pass current. The `ste-writing` skill takes a glossary of the process terms and a table of every byte ceiling. The `pr-review` skill keeps the procedure, and seven reference files hold each case. The `one-pr-one-session` skill keeps the binding, the start gate, the documents matrix, and the completion gate (D-385). The `design-doc-style` skill takes the entry list of a focused roadmap. A new runbook, `docs/runbooks/session-context.md`, holds the commands of a session. A new skill, `csharp-conventions`, holds the code rules, and both agent files point to it.
+- Applied D-384. Every `.md` file under `.claude/skills/` takes one ceiling of 12000 bytes, a reference file included, and the separate ceiling of `pr-review` ends.
+- Asked the two open questions that bind PR-70, and recorded the answers. D-386 answers OQ-177, and the STE checker now holds the front matter of a file to rule 6.3 alone. D-387 answers OQ-178, and the owner applies a branch protection rule on `main`.
+- Sizes: `pr-review/SKILL.md` fell from 30443 bytes to 4313, `ste-writing` from 10443 to 8496, and each agent file grew from 14695 to 13986 after the code rules moved out. No reference file is over 6927 bytes.
+
+### State of the build
+
+- Base and merge base: `ea338f4`, the merge of PR #80. Effective head: `be07a42`. The tip `a5e7f7f` changes the handoff paths alone, so it is metadata under D-184.
+- `dotnet test` locally: 1149 passed, 0 failed, with the filter `Category!=Smoke`. `ste-check` reports 0 findings over 34 files. `doc-gate` passes over 34 changed paths.
+- GitHub PR #81 is open. Every check passes on the tip: Gitar, CI on three platforms, Smoke on three platforms, Bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, and night-gate. `evaluate` fails because no review record exists (D-251), and `review-gate` shows grey.
+- The night of `main` at `ea338f4` ended success at 2026-09-19T00:45:48Z. The record on `night-results` moved from `24f47be` to `40f148d`, and it names `ea338f4`.
+- Exit test 3 of PR-69 passes in full. The hand night on `main` wrote the record, and the `night-gate` job of PR #81 read that record and turned green.
+- Remote head: `origin/feat/skill-port` reached `1d46c14` with this entry, and the status showed no `[ahead N]`. A final metadata commit follows that head with the correction below. The effective head stays `be07a42` through every one of them (D-184).
+
+### In flight
+
+GitHub PR #81 holds the port, the two decisions, the roadmap entry, and this entry. It is pending owner merge.
+
+The automated pass of gitar is complete on the effective head `be07a42`. Gitar reviewed two heads, `a5e7f7f` and `1d46c14`, and each review approved with the verdict "No issues found". Neither opened a review thread. The pass needed no `Gitar review` comment, because the automatic review started 5 seconds after the PR opened. Gitar replaced its dashboard comment between the two reviews, so the id changed from `5737986894` to `5738085529`. One CI analysis comment named the missing `docs/reviews/pr-81.md`. That comment has its answer on the PR: `review-gate` reads a record that no reviewer wrote yet, which is the state that D-251 states. Findings with merit: zero. No commit answers a finding.
+
+The cross-provider review comes next. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
+
+### Traps and gotchas
+
+- The scheduled night of 2026-09-18 failed with the annotation "The self-hosted runner lost communication with the server". That is not the "not acquired" case of D-358, and a re-run of the failed job is not the fix. A new dispatch on the same ref is. The runner was online and idle after the failure.
+- A full night takes 78 to 91 minutes on this runner. The failed run died at 27 minutes, so a short run time is the first sign of a lost runner.
+- `docs/design.md` marked PR-69 as planned after PR #80 merged. This PR corrects that mark to `✅ Done in PR #80.` The correction is a stale fact, and it is not a record of an earlier PR (D-375).
+- The `review-response` skill read two sections of `pr-review` with a `sed` command over a line range. The split breaks such a command. That skill now names `references/commit-and-push.md`, and D-381 carries a partial revision mark.
+- A reference file is under the byte ceiling of D-384 too. The `ste-writing` skill states every ceiling in one table.
+- A later commit on this branch put its handoff entry at the end of the file, and CI turned red on all three legs. `HandoffRotateTests.RepositoryFilesHoldTheRule` states the cause: the file keeps the newest entry first (D-146). A repair commit moved that entry to the top, word for word, and ran `handoff-rotate`. Add a new entry at the top, and never at the end.
+- The next ids are D-388, OQ-179, F-103, PR-71, and Session 190.
+
+### Open questions that block progress
+
+None blocks PR-70. OQ-177 and OQ-178 have their answers in D-386 and D-387. D-387 needs an owner action in the GitHub settings, and no code of this repository enforces it.
+
+### Next concrete action
+
+Codex reviews GitHub PR #81 at effective head `be07a42`, per `.claude/skills/pr-review/SKILL.md`, and writes `docs/reviews/pr-81.md`. That review reads the split of each skill against the file it replaced, and the front matter rule of the checker. After the merge, a new clean session starts PR-66, the ramps and the chamber tiers. D-387 needs an owner action in the GitHub settings, and it needs no PR.
+
+## Session 187: 2026-09-18, Codex
+
+Author: Codex
+Session: review GitHub PR #80, the night record ref guard. Branch `feat/night-record-ref`.
+
+### What this session did, and why
+
+- Checked the complete PR diff, the workflow contract, the regression test, the roadmap, and the GitHub comments.
+- Verified the author as Claude Code from Session 186. Codex is the eligible reviewer under T-4 and D-101.
+- Found no in-scope defect. Added `docs/reviews/pr-80.md` for effective head `63bb4a3`.
+
+### State of the build
+
+- Base and merge base: `3434055`. Effective head: `63bb4a3`. The later `cadcfbb` commit changes only `docs/session-handoff.md` (D-184).
+- Local `dotnet test` built the projects, then produced no test result after discovery. The run was stopped, so it is incomplete local evidence.
+- GitHub checks on the metadata tip passed CI, Smoke, Bit identity, compare, Bots, Asset QA, det-lint, STE check, doc-gate, and night-gate. `evaluate` failed before publication because no review record existed (D-251).
+- Remote head: `origin/feat/night-record-ref` reached `fb9177b` with the review record and this entry. Every check passed, including `review-gate`. A final metadata update follows this head.
+
+### In flight
+
+GitHub PR #80 is ready for owner merge at effective head `63bb4a3`. Exit test 3 of PR-69 needs a hand night on `main` after merge, and the session that runs it states the result in its handoff entry (D-375).
+
+### Traps and gotchas
+
+- The current PR branch is `feat/night-record-ref`. Keep the review head at `63bb4a3`; the handoff-only commit does not change it (D-184).
+- The full local test run did not complete. Revision-matched GitHub checks passed on the later metadata tip under D-357.
+- The next ids are D-386, OQ-179, F-103, PR-70, and Session 188.
+
+### Open questions that block progress
+
+None blocks PR #80. OQ-177 and OQ-178 bind PR-70 and block nothing.
+
+### Next concrete action
+
+The owner merges GitHub PR #80. A new clean session starts PR-70, the skill port of D-383 to D-385.
+
+## Session 186: 2026-09-17, Claude Code
+
+Author: Claude Code
+Session: PR-69, the night record ref guard. Branch `feat/night-record-ref`.
+
+### What this session did, and why
+
+- Gave the two record steps of `night.yml` the condition `github.ref == 'refs/heads/main'` beside `always()` (D-373). A night on another ref now runs in full and writes no record, so it cannot replace the record of `main`.
+- Added `RepositoryShapeTests.TheNightRecordStepsRunOnMainAlone`. It reads the text of each record step and the trap that no step holds a bare `always()`.
+- Repaired the trunk (F-102). `main` at `3434055` failed two tests. The description of the `gitar-review` skill held a sentence of 27 words, and the handoff held 11 entries.
+- Recorded the owner answers of this session for the skill port: D-383 the scope, D-384 the ceiling of a skill file, D-385 the reference files of the session skill.
+- Filed OQ-177 on front matter and the STE rules, and OQ-178 on a merge with red checks.
+
+### State of the build
+
+- `main` is at `3434055`, and it is red. GitHub PR #79 merged with `ste-check`, `doc-gate`, and the three build legs red.
+- The full suite on the inherited tree: 1150 passed, 2 failed, both from the trunk. After the repair the document tests and the checker pass.
+- `dotnet build` is clean. `ste-check` reports 0 findings in 19 files.
+- `TheNightRecordStepsRunOnMainAlone` fails on the workflow of `origin/main` and passes on this branch.
+- Remote head: `origin/feat/night-record-ref` at the commit that holds this entry, checked with the session end gate.
+
+### In flight
+
+- GitHub PR #80 is pending owner merge on branch `feat/night-record-ref`. It holds the guard, the test, the trunk repair, and the records. The pass of gitar approved effective head `63bb4a3` with no finding and no open thread. The PR waits for the review of the other provider, which comes from Codex.
+- Exit test 2 of PR-69 passes. The hand night of this branch ran every sweep to the end in 78 minutes, both record steps skipped, and the record on `night-results` stayed at `24f47be`, the success of `3434055`.
+- Exit test 3 of PR-69 needs a hand night on `main`, which no branch can give.
+
+### Traps and gotchas
+
+- Run the full suite at the start of a session. The trunk was red, and two focused runs would hide it.
+- A branch night writes no record now. Such a night proves a fix through its run log alone, and a PR body cites that run.
+- The night legs and the macOS legs of a PR share the one Mac runner. Dispatch the night after the checks of the PR.
+- The deferral phrases of `doc-gate` read the PR body and the newest handoff entry. Name a later PR by its id alone.
+- The next ids are D-386, OQ-179, F-103, PR-70, and Session 187.
+
+### Open questions that block progress
+
+None blocks GitHub PR #80. OQ-177 and OQ-178 block nothing, and both bind the work of PR-70.
+
+### Next concrete action
+
+The owner merges GitHub PR #80 after the review. Then a new clean session starts PR-70, the skill port of D-383 to D-385, which holds seven items and its own ceiling change.
+
+## Session 185: 2026-09-16, Codex
+
+Author: Codex
+Session: re-review PR #78 at effective head `337d706`. Branch `feat/context-budget`.
+
+### What this session did, and why
+
+- Re-reviewed the P2-1 correction, its response, the documented lookup command, and its regression tests.
+- Confirmed that the command finds D-379 to D-382, the relevant revisions, OQ-9, and OQ-44.
+- Updated `docs/reviews/pr-78.md`. P2-1 is fixed at `337d706`, and the earlier verdict remains in the record.
+
+### State of the build
+
+- `main` is at `58e4fc8`. The effective head is `337d706`. Later commits change metadata only (D-184).
+- The focused `ReviewGateRulesTests`, `RegisterLookupTests`, and `ContextBudgetTests` run passed 27 tests. The documented command and `git diff --check` passed.
+- The owner directed this session to exclude CI status from the review verdict.
+- The first review publication, `00c29f6852990e0a05a063a45a99f25b1343c41d`, matched the remote head when `gh pr view` checked it.
+- Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
+
+### In flight
+
+PR #78 is ready for owner merge at effective head `337d706`. P2-1 is fixed with regression coverage.
+
+### Traps and gotchas
+
+- The review verdict covers effective head `337d706`. Later commits change metadata only.
+- The lookup command needs every relevant D-# and OQ-# in its `d` and `q` values.
+- The next ids are D-383, OQ-177, F-102, PR-70, and Session 186.
+
+### Open questions that block progress
+
+None blocks PR #78.
+
+### Next concrete action
+
+The owner merges PR #78.
+
 ## Session 184: 2026-09-16, Claude Code
 
 Author: Claude Code
