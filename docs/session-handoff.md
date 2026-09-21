@@ -2,6 +2,44 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 201: 2026-09-21, Codex
+
+Author: Codex
+Session: PR-18, reviewer. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
+
+### What this session did, and why
+
+- Reviewed PR #85 at effective head `46c4b9d` under the cross-provider gate.
+- Inspected the full diff, the transition state, the chunk swap, the bot and night workflows, the focused roadmap, the applicable decisions, and the Gitar comment.
+- Wrote `docs/reviews/pr-85.md`. The record has no finding and a blocked verdict because the Steam Deck transition exit test remains unresolved.
+
+### State of the build
+
+- Remote PR head: `14f0378`.
+- Build passed with 0 warnings and 0 errors.
+- Focused transition, measurement, and smoke tests passed, 31 of 31.
+- `det-lint`, `asset-qa`, and `ste-check` passed with 0 findings.
+- A local three-transition headless bot session exited 0 and recorded `transitionMicrosMax` of 16667 microseconds.
+- The full local test command produced no result after the build and was interrupted. CI reports the test, Smoke, Bit identity, Bots, Night gate, Asset QA, Determinism lint, Doc gate, STE check, and Gitar checks as passed.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and push.
+- The owner must run the Deck transition command in `CLAUDE.md` and record exit test 6.
+
+### Traps and gotchas
+
+- The review applies to effective head `46c4b9d`, not metadata tip `14f0378`.
+- The transition test removes enemy content by design under D-437.
+
+### Open questions that block progress
+
+- None. The Deck result is a required exit test, not an open owner question.
+
+### Next concrete action
+
+Commit and push the review record and this handoff entry. Then wait for the owner to record the Deck result and rerun the review gate.
+
 ## Session 200: 2026-09-21, Claude Code
 
 Author: Claude Code
