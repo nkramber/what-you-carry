@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 203: 2026-09-21, Codex
+
+Author: Codex
+Session: PR-18, reviewer, after the repeat review of session 202. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
+
+### What this session did, and why
+
+- Re-reviewed PR #85 at effective head `bab19cc` after the full-clearer timeout fix.
+- Verified the original transition review trigger and the new clearer regression tests.
+- Updated `docs/reviews/pr-85.md` with the current verdict and evidence.
+
+### State of the build
+
+- Build passed with 0 warnings and 0 errors.
+- Focused transition, bot, and measurement tests passed, 11 of 11.
+- Det-lint, asset QA, and STE check passed.
+- PR head is `e32c6cb` on the remote. The effective head is `bab19cc`.
+- The night gate is red on the prior base-branch record under D-440. The first night on `main` after merge must pass.
+
+### In flight
+
+- The owner must merge PR #85.
+
+### Traps and gotchas
+
+- The review gate turns green after the review record reaches the PR branch.
+- The broad local test command stalled after the build. The author reported 1229 of 1229 tests, and focused tests passed locally.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner merges PR #85. After the merge, start a new session and run the night on `main`.
+
 ## Session 202: 2026-09-21, Claude Code
 
 Author: Claude Code
@@ -341,39 +377,3 @@ None.
 ### Next concrete action
 
 Recheck the fresh CI jobs before the owner merge.
-
-## Session 193: 2026-09-20, Codex
-
-Author: Codex
-Session: PR-83, cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
-
-### What this session did, and why
-
-- Reviewed PR #83 at effective head `8452dbd`.
-- Inspected the pathfinder, movement rules, enemy and combat state, AI, procgen, simulation, bots, workflows, tests, and PR comments.
-- Added `docs/reviews/pr-83.md` with no code finding and a blocked verdict because required CI remains pending.
-
-### State of the build
-
-- Focused tests passed, 6 of 6.
-- The broad non-smoke test run compiled but stalled without a result.
-- GitHub checks pass for completed jobs, but Linux and Windows CI remain pending. The review-gate check waits for this review record.
-- Remote code head remains `8452dbd`. Metadata commit `9fb8fda` carries the review record and this entry.
-
-### In flight
-
-The review record and this handoff entry are pushed to the PR branch.
-
-### Traps and gotchas
-
-- The effective head excludes later handoff-only commits.
-- A stalled test run is incomplete evidence, not a pass.
-- The review stays blocked until required CI completes.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Recheck the pending Linux and Windows CI jobs before the owner merge.

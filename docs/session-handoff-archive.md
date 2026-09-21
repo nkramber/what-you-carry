@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 193: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reviewed PR #83 at effective head `8452dbd`.
+- Inspected the pathfinder, movement rules, enemy and combat state, AI, procgen, simulation, bots, workflows, tests, and PR comments.
+- Added `docs/reviews/pr-83.md` with no code finding and a blocked verdict because required CI remains pending.
+
+### State of the build
+
+- Focused tests passed, 6 of 6.
+- The broad non-smoke test run compiled but stalled without a result.
+- GitHub checks pass for completed jobs, but Linux and Windows CI remain pending. The review-gate check waits for this review record.
+- Remote code head remains `8452dbd`. Metadata commit `9fb8fda` carries the review record and this entry.
+
+### In flight
+
+The review record and this handoff entry are pushed to the PR branch.
+
+### Traps and gotchas
+
+- The effective head excludes later handoff-only commits.
+- A stalled test run is incomplete evidence, not a pass.
+- The review stays blocked until required CI completes.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Recheck the pending Linux and Windows CI jobs before the owner merge.
+
 ## Session 192: 2026-09-20, Claude Code
 
 Author: Claude Code
