@@ -23,11 +23,16 @@ Session: PR-16, the first enemy family, the AI, and the pathfinder. Branch `feat
 - The bot sweep of seeds 1 to 100 passed for all three policies: 0 crashes and 0 softlocks. Over 2000 seeds, the descender reaches the bottom on 129 and the clearer on 421, and neither reads a crash or a softlock.
 - Exit test 8 of PR-66, the night sweep on `main` at `e1c20ea`: pass. Run 35542505776 ended `success`. The random walker ran out its budget on all 5000 seeds, the greedy descender reached the bottom on all 5000, and neither read a softlock or a crash. The reachability sweep of 100000 seeds passed in the same job. So the ramps and the tiers hold over the night.
 - That night ran the workflow of `main`, which plays two policies and writes no death count. The third policy and the death count of D-403 are on this branch, so the next night after the merge plays three.
-- Remote head: `origin/feat/pr-16-enemies-and-pathfinder` at `1648ed4`, and GitHub PR #83 holds it.
+- Remote head: `origin/feat/pr-16-enemies-and-pathfinder` reached `e766b23`, and the status showed no `[ahead N]`. That commit and the one before it change `docs/session-handoff.md` alone, so the effective head is `8452dbd` (D-184). The commit `8452dbd` changes `docs/design.md` and `docs/roadmaps/`, which sit outside the metadata set, so it moves the effective head.
+- Every check of PR #83 passes on `8452dbd`: Gitar, the three build legs, the three smoke legs, bit identity, compare, bots, asset-qa, det-lint, ste-check, doc-gate, and night-gate. `evaluate` fails and `review-gate` shows grey, because no review record exists yet (D-251).
 
 ### In flight
 
-GitHub PR #83 holds the whole PR-16 scope, the eleven decisions, the two findings, and this entry. The checks run next, then the automated pass of gitar, then the cross-provider review. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
+GitHub PR #83 holds the whole PR-16 scope, the eleven decisions, the two findings, and this entry. It waits for the owner merge.
+
+The automated pass of gitar is complete on the effective head `8452dbd`. The `Code Review` block reads "Approved" with no finding. The `CI failed` block of the same comment names the missing `docs/reviews/pr-83.md`, and a PR reply answers it with D-251: the review gate stays red until the reviewing provider writes that file, and the author of a PR does not write it. Findings with merit: none.
+
+The cross-provider review comes next. Codex is the eligible reviewer, because Claude Code wrote this PR (T-4, D-101).
 
 ### Traps and gotchas
 
