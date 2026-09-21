@@ -21,7 +21,8 @@ Session: PR-16, the first enemy family, the AI, and the pathfinder. Branch `feat
 - `dotnet test` locally: 1172 passed, 0 failed, with the filter `Category!=Smoke`. The Smoke category passed 5 of 5 against the pinned binary. `det-lint` reports 0 findings in Core and 0 in Game. `ste-check` reports 0 findings over 34 files. `asset-qa` reports 0 findings.
 - The simulation version is 13, and the bit-identity answer is `d701dca6d5cee4d8`.
 - The bot sweep of seeds 1 to 100 passed for all three policies: 0 crashes and 0 softlocks. Over 2000 seeds, the descender reaches the bottom on 129 and the clearer on 421, and neither reads a crash or a softlock.
-- Exit test 8 of PR-66, the night sweep on `main` at `e1c20ea`: dispatched after the PR checks. The night and the PR macOS legs share the one Mac runner.
+- Exit test 8 of PR-66, the night sweep on `main` at `e1c20ea`: pass. Run 35542505776 ended `success`. The random walker ran out its budget on all 5000 seeds, the greedy descender reached the bottom on all 5000, and neither read a softlock or a crash. The reachability sweep of 100000 seeds passed in the same job. So the ramps and the tiers hold over the night.
+- That night ran the workflow of `main`, which plays two policies and writes no death count. The third policy and the death count of D-403 are on this branch, so the next night after the merge plays three.
 - Remote head: `origin/feat/pr-16-enemies-and-pathfinder` at `1648ed4`, and GitHub PR #83 holds it.
 
 ### In flight
