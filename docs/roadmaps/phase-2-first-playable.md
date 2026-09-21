@@ -567,6 +567,8 @@ Gate: exit tests 1 to 7 pass.
 
 ### PR-17: Floor timer, hunter, and escalation
 
+✅ Done in PR #84.
+
 Scope:
 
 - `Core/Simulation/FloorTimer.cs`: a tick countdown per floor, with lengths per floor band and boss floors in the floor template (D-44, D-46, D-407). It pauses at the stairwell and runs in boss fights (D-140).
@@ -739,7 +741,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 21. ✅ OQ-9 answered 2026-09-20: D-395 and D-396.
 22. PR-16.
 23. ✅ OQ-4 and OQ-6 answered 2026-09-20: D-407 to D-409. The escalation, the exit tests, and the rules of the hunt: D-410 to D-421.
-24. PR-17.
+24. PR-17. ✅ Done in PR #84.
 25. Owner: answer OQ-44.
 26. PR-18.
 27. PR-19.

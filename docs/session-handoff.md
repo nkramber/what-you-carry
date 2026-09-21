@@ -2,6 +2,87 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 196: 2026-09-20, Claude Code
+
+Author: Claude Code
+Session: PR-17, the floor timer, the hunter, and the escalation, author. Branch `feat/pr-17-timer-and-hunter`. PR #84, pending owner merge.
+
+### What this session did, and why
+
+- Asked the owner OQ-4, OQ-6, and every rule of the hunt before code. The answers are D-407 to D-426. OQ-4 and OQ-6 are resolved.
+- Revised in part: D-271 by D-420, D-320 by D-422, D-400 by D-419, and D-403 by D-411.
+- Added `FloorTimer`, `Hunter` (the Overseer), `Escalation`, `TimerEvent`, `HunterDefinition`, and the `TimerTester` policy.
+- Added `content/hunter/overseer.json`, `content/weapons/overseer-pick.json`, and the timer and wave fields of each floor template.
+- A death carries its cause. The bot log writes the timer events, and the night record gains `deathCauses` of each policy.
+- A policy that promises progress reads softlock at expiry (D-420). The timer tester joins the PR bot job and the night (D-426).
+- The Game draws the wave enemies and the Overseer with the body model as a fixture.
+- Raised the simulation version to 14. The bit-identity answer moved to `6f7da3d2313688bd`.
+
+### State of the build
+
+- Base `a5461d4`. The code head is `4e85570`. Read the remote head of the branch from git.
+- The local suite passed 1206 of 1207 before the handoff rotation. The one failure was `RepositoryFilesHoldTheRule`, which this rotation repairs.
+- det-lint, asset-qa, ste-check, the Godot build, and the smoke session passed.
+- PR-17 exit tests 1 to 7 pass. Exit test 6 measured expiry on 0 of 2293 floors.
+
+### In flight
+
+- Exit test 7 of PR-16: the night on `main` at `a5461d4`. Dispatch it after the PR checks, because both use the one Mac runner. State the crash count, the softlock count, and the death count of each policy in the next entry.
+- The automated pass of gitar, and then the review by the other provider.
+
+### Traps and gotchas
+
+- `main` at `a5461d4` is red on CI. Session 195 sat at the end of the handoff, and 11 entries stood in the file. The rotation of this session moves 195 back and 185 to the archive.
+- The timer and wave fields are required in every floor template. A test content set needs them and one `hunter/` file.
+- The Overseer spawn is a fault on a floor with no hidden reachable cell (D-415). The night reports each such floor as a crash.
+- Exit tests 5 and 6 run their seeds in parallel. Core holds no mutable static state.
+- The pick reuses the sword model and animation until PR-14. Its low and high blade heights copy the sword.
+- The night now runs four policies, so it takes more wall time on the Mac runner.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the PR checks, dispatch the night on `main`, then run the gitar pass on PR #84.
+
+## Session 195: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reopened PR #83 after the D-406 handoff rotation correction.
+- Reviewed the new substantive diff at effective head `f698cd9`.
+- Verified the handoff tests and all required implementation checks.
+- Updated `docs/reviews/pr-83.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `HandoffRotateTests` passed, 9 of 9.
+- The three build legs, three smoke legs, bit identity, compare, bots, asset-qa, det-lint, STE, doc-gate, and night-gate pass for the corrected tip.
+- `evaluate` and `review-gate` wait for this review record. The effective head is `f698cd9`.
+
+### In flight
+
+The approving repeat-review record is pushed in metadata commit `a07243a`.
+
+### Traps and gotchas
+
+- D-406 changes substantive tool and test paths, so the effective head moved from `8452dbd` to `f698cd9`.
+- Duplicate session numbers remain an error case.
+- The owner merges the PR.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Verify the remote review-gate result after the record publishes.
+
 ## Session 194: 2026-09-20, Codex
 
 Author: Codex
@@ -333,118 +414,3 @@ None blocks PR #80. OQ-177 and OQ-178 bind PR-70 and block nothing.
 ### Next concrete action
 
 The owner merges GitHub PR #80. A new clean session starts PR-70, the skill port of D-383 to D-385.
-
-## Session 186: 2026-09-17, Claude Code
-
-Author: Claude Code
-Session: PR-69, the night record ref guard. Branch `feat/night-record-ref`.
-
-### What this session did, and why
-
-- Gave the two record steps of `night.yml` the condition `github.ref == 'refs/heads/main'` beside `always()` (D-373). A night on another ref now runs in full and writes no record, so it cannot replace the record of `main`.
-- Added `RepositoryShapeTests.TheNightRecordStepsRunOnMainAlone`. It reads the text of each record step and the trap that no step holds a bare `always()`.
-- Repaired the trunk (F-102). `main` at `3434055` failed two tests. The description of the `gitar-review` skill held a sentence of 27 words, and the handoff held 11 entries.
-- Recorded the owner answers of this session for the skill port: D-383 the scope, D-384 the ceiling of a skill file, D-385 the reference files of the session skill.
-- Filed OQ-177 on front matter and the STE rules, and OQ-178 on a merge with red checks.
-
-### State of the build
-
-- `main` is at `3434055`, and it is red. GitHub PR #79 merged with `ste-check`, `doc-gate`, and the three build legs red.
-- The full suite on the inherited tree: 1150 passed, 2 failed, both from the trunk. After the repair the document tests and the checker pass.
-- `dotnet build` is clean. `ste-check` reports 0 findings in 19 files.
-- `TheNightRecordStepsRunOnMainAlone` fails on the workflow of `origin/main` and passes on this branch.
-- Remote head: `origin/feat/night-record-ref` at the commit that holds this entry, checked with the session end gate.
-
-### In flight
-
-- GitHub PR #80 is pending owner merge on branch `feat/night-record-ref`. It holds the guard, the test, the trunk repair, and the records. The pass of gitar approved effective head `63bb4a3` with no finding and no open thread. The PR waits for the review of the other provider, which comes from Codex.
-- Exit test 2 of PR-69 passes. The hand night of this branch ran every sweep to the end in 78 minutes, both record steps skipped, and the record on `night-results` stayed at `24f47be`, the success of `3434055`.
-- Exit test 3 of PR-69 needs a hand night on `main`, which no branch can give.
-
-### Traps and gotchas
-
-- Run the full suite at the start of a session. The trunk was red, and two focused runs would hide it.
-- A branch night writes no record now. Such a night proves a fix through its run log alone, and a PR body cites that run.
-- The night legs and the macOS legs of a PR share the one Mac runner. Dispatch the night after the checks of the PR.
-- The deferral phrases of `doc-gate` read the PR body and the newest handoff entry. Name a later PR by its id alone.
-- The next ids are D-386, OQ-179, F-103, PR-70, and Session 187.
-
-### Open questions that block progress
-
-None blocks GitHub PR #80. OQ-177 and OQ-178 block nothing, and both bind the work of PR-70.
-
-### Next concrete action
-
-The owner merges GitHub PR #80 after the review. Then a new clean session starts PR-70, the skill port of D-383 to D-385, which holds seven items and its own ceiling change.
-
-## Session 185: 2026-09-16, Codex
-
-Author: Codex
-Session: re-review PR #78 at effective head `337d706`. Branch `feat/context-budget`.
-
-### What this session did, and why
-
-- Re-reviewed the P2-1 correction, its response, the documented lookup command, and its regression tests.
-- Confirmed that the command finds D-379 to D-382, the relevant revisions, OQ-9, and OQ-44.
-- Updated `docs/reviews/pr-78.md`. P2-1 is fixed at `337d706`, and the earlier verdict remains in the record.
-
-### State of the build
-
-- `main` is at `58e4fc8`. The effective head is `337d706`. Later commits change metadata only (D-184).
-- The focused `ReviewGateRulesTests`, `RegisterLookupTests`, and `ContextBudgetTests` run passed 27 tests. The documented command and `git diff --check` passed.
-- The owner directed this session to exclude CI status from the review verdict.
-- The first review publication, `00c29f6852990e0a05a063a45a99f25b1343c41d`, matched the remote head when `gh pr view` checked it.
-- Remote head: `origin/feat/context-budget` at the commit that holds this entry, checked with the session end gate before the session ended.
-
-### In flight
-
-PR #78 is ready for owner merge at effective head `337d706`. P2-1 is fixed with regression coverage.
-
-### Traps and gotchas
-
-- The review verdict covers effective head `337d706`. Later commits change metadata only.
-- The lookup command needs every relevant D-# and OQ-# in its `d` and `q` values.
-- The next ids are D-383, OQ-177, F-102, PR-70, and Session 186.
-
-### Open questions that block progress
-
-None blocks PR #78.
-
-### Next concrete action
-
-The owner merges PR #78.
-## Session 195: 2026-09-20, Codex
-
-Author: Codex
-Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
-
-### What this session did, and why
-
-- Reopened PR #83 after the D-406 handoff rotation correction.
-- Reviewed the new substantive diff at effective head `f698cd9`.
-- Verified the handoff tests and all required implementation checks.
-- Updated `docs/reviews/pr-83.md` with the verdict `Ready for owner merge`.
-
-### State of the build
-
-- `HandoffRotateTests` passed, 9 of 9.
-- The three build legs, three smoke legs, bit identity, compare, bots, asset-qa, det-lint, STE, doc-gate, and night-gate pass for the corrected tip.
-- `evaluate` and `review-gate` wait for this review record. The effective head is `f698cd9`.
-
-### In flight
-
-The approving repeat-review record is pushed in metadata commit `a07243a`.
-
-### Traps and gotchas
-
-- D-406 changes substantive tool and test paths, so the effective head moved from `8452dbd` to `f698cd9`.
-- Duplicate session numbers remain an error case.
-- The owner merges the PR.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Verify the remote review-gate result after the record publishes.

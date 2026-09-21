@@ -526,7 +526,7 @@ Implement the A* grid pathfinder that understands jumps, drops, and ramps (D-76,
 Gate: the bot sweep passes with enemies active, and no run reads a crash or a softlock.
 > *In plain English:* the first enemies find their way through the dungeon and fight by the same rules you do.
 
-**PR-17: Floor timer, hunter, and escalation.** 🔧
+**PR-17: Floor timer, hunter, and escalation.** ✅ Done in PR #84.
 Implement the visible per-floor timer with lengths in data (D-44, D-46, D-407). Implement the hunter as one entity with a speed curve that grows until escape is impossible, and the escalation spawner (D-45, D-408 to D-410). A death carries its cause (D-411). The rules of the hunt and the waves are D-413 to D-419, and a bot that promises progress reads softlock at expiry (D-420). The timer pauses at the stairwell and runs in boss fights (D-140). Add the timer-tester bot policy (D-149).
 Gate: a timer-tester bot always dies to the hunter, and a greedy descender rarely meets it.
 > *In plain English:* each floor has a clock. When it runs out, an unstoppable hunter arrives and gets faster, so a wait is never the safe choice.
