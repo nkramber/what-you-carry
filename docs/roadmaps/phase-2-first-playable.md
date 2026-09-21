@@ -569,9 +569,10 @@ Gate: exit tests 1 to 7 pass.
 
 Scope:
 
-- `Core/Simulation/FloorTimer.cs`: a tick countdown per floor, with lengths per floor band and boss floors in the floor template (D-44, D-46, OQ-4). It pauses at the stairwell and runs in boss fights (D-140).
-- `Core/Entities/Hunter.cs`: one unkillable entity that spawns at expiry, paths to the player, and follows a speed curve that grows until escape is impossible (D-45, OQ-6).
-- `Core/Simulation/Escalation.cs`: extra spawns after expiry on a schedule in data (D-45).
+- `Core/Simulation/FloorTimer.cs`: a tick countdown per floor, with lengths per floor band and boss floors in the floor template (D-44, D-46, D-407). It pauses at the stairwell and runs in boss fights (D-140).
+- `Core/Entities/Hunter.cs`: one unkillable entity that spawns at expiry, paths to the player, and follows a speed curve that grows until escape is impossible (D-45, D-408). Its id is `overseer` (D-409).
+- `Core/Simulation/Escalation.cs`: waves of the floor families after expiry, on a schedule in the floor template data (D-45, D-410).
+- `Core/Bots/BotRun.cs`: the `death` end state carries its cause, and the night record counts the deaths of each cause for each policy (D-411).
 - `Core/Bots/TimerTester.cs`: a policy that waits until expiry, then runs for the stairwell (D-149).
 - Timer events in the run log for M-5.
 
@@ -583,8 +584,8 @@ Exit tests:
 2. `HunterSpawnsAtExpiry` asserts one hunter on the tick after expiry.
 3. `HunterCannotDie` asserts the hunter's health ignores damage.
 4. `HunterSpeedGrows` asserts speed at expiry plus one minute exceeds speed at expiry.
-5. `TimerTesterAlwaysDies` over one thousand seeds asserts the `death` end state with the hunter as the cause.
-6. `GreedyDescenderRarelyMeetsHunter` over one thousand seeds asserts the hunter spawns in under 5 percent of runs.
+5. `TimerTesterAlwaysDies` over one thousand seeds, with the enemy spawns and the waves off, asserts the `death` end state with the cause `overseer` (D-411).
+6. `GreedyDescenderRarelyMeetsHunter` runs one thousand seeds. A floor counts when the policy completes it or its timer expires. The test asserts expiry on under 5 percent of at least 500 such floors (D-412).
 7. `TimerIsDeterministic` replays a record past expiry and asserts one state hash on three platforms.
 
 Review focus: determinism, gameplay, economy, test quality.
@@ -737,7 +738,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 20. PR-66. ✅ Done in PR #82. ✅ OQ-179 and OQ-180 answered 2026-09-19 and 2026-09-20: D-388 to D-394.
 21. ✅ OQ-9 answered 2026-09-20: D-395 and D-396.
 22. PR-16.
-23. Owner: answer OQ-4 and OQ-6.
+23. ✅ OQ-4 and OQ-6 answered 2026-09-20: D-407 to D-409. The escalation and the exit tests: D-410 to D-412.
 24. PR-17.
 25. Owner: answer OQ-44.
 26. PR-18.
@@ -755,8 +756,6 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 2. Each 
 
 Open:
 
-- OQ-4: timer lengths. Blocks PR-17.
-- OQ-6: the hunter. Blocks PR-17.
 - OQ-44: the transition hitch budget. Blocks PR-18.
 - OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
@@ -765,6 +764,8 @@ Open:
 
 Resolved 2026-09-20:
 
+- OQ-4 (D-407): the timer lengths. PR-17.
+- OQ-6 (D-408, D-409): the hunter pace, look, and sound. PR-17.
 - OQ-9 (D-395, D-396): the eight enemy families, and the scavenger as the first one. PR-16.
 - OQ-179 (D-388 to D-393): the shape of a tier. PR-66.
 - OQ-180 (D-394): the shafts of a floor. PR-66.
