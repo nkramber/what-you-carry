@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 193: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reviewed PR #83 at effective head `8452dbd`.
+- Inspected the pathfinder, movement rules, enemy and combat state, AI, procgen, simulation, bots, workflows, tests, and PR comments.
+- Added `docs/reviews/pr-83.md` with no code finding and a blocked verdict because required CI remains pending.
+
+### State of the build
+
+- Focused tests passed, 6 of 6.
+- The broad non-smoke test run compiled but stalled without a result.
+- GitHub checks pass for completed jobs, but Linux and Windows CI remain pending. The review-gate check waits for this review record.
+- Remote code head remains `8452dbd`. Metadata commit `9fb8fda` carries the review record and this entry.
+
+### In flight
+
+The review record and this handoff entry are pushed to the PR branch.
+
+### Traps and gotchas
+
+- The effective head excludes later handoff-only commits.
+- A stalled test run is incomplete evidence, not a pass.
+- The review stays blocked until required CI completes.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Recheck the pending Linux and Windows CI jobs before the owner merge.
+
 ## Session 192: 2026-09-20, Claude Code
 
 Author: Claude Code
@@ -29,6 +65,8 @@ Session: PR-16, the first enemy family, the AI, and the pathfinder. Branch `feat
 ### In flight
 
 GitHub PR #83 holds the whole PR-16 scope, the eleven decisions, the two findings, and this entry. It waits for the owner merge.
+
+The review record `docs/reviews/pr-83.md` of Session 193 reports no code finding, and its verdict is `Blocked` for the effective head `8452dbd`, because required CI was pending and a local broad test run stalled. `docs/reviews/pr-83-response.md` answers both limits: the suite completed at 1172 passed and 0 failed at `0075b92`, and the three CI legs failed on the handoff order of D-146 alone. The entry of Session 193 sat under Session 183, and this session moved it to the top, word for word, and ran `handoff-rotate`. The verdict stays as the reviewing provider wrote it, because the author of a PR never sets it (T-4, D-381).
 
 The automated pass of gitar is complete on the effective head `8452dbd`. The `Code Review` block reads "Approved" with no finding. The `CI failed` block of the same comment names the missing `docs/reviews/pr-83.md`, and a PR reply answers it with D-251: the review gate stays red until the reviewing provider writes that file, and the author of a PR does not write it. Findings with merit: none.
 
@@ -377,71 +415,3 @@ None blocks PR #78.
 ### Next concrete action
 
 A Codex session runs the repeat review of P2-1 per the `pr-review` skill at the correction head and sets the verdict. The owner then merges PR #78.
-
-## Session 183: 2026-09-16, Codex
-
-Author: Codex
-Session: review PR #78 at effective head `3eb7142`. Branch `feat/context-budget`.
-
-### What this session did, and why
-
-- Reviewed the full change and its tests, tools, skills, decisions, design, handoff, PR description, comments, and checks.
-- Found P2-1 in `docs/reviews/pr-78.md`: the register command searches fixed ids, so it misses decisions for other tasks.
-
-### State of the build
-
-- `main` is at `58e4fc8`, the base. The effective head is `3eb7142`, and remote tip `77c6f66` changes only handoff metadata (D-184).
-- The focused rotation and context budget tests passed: 12 tests, 0 failures. The full non-Smoke test attempt did not complete locally and was cancelled.
-- CI on `3eb7142` passed, as recorded in the handoff update at `77c6f66`. Checks after that metadata push passed for the platforms and required workflows. `evaluate` failed before this review record, and `review-gate` skipped.
-
-### In flight
-
-The author must correct P2-1 and request a Codex re-review. The owner merges after the finding closes.
-
-### Traps and gotchas
-
-- The Gitar approval covers effective head `3eb7142`. Later commits changed metadata only.
-- The review commit must keep `3eb7142` as the effective head.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author loads `review-response`, updates the lookup command in both agent files, and adds a regression check.
-## Session 193: 2026-09-20, Codex
-
-Author: Codex
-Session: PR-83, cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
-
-### What this session did, and why
-
-- Reviewed PR #83 at effective head `8452dbd`.
-- Inspected the pathfinder, movement rules, enemy and combat state, AI, procgen, simulation, bots, workflows, tests, and PR comments.
-- Added `docs/reviews/pr-83.md` with no code finding and a blocked verdict because required CI remains pending.
-
-### State of the build
-
-- Focused tests passed, 6 of 6.
-- The broad non-smoke test run compiled but stalled without a result.
-- GitHub checks pass for completed jobs, but Linux and Windows CI remain pending. The review-gate check waits for this review record.
-- Remote code head remains `8452dbd`. Metadata commit `9fb8fda` carries the review record and this entry.
-
-### In flight
-
-The review record and this handoff entry are pushed to the PR branch.
-
-### Traps and gotchas
-
-- The effective head excludes later handoff-only commits.
-- A stalled test run is incomplete evidence, not a pass.
-- The review stays blocked until required CI completes.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Recheck the pending Linux and Windows CI jobs before the owner merge.

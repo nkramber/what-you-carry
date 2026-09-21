@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 183: 2026-09-16, Codex
+
+Author: Codex
+Session: review PR #78 at effective head `3eb7142`. Branch `feat/context-budget`.
+
+### What this session did, and why
+
+- Reviewed the full change and its tests, tools, skills, decisions, design, handoff, PR description, comments, and checks.
+- Found P2-1 in `docs/reviews/pr-78.md`: the register command searches fixed ids, so it misses decisions for other tasks.
+
+### State of the build
+
+- `main` is at `58e4fc8`, the base. The effective head is `3eb7142`, and remote tip `77c6f66` changes only handoff metadata (D-184).
+- The focused rotation and context budget tests passed: 12 tests, 0 failures. The full non-Smoke test attempt did not complete locally and was cancelled.
+- CI on `3eb7142` passed, as recorded in the handoff update at `77c6f66`. Checks after that metadata push passed for the platforms and required workflows. `evaluate` failed before this review record, and `review-gate` skipped.
+
+### In flight
+
+The author must correct P2-1 and request a Codex re-review. The owner merges after the finding closes.
+
+### Traps and gotchas
+
+- The Gitar approval covers effective head `3eb7142`. Later commits changed metadata only.
+- The review commit must keep `3eb7142` as the effective head.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author loads `review-response`, updates the lookup command in both agent files, and adds a regression check.
+
 ## Session 182: 2026-09-16, Claude Code
 
 Author: Claude Code
