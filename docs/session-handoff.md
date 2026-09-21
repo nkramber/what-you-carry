@@ -415,3 +415,37 @@ None blocks PR #78.
 ### Next concrete action
 
 A Codex session runs the repeat review of P2-1 per the `pr-review` skill at the correction head and sets the verdict. The owner then merges PR #78.
+## Session 194: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reopened PR #83 after the response to Session 193.
+- Verified the response, the handoff-order correction, and the focused handoff test.
+- Updated `docs/reviews/pr-83.md` and kept the verdict blocked because fresh required CI remains pending.
+
+### State of the build
+
+- `HandoffRotateTests` passed, 9 of 9.
+- The response reports the completed broad suite and Smoke results. The corrected tip has completed passing jobs for bots, smoke, asset-qa, det-lint, STE, doc-gate, and night-gate.
+- Fresh Linux, macOS, and Windows CI jobs remain pending. The effective code head remains `8452dbd`.
+
+### In flight
+
+The repeat-review record needs one metadata commit and push.
+
+### Traps and gotchas
+
+- Later commits remain metadata-only, so the effective code head stays `8452dbd`.
+- The review gate cannot pass while this record has a blocked verdict.
+- Pending CI is incomplete evidence.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Commit and push this repeat-review record and handoff entry. Recheck the fresh CI jobs before the owner merge.
