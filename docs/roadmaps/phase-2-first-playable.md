@@ -693,6 +693,7 @@ Scope:
 - Texture rules: the generator of PR-14 gains the rule kinds of a finished material (D-305, D-339). A face then shows more than a base color with noise and an edge.
 - Models: the body of PR-13 and the sword of PR-15 gain the detail that the owner asks for. The detail stays inside the proportion set of D-82 and the rule of D-83. The enemy models of PR-16 take the same pass.
 - Light: the scene light of play and of the contact sheet moves toward the torchlight of D-59, inside the budget of D-81.
+- The edge smoothing of the world: the antialiasing mode and the texture filter that OQ-181 names, measured on the Deck against D-295.
 - The owner answers the rule kinds and the looks in the PR-62 session, before the code (D-339).
 
 Out of scope: armor overlays (PR-22), the enemy families of PR-36 to PR-42, the polygon, pivot, and UV checks (PR-49).
@@ -765,6 +766,7 @@ Open:
 - OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
+- OQ-181: the antialiasing of the world. Blocks PR-62.
 
 Resolved 2026-09-21:
 
