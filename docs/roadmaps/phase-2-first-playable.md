@@ -600,6 +600,8 @@ Gate: exit tests 1 to 7 pass.
 
 ### PR-18: Stairwell and floor transition
 
+✅ Done in PR #85.
+
 Scope:
 
 - `Core/Simulation/StairwellPrompt.cs`: the untimed descend-or-ascend choice (D-50, D-140). The prompt is open while the body stands on the stairwell cell, and it closes when the body leaves (D-431). It does not hold the player, and the Overseer and the waves still attack (D-417). An intent button or a bot policy answers it.
@@ -745,7 +747,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 23. ✅ OQ-4 and OQ-6 answered 2026-09-20: D-407 to D-409. The escalation, the exit tests, and the rules of the hunt: D-410 to D-421.
 24. PR-17. ✅ Done in PR #84.
 25. Owner: answer OQ-44. ✅ Answered 2026-09-21: D-427. The PR-18 answers: D-428 to D-437.
-26. PR-18.
+26. PR-18. ✅ Done in PR #85.
 27. PR-19.
 28. Owner: answer OQ-48.
 29. PR-20.

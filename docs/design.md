@@ -531,7 +531,7 @@ Implement the visible per-floor timer with lengths in data (D-44, D-46, D-407). 
 Gate: a timer-tester bot always dies to the hunter, and a greedy descender rarely meets it.
 > *In plain English:* each floor has a clock. When it runs out, an unstoppable hunter arrives and gets faster, so a wait is never the safe choice.
 
-**PR-18: Stairwell and floor transition.** 🔧
+**PR-18: Stairwell and floor transition.** ✅ Done in PR #85.
 Implement the stairwell with the untimed descend-or-ascend prompt, open while the body stands on the stairwell cell (D-50, D-140, D-431). Implement the floor transition with the next floor generated on a worker during the current floor (D-72, D-429). A test asserts the worker output equals a synchronous generation for the same seed. Add the coward bot policy and the `ascend` end state (D-149, D-430, D-433), and extend the smoke session to the stairwell (D-436).
 Gate: the transition shows no frame over 22 milliseconds on the Deck (D-427, D-435).
 > *In plain English:* you reach the stairs, choose to go down or leave, and the next floor already exists, so there is no pause.
