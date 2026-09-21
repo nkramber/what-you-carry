@@ -638,10 +638,11 @@ Gate: exit tests 1 to 5 and 7 pass. Exit test 6 needs the Deck of the owner.
 
 Scope:
 
-- `WhatYouCarry.Game/Ui/Hud.cs`: health, the timer, damage numbers, and a boss bar placeholder, as Control nodes built in C# (D-36, D-90). Every label reads the string table (G-8).
-- Damage numbers: small, short-lived, placed above the hit and never over the hit entity's silhouette (F-24).
-- `WhatYouCarry.Game/Ui/Navigation.cs`: focus movement and activation for every later screen with a controller, and one layout scale for 800p (G-15).
-- A screenshot fixture at 1280 by 800 for the Tier 4 pass at the phase gate (D-133).
+- `WhatYouCarry.Game/Ui/Hud.cs`: health, the timer, damage numbers, a boss bar placeholder, and the stairwell prompt, as Control nodes built in C# (D-36, D-90). Every label reads the string table (G-8). The default font of the engine (D-441). The health stands at the bottom left (D-442), and the timer stands at the top center with a paused mark (D-443). The boss bar stands under the timer and hides until a boss exists (D-445).
+- Damage numbers: small, short-lived, placed above the hit and never over the hit entity's silhouette (F-24). The colors, the lifetime, and the size come from D-444.
+- The stairwell prompt at the lower center, with the buttons of the last device (D-447). A tap of interact descends, and a hold of one second ascends (D-448).
+- `WhatYouCarry.Game/Ui/Navigation.cs`: focus movement and activation for every later screen with a controller, and one layout scale for 800p (G-15, D-446). The A button activates a control (D-449). The fixture screen holds six buttons and one slider (D-446).
+- A screenshot fixture at 1280 by 800 for the Tier 4 pass at the phase gate (D-133): the flag `--hud-shot <png>`.
 
 Out of scope: the satchel, the tree, the hub, settings.
 

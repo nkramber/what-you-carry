@@ -189,6 +189,25 @@ public sealed class SmokeSessionTests
     }
 
     /// <summary>
+    /// PR-19 exit test 5. The engine boots headless, builds the HUD and the fixture screen of the navigation with its
+    /// seven controls, draws the HUD on every frame of the session, and quits with exit code 0 and no error line.
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task HudConstructsHeadless()
+    {
+        EngineRun run = await RunEngine("smoke session with the HUD", ["--headless", "--fixed-fps", "60"], [SmokeSession.Flag]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitSuccess, $"The smoke session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.HudBuiltMessage}\"", StringComparison.Ordinal) && line.Contains("\"tick\":0,", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.FixtureBuiltMessage}\"", StringComparison.Ordinal) && line.Contains($"\"{Main.ControlsField}\":7", StringComparison.Ordinal));
+        AssertCleanEnd(lines, run.Output);
+    }
+
+    /// <summary>
     /// Asserts the end of a smoke session: the script ends it on floor 2, or a death ends it sooner with the end kind
     /// in its line. Both are a clean end, and neither one writes an error line (D-403, D-436).
     /// </summary>

@@ -33,6 +33,27 @@ public sealed class InputReaderTests
         Assert.False(reader.Read().ControllerLook);
     }
 
+    /// <summary>
+    /// The prompt device is the one of the latest input of any kind (D-447): a controller button or a stick past the
+    /// dead zone names the controller, a stick at rest names nothing, and a key or the mouse names the keyboard.
+    /// </summary>
+    [Fact]
+    public void LatestInputNamesThePromptDevice()
+    {
+        InputReader reader = new(new FakePoll());
+        Assert.False(reader.ControllerLast);
+
+        reader.NoteControllerButton();
+        Assert.True(reader.ControllerLast);
+        reader.NoteKeyboardOrMouse();
+        Assert.False(reader.ControllerLast);
+
+        reader.NoteControllerMotion(IntentBuilder.StickDeadZone / 2.0f);
+        Assert.False(reader.ControllerLast);
+        reader.NoteControllerMotion(-0.9f);
+        Assert.True(reader.ControllerLast);
+    }
+
     /// <summary>A stick event past the dead zone on a look axis takes the look back from the mouse (D-243).</summary>
     [Fact]
     public void StickEventPastTheDeadZoneTakesTheLook()
