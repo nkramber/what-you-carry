@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
@@ -133,6 +134,15 @@ public partial class Main : Node3D
     /// <summary>The name of the field of the swap line that tells whether the loop took the plan of the worker (D-429).</summary>
     public const string FromWorkerField = "fromWorker";
 
+    /// <summary>The message of the line of the tick whose loop took the plan of the worker, with the time of the dig (D-429).</summary>
+    public const string DigMessage = "The worker dug the next floor.";
+
+    /// <summary>The message of the line that closes the trace window of one transition (D-435).</summary>
+    public const string TraceMessage = "The trace of a floor transition closes.";
+
+    /// <summary>The name of the field of the dig line that holds the time of the dig, in microseconds.</summary>
+    public const string DigMicrosField = "digMicros";
+
     /// <summary>The name of the field of the end line that holds the count of transitions of the frame log.</summary>
     public const string TransitionsField = "transitions";
 
@@ -158,6 +168,15 @@ public partial class Main : Node3D
     private const string ParentDirectory = "..";
     private const string ContentDirectoryName = "content";
     private const string SeedField = "seed";
+    private const string TraceTransitionField = "transition";
+    private const string TraceSlowestField = "slowestFrameMicros";
+    private const string TraceTickField = "maxTickMicros";
+    private const string TraceUploadField = "maxUploadMicros";
+    private const string TracePauseField = "gcPauseMicros";
+    private const string TraceGen0Field = "gen0";
+    private const string TraceGen1Field = "gen1";
+    private const string TraceGen2Field = "gen2";
+    private const string TraceDiggingField = "diggingFrames";
     private const string FloorField = "floor";
     private const string TickField = "tick";
     private const string SubsystemField = "subsystem";
@@ -190,6 +209,12 @@ public partial class Main : Node3D
     private int transitions = 1;
     private bool transitionTest;
     private uint floorStartTick;
+    private TransitionTrace? trace;
+    private long tickMicros;
+    private long lastPauseMicros;
+    private int lastGen0;
+    private int lastGen1;
+    private int lastGen2;
     private EnemyNodes? enemyNodes;
     private int drawnFloor;
     private ScriptedPress? press;
@@ -230,6 +255,19 @@ public partial class Main : Node3D
     public override void _PhysicsProcess(double delta)
     {
         if (this.loop is null || this.ended)
+        {
+            return;
+        }
+
+        long started = Stopwatch.GetTimestamp();
+        this.Tick();
+        this.tickMicros += (long)Stopwatch.GetElapsedTime(started).TotalMicroseconds;
+    }
+
+    /// <summary>Runs one tick of the session: the test exit, the intent, the step, the swap, the prompt, and the end checks.</summary>
+    private void Tick()
+    {
+        if (this.loop is null)
         {
             return;
         }
@@ -284,7 +322,13 @@ public partial class Main : Node3D
 
         try
         {
-            this.chunks?.BeforeTick(this.loop);
+            if (this.chunks is not null && this.chunks.BeforeTick(this.loop) && this.trace is not null)
+            {
+                LogFields dug = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+                dug.Add(DigMicrosField, this.chunks.LastDigMicros);
+                this.logger.Write(LogContextKind.Run, LogLevel.Info, DigMessage, dug);
+            }
+
             this.loop.Step(intent);
         }
         catch (Exception error)
@@ -306,6 +350,7 @@ public partial class Main : Node3D
             this.previousPose = this.currentPose;
             this.floorStartTick = this.loop.Tick;
             this.frames?.MarkTransition();
+            this.trace?.MarkTransition();
             LogFields swap = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
             swap.Add(FromWorkerField, this.chunks.LastSwapFromWorker);
             this.logger.Write(LogContextKind.Run, LogLevel.Info, SwapMessage, swap);
@@ -370,7 +415,10 @@ public partial class Main : Node3D
         }
 
         this.frames?.Add(delta);
+        long uploadStarted = Stopwatch.GetTimestamp();
         this.chunks?.UploadSome();
+        long uploadMicros = (long)Stopwatch.GetElapsedTime(uploadStarted).TotalMicroseconds;
+        this.TraceFrame(delta, uploadMicros);
 
         float fraction = (float)Engine.GetPhysicsInterpolationFraction();
         CoreVector3 feet = RenderInterpolation.Between(this.previousFeet, this.currentFeet, fraction);
@@ -454,6 +502,56 @@ public partial class Main : Node3D
         }
 
         return fields;
+    }
+
+    /// <summary>
+    /// Adds the frame to the trace of the transition test, with the tick time since the last frame and the collector
+    /// pause and collections since the last frame, and logs the summary of a window that closes (D-435).
+    /// </summary>
+    private void TraceFrame(double delta, long uploadMicros)
+    {
+        if (this.trace is null || this.loop is null)
+        {
+            this.tickMicros = 0;
+            return;
+        }
+
+        long pause = (long)GC.GetTotalPauseDuration().TotalMicroseconds;
+        int gen0 = GC.CollectionCount(0);
+        int gen1 = GC.CollectionCount(1);
+        int gen2 = GC.CollectionCount(2);
+        TraceFrame frame = new(
+            (long)Math.Round(delta * FrameLog.MicrosecondsPerSecond),
+            this.tickMicros,
+            uploadMicros,
+            pause - this.lastPauseMicros,
+            gen0 - this.lastGen0,
+            gen1 - this.lastGen1,
+            gen2 - this.lastGen2,
+            this.chunks?.IsDigging ?? false);
+        this.tickMicros = 0;
+        this.lastPauseMicros = pause;
+        this.lastGen0 = gen0;
+        this.lastGen1 = gen1;
+        this.lastGen2 = gen2;
+
+        TransitionSummary? summary = this.trace.AddFrame(frame);
+        if (summary is null)
+        {
+            return;
+        }
+
+        LogFields fields = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+        fields.Add(TraceTransitionField, (long)summary.Transition);
+        fields.Add(TraceSlowestField, summary.SlowestFrameMicros);
+        fields.Add(TraceTickField, summary.MaxPhysicsMicros);
+        fields.Add(TraceUploadField, summary.MaxUploadMicros);
+        fields.Add(TracePauseField, summary.GcPauseMicros);
+        fields.Add(TraceGen0Field, (long)summary.Gen0);
+        fields.Add(TraceGen1Field, (long)summary.Gen1);
+        fields.Add(TraceGen2Field, (long)summary.Gen2);
+        fields.Add(TraceDiggingField, (long)summary.DiggingFrames);
+        this.logger.Write(LogContextKind.Run, LogLevel.Info, TraceMessage, fields);
     }
 
     /// <summary>The largest of the values. The list holds one value for each transition, so it is never empty.</summary>
@@ -543,6 +641,7 @@ public partial class Main : Node3D
         {
             this.bot = new GreedyDescender(content);
             this.transitions = BotSession.TransitionsOf(arguments);
+            this.trace = this.transitionTest ? new TransitionTrace() : null;
         }
 
         if (this.smoke)

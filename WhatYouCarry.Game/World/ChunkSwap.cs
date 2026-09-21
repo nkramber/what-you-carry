@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using Godot;
@@ -47,7 +48,7 @@ public sealed class ChunkSwap
     private readonly ulong seed;
     private List<MeshInstance3D> shown = [];
     private int shownFloor;
-    private Task<FloorPlan>? digging;
+    private Task<(FloorPlan Plan, long Micros)>? digging;
     private int diggingFloor;
     private FloorPlan? staged;
     private List<MeshInstance3D> stagedNodes = [];
@@ -64,6 +65,12 @@ public sealed class ChunkSwap
 
     /// <summary>The nodes of the floor on screen, in chunk order.</summary>
     public IReadOnlyList<MeshInstance3D> Shown => this.shown;
+
+    /// <summary>Answers whether a task digs a floor now.</summary>
+    public bool IsDigging => this.digging is not null && !this.digging.IsCompleted;
+
+    /// <summary>The wall time of the last dig that the loop took, in microseconds, measured on the task. Zero before the first one.</summary>
+    public long LastDigMicros { get; private set; }
 
     /// <summary>Answers whether the last swap showed the plan of the worker, and not a floor that the loop dug at the descent.</summary>
     public bool LastSwapFromWorker { get; private set; }
@@ -83,19 +90,22 @@ public sealed class ChunkSwap
     /// Offers the plan of the next floor to the loop when the task ended and no plan is on offer. Call it before
     /// each tick.
     /// </summary>
+    /// <returns>True when this call offered a plan.</returns>
     /// <exception cref="ContextException">The task failed. The error names the seed, the floor, and the cause.</exception>
-    public void BeforeTick(SimulationLoop loop)
+    public bool BeforeTick(SimulationLoop loop)
     {
         if (this.digging is null || !this.digging.IsCompleted || this.staged is not null)
         {
-            return;
+            return false;
         }
 
-        FloorPlan plan = this.TakeResult();
+        (FloorPlan plan, long micros) = this.TakeResult();
+        this.LastDigMicros = micros;
         loop.OfferNextFloor(plan);
         this.staged = plan;
         this.stagedNodes = [];
         this.stagedChunk = 0;
+        return true;
     }
 
     /// <summary>Uploads up to <see cref="ChunksPerFrame"/> chunks of the next floor into hidden nodes. Call it once each frame.</summary>
@@ -183,14 +193,19 @@ public sealed class ChunkSwap
         NextFloorWorker dig = this.worker;
         ulong runSeed = this.seed;
         this.diggingFloor = floor;
-        this.digging = Task.Run(() => dig.Generate(runSeed, floor));
+        this.digging = Task.Run(() =>
+        {
+            Stopwatch watch = Stopwatch.StartNew();
+            FloorPlan plan = dig.Generate(runSeed, floor);
+            return (plan, (long)watch.Elapsed.TotalMicroseconds);
+        });
     }
 
-    /// <summary>The plan of the task that ended.</summary>
+    /// <summary>The plan of the task that ended, and the wall time of its dig in microseconds.</summary>
     /// <exception cref="ContextException">The task failed or the engine cancelled it.</exception>
-    private FloorPlan TakeResult()
+    private (FloorPlan Plan, long Micros) TakeResult()
     {
-        Task<FloorPlan> task = this.digging ?? throw new InvalidOperationException(TaskFailedMessage);
+        Task<(FloorPlan Plan, long Micros)> task = this.digging ?? throw new InvalidOperationException(TaskFailedMessage);
         if (task.IsCompletedSuccessfully)
         {
             return task.Result;

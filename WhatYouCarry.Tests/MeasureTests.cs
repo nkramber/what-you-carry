@@ -87,6 +87,35 @@ public sealed class MeasureTests
         Assert.Equal([12000L], edge.TransitionMaxima());
     }
 
+    /// <summary>
+    /// The trace sums the collector pauses and the collections of the frames after a mark, takes the slowest frame and
+    /// the most tick and upload time, counts the frames of a dig, and closes after the window (D-109, D-435). A frame
+    /// with no open window is not traced, and a new mark closes a window that is still open.
+    /// </summary>
+    [Fact]
+    public void TransitionTraceSummarizesTheWindowAfterAMark()
+    {
+        TransitionTrace trace = new();
+        Assert.Null(trace.AddFrame(new TraceFrame(90000, 0, 0, 0, 0, 0, 0, false)));
+
+        trace.MarkTransition();
+        TransitionSummary? summary = null;
+        for (int frame = 0; frame < FrameLog.TransitionWindowFrames; frame++)
+        {
+            bool first = frame < 3;
+            Assert.Null(summary);
+            summary = trace.AddFrame(new TraceFrame(first ? 44444 : 11111, first ? 2000 : 500, frame == 5 ? 3000 : 100, first ? 15000 : 0, first ? 1 : 0, frame == 1 ? 1 : 0, frame == 2 ? 1 : 0, frame < 10));
+        }
+
+        Assert.Equal(new TransitionSummary(1, FrameLog.TransitionWindowFrames, 44444, 2000, 3000, 45000, 3, 1, 1, 10), summary);
+        Assert.Null(trace.AddFrame(new TraceFrame(90000, 0, 0, 0, 0, 0, 0, false)));
+
+        trace.MarkTransition();
+        trace.AddFrame(new TraceFrame(20000, 0, 0, 0, 0, 0, 0, true));
+        trace.MarkTransition();
+        Assert.Equal(new TransitionSummary(2, 1, 20000, 0, 0, 0, 0, 0, 0, 1), trace.Summaries[1]);
+    }
+
     /// <summary>A mark with no frame in its window has no hitch, and the error says so (T-2).</summary>
     [Fact]
     public void FrameLogRejectsAnEmptyWindow()
