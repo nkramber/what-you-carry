@@ -211,6 +211,47 @@ public sealed class BotTests
         Assert.True(bottoms > 0, "No run of one hundred seeds reached the bottom, so no bot can leave a floor.");
     }
 
+    /// <summary>
+    /// The full clearer leaves in time (D-439). On seeds 2100 and 2109 the night of 2026-09-21 read a softlock: the
+    /// clear ended near 5,750 ticks, and the walk to the stairwell wound past expiry. The runs now end at the bottom
+    /// or by a death, and never as a softlock.
+    /// </summary>
+    [Theory]
+    [InlineData(2100UL)]
+    [InlineData(2109UL)]
+    public void FullClearerLeavesInTime(ulong seed)
+    {
+        BotRunResult result = BotRun.Play(new FullClearer(TestWorld.Content), seed, TestWorld.Content);
+        Assert.True(
+            result.End == BotRunEnd.Bottom || result.End == BotRunEnd.Death,
+            $"Seed {seed}: the full clearer ended as {result.End} on floor {result.FloorsReached} after {result.Ticks} ticks. {result.Error}");
+    }
+
+    /// <summary>
+    /// The clearer stops the hunt when the timer left is no more than the walk to the stairwell, and it hunts while
+    /// the time is long (D-439). A floor with a short timer makes it leave at once.
+    /// </summary>
+    [Fact]
+    public void FullClearerLeavesWhenTheTimeIsShort()
+    {
+        List<FloorTemplate> shortFloors = [];
+        foreach (FloorTemplate floor in TestWorld.Content.Floors)
+        {
+            shortFloors.Add(floor with { TimerSeconds = 5, BossTimerSeconds = 0 });
+        }
+
+        ContentSet hurried = TestWorld.Content with { Floors = shortFloors };
+        SimulationLoop quick = new(1, hurried);
+        FullClearer leaver = new(hurried);
+        quick.Step(leaver.Next(quick));
+        Assert.True(leaver.IsLeaving, "The clearer hunts with five seconds on the timer.");
+
+        SimulationLoop slow = new(1, TestWorld.Content);
+        FullClearer hunter = new(TestWorld.Content);
+        slow.Step(hunter.Next(slow));
+        Assert.False(hunter.IsLeaving, "The clearer leaves with three minutes on the timer.");
+    }
+
     /// <summary>PR-11 exit test 7. The night record holds the commit, the end time, and the status, and a bad commit or status is an error (D-273).</summary>
     [Fact]
     public void NightResultIsPublished()

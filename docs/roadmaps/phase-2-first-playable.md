@@ -553,7 +553,7 @@ Exit tests:
 2. `PathfinderFindsStairwell` over one thousand seeds asserts a path from every spawn to the stairwell, of the count of moves that the reachability search gives.
 3. `EnemyUsesPlayerRules` asserts an enemy swing has the same windup, active, and recovery as the player's sword, and the same box.
 4. `EnemyCountMatchesBudget` asserts the spawned weight within 10 percent of the floor budget less the weight of the chamber that holds the player spawn (D-167, D-398).
-5. `FullClearerClearsFloor` asserts zero enemies alive when the policy takes the stairwell choice at the stairwell.
+5. `FullClearerClearsFloor` asserts zero enemies alive when the policy takes the stairwell choice at the stairwell. 2026-09-21: a policy that the timer sends to the stairwell leaves the rest alive (D-439, PR #85).
 6. `AiIsDeterministic` replays a record with enemies and asserts one state hash, and the bit-identity sweep folds that replay on three platforms.
 7. The bot sweep with enemies active reports zero crashes and zero softlocks. A death is its own end state and fails no gate (D-403).
 
@@ -610,6 +610,8 @@ Scope:
 - `Core/Bots/Coward.cs`: a policy that ascends at the first stairwell (D-149). It promises progress (D-433). The PR bot job and the night run it (D-434).
 - `Core/Bots/BotRun.cs`: an ascend on floors 1 to 14 ends as `ascend`, the sixth end state, and the night record counts the ascends of each policy (D-430).
 - The smoke session of PR-12 walks floor 1 with the greedy descender, opens the prompt, and descends. The script then plays on floor 2 (D-436).
+- `Core/Bots/FullClearer.cs`: the policy leaves when the time runs short, so a long floor ends at the stairwell and not as a softlock (D-438, D-439).
+- `WhatYouCarry.Game/World/ChunkSwap.cs` meshes the chunks on the worker task. The first Deck run traced 38 to 46 milliseconds of mesh work in one frame on the main thread.
 - The bot session takes the flag `--transitions <count>`. The frame log marks each transition, and the session fails on a frame over the hitch budget (D-427, D-435). The session loads no enemy family (D-437).
 
 Out of scope: the hub (PR-30), the ending (PR-35), the button names and the placement of the prompt text (PR-19).
@@ -621,7 +623,7 @@ Exit tests:
 3. `PromptIsUntimed` asserts that the prompt is open and the timer holds on each tick that the prompt is open (D-140, D-432).
 4. `AscendEndsRun` asserts the `ascend` end state and no next floor.
 5. `CowardAscendsFirst` asserts the `ascend` end state at floor 1 for the coward policy (D-430).
-6. `TransitionUnderHitchBudget` on the Deck asserts no frame over 22 milliseconds across ten transitions (D-427). The owner runs the command in `CLAUDE.md` on the Deck (D-428, D-435), and the session exits 0. The result goes in the handoff of the session that reads it.
+6. `TransitionUnderHitchBudget` on the Deck asserts no frame over 22 milliseconds across ten transitions (D-427). The owner runs the command in `CLAUDE.md` on the Deck (D-428, D-435), and the session exits 0. The result goes in the handoff of the session that reads it. 2026-09-21: passed on the Deck at `c3ca60a`, with the slowest frame near a transition at 11.1 milliseconds.
 7. `SmokeReachesStairwell` runs the extended smoke session and asserts exit code 0.
 
 Review focus: determinism, Core boundary, presentation, test quality.
