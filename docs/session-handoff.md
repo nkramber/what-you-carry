@@ -15,7 +15,7 @@ Session: PR-18, reviewer. Branch `feat/pr-18-stairwell-and-transition`. PR #85, 
 
 ### State of the build
 
-- Remote PR head: `14f0378`.
+- Remote PR head: `5bac1cd`.
 - Build passed with 0 warnings and 0 errors.
 - Focused transition, measurement, and smoke tests passed, 31 of 31.
 - `det-lint`, `asset-qa`, and `ste-check` passed with 0 findings.
@@ -24,7 +24,7 @@ Session: PR-18, reviewer. Branch `feat/pr-18-stairwell-and-transition`. PR #85, 
 
 ### In flight
 
-- The review record and this handoff entry need one metadata commit and push.
+- The review record and this handoff entry are pushed in metadata commit `5bac1cd`.
 - The owner must run the Deck transition command in `CLAUDE.md` and record exit test 6.
 
 ### Traps and gotchas
@@ -38,7 +38,7 @@ Session: PR-18, reviewer. Branch `feat/pr-18-stairwell-and-transition`. PR #85, 
 
 ### Next concrete action
 
-Commit and push the review record and this handoff entry. Then wait for the owner to record the Deck result and rerun the review gate.
+Wait for the owner to record the Deck result and rerun the review gate.
 
 ## Session 200: 2026-09-21, Claude Code
 
