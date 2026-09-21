@@ -20,15 +20,21 @@ Session: PR-17, the floor timer, the hunter, and the escalation, author. Branch 
 
 ### State of the build
 
-- Base `a5461d4`. The code head is `4e85570`. Read the remote head of the branch from git.
+- Base `a5461d4`. The code head is `4e85570`, and the effective head is `f000599`, because that commit changes the design doc and the roadmap (D-184).
 - The local suite passed 1206 of 1207 before the handoff rotation. The one failure was `RepositoryFilesHoldTheRule`, which this rotation repairs.
 - det-lint, asset-qa, ste-check, the Godot build, and the smoke session passed.
 - PR-17 exit tests 1 to 7 pass. Exit test 6 measured expiry on 0 of 2293 floors.
+- All PR #84 checks passed at `f000599`. `evaluate` reads red until the review record exists (D-251).
+- The gitar pass is current and found no issues. Its CI note got a reply with D-251.
+- Exit test 7 of PR-16 passed: night run 35561635447 on `main` at `a5461d4` ended in success.
+  - Random walker: 0 crashes, 0 softlocks, 4839 deaths, 161 by budget.
+  - Greedy descender: 0 crashes, 0 softlocks, 4669 deaths, 331 at the bottom.
+  - Full clearer: 0 crashes, 0 softlocks, 3928 deaths, 1072 at the bottom. This is the first night of the full clearer at 5000 seeds.
+  - The `night.json` of that night is the first to carry the deaths of each policy (D-403): 4839, 4669, and 3928.
 
 ### In flight
 
-- Exit test 7 of PR-16: the night on `main` at `a5461d4`. Dispatch it after the PR checks, because both use the one Mac runner. State the crash count, the softlock count, and the death count of each policy in the next entry.
-- The automated pass of gitar, and then the review by the other provider.
+- The cross-provider review of PR #84 at effective head `f000599`.
 
 ### Traps and gotchas
 
@@ -45,7 +51,7 @@ None.
 
 ### Next concrete action
 
-After the PR checks, dispatch the night on `main`, then run the gitar pass on PR #84.
+The other provider reviews PR #84 at effective head `f000599`.
 
 ## Session 195: 2026-09-20, Codex
 
