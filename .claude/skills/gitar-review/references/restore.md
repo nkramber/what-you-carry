@@ -9,7 +9,7 @@ Load this file when the owner restores the pass.
 1. Confirm that the gitar subscription is active again, and that gitar reviews a new PR.
 2. Add a decision that restores the pass and supersedes D-471. Do not delete the D-471 row.
 3. In the D-250, D-303, and D-374 rows, add the note "Restored by D-N" after the D-471 note.
-4. Run `grep -rn 'D-471' --include='*.md' . .github` to find each place that the suspension changed.
+4. Run `grep -rn 'D-471' --include='*.md' .` to find each place that the suspension changed.
 5. Replace each suspended text with its original text from the next section.
 6. Remove the section "The suspension" from the `gitar-review` skill.
 7. Remove the first paragraph of "Wait for gitar" in `docs/runbooks/session-context.md`.
@@ -36,12 +36,6 @@ An automated reviewer, gitar, comments on every PR after a push (D-250). The aut
 ````
 
 The PR gate line of `CLAUDE.md` and `AGENTS.md`:
-
-````markdown
-- [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250).
-````
-
-The PR gate line of `.github/pull_request_template.md`:
 
 ````markdown
 - [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250).
