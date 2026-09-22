@@ -71,6 +71,9 @@ Session: PR-20, author. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, pen
 - P2-1: the analysis command joined the sound name into a path, so `--sound ../../../pwn` wrote a file outside the sound directory. Both findings reproduced before the correction.
 - P2-2: a chunk length near the top of an int made `body + length` turn negative, so a malformed reference raised an unhandled error with no file and no chunk in it.
 - Both have full merit. The corrections and the evidence stand in `docs/reviews/pr-87-response.md`. Six new test cases cover them, and each one fails on the code before the correction.
+- The corrections went to the remote as `996b3c3`, which is the effective head now. The full suite passed on that tree: 1301 tests, 0 failures, 7 minutes and 13 seconds.
+- The automated pass of gitar ran on `996b3c3` and approved it with no finding and no open thread. The pass of the earlier head `06cd3b3` also had no finding, and no session asked for a manual review.
+- Every CI check of `996b3c3` passed but two: `evaluate` and `review-gate` fail while the review record holds the verdict `Changes required` (D-251). The reviewer alone changes that verdict.
 
 ### Traps and gotchas
 
@@ -98,7 +101,7 @@ The next PR after this one skips the heavy checks on a head that changes documen
 - Risks to check first: a skipped required check must count as a pass in the branch ruleset, the skip must not move what D-184 names the effective head, and the list of document paths must be narrow.
 - The owner answers three questions in that session: the id of the entry in the roadmap, whether `det-lint` and `asset-qa` skip too, and whether a push to `main` skips as well.
 
-That PR also asks why the checks take so long, which the owner saw on a Windows check of 24 minutes. The one test step of `ci.yml` holds the whole cost: 1055 seconds on the hosted Linux runner, 1206 on the hosted Windows runner, and 451 on the self-hosted Mac mini. The smoke workflow takes 48 seconds, 103 seconds, and 29 seconds, and the bit identity takes 33 seconds or less, so neither one is the cost. A profile of the suite on 2026-09-22 names ten tests that hold 73 percent of the summed duration of 20.3 minutes, and every one is a seed sweep: `EveryFloorTakesATierWhenOneFits` at 177 seconds, `ReplayReproducesHash` at 132, `EveryPolicyEndsAtTheBottomOrByDeath` at 118, `StairwellReachable` at 98, `CameraNeverInsideSolid` at 97, and `EnemyCountMatchesBudget` at 94. A smaller sweep on a pull request weakens the gate, so the owner decides any change of a seed count.
+That PR also asks why the checks take so long, which the owner saw on a Windows check of 24 minutes. The one test step of `ci.yml` holds the whole cost: 1055 seconds on the hosted Linux runner, 1206 on the hosted Windows runner, and 451 on the self-hosted Mac mini. The run of `996b3c3` gives a second reading: 872 seconds on Linux, 1518 on Windows, and 489 on the Mac mini, so the hosted runners also vary from run to run. The smoke workflow takes 48 seconds, 103 seconds, and 29 seconds, and the bit identity takes 33 seconds or less, so neither one is the cost. A profile of the suite on 2026-09-22 names ten tests that hold 73 percent of the summed duration of 20.3 minutes, and every one is a seed sweep: `EveryFloorTakesATierWhenOneFits` at 177 seconds, `ReplayReproducesHash` at 132, `EveryPolicyEndsAtTheBottomOrByDeath` at 118, `StairwellReachable` at 98, `CameraNeverInsideSolid` at 97, and `EnemyCountMatchesBudget` at 94. A smaller sweep on a pull request weakens the gate, so the owner decides any change of a seed count.
 
 After that PR: F-107 and F-108, an enemy walks no diagonal, and an enemy does not walk up a ramp. The owner saw both in the play session of PR #87.
 
