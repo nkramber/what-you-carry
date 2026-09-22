@@ -574,6 +574,55 @@ public sealed class AudioTests
     }
 
     /// <summary>
+    /// The analysis command takes one file name, and it writes no file outside the sound directory (PR #87 review P2-1).
+    /// </summary>
+    [Theory]
+    [InlineData("../../../pwn")]
+    [InlineData("../escape")]
+    [InlineData("sub/footstep")]
+    [InlineData("..")]
+    [InlineData("")]
+    public void TheAnalysisTakesOneFileName(string sound)
+    {
+        Assert.False(AudioAnalyzeCommand.IsOneName(sound));
+
+        DirectoryInfo root = Directory.CreateTempSubdirectory("pr87-name");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root.FullName, AudioSynthCommand.ContentDirectoryName, AssetPaths.SoundDirectory));
+            Directory.CreateDirectory(Path.Combine(root.FullName, AudioAnalyzeCommand.ReferenceDirectory));
+            File.Copy(Path.Combine(ContentRoot(), AssetPaths.RecordingDirectory, "footstep.wav"), Path.Combine(root.FullName, "pwn.wav"));
+
+            int code = AudioAnalyzeCommand.Run(["--root", root.FullName, "--sound", sound]);
+
+            Assert.Equal(2, code);
+            Assert.False(File.Exists(Path.Combine(root.FullName, "pwn.json")), "The command wrote a file outside the sound directory.");
+            Assert.Empty(Directory.GetFiles(Path.Combine(root.FullName, AudioSynthCommand.ContentDirectoryName, AssetPaths.SoundDirectory)));
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
+    /// <summary>A chunk length that passes the end of the file is an error that names the file and the chunk, and never an overflow (PR #87 review P2-2).</summary>
+    [Fact]
+    public void AWavChunkPastTheEndFails()
+    {
+        byte[] header = [.. Encoding.ASCII.GetBytes("RIFF"), .. BitConverter.GetBytes(12), .. Encoding.ASCII.GetBytes("WAVE")];
+        foreach (int length in new[] { 2147483640, int.MaxValue, 40 })
+        {
+            byte[] file = [.. header, .. Encoding.ASCII.GetBytes("fmt "), .. BitConverter.GetBytes(length)];
+
+            ContextException error = Assert.Throws<ContextException>(() => WavReader.Read("broken.wav", file));
+
+            Assert.Contains("broken.wav", error.Message, StringComparison.Ordinal);
+            Assert.Contains("fmt ", error.Message, StringComparison.Ordinal);
+            Assert.Contains("past the end", error.Message, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>
     /// A short burst of noise under a fall, as a stand-in for a recording. The spectral layer holds the shape of noise, and
     /// a pure tone is the one thing that its random phases do not hold (D-464, D-467).
     /// </summary>

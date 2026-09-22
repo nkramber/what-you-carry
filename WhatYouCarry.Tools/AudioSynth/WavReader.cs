@@ -36,7 +36,10 @@ public static class WavReader
             string tag = Tag(bytes, offset);
             int length = BitConverter.ToInt32(bytes, offset + 4);
             int body = offset + 8;
-            if (length < 0 || body + length > bytes.Length)
+
+            // The remaining count comes off the length, because body plus length passes the end of an int and turns
+            // negative on a length near the top of the range (PR #87 review P2-2).
+            if (length < 0 || length > bytes.Length - body)
             {
                 throw Error(path, tag, "has a length past the end of the file");
             }

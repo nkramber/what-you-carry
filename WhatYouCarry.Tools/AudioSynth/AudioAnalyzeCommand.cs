@@ -39,6 +39,9 @@ public static class AudioAnalyzeCommand
     /// <summary>The fade of a new spectral layer, in milliseconds.</summary>
     public const double NewFadeMs = 10.0;
 
+    /// <summary>The message of a sound name that is not one file name.</summary>
+    public const string BadSoundName = "The sound name must be one file name: no directory, no '..', and no separator.";
+
     /// <summary>The whole run as an exit code: 0 when the sound file is written, 1 on a bad file or a write failure, 2 on a bad command line.</summary>
     public static int Run(string[] args)
     {
@@ -77,6 +80,12 @@ public static class AudioAnalyzeCommand
         if (root is null || sound is null)
         {
             Console.Error.WriteLine("The options are required: --root <checkout> and --sound <name>.");
+            return 2;
+        }
+
+        if (!IsOneName(sound))
+        {
+            Console.Error.WriteLine($"{BadSoundName} The name is '{sound}'.");
             return 2;
         }
 
@@ -231,6 +240,20 @@ public static class AudioAnalyzeCommand
         JsonObject added = NewSpectral(referenceSamples);
         layers.Add(added);
         return added;
+    }
+
+    /// <summary>
+    /// Answers whether a sound name is one file name. A name with a directory, a parent step, or a separator writes
+    /// outside the sound directory, so the command takes none of them (PR #87 review P2-1).
+    /// </summary>
+    public static bool IsOneName(string sound)
+    {
+        return sound.Length > 0
+            && sound != "."
+            && sound != ".."
+            && sound.IndexOfAny(['/', '\\', ':']) < 0
+            && sound.IndexOfAny(Path.GetInvalidFileNameChars()) < 0
+            && Path.GetFileName(sound) == sound;
     }
 
     /// <summary>The bytes of one file. An absent file, and a file that the user cannot read, are each an error that names the path (T-2).</summary>
