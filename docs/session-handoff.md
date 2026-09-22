@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 205: 2026-09-21, Codex
+
+Author: Codex
+Session: PR-86, reviewer. Branch `feat/pr-19-hud-and-navigation`. PR #86, pending owner merge.
+
+### What this session did, and why
+
+- Reviewed the complete PR-86 implementation and test diff for the HUD and controller navigation base.
+- Added `docs/reviews/pr-86.md` with the cross-provider verdict for effective head `c64e1e2`.
+
+### State of the build
+
+- Build: 0 warnings and 0 errors at the remote tip `5ea0566`.
+- Focused HUD, navigation, input, and stairwell tests passed: 30 tests.
+- Det-lint, asset QA, and STE check passed with 0 findings.
+- The Godot smoke session passed. The full test suite stalled before it returned a result.
+
+### In flight
+
+- The owner merge of PR #86.
+
+### Traps and gotchas
+
+- The PR tip `5ea0566` is metadata-only. The review effective head is `c64e1e2`.
+- The pre-review evaluate failure reported the missing `docs/reviews/pr-86.md` record. It was not a product test failure.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can merge PR #86 after the review record and this handoff commit reach the remote branch.
+
 ## Session 204: 2026-09-21, Claude Code
 
 Author: Claude Code
@@ -347,39 +381,3 @@ None.
 ### Next concrete action
 
 The other provider reviews PR #84 at effective head `f000599`.
-
-## Session 195: 2026-09-20, Codex
-
-Author: Codex
-Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
-
-### What this session did, and why
-
-- Reopened PR #83 after the D-406 handoff rotation correction.
-- Reviewed the new substantive diff at effective head `f698cd9`.
-- Verified the handoff tests and all required implementation checks.
-- Updated `docs/reviews/pr-83.md` with the verdict `Ready for owner merge`.
-
-### State of the build
-
-- `HandoffRotateTests` passed, 9 of 9.
-- The three build legs, three smoke legs, bit identity, compare, bots, asset-qa, det-lint, STE, doc-gate, and night-gate pass for the corrected tip.
-- `evaluate` and `review-gate` wait for this review record. The effective head is `f698cd9`.
-
-### In flight
-
-The approving repeat-review record is pushed in metadata commit `a07243a`.
-
-### Traps and gotchas
-
-- D-406 changes substantive tool and test paths, so the effective head moved from `8452dbd` to `f698cd9`.
-- Duplicate session numbers remain an error case.
-- The owner merges the PR.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Verify the remote review-gate result after the record publishes.
