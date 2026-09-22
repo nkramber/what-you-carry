@@ -137,8 +137,8 @@ public sealed class GameShapeTests
     }
 
     /// <summary>
-    /// Every content source skips the model directory and the texture directory, because the animation, palette, and
-    /// rule files there are JSON that Core never reads (D-298, D-305).
+    /// Every content source skips the model, texture, and audio directories, because the animation, palette, rule, and
+    /// sound parameter files there are JSON that Core never reads (D-298, D-305, D-453).
     /// </summary>
     [Fact]
     public void ContentSourcesSkipTheAssetDirectories()
@@ -150,6 +150,7 @@ public sealed class GameShapeTests
         content.Write("textures/palette.json", "{}");
         content.Write("textures/rules/raw-stone.json", "{}");
         content.Write("texturesets/b.json", "{}");
+        content.Write("audio/sfx/footstep.json", "{}");
 
         string[] gamePaths = new DirectoryContentSource(content.Content).Read().Select(file => file.Path).OrderBy(path => path, StringComparer.Ordinal).ToArray();
         string[] toolPaths = new WhatYouCarry.Tools.BotRunner.DirectoryContentSource(content.Content).Read().Select(file => file.Path).OrderBy(path => path, StringComparer.Ordinal).ToArray();
@@ -161,6 +162,8 @@ public sealed class GameShapeTests
         Assert.True(ContentLoader.IsAssetPath("models/player.attack.json"));
         Assert.False(ContentLoader.IsAssetPath("floors/a.json"));
         Assert.False(ContentLoader.IsAssetPath("texturesets/b.json"));
+        Assert.True(ContentLoader.IsAssetPath("audio/sfx/footstep.json"));
+        Assert.False(ContentLoader.IsAssetPath("audiobooks/c.json"));
     }
 
     /// <summary>An absent directory is an error that names the path, and never an empty set (T-2).</summary>

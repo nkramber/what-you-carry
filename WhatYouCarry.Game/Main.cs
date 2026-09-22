@@ -13,6 +13,7 @@ using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Game.Animation;
+using WhatYouCarry.Game.Audio;
 using WhatYouCarry.Game.Content;
 using WhatYouCarry.Game.Input;
 using WhatYouCarry.Game.Logging;
@@ -62,6 +63,10 @@ namespace WhatYouCarry.Game;
 /// The chunk swap digs the next floor on one task during each floor, offers the plan to the loop before each tick,
 /// and uploads its chunks a few at a time (D-72, D-429). A descent swaps the chunks in one frame, and the
 /// interpolation starts again at the spawn, so no frame draws the body between two floors.
+/// </para>
+/// <para>
+/// The sound bank plays the sounds of each tick: a sound for each action event, the expiry, and the hunter spawn, and
+/// the steps of the player and of the Overseer on their stride rhythm (D-453, D-454, D-455).
 /// </para>
 /// <para>
 /// The HUD shows the health, the timer, the damage numbers, and the stairwell prompt on every frame (D-36, PR-19). The
@@ -124,6 +129,18 @@ public partial class Main : Node3D
 
     /// <summary>The message of the line of the boot that built the HUD (PR-19 exit test 5).</summary>
     public const string HudBuiltMessage = "The HUD is built.";
+
+    /// <summary>The message of the line of the boot that loaded the sound bank (D-453).</summary>
+    public const string SoundsLoadedMessage = "The sound bank is loaded.";
+
+    /// <summary>The message of the error line of a tick whose sounds failed.</summary>
+    public const string SoundFailedMessage = "The sounds of a tick failed, and the game quits.";
+
+    /// <summary>The name of the field of the sound line that holds the count of rendered files.</summary>
+    public const string SoundFilesField = "soundFiles";
+
+    /// <summary>The name of the field of the sound line that names the audio driver. The dummy driver plays nothing.</summary>
+    public const string AudioDriverField = "audioDriver";
 
     /// <summary>The message of the line of the boot that built the fixture screen of the navigation (D-446).</summary>
     public const string FixtureBuiltMessage = "The fixture screen of the navigation is built.";
@@ -234,6 +251,8 @@ public partial class Main : Node3D
     private ChunkSwap? chunks;
     private readonly StairwellHold hold = new();
     private Hud? hud;
+    private SoundBank? sounds;
+    private SoundDirector? director;
     private Camera3D? hudCamera;
     private HudState? shotState;
     private bool promptOpen;
@@ -399,6 +418,19 @@ public partial class Main : Node3D
 
         this.promptOpen = open;
         this.hud?.AfterTick(this.loop);
+        if (this.sounds is not null && this.director is not null)
+        {
+            try
+            {
+                this.sounds.Play(this.director.AfterTick(this.loop), this.loop.Hunter);
+            }
+            catch (Exception error)
+            {
+                this.LogFailure(SoundFailedMessage, RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick), error);
+                this.Quit(ExitFailure);
+                return;
+            }
+        }
 
         // A descent digs a new floor with its own enemies, so the trees of the old floor go and the new ones come.
         if (this.enemyNodes is not null)
@@ -740,6 +772,14 @@ public partial class Main : Node3D
         this.hud = Hud.Build(content.Strings, this);
         this.hudCamera = this.camera;
         this.logger.Write(LogContextKind.Run, LogLevel.Info, HudBuiltMessage, RunFields(loop.Seed, loop.Floor, loop.Tick));
+
+        // The sounds of each tick follow its Core events and the stride of each body (D-453, D-454).
+        this.sounds = SoundBank.Build(contentDirectory, this);
+        this.director = new SoundDirector(content.Hunter.SpeedMetresPerSecond(0));
+        LogFields loaded = RunFields(loop.Seed, loop.Floor, loop.Tick);
+        loaded.Add(SoundFilesField, (long)this.sounds.Files);
+        loaded.Add(AudioDriverField, AudioServer.GetDriverName());
+        this.logger.Write(LogContextKind.Run, LogLevel.Info, SoundsLoadedMessage, loaded);
         if (this.smoke)
         {
             // No menu screen exists before PR-53, so the smoke session proves the focus map on the fixture (D-446).
@@ -889,12 +929,13 @@ public partial class Main : Node3D
 
     /// <summary>
     /// Ends the session. The frame log, when one runs, goes to its file first, and a write failure of either
-    /// kind, a disk error or a path the user cannot write, turns the exit code to failure. The engine quits at
-    /// the end of the frame, and no later tick runs.
+    /// kind, a disk error or a path the user cannot write, turns the exit code to failure. The sound bank releases
+    /// its streams. The engine quits at the end of the frame, and no later tick runs.
     /// </summary>
     private void Quit(int exitCode)
     {
         this.ended = true;
+        this.sounds?.Release();
         if (this.frames is not null)
         {
             try

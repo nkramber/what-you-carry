@@ -1,0 +1,14 @@
+{
+  "seed": 1,
+  "gain": 0.7,
+  "layers": [
+    {
+      "kind": "recording",
+      "delayMs": 0,
+      "gain": 1.0,
+      "trimMs": 2760,
+      "fadeMs": 40,
+      "file": "audio/recordings/hunter-step.wav"
+    }
+  ]
+}

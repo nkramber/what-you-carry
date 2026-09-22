@@ -1,0 +1,59 @@
+{
+  "recordings": [
+    {
+      "file": "footstep.wav",
+      "sound": "footstep",
+      "source": "Freesound",
+      "id": 563473,
+      "name": "Footstep_Walk_HardSurface_6.wav",
+      "author": "nicholasdaryl",
+      "url": "https://freesound.org/people/nicholasdaryl/sounds/563473/",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "form": "the high-quality OGG preview, decoded to 16-bit PCM mono at 44100 Hz"
+    },
+    {
+      "file": "hunter-spawn-horn.wav",
+      "sound": "hunter-spawn",
+      "source": "Freesound",
+      "id": 324275,
+      "name": "horn 02",
+      "author": "Kostrava",
+      "url": "https://freesound.org/people/Kostrava/sounds/324275/",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "form": "the high-quality OGG preview, decoded to 16-bit PCM mono at 44100 Hz"
+    },
+    {
+      "file": "hunter-spawn-stones.wav",
+      "sound": "hunter-spawn",
+      "source": "Freesound",
+      "id": 567251,
+      "name": "Stones Falling",
+      "author": "iwanPlays",
+      "url": "https://freesound.org/people/iwanPlays/sounds/567251/",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "form": "the high-quality OGG preview, decoded to 16-bit PCM mono at 44100 Hz"
+    },
+    {
+      "file": "hunter-step.wav",
+      "sound": "hunter-step",
+      "source": "Freesound",
+      "id": 462818,
+      "name": "HUTCH HD SFX 2014 0144",
+      "author": "leonelmail",
+      "url": "https://freesound.org/people/leonelmail/sounds/462818/",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "form": "the high-quality OGG preview, decoded to 16-bit PCM mono at 44100 Hz"
+    },
+    {
+      "file": "timer-alarm.wav",
+      "sound": "timer-alarm",
+      "source": "Freesound",
+      "id": 607943,
+      "name": "Sensor signal",
+      "author": "BloodPixelHero",
+      "url": "https://freesound.org/people/BloodPixelHero/sounds/607943/",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "form": "the high-quality OGG preview, decoded to 16-bit PCM mono at 44100 Hz"
+    }
+  ]
+}

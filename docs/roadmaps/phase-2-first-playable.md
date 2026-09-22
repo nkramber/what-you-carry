@@ -668,10 +668,11 @@ Gate: exit tests 1 to 5 pass.
 
 Scope:
 
-- `WhatYouCarry.Tools/AudioSynth/`: a command that renders a sound from a parameter file to a WAV, deterministically (D-93). The parameter format is OQ-48.
-- `content/audio/sfx/*.json`: the first set: sword swing, sword hit, footstep, dodge, player hit, hunter spawn, hunter step, timer alarm at one minute, and timer expiry.
-- `WhatYouCarry.Game/Audio/`: playback bound to Core events, with the hunter's sound pitched by its speed.
-- The synthesizer runs at build time. The game ships the rendered WAV files.
+- `WhatYouCarry.Tools/AudioSynth/`: the `audio-synth` command renders each sound file to a WAV file, deterministically on the three platforms (D-93, D-462). A sound holds 1 to 4 layers. The `audio-analyze` command writes the band levels of a CC0 reference into a spectral layer (D-459, D-461, D-464). Its four controls trim, stretch, pitch, and tilt the sound (D-465). A pitched sound ships as its CC0 recording in a recording layer (D-467).
+- `content/audio/sfx/*.json`: the first set: sword swing, sword hit, footstep, dodge, player hit, hunter spawn, hunter step, timer alarm, and timer tick. The expiry has no sound of its own (D-469). The repository holds each rendered WAV file next to its sound file, and a test compares them, as for the atlas (D-453). The recordings live under `content/audio/recordings/`, with their sources.
+- `WhatYouCarry.Core/Simulation/ActionEvent.cs`: an action event for the swing start, the swing hit, the dodge, a hit that lands on the player, and each timer mark (D-454, D-456). The events are not state, so the simulation version stands.
+- `WhatYouCarry.Game/Audio/`: four buses (D-452), one player per file, and a cue for each Core event (D-454). The footstep and the hunter step follow a stride rhythm. The hunter step takes the pitch of its speed (D-455).
+- The owner approves the sword and hunter sounds after an `afplay` review and a play session (D-457, D-470).
 
 Out of scope: music (PR-50), a mix beyond one bus per group.
 
@@ -679,9 +680,9 @@ Exit tests:
 
 1. `SynthIsDeterministic` renders one parameter file twice and asserts equal bytes.
 2. `SynthRejectsUnknownField` asserts a parameter file with an extra field fails with the field (D-92).
-3. `EveryEventHasSound` asserts each Core event in the fixture list maps to a rendered file.
-4. `HunterPitchFollowsSpeed` asserts a higher pitch at a higher hunter speed.
-5. The owner approves the sword and hunter sounds, recorded as a decision.
+3. `EveryEventHasSound` asserts each Core event in the fixture list maps to a rendered file. The list holds the five action kinds, a timer mark at each mark, and the hunter spawn. The expiry has no cue (D-454, D-469).
+4. `HunterPitchFollowsSpeed` asserts a higher pitch at a higher hunter speed, up to the ratio 2 (D-455).
+5. The owner approves the sword and hunter sounds, recorded as a decision: D-470. `ApprovedSoundsAreTheOwnerChoice` holds each approved file to its SHA-256.
 
 Review focus: content, presentation, test quality.
 
@@ -755,7 +756,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 25. Owner: answer OQ-44. ✅ Answered 2026-09-21: D-427. The PR-18 answers: D-428 to D-437.
 26. PR-18. ✅ Done in PR #85.
 27. PR-19.
-28. Owner: answer OQ-48.
+28. Owner: answer OQ-48 and OQ-182. ✅ Answered 2026-09-21 and 2026-09-22. The answers of PR-20 run from D-450, which D-462 supersedes, to D-470.
 29. PR-20.
 30. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
 31. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
@@ -768,13 +769,14 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 2. Each 
 
 Open:
 
-- OQ-48: the sound parameter format. Blocks PR-20.
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-181: the antialiasing of the world. Blocks PR-62.
 
 Resolved 2026-09-21:
 
+- OQ-48 (D-450, D-462): the sound parameter format. PR-20.
+- OQ-182 (D-459, D-464): the sound path after the review of the first sounds. PR-20.
 - OQ-44 (D-427): the transition hitch budget. PR-18.
 - OQ-161 (D-428): the M-3 run on the Steam Deck. PR-13, PR-18, and M-3.
 

@@ -56,11 +56,18 @@ public sealed class ContentLoader
     /// </summary>
     public const string TextureDirectory = "textures/";
 
-    /// <summary>Answers whether a content path lies in a directory that every content source skips: the models or the textures (D-298, D-305).</summary>
+    /// <summary>
+    /// The directory of the sound parameter files and the rendered sounds, which Core never reads (D-453). Every
+    /// content source skips it, so a sound change leaves the content hash of D-163 as it was.
+    /// </summary>
+    public const string AudioDirectory = "audio/";
+
+    /// <summary>Answers whether a content path lies in a directory that every content source skips: the models, the textures, or the audio (D-298, D-305, D-453).</summary>
     public static bool IsAssetPath(string contentPath)
     {
         return contentPath.StartsWith(ModelDirectory, System.StringComparison.Ordinal)
-            || contentPath.StartsWith(TextureDirectory, System.StringComparison.Ordinal);
+            || contentPath.StartsWith(TextureDirectory, System.StringComparison.Ordinal)
+            || contentPath.StartsWith(AudioDirectory, System.StringComparison.Ordinal);
     }
 
     private readonly IContentSource source;

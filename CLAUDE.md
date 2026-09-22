@@ -112,6 +112,7 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Determinism and string lint: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --root .`
 - Asset QA: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- asset-qa --root .`
 - Texture generator: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- texture-gen --root .`
+- Sounds: `make sounds` renders them, and `make analyze SOUND=<name>` analyses one reference.
 - Bit identity: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- bit-identity`
 - Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
@@ -127,7 +128,7 @@ The Game layer checks the user arguments after `--` at boot. A bad argument ends
 
 `Godot` is not on the command path of this machine, so use the full path above. `det-lint` reports one count for Core and one for Game (D-222). The PR gate names what `det-lint` and `asset-qa` read. `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. A local `dotnet test` needs the Godot build at the path above, or the one that `WYC_GODOT` names, for the Smoke category. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
 
-`texture-gen` writes `content/textures/atlas.png` from the palette and the rules under `content/textures/` (D-305). Commit the atlas after each palette or rule change, because a test compares it with the output. The contact sheet needs a window, so it never runs in CI, and a headless run exits 1 (D-306).
+`texture-gen` writes `content/textures/atlas.png` from the palette and the rules under `content/textures/` (D-305). Commit the atlas after each palette or rule change, because a test compares it with the output. `audio-synth` writes a WAV file next to each sound file under `content/audio/sfx/`, and a test compares each one too (D-453). `audio-analyze` writes the band levels of a reference into a spectral layer (D-464). The `Makefile` holds the commands of this list: run `make`. The contact sheet needs a window, so it never runs in CI, and a headless run exits 1 (D-306).
 
 Each project has one directory at the root, beside the solution file, and `project.godot` sits in `WhatYouCarry.Game/`. Each project file names its target framework, because the Godot editor writes `net8.0` into a project file that has none.
 

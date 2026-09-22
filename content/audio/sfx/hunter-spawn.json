@@ -1,0 +1,22 @@
+{
+  "seed": 1,
+  "gain": 0.6,
+  "layers": [
+    {
+      "kind": "recording",
+      "delayMs": 0,
+      "gain": 1.0,
+      "trimMs": 5513,
+      "fadeMs": 100,
+      "file": "audio/recordings/hunter-spawn-horn.wav"
+    },
+    {
+      "kind": "recording",
+      "delayMs": 0,
+      "gain": 0.1581,
+      "trimMs": 4201,
+      "fadeMs": 100,
+      "file": "audio/recordings/hunter-spawn-stones.wav"
+    }
+  ]
+}

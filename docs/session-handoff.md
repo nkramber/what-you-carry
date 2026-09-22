@@ -2,6 +2,48 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 206: 2026-09-22, Claude Code
+
+Author: Claude Code
+Session: PR-20, author. Branch `feat/pr-20-audio-synth-and-effects`. PR pending.
+
+### What this session did, and why
+
+- Asked the owner OQ-48 and every open answer of PR-20 before the code, and recorded D-450 to D-470.
+- Built the sound tool: `audio-synth` renders each sound file to a WAV file, and `audio-analyze` writes the band levels of a CC0 reference into a spectral layer. The render holds no transcendental of the runtime, so the three platforms give equal bytes.
+- The owner rejected the sfxr sounds of the first design, so D-459 and D-462 to D-469 moved the path twice: first to the spectral layer of analysed references, then to CC0 recordings for the pitched sounds.
+- Shipped nine sounds: the sword swing, the sword hit, the footstep, the dodge, the player hit, the hunter spawn, the hunter step, the timer alarm, and the timer tick. The owner picked the reference of each one by ear from CC0 candidates.
+- Gave Core five action events for the gameplay facts of the sounds (D-454), and the Game layer four buses, one player per sound, the stride rhythm of D-463, and the hunter pitch of D-455.
+- Wrote the `Makefile` at the root, under an owner override of G-10 for a second concern in this PR.
+
+### State of the build
+
+- Build: 0 warnings and 0 errors. The base is `170f08c`, and no commit exists on the branch yet.
+- The 38 audio tests pass, the STE check, the determinism lint, and the asset check each report 0 findings.
+- The last full suite ran while the documents changed, so it needs one more run before the commit.
+- The headless smoke session passed earlier in the session, with no leaked object and no error line.
+
+### In flight
+
+- The first commit, the push, the gitar pass, and the hand-over to Codex.
+- The owner runs a play session of the nine sounds. The verdict of that session is not in yet.
+
+### Traps and gotchas
+
+- The dummy audio driver of a headless session mixes nothing, so a playback never ends and the engine reports it leaked. The bank plays nothing on that driver, and the boot line names the driver.
+- A level of a spectral layer had a ceiling of 40 decibels, which clamped the loudest bands of three sounds. The ceiling is 80 now, and `ALoudRecordingDoesNotReachTheCeiling` guards it.
+- The band noise of a spectral layer drops the pitch of a tone, so a horn or a bell must ship as its recording (D-467).
+- `afplay` cannot play OGG, and `afconvert` writes the extensible WAV header. The reader takes that header.
+- The Freesound key of the owner lives in `~/.zshrc` as `FREESOUND_API_KEY`, and never in this repository.
+
+### Open questions that block progress
+
+None. OQ-48 and OQ-182 are answered.
+
+### Next concrete action
+
+Run the full suite, commit, push, and answer the gitar pass. Then hand the PR to Codex for the cross-provider review. After the merge, a fresh session takes F-107 and F-108: an enemy walks no diagonal, and an enemy does not walk up a ramp. The owner saw both in the play session of this PR.
+
 ## Session 205: 2026-09-21, Codex
 
 Author: Codex
@@ -330,54 +372,3 @@ None.
 ### Next concrete action
 
 The author fixes P1-1 and reruns the focused and full test suites.
-
-## Session 196: 2026-09-20, Claude Code
-
-Author: Claude Code
-Session: PR-17, the floor timer, the hunter, and the escalation, author. Branch `feat/pr-17-timer-and-hunter`. PR #84, pending owner merge.
-
-### What this session did, and why
-
-- Asked the owner OQ-4, OQ-6, and every rule of the hunt before code. The answers are D-407 to D-426. OQ-4 and OQ-6 are resolved.
-- Revised in part: D-271 by D-420, D-320 by D-422, D-400 by D-419, and D-403 by D-411.
-- Added `FloorTimer`, `Hunter` (the Overseer), `Escalation`, `TimerEvent`, `HunterDefinition`, and the `TimerTester` policy.
-- Added `content/hunter/overseer.json`, `content/weapons/overseer-pick.json`, and the timer and wave fields of each floor template.
-- A death carries its cause. The bot log writes the timer events, and the night record gains `deathCauses` of each policy.
-- A policy that promises progress reads softlock at expiry (D-420). The timer tester joins the PR bot job and the night (D-426).
-- The Game draws the wave enemies and the Overseer with the body model as a fixture.
-- Raised the simulation version to 14. The bit-identity answer moved to `6f7da3d2313688bd`.
-
-### State of the build
-
-- Base `a5461d4`. The code head is `4e85570`, and the effective head is `f000599`, because that commit changes the design doc and the roadmap (D-184).
-- The local suite passed 1206 of 1207 before the handoff rotation. The one failure was `RepositoryFilesHoldTheRule`, which this rotation repairs.
-- det-lint, asset-qa, ste-check, the Godot build, and the smoke session passed.
-- PR-17 exit tests 1 to 7 pass. Exit test 6 measured expiry on 0 of 2293 floors.
-- All PR #84 checks passed at `f000599`. `evaluate` reads red until the review record exists (D-251).
-- The gitar pass is current and found no issues. Its CI note got a reply with D-251.
-- Exit test 7 of PR-16 passed: night run 35561635447 on `main` at `a5461d4` ended in success.
-  - Random walker: 0 crashes, 0 softlocks, 4839 deaths, 161 by budget.
-  - Greedy descender: 0 crashes, 0 softlocks, 4669 deaths, 331 at the bottom.
-  - Full clearer: 0 crashes, 0 softlocks, 3928 deaths, 1072 at the bottom. This is the first night of the full clearer at 5000 seeds.
-  - The `night.json` of that night is the first to carry the deaths of each policy (D-403): 4839, 4669, and 3928.
-
-### In flight
-
-- The cross-provider review of PR #84 at effective head `f000599`.
-
-### Traps and gotchas
-
-- `main` at `a5461d4` is red on CI. Session 195 sat at the end of the handoff, and 11 entries stood in the file. The rotation of this session moves 195 back and 185 to the archive.
-- The timer and wave fields are required in every floor template. A test content set needs them and one `hunter/` file.
-- The Overseer spawn is a fault on a floor with no hidden reachable cell (D-415). The night reports each such floor as a crash.
-- Exit tests 5 and 6 run their seeds in parallel. Core holds no mutable static state.
-- The pick reuses the sword model and animation until PR-14. Its low and high blade heights copy the sword.
-- The night now runs four policies, so it takes more wall time on the Mac runner.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The other provider reviews PR #84 at effective head `f000599`.

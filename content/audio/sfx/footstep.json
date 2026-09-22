@@ -1,0 +1,14 @@
+{
+  "seed": 1,
+  "gain": 0.2,
+  "layers": [
+    {
+      "kind": "recording",
+      "delayMs": 0,
+      "gain": 1.0,
+      "trimMs": 241,
+      "fadeMs": 5,
+      "file": "audio/recordings/footstep.wav"
+    }
+  ]
+}

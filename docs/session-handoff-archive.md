@@ -1,5 +1,56 @@
 # Session handoff archive
 
+## Session 196: 2026-09-20, Claude Code
+
+Author: Claude Code
+Session: PR-17, the floor timer, the hunter, and the escalation, author. Branch `feat/pr-17-timer-and-hunter`. PR #84, pending owner merge.
+
+### What this session did, and why
+
+- Asked the owner OQ-4, OQ-6, and every rule of the hunt before code. The answers are D-407 to D-426. OQ-4 and OQ-6 are resolved.
+- Revised in part: D-271 by D-420, D-320 by D-422, D-400 by D-419, and D-403 by D-411.
+- Added `FloorTimer`, `Hunter` (the Overseer), `Escalation`, `TimerEvent`, `HunterDefinition`, and the `TimerTester` policy.
+- Added `content/hunter/overseer.json`, `content/weapons/overseer-pick.json`, and the timer and wave fields of each floor template.
+- A death carries its cause. The bot log writes the timer events, and the night record gains `deathCauses` of each policy.
+- A policy that promises progress reads softlock at expiry (D-420). The timer tester joins the PR bot job and the night (D-426).
+- The Game draws the wave enemies and the Overseer with the body model as a fixture.
+- Raised the simulation version to 14. The bit-identity answer moved to `6f7da3d2313688bd`.
+
+### State of the build
+
+- Base `a5461d4`. The code head is `4e85570`, and the effective head is `f000599`, because that commit changes the design doc and the roadmap (D-184).
+- The local suite passed 1206 of 1207 before the handoff rotation. The one failure was `RepositoryFilesHoldTheRule`, which this rotation repairs.
+- det-lint, asset-qa, ste-check, the Godot build, and the smoke session passed.
+- PR-17 exit tests 1 to 7 pass. Exit test 6 measured expiry on 0 of 2293 floors.
+- All PR #84 checks passed at `f000599`. `evaluate` reads red until the review record exists (D-251).
+- The gitar pass is current and found no issues. Its CI note got a reply with D-251.
+- Exit test 7 of PR-16 passed: night run 35561635447 on `main` at `a5461d4` ended in success.
+  - Random walker: 0 crashes, 0 softlocks, 4839 deaths, 161 by budget.
+  - Greedy descender: 0 crashes, 0 softlocks, 4669 deaths, 331 at the bottom.
+  - Full clearer: 0 crashes, 0 softlocks, 3928 deaths, 1072 at the bottom. This is the first night of the full clearer at 5000 seeds.
+  - The `night.json` of that night is the first to carry the deaths of each policy (D-403): 4839, 4669, and 3928.
+
+### In flight
+
+- The cross-provider review of PR #84 at effective head `f000599`.
+
+### Traps and gotchas
+
+- `main` at `a5461d4` is red on CI. Session 195 sat at the end of the handoff, and 11 entries stood in the file. The rotation of this session moves 195 back and 185 to the archive.
+- The timer and wave fields are required in every floor template. A test content set needs them and one `hunter/` file.
+- The Overseer spawn is a fault on a floor with no hidden reachable cell (D-415). The night reports each such floor as a crash.
+- Exit tests 5 and 6 run their seeds in parallel. Core holds no mutable static state.
+- The pick reuses the sword model and animation until PR-14. Its low and high blade heights copy the sword.
+- The night now runs four policies, so it takes more wall time on the Mac runner.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The other provider reviews PR #84 at effective head `f000599`.
+
 ## Session 195: 2026-09-20, Codex
 
 Author: Codex

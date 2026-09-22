@@ -1,5 +1,6 @@
 using System;
 using WhatYouCarry.Tools.AssetQa;
+using WhatYouCarry.Tools.AudioSynth;
 using WhatYouCarry.Tools.BitIdentity;
 using WhatYouCarry.Tools.BotRunner;
 using WhatYouCarry.Tools.DetLint;
@@ -14,7 +15,7 @@ namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, doc-gate, handoff-rotate, ste-check, det-lint, asset-qa, texture-gen, bit-identity, bot-run, night-record, night-gate.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, doc-gate, handoff-rotate, ste-check, det-lint, asset-qa, texture-gen, audio-synth, audio-analyze, bit-identity, bot-run, night-record, night-gate.";
 
     public static int Main(string[] args)
     {
@@ -42,6 +43,10 @@ public static class Program
                 return AssetQaCommand.Run(commandArgs);
             case "texture-gen":
                 return TextureGenCommand.Run(commandArgs);
+            case "audio-synth":
+                return AudioSynthCommand.Run(commandArgs);
+            case "audio-analyze":
+                return AudioAnalyzeCommand.Run(commandArgs);
             case "bit-identity":
                 return BitIdentityCommand.Run(commandArgs);
             case "bot-run":
