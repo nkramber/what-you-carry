@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 208: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-20, reviewer. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, review ready; publication CI pending.
+
+### What this session did, and why
+
+- Re-reviewed PR #87 after the author fixed P2-1 and P2-2. The effective head is `996b3c3`; the later commit `de98480` changes only this handoff.
+- Both earlier findings are fixed. The path-name check and the overflow-safe WAV bound have six regression cases in total.
+- Updated `docs/reviews/pr-87.md` to record the fixes and the `Ready for owner merge` verdict.
+
+### State of the build
+
+- Build: 0 warnings and 0 errors. The full suite passed: 1301 tests, 0 failures, 0 skips. `det-lint`, `asset-qa`, and `ste-check` each report 0 findings.
+- Before this review publication, the remote tip was `de98480`; the effective head remains `996b3c3`.
+- The CI run for effective head `996b3c3` passed Linux, macOS, Windows, Gitar, bots, `doc-gate`, `night-gate`, `det-lint`, `asset-qa`, `ste-check`, and compare. `evaluate` and `review-gate` failed because the review record still had its earlier verdict.
+- The review publication is in flight. Its fresh checks must pass before owner merge.
+
+### In flight
+
+- The push of the review record and this handoff, followed by the CI wait for the updated record.
+
+### Traps and gotchas
+
+- P2-1 rejected `../../../pwn`, directory names, dot segments, and empty names before it built paths.
+- P2-2 rejected chunk lengths 2147483640, `int.MaxValue`, and 40 with a contextual WAV error.
+- `de98480` is a metadata commit. It does not change the effective head under D-184.
+- F-107 and F-108 remain in the later gameplay PR.
+
+### Open questions that block progress
+
+None. OQ-48 and OQ-182 are resolved by D-450 to D-470.
+
+### Next concrete action
+
+Wait for all checks after the review publication to pass, then hand PR #87 to the owner for merge.
+
 ## Session 207: 2026-09-22, Codex
 
 Author: Codex
@@ -364,38 +401,3 @@ None.
 ### Next concrete action
 
 The owner can merge PR #84 after the review-gate record turns green.
-
-## Session 198: 2026-09-21, Claude Code
-
-Author: Claude Code
-Session: PR-84, answer to the cross-provider review, author. Branch `feat/pr-17-timer-and-hunter`. Pending owner merge.
-
-### What this session did, and why
-
-- Answered the one finding of `docs/reviews/pr-84.md` in `docs/reviews/pr-84-response.md`.
-- P1-1 has partial merit. The crash does not reproduce, because both modulo expressions of `Escalation.TryNextPost` sit inside a loop that does not run for an empty list. The missing test was real.
-- Added `AFloorWithNoPostSkipsEveryWave` to `TimerTests`. It passed on the unchanged Core code. No Core change follows.
-
-### State of the build
-
-- The test commit moves the effective head, because `WhatYouCarry.Tests/` lies outside the metadata set (D-184). Read its hash from `git log`. It is the commit of this entry.
-- The full local suite passed 1208 of 1208 with the Smoke category, in 8 minutes 39 seconds. `TimerTests` passed 17 of 17.
-- The CI of the new head and the gitar pass follow the push.
-
-### In flight
-
-- The gitar pass of the new effective head.
-- The repeat review by the other provider.
-
-### Traps and gotchas
-
-- The review record keeps P1-1 open until the repeat review sets its status. The author never edits the review record.
-- The PR-16 night result stands in the entry of Session 196.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The other provider runs the repeat review of PR #84 at the new effective head.

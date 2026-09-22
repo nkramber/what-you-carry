@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 198: 2026-09-21, Claude Code
+
+Author: Claude Code
+Session: PR-84, answer to the cross-provider review, author. Branch `feat/pr-17-timer-and-hunter`. Pending owner merge.
+
+### What this session did, and why
+
+- Answered the one finding of `docs/reviews/pr-84.md` in `docs/reviews/pr-84-response.md`.
+- P1-1 has partial merit. The crash does not reproduce, because both modulo expressions of `Escalation.TryNextPost` sit inside a loop that does not run for an empty list. The missing test was real.
+- Added `AFloorWithNoPostSkipsEveryWave` to `TimerTests`. It passed on the unchanged Core code. No Core change follows.
+
+### State of the build
+
+- The test commit moves the effective head, because `WhatYouCarry.Tests/` lies outside the metadata set (D-184). Read its hash from `git log`. It is the commit of this entry.
+- The full local suite passed 1208 of 1208 with the Smoke category, in 8 minutes 39 seconds. `TimerTests` passed 17 of 17.
+- The CI of the new head and the gitar pass follow the push.
+
+### In flight
+
+- The gitar pass of the new effective head.
+- The repeat review by the other provider.
+
+### Traps and gotchas
+
+- The review record keeps P1-1 open until the repeat review sets its status. The author never edits the review record.
+- The PR-16 night result stands in the entry of Session 196.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The other provider runs the repeat review of PR #84 at the new effective head.
+
 ## Session 197: 2026-09-21, Codex
 
 Author: Codex
