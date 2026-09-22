@@ -1,0 +1,14 @@
+{
+  "seed": 1,
+  "gain": 0.5,
+  "layers": [
+    {
+      "kind": "recording",
+      "delayMs": 0,
+      "gain": 1.0,
+      "trimMs": 563,
+      "fadeMs": 10,
+      "file": "audio/recordings/timer-alarm.wav"
+    }
+  ]
+}

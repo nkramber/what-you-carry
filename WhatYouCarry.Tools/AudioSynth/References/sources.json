@@ -1,0 +1,48 @@
+{
+  "references": [
+    {
+      "file": "dodge.wav",
+      "sound": "dodge",
+      "source": "Kenney",
+      "id": "cloth3",
+      "name": "cloth3.ogg",
+      "author": "Kenney",
+      "url": "https://kenney.nl/assets",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "form": "the OGG file of the pack, decoded to 16-bit PCM mono at 44100 Hz"
+    },
+    {
+      "file": "player-hit.wav",
+      "sound": "player-hit",
+      "source": "Freesound",
+      "id": 276600,
+      "name": "body_hit.wav",
+      "author": "insanity54",
+      "url": "https://freesound.org/people/insanity54/sounds/276600/",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "form": "the high-quality OGG preview, decoded to 16-bit PCM mono at 44100 Hz, with the first 9378 samples of near-silence cut"
+    },
+    {
+      "file": "sword-hit.wav",
+      "sound": "sword-hit",
+      "source": "Freesound",
+      "id": 420674,
+      "name": "Deep Cut / Slash / Gash",
+      "author": "SypherZent",
+      "url": "https://freesound.org/people/SypherZent/sounds/420674/",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "form": "the high-quality OGG preview, decoded to 16-bit PCM mono at 44100 Hz"
+    },
+    {
+      "file": "sword-swing.wav",
+      "sound": "sword-swing",
+      "source": "Freesound",
+      "id": 59992,
+      "name": "Swosh Sword Swing",
+      "author": "qubodup",
+      "url": "https://freesound.org/people/qubodup/sounds/59992/",
+      "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "form": "the high-quality OGG preview, decoded to 16-bit PCM mono at 44100 Hz"
+    }
+  ]
+}

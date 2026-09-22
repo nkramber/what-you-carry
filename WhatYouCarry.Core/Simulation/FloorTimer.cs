@@ -26,6 +26,9 @@ public sealed class FloorTimer
     /// <summary>The floors that hold a boss (D-6). Each gets the extra seconds of its band (D-407).</summary>
     public static readonly int[] BossFloors = [5, 10, 15];
 
+    /// <summary>The timer marks, in seconds left (D-456). The loop gives an action event when the running countdown reaches one.</summary>
+    public static readonly int[] MarkSeconds = [60, 30, 10, 8, 6, 5, 4, 3, 2, 1];
+
     /// <summary>A timer at its full length.</summary>
     /// <exception cref="ContextException">The length is below one tick.</exception>
     public FloorTimer(long lengthTicks)
@@ -77,6 +80,20 @@ public sealed class FloorTimer
         }
 
         return false;
+    }
+
+    /// <summary>The timer mark at one count of ticks left: its seconds when the count is exactly a mark, or zero (D-456).</summary>
+    public static int MarkAt(long remaining)
+    {
+        foreach (int seconds in MarkSeconds)
+        {
+            if (remaining == (long)seconds * SimulationLoop.TicksPerSecond)
+            {
+                return seconds;
+            }
+        }
+
+        return 0;
     }
 
     /// <summary>

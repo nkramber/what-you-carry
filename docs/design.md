@@ -228,7 +228,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-4 | v1 named Deep Rock Galactic as the non-hitscan reference. Most of its guns are hitscan | 2026-09-06 | ✅ doc. D-60 replaced it |
 | F-5 | v1 never said whether banked gear enters the dungeon | 2026-09-06 | 🔧 D-2. Binds PR-30 |
 | F-6 | v1 never said who simulates player collision, enemy AI, and pathfinding | 2026-09-06 | 🔧 D-76, D-80. Binds PR-7, PR-16 |
-| F-7 | v1 had no audio plan | 2026-09-06 | 🔧 D-89, D-93. Binds PR-20, PR-50 |
+| F-7 | v1 had no audio plan | 2026-09-06 | 🔧 D-89, D-93. The effects are done in PR #87. Binds PR-50 for the music |
 | F-8 | D-74 put a world-space aim in the intent. D-75 put the camera in Core. Both cannot hold | 2026-09-06 | 🔧 D-77. Binds PR-6, PR-8 |
 | F-9 | D-95 "resume at floor start" made a quit a free heal and a timer reset | 2026-09-06 | 🔧 D-97. Binds PR-31 |
 | F-10 | D-47 random affixes cannot show on an enemy, against D-16 | 2026-09-06 | 🔧 D-49. Binds PR-21, PR-26 |
@@ -328,6 +328,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-104 | Two walkers that each walk to the cell of the other never meet. A body crosses one cell in about the ticks of one path search, so it lies between two cells at every search, and two paths of one length lead from the two cells, each through the other. The bot and the enemy then swing around each other 2 meters apart. A search that starts at the cell ahead keeps the step that runs, and the last meters of a chase are a straight walk at the body and not at a cell | 2026-09-20 | ✅ PR #83. `PathFollower` and `PathWalk.CanWalkStraight` |
 | F-105 | A body can come no nearer its goal with a clear path ahead of it. Three causes: a drift check that read the X and the Z of a waypoint and never its row missed a body that a fall or a roll took two rows under its path, and the body then jumped at a step of two blocks for the rest of the floor. A step up jumped in place and gave the body no forward input, so a step that one jump cannot clear repeats. A roll away from every blade ends in a standoff that no duel leaves. The drift check now reads the row, a step up jumps and walks on in the same tick, a roll goes through the enemy, and a walk that gains nothing for four seconds jumps. The measured softlock rate of a bot fell from about 10 percent to zero over 2000 seeds of each policy | 2026-09-20 | ✅ PR #83. `PathFollower`, `BotIntent.Roll`, and the two bot policies |
 | F-106 | A handoff entry added at the end of `docs/session-handoff.md`, under an older session, fails `HandoffRotateTests.RepositoryFilesHoldTheRule` and reds the three build legs of its branch. The rule of D-146 keeps the newest entry first. Four sessions did this: Session 191 on the base of PR #83, and Sessions 193 and 194 on its branch. Each one held the review of PR #83 at `Blocked` for CI that the same entry had reddened, and the review commits moved the tip again on each pass. `handoff-rotate` reported the order and changed nothing, so every repair was by hand | 2026-09-20 | ✅ PR #83. D-406: the rotation puts the entry back in place and names it |
+| F-107 | An enemy walks no diagonal. `GridMoves.Directions` is 4, with the steps (1,0), (-1,0), (0,1), and (0,-1), so every path of an enemy is a staircase of side steps, and no enemy cuts a corner | 2026-09-22 | ⚠ Binds a later PR. The owner saw it in the play session of PR-20 |
+| F-108 | An enemy does not walk up a ramp, as the owner saw in the play session of PR-20. The cause is open: `GridMoves.RampWalk` models a walk on a ramp, and `Enemy.Step` and `Hunter.Step` each pass the slope rule of the body, as the player does. The path follower, the ramp geometry check, or the approach of the brain holds the fault | 2026-09-22 | ⚠ Binds a later PR. It needs a seed and a floor that repeat it |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -541,9 +543,9 @@ Build the HUD in C# Control nodes: health, timer, damage numbers, and a boss bar
 Gate: the HUD reads at 800p and every element works with a controller.
 > *In plain English:* the on-screen numbers and bars appear, sized for the smallest screen, and every menu works with a gamepad from the start.
 
-**PR-20: Audio synthesizer and first effects.** 🔧
-Implement the C# synthesizer that renders sound effects from parameter files (D-93). Ship the first set: sword, footsteps, dodge, hit, hunter, and timer warnings. Bind them in Game.
-Gate: the owner approves the sword and hunter sounds.
+**PR-20: Audio synthesizer and first effects.** ✅ Done in PR #87.
+Implement the C# synthesizer that renders each sound from its file to a WAV file (D-93, D-462). A noisy sound comes from a spectral layer: the band levels that the analysis takes from a CC0 reference (D-459, D-461, D-464). A pitched sound ships as its CC0 recording in a recording layer (D-467). Ship the first set: sword, footsteps, dodge, hit, hunter, and timer warnings, with the rendered files in the repository (D-453). Bind them in Game to the action events of Core and to a stride rhythm, on four buses (D-452, D-454, D-456, D-463). The hunter step takes the pitch of its speed (D-455).
+Gate: the owner approves the sword and hunter sounds (D-457, D-470).
 > *In plain English:* a tool makes every sound from a recipe, and the first sounds give the sword and the hunter their weight.
 
 **PR-62: Art quality pass.** 🔧

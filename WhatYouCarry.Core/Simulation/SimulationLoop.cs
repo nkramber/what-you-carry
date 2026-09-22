@@ -94,6 +94,7 @@ public sealed class SimulationLoop
     private Hunter? hunter;
     private int nextOwner;
     private List<TimerEvent> lastEvents = [];
+    private List<ActionEvent> lastActions = [];
     private FloorPlan? offeredFloor;
 
     /// <summary>A loop at tick zero for one run, on floor 1 of the seed, with the player at rest at the spawn point.</summary>
@@ -177,6 +178,13 @@ public sealed class SimulationLoop
 
     /// <summary>The timer events of the last tick, in the order they came. The run log reads them. They are not state.</summary>
     public IReadOnlyList<TimerEvent> LastEvents => this.lastEvents;
+
+    /// <summary>
+    /// The action events of the last tick, in the order they came (D-454): the swing start and the dodge of the player,
+    /// the hits of the player blade in hit order, the hits that landed on the player, and a timer mark. The Game layer
+    /// plays a sound for each. They are not state.
+    /// </summary>
+    public IReadOnlyList<ActionEvent> LastActions => this.lastActions;
 
     /// <summary>The count of enemies of the floor that still have health.</summary>
     public int LivingEnemies
@@ -275,7 +283,9 @@ public sealed class SimulationLoop
         this.Pitch = pitch;
         this.Buttons = intent.Buttons;
         this.lastEvents = [];
+        this.lastActions = [];
         this.Player.Step(intent, previousButtons, yaw, this.LivingBoxes());
+        this.AddPlayerActions(intent.Tick);
         this.StrikeEnemies();
         this.StepBrains();
         this.StepHunter();
@@ -420,6 +430,25 @@ public sealed class SimulationLoop
         return boxes;
     }
 
+    /// <summary>The action events of the tick of the player: a dodge, a swing start, and each hit of the blade in hit order (D-454).</summary>
+    private void AddPlayerActions(uint tick)
+    {
+        if (this.Player.StartedRoll)
+        {
+            this.lastActions.Add(new ActionEvent(ActionEventKind.Dodge, tick, 0));
+        }
+
+        if (this.Player.StartedSwing)
+        {
+            this.lastActions.Add(new ActionEvent(ActionEventKind.SwingStart, tick, 0));
+        }
+
+        foreach (SwordHit hit in this.Player.LastHits)
+        {
+            this.lastActions.Add(new ActionEvent(ActionEventKind.SwingHit, tick, hit.Owner));
+        }
+    }
+
     /// <summary>
     /// Deals the hits of the blade of the player on this tick to the enemies that it met, in hit order. An enemy
     /// that the same swing already hit takes no second hit, because the swing holds the owner ids that it hit
@@ -499,8 +528,8 @@ public sealed class SimulationLoop
     }
 
     /// <summary>
-    /// Deals one hit to the player, and records the cause when the hit takes the last health (D-411). A player of a
-    /// dead run takes no more hits (D-322).
+    /// Deals one hit to the player, and records the cause when the hit takes the last health (D-411). A hit that lands
+    /// gives an action event (D-454). A player of a dead run takes no more hits (D-322).
     /// </summary>
     private void HitPlayer(long damage, string cause)
     {
@@ -509,7 +538,11 @@ public sealed class SimulationLoop
             return;
         }
 
-        this.Player.TakeHit(damage);
+        if (this.Player.TakeHit(damage))
+        {
+            this.lastActions.Add(new ActionEvent(ActionEventKind.PlayerHit, this.Tick, damage));
+        }
+
         if (this.Player.IsDead)
         {
             this.DeathCause = cause;
@@ -518,7 +551,8 @@ public sealed class SimulationLoop
 
     /// <summary>
     /// Runs the timer of the floor for one tick (D-140, D-417). On the tick of expiry the Overseer spawns (D-415).
-    /// After expiry the waves come due on their interval (D-410, D-424). Each step logs its events.
+    /// After expiry the waves come due on their interval (D-410, D-424). Each step logs its events. A step that runs
+    /// the countdown onto a timer mark gives an action event, and a paused step gives none (D-140, D-456).
     /// </summary>
     /// <param name="tick">The tick of the intent, which the events carry.</param>
     /// <exception cref="ContextException">The floor holds no cell out of the sight of the player for the Overseer (D-415).</exception>
@@ -530,7 +564,15 @@ public sealed class SimulationLoop
         }
 
         bool atStairwell = StairwellTransition.IsAtStairwell(this.Body, this.Plan.Stairwell);
-        if (this.Timer.Step(atStairwell))
+        long remainingBefore = this.Timer.Remaining;
+        bool expiredNow = this.Timer.Step(atStairwell);
+        int mark = FloorTimer.MarkAt(this.Timer.Remaining);
+        if (this.Timer.Remaining != remainingBefore && mark > 0)
+        {
+            this.lastActions.Add(new ActionEvent(ActionEventKind.TimerMark, tick, mark));
+        }
+
+        if (expiredNow)
         {
             this.lastEvents.Add(new TimerEvent(TimerEventKind.Expiry, this.Floor, tick, 0, 0));
             Cell cell = Hunter.FindSpawn(this.Grid, this.pathfinder, this.Body.Position);

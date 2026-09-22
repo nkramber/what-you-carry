@@ -117,6 +117,12 @@ public sealed class Player
     /// <summary>The hits of the swing on the last tick, in target order. The Game layer and the loop read them. It is not state.</summary>
     public IReadOnlyList<SwordHit> LastHits => this.swing.LastHits;
 
+    /// <summary>Answers whether a press of the attack bit started a swing on the last tick (D-454). It is not state.</summary>
+    public bool StartedSwing { get; private set; }
+
+    /// <summary>Answers whether a press of the dodge bit started a roll on the last tick (D-454). It is not state.</summary>
+    public bool StartedRoll { get; private set; }
+
     /// <summary>Runs one tick.</summary>
     /// <param name="intent">The intent of the tick.</param>
     /// <param name="previousButtons">The buttons of the intent before, which tell a press from a held bit (D-323).</param>
@@ -136,6 +142,8 @@ public sealed class Player
         bool dodgePressed = (intent.Buttons & Button.Dodge) != 0 && (previousButtons & Button.Dodge) == 0;
         bool inWater = this.Body.IsInWater();
         bool staggered = this.stagger.Holds;
+        this.StartedSwing = false;
+        this.StartedRoll = false;
         if (this.DodgeCooldown > 0)
         {
             this.DodgeCooldown--;
@@ -147,11 +155,13 @@ public sealed class Player
             this.RollRemaining = RollTicks;
             this.DodgeCooldown = DodgeCooldownTicks;
             this.RollVelocity = PlayerBody.RollDirection(intent, yaw) * RollSpeed;
+            this.StartedRoll = true;
         }
 
         if (attackPressed && !staggered && this.RollRemaining == 0 && !this.swing.IsSwinging)
         {
             this.swing.Start();
+            this.StartedSwing = true;
         }
 
         // A stagger and a walk stay on a slope. A roll leaves a slope on the way down, and gravity takes over (D-363,
@@ -185,8 +195,9 @@ public sealed class Player
     /// (D-322), and the hit staggers the player and cancels a swing, unless a stagger or its guard holds or a
     /// two-handed swing gives hyper-armor (D-29, D-326).
     /// </summary>
+    /// <returns>True when the hit landed, and false when a roll took it (D-328, D-454).</returns>
     /// <exception cref="ContextException">The damage is below zero, or the player is dead.</exception>
-    public void TakeHit(long damage)
+    public bool TakeHit(long damage)
     {
         if (damage < 0)
         {
@@ -202,20 +213,22 @@ public sealed class Player
 
         if (this.RollRemaining > 0)
         {
-            return;
+            return false;
         }
 
         long health = this.Health - damage;
         this.Health = health < 0 ? 0 : (int)health;
         if (this.IsDead)
         {
-            return;
+            return true;
         }
 
         if (this.stagger.TryStart(this.swing.HasHyperArmor))
         {
             this.swing.Cancel();
         }
+
+        return true;
     }
 
     /// <summary>

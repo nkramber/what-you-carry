@@ -2,6 +2,146 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 208: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-20, reviewer. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, review ready; publication CI pending.
+
+### What this session did, and why
+
+- Re-reviewed PR #87 after the author fixed P2-1 and P2-2. The effective head is `996b3c3`; the later commit `de98480` changes only this handoff.
+- Both earlier findings are fixed. The path-name check and the overflow-safe WAV bound have six regression cases in total.
+- Updated `docs/reviews/pr-87.md` to record the fixes and the `Ready for owner merge` verdict.
+
+### State of the build
+
+- Build: 0 warnings and 0 errors. The full suite passed: 1301 tests, 0 failures, 0 skips. `det-lint`, `asset-qa`, and `ste-check` each report 0 findings.
+- Before this review publication, the remote tip was `de98480`; the effective head remains `996b3c3`.
+- The CI run for effective head `996b3c3` passed Linux, macOS, Windows, Gitar, bots, `doc-gate`, `night-gate`, `det-lint`, `asset-qa`, `ste-check`, and compare. `evaluate` and `review-gate` failed because the review record still had its earlier verdict.
+- The review publication is in flight. Its fresh checks must pass before owner merge.
+
+### In flight
+
+- The push of the review record and this handoff, followed by the CI wait for the updated record.
+
+### Traps and gotchas
+
+- P2-1 rejected `../../../pwn`, directory names, dot segments, and empty names before it built paths.
+- P2-2 rejected chunk lengths 2147483640, `int.MaxValue`, and 40 with a contextual WAV error.
+- `de98480` is a metadata commit. It does not change the effective head under D-184.
+- F-107 and F-108 remain in the later gameplay PR.
+
+### Open questions that block progress
+
+None. OQ-48 and OQ-182 are resolved by D-450 to D-470.
+
+### Next concrete action
+
+Wait for all checks after the review publication to pass, then hand PR #87 to the owner for merge.
+
+## Session 207: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-20, reviewer. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, changes required.
+
+### What this session did, and why
+
+- Reviewed the complete PR #87 change at effective head `06cd3b3` for the contracts of D-450 to D-470 and the five exit tests.
+- Found two input defects: `audio-analyze` accepts path traversal, and `WavReader` overflows on a malformed chunk length.
+- Wrote `docs/reviews/pr-87.md` with the findings and the `Changes required` verdict.
+
+### State of the build
+
+- The full suite passed: 1295 tests, 0 failures, 0 skips, in 7 minutes and 35 seconds. The STE check, determinism lint, and asset check each report 0 findings.
+- At the last status read before publication, the remote head was `5853e7b`, and the effective head was `06cd3b3` (D-184). Linux and Windows jobs were in progress. `evaluate` failed because the review record was absent, and `review-gate` was neutral for the same reason.
+- The checks wait ran for about 14 minutes without a result, then stopped. It did not establish a pass or a failure for the pending jobs.
+
+### In flight
+
+- The author must correct P2-1 and P2-2 with regression tests, then request a repeat review.
+
+### Traps and gotchas
+
+- `audio-analyze --sound ../../../pwn` wrote `pwn.json` at the checkout root in an isolated run.
+- A 20-byte RIFF file with chunk length `2147483640` made `WavReader` throw an unhandled `ArgumentOutOfRangeException`.
+- The two pending platform jobs do not count as complete evidence.
+- F-107 and F-108 remain in the later gameplay PR.
+
+### Open questions that block progress
+
+None. OQ-48 and OQ-182 are answered. The two findings block owner merge until the author corrects them.
+
+### Next concrete action
+
+The author adds a name check to `audio-analyze`, makes the WAV chunk bounds overflow-safe, adds regression tests, and requests a repeat review.
+
+## Session 206: 2026-09-22, Claude Code
+
+Author: Claude Code
+Session: PR-20, author. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, pending owner merge.
+
+### What this session did, and why
+
+- Asked the owner OQ-48 and every open answer of PR-20 before the code, and recorded D-450 to D-470.
+- Built the sound tool: `audio-synth` renders each sound file to a WAV file, and `audio-analyze` writes the band levels of a CC0 reference into a spectral layer. The render holds no transcendental of the runtime, so the three platforms give equal bytes.
+- The owner rejected the sfxr sounds of the first design, so D-459 and D-462 to D-469 moved the path twice: first to the spectral layer of analysed references, then to CC0 recordings for the pitched sounds.
+- Shipped nine sounds: the sword swing, the sword hit, the footstep, the dodge, the player hit, the hunter spawn, the hunter step, the timer alarm, and the timer tick. The owner picked the reference of each one by ear from CC0 candidates.
+- Gave Core five action events for the gameplay facts of the sounds (D-454), and the Game layer four buses, one player per sound, the stride rhythm of D-463, and the hunter pitch of D-455.
+- Wrote the `Makefile` at the root, under an owner override of G-10 for a second concern in this PR.
+
+### State of the build
+
+- Build: 0 warnings and 0 errors. The remote head is `77f215d`, and the effective head is `06cd3b3` (D-184).
+- The full suite passed on the tree of the first commit: 1295 tests, 0 failures, 7 minutes and 55 seconds.
+- The STE check, the determinism lint, and the asset check each report 0 findings.
+- Every CI check of the effective head passed: the three platforms of CI, of bit identity, and of the smoke session, with `doc-gate`, `night-gate`, `det-lint`, `asset-qa`, `ste-check`, and `bots`.
+- The headless smoke session passed with no leaked object and no error line. The play session of the owner ended clean, and the sound bank loaded nine files on the CoreAudio driver.
+- Gitar approved the effective head with no finding, and the review has no open thread. The `evaluate` check fails until a review record exists (D-251).
+
+### In flight
+
+- The owner merge of PR #87, after Codex confirms the corrections of the review.
+
+### The review of Codex, and the answer
+
+- Codex reviewed the effective head `06cd3b3` and asked for changes: `docs/reviews/pr-87.md`.
+- P2-1: the analysis command joined the sound name into a path, so `--sound ../../../pwn` wrote a file outside the sound directory. Both findings reproduced before the correction.
+- P2-2: a chunk length near the top of an int made `body + length` turn negative, so a malformed reference raised an unhandled error with no file and no chunk in it.
+- Both have full merit. The corrections and the evidence stand in `docs/reviews/pr-87-response.md`. Six new test cases cover them, and each one fails on the code before the correction.
+- The corrections went to the remote as `996b3c3`, which is the effective head now. The full suite passed on that tree: 1301 tests, 0 failures, 7 minutes and 13 seconds.
+- The automated pass of gitar ran on `996b3c3` and approved it with no finding and no open thread. The pass of the earlier head `06cd3b3` also had no finding, and no session asked for a manual review.
+- Every CI check of `996b3c3` passed but two: `evaluate` and `review-gate` fail while the review record holds the verdict `Changes required` (D-251). The reviewer alone changes that verdict.
+
+### Traps and gotchas
+
+- The dummy audio driver of a headless session mixes nothing, so a playback never ends and the engine reports it leaked. The bank plays nothing on that driver, and the boot line names the driver.
+- A level of a spectral layer had a ceiling of 40 decibels, which clamped the loudest bands of three sounds. The ceiling is 80 now, and `ALoudRecordingDoesNotReachTheCeiling` guards it.
+- The band noise of a spectral layer drops the pitch of a tone, so a horn or a bell must ship as its recording (D-467).
+- `afplay` cannot play OGG, and `afconvert` writes the extensible WAV header. The reader takes that header.
+- The Freesound key of the owner lives in `~/.zshrc` as `FREESOUND_API_KEY`, and never in this repository.
+
+### Open questions that block progress
+
+None. OQ-48 and OQ-182 are answered.
+
+### Next concrete action
+
+Codex reviews PR #87 and writes `docs/reviews/pr-87.md` for the effective head `06cd3b3`.
+
+The next PR after this one skips the heavy checks on a head that changes documents alone. The owner asks for it before the bug fixes, and it takes the pattern of PR #54 of the repository `the-thing-below`. The owner wants no document change for it in PR #87, because a change outside the metadata set moves the effective head and starts CI again. The plan:
+
+- A new command of Tools answers one question: does every path of a diff belong to the documents? The rule lives in C# with its own tests, as `doc-gate` and `night-gate` do. A path under `content/`, `.github/workflows/`, or any project directory is never a document.
+- The workflows `ci.yml`, `bit-identity.yml`, and `smoke.yml` gain a first job on Linux that runs the command and gives a boolean output. Each platform job takes that job in `needs`, and runs under `if`. A skipped job reports success to the branch rules, so the PR gate stays green with no job that hangs.
+- The cheap checks always run: `ste-check`, `doc-gate`, `review-gate`, `night-gate`, `det-lint`, and `asset-qa`. They read the documents, so a document change must not skip them.
+- The skip reads the diff from the base of the pull request to the head, so a pull request of documents alone skips from its first push, and a pull request with code runs every check on every push, as today.
+- This automates D-357, which a session applies by hand today, and it frees the one Mac runner (D-356, F-99).
+- Risks to check first: a skipped required check must count as a pass in the branch ruleset, the skip must not move what D-184 names the effective head, and the list of document paths must be narrow.
+- The owner answers three questions in that session: the id of the entry in the roadmap, whether `det-lint` and `asset-qa` skip too, and whether a push to `main` skips as well.
+
+That PR also asks why the checks take so long, which the owner saw on a Windows check of 24 minutes. The one test step of `ci.yml` holds the whole cost: 1055 seconds on the hosted Linux runner, 1206 on the hosted Windows runner, and 451 on the self-hosted Mac mini. The run of `996b3c3` gives a second reading: 872 seconds on Linux, 1518 on Windows, and 489 on the Mac mini, so the hosted runners also vary from run to run. The smoke workflow takes 48 seconds, 103 seconds, and 29 seconds, and the bit identity takes 33 seconds or less, so neither one is the cost. A profile of the suite on 2026-09-22 names ten tests that hold 73 percent of the summed duration of 20.3 minutes, and every one is a seed sweep: `EveryFloorTakesATierWhenOneFits` at 177 seconds, `ReplayReproducesHash` at 132, `EveryPolicyEndsAtTheBottomOrByDeath` at 118, `StairwellReachable` at 98, `CameraNeverInsideSolid` at 97, and `EnemyCountMatchesBudget` at 94. A smaller sweep on a pull request weakens the gate, so the owner decides any change of a seed count.
+
+After that PR: F-107 and F-108, an enemy walks no diagonal, and an enemy does not walk up a ramp. The owner saw both in the play session of PR #87.
+
 ## Session 205: 2026-09-21, Codex
 
 Author: Codex
@@ -261,123 +401,3 @@ None.
 ### Next concrete action
 
 The owner can merge PR #84 after the review-gate record turns green.
-
-## Session 198: 2026-09-21, Claude Code
-
-Author: Claude Code
-Session: PR-84, answer to the cross-provider review, author. Branch `feat/pr-17-timer-and-hunter`. Pending owner merge.
-
-### What this session did, and why
-
-- Answered the one finding of `docs/reviews/pr-84.md` in `docs/reviews/pr-84-response.md`.
-- P1-1 has partial merit. The crash does not reproduce, because both modulo expressions of `Escalation.TryNextPost` sit inside a loop that does not run for an empty list. The missing test was real.
-- Added `AFloorWithNoPostSkipsEveryWave` to `TimerTests`. It passed on the unchanged Core code. No Core change follows.
-
-### State of the build
-
-- The test commit moves the effective head, because `WhatYouCarry.Tests/` lies outside the metadata set (D-184). Read its hash from `git log`. It is the commit of this entry.
-- The full local suite passed 1208 of 1208 with the Smoke category, in 8 minutes 39 seconds. `TimerTests` passed 17 of 17.
-- The CI of the new head and the gitar pass follow the push.
-
-### In flight
-
-- The gitar pass of the new effective head.
-- The repeat review by the other provider.
-
-### Traps and gotchas
-
-- The review record keeps P1-1 open until the repeat review sets its status. The author never edits the review record.
-- The PR-16 night result stands in the entry of Session 196.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The other provider runs the repeat review of PR #84 at the new effective head.
-
-## Session 197: 2026-09-21, Codex
-
-Author: Codex
-Session: PR-17, the floor timer, the hunter, and the escalation, reviewer. Branch `feat/pr-17-timer-and-hunter`. PR #84, changes required.
-
-### What this session did, and why
-
-- Reviewed PR #84 at effective head `f000599` as the opposite provider.
-- Found P1-1 in `Escalation`: an empty post list can crash at the first due wave, although D-410 and D-418 require a skipped wave.
-- Added the review record at `docs/reviews/pr-84.md`.
-
-### State of the build
-
-- The focused timer suite passed 16 of 16 tests.
-- The full suite did not finish during the review window and was interrupted.
-- The remote PR head is `a33653a`.
-
-### In flight
-
-- The author must handle P1-1 and add the empty-post wave regression test.
-
-### Traps and gotchas
-
-- `TestWorld.PeacefulContent` has no enemy family and can produce an empty post list.
-- The review record uses effective head `f000599`. The metadata commit does not change that head.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author fixes P1-1 and reruns the focused and full test suites.
-
-## Session 196: 2026-09-20, Claude Code
-
-Author: Claude Code
-Session: PR-17, the floor timer, the hunter, and the escalation, author. Branch `feat/pr-17-timer-and-hunter`. PR #84, pending owner merge.
-
-### What this session did, and why
-
-- Asked the owner OQ-4, OQ-6, and every rule of the hunt before code. The answers are D-407 to D-426. OQ-4 and OQ-6 are resolved.
-- Revised in part: D-271 by D-420, D-320 by D-422, D-400 by D-419, and D-403 by D-411.
-- Added `FloorTimer`, `Hunter` (the Overseer), `Escalation`, `TimerEvent`, `HunterDefinition`, and the `TimerTester` policy.
-- Added `content/hunter/overseer.json`, `content/weapons/overseer-pick.json`, and the timer and wave fields of each floor template.
-- A death carries its cause. The bot log writes the timer events, and the night record gains `deathCauses` of each policy.
-- A policy that promises progress reads softlock at expiry (D-420). The timer tester joins the PR bot job and the night (D-426).
-- The Game draws the wave enemies and the Overseer with the body model as a fixture.
-- Raised the simulation version to 14. The bit-identity answer moved to `6f7da3d2313688bd`.
-
-### State of the build
-
-- Base `a5461d4`. The code head is `4e85570`, and the effective head is `f000599`, because that commit changes the design doc and the roadmap (D-184).
-- The local suite passed 1206 of 1207 before the handoff rotation. The one failure was `RepositoryFilesHoldTheRule`, which this rotation repairs.
-- det-lint, asset-qa, ste-check, the Godot build, and the smoke session passed.
-- PR-17 exit tests 1 to 7 pass. Exit test 6 measured expiry on 0 of 2293 floors.
-- All PR #84 checks passed at `f000599`. `evaluate` reads red until the review record exists (D-251).
-- The gitar pass is current and found no issues. Its CI note got a reply with D-251.
-- Exit test 7 of PR-16 passed: night run 35561635447 on `main` at `a5461d4` ended in success.
-  - Random walker: 0 crashes, 0 softlocks, 4839 deaths, 161 by budget.
-  - Greedy descender: 0 crashes, 0 softlocks, 4669 deaths, 331 at the bottom.
-  - Full clearer: 0 crashes, 0 softlocks, 3928 deaths, 1072 at the bottom. This is the first night of the full clearer at 5000 seeds.
-  - The `night.json` of that night is the first to carry the deaths of each policy (D-403): 4839, 4669, and 3928.
-
-### In flight
-
-- The cross-provider review of PR #84 at effective head `f000599`.
-
-### Traps and gotchas
-
-- `main` at `a5461d4` is red on CI. Session 195 sat at the end of the handoff, and 11 entries stood in the file. The rotation of this session moves 195 back and 185 to the archive.
-- The timer and wave fields are required in every floor template. A test content set needs them and one `hunter/` file.
-- The Overseer spawn is a fault on a floor with no hidden reachable cell (D-415). The night reports each such floor as a crash.
-- Exit tests 5 and 6 run their seeds in parallel. Core holds no mutable static state.
-- The pick reuses the sword model and animation until PR-14. Its low and high blade heights copy the sword.
-- The night now runs four policies, so it takes more wall time on the Mac runner.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The other provider reviews PR #84 at effective head `f000599`.

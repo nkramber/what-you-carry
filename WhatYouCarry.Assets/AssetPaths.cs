@@ -38,6 +38,29 @@ public static class AssetPaths
     /// <summary>The atlas image that the texture generator writes and the game reads at boot (D-305).</summary>
     public const string AtlasImage = TextureDirectory + "atlas.png";
 
+    /// <summary>The directory of the audio, which every content source skips (D-453).</summary>
+    public const string AudioDirectory = ContentLoader.AudioDirectory;
+
+    /// <summary>The directory of the sound effects: one parameter file and one rendered WAV file per sound (D-453, D-462).</summary>
+    public const string SoundDirectory = AudioDirectory + "sfx/";
+
+    /// <summary>The directory of the CC0 recordings that a recording layer plays (D-467).</summary>
+    public const string RecordingDirectory = AudioDirectory + "recordings/";
+
+    /// <summary>The file extension of a sound parameter file (D-462).</summary>
+    public const string SoundParameterExtension = ".json";
+
+    /// <summary>The file extension of a rendered sound (D-453).</summary>
+    public const string SoundExtension = ".wav";
+
+    /// <summary>The path of the rendered sound of one parameter file: <c>audio/sfx/footstep.wav</c> for <c>audio/sfx/footstep.json</c> (D-453).</summary>
+    public static string SoundPath(string parameterPath)
+    {
+        return parameterPath.EndsWith(SoundParameterExtension, System.StringComparison.Ordinal)
+            ? parameterPath.Substring(0, parameterPath.Length - SoundParameterExtension.Length) + SoundExtension
+            : parameterPath + SoundExtension;
+    }
+
     /// <summary>The path of one animation of one model: <c>models/player.attack.json</c> for the model <c>models/player.bbmodel</c> (D-298).</summary>
     public static string AnimationPath(string modelPath, string animationName)
     {
