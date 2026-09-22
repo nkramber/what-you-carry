@@ -42,7 +42,19 @@ None. OQ-48 and OQ-182 are answered.
 
 ### Next concrete action
 
-Run the full suite, commit, push, and answer the gitar pass. Then hand the PR to Codex for the cross-provider review. After the merge, a fresh session takes F-107 and F-108: an enemy walks no diagonal, and an enemy does not walk up a ramp. The owner saw both in the play session of this PR.
+Answer the gitar pass of PR #87, then hand the PR to Codex for the cross-provider review.
+
+The next PR after this one skips the heavy checks on a head that changes documents alone. The owner asks for it before the bug fixes, and it takes the pattern of PR #54 of the repository `the-thing-below`. The owner wants no document change for it in PR #87, because a change outside the metadata set moves the effective head and starts CI again. The plan:
+
+- A new command of Tools answers one question: does every path of a diff belong to the documents? The rule lives in C# with its own tests, as `doc-gate` and `night-gate` do. A path under `content/`, `.github/workflows/`, or any project directory is never a document.
+- The workflows `ci.yml`, `bit-identity.yml`, and `smoke.yml` gain a first job on Linux that runs the command and gives a boolean output. Each platform job takes that job in `needs`, and runs under `if`. A skipped job reports success to the branch rules, so the PR gate stays green with no job that hangs.
+- The cheap checks always run: `ste-check`, `doc-gate`, `review-gate`, `night-gate`, `det-lint`, and `asset-qa`. They read the documents, so a document change must not skip them.
+- The skip reads the diff from the base of the pull request to the head, so a pull request of documents alone skips from its first push, and a pull request with code runs every check on every push, as today.
+- This automates D-357, which a session applies by hand today, and it frees the one Mac runner (D-356, F-99).
+- Risks to check first: a skipped required check must count as a pass in the branch ruleset, the skip must not move what D-184 names the effective head, and the list of document paths must be narrow.
+- The owner answers three questions in that session: the id of the entry in the roadmap, whether `det-lint` and `asset-qa` skip too, and whether a push to `main` skips as well.
+
+After that PR: F-107 and F-108, an enemy walks no diagonal, and an enemy does not walk up a ramp. The owner saw both in the play session of PR #87.
 
 ## Session 205: 2026-09-21, Codex
 
