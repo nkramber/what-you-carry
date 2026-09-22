@@ -228,7 +228,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-4 | v1 named Deep Rock Galactic as the non-hitscan reference. Most of its guns are hitscan | 2026-09-06 | ✅ doc. D-60 replaced it |
 | F-5 | v1 never said whether banked gear enters the dungeon | 2026-09-06 | 🔧 D-2. Binds PR-30 |
 | F-6 | v1 never said who simulates player collision, enemy AI, and pathfinding | 2026-09-06 | 🔧 D-76, D-80. Binds PR-7, PR-16 |
-| F-7 | v1 had no audio plan | 2026-09-06 | 🔧 D-89, D-93. Binds PR-20, PR-50 |
+| F-7 | v1 had no audio plan | 2026-09-06 | 🔧 D-89, D-93. The effects are done in PR #87. Binds PR-50 for the music |
 | F-8 | D-74 put a world-space aim in the intent. D-75 put the camera in Core. Both cannot hold | 2026-09-06 | 🔧 D-77. Binds PR-6, PR-8 |
 | F-9 | D-95 "resume at floor start" made a quit a free heal and a timer reset | 2026-09-06 | 🔧 D-97. Binds PR-31 |
 | F-10 | D-47 random affixes cannot show on an enemy, against D-16 | 2026-09-06 | 🔧 D-49. Binds PR-21, PR-26 |
@@ -543,7 +543,7 @@ Build the HUD in C# Control nodes: health, timer, damage numbers, and a boss bar
 Gate: the HUD reads at 800p and every element works with a controller.
 > *In plain English:* the on-screen numbers and bars appear, sized for the smallest screen, and every menu works with a gamepad from the start.
 
-**PR-20: Audio synthesizer and first effects.** 🔧
+**PR-20: Audio synthesizer and first effects.** ✅ Done in PR #87.
 Implement the C# synthesizer that renders each sound from its file to a WAV file (D-93, D-462). A noisy sound comes from a spectral layer: the band levels that the analysis takes from a CC0 reference (D-459, D-461, D-464). A pitched sound ships as its CC0 recording in a recording layer (D-467). Ship the first set: sword, footsteps, dodge, hit, hunter, and timer warnings, with the rendered files in the repository (D-453). Bind them in Game to the action events of Core and to a stride rhythm, on four buses (D-452, D-454, D-456, D-463). The hunter step takes the pitch of its speed (D-455).
 Gate: the owner approves the sword and hunter sounds (D-457, D-470).
 > *In plain English:* a tool makes every sound from a recipe, and the first sounds give the sword and the hunter their weight.

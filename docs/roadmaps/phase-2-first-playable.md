@@ -666,6 +666,8 @@ Gate: exit tests 1 to 5 pass.
 
 ### PR-20: Audio synthesizer and first effects
 
+✅ Done in PR #87.
+
 Scope:
 
 - `WhatYouCarry.Tools/AudioSynth/`: the `audio-synth` command renders each sound file to a WAV file, deterministically on the three platforms (D-93, D-462). A sound holds 1 to 4 layers. The `audio-analyze` command writes the band levels of a CC0 reference into a spectral layer (D-459, D-461, D-464). Its four controls trim, stretch, pitch, and tilt the sound (D-465). A pitched sound ships as its CC0 recording in a recording layer (D-467).
@@ -757,7 +759,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 26. PR-18. ✅ Done in PR #85.
 27. PR-19.
 28. Owner: answer OQ-48 and OQ-182. ✅ Answered 2026-09-21 and 2026-09-22. The answers of PR-20 run from D-450, which D-462 supersedes, to D-470.
-29. PR-20.
+29. PR-20. ✅ Done in PR #87.
 30. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
 31. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
 32. Tier 4 pass on the screenshot fixture (D-133).
