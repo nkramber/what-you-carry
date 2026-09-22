@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 197: 2026-09-21, Codex
+
+Author: Codex
+Session: PR-17, the floor timer, the hunter, and the escalation, reviewer. Branch `feat/pr-17-timer-and-hunter`. PR #84, changes required.
+
+### What this session did, and why
+
+- Reviewed PR #84 at effective head `f000599` as the opposite provider.
+- Found P1-1 in `Escalation`: an empty post list can crash at the first due wave, although D-410 and D-418 require a skipped wave.
+- Added the review record at `docs/reviews/pr-84.md`.
+
+### State of the build
+
+- The focused timer suite passed 16 of 16 tests.
+- The full suite did not finish during the review window and was interrupted.
+- The remote PR head is `a33653a`.
+
+### In flight
+
+- The author must handle P1-1 and add the empty-post wave regression test.
+
+### Traps and gotchas
+
+- `TestWorld.PeacefulContent` has no enemy family and can produce an empty post list.
+- The review record uses effective head `f000599`. The metadata commit does not change that head.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author fixes P1-1 and reruns the focused and full test suites.
+
 ## Session 196: 2026-09-20, Claude Code
 
 Author: Claude Code
