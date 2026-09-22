@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 206: 2026-09-22, Claude Code
 
 Author: Claude Code
-Session: PR-20, author. Branch `feat/pr-20-audio-synth-and-effects`. PR pending.
+Session: PR-20, author. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, pending owner merge.
 
 ### What this session did, and why
 
@@ -18,15 +18,16 @@ Session: PR-20, author. Branch `feat/pr-20-audio-synth-and-effects`. PR pending.
 
 ### State of the build
 
-- Build: 0 warnings and 0 errors. The base is `170f08c`, and no commit exists on the branch yet.
-- The 38 audio tests pass, the STE check, the determinism lint, and the asset check each report 0 findings.
-- The last full suite ran while the documents changed, so it needs one more run before the commit.
-- The headless smoke session passed earlier in the session, with no leaked object and no error line.
+- Build: 0 warnings and 0 errors. The remote head is `77f215d`, and the effective head is `06cd3b3` (D-184).
+- The full suite passed on the tree of the first commit: 1295 tests, 0 failures, 7 minutes and 55 seconds.
+- The STE check, the determinism lint, and the asset check each report 0 findings.
+- Every CI check of the effective head passed: the three platforms of CI, of bit identity, and of the smoke session, with `doc-gate`, `night-gate`, `det-lint`, `asset-qa`, `ste-check`, and `bots`.
+- The headless smoke session passed with no leaked object and no error line. The play session of the owner ended clean, and the sound bank loaded nine files on the CoreAudio driver.
+- Gitar approved the effective head with no finding, and the review has no open thread. The `evaluate` check fails until a review record exists (D-251).
 
 ### In flight
 
-- The first commit, the push, the gitar pass, and the hand-over to Codex.
-- The owner runs a play session of the nine sounds. The verdict of that session is not in yet.
+- The cross-provider review of Codex, and then the owner merge.
 
 ### Traps and gotchas
 
@@ -42,7 +43,7 @@ None. OQ-48 and OQ-182 are answered.
 
 ### Next concrete action
 
-Answer the gitar pass of PR #87, then hand the PR to Codex for the cross-provider review.
+Codex reviews PR #87 and writes `docs/reviews/pr-87.md` for the effective head `06cd3b3`.
 
 The next PR after this one skips the heavy checks on a head that changes documents alone. The owner asks for it before the bug fixes, and it takes the pattern of PR #54 of the repository `the-thing-below`. The owner wants no document change for it in PR #87, because a change outside the metadata set moves the effective head and starts CI again. The plan:
 
