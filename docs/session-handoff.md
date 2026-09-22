@@ -12,13 +12,13 @@ Session: gitar suspension, author. Branch `chore/suspend-gitar-pass`. PR #88, pe
 - The gitar subscription expires. The owner asked for a temporary change that removes the gitar review from the PR gate, and that is easy to reverse.
 - A survey found that no branch protection, ruleset, workflow, or tool requires gitar. The requirement lives in the documents alone, so CI does not change.
 - Recorded D-471 with three owner answers. Gitar comments that still arrive get an answer. The suspension applies to this PR. The gitar app stays installed.
-- Replaced the gitar rules in the agent files, the PR template, the `review-response` skill, and section 3.14 of the design doc. Added a suspension section to the `gitar-review` skill and a skip note to the runbook wait.
+- Replaced the gitar rules in the agent files, the `review-response` skill, and section 3.14 of the design doc. Added a suspension section to the `gitar-review` skill and a skip note to the runbook wait.
 - Added `.claude/skills/gitar-review/references/restore.md`. It holds the original text word for word and the restore steps.
 
 ### State of the build
 
 - Build: 0 warnings and 0 errors. The full suite passed: 1301 tests, 0 failures, 0 skips. `ste-check` reports 0 findings.
-- The effective head is `9996282`. This entry is a metadata commit on top of it.
+- The effective head is `4cd843f`. This entry is a metadata commit on top of it.
 - The PR changes no code, so it takes the `review-override` label (D-188, D-190).
 
 ### In flight
@@ -28,7 +28,8 @@ Session: gitar suspension, author. Branch `chore/suspend-gitar-pass`. PR #88, pe
 ### Traps and gotchas
 
 - The restore is a new decision that supersedes D-471, and not a git revert. A revert deletes the D-471 row.
-- `grep -rn 'D-471' --include='*.md' . .github` finds each suspended text.
+- `grep -rn 'D-471' --include='*.md' .` finds each suspended text.
+- The PR template keeps its gitar line. The `review-gate` job failed the override on the first push, because `.github/` is outside the override set (D-190). The line holds under the suspension.
 - The agent files are near the byte ceiling of 15000. The full original section moved to the restore file for that reason.
 - The description of the `gitar-review` skill still says to load it after each push. Its suspension section limits the use to the answer of a comment.
 
