@@ -4,5 +4,15 @@
   "run.ascend": "Ascend",
   "run.descend": "Descend",
   "run.timerExpired": "Something heard you.",
-  "error.contentMissing": "The game could not read its content."
+  "error.contentMissing": "The game could not read its content.",
+  "hud.health": "{0} / {1}",
+  "hud.timer": "{0}:{1:00}",
+  "hud.paused": "Paused",
+  "hud.bossPlaceholder": "Boss",
+  "hud.tap": "{0}: {1}",
+  "hud.hold": "Hold {0}: {1}",
+  "input.keyboard.interact": "E",
+  "input.controller.interact": "X",
+  "ui.fixture.button": "Button {0}",
+  "ui.fixture.slider": "Slider"
 }

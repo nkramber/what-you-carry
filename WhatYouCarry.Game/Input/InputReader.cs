@@ -22,6 +22,10 @@ namespace WhatYouCarry.Game.Input;
 /// tick reads the stick deflection and never the device (PR #49 review P2-1).
 /// </para>
 /// <para>
+/// The prompt device is the one of the latest input of any kind (D-447). It is apart from the look device, because a
+/// press of a key names the keyboard while the stick still holds the look. The prompt names its buttons from it.
+/// </para>
+/// <para>
 /// The engine reports the two shift keys as one key and the two control keys as one key. D-289 names the left
 /// key of each pair, and the right one works too.
 /// </para>
@@ -92,6 +96,7 @@ public sealed class InputReader
     private float mouseX;
     private float mouseY;
     private bool controllerLook;
+    private bool controllerLast;
 
     /// <summary>A reader over one poll.</summary>
     public InputReader(IInputPoll poll)
@@ -126,6 +131,30 @@ public sealed class InputReader
         if (IntentBuilder.StickCurve(value) != 0.0f)
         {
             this.controllerLook = true;
+        }
+    }
+
+    /// <summary>True when the latest input came from the controller, and false when it came from the keyboard or the mouse (D-447).</summary>
+    public bool ControllerLast => this.controllerLast;
+
+    /// <summary>Takes one input of the keyboard or the mouse: a key, a mouse button, or a mouse motion (D-447).</summary>
+    public void NoteKeyboardOrMouse()
+    {
+        this.controllerLast = false;
+    }
+
+    /// <summary>Takes one press of a controller button (D-447).</summary>
+    public void NoteControllerButton()
+    {
+        this.controllerLast = true;
+    }
+
+    /// <summary>Takes one axis motion of a controller. A motion inside the dead zone names no device, so a stick at rest never takes the prompt (D-447).</summary>
+    public void NoteControllerMotion(float value)
+    {
+        if (IntentBuilder.StickCurve(value) != 0.0f)
+        {
+            this.controllerLast = true;
         }
     }
 

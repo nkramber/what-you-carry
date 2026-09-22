@@ -121,8 +121,9 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Bot session with a frame log, for M-3: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt`
 - Transition test, PR-18 exit test 6 on the Deck (D-428, D-435): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt --transitions 10`. On the Deck, use the Linux Godot .NET binary of D-294 in place of that path.
 - Contact sheet, a local run with a window: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
+- HUD shot, the Deck frame of the HUD fixture, with a window (D-133): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --hud-shot hud.png`
 
-The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet takes no other flag, `--smoke` and `--bot` exclude each other, and `--transitions` needs `--bot` and `--frame-log`.
+The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, `--smoke` and `--bot` exclude each other, and `--transitions` needs `--bot` and `--frame-log`.
 
 `Godot` is not on the command path of this machine, so use the full path above. `det-lint` reports one count for Core and one for Game (D-222). The PR gate names what `det-lint` and `asset-qa` read. `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. A local `dotnet test` needs the Godot build at the path above, or the one that `WYC_GODOT` names, for the Smoke category. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
 

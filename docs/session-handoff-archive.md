@@ -1,5 +1,76 @@
 # Session handoff archive
 
+## Session 195: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reopened PR #83 after the D-406 handoff rotation correction.
+- Reviewed the new substantive diff at effective head `f698cd9`.
+- Verified the handoff tests and all required implementation checks.
+- Updated `docs/reviews/pr-83.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `HandoffRotateTests` passed, 9 of 9.
+- The three build legs, three smoke legs, bit identity, compare, bots, asset-qa, det-lint, STE, doc-gate, and night-gate pass for the corrected tip.
+- `evaluate` and `review-gate` wait for this review record. The effective head is `f698cd9`.
+
+### In flight
+
+The approving repeat-review record is pushed in metadata commit `a07243a`.
+
+### Traps and gotchas
+
+- D-406 changes substantive tool and test paths, so the effective head moved from `8452dbd` to `f698cd9`.
+- Duplicate session numbers remain an error case.
+- The owner merges the PR.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Verify the remote review-gate result after the record publishes.
+
+## Session 194: 2026-09-20, Codex
+
+Author: Codex
+Session: PR-83, repeat cross-provider review. Branch `feat/pr-16-enemies-and-pathfinder`.
+
+### What this session did, and why
+
+- Reopened PR #83 after the response to Session 193.
+- Verified the response, the handoff-order correction, and the focused handoff test.
+- Updated `docs/reviews/pr-83.md` and kept the verdict blocked because fresh required CI remains pending.
+
+### State of the build
+
+- `HandoffRotateTests` passed, 9 of 9.
+- The response reports the completed broad suite and Smoke results. The corrected tip has completed passing jobs for bots, smoke, asset-qa, det-lint, STE, doc-gate, and night-gate.
+- Fresh Linux, macOS, and Windows CI jobs remain pending. The effective code head remains `8452dbd`.
+
+### In flight
+
+The repeat-review record is pushed in metadata commit `8c385ce`.
+
+### Traps and gotchas
+
+- Later commits remain metadata-only, so the effective code head stays `8452dbd`.
+- The review gate cannot pass while this record has a blocked verdict.
+- Pending CI is incomplete evidence.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Recheck the fresh CI jobs before the owner merge.
+
 ## Session 193: 2026-09-20, Codex
 
 Author: Codex

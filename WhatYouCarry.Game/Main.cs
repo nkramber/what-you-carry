@@ -61,12 +61,18 @@ namespace WhatYouCarry.Game;
 /// <para>
 /// The chunk swap digs the next floor on one task during each floor, offers the plan to the loop before each tick,
 /// and uploads its chunks a few at a time (D-72, D-429). A descent swaps the chunks in one frame, and the
-/// interpolation starts again at the spawn, so no frame draws the body between two floors. The stairwell prompt
-/// shows its text while the body stands on the stairwell cell (D-431).
+/// interpolation starts again at the spawn, so no frame draws the body between two floors.
+/// </para>
+/// <para>
+/// The HUD shows the health, the timer, the damage numbers, and the stairwell prompt on every frame (D-36, PR-19). The
+/// prompt shows while the body stands on the stairwell cell (D-431), and it names the buttons of the device of the
+/// last input (D-447). At the open prompt, a tap of interact descends and a hold of one second ascends (D-448). The
+/// smoke session also builds the hidden fixture screen of the navigation, so the focus map runs on every platform.
 /// </para>
 /// <para>
 /// The contact sheet flag starts no loop. It renders every block material and the body with the sword at game zoom
-/// to one PNG file for the review of the owner, and quits (D-306, D-336).
+/// to one PNG file for the review of the owner, and quits (D-306, D-336). The HUD shot flag builds the scene of play at
+/// the spawn, takes no tick, renders one frame of the Deck size with the HUD fixture, and quits (D-133).
 /// </para>
 /// </remarks>
 public partial class Main : Node3D
@@ -115,6 +121,24 @@ public partial class Main : Node3D
 
     /// <summary>The message of the error line of a frame log that the game could not write.</summary>
     public const string FrameLogFailedMessage = "The frame log could not be written, and the game quits.";
+
+    /// <summary>The message of the line of the boot that built the HUD (PR-19 exit test 5).</summary>
+    public const string HudBuiltMessage = "The HUD is built.";
+
+    /// <summary>The message of the line of the boot that built the fixture screen of the navigation (D-446).</summary>
+    public const string FixtureBuiltMessage = "The fixture screen of the navigation is built.";
+
+    /// <summary>The message of the line at the end of the HUD shot.</summary>
+    public const string HudShotEndMessage = "The HUD shot is written.";
+
+    /// <summary>The message of the error line of a HUD shot that failed.</summary>
+    public const string HudShotFailedMessage = "The HUD shot failed, and the game quits.";
+
+    /// <summary>The message of the error when the HUD shot starts on the headless display.</summary>
+    public const string HudShotNeedsWindow = "The HUD shot needs a window, and the headless display renders no image.";
+
+    /// <summary>The name of the field of the fixture line that holds the count of its controls.</summary>
+    public const string ControlsField = "controls";
 
     /// <summary>The message of the line of the tick whose state opens the stairwell prompt (D-431).</summary>
     public const string PromptOpenMessage = "The stairwell prompt opens.";
@@ -189,6 +213,7 @@ public partial class Main : Node3D
     private const string ShotField = "shot";
     private const string HeadlessDisplay = "headless";
     private const string NoShotImage = "The viewport of the contact sheet gave no image for a shot.";
+    private const string NoHudImage = "The viewport of the HUD shot gave no image.";
 
     private static readonly long[] NoEntities = [];
 
@@ -207,7 +232,10 @@ public partial class Main : Node3D
     private GreedyDescender? bot;
     private GreedyDescender? smokeWalker;
     private ChunkSwap? chunks;
-    private StairwellPromptNodes? prompt;
+    private readonly StairwellHold hold = new();
+    private Hud? hud;
+    private Camera3D? hudCamera;
+    private HudState? shotState;
     private bool promptOpen;
     private int transitions = 1;
     private bool transitionTest;
@@ -257,7 +285,7 @@ public partial class Main : Node3D
     /// <inheritdoc/>
     public override void _PhysicsProcess(double delta)
     {
-        if (this.loop is null || this.ended)
+        if (this.loop is null || this.ended || this.shotState is not null)
         {
             return;
         }
@@ -320,7 +348,10 @@ public partial class Main : Node3D
         }
         else
         {
-            intent = this.builder.Build(this.loop.Tick, this.reader.Read());
+            // The tap and the hold at the open prompt set the interact bit or the ascend bit on one tick (D-448).
+            RawInput raw = this.reader.Read();
+            raw = raw with { Buttons = this.hold.Apply(raw.Buttons, StairwellPrompt.IsOpen(this.loop)) };
+            intent = this.builder.Build(this.loop.Tick, raw);
         }
 
         try
@@ -367,7 +398,7 @@ public partial class Main : Node3D
         }
 
         this.promptOpen = open;
-        this.prompt?.Show(open);
+        this.hud?.AfterTick(this.loop);
 
         // A descent digs a new floor with its own enemies, so the trees of the old floor go and the new ones come.
         if (this.enemyNodes is not null)
@@ -460,6 +491,13 @@ public partial class Main : Node3D
 
         Vector3 playerCenter = feetPoint + new Vector3(0.0f, PlayerBody.Height / 2.0f, 0.0f);
         WorldMaterial.SetFade(this.worldMaterial, cameraPosition, playerCenter);
+
+        if (this.hud is not null && this.hudCamera is not null)
+        {
+            // The shot camera stands where the play camera stands, in a viewport of the Deck size (D-133).
+            this.hudCamera.GlobalTransform = this.camera.GlobalTransform;
+            this.hud.Draw(this.shotState ?? HudState.Of(this.loop, this.reader.ControllerLast), this.hudCamera, (float)delta);
+        }
     }
 
     /// <inheritdoc/>
@@ -468,10 +506,20 @@ public partial class Main : Node3D
         if (@event is InputEventMouseMotion motion)
         {
             this.reader.AddMouseMotion(motion.Relative.X, motion.Relative.Y);
+            this.reader.NoteKeyboardOrMouse();
         }
         else if (@event is InputEventJoypadMotion stick)
         {
             this.reader.AddLookStickMotion(stick.Device, stick.Axis, stick.AxisValue);
+            this.reader.NoteControllerMotion(stick.AxisValue);
+        }
+        else if (@event is (InputEventKey or InputEventMouseButton) && @event.IsPressed())
+        {
+            this.reader.NoteKeyboardOrMouse();
+        }
+        else if (@event is InputEventJoypadButton && @event.IsPressed())
+        {
+            this.reader.NoteControllerButton();
         }
     }
 
@@ -661,8 +709,6 @@ public partial class Main : Node3D
         this.worldMaterial = WorldMaterial.Create(atlas);
         this.chunks = new ChunkSwap(this, this.worldMaterial, new NextFloorWorker(content), loop.Seed);
         this.chunks.Start(loop);
-        this.prompt = StairwellPromptNodes.Build(content.Strings);
-        this.AddChild(this.prompt.Layer);
 
         StandardMaterial3D modelMaterial = ModelMaterial(atlas);
         ModelNodeTree nodes = ModelNodes.Build(bodyModel, modelMaterial);
@@ -682,6 +728,27 @@ public partial class Main : Node3D
         this.drawnFloor = loop.Floor;
         this.AddChild(this.camera);
         this.AddChild(PlaceholderScene.Light());
+
+        if (HudShot.IsRequested(arguments))
+        {
+            this.StartHudShot(HudShot.PathOf(arguments), content.Strings, loop);
+            return;
+        }
+
+        // The accept action of the engine has no controller input, so every session binds the A button (D-449).
+        Navigation.BindAccept();
+        this.hud = Hud.Build(content.Strings, this);
+        this.hudCamera = this.camera;
+        this.logger.Write(LogContextKind.Run, LogLevel.Info, HudBuiltMessage, RunFields(loop.Seed, loop.Floor, loop.Tick));
+        if (this.smoke)
+        {
+            // No menu screen exists before PR-53, so the smoke session proves the focus map on the fixture (D-446).
+            Navigation.RequireControllerActions();
+            NavigationFixtureNodes fixture = NavigationFixture.Build(content.Strings, this);
+            LogFields built = RunFields(loop.Seed, loop.Floor, loop.Tick);
+            built.Add(ControlsField, (long)fixture.Controls.Count);
+            this.logger.Write(LogContextKind.Run, LogLevel.Info, FixtureBuiltMessage, built);
+        }
 
         if (!this.smoke && this.bot is null)
         {
@@ -745,6 +812,61 @@ public partial class Main : Node3D
         catch (Exception error)
         {
             this.LogFailure(ContactSheetFailedMessage, fields, error);
+            this.Quit(ExitFailure);
+        }
+    }
+
+    /// <summary>
+    /// Renders the HUD shot and quits (D-133). The HUD and a camera go into a viewport of the Deck size that shares the
+    /// world of the scene. The HUD shows the fixture state, the boss bar placeholder, and one damage number of each
+    /// kind above the body, which come after the warm-up so they stand at the start of their lifetime. The headless
+    /// display, a frame with no image, and a write failure are each an error line and exit code 1 (T-2).
+    /// </summary>
+    private async void StartHudShot(string path, Strings strings, SimulationLoop loop)
+    {
+        LogFields fields = RunFields(loop.Seed, loop.Floor, loop.Tick);
+        fields.Add(FileField, path);
+        try
+        {
+            if (DisplayServer.GetName() == HeadlessDisplay)
+            {
+                throw new ContextException(HudShotNeedsWindow);
+            }
+
+            SubViewport viewport = new()
+            {
+                Size = new Vector2I(HudShot.PixelsWide, HudShot.PixelsHigh),
+                RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
+            };
+            this.AddChild(viewport);
+            Camera3D shotCamera = PlaceholderScene.Camera();
+            viewport.AddChild(shotCamera);
+            Hud shotHud = Hud.Build(strings, viewport);
+            shotHud.ShowBoss(shotHud.BossPlaceholderName(), HudShot.BossHealth, HudShot.BossMost);
+            this.shotState = new HudState(HudShot.Health, Player.MaxHealth, loop.Timer.Remaining, loop.Timer.Expired, true, false);
+            this.hud = shotHud;
+            this.hudCamera = shotCamera;
+
+            await this.WaitFrames(HudShot.WarmUpFrames);
+            shotHud.AfterTick(loop);
+            shotHud.AddNumber(HudShot.NumberOwner, HudShot.DealtAmount, false);
+            shotHud.AddNumber(HudShot.NumberOwner, HudShot.TakenAmount, true);
+            await this.WaitFrames(ContactSheet.FramesPerShot);
+
+            Image frame = viewport.GetTexture().GetImage();
+            if (frame is null || frame.IsEmpty())
+            {
+                throw new ContextException(NoHudImage);
+            }
+
+            frame.Convert(Image.Format.Rgb8);
+            File.WriteAllBytes(path, frame.SavePngToBuffer());
+            this.logger.Write(LogContextKind.Run, LogLevel.Info, HudShotEndMessage, fields);
+            this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
+        }
+        catch (Exception error)
+        {
+            this.LogFailure(HudShotFailedMessage, fields, error);
             this.Quit(ExitFailure);
         }
     }

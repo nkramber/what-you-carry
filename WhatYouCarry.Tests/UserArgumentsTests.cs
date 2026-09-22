@@ -165,6 +165,23 @@ public sealed class UserArgumentsTests
     }
 
     /// <summary>
+    /// The HUD shot takes its path and no other flag, because it takes no tick, and the error names both flags
+    /// (D-133, D-317). The contact sheet and the shot also exclude each other.
+    /// </summary>
+    [Fact]
+    public void HudShotTakesNoOtherFlag()
+    {
+        UserArguments shot = UserArguments.Parse([HudShot.Flag, "hud.png"]);
+        Assert.True(HudShot.IsRequested(shot));
+        Assert.Equal("hud.png", HudShot.PathOf(shot));
+        Assert.False(HudShot.IsRequested(UserArguments.Parse([SmokeSession.Flag])));
+
+        AssertStops(UserArguments.ShotTakesNoFlagMessage, [HudShot.Flag, "hud.png", SmokeSession.Flag], HudShot.Flag, SmokeSession.Flag);
+        AssertStops(UserArguments.ShotTakesNoFlagMessage, [BotSession.Flag, HudShot.Flag, "hud.png"], HudShot.Flag, BotSession.Flag);
+        AssertStops(UserArguments.SheetTakesNoFlagMessage, [ContactSheet.Flag, "sheet.png", HudShot.Flag, "hud.png"], ContactSheet.Flag, HudShot.Flag);
+    }
+
+    /// <summary>
     /// The transitions flag counts the descents of the bot session into the frame log, so it stops the boot without
     /// either of them, and the error names the flag that is absent (D-317, D-435).
     /// </summary>

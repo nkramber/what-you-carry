@@ -46,6 +46,9 @@ public sealed class UserArguments
     /// <summary>The message of the error for the contact sheet flag with any other flag (D-317).</summary>
     public const string SheetTakesNoFlagMessage = "The contact sheet starts no loop, so it takes no other flag.";
 
+    /// <summary>The message of the error for the HUD shot flag with any other flag (D-317).</summary>
+    public const string ShotTakesNoFlagMessage = "The HUD shot takes no tick, so it takes no other flag.";
+
     /// <summary>The message of the error for the smoke flag with the bot flag (D-317).</summary>
     public const string SmokeTakesNoBotMessage = "The smoke script gives every intent, so the smoke flag takes no bot flag.";
 
@@ -70,6 +73,7 @@ public sealed class UserArguments
         [BotSession.TransitionsFlag] = 1,
         [FrameLog.Flag] = 1,
         [ContactSheet.Flag] = 1,
+        [HudShot.Flag] = 1,
         [TestExit.PressFlag] = 2,
     };
 
@@ -168,29 +172,16 @@ public sealed class UserArguments
     }
 
     /// <summary>
-    /// Stops the boot on a flag that the session ignores (D-317). The contact sheet starts no loop, so it ignores every
-    /// other flag. The smoke script gives the intent of every tick, so the bot of the bot flag never drives the loop.
+    /// Stops the boot on a flag that the session ignores (D-317). The contact sheet starts no loop, and the HUD shot takes
+    /// no tick, so each one ignores every other flag. The smoke script gives the intent of every tick, so the bot of the bot flag never drives the loop.
     /// The transitions flag counts the descents of the bot session into the frame log, so it needs both (D-435).
     /// The error names both flags.
     /// </summary>
-    /// <exception cref="ContextException">The contact sheet flag with another flag, the smoke flag with the bot flag, or the transitions flag with no bot flag or no frame log flag.</exception>
+    /// <exception cref="ContextException">The contact sheet flag or the HUD shot flag with another flag, the smoke flag with the bot flag, or the transitions flag with no bot flag or no frame log flag.</exception>
     private static void RejectIgnoredFlags(Dictionary<string, string[]> flags)
     {
-        if (flags.ContainsKey(ContactSheet.Flag))
-        {
-            foreach (string flag in flags.Keys)
-            {
-                if (flag == ContactSheet.Flag)
-                {
-                    continue;
-                }
-
-                ContextException withSheet = new(SheetTakesNoFlagMessage);
-                withSheet.AddContext(FlagField, ContactSheet.Flag);
-                withSheet.AddContext(OtherField, flag);
-                throw withSheet;
-            }
-        }
+        RejectCompanions(flags, ContactSheet.Flag, SheetTakesNoFlagMessage);
+        RejectCompanions(flags, HudShot.Flag, ShotTakesNoFlagMessage);
 
         if (flags.ContainsKey(SmokeSession.Flag) && flags.ContainsKey(BotSession.Flag))
         {
@@ -206,6 +197,29 @@ public sealed class UserArguments
             alone.AddContext(FlagField, BotSession.TransitionsFlag);
             alone.AddContext(OtherField, flags.ContainsKey(BotSession.Flag) ? FrameLog.Flag : BotSession.Flag);
             throw alone;
+        }
+    }
+
+    /// <summary>Stops the boot when the arguments hold a flag that takes no other flag, and one more flag. The error names both.</summary>
+    /// <exception cref="ContextException">The flag stands with another flag.</exception>
+    private static void RejectCompanions(Dictionary<string, string[]> flags, string alone, string message)
+    {
+        if (!flags.ContainsKey(alone))
+        {
+            return;
+        }
+
+        foreach (string flag in flags.Keys)
+        {
+            if (flag == alone)
+            {
+                continue;
+            }
+
+            ContextException withOther = new(message);
+            withOther.AddContext(FlagField, alone);
+            withOther.AddContext(OtherField, flag);
+            throw withOther;
         }
     }
 

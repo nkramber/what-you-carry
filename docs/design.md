@@ -536,8 +536,8 @@ Implement the stairwell with the untimed descend-or-ascend prompt, open while th
 Gate: the transition shows no frame over 22 milliseconds on the Deck (D-427, D-435).
 > *In plain English:* you reach the stairs, choose to go down or leave, and the next floor already exists, so there is no pause.
 
-**PR-19: HUD and controller navigation.** 🔧
-Build the HUD in C# Control nodes: health, timer, damage numbers, and a boss bar placeholder (D-36, D-90). Numbers must not cover silhouettes (F-24). Build the controller navigation base for every later screen at Deck size (G-15).
+**PR-19: HUD and controller navigation.** ✅ Done in PR #86.
+Build the HUD in C# Control nodes: health, timer, damage numbers, and a boss bar placeholder (D-36, D-90, D-441 to D-445). Numbers must not cover silhouettes (F-24). Place the stairwell prompt, and let a hold of interact ascend (D-447, D-448). Build the controller navigation base for every later screen on one layout scale at Deck size (G-15, D-446, D-449).
 Gate: the HUD reads at 800p and every element works with a controller.
 > *In plain English:* the on-screen numbers and bars appear, sized for the smallest screen, and every menu works with a gamepad from the start.
 
