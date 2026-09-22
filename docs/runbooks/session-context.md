@@ -79,6 +79,8 @@ Run no other status command while the wait runs. Read the result one time, when 
 
 ## Wait for gitar
 
+The owner suspended the automated pass (D-471). Skip this wait until the owner restores the pass.
+
 The `gitar-review` skill holds the procedure and the proof that a review is current (D-374). This section holds the two commands of the wait. Do the full push wait of three minutes after each push, and do it also when gitar paused the automatic reviews (D-160).
 
 ```

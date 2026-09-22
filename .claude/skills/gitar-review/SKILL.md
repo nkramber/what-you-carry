@@ -9,6 +9,17 @@ The GitHub app `gitar-bot` reviews pull requests. This skill gets a Gitar review
 
 Each repo that uses Gitar keeps a copy of this file. A rule of the repo wins over this skill. For example, a repo can ask for a second review, or it can limit who replies to Gitar.
 
+## The suspension
+
+The owner suspended the automated pass on 2026-09-22 (D-471). Until the owner restores it, this repo uses this skill in part:
+
+- Do not comment `Gitar review`, and do not do the push wait.
+- When gitar posts a comment, export the comments with command F, and do steps 19 to 24.
+- After a fix push, reply on each thread with the commit. Do not ask for a new review.
+- Stop when each comment of gitar has its answer.
+
+The file `references/restore.md` holds the original rules and the restore steps. Load it when the owner restores the pass.
+
 ## Terms
 
 - **Head**: the newest commit of the pull request branch on GitHub.

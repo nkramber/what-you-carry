@@ -69,12 +69,12 @@ A disagreement with a finding belongs here, with the evidence. Do not remove the
 
 ## The automated pass
 
-An automated reviewer, gitar, reviews every PR after a push (D-250). The author gets a current review of the head and answers every finding before the hand-over to the other provider. On a documentation PR, the author does this before the override request. This pass comes before the cross-provider review and never replaces it (T-4).
+The owner suspended the automated pass of gitar (D-471). The author asks for no gitar review and waits for none. The pass never replaces the cross-provider review (T-4).
 
-Load `.claude/skills/gitar-review/SKILL.md` after each push, and follow its procedure (D-374). That skill holds the steps, the proof that a review is current, the traps, and the commands. This section gives only the rules of this repo, and each rule wins over that skill:
+When gitar posts a comment on a PR, answer it before the hand-over to the other provider, or before the override request. Use the answer steps of `.claude/skills/gitar-review/SKILL.md` (D-374). These rules of this repo win over that skill:
 
 - The author alone answers gitar. The reviewing provider never replies to gitar (`pr-review`, `references/repeat-review.md`).
 - A reply names no provider, harness, or model as the source of the work (T-6, D-176).
-- When the pass ends, tell the owner that the PR is ready for the other provider, or for the override. It is not ready to merge yet.
-- Record the pass in the handoff entry. Give the count of findings, the count with merit, and the commit that answered each one.
-- Record each `Gitar review` comment in the handoff entry too (D-303).
+- Record each comment of gitar in the handoff entry, with the commit that answered it.
+
+The file `.claude/skills/gitar-review/references/restore.md` holds the original section and the restore steps.

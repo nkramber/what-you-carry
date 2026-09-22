@@ -179,7 +179,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 ### 3.14 Process
 
-Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one role (D-121, D-375). The PR carries its code, tests, registers, design and roadmap state, review record, and handoff entry. No PR exists only to record an earlier PR (D-375). Each PR has its own handoff entry (D-146). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250).
+Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one role (D-121, D-375). The PR carries its code, tests, registers, design and roadmap state, review record, and handoff entry. No PR exists only to record an earlier PR (D-375). Each PR has its own handoff entry (D-146). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). The owner suspended the automated pass of gitar (D-471). When gitar posts a comment on a PR, the author answers it before that review.
 
 The document protocol (D-118, D-120, D-125, D-129, D-132):
 

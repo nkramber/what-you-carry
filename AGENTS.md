@@ -93,12 +93,12 @@ The `csharp-conventions` skill holds the code rules. It covers the language, the
 
 ## Automated review pass
 
-An automated reviewer, gitar, comments on every PR after a push (D-250). The author answers every comment before the hand-over to the other provider, or before the override request on a documentation PR.
+The owner suspended the automated pass of gitar (D-471). Do not ask for a gitar review, and do not wait for one.
 
-- Load the `gitar-review` skill after each push. It holds the author procedure, the proof that a review is current, and the commands (D-374).
-- When the pass ends, tell the owner that the PR is ready for the other provider, or for the override.
-- The reviewing provider reads the PR comments into its review and never addresses gitar (`pr-review`).
+- When gitar posts a comment on a PR, the author answers it before the hand-over or the override request. The `gitar-review` skill holds the procedure (D-374).
+- The reviewing provider never addresses gitar (`pr-review`).
 - A reply names no provider, harness, or model as the source of work (T-6).
+- `.claude/skills/gitar-review/references/restore.md` holds the original rule and the restore steps.
 
 ## Build and test commands
 
@@ -144,7 +144,7 @@ A PR merges only when every line holds:
 - [ ] The `ste-check` job is green (G-14).
 - [ ] The `night-gate` job is green: a success record from a night inside 48 hours, at a commit on the base branch (D-115, D-177, D-274, D-275).
 - [ ] The `smoke` job is green on all three platforms: the headless smoke session of the Game layer, with the pinned Godot binary (D-114, D-149).
-- [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250).
+- [ ] Every comment that gitar posted has its answer. The owner suspended the pass, so no gitar review is necessary (D-471).
 - [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
 - [ ] The `review-gate` check run is green. Grey means no review record yet, and the job line reads red then (D-251). Red means the review does not approve this head (D-179, D-181, D-185).
 - [ ] `docs/decisions.md` has every new decision.
