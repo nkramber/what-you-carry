@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 226: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-79, author. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Built D-534. `review-gate` and `make codex-review` read the effective head, the newest commit outside the skip set of D-475. A documents commit after an approving review keeps the gate green.
+- Kept the metadata set of D-184 for the gitar pass and for the override label, as the work head. The owner answered the two open points in session: D-539 (the label keeps D-190) and D-540 (a PR of documents alone needs the label).
+- Wrote the merge summary of D-533 (What, How, CI, Codex review) into `one-pr-one-session`, `review-and-merge.md`, the agent files, and the PR template.
+- Added the PR-79 entry to the Phase 2 roadmap and to the design doc, with `✅ Done in PR #95.`
+
+### State of the build
+
+- Code head `d13f73c`, and it is the effective head under the old rule and the new rule. `dotnet build` passed with no warning. `dotnet test` passed 1550 of 1550, Smoke included. `ste-check` gave 0 findings.
+- Six new tests fail when `SkipPaths` returns the metadata set, so they prove D-534.
+
+### In flight
+
+- The Codex review of `d13f73c`, then the merge summary and the owner confirmation.
+
+### Traps and gotchas
+
+- `review-gate` runs the tool of `main` (`pull_request_target`, D-197). This PR is judged by the old rule until it merges. Keep a code path in the last commit outside the metadata set before each review round, so the two rules give one head. A documents-only fix needs a new round, or a commit that also holds code.
+- Exit test 4 runs on the first PR after the merge: a documents commit after its approval must keep `review-gate` green.
+- Sequence item 35 of the Phase 2 roadmap still reads `PR-74.` with no done mark, although PR #94 merged.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the Codex review of PR #95, and answer each finding. Then write the merge summary and ask the owner to confirm the merge. The night fix of D-538 is the next PR, in a new session.
+
 ## Session 225: 2026-09-23, Codex
 
 Author: Codex
@@ -340,36 +375,3 @@ None for PR-62.
 ### Next concrete action
 
 Verify the session end gate after the push. The owner can merge PR #92. Then a clean author session can start PR-74 from Session 214 and D-496 to D-503.
-
-## Session 216: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-62, correction author. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
-
-### What this session did, and why
-
-- Answered the review of Session 215 in `docs/reviews/pr-92-response.md`.
-- P2-1 had full merit. The layout parse accepted a canvas whose `x + width` wrapped past the int limit. The check now compares each size with the room that the start leaves. The packer had the same wrap, and it now rejects a size past the atlas before any sum. New cases in `RecipeTests` failed on the old code and pass now.
-- The owner confirmed exit test 6: the look stayed the same (D-510).
-
-### State of the build
-
-- The full suite passed 1436 of 1436, Smoke included. `ste-check` gave 0 findings.
-- The committed atlas and layout did not change.
-- The remote head is the commit that holds this entry. It holds the correction, so it is the new effective head.
-
-### In flight
-
-- PR #92: the automated pass of gitar on the new head, then the repeat review of Codex.
-
-### Traps and gotchas
-
-- A bounds check of two ints adds no two large values. Compare the size with the room that remains.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Codex re-reviews PR #92 at the new effective head. After the merge, PR-74 starts from Session 214 and D-496 to D-503.

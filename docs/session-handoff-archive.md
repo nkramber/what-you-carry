@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 216: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-62, correction author. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
+
+### What this session did, and why
+
+- Answered the review of Session 215 in `docs/reviews/pr-92-response.md`.
+- P2-1 had full merit. The layout parse accepted a canvas whose `x + width` wrapped past the int limit. The check now compares each size with the room that the start leaves. The packer had the same wrap, and it now rejects a size past the atlas before any sum. New cases in `RecipeTests` failed on the old code and pass now.
+- The owner confirmed exit test 6: the look stayed the same (D-510).
+
+### State of the build
+
+- The full suite passed 1436 of 1436, Smoke included. `ste-check` gave 0 findings.
+- The committed atlas and layout did not change.
+- The remote head is the commit that holds this entry. It holds the correction, so it is the new effective head.
+
+### In flight
+
+- PR #92: the automated pass of gitar on the new head, then the repeat review of Codex.
+
+### Traps and gotchas
+
+- A bounds check of two ints adds no two large values. Compare the size with the room that remains.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Codex re-reviews PR #92 at the new effective head. After the merge, PR-74 starts from Session 214 and D-496 to D-503.
+
 ## Session 215: 2026-09-23, Codex
 
 Author: Codex
