@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 221: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-78, reviewer, round 2. Branch `feat/pr-78-codex-review`. PR #93, changes required. Base `e069e16`.
+
+### What this session did, and why
+
+- Re-reviewed PR #93 at effective head `4e850b9` after the author fixed P1-1 and the login check.
+- P1-1 is fixed in `2dca4fe`. The approving record now rejects an open P0 to P2 finding.
+- Added P2-1: the parser accepts unsupported severities P4 to P9, and the outcome rules treat them as nonblocking.
+- Updated `docs/reviews/pr-93.md` with the prior verdict, the fixed finding, P2-1, and this round’s evidence.
+
+### State of the build
+
+- The focused Codex review, ruleset, and review gate tests passed: 64 passed, 0 failed, 0 skipped. The build succeeded as part of the test command.
+- Required code checks passed on `4e850b9`. `evaluate` and `review-gate` failed because the published review still required changes. Fresh results are pending this record.
+- The effective head is `4e850b9`. This review record and this entry are metadata.
+
+### In flight
+
+- Fresh `evaluate` and `review-gate` results after the metadata commit.
+- The author must fix P2-1 and start another review round after the Gitar pass.
+
+### Traps and gotchas
+
+- The finding format defines P0 to P3. Only P3 is nonblocking.
+- The code and workflow checks pass at the effective head, but the review gate is not green until a review approves it.
+- Exit test 4, the live ruleset setup, waits until after merge under D-519.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author rejects unsupported finding severities, then starts the next round after the Gitar pass.
+
 ## Session 220: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -329,43 +366,3 @@ None.
 ### Next concrete action
 
 The owner merges PR #90.
-
-## Session 211: 2026-09-22, Claude Code
-
-Author: Claude Code
-Session: PR-72, author. Branch `fix/pr-72-enemy-movement`. PR #90, pending owner merge. Base `ea84473`.
-
-### What this session did, and why
-
-- PR-71 exit test 6 passes. The push runs of `ea84473` on `main` ran every job of `ci.yml` (7 jobs), `smoke.yml` (4), `bit-identity.yml` (5), and `bots.yml` (2), and each passed. No job skipped. Each `ci-skip` log reads "The event 'push' runs every job. A push to main never skips (D-473)." Runs 35806594707, 35806594677, 35806594709, and 35806594708.
-- Owner answers D-483 to D-489: the id PR-72, one PR for F-107 and F-108, the F-108 case (seed 1, floor 1), the diagonal rule, the costs 10 and 14, the walkers, and no diagonal step up past a corner.
-- F-108: six probes on seed 1, floor 1 found no stall. The owner then said the enemy "slowly jumped up the ramp". `PathWalk.NeedsAJump` read the feet against the face of the next place, so 80 to 87 percent of the ticks of a climb were in the air. It now reads the slope under the feet at the entry point.
-- F-107: `GridMoves.DiagonalMove` and the search costs of D-487. Three faults came out of the tests and a sweep of 431597 diagonal moves over 120 seeds: a two-block rise from two side steps, a climb cut out of a ramp, and a drop into a landing column with a block at body height (the Overseer of `TimerTesterAlwaysDies` seed 662). The rule now limits the rise in rows and in floor height, and it needs the start and landing columns open. D-489 closed the fourth: a step up past a corner lands short.
-
-### State of the build
-
-- Local: the full suite passed (1377 tests, Smoke apart), then Smoke 7 of 7, the Godot build check, `det-lint` 0, `ste-check` 0.
-- Simulation version 15. Bit identity `dc4258105649a548`. With version 14 the new walk gives `5edea237bc4e2fae`, so the walk moved the hash too.
-- Effective head `09926b6`. CI, Smoke, bit identity, bots, det-lint, asset-QA, STE, doc-gate, night-gate, and gitar passed on `751431d`, every heavy job ran. `evaluate` reads red until the review record exists (D-251).
-- Remote head before this metadata commit: `751431d`.
-
-### In flight
-
-- The status marks `✅ Done in PR #90.` are in the roadmap and the design doc.
-- The review by Codex of the effective head `09926b6`.
-- CI passed on `b1e3ab5`, `evaluate` apart (D-251). The gitar pass of `35311d8` gave one finding: a box on the edge of a block over a ramp got a needless jump. The fix takes the higher of the feet and the slope, with the test `ABodyOnTheEdgeOfABlockOverARampNeedsNoJumpOntoIt`. The bit-identity answer did not move.
-
-### Traps and gotchas
-
-- The walk sweep is `EnemyWalkTests.DiagonalSweep`, in the `Sweep` category, at a fixed 120 seeds (about 8 s local). A seed count on floor 1 alone missed every fault. The faults sat on floors 6 to 15.
-- An arrival alone proves little. A follower that searches again walks the two side moves, so the sweep also counts the jumps.
-- `GridMoves.FloorHeightAt` works in 24ths of a block, so the rule stays in integers (G-9).
-- On `main`, the Session 210 entry sat above the `# Session handoff` title. `doc-gate` finds the newest entry by `\n## Session `, so it read Session 209 and failed this branch. This entry puts the title and the rule line back on top, with Session 210 unchanged under Session 211. Add an entry under the rule line.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Codex reviews PR #90 at the effective head `09926b6` and writes `docs/reviews/pr-90.md`. The owner starts it with "Review PR #90" in Codex Desktop.
