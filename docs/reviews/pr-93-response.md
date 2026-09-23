@@ -23,4 +23,18 @@ The owner gave two new rules during round 1. They are in the same push, so round
 - D-523: no review uses API pricing. The command removes `OPENAI_API_KEY`, `CODEX_API_KEY`, and `CODEX_ACCESS_TOKEN` from each Codex process, passes `forced_login_method="chatgpt"`, and refuses unless `codex login status` gives `Logged in using ChatGPT`.
 - D-524: before a merge, the session gives the owner a summary of one paragraph and gets the merge confirmation.
 
+## Round 2 at `4e850b9`: P2-1, an unsupported finding severity can pass as nonblocking
+
+Disposition: full merit.
+
+Evidence: the finding heading pattern accepted each digit from 0 to 9, and the outcome rule counts P0 to P2 as blocking. An open `P4-1` under an approving verdict therefore passed. The same class has two more silent paths: a heading such as `### P10-1:` or `### P1: title` did not match the pattern, and the parser skipped it with no error (T-2).
+
+Correction: `WhatYouCarry.Tools/CodexReview/ReviewFindings.cs`. A severity outside P0 to P3 is a fault that names the finding. Each other `###` heading in the Findings section is a fault that names the heading. The severity pattern takes one to three digits, so no parse can overflow. `findings.md` of `pr-review` states the rule. P3 stays the one nonblocking severity.
+
+Regression check: `AFindingHeadingOutsideTheFormatIsAFault` for `P4-1`, `P10-1`, `### P1:`, and `### Notes`. On the old parser, all four failed (4 of 4). With the correction, `dotnet test --filter FullyQualifiedName~CodexReview` passes 61 of 61, and the P3 approval case still passes.
+
+## The automated pass after round 1
+
+Gitar found at `2dca4fe` that `codex login status` writes its status to stderr, and the command read stdout alone, so each round refused. `4e850b9` reads both streams, and `TheLoginStatusReadsTheStderrOfTheCli` starts a real child that writes to stderr. The thread has its reply and is resolved.
+
 New ids: D-523, D-524. No new F-# id.

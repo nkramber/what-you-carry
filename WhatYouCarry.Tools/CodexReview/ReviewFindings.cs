@@ -22,10 +22,15 @@ public static partial class ReviewFindings
     public const string StatusPrefix = "Status:";
     public const string OpenAtPrefix = "Open at:";
 
+    /// <summary>The severities of <c>findings.md</c>: P0 to P3.</summary>
+    public const int HighestSeverity = 3;
+
     /// <summary>
     /// Every finding under the section heading, in the order of the file. A finding heading is
-    /// <c>### P&lt;severity&gt;-&lt;index&gt;: &lt;title&gt;</c>. A finding with no status line is an error that names it (T-2).
-    /// A finding with no <c>Open at:</c> line has an empty list, and the outcome rule judges that.
+    /// <c>### P&lt;severity&gt;-&lt;index&gt;: &lt;title&gt;</c>, with a severity from P0 to P3. Any other third-level heading in
+    /// the section is an error that names it, because a skipped finding blocks nothing in silence (T-2, PR #93 P2-1).
+    /// A finding with no status line is an error that names it too. A finding with no <c>Open at:</c> line has an
+    /// empty list, and the outcome rule judges that.
     /// </summary>
     public static IReadOnlyList<ReviewFinding> Parse(string recordText)
     {
@@ -45,11 +50,21 @@ public static partial class ReviewFindings
         {
             string line = lines[index].Trim();
             Match heading = FindingHeading().Match(line);
+            if (!heading.Success && line.StartsWith("### ", StringComparison.Ordinal))
+            {
+                throw new FormatException($"The heading '{line}' in the '{SectionHeading}' section is not a finding heading of the form '### P<0 to {HighestSeverity}>-<index>: <title>'.");
+            }
+
             if (heading.Success)
             {
                 AddFinding(findings, id, severity, status, openAt);
                 id = heading.Groups["id"].Value;
                 severity = int.Parse(heading.Groups["severity"].Value, CultureInfo.InvariantCulture);
+                if (severity > HighestSeverity)
+                {
+                    throw new FormatException($"The finding {id} has the severity P{severity}, and a severity is P0 to P{HighestSeverity}.");
+                }
+
                 status = null;
                 openAt = [];
                 continue;
@@ -101,7 +116,7 @@ public static partial class ReviewFindings
         return hashes;
     }
 
-    [GeneratedRegex(@"^### (?<id>P(?<severity>[0-9])-[0-9]+):")]
+    [GeneratedRegex(@"^### (?<id>P(?<severity>[0-9]{1,3})-[0-9]+):")]
     private static partial Regex FindingHeading();
 
     [GeneratedRegex("`(?<text>[^`]+)`")]

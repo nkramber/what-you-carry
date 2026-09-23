@@ -168,6 +168,23 @@ public sealed class CodexReviewTests
         Assert.Contains(id, outcome.Message, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("### P4-1: A defect", "severity P4")]
+    [InlineData("### P10-1: A defect", "severity P10")]
+    [InlineData("### P1: A defect", "not a finding heading")]
+    [InlineData("### Notes", "not a finding heading")]
+    public void AFindingHeadingOutsideTheFormatIsAFault(string heading, string expected)
+    {
+        // PR #93 review P2-1: a severity outside P0 to P3, or a heading that the parser skips, never passes as
+        // a nonblocking finding under an approval.
+        string record = Record(Head, Approve, heading + "\n\nStatus: open.\n\nOpen at: `" + Head + "`.\n");
+
+        ReviewOutcome outcome = Judge(record);
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains(expected, outcome.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void AnApprovalWithAnAcceptedRiskApproves()
     {
