@@ -212,6 +212,21 @@ public sealed class ReviewGateGitTests
         Assert.Equal(ReviewGateResult.Success, result.Conclusion);
     }
 
+    [Theory]
+    [InlineData("README.md")]
+    [InlineData("LICENSE")]
+    public void ReviewGatePassesOnOverrideLabelForARootDocument(string path)
+    {
+        // PR #95 review P2-1, D-541: a PR of one root document has no effective head (D-540), so the label covers it.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string head = repo.Commit("docs: a root document", Files((path, "text")), LabelTime.AddMinutes(-5));
+
+        ReviewGateResult result = Evaluate(repo, head, overrideLabel: true);
+
+        Assert.Equal(ReviewGateResult.Success, result.Conclusion);
+    }
+
     [Fact]
     public void ReviewGateCommandWritesCheckRunPayload()
     {

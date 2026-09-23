@@ -581,7 +581,7 @@ Gate: the clip check passes at every keyframe, and the grain paints the same byt
 > *In plain English:* the miner was ten plain boxes with speckled paint. This change adds a brow, a nose, a beard, and boots, and paints the body with the soft mottle of the 3D model.
 
 **PR-79: Review process after approval.** ✅ Done in PR #95.
-The effective head that `review-gate` and `make codex-review` read skips each commit whose paths all lie in the skip set of D-475 (D-534). An approving review then stays green after a later documents commit. The gitar pass and the override label keep the metadata set of D-184 (D-539). A PR of documents alone needs the `review-override` label (D-540). Before the owner confirms a merge, the session writes the merge summary: What, How, CI, and Codex review (D-533).
+The effective head that `review-gate` and `make codex-review` read skips each commit whose paths all lie in the skip set of D-475 (D-534). An approving review then stays green after a later documents commit. The gitar pass and the override label keep the metadata set of D-184 (D-539). A PR of documents alone needs the `review-override` label, and the label covers each path of the skip set (D-540, D-541). Before the owner confirms a merge, the session writes the merge summary: What, How, CI, and Codex review (D-533).
 Gate: the review gate and the review command tests pass, and the merge confirmation of this PR uses the merge summary.
 > *In plain English:* a fix of one word in a document after the approval of a PR asked for a second full review. Now a change of documents alone keeps the approval, and gitar still reads each push.
 

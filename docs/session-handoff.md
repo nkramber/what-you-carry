@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 228: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-79, author. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Answered round 1 of the Codex review (`Changes required` at `d13f73c`). P2-1 has full merit: a PR of the root `README.md` or `LICENSE` alone passed neither by review nor by label.
+- Recorded the owner instruction as D-541: the `review-override` label covers each path of the skip set of D-475. `review-gate` now reads the one list of the CI skip for the label. D-190 carries a partial revision mark.
+- Wrote `docs/reviews/pr-95-response.md`. It also shows that the Smoke jobs ran and passed at `d13f73c`.
+
+### State of the build
+
+- `dotnet build` passed with no warning. The full suite result and the new code head are in the response file and the PR.
+- Four new tests fail on the old `ReviewGateRules.cs` and pass with the correction.
+
+### In flight
+
+- Round 2 of the Codex review on the new code head, then the merge summary and the owner confirmation.
+
+### Traps and gotchas
+
+- `review-gate` runs the tool of `main`, so round 2 must record the new code head. The correction commit holds code, so the old rule and the new rule give one head.
+- The night gate stays red on the record of D-538. D-537 keeps the bypass for the merge.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read round 2 of the Codex review of PR #95. On approval, write the merge summary of D-533 and ask the owner to confirm the merge.
+
 ## Session 227: 2026-09-23, Codex
 
 Author: Codex
@@ -336,42 +369,3 @@ None.
 ### Next concrete action
 
 The author fixes P1-1, then starts the next review round after the Gitar pass.
-
-## Session 218: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-78, author. Branch `feat/pr-78-codex-review`. PR #93, pending merge. Base `e069e16`.
-
-### What this session did, and why
-
-- The owner asked for an automated Codex review, a three-strike stop, and a gated auto-merge. D-511 to D-522 record the direction and the answers of 2026-09-23.
-- `make codex-review PR=<n>` updates the npm CLI and runs the new `codex-review` command of Tools (D-511, D-512). The command checks the start conditions, probes `gpt-6-luna` at effort `medium`, runs Codex in a detached worktree, and judges the pushed record.
-- The `Open at:` line of each finding counts the review rounds. A P0 to P2 finding open in three rounds exits 11 (D-513 to D-515).
-- `.github/rulesets/main.json` holds the ruleset of `main`, and `.github/review-gate-mode` turns `enforced` (D-520 to D-522). The platform jobs got unique check names (F-110).
-- The owner merges this PR by hand. After the merge, the session applies the settings on approval (D-519).
-
-### State of the build
-
-- The build passes with no warnings. The new tests pass: `CodexReviewTests`, `CodexReviewGitTests`, and `RulesetTests`. `ste-check` finds no issue.
-- The effective head is the commit that holds this entry. Origin holds it after the push.
-- The CLI facts of 2026-09-23: npm `@openai/codex` 0.156.1 answered the probe. Homebrew holds 0.39.0, and the app bundles 0.155.0-alpha.9.2.
-
-### In flight
-
-- PR #93: the gitar pass, then `make codex-review PR=93`, then the answers to the findings.
-- After the owner merge: the setup of D-519, and the live ruleset check with `docs/runbooks/main-ruleset.md`.
-
-### Traps and gotchas
-
-- GNU make exits 2 for each failed target. The exit code of the command shows as `Error <code>`, and the first output line names the outcome.
-- `codex exec` reads a piped stdin into the prompt, so the command closes stdin.
-- A skipped job reports success to a required check. A job that never reports blocks every merge, so `RulesetTests` binds each required name to one job.
-- The agent files stand at 14987 of 15000 bytes. The Tools commands now use the `tools <command>` form.
-
-### Open questions that block progress
-
-None. The owner answered each question of this PR in session.
-
-### Next concrete action
-
-Complete the gitar pass of PR #93, then run `make codex-review PR=93` in the background.

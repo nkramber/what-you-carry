@@ -176,6 +176,18 @@ public sealed class ReviewGateRulesTests
         Assert.Equal(ReviewGateResult.Success, ReviewGateRules.Evaluate(facts).Conclusion);
     }
 
+    [Theory]
+    [InlineData("WhatYouCarry.Game/README.md")]
+    [InlineData(".github/pull_request_template.md")]
+    public void ReviewGateFailsOnOverrideLabelWithADocumentOutsideTheSkipSet(string path)
+    {
+        // D-541: only the root README and LICENSE join the set. A Markdown file in another directory stays outside it.
+        ReviewGateFacts facts = Facts(mode: "enforced", reviewFile: null, overrideLabel: true, changedPaths: [path]);
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(path, result.Summary, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void ReviewGateFailsOnOverrideLabelWithCodePath()
     {
@@ -232,6 +244,18 @@ public sealed class ReviewGateRulesTests
         Assert.Contains(ReviewGateRules.OverrideLabel, result.Summary, StringComparison.Ordinal);
         Assert.Contains("D-540", result.Summary, StringComparison.Ordinal);
         AssertNamesRuleExpectedAndFound(result);
+    }
+
+    [Theory]
+    [InlineData("README.md")]
+    [InlineData("LICENSE")]
+    [InlineData("AGENTS.md")]
+    [InlineData(".claude/skills/pr-review/SKILL.md")]
+    public void ReviewGatePassesOnOverrideLabelForEachPathOfTheSkipSet(string path)
+    {
+        // D-541: the label covers each path of the skip set of D-475, the root README and LICENSE included.
+        ReviewGateFacts facts = Facts(mode: "enforced", reviewFile: null, overrideLabel: true, changedPaths: [path], documentsOnly: true);
+        Assert.Equal(ReviewGateResult.Success, ReviewGateRules.Evaluate(facts).Conclusion);
     }
 
     [Fact]

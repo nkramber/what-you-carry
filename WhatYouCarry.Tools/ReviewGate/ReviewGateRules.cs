@@ -14,7 +14,7 @@ public sealed record ReviewGateResult(string Conclusion, string Title, string Su
 }
 
 /// <summary>
-/// The rules of the review gate (D-179, D-181, D-184, D-185, D-190, D-534). Pure: the facts go in, and a result comes out.
+/// The rules of the review gate (D-179, D-181, D-184, D-185, D-190, D-534, D-541). Pure: the facts go in, and a result comes out.
 /// Every failure names the rule, the expected value, and the value found (T-2).
 /// </summary>
 public static class ReviewGateRules
@@ -30,13 +30,11 @@ public static class ReviewGateRules
     public static readonly string[] MetadataPaths = ["docs/reviews/", "docs/session-handoff.md", "docs/session-handoff-archive.md"];
 
     /// <summary>
-    /// A commit that changes only paths of the skip set of D-475 does not move the effective head (D-534). The CI skip
-    /// owns the list, so the two rules never disagree on what a document is.
+    /// A commit that changes only paths of the skip set of D-475 does not move the effective head (D-534). The override
+    /// label covers a PR whose every changed path lies in this set (D-541). The CI skip owns the list, so the three rules
+    /// never disagree on what a document is.
     /// </summary>
     public static IReadOnlyList<string> SkipPaths => CiSkipRules.DocumentPaths;
-
-    /// <summary>The override label covers a PR whose every changed path starts with one of these (D-190).</summary>
-    public static readonly string[] EligiblePaths = ["docs/", "CLAUDE.md", "AGENTS.md", ".claude/skills/"];
 
     public static string ReviewFilePath(int pullRequestNumber)
     {
@@ -89,7 +87,7 @@ public static class ReviewGateRules
         var codePaths = new List<string>();
         foreach (string path in facts.ChangedPaths)
         {
-            if (!IsEligible(path))
+            if (!CiSkipRules.IsDocument(path))
             {
                 codePaths.Add(path);
             }
@@ -98,9 +96,9 @@ public static class ReviewGateRules
         if (codePaths.Count > 0)
         {
             return Fail(
-                $"Override label '{OverrideLabel}': every changed path is in the eligible set ({string.Join(", ", EligiblePaths)})",
-                "no changed path outside the eligible set",
-                $"{codePaths.Count} path(s) outside the eligible set: {string.Join(", ", codePaths)}");
+                $"Override label '{OverrideLabel}': every changed path is in the skip set of D-475 ({string.Join(", ", SkipPaths)}) (D-541)",
+                "no changed path outside the skip set",
+                $"{codePaths.Count} path(s) outside the skip set: {string.Join(", ", codePaths)}");
         }
 
         LabelEvent? labelEvent = facts.NewestOverrideLabelEvent;
@@ -127,7 +125,7 @@ public static class ReviewGateRules
         return new ReviewGateResult(
             ReviewGateResult.Success,
             $"Override by label '{OverrideLabel}'",
-            $"Label: {OverrideLabel}\nAdded by: {labelEvent.Actor} at {labelTime:O}\nWork head: {workHeadText}\nEvery changed path is in the eligible set (D-190).");
+            $"Label: {OverrideLabel}\nAdded by: {labelEvent.Actor} at {labelTime:O}\nWork head: {workHeadText}\nEvery changed path is in the skip set of D-475 (D-190, D-541).");
     }
 
     private static ReviewGateResult EvaluateReview(ReviewGateFacts facts, string mode)
@@ -187,24 +185,6 @@ public static class ReviewGateRules
         }
 
         return $"Review file last changed by: {facts.ReviewFileCommit.Sha} \"{facts.ReviewFileCommit.Subject}\"";
-    }
-
-    private static bool IsEligible(string path)
-    {
-        foreach (string eligible in EligiblePaths)
-        {
-            if (eligible.EndsWith('/') && path.StartsWith(eligible, StringComparison.Ordinal))
-            {
-                return true;
-            }
-
-            if (path == eligible)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /// <summary>A short hash in the review file matches the full hash by prefix. Seven characters is the minimum.</summary>
