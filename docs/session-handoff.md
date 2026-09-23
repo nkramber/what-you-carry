@@ -12,12 +12,11 @@ Session: PR-78, reviewer, round 3. Branch `feat/pr-78-codex-review`. PR #93, Rea
 ### State of the build
 
 - The focused Codex review, ruleset, and review-gate tests passed: 70 passed, 0 failed, 0 skipped. The build succeeded as part of the test command.
-- Required code checks passed on `e28ecd2`. At the old record, `evaluate` and `review-gate` failed. Fresh results wait for this metadata commit.
+- Required code checks passed on `e28ecd2`. After metadata commit `a91b075`, `evaluate`, `review-gate`, and the document checks passed. Code-only jobs skipped on the metadata head under the documents-only rule.
 - The effective head is `e28ecd2`. The review record and this entry are metadata.
 
 ### In flight
 
-- Fresh `evaluate` and `review-gate` results after the metadata commit.
 - The author gives the owner the merge summary required by D-524 after the fresh results pass.
 
 ### Traps and gotchas
