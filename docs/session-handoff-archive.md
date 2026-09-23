@@ -1,5 +1,72 @@
 # Session handoff archive
 
+## Session 206: 2026-09-22, Claude Code
+
+Author: Claude Code
+Session: PR-20, author. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, pending owner merge.
+
+### What this session did, and why
+
+- Asked the owner OQ-48 and every open answer of PR-20 before the code, and recorded D-450 to D-470.
+- Built the sound tool: `audio-synth` renders each sound file to a WAV file, and `audio-analyze` writes the band levels of a CC0 reference into a spectral layer. The render holds no transcendental of the runtime, so the three platforms give equal bytes.
+- The owner rejected the sfxr sounds of the first design, so D-459 and D-462 to D-469 moved the path twice: first to the spectral layer of analysed references, then to CC0 recordings for the pitched sounds.
+- Shipped nine sounds: the sword swing, the sword hit, the footstep, the dodge, the player hit, the hunter spawn, the hunter step, the timer alarm, and the timer tick. The owner picked the reference of each one by ear from CC0 candidates.
+- Gave Core five action events for the gameplay facts of the sounds (D-454), and the Game layer four buses, one player per sound, the stride rhythm of D-463, and the hunter pitch of D-455.
+- Wrote the `Makefile` at the root, under an owner override of G-10 for a second concern in this PR.
+
+### State of the build
+
+- Build: 0 warnings and 0 errors. The remote head is `77f215d`, and the effective head is `06cd3b3` (D-184).
+- The full suite passed on the tree of the first commit: 1295 tests, 0 failures, 7 minutes and 55 seconds.
+- The STE check, the determinism lint, and the asset check each report 0 findings.
+- Every CI check of the effective head passed: the three platforms of CI, of bit identity, and of the smoke session, with `doc-gate`, `night-gate`, `det-lint`, `asset-qa`, `ste-check`, and `bots`.
+- The headless smoke session passed with no leaked object and no error line. The play session of the owner ended clean, and the sound bank loaded nine files on the CoreAudio driver.
+- Gitar approved the effective head with no finding, and the review has no open thread. The `evaluate` check fails until a review record exists (D-251).
+
+### In flight
+
+- The owner merge of PR #87, after Codex confirms the corrections of the review.
+
+### The review of Codex, and the answer
+
+- Codex reviewed the effective head `06cd3b3` and asked for changes: `docs/reviews/pr-87.md`.
+- P2-1: the analysis command joined the sound name into a path, so `--sound ../../../pwn` wrote a file outside the sound directory. Both findings reproduced before the correction.
+- P2-2: a chunk length near the top of an int made `body + length` turn negative, so a malformed reference raised an unhandled error with no file and no chunk in it.
+- Both have full merit. The corrections and the evidence stand in `docs/reviews/pr-87-response.md`. Six new test cases cover them, and each one fails on the code before the correction.
+- The corrections went to the remote as `996b3c3`, which is the effective head now. The full suite passed on that tree: 1301 tests, 0 failures, 7 minutes and 13 seconds.
+- The automated pass of gitar ran on `996b3c3` and approved it with no finding and no open thread. The pass of the earlier head `06cd3b3` also had no finding, and no session asked for a manual review.
+- Every CI check of `996b3c3` passed but two: `evaluate` and `review-gate` fail while the review record holds the verdict `Changes required` (D-251). The reviewer alone changes that verdict.
+
+### Traps and gotchas
+
+- The dummy audio driver of a headless session mixes nothing, so a playback never ends and the engine reports it leaked. The bank plays nothing on that driver, and the boot line names the driver.
+- A level of a spectral layer had a ceiling of 40 decibels, which clamped the loudest bands of three sounds. The ceiling is 80 now, and `ALoudRecordingDoesNotReachTheCeiling` guards it.
+- The band noise of a spectral layer drops the pitch of a tone, so a horn or a bell must ship as its recording (D-467).
+- `afplay` cannot play OGG, and `afconvert` writes the extensible WAV header. The reader takes that header.
+- The Freesound key of the owner lives in `~/.zshrc` as `FREESOUND_API_KEY`, and never in this repository.
+
+### Open questions that block progress
+
+None. OQ-48 and OQ-182 are answered.
+
+### Next concrete action
+
+Codex reviews PR #87 and writes `docs/reviews/pr-87.md` for the effective head `06cd3b3`.
+
+The next PR after this one skips the heavy checks on a head that changes documents alone. The owner asks for it before the bug fixes, and it takes the pattern of PR #54 of the repository `the-thing-below`. The owner wants no document change for it in PR #87, because a change outside the metadata set moves the effective head and starts CI again. The plan:
+
+- A new command of Tools answers one question: does every path of a diff belong to the documents? The rule lives in C# with its own tests, as `doc-gate` and `night-gate` do. A path under `content/`, `.github/workflows/`, or any project directory is never a document.
+- The workflows `ci.yml`, `bit-identity.yml`, and `smoke.yml` gain a first job on Linux that runs the command and gives a boolean output. Each platform job takes that job in `needs`, and runs under `if`. A skipped job reports success to the branch rules, so the PR gate stays green with no job that hangs.
+- The cheap checks always run: `ste-check`, `doc-gate`, `review-gate`, `night-gate`, `det-lint`, and `asset-qa`. They read the documents, so a document change must not skip them.
+- The skip reads the diff from the base of the pull request to the head, so a pull request of documents alone skips from its first push, and a pull request with code runs every check on every push, as today.
+- This automates D-357, which a session applies by hand today, and it frees the one Mac runner (D-356, F-99).
+- Risks to check first: a skipped required check must count as a pass in the branch ruleset, the skip must not move what D-184 names the effective head, and the list of document paths must be narrow.
+- The owner answers three questions in that session: the id of the entry in the roadmap, whether `det-lint` and `asset-qa` skip too, and whether a push to `main` skips as well.
+
+That PR also asks why the checks take so long, which the owner saw on a Windows check of 24 minutes. The one test step of `ci.yml` holds the whole cost: 1055 seconds on the hosted Linux runner, 1206 on the hosted Windows runner, and 451 on the self-hosted Mac mini. The run of `996b3c3` gives a second reading: 872 seconds on Linux, 1518 on Windows, and 489 on the Mac mini, so the hosted runners also vary from run to run. The smoke workflow takes 48 seconds, 103 seconds, and 29 seconds, and the bit identity takes 33 seconds or less, so neither one is the cost. A profile of the suite on 2026-09-22 names ten tests that hold 73 percent of the summed duration of 20.3 minutes, and every one is a seed sweep: `EveryFloorTakesATierWhenOneFits` at 177 seconds, `ReplayReproducesHash` at 132, `EveryPolicyEndsAtTheBottomOrByDeath` at 118, `StairwellReachable` at 98, `CameraNeverInsideSolid` at 97, and `EnemyCountMatchesBudget` at 94. A smaller sweep on a pull request weakens the gate, so the owner decides any change of a seed count.
+
+After that PR: F-107 and F-108, an enemy walks no diagonal, and an enemy does not walk up a ramp. The owner saw both in the play session of PR #87.
+
 ## Session 205: 2026-09-21, Codex
 
 Author: Codex

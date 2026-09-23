@@ -35,6 +35,14 @@ public static class AtlasPacker
         foreach (int index in order)
         {
             CanvasSize canvas = canvases[index];
+            int room = AtlasLayout.AtlasPixels - (2 * AtlasLayout.Gutter);
+
+            // A size past the room fails before the sums below, so a size near the int limit cannot wrap (PR #92 review P2-1).
+            if (canvas.Width > room || canvas.Height > room)
+            {
+                throw NoRoom(canvas);
+            }
+
             int cellWidth = canvas.Width + (2 * AtlasLayout.Gutter);
             int cellHeight = canvas.Height + (2 * AtlasLayout.Gutter);
             if (cursor + cellWidth > AtlasLayout.AtlasPixels)
@@ -44,9 +52,9 @@ public static class AtlasPacker
                 cursor = 0;
             }
 
-            if (cellWidth > AtlasLayout.AtlasPixels || shelfTop + cellHeight > AtlasLayout.AtlasPixels)
+            if (shelfTop + cellHeight > AtlasLayout.AtlasPixels)
             {
-                throw new ContextException($"The atlas of {Text(AtlasLayout.AtlasPixels)} pixels has no room for the canvas {canvas.Name} of {Text(canvas.Width)} by {Text(canvas.Height)} pixels. A larger atlas needs a new decision (D-506).");
+                throw NoRoom(canvas);
             }
 
             places[index] = new AtlasRect(cursor + AtlasLayout.Gutter, shelfTop + AtlasLayout.Gutter, canvas.Width, canvas.Height);
@@ -55,6 +63,12 @@ public static class AtlasPacker
         }
 
         return places;
+    }
+
+    /// <summary>The error of a canvas that the atlas has no room for. It names the canvas and its size (D-506).</summary>
+    private static ContextException NoRoom(CanvasSize canvas)
+    {
+        return new ContextException($"The atlas of {Text(AtlasLayout.AtlasPixels)} pixels has no room for the canvas {canvas.Name} of {Text(canvas.Width)} by {Text(canvas.Height)} pixels. A larger atlas needs a new decision (D-506).");
     }
 
     private static int Compare(CanvasSize left, CanvasSize right)

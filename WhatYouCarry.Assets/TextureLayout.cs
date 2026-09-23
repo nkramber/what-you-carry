@@ -267,9 +267,10 @@ public sealed class TextureLayout
             index++;
         }
 
+        // Each end compares the size with the room that the start leaves, so no sum of two large values can wrap (PR #92 review P2-1).
         AtlasRect rect = new(values[0], values[1], values[2], values[3]);
         bool inside = rect.X >= 0 && rect.Y >= 0 && rect.Width > 0 && rect.Height > 0
-            && rect.X + rect.Width <= AtlasLayout.AtlasPixels && rect.Y + rect.Height <= AtlasLayout.AtlasPixels;
+            && rect.Width <= AtlasLayout.AtlasPixels - rect.X && rect.Height <= AtlasLayout.AtlasPixels - rect.Y;
         if (!inside)
         {
             throw ContentError.Make(path, AtKey, $"on '{owner}' is {RectText(rect)}, and a canvas has a positive size inside the atlas of {Text(AtlasLayout.AtlasPixels)} pixels");

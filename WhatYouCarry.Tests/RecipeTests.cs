@@ -322,6 +322,19 @@ public sealed class RecipeTests
         }
     }
 
+    /// <summary>A canvas wider or higher than the atlas is an error that names it, also at a size where the sum with the gutter wraps (D-506, T-2).</summary>
+    [Theory]
+    [InlineData(int.MaxValue, 4)]
+    [InlineData(4, int.MaxValue)]
+    [InlineData(511, 4)]
+    public void PackerRejectsACanvasLargerThanTheAtlas(int width, int height)
+    {
+        ContextException error = Assert.Throws<ContextException>(() => AtlasPacker.Pack([new CanvasSize("models/rig.bbmodel:arm:north", width, height)]));
+
+        Assert.Contains("models/rig.bbmodel:arm:north", error.Message, StringComparison.Ordinal);
+        Assert.Contains("has no room for the canvas", error.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>PR-62 exit test 3. A full atlas is an error that names the canvas that does not fit (D-506).</summary>
     [Fact]
     public void PackerReportsAFullAtlas()
@@ -356,6 +369,8 @@ public sealed class RecipeTests
     [Theory]
     [InlineData("{\"atlas\": 256, \"blocks\": [], \"faces\": []}", "atlas", "512 pixels on a side")]
     [InlineData("{\"atlas\": 512, \"blocks\": [{\"block\": 1, \"recipe\": \"a\", \"at\": [500, 0, 32, 32]}], \"faces\": []}", "at", "inside the atlas")]
+    [InlineData("{\"atlas\": 512, \"blocks\": [{\"block\": 1, \"recipe\": \"a\", \"at\": [2147483647, 1, 1, 32]}], \"faces\": []}", "at", "inside the atlas")]
+    [InlineData("{\"atlas\": 512, \"blocks\": [], \"faces\": [{\"model\": \"m\", \"box\": \"b\", \"face\": \"up\", \"recipe\": \"a\", \"at\": [1, 2147483647, 4, 1]}]}", "at", "inside the atlas")]
     [InlineData("{\"atlas\": 512, \"blocks\": [], \"faces\": [{\"model\": \"m\", \"box\": \"b\", \"face\": \"top\", \"recipe\": \"a\", \"at\": [0, 0, 1, 1]}]}", "face", "a face is one of")]
     [InlineData("{\"atlas\": 512, \"blocks\": [], \"faces\": [], \"size\": 1}", "size", "not a field of the format")]
     public void LayoutRejectsABadFile(string json, string field, string reason)
