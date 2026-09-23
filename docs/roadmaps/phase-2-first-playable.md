@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-78, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-78 applies D-511 to D-524. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-78, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -802,7 +802,7 @@ Scope:
 - Generator: `texture-gen` sizes each box face at 32 texels per meter from its box (D-308). It paints the face and packs it into an atlas of 512 by 512 (D-506). It writes `content/textures/layout.json` (D-505). A block is a recipe of 32 by 32 texels.
 - Game: the mesher and the model mesh read the place of each block and each face from the layout (D-505). They ignore the UVs of the model file.
 - Look: every block keeps its pixels. The body and the sword keep their material, base color, and noise (D-504).
-- The owner answers of the art pass for the later PRs: D-496 to D-503.
+- The owner answers of the art pass for the later PRs: D-496 to D-503. D-527 supersedes D-503, the noise pick.
 - Skill: `.claude/skills/asset-texture-creation/` gives the five steps of the art of every asset, from the Meshy prompt to the box model (D-509).
 
 Out of scope: the new body boxes and the face (PR-74), the sword (PR-75), the enemy models (PR-76), the light (PR-77), the armor overlays (PR-22).
@@ -857,28 +857,34 @@ Gate: exit tests 1 to 3 pass. Exit test 4 runs after the merge.
 
 ### PR-74: Body art
 
+✅ Done in PR #94.
+
 Scope:
 
 - `content/models/player.bbmodel`: the brow, the nose, and the beard on the head bone, and a toe box on each lower leg (D-497, D-498, D-501, D-502). Every other box stays (D-499).
-- Recipes in the colors of D-500: the face, the hair, the sleeve with a skin cuff, the torso with the collar and the belt, and the boot band. The face has no eye whites and no flat Minecraft layout (D-83).
-- The noise of the cloth and the leather comes from the pick of the owner on the contact sheet (D-503).
+- `content/textures/palette.json`: three fine shades between each pair of colors of a ramp, and a ninth ramp, umber, for the dark browns (D-528, D-530).
+- `WhatYouCarry.Tools/TextureGen/`: a `shade` field on `fill` and `rect`, and the kinds `grain` and `gradient`, in whole numbers alone (D-527).
+- Recipes: the face, the hair, the beard, the sleeve, the torso, the trousers, and the boot, with the trim of D-526 (D-525, D-529, D-531). The face has no eye whites and no flat Minecraft layout (D-83). The blocks and the sword keep their pixels.
+- `.github/rulesets/main.json`: the two fields of the `pull_request` rule that the live ruleset holds, by owner approval of 2026-09-23.
 
-Out of scope: the head and feet overlays that enclose the new boxes (PR-22).
+Out of scope: the head and feet overlays that enclose the new boxes (PR-22), the scene light (PR-77).
 
 Exit tests:
 
 1. `RepositoryModelsPass` passes. The new boxes clip nothing at the rest pose or at any keyframe of the dodge, the stagger, and the sword swing (D-301).
 2. `CommittedAtlasMatchesTheGenerator` and the layout test pass.
 3. `SmokeSessionPasses` passes on the three platforms.
-4. The owner approves the new contact sheet beside `02-concept-final-front.png` as finished art, recorded as a decision (D-504).
+4. The owner approves the new contact sheet as finished art, recorded as a decision (D-504). D-532 records it.
+5. `GrainPaintsTheSameBytesOnEachPlatform` passes on the three CI platforms (D-527).
+6. `RulesetTests` passes, and the comparison of `docs/runbooks/main-ruleset.md` shows an empty diff.
 
-Review focus: the clip check of the new boxes, the face against D-83, test quality.
+Review focus: the clip check of the new boxes, the whole-number grain and the fine shades, test quality.
 
 Check clause: none.
 
-Gate: exit tests 1 to 4 pass.
+Gate: exit tests 1 to 6 pass.
 
-> *In plain English:* the miner is ten plain boxes today. This change adds a brow, a nose, a beard, boots, and a painted face from the approved concept.
+> *In plain English:* the miner was ten plain boxes with speckled paint. This change adds a brow, a nose, a beard, and boots, and paints the body with the soft mottle of the 3D model.
 
 ### PR-75: Sword art
 

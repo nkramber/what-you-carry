@@ -1,5 +1,5 @@
 {
   "layers": [
-    {"kind": "fill", "color": 12, "noise": 0.55, "seed": 1004}
+    {"kind": "fill", "color": 12, "shade": 0, "noise": 0.55, "seed": 1004}
   ]
 }

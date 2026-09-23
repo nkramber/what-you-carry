@@ -9,6 +9,7 @@ The file `.github/rulesets/main.json` holds the ruleset of `main`. The live rule
 - The branch `refs/heads/main`, with the enforcement `active`.
 - Squash merges alone, and resolved conversations (D-522).
 - No required approval, because one person owns the repository.
+- No extra approval for a commit of an unlinked author, and no required reviewers. GitHub adds both fields with other values when the file omits them, and an extra approval blocks every auto-merge of a one-owner repository.
 - 20 required checks, each from the GitHub Actions app (id 15368). The job name of each check is unique across the workflows (F-110).
 - No rule for the newest `main` on the branch, because the PRs go one at a time.
 - One bypass: the repository admin role, through a pull request merge alone (D-520). It clears a night gate deadlock.

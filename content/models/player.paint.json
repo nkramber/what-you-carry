@@ -1,15 +1,20 @@
 {
   "model": "models/player.bbmodel",
   "boxes": {
-    "head_box": {"recipe": "skin", "faces": {}},
-    "torso_box": {"recipe": "cloth", "faces": {}},
+    "head_box": {"recipe": "hair", "faces": {"north": "face"}},
+    "brow_box": {"recipe": "hair", "faces": {}},
+    "nose_box": {"recipe": "skin", "faces": {}},
+    "beard_box": {"recipe": "hair", "faces": {"north": "beard"}},
+    "torso_box": {"recipe": "torso", "faces": {"north": "torso-front", "up": "cloth", "down": "cloth"}},
     "arm_left_upper_box": {"recipe": "cloth", "faces": {}},
-    "arm_left_lower_box": {"recipe": "cloth", "faces": {}},
+    "arm_left_lower_box": {"recipe": "sleeve", "faces": {"up": "cloth", "down": "skin"}},
     "arm_right_upper_box": {"recipe": "cloth", "faces": {}},
-    "arm_right_lower_box": {"recipe": "cloth", "faces": {}},
-    "leg_left_upper_box": {"recipe": "leather", "faces": {}},
-    "leg_left_lower_box": {"recipe": "leather", "faces": {}},
-    "leg_right_upper_box": {"recipe": "leather", "faces": {}},
-    "leg_right_lower_box": {"recipe": "leather", "faces": {}}
+    "arm_right_lower_box": {"recipe": "sleeve", "faces": {"up": "cloth", "down": "skin"}},
+    "leg_left_upper_box": {"recipe": "trousers", "faces": {"north": "trousers-front"}},
+    "leg_left_lower_box": {"recipe": "boot", "faces": {"up": "boot-toe", "down": "boot-toe"}},
+    "toe_left_box": {"recipe": "boot-toe", "faces": {}},
+    "leg_right_upper_box": {"recipe": "trousers", "faces": {"north": "trousers-front"}},
+    "leg_right_lower_box": {"recipe": "boot", "faces": {"up": "boot-toe", "down": "boot-toe"}},
+    "toe_right_box": {"recipe": "boot-toe", "faces": {}}
   }
 }

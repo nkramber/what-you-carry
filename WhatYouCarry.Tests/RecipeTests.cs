@@ -30,7 +30,7 @@ public sealed class RecipeTests
         PaletteRamp timber = palette.Ramps[2];
         for (uint seed = 1; seed <= 200; seed++)
         {
-            Recipe recipe = Layers(new FillLayer(TimberTwo, 0.9, seed), new EdgeLayer(3));
+            Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.9, seed), new EdgeLayer(3));
             byte[] pixels = CanvasPainter.Paint(palette, recipe, 20, 12, CanvasPainter.BlockSalt, "test");
 
             Assert.All(pixels, value => Assert.True(value >= timber.First && value < timber.First + timber.Count, $"Seed {seed}: a pixel holds the index {value}, off the ramp '{timber.Name}'."));
@@ -45,10 +45,10 @@ public sealed class RecipeTests
         Palette palette = RepositoryPalette();
         int first = palette.Ramps[2].First;
 
-        byte[] one = CanvasPainter.Paint(palette, Layers(new FillLayer(first + 2, 0.0, 7), new EdgeLayer(1)), 6, 5, CanvasPainter.BlockSalt, "test");
+        byte[] one = CanvasPainter.Paint(palette, Layers(new FillLayer(first + 2, 0, 0.0, 7), new EdgeLayer(1)), 6, 5, CanvasPainter.BlockSalt, "test");
         AssertRingAndInside(one, 6, 5, first + 1, first + 2);
 
-        byte[] deep = CanvasPainter.Paint(palette, Layers(new FillLayer(first + 2, 0.0, 7), new EdgeLayer(5)), 6, 5, CanvasPainter.BlockSalt, "test");
+        byte[] deep = CanvasPainter.Paint(palette, Layers(new FillLayer(first + 2, 0, 0.0, 7), new EdgeLayer(5)), 6, 5, CanvasPainter.BlockSalt, "test");
         AssertRingAndInside(deep, 6, 5, first, first + 2);
     }
 
@@ -61,7 +61,7 @@ public sealed class RecipeTests
     {
         Palette palette = RepositoryPalette();
         int first = palette.Ramps[2].First;
-        byte[] pixels = CanvasPainter.Paint(palette, Layers(new FillLayer(first + 3, 1.0, 11), new EdgeLayer(1)), 10, 10, CanvasPainter.BlockSalt, "test");
+        byte[] pixels = CanvasPainter.Paint(palette, Layers(new FillLayer(first + 3, 0, 1.0, 11), new EdgeLayer(1)), 10, 10, CanvasPainter.BlockSalt, "test");
 
         for (int x = 0; x < 10; x++)
         {
@@ -74,7 +74,7 @@ public sealed class RecipeTests
     public void RectPaintsItsColorAndTheCanvasClipsIt()
     {
         Palette palette = RepositoryPalette();
-        Recipe recipe = Layers(new FillLayer(TimberTwo, 0.0, 3), new RectLayer(6, 2, 10, 2, 29, 0.0, 5));
+        Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.0, 3), new RectLayer(6, 2, 10, 2, 29, 0, 0.0, 5));
 
         byte[] pixels = CanvasPainter.Paint(palette, recipe, 8, 6, CanvasPainter.BlockSalt, "test");
 
@@ -92,7 +92,7 @@ public sealed class RecipeTests
     [Fact]
     public void RectOutsideTheCanvasFails()
     {
-        Recipe recipe = Layers(new FillLayer(TimberTwo, 0.0, 3), new RectLayer(8, 0, 2, 2, 29, 0.0, 5));
+        Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.0, 3), new RectLayer(8, 0, 2, 2, 29, 0, 0.0, 5));
 
         ContextException error = Assert.Throws<ContextException>(() => CanvasPainter.Paint(RepositoryPalette(), recipe, 8, 6, CanvasPainter.BlockSalt, "models/rig.bbmodel:arm:up"));
 
@@ -108,7 +108,7 @@ public sealed class RecipeTests
     [InlineData(CanvasSide.Right, 9)]
     public void BandShiftsOneSide(CanvasSide side, int depth)
     {
-        Recipe recipe = Layers(new FillLayer(TimberTwo, 0.0, 3), new BandLayer(side, depth, -1));
+        Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.0, 3), new BandLayer(side, depth, -1));
 
         byte[] pixels = CanvasPainter.Paint(RepositoryPalette(), recipe, 7, 5, CanvasPainter.BlockSalt, "test");
 
@@ -133,7 +133,7 @@ public sealed class RecipeTests
     public void FaceSaltsGiveTheirOwnNoise()
     {
         Palette palette = RepositoryPalette();
-        Recipe recipe = Layers(new FillLayer(TimberTwo, 0.5, 1009));
+        Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.5, 1009));
 
         byte[] north = CanvasPainter.Paint(palette, recipe, 16, 16, CanvasPainter.SaltOf("models/player.bbmodel:head_box:north"), "north");
         byte[] east = CanvasPainter.Paint(palette, recipe, 16, 16, CanvasPainter.SaltOf("models/player.bbmodel:head_box:east"), "east");
@@ -151,7 +151,7 @@ public sealed class RecipeTests
     public void SeedEqualToTheSaltFails()
     {
         uint salt = CanvasPainter.SaltOf("models/rig.bbmodel:arm:north");
-        Recipe recipe = Layers(new FillLayer(TimberTwo, 0.5, salt));
+        Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.5, salt));
 
         ContextException error = Assert.Throws<ContextException>(() => CanvasPainter.Paint(RepositoryPalette(), recipe, 4, 4, salt, "models/rig.bbmodel:arm:north"));
 
@@ -163,19 +163,29 @@ public sealed class RecipeTests
     [Theory]
     [InlineData("{\"layers\": [{\"kind\": \"glow\"}]}", "kind", "a layer kind is one of")]
     [InlineData("{\"layers\": [{\"kind\": \"edge\", \"steps\": 1}]}", "kind", "the first layer is a 'fill'")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3}]}", "kind", "no other layer is one")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}]}", "kind", "no other layer is one")]
     [InlineData("{\"layers\": []}", "layers", "at least one layer")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 32, \"noise\": 0.1, \"seed\": 3}]}", "color", "names the color index 32")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 1.5, \"seed\": 3}]}", "noise", "from 0 to 1")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 0}]}", "seed", "never leaves zero")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1}]}", "seed", "is absent")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3, \"glow\": 1}]}", "glow", "not a field of the format")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"edge\", \"steps\": 0}]}", "steps", "1 or more")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"rect\", \"x\": -1, \"y\": 0, \"width\": 1, \"height\": 1, \"color\": 1, \"noise\": 0, \"seed\": 3}]}", "x", "0 or more")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"rect\", \"x\": 0, \"y\": 0, \"width\": 0, \"height\": 1, \"color\": 1, \"noise\": 0, \"seed\": 3}]}", "width", "1 or more")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"band\", \"side\": \"middle\", \"depth\": 1, \"shift\": 1}]}", "side", "a side is one of")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"band\", \"side\": \"top\", \"depth\": 1, \"shift\": 0}]}", "shift", "paints nothing")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3}], \"extends\": \"stone\"}", "extends", "not a field of the format")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 36, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}]}", "color", "names the color index 36")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 1.5, \"seed\": 3}]}", "noise", "from 0 to 1")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 0}]}", "seed", "never leaves zero")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1}]}", "seed", "is absent")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3, \"glow\": 1}]}", "glow", "not a field of the format")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"edge\", \"steps\": 0}]}", "steps", "1 or more")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"rect\", \"x\": -1, \"y\": 0, \"width\": 1, \"height\": 1, \"color\": 1, \"shade\": 0, \"noise\": 0, \"seed\": 3}]}", "x", "0 or more")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"rect\", \"x\": 0, \"y\": 0, \"width\": 0, \"height\": 1, \"color\": 1, \"shade\": 0, \"noise\": 0, \"seed\": 3}]}", "width", "1 or more")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"band\", \"side\": \"middle\", \"depth\": 1, \"shift\": 1}]}", "side", "a side is one of")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"band\", \"side\": \"top\", \"depth\": 1, \"shift\": 0}]}", "shift", "paints nothing")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}], \"extends\": \"stone\"}", "extends", "not a field of the format")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 4, \"noise\": 0.1, \"seed\": 3}]}", "shade", "a shade is from -3 to 3")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 0, \"shade\": -1, \"noise\": 0.1, \"seed\": 3}]}", "shade", "off the end of the ramp")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.1, \"seed\": 3}]}", "shade", "is absent")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"grain\", \"cell\": 0, \"amount\": 1, \"seed\": 3}]}", "cell", "1 or more")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"grain\", \"cell\": 2, \"amount\": 0, \"seed\": 3}]}", "amount", "1 or more")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"grain\", \"cell\": 2, \"amount\": 13, \"seed\": 3}]}", "amount", "the length of the longest ramp")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"grain\", \"cell\": 2, \"amount\": 1, \"seed\": 3, \"shade\": 1}]}", "shade", "not a field of the format")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"gradient\", \"side\": \"top\", \"depth\": 2, \"shift\": 0}]}", "shift", "paints nothing")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"gradient\", \"side\": \"top\", \"depth\": 2, \"shift\": -13}]}", "shift", "the length of the longest ramp")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"gradient\", \"side\": \"top\", \"depth\": 0, \"shift\": 1}]}", "depth", "1 or more")]
     public void RecipeRejectsABadLayer(string json, string field, string reason)
     {
         ContextException error = Assert.Throws<ContextException>(() => ReadOne(json));
@@ -183,6 +193,94 @@ public sealed class RecipeTests
         Assert.Contains(RecipePath, error.Message, StringComparison.Ordinal);
         Assert.Contains($"The field '{field}'", error.Message, StringComparison.Ordinal);
         Assert.Contains(reason, error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A shade names a fine step between the colors of a ramp (D-527, D-528): the step of the color times four, plus the shade.</summary>
+    [Theory]
+    [InlineData(-3)]
+    [InlineData(-1)]
+    [InlineData(0)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void ShadeNamesAFineStep(int shade)
+    {
+        Palette palette = RepositoryPalette();
+
+        byte[] pixels = CanvasPainter.Paint(palette, Layers(new FillLayer(TimberTwo, shade, 0.0, 3)), 4, 3, CanvasPainter.BlockSalt, "test");
+
+        int expected = palette.AtlasIndex(2, Palette.ShadesPerStep + shade);
+        Assert.All(pixels, value => Assert.Equal(expected, value));
+        Assert.Equal(shade == 0, expected == TimberTwo);
+    }
+
+    /// <summary>Over a hundred seeds, a grain keeps every pixel on its ramp and moves pixels both down and up by fine steps. A failure names the seed (D-66, D-527).</summary>
+    [Fact]
+    public void GrainStaysOnTheRampAndMovesBothWays()
+    {
+        Palette palette = RepositoryPalette();
+        Dictionary<int, int> fineStepOf = FineStepsOfRamp(palette, 2);
+        for (uint seed = 1; seed <= 100; seed++)
+        {
+            Recipe recipe = Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(2, 3, seed));
+            byte[] pixels = CanvasPainter.Paint(palette, recipe, 12, 10, CanvasPainter.BlockSalt, "test");
+
+            Assert.All(pixels, value => Assert.True(fineStepOf.ContainsKey(value), $"Seed {seed}: a pixel holds the index {value}, off the timber ramp."));
+            Assert.True(pixels.Any(value => fineStepOf[value] < 8), $"Seed {seed}: the grain moved no pixel down.");
+            Assert.True(pixels.Any(value => fineStepOf[value] > 8), $"Seed {seed}: the grain moved no pixel up.");
+            Assert.True(pixels.Any(value => fineStepOf[value] % Palette.ShadesPerStep != 0), $"Seed {seed}: the grain painted no fine shade.");
+        }
+    }
+
+    /// <summary>A grain of a larger cell gives larger clusters: neighbor pixels agree more often than with a cell of one pixel (D-527).</summary>
+    [Fact]
+    public void GrainClustersByItsCell()
+    {
+        Palette palette = RepositoryPalette();
+        Dictionary<int, int> fineStepOf = FineStepsOfRamp(palette, 2);
+        double single = 0.0;
+        double wide = 0.0;
+        for (uint seed = 1; seed <= 40; seed++)
+        {
+            single += NeighborCorrelation(CanvasPainter.Paint(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(1, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test"), fineStepOf, 16);
+            wide += NeighborCorrelation(CanvasPainter.Paint(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(4, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test"), fineStepOf, 16);
+        }
+
+        Assert.True(wide / 40.0 > (single / 40.0) + 0.3, $"The mean neighbor correlation is {wide / 40.0:F2} for a cell of 4 and {single / 40.0:F2} for a cell of 1.");
+    }
+
+    /// <summary>
+    /// A grain uses whole numbers alone, so each platform paints the same bytes (D-527). The three CI platforms run
+    /// this test on one canvas of the trousers recipe: its first row and the count of each index.
+    /// </summary>
+    [Fact]
+    public void GrainPaintsTheSameBytesOnEachPlatform()
+    {
+        Palette palette = RepositoryPalette();
+        IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(TextureGenCommand.ReadRecipeFiles(Path.Combine(RepositoryRoot.Find(), "content")), palette);
+
+        byte[] pixels = CanvasPainter.Paint(palette, recipes["trousers"], 8, 10, CanvasPainter.SaltOf("models/player.bbmodel:leg_left_upper_box:east"), "east");
+
+        Assert.Equal("108,110,113,33,108,33,33,33", string.Join(",", pixels.Take(8)));
+        Assert.Equal("32:1,33:16,34:3,108:4,109:6,110:11,111:18,112:8,113:12,114:1", string.Join(",", pixels.GroupBy(value => value).OrderBy(group => group.Key).Select(group => $"{group.Key}:{group.Count()}")));
+    }
+
+    /// <summary>A gradient shifts the full amount at its side and less toward its depth, rounded to whole fine steps, and nothing past the depth (D-527).</summary>
+    [Fact]
+    public void GradientFadesFromItsSide()
+    {
+        Palette palette = RepositoryPalette();
+        Recipe recipe = Layers(new FillLayer(TimberTwo + 1, 0, 0.0, 3), new GradientLayer(CanvasSide.Bottom, 4, -4));
+
+        byte[] pixels = CanvasPainter.Paint(palette, recipe, 3, 6, CanvasPainter.BlockSalt, "test");
+
+        int[] expectedFine = [8, 8, 7, 6, 5, 4];
+        for (int y = 0; y < 6; y++)
+        {
+            for (int x = 0; x < 3; x++)
+            {
+                Assert.Equal(palette.AtlasIndex(2, expectedFine[y]), pixels[(y * 3) + x]);
+            }
+        }
     }
 
     /// <summary>A recipe with neither form is an error that names the file.</summary>
@@ -201,15 +299,15 @@ public sealed class RecipeTests
         Palette palette = RepositoryPalette();
         IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(
             [
-                ("textures/recipes/skin.json", Bytes("{\"layers\": [{\"kind\": \"fill\", \"color\": 29, \"noise\": 0.3, \"seed\": 8}, {\"kind\": \"rect\", \"x\": 0, \"y\": 0, \"width\": 2, \"height\": 2, \"color\": 9, \"noise\": 0, \"seed\": 4}, {\"kind\": \"edge\", \"steps\": 1}]}")),
+                ("textures/recipes/skin.json", Bytes("{\"layers\": [{\"kind\": \"fill\", \"color\": 29, \"shade\": 0, \"noise\": 0.3, \"seed\": 8}, {\"kind\": \"rect\", \"x\": 0, \"y\": 0, \"width\": 2, \"height\": 2, \"color\": 9, \"shade\": 0, \"noise\": 0, \"seed\": 4}, {\"kind\": \"edge\", \"steps\": 1}]}")),
                 ("textures/recipes/goblin.json", Bytes("{\"extends\": \"skin\", \"swap\": {\"bone\": \"lichen\"}}")),
             ],
             palette);
 
         Recipe goblin = recipes["goblin"];
         Assert.Equal("textures/recipes/goblin.json", goblin.ContentPath);
-        Assert.Equal(new FillLayer(25, 0.3, 8), goblin.Layers[0]);
-        Assert.Equal(new RectLayer(0, 0, 2, 2, 9, 0.0, 4), goblin.Layers[1]);
+        Assert.Equal(new FillLayer(25, 0, 0.3, 8), goblin.Layers[0]);
+        Assert.Equal(new RectLayer(0, 0, 2, 2, 9, 0, 0.0, 4), goblin.Layers[1]);
         Assert.Equal(new EdgeLayer(1), goblin.Layers[2]);
 
         byte[] skin = CanvasPainter.Paint(palette, recipes["skin"], 5, 5, CanvasPainter.BlockSalt, "skin");
@@ -226,7 +324,7 @@ public sealed class RecipeTests
     public void ExtensionRejectsABadSwap()
     {
         Palette palette = RepositoryPalette();
-        (string, byte[]) skin = ("textures/recipes/skin.json", Bytes("{\"layers\": [{\"kind\": \"fill\", \"color\": 29, \"noise\": 0.3, \"seed\": 8}]}"));
+        (string, byte[]) skin = ("textures/recipes/skin.json", Bytes("{\"layers\": [{\"kind\": \"fill\", \"color\": 29, \"shade\": 0, \"noise\": 0.3, \"seed\": 8}]}"));
 
         ContextException absent = Assert.Throws<ContextException>(() => RecipeFile.ReadAll([skin, ("textures/recipes/a.json", Bytes("{\"extends\": \"hide\", \"swap\": {\"bone\": \"rust\"}}"))], palette));
         Assert.Contains("no recipe file", absent.Message, StringComparison.Ordinal);
@@ -242,9 +340,9 @@ public sealed class RecipeTests
         ContextException unused = Assert.Throws<ContextException>(() => RecipeFile.ReadAll([skin, ("textures/recipes/a.json", Bytes("{\"extends\": \"skin\", \"swap\": {\"rust\": \"bone\"}}"))], palette));
         Assert.Contains("paints no color of it", unused.Message, StringComparison.Ordinal);
 
-        Palette uneven = Palette.Parse(AssetPaths.PaletteFile, Bytes("{\"ramps\": [{\"name\": \"a\", \"colors\": [\"#101010\", \"#202020\"]}, {\"name\": \"b\", \"colors\": [\"#303030\"]}]}"));
+        Palette uneven = Palette.Parse(AssetPaths.PaletteFile, Bytes("{\"ramps\": [{\"name\": \"a\", \"colors\": [\"#101010\", \"#202020\"], \"shades\": [\"#141414\", \"#181818\", \"#1c1c1c\"]}, {\"name\": \"b\", \"colors\": [\"#303030\"], \"shades\": []}]}"));
         ContextException length = Assert.Throws<ContextException>(() => RecipeFile.ReadAll(
-            [("textures/recipes/base.json", Bytes("{\"layers\": [{\"kind\": \"fill\", \"color\": 0, \"noise\": 0, \"seed\": 8}]}")), ("textures/recipes/a.json", Bytes("{\"extends\": \"base\", \"swap\": {\"a\": \"b\"}}"))],
+            [("textures/recipes/base.json", Bytes("{\"layers\": [{\"kind\": \"fill\", \"color\": 0, \"shade\": 0, \"noise\": 0, \"seed\": 8}]}")), ("textures/recipes/a.json", Bytes("{\"extends\": \"base\", \"swap\": {\"a\": \"b\"}}"))],
             uneven));
         Assert.Contains("keeps the step of each color", length.Message, StringComparison.Ordinal);
     }
@@ -258,7 +356,7 @@ public sealed class RecipeTests
     [InlineData("1,2,3,4,5,6,7", "hide", "no recipe file")]
     public void BlockFileBindsEveryBlockOnce(string blocks, string recipe, string reason)
     {
-        IReadOnlyDictionary<string, Recipe> recipes = new Dictionary<string, Recipe> { ["stone"] = Layers(new FillLayer(1, 0.0, 1)) };
+        IReadOnlyDictionary<string, Recipe> recipes = new Dictionary<string, Recipe> { ["stone"] = Layers(new FillLayer(1, 0, 0.0, 1)) };
         string name = recipe.Length > 0 ? recipe : "stone";
         IEnumerable<string> entries = blocks.Split(',').Select(block => "{\"block\": " + block + ", \"recipe\": \"" + name + "\"}");
         byte[] bytes = Bytes("{\"blocks\": [" + string.Join(", ", entries) + "]}");
@@ -411,6 +509,35 @@ public sealed class RecipeTests
         Assert.False(BoxFaces.TryParse("top", out _));
     }
 
+    private static Dictionary<int, int> FineStepsOfRamp(Palette palette, int ramp)
+    {
+        Dictionary<int, int> fineStepOf = [];
+        for (int fineStep = 0; fineStep <= palette.FineTop(ramp); fineStep++)
+        {
+            fineStepOf.Add(palette.AtlasIndex(ramp, fineStep), fineStep);
+        }
+
+        return fineStepOf;
+    }
+
+    /// <summary>The correlation of the fine step of each pixel with the pixel on its right.</summary>
+    private static double NeighborCorrelation(byte[] pixels, Dictionary<int, int> fineStepOf, int width)
+    {
+        double[] values = pixels.Select(value => (double)fineStepOf[value]).ToArray();
+        double mean = values.Average();
+        double variance = values.Select(value => (value - mean) * (value - mean)).Average();
+        List<double> products = [];
+        for (int pixel = 0; pixel < values.Length; pixel++)
+        {
+            if ((pixel % width) < width - 1)
+            {
+                products.Add((values[pixel] - mean) * (values[pixel + 1] - mean));
+            }
+        }
+
+        return products.Average() / variance;
+    }
+
     private static bool CellsOverlap(AtlasRect a, AtlasRect b)
     {
         return a.X - 1 < b.X + b.Width + 1 && b.X - 1 < a.X + a.Width + 1 && a.Y - 1 < b.Y + b.Height + 1 && b.Y - 1 < a.Y + a.Height + 1;
@@ -430,8 +557,8 @@ public sealed class RecipeTests
     {
         return new Dictionary<string, Recipe>
         {
-            ["stone"] = Layers(new FillLayer(1, 0.0, 1)),
-            ["moss"] = Layers(new FillLayer(25, 0.0, 1)),
+            ["stone"] = Layers(new FillLayer(1, 0, 0.0, 1)),
+            ["moss"] = Layers(new FillLayer(25, 0, 0.0, 1)),
         };
     }
 

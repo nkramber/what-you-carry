@@ -140,7 +140,7 @@ Every floor is 64 by 20 by 64 blocks, with 5 to 9 chambers (D-343, D-344). A gal
 
 A ramp cell is one block id from 8 to 43, so the grid stays one byte per cell (D-164, D-367). On a ramp, the speed along the slope is the flat speed (D-362). A walk and a sprint stay on the slope on the way down, and a roll leaves it (D-363). A body does not slide on a ramp, and it jumps and rolls from a ramp as from flat ground (D-364 to D-366). The mesher draws every face of a ramp with the raw stone tile, so a ramp reads as the floor that it joins (D-368).
 
-Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The palette is eight ramps of four colors from dark to light (D-304). A tool generates the atlas of 512 from the palette and the recipes (D-305, D-505, D-506). A recipe is a list of paint layers (D-507), and a file next to each model names the recipe of each face (D-508). Every face has 32 texels per meter, a body face too (D-308). Each asset starts as a Meshy look reference, and the agent rebuilds it as boxes (D-496, D-509). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
+Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The palette is nine ramps of four colors from dark to light, with three fine shades between each pair of colors (D-304, D-528, D-530). A tool generates the atlas of 512 from the palette and the recipes (D-305, D-505, D-506). A recipe is a list of paint layers, with clustered grain and fine shades (D-507, D-527). A file next to each model names the recipe of each face (D-508). Every face has 32 texels per meter, a body face too (D-308). Each asset starts as a Meshy look reference, and the agent rebuilds it as boxes (D-496, D-509). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
 A C# synthesizer generates all audio from parameter files, music included (D-89, D-93). Music quality is a register risk (F-18).
 
@@ -575,10 +575,10 @@ Gate: the atlas and the layout match the generator, each block matches its old t
 Gate: the new tests pass, the command reviews this PR, and each required check reports on a documents head and on a code head.
 > *In plain English:* the owner started every review by hand and merged every PR by hand. Now one command starts the review, and a PR that passes every gate merges itself.
 
-**PR-74: Body art.** 🔧
-The body gains a brow, a nose, and a beard on the head bone, and a toe box on each lower leg (D-497, D-498, D-501, D-502). Every other box stays (D-499). New recipes paint the face, the hair, the cuffs, the collar, the belt, and the boots in the colors of D-500. The owner picks the noise on the sheet (D-503). The Meshy images are a look reference alone (D-496).
-Gate: the clip check passes at every keyframe, and the owner approves the contact sheet beside the front concept as finished art.
-> *In plain English:* the miner is ten plain boxes today. This change adds a brow, a nose, a beard, boots, and a painted face from the approved concept.
+**PR-74: Body art.** ✅ Done in PR #94.
+The body gains a brow, a nose, and a beard on the head bone, and a toe box on each lower leg (D-497, D-498, D-501, D-502). Every other box stays (D-499). The face and the trim follow D-525 and D-526. The recipes gain fine shades, a clustered grain, and a gradient, so the body carries the detail of the 3D reference (D-527, D-528). A ninth ramp, umber, holds the dark browns, and each material takes the measured shade of the reference (D-529 to D-531). The owner approved the contact sheet as finished art (D-532). The Meshy images are a look reference alone (D-496).
+Gate: the clip check passes at every keyframe, and the grain paints the same bytes on each platform. The owner approves the contact sheet as finished art.
+> *In plain English:* the miner was ten plain boxes with speckled paint. This change adds a brow, a nose, a beard, and boots, and paints the body with the soft mottle of the 3D model.
 
 **PR-75: Sword art.** 🔧
 The sword of PR-15 gains the detail that the owner asks for, on the recipes of PR-62 (D-504).

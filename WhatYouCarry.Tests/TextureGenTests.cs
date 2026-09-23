@@ -24,10 +24,10 @@ public sealed class TextureGenTests
 {
     private const float UvTolerance = 0.0001f;
 
-    /// <summary>The ramp names of the palette of D-304, in file order.</summary>
-    private static readonly string[] OwnerRampNames = ["rock", "slate", "timber", "ochre", "rust", "water", "lichen", "bone"];
+    /// <summary>The ramp names of the palette of D-304 and the umber ramp of D-530, in file order.</summary>
+    private static readonly string[] OwnerRampNames = ["rock", "slate", "timber", "ochre", "rust", "water", "lichen", "bone", "umber"];
 
-    /// <summary>The 32 colors of the palette of D-304, ramp by ramp from dark to light.</summary>
+    /// <summary>The 32 colors of the palette of D-304 and the 4 of D-530, ramp by ramp from dark to light.</summary>
     private static readonly string[] OwnerColors =
     [
         "#14161b", "#2a2e33", "#4e4a43", "#746e65",
@@ -38,6 +38,7 @@ public sealed class TextureGenTests
         "#04141c", "#082b34", "#144b51", "#317272",
         "#111b10", "#28351e", "#46532e", "#6f7746",
         "#775d50", "#9f836f", "#c0aa92", "#e1d6c2",
+        "#160e05", "#2b1f11", "#413221", "#5d4c39",
     ];
 
     /// <summary>
@@ -62,11 +63,11 @@ public sealed class TextureGenTests
         Palette palette = RepositoryPalette();
         PngImage image = PngReader.Read(TextureGenCommand.Generate(ContentRoot()).Atlas);
 
-        byte[] expected = palette.Colors.SelectMany(color => new[] { color.Red, color.Green, color.Blue }).ToArray();
+        byte[] expected = palette.AtlasColors.SelectMany(color => new[] { color.Red, color.Green, color.Blue }).ToArray();
         Assert.Equal(expected, image.PaletteBytes);
         for (int pixel = 0; pixel < image.Pixels.Length; pixel++)
         {
-            Assert.True(image.Pixels[pixel] < palette.Colors.Count, $"The pixel {pixel} names the index {image.Pixels[pixel]}, and the palette holds {palette.Colors.Count} colors.");
+            Assert.True(image.Pixels[pixel] < palette.AtlasColors.Count, $"The pixel {pixel} names the index {image.Pixels[pixel]}, and the palette holds {palette.AtlasColors.Count} colors and shades.");
         }
     }
 
@@ -114,7 +115,7 @@ public sealed class TextureGenTests
         Assert.Equal(0, image.Width % AtlasLayout.BlockPixels);
     }
 
-    /// <summary>The palette file holds the choice of the owner: eight ramps of four colors, with the values of D-304.</summary>
+    /// <summary>The palette file holds the choice of the owner: nine ramps of four colors, with the values of D-304 and D-530.</summary>
     [Fact]
     public void PaletteIsTheOwnerChoice()
     {
@@ -124,6 +125,35 @@ public sealed class TextureGenTests
         Assert.All(palette.Ramps, ramp => Assert.Equal(4, ramp.Count));
         string[] colors = palette.Colors.Select(color => $"#{color.Red:x2}{color.Green:x2}{color.Blue:x2}").ToArray();
         Assert.Equal(OwnerColors, colors);
+    }
+
+    /// <summary>
+    /// Each fine shade lies a quarter, a half, or three quarters of the way between its two colors in linear light, to
+    /// within one byte for each channel (D-528). The atlas holds the colors first, so every block keeps its indices.
+    /// </summary>
+    [Fact]
+    public void EachShadeLiesBetweenItsColorsInLinearLight()
+    {
+        Palette palette = RepositoryPalette();
+
+        Assert.Equal(117, palette.AtlasColors.Count);
+        for (int ramp = 0; ramp < palette.Ramps.Count; ramp++)
+        {
+            PaletteRamp named = palette.Ramps[ramp];
+            for (int fineStep = 0; fineStep <= palette.FineTop(ramp); fineStep++)
+            {
+                AtlasColor shade = palette.AtlasColors[palette.AtlasIndex(ramp, fineStep)];
+                PaletteColor dark = palette.Colors[named.First + (fineStep / Palette.ShadesPerStep)];
+                PaletteColor light = palette.Colors[named.First + System.Math.Min((fineStep / Palette.ShadesPerStep) + 1, named.Count - 1)];
+                double share = (fineStep % Palette.ShadesPerStep) / (double)Palette.ShadesPerStep;
+                AssertChannel(dark.Red, light.Red, share, shade.Red, named.Name, fineStep);
+                AssertChannel(dark.Green, light.Green, share, shade.Green, named.Name, fineStep);
+                AssertChannel(dark.Blue, light.Blue, share, shade.Blue, named.Name, fineStep);
+            }
+        }
+
+        Assert.Equal(0, palette.AtlasIndex(0, 0));
+        Assert.Equal(palette.Colors.Count, palette.Ramps[0].ShadeFirst);
     }
 
     /// <summary>
@@ -150,14 +180,13 @@ public sealed class TextureGenTests
     }
 
     /// <summary>
-    /// A block canvas of each of four recipes equals the tile of the palette preview that the owner chose from (D-304):
-    /// the first row, and the count of each palette index. The skin recipe at the block salt gives the old skin tile.
+    /// A block canvas of each of three recipes equals the tile of the palette preview that the owner chose from (D-304):
+    /// the first row, and the count of each palette index. The skin of D-531 is no longer the skin tile of the preview.
     /// </summary>
     [Theory]
     [InlineData("raw-stone", "0,1,1,1,1,0,1,0,1,0,0,0,1,1,1,1", "0:194,1:614,2:216")]
     [InlineData("hewn-stone", "4,5,5,5,5,5,5,5,5,6,5,5,5,6,5,5", "4:15,5:214,6:707,7:88")]
     [InlineData("ore-vein", "12,12,12,13,12,12,12,12,12,12,13,13,12,12,12,13", "12:753,13:271")]
-    [InlineData("skin", "29,29,29,29,29,29,29,29,30,29,29,29,29,29,30,29", "28:56,29:896,30:72")]
     public void BlockCanvasesMatchThePalettePreview(string recipe, string firstRow, string counts)
     {
         Palette palette = RepositoryPalette();
@@ -174,7 +203,7 @@ public sealed class TextureGenTests
     /// texels per meter, and the box mesh reads that many texels of it (D-308, D-505).
     /// </summary>
     [Theory]
-    [InlineData("models/player.bbmodel", 10)]
+    [InlineData("models/player.bbmodel", 15)]
     [InlineData("models/sword-basic.bbmodel", 4)]
     public void EveryFaceHasACanvasAtWorldDensity(string modelPath, int boxes)
     {
@@ -203,35 +232,140 @@ public sealed class TextureGenTests
     }
 
     /// <summary>
-    /// The paint files keep the materials of D-308 and D-330: the head reads skin, the torso and the arms cloth, the legs
-    /// leather, and the sword a leather grip, a plank guard, and a metal blade and tip. No face overrides its box yet.
+    /// The paint files bind each face to its recipe. The body reads the recipes of D-525 to D-531: hair on the head with
+    /// the face at the front, the beard with the mouth at the front, the torso with the collar at the front, the sleeve
+    /// with the skin cuff, the trousers with the knees at the front, and the boot with its band. The sword keeps the
+    /// materials of D-330.
     /// </summary>
     [Fact]
-    public void PaintFilesKeepTheMaterials()
+    public void PaintFilesBindTheBodyArt()
     {
-        Dictionary<string, string> expected = new()
+        const string Player = "models/player.bbmodel:";
+        const string Sword = "models/sword-basic.bbmodel:";
+        Dictionary<string, string> boxRecipe = new()
         {
-            ["models/player.bbmodel:head_box"] = "skin",
-            ["models/player.bbmodel:torso_box"] = "cloth",
-            ["models/player.bbmodel:arm_left_upper_box"] = "cloth",
-            ["models/player.bbmodel:arm_left_lower_box"] = "cloth",
-            ["models/player.bbmodel:arm_right_upper_box"] = "cloth",
-            ["models/player.bbmodel:arm_right_lower_box"] = "cloth",
-            ["models/player.bbmodel:leg_left_upper_box"] = "leather",
-            ["models/player.bbmodel:leg_left_lower_box"] = "leather",
-            ["models/player.bbmodel:leg_right_upper_box"] = "leather",
-            ["models/player.bbmodel:leg_right_lower_box"] = "leather",
-            ["models/sword-basic.bbmodel:grip_box"] = "leather",
-            ["models/sword-basic.bbmodel:guard_box"] = "plank",
-            ["models/sword-basic.bbmodel:blade_box"] = "metal",
-            ["models/sword-basic.bbmodel:tip_box"] = "metal",
+            [Player + "head_box"] = "hair",
+            [Player + "brow_box"] = "hair",
+            [Player + "nose_box"] = "skin",
+            [Player + "beard_box"] = "hair",
+            [Player + "torso_box"] = "torso",
+            [Player + "arm_left_upper_box"] = "cloth",
+            [Player + "arm_left_lower_box"] = "sleeve",
+            [Player + "arm_right_upper_box"] = "cloth",
+            [Player + "arm_right_lower_box"] = "sleeve",
+            [Player + "leg_left_upper_box"] = "trousers",
+            [Player + "leg_left_lower_box"] = "boot",
+            [Player + "toe_left_box"] = "boot-toe",
+            [Player + "leg_right_upper_box"] = "trousers",
+            [Player + "leg_right_lower_box"] = "boot",
+            [Player + "toe_right_box"] = "boot-toe",
+            [Sword + "grip_box"] = "leather",
+            [Sword + "guard_box"] = "plank",
+            [Sword + "blade_box"] = "metal",
+            [Sword + "tip_box"] = "metal",
+        };
+        Dictionary<string, string> faceRecipe = new()
+        {
+            [Player + "head_box:north"] = "face",
+            [Player + "beard_box:north"] = "beard",
+            [Player + "torso_box:north"] = "torso-front",
+            [Player + "torso_box:up"] = "cloth",
+            [Player + "torso_box:down"] = "cloth",
+            [Player + "arm_left_lower_box:up"] = "cloth",
+            [Player + "arm_left_lower_box:down"] = "skin",
+            [Player + "arm_right_lower_box:up"] = "cloth",
+            [Player + "arm_right_lower_box:down"] = "skin",
+            [Player + "leg_left_upper_box:north"] = "trousers-front",
+            [Player + "leg_right_upper_box:north"] = "trousers-front",
+            [Player + "leg_left_lower_box:up"] = "boot-toe",
+            [Player + "leg_left_lower_box:down"] = "boot-toe",
+            [Player + "leg_right_lower_box:up"] = "boot-toe",
+            [Player + "leg_right_lower_box:down"] = "boot-toe",
         };
 
-        Assert.Equal(expected.Count * BoxFaces.Names.Count, RepositoryTextures.Layout.Faces.Count);
+        Assert.Equal(boxRecipe.Count * BoxFaces.Names.Count, RepositoryTextures.Layout.Faces.Count);
         foreach (FacePlace place in RepositoryTextures.Layout.Faces)
         {
-            Assert.Equal(expected[place.Model + ":" + place.Box], place.Recipe);
+            string box = place.Model + ":" + place.Box;
+            string face = box + ":" + BoxFaces.Name(place.Side);
+            string expected = faceRecipe.TryGetValue(face, out string? own) ? own : boxRecipe[box];
+            Assert.True(expected == place.Recipe, $"The face {face} reads the recipe '{place.Recipe}', and the paint of D-525 to D-531 gives '{expected}'.");
         }
+    }
+
+    /// <summary>
+    /// The committed atlas holds the face, the trim, and the texture of the owner (D-525 to D-531). Each check reads one
+    /// texel of a face canvas, from the top left, as a ramp and a fine step. A texel with no grain after it holds its
+    /// exact shade. The gradient, the band, and the knees compare the mean fine step of two areas.
+    /// </summary>
+    [Fact]
+    public void BodyCanvasesHoldTheOwnerLayout()
+    {
+        PngImage atlas = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
+        Palette palette = RepositoryPalette();
+
+        // The face: hair rows 0 to 2, the peak, the sideburns, the skin, the eyes, and the under-eye texels.
+        BodyCanvas face = new(atlas, palette, "head_box", BoxSide.North);
+        face.AssertRamp("umber", 0, 0, 16, 3);
+        face.AssertRamp("umber", 7, 3, 2, 1);
+        face.AssertRamp("umber", 0, 3, 1, 8);
+        face.AssertRamp("umber", 15, 3, 1, 8);
+        face.AssertRamp("bone", 1, 3, 6, 3);
+        face.AssertRamp("bone", 9, 3, 6, 3);
+        face.AssertShades("timber", 0, 0, 4, 8, 2, 1);
+        face.AssertShades("timber", 0, 0, 10, 8, 2, 1);
+        face.AssertShades("bone", 0, 0, 4, 9, 2, 1);
+        face.AssertShades("bone", 0, 0, 10, 9, 2, 1);
+        face.AssertRamp("bone", 1, 8, 3, 3);
+        face.AssertRamp("bone", 12, 8, 3, 3);
+
+        // The mouth notch on the beard, in the skin of D-531: bone 2 minus 2 shades.
+        BodyCanvas beard = new(atlas, palette, "beard_box", BoxSide.North);
+        beard.AssertRamp("umber", 0, 0, 16, 1);
+        beard.AssertShades("bone", 2, 2, 5, 1, 6, 1);
+        beard.AssertShades("bone", 2, 2, 5, 2, 1, 1);
+        beard.AssertShades("bone", 2, 2, 10, 2, 1, 1);
+        beard.AssertRamp("umber", 6, 2, 4, 1);
+        beard.AssertRamp("umber", 0, 3, 16, 2);
+
+        // The collar in its hem, the belt, and the grime over the belt, at the front alone.
+        BodyCanvas front = new(atlas, palette, "torso_box", BoxSide.North);
+        front.AssertRamp("bone", 5, 0, 10, 2);
+        front.AssertRamp("bone", 8, 2, 4, 1);
+        front.AssertShades("rust", 0, 3, 4, 0, 1, 2);
+        front.AssertShades("rust", 0, 3, 15, 0, 1, 2);
+        front.AssertShades("rust", 0, 3, 4, 2, 4, 1);
+        front.AssertShades("rust", 0, 3, 12, 2, 4, 1);
+        front.AssertShades("rust", 0, 3, 7, 3, 6, 1);
+        front.AssertRamp("rust", 0, 4, 20, 16);
+        front.AssertRamp("umber", 0, 20, 20, 2);
+        BodyCanvas back = new(atlas, palette, "torso_box", BoxSide.South);
+        back.AssertRamp("rust", 0, 0, 20, 20);
+        back.AssertRamp("umber", 0, 20, 20, 2);
+        Assert.True(back.MeanFine(0, 17, 20, 3) + 1.0 < back.MeanFine(0, 4, 20, 10), "The grime gradient does not darken the rows over the belt (D-527).");
+        new BodyCanvas(atlas, palette, "torso_box", BoxSide.East).AssertRamp("umber", 0, 20, 10, 2);
+
+        foreach (BoxSide side in new[] { BoxSide.North, BoxSide.East, BoxSide.South, BoxSide.West })
+        {
+            // The sleeve, its hem, and the skin cuff.
+            BodyCanvas sleeve = new(atlas, palette, "arm_right_lower_box", side);
+            sleeve.AssertRamp("rust", 0, 0, 6, 6);
+            sleeve.AssertShades("rust", 0, 3, 0, 6, 6, 1);
+            sleeve.AssertRamp("bone", 0, 7, 6, 4);
+
+            // The boot band: the top two rows one step of a color lighter than the boot below.
+            BodyCanvas boot = new(atlas, palette, "leg_left_lower_box", side);
+            boot.AssertRamp("umber", 0, 0, 8, 10);
+            Assert.True(boot.MeanFine(0, 0, 8, 2) >= boot.MeanFine(0, 2, 8, 6) + 2.0, $"The boot band on the {side} face is not lighter than the boot (D-526).");
+        }
+
+        // The knee patch is lighter than the rest of the trousers front.
+        BodyCanvas knee = new(atlas, palette, "leg_right_upper_box", BoxSide.North);
+        knee.AssertRamp("umber", 0, 0, 8, 10);
+        Assert.True(knee.MeanFine(2, 5, 4, 4) > knee.MeanFine(0, 0, 8, 4) + 1.0, "The knee patch is not lighter than the trousers.");
+
+        new BodyCanvas(atlas, palette, "arm_left_lower_box", BoxSide.Down).AssertRamp("bone", 0, 0, 6, 6);
+        new BodyCanvas(atlas, palette, "toe_left_box", BoxSide.North).AssertRamp("umber", 0, 0, 8, 4);
     }
 
     /// <summary>Every block id other than air has a canvas of 32 pixels in the committed layout, bound to the recipe of its material (D-259, D-505).</summary>
@@ -280,10 +414,10 @@ public sealed class TextureGenTests
     [InlineData("{\"ramps\": [{\"name\": \"rock\", \"colors\": [\"#101010\", \"#101010\"]}]}", "colors", "each color appears once")]
     [InlineData("{\"ramps\": [{\"name\": \"rock\", \"colors\": []}]}", "colors", "at least one color")]
     [InlineData("{\"ramps\": []}", "ramps", "at least one ramp")]
-    [InlineData("{\"ramps\": [{\"name\": \"rock\", \"colors\": [\"#101010\"]}, {\"name\": \"rock\", \"colors\": [\"#202020\"]}]}", "name", "an earlier ramp has that name")]
-    [InlineData("{\"ramps\": [{\"name\": \"\", \"colors\": [\"#101010\"]}]}", "name", "is empty")]
+    [InlineData("{\"ramps\": [{\"name\": \"rock\", \"colors\": [\"#101010\"], \"shades\": []}, {\"name\": \"rock\", \"colors\": [\"#202020\"], \"shades\": []}]}", "name", "an earlier ramp has that name")]
+    [InlineData("{\"ramps\": [{\"name\": \"\", \"colors\": [\"#101010\"], \"shades\": []}]}", "name", "is empty")]
     [InlineData("{\"ramps\": [{\"name\": \"rock\", \"colors\": [\"#101010\"], \"glow\": true}]}", "glow", "not a field of the format")]
-    [InlineData("{\"ramps\": [{\"name\": \"rock\", \"colors\": [\"#101010\"]}], \"count\": 1}", "count", "not a field of the format")]
+    [InlineData("{\"ramps\": [{\"name\": \"rock\", \"colors\": [\"#101010\"], \"shades\": []}], \"count\": 1}", "count", "not a field of the format")]
     [InlineData("[1, 2]", "", "one JSON object")]
     [InlineData("{\"ramps\": ", "", "not valid JSON")]
     public void PaletteRejectsABadFile(string json, string field, string reason)
@@ -299,23 +433,35 @@ public sealed class TextureGenTests
         Assert.Contains(reason, error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>A palette past 256 colors is an error, because an indexed PNG holds no more.</summary>
+    /// <summary>A palette past 256 colors and shades is an error, because an indexed PNG holds no more.</summary>
     [Fact]
     public void PaletteRejectsMoreColorsThanAPngHolds()
     {
-        IEnumerable<string> colors = Enumerable.Range(0, 257).Select(index => $"\"#{index:x6}\"");
-        string json = "{\"ramps\": [{\"name\": \"many\", \"colors\": [" + string.Join(", ", colors) + "]}]}";
+        IEnumerable<string> ramps = Enumerable.Range(0, 257).Select(index => $"{{\"name\": \"r{index}\", \"colors\": [\"#{index:x6}\"], \"shades\": []}}");
+        string json = "{\"ramps\": [" + string.Join(", ", ramps) + "]}";
 
         ContextException error = Assert.Throws<ContextException>(() => Palette.Parse(AssetPaths.PaletteFile, Encoding.UTF8.GetBytes(json)));
 
-        Assert.Contains("holds 257 colors", error.Message, StringComparison.Ordinal);
+        Assert.Contains("holds 257 colors and shades", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A ramp with the wrong count of shades is an error that names the ramp and the count (D-528).</summary>
+    [Fact]
+    public void PaletteRejectsAWrongCountOfShades()
+    {
+        string json = "{\"ramps\": [{\"name\": \"rock\", \"colors\": [\"#101010\", \"#202020\"], \"shades\": [\"#151515\"]}]}";
+
+        ContextException error = Assert.Throws<ContextException>(() => Palette.Parse(AssetPaths.PaletteFile, Encoding.UTF8.GetBytes(json)));
+
+        Assert.Contains("The field 'shades'", error.Message, StringComparison.Ordinal);
+        Assert.Contains("on the ramp 'rock' is not a list of 3 shades", error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A small image goes through the writer and the strict reader with its size, its palette, and its pixels.</summary>
     [Fact]
     public void PngWriterRoundTrips()
     {
-        PaletteColor[] colors = [new PaletteColor(1, 2, 3, 0, 0), new PaletteColor(250, 128, 7, 0, 1)];
+        AtlasColor[] colors = [new AtlasColor(1, 2, 3), new AtlasColor(250, 128, 7)];
         byte[] pixels = [0, 1, 1, 0, 1, 0];
 
         PngImage image = PngReader.Read(PngWriter.Write(3, 2, colors, pixels));
@@ -330,7 +476,7 @@ public sealed class TextureGenTests
     [Fact]
     public void PngWriterSplitsLongDataIntoStoredBlocks()
     {
-        PaletteColor[] colors = [new PaletteColor(0, 0, 0, 0, 0), new PaletteColor(255, 255, 255, 0, 1)];
+        AtlasColor[] colors = [new AtlasColor(0, 0, 0), new AtlasColor(255, 255, 255)];
         byte[] pixels = Enumerable.Range(0, 300 * 300).Select(index => (byte)(index % 7 == 0 ? 1 : 0)).ToArray();
 
         PngImage image = PngReader.Read(PngWriter.Write(300, 300, colors, pixels));
@@ -343,7 +489,7 @@ public sealed class TextureGenTests
     [Fact]
     public void PngWriterRejectsABadImage()
     {
-        PaletteColor[] colors = [new PaletteColor(1, 2, 3, 0, 0)];
+        AtlasColor[] colors = [new AtlasColor(1, 2, 3)];
 
         ArgumentException past = Assert.Throws<ArgumentException>(() => PngWriter.Write(2, 1, colors, [0, 1]));
         Assert.Contains("The pixel 1 names the index 1", past.Message, StringComparison.Ordinal);
@@ -370,7 +516,7 @@ public sealed class TextureGenTests
     public void CommandReportsABadRecipeAndWritesNothing()
     {
         using TemporaryContentDirectory content = MinimalContent();
-        content.Write(AssetPaths.RecipeDirectory + "stone.json", "{\"layers\": [{\"kind\": \"fill\", \"color\": 99, \"noise\": 0.4, \"seed\": 1001}]}");
+        content.Write(AssetPaths.RecipeDirectory + "stone.json", "{\"layers\": [{\"kind\": \"fill\", \"color\": 99, \"shade\": 0, \"noise\": 0.4, \"seed\": 1001}]}");
 
         Assert.Equal(1, TextureGenCommand.Run(["--root", content.Root]));
 
@@ -456,7 +602,7 @@ public sealed class TextureGenTests
     }
 
     /// <summary>A recipe of one fill, which the small content directories of these tests bind to every block.</summary>
-    private const string StoneRecipe = "{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.4, \"seed\": 1001}]}";
+    private const string StoneRecipe = "{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.4, \"seed\": 1001}]}";
 
     /// <summary>A content directory of the repository palette, one recipe, and a block file that binds the recipe to every block.</summary>
     private static TemporaryContentDirectory MinimalContent()
@@ -515,6 +661,86 @@ public sealed class TextureGenTests
                 File.SetUnixFileMode(file, UnixFileMode.UserRead | UnixFileMode.UserWrite);
             }
         }
+    }
+
+    /// <summary>One face canvas of the player in the committed atlas, read by texel from its top left as a ramp and a fine step.</summary>
+    private sealed class BodyCanvas
+    {
+        private readonly PngImage atlas;
+        private readonly Palette palette;
+        private readonly AtlasRect at;
+        private readonly string name;
+        private readonly Dictionary<int, (int Ramp, int FineStep)> shadeOfIndex = [];
+
+        public BodyCanvas(PngImage atlas, Palette palette, string box, BoxSide side)
+        {
+            this.atlas = atlas;
+            this.palette = palette;
+            this.at = RepositoryTextures.Layout.Face(AssetPaths.BodyModel, box, side);
+            this.name = TextureLayout.FaceName(AssetPaths.BodyModel, box, side);
+            for (int ramp = 0; ramp < palette.Ramps.Count; ramp++)
+            {
+                for (int fineStep = 0; fineStep <= palette.FineTop(ramp); fineStep++)
+                {
+                    this.shadeOfIndex.Add(palette.AtlasIndex(ramp, fineStep), (ramp, fineStep));
+                }
+            }
+        }
+
+        /// <summary>Asserts that every texel of a rectangle lies on the named ramp.</summary>
+        public void AssertRamp(string ramp, int x, int y, int width, int height)
+        {
+            this.AssertShades(ramp, 0, int.MaxValue, x, y, width, height);
+        }
+
+        /// <summary>Asserts that every texel of a rectangle lies on the named ramp, at a fine step from the lowest to the highest.</summary>
+        public void AssertShades(string ramp, int lowest, int highest, int x, int y, int width, int height)
+        {
+            for (int row = y; row < y + height; row++)
+            {
+                for (int column = x; column < x + width; column++)
+                {
+                    (int texelRamp, int fineStep) = this.Shade(column, row);
+                    string texelRampName = this.palette.Ramps[texelRamp].Name;
+                    Assert.True(texelRampName == ramp && fineStep >= lowest && fineStep <= highest, $"The texel ({column}, {row}) of {this.name} holds the fine step {fineStep} of '{texelRampName}', and the owner layout gives '{ramp}' at {lowest} to {highest}.");
+                }
+            }
+        }
+
+        /// <summary>The mean fine step of the texels of a rectangle.</summary>
+        public double MeanFine(int x, int y, int width, int height)
+        {
+            int sum = 0;
+            for (int row = y; row < y + height; row++)
+            {
+                for (int column = x; column < x + width; column++)
+                {
+                    sum += this.Shade(column, row).FineStep;
+                }
+            }
+
+            return sum / (double)(width * height);
+        }
+
+        private (int Ramp, int FineStep) Shade(int column, int row)
+        {
+            int index = this.atlas.Pixels[((this.at.Y + row) * this.atlas.Width) + this.at.X + column];
+            return this.shadeOfIndex[index];
+        }
+    }
+
+    /// <summary>Asserts that one channel of a shade lies within one byte of the interpolation in linear light.</summary>
+    private static void AssertChannel(byte dark, byte light, double share, byte actual, string ramp, int fineStep)
+    {
+        double linear = (Linear(dark) * (1.0 - share)) + (Linear(light) * share);
+        double expected = 255.0 * (linear <= 0.0031308 ? linear * 12.92 : (1.055 * System.Math.Pow(linear, 1.0 / 2.4)) - 0.055);
+        Assert.True(System.Math.Abs(expected - actual) <= 1.0, $"The fine step {fineStep} of the ramp '{ramp}' holds {actual} in a channel, and linear light gives {expected:F2} (D-528).");
+    }
+
+    private static double Linear(byte channel)
+    {
+        double value = channel / 255.0;
+        return value <= 0.04045 ? value / 12.92 : System.Math.Pow((value + 0.055) / 1.055, 2.4);
     }
 
     private static string ContentRoot()
