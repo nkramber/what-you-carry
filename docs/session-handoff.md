@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 225: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-74, reviewer. Branch `feat/pr-74-body-art`. PR #94, blocked. Base `6ee836d`.
+
+### What this session did, and why
+
+- Reviewed PR #94 at effective head `df900d5` under the Codex review request that Session 224 started by hand (D-536).
+- Verified the body geometry and paint recipes, fine shades, grain and gradient behavior, palette indexing, tests, documentation, and ruleset fields. No in-scope defect was found.
+- Published the review record with this handoff entry in one metadata commit (D-182).
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx` passed with no warnings or errors. The focused texture, recipe, model, and ruleset tests passed 152 of 152.
+- The live ruleset matches `.github/rulesets/main.json`. `asset-qa`, `det-lint`, `doc-gate`, `documents`, `ste-check`, Linux smoke, and Linux bit identity passed.
+- The known `night-gate` failure remains. Multiple platform CI, smoke, bit-identity, and bot jobs were pending when the review record was written. The effective head remains `df900d5`.
+
+### In flight
+
+- PR #94 remains blocked until required platform evidence completes and the owner resolves the night-gate block of D-538.
+
+### Traps and gotchas
+
+- The owner waived Gitar for PR #94. Its in-progress dashboard has no review threads and makes no code claim.
+- The metadata commit does not change the effective head under D-184. The code head stays `df900d5`.
+- Local smoke sessions need the full Godot path in `AGENTS.md`. This checkout did not have a configured Godot binary.
+
+### Open questions that block progress
+
+None. OQ-181 blocks PR-77 alone.
+
+### Next concrete action
+
+Read the final required checks after the metadata push. Reassess PR #94 when platform checks complete and the night-gate block has an owner disposition.
+
 ## Session 224: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -338,38 +373,3 @@ None.
 ### Next concrete action
 
 Codex re-reviews PR #92 at the new effective head. After the merge, PR-74 starts from Session 214 and D-496 to D-503.
-
-## Session 215: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, changes required. Base `97a12ff`.
-
-### What this session did, and why
-
-- Reviewed the texture recipes, atlas packer, layout parser, Game UV consumers, tests, and the PR documents.
-- Found P2-1: an overflowing canvas coordinate can pass the layout bounds check. Added the review record for effective head `6654571`.
-- Reviewed the before-and-after contact sheet. It looks consistent at sheet scale, but exit test 6 still needs the owner's confirmation.
-
-### State of the build
-
-- The focused recipe, texture, and model tests passed 113 of 113. `ste-check`, `det-lint`, and `asset-qa` passed with 0 findings.
-- The local full suite stalled without output and was interrupted. Its result is incomplete. The remote CI, smoke, bit-identity, and bot checks passed on effective head `6654571`.
-- CI passed on Linux, Windows, and macOS, with Linux and Windows sweeps. Bit identity passed on all three platforms and in compare.
-- The remote branch tip before this review was `adfe9c7`. This session pushed the review record and this handoff to `origin/feat/pr-62-texture-recipes`.
-
-### In flight
-
-- PR #92 needs a fix and regression test for P2-1, and the owner's confirmation of exit test 6.
-
-### Traps and gotchas
-
-- Later handoff-only commits do not change the effective head (D-184).
-- OQ-181 blocks PR-77, not PR-62 (D-504).
-
-### Open questions that block progress
-
-None for PR-62. The owner confirmation and the missing checks are exit evidence, not open questions.
-
-### Next concrete action
-
-The author fixes P2-1 and adds the overflow regression test. The owner confirms the contact sheet. Codex re-reviews PR #92.

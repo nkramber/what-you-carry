@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 215: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, changes required. Base `97a12ff`.
+
+### What this session did, and why
+
+- Reviewed the texture recipes, atlas packer, layout parser, Game UV consumers, tests, and the PR documents.
+- Found P2-1: an overflowing canvas coordinate can pass the layout bounds check. Added the review record for effective head `6654571`.
+- Reviewed the before-and-after contact sheet. It looks consistent at sheet scale, but exit test 6 still needs the owner's confirmation.
+
+### State of the build
+
+- The focused recipe, texture, and model tests passed 113 of 113. `ste-check`, `det-lint`, and `asset-qa` passed with 0 findings.
+- The local full suite stalled without output and was interrupted. Its result is incomplete. The remote CI, smoke, bit-identity, and bot checks passed on effective head `6654571`.
+- CI passed on Linux, Windows, and macOS, with Linux and Windows sweeps. Bit identity passed on all three platforms and in compare.
+- The remote branch tip before this review was `adfe9c7`. This session pushed the review record and this handoff to `origin/feat/pr-62-texture-recipes`.
+
+### In flight
+
+- PR #92 needs a fix and regression test for P2-1, and the owner's confirmation of exit test 6.
+
+### Traps and gotchas
+
+- Later handoff-only commits do not change the effective head (D-184).
+- OQ-181 blocks PR-77, not PR-62 (D-504).
+
+### Open questions that block progress
+
+None for PR-62. The owner confirmation and the missing checks are exit evidence, not open questions.
+
+### Next concrete action
+
+The author fixes P2-1 and adds the overflow regression test. The owner confirms the contact sheet. Codex re-reviews PR #92.
+
 ## Session 214: 2026-09-23, Claude Code
 
 Author: Claude Code
