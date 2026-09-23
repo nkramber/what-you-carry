@@ -1,3 +1,40 @@
+## Session 211: 2026-09-22, Claude Code
+
+Author: Claude Code
+Session: PR-72, author. Branch `fix/pr-72-enemy-movement`. PR number follows on open, pending owner merge. Base `ea84473`.
+
+### What this session did, and why
+
+- PR-71 exit test 6 passes. The push runs of `ea84473` on `main` ran every job of `ci.yml` (7 jobs), `smoke.yml` (4), `bit-identity.yml` (5), and `bots.yml` (2), and each passed. No job skipped. Each `ci-skip` log reads "The event 'push' runs every job. A push to main never skips (D-473)." Runs 35806594707, 35806594677, 35806594709, and 35806594708.
+- Owner answers D-483 to D-489: the id PR-72, one PR for F-107 and F-108, the F-108 case (seed 1, floor 1), the diagonal rule, the costs 10 and 14, the walkers, and no diagonal step up past a corner.
+- F-108: six probes on seed 1, floor 1 found no stall. The owner then said the enemy "slowly jumped up the ramp". `PathWalk.NeedsAJump` read the feet against the face of the next place, so 80 to 87 percent of the ticks of a climb were in the air. It now reads the slope under the feet at the entry point.
+- F-107: `GridMoves.DiagonalMove` and the search costs of D-487. Three faults came out of the tests and a sweep of 431597 diagonal moves over 120 seeds: a two-block rise from two side steps, a climb cut out of a ramp, and a drop into a landing column with a block at body height (the Overseer of `TimerTesterAlwaysDies` seed 662). The rule now limits the rise in rows and in floor height, and it needs the start and landing columns open. D-489 closed the fourth: a step up past a corner lands short.
+
+### State of the build
+
+- Local: the full suite passed (1377 tests, Smoke apart), then Smoke 7 of 7, the Godot build check, `det-lint` 0, `ste-check` 0.
+- Simulation version 15. Bit identity `dc4258105649a548`. With version 14 the new walk gives `5edea237bc4e2fae`, so the walk moved the hash too.
+- Remote head before this entry: `b283abe`, not pushed yet.
+
+### In flight
+
+- Open the PR, then add `✅ Done in PR #N.` to the roadmap and the design doc, and the PR number here.
+- The CI of the code head, then the gitar pass, then the hand-over to Codex.
+
+### Traps and gotchas
+
+- The walk sweep is `EnemyWalkTests.DiagonalSweep`, in the `Sweep` category, at a fixed 120 seeds (about 8 s local). A seed count on floor 1 alone missed every fault. The faults sat on floors 6 to 15.
+- An arrival alone proves little. A follower that searches again walks the two side moves, so the sweep also counts the jumps.
+- `GridMoves.FloorHeightAt` works in 24ths of a block, so the rule stays in integers (G-9).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Push, open PR-72, add the status marks, wait for the checks, and load `gitar-review`.
+
 ## Session 210: 2026-09-22, Codex
 
 Author: Codex
@@ -368,41 +405,3 @@ None.
 ### Next concrete action
 
 Codex: review PR #85 again at the effective head. After the owner merge, dispatch a night on `main` so that the night gate reads green (D-440).
-
-## Session 201: 2026-09-21, Codex
-
-Author: Codex
-Session: PR-18, reviewer. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
-
-### What this session did, and why
-
-- Reviewed PR #85 at effective head `46c4b9d` under the cross-provider gate.
-- Inspected the full diff, the transition state, the chunk swap, the bot and night workflows, the focused roadmap, the applicable decisions, and the Gitar comment.
-- Wrote `docs/reviews/pr-85.md`. The record has no finding and a blocked verdict because the Steam Deck transition exit test remains unresolved.
-
-### State of the build
-
-- Remote PR head: `5bac1cd`.
-- Build passed with 0 warnings and 0 errors.
-- Focused transition, measurement, and smoke tests passed, 31 of 31.
-- `det-lint`, `asset-qa`, and `ste-check` passed with 0 findings.
-- A local three-transition headless bot session exited 0 and recorded `transitionMicrosMax` of 16667 microseconds.
-- The full local test command produced no result after the build and was interrupted. CI reports the test, Smoke, Bit identity, Bots, Night gate, Asset QA, Determinism lint, Doc gate, STE check, and Gitar checks as passed.
-
-### In flight
-
-- The review record and this handoff entry are pushed in metadata commit `5bac1cd`.
-- The owner must run the Deck transition command in `CLAUDE.md` and record exit test 6.
-
-### Traps and gotchas
-
-- The review applies to effective head `46c4b9d`, not metadata tip `14f0378`.
-- The transition test removes enemy content by design under D-437.
-
-### Open questions that block progress
-
-- None. The Deck result is a required exit test, not an open owner question.
-
-### Next concrete action
-
-Wait for the owner to record the Deck result and rerun the review gate.
