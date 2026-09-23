@@ -79,9 +79,13 @@ public sealed class GitRepository
         return new CommitSubject(sha, subject);
     }
 
+    /// <summary>
+    /// Every path that changes from the first revision to the second. A move lists both paths, because rename
+    /// detection would hide the old path, and a code file moved into <c>docs/</c> would then read as a document.
+    /// </summary>
     public IReadOnlyList<string> ChangedPaths(string mergeBase, string head)
     {
-        string output = Run(["diff", "--name-only", mergeBase, head]);
+        string output = Run(["diff", "--name-only", "--no-renames", mergeBase, head]);
         return output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 

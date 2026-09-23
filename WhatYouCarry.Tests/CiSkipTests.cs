@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using WhatYouCarry.Tools.CiSkip;
 using Xunit;
 
@@ -167,6 +168,26 @@ public sealed class CiSkipTests
         WorkflowRun run = Assert.Single(facts.PreviousRuns!);
         Assert.Equal(7, run.Id);
         Assert.True(CiSkipRules.Decide(facts).Skip);
+    }
+
+    /// <summary>A code file that moves into the skip set changes a code path too: git lists both sides of the move (PR #89 review).</summary>
+    [Fact]
+    public void CodeMovedIntoTheSkipSetRunsEveryJob()
+    {
+        using var repo = new TemporaryGitRepository();
+        using var runs = new TemporaryRunsFile("{\"id\":7,\"status\":\"completed\",\"conclusion\":\"success\",\"created_at\":\"2026-09-22T12:00:00Z\"}\n");
+        string source = string.Join('\n', Enumerable.Range(1, 40).Select(line => $"// line {line} of the source"));
+        string baseCommit = repo.Commit("chore: base", Files(("WhatYouCarry.Core/Moved.cs", source)));
+        repo.CreateBranch("feature");
+        string previous = repo.Commit("docs: design", Files(("docs/design.md", "design")));
+        repo.Git(["mv", "WhatYouCarry.Core/Moved.cs", "docs/Moved.cs"]);
+        string head = repo.Commit("docs: move", Files());
+
+        CiSkipFacts facts = CiSkipFacts.Gather(repo.Path, "pull_request", "synchronize", baseCommit, head, previous, runs.Path);
+
+        Assert.Contains("WhatYouCarry.Core/Moved.cs", facts.PullRequestPaths!);
+        Assert.Contains("WhatYouCarry.Core/Moved.cs", facts.PushPaths!);
+        Assert.False(CiSkipRules.Decide(facts).Skip);
     }
 
     [Fact]

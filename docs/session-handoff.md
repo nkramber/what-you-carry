@@ -30,6 +30,7 @@ Session: PR-71, author. Branch `chore/ci-skip-for-document-heads`. PR #89, pendi
 - A skipped job reports success. The `!cancelled()` condition runs every heavy job when `ci-skip` fails, so a fault never passes in silence.
 - xUnit reads no trait of an outer class on a nested class. Each nested class of `ProcgenTests` carries its own `Sweep` trait, and `EveryNestedClassOfASweepClassTakesTheCategory` checks it.
 - A class that calls a command joins the console collection, or `EveryConsoleTestIsInTheCollection` fails.
+- `git diff --name-only` hides the old path of a move. `ChangedPaths` passes `--no-renames`, so a code file moved into `docs/` still runs every job (gitar finding on PR #89, `CodeMovedIntoTheSkipSetRunsEveryJob`).
 - `CLAUDE.md` sits 43 bytes under the ceiling of D-382, so the reviewer rule for a skipped job lives in the pr-review verification reference.
 - `main` has no branch protection yet (D-387), so no required check reads the skipped jobs today.
 
