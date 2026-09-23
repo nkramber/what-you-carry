@@ -112,11 +112,22 @@ public sealed class RulesetTests
         // D-511, D-512: the target stays thin, and the update comes first.
         string makefile = RepositoryRoot.ReadFile("Makefile");
         int update = makefile.IndexOf("\tnpm install -g @openai/codex@latest\n", StringComparison.Ordinal);
-        int review = makefile.IndexOf("\t$(TOOLS) codex-review --root . --pr $(PR) --codex $(CODEX)\n", StringComparison.Ordinal);
+        int review = makefile.IndexOf("\t$(TOOLS) codex-review --root . --pr $(PR) --codex $(CODEX) $(CODEX_REVIEW_FLAGS)\n", StringComparison.Ordinal);
 
         Assert.True(update > 0, "The codex-review target does not update the CLI.");
         Assert.True(review > update, "The codex-review target does not run the tool after the update.");
         Assert.Contains("codex-review: ## ", makefile, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheMakeTargetPassesTheFlagsAfterTheDoubleDash()
+    {
+        // D-543: make reads each word after `--` as a goal. The target passes each goal that starts with `--` to the
+        // tool, and a rule that does nothing keeps make from a "No rule to make target" stop.
+        string makefile = RepositoryRoot.ReadFile("Makefile");
+
+        Assert.Contains("CODEX_REVIEW_FLAGS := $(filter --%,$(MAKECMDGOALS))\n", makefile, StringComparison.Ordinal);
+        Assert.Contains("\n--%:\n\t@:\n", makefile, StringComparison.Ordinal);
     }
 
     private static List<(string Context, int AppId)> RequiredChecks()

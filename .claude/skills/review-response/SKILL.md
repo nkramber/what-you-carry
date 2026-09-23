@@ -74,6 +74,8 @@ A disagreement with a finding belongs here, with the evidence. Do not remove the
 
 An automated reviewer, gitar, reviews every PR after a push (D-250). The author gets a current review of the head and answers every finding before the hand-over to the other provider. On a documentation PR, the author does this before the override request. This pass comes before the cross-provider review and never replaces it (T-4).
 
+**Pause (D-542).** The pause section of `gitar-review` and the pause of `AGENTS.md` win over this section and over step 9. Run each round as `make codex-review PR=<n> -- --skip-gitar-review` (D-543).
+
 Load `.claude/skills/gitar-review/SKILL.md` after each push, and follow its procedure (D-374). That skill holds the steps, the proof that a review is current, the traps, and the commands. This section gives only the rules of this repo, and each rule wins over that skill:
 
 - The author alone answers gitar. The reviewing provider never replies to gitar (`pr-review`, `references/repeat-review.md`).

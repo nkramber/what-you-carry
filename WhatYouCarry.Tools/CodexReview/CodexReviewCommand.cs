@@ -10,6 +10,9 @@ namespace WhatYouCarry.Tools.CodexReview;
 /// <summary>The facts of a PR that <c>gh pr view</c> gives.</summary>
 public sealed record PullRequestView(string State, string Branch, string Head, string BaseBranch);
 
+/// <summary>The options of one run. <see cref="SkipGitarReview"/> drops the Gitar start checks alone (D-543).</summary>
+public sealed record CodexReviewOptions(string Root, int PullRequest, string Codex, bool SkipGitarReview);
+
 /// <summary>
 /// <c>codex-review --root . --pr &lt;n&gt; --codex &lt;path&gt;</c> (D-511). The command checks the start conditions,
 /// probes the model, runs one Codex review round in a detached worktree at the PR head, and judges the review
@@ -17,44 +20,24 @@ public sealed record PullRequestView(string State, string Branch, string Head, s
 /// </summary>
 public static class CodexReviewCommand
 {
-    public const string Usage = "Options: --root <path> --pr <number> --codex <path>.";
+    public const string SkipGitarReviewFlag = "--skip-gitar-review";
+    public const string Usage = "Options: --root <path> --pr <number> --codex <path> [--skip-gitar-review].";
     public const string GitarApp = "gitar-bot";
     public const string GitarLogin = "gitar-bot[bot]";
     public const string DashboardMarker = "<b>Code Review</b>";
 
     public static int Run(string[] args)
     {
-        string? root = null;
-        string? pullRequestText = null;
-        string? codex = null;
-        for (int i = 0; i + 1 < args.Length; i += 2)
+        CodexReviewOptions? options = ParseOptions(args, out string usageProblem);
+        if (options is null)
         {
-            switch (args[i])
-            {
-                case "--root":
-                    root = args[i + 1];
-                    break;
-                case "--pr":
-                    pullRequestText = args[i + 1];
-                    break;
-                case "--codex":
-                    codex = args[i + 1];
-                    break;
-                default:
-                    Console.Error.WriteLine($"Unknown option '{args[i]}'. {Usage}");
-                    return 2;
-            }
-        }
-
-        if (root is null || codex is null || !int.TryParse(pullRequestText, NumberStyles.None, CultureInfo.InvariantCulture, out int pullRequest))
-        {
-            Console.Error.WriteLine($"Each option needs a value, and --pr needs a whole number. Found --pr '{pullRequestText}'. {Usage}");
+            Console.Error.WriteLine($"{usageProblem} {Usage}");
             return 2;
         }
 
         try
         {
-            return (int)Review(Path.GetFullPath(root), pullRequest, codex);
+            return (int)Review(Path.GetFullPath(options.Root), options.PullRequest, options.Codex, options.SkipGitarReview);
         }
         catch (Exception exception) when (exception is InvalidOperationException or FormatException or IOException or JsonException)
         {
@@ -63,7 +46,67 @@ public static class CodexReviewCommand
         }
     }
 
-    private static CodexReviewExit Review(string root, int pullRequest, string codex)
+    /// <summary>
+    /// Reads the options. Each option takes one value, except the flag <see cref="SkipGitarReviewFlag"/>, which takes
+    /// none. Returns null, with the problem, on an unknown option, a missing value, or a PR that is not a whole number.
+    /// </summary>
+    public static CodexReviewOptions? ParseOptions(IReadOnlyList<string> args, out string problem)
+    {
+        string? root = null;
+        string? pullRequestText = null;
+        string? codex = null;
+        bool skipGitarReview = false;
+        int i = 0;
+        while (i < args.Count)
+        {
+            string option = args[i];
+            if (option == SkipGitarReviewFlag)
+            {
+                skipGitarReview = true;
+                i++;
+                continue;
+            }
+
+            if (option is not ("--root" or "--pr" or "--codex"))
+            {
+                problem = $"Unknown option '{option}'.";
+                return null;
+            }
+
+            if (i + 1 >= args.Count)
+            {
+                problem = $"The option '{option}' needs a value.";
+                return null;
+            }
+
+            string value = args[i + 1];
+            switch (option)
+            {
+                case "--root":
+                    root = value;
+                    break;
+                case "--pr":
+                    pullRequestText = value;
+                    break;
+                case "--codex":
+                    codex = value;
+                    break;
+            }
+
+            i += 2;
+        }
+
+        if (root is null || codex is null || !int.TryParse(pullRequestText, NumberStyles.None, CultureInfo.InvariantCulture, out int pullRequest))
+        {
+            problem = $"Each of --root, --pr, and --codex needs a value, and --pr needs a whole number. Found --pr '{pullRequestText}'.";
+            return null;
+        }
+
+        problem = string.Empty;
+        return new CodexReviewOptions(root, pullRequest, codex, skipGitarReview);
+    }
+
+    private static CodexReviewExit Review(string root, int pullRequest, string codex, bool skipGitarReview)
     {
         var git = new GitRepository(root);
         ProcessResult versionResult;
@@ -86,7 +129,7 @@ public static class CodexReviewCommand
 
         string loginStatus = CodexReviewSettings.LoginStatusText(ExternalProcess.Run(codex, CodexReviewSettings.LoginStatusArguments, root, CodexReviewSettings.ApiCredentialVariables));
         StartFacts facts = GatherStartFacts(root, git, pullRequest, view, version, loginStatus);
-        var problems = new List<string>(StartChecks.Problems(facts));
+        var problems = new List<string>(StartChecks.Problems(facts, skipGitarReview));
         if (problems.Count == 0)
         {
             string? probeProblem = ProbeModel(codex);
@@ -112,6 +155,11 @@ public static class CodexReviewCommand
         string lastMessage = Path.Combine(workDirectory, "last-message.md");
         git.Run(["worktree", "add", "--detach", worktree, facts.OriginHead]);
         Console.WriteLine($"codex-review: PR #{pullRequest}, effective head {effectiveBefore}, model {CodexReviewSettings.Model} at effort {CodexReviewSettings.ReasoningEffort}, CLI {version}.");
+        if (skipGitarReview)
+        {
+            Console.WriteLine($"codex-review: {SkipGitarReviewFlag} skipped the Gitar check run and the dashboard. The unresolved thread check ran (D-543).");
+        }
+
         Console.WriteLine($"Transcript: {transcript}");
 
         IReadOnlyList<string> arguments = CodexReviewSettings.ReviewArguments(worktree, lastMessage, CodexReviewSettings.ReviewPrompt(pullRequest, view.Branch));

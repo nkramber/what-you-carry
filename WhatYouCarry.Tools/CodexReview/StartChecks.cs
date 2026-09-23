@@ -68,7 +68,11 @@ public static class StartChecks
         return $"PR #{pullRequestNumber} is {state}, and a review needs an open PR.";
     }
 
-    public static IReadOnlyList<string> Problems(StartFacts facts)
+    /// <summary>
+    /// Every problem of the start facts. <paramref name="skipGitarReview"/> drops the Gitar check run and the Gitar
+    /// dashboard checks, and the thread check stays, because the ruleset of main requires resolved threads (D-522, D-543).
+    /// </summary>
+    public static IReadOnlyList<string> Problems(StartFacts facts, bool skipGitarReview)
     {
         var problems = new List<string>();
         if (!facts.Version.IsAtLeast(CodexReviewSettings.MinimumVersion))
@@ -92,7 +96,16 @@ public static class StartChecks
         }
 
         AddCheckoutProblems(facts, problems);
-        AddGitarProblems(facts, problems);
+        if (!skipGitarReview)
+        {
+            AddGitarProblems(facts, problems);
+        }
+
+        if (facts.UnresolvedThreadCount > 0)
+        {
+            problems.Add($"PR #{facts.PullRequestNumber} has {facts.UnresolvedThreadCount} unresolved review thread(s). Answer and resolve each one (D-250, D-522).");
+        }
+
         return problems;
     }
 
@@ -158,11 +171,6 @@ public static class StartChecks
         else if (earliest is not null && facts.DashboardEditedAt <= earliest.StartedAt)
         {
             problems.Add($"The Gitar dashboard comment has its last edit at {facts.DashboardEditedAt:O}, not after the Gitar check run on {earliest.Sha} started at {earliest.StartedAt:O}. The review of the work head is not current. Follow the gitar-review skill.");
-        }
-
-        if (facts.UnresolvedThreadCount > 0)
-        {
-            problems.Add($"PR #{facts.PullRequestNumber} has {facts.UnresolvedThreadCount} unresolved review thread(s). Answer and resolve each one (D-250, D-522).");
         }
     }
 }
