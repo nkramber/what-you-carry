@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 215: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, changes required. Base `97a12ff`.
+
+### What this session did, and why
+
+- Reviewed the texture recipes, atlas packer, layout parser, Game UV consumers, tests, and the PR documents.
+- Found P2-1: an overflowing canvas coordinate can pass the layout bounds check. Added the review record for effective head `6654571`.
+- Reviewed the before-and-after contact sheet. It looks consistent at sheet scale, but exit test 6 still needs the owner's confirmation.
+
+### State of the build
+
+- The focused recipe, texture, and model tests passed 113 of 113. `ste-check`, `det-lint`, and `asset-qa` passed with 0 findings.
+- The local full suite stalled without output and was interrupted. Its result is incomplete. The remote CI, smoke, bit-identity, and bot checks passed on effective head `6654571`.
+- CI passed on Linux, Windows, and macOS, with Linux and Windows sweeps. Bit identity passed on all three platforms and in compare.
+- The remote branch tip before this review was `adfe9c7`. This session pushed the review record and this handoff to `origin/feat/pr-62-texture-recipes`.
+
+### In flight
+
+- PR #92 needs a fix and regression test for P2-1, and the owner's confirmation of exit test 6.
+
+### Traps and gotchas
+
+- Later handoff-only commits do not change the effective head (D-184).
+- OQ-181 blocks PR-77, not PR-62 (D-504).
+
+### Open questions that block progress
+
+None for PR-62. The owner confirmation and the missing checks are exit evidence, not open questions.
+
+### Next concrete action
+
+The author fixes P2-1 and adds the overflow regression test. The owner confirms the contact sheet. Codex re-reviews PR #92.
+
 ## Session 214: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -373,37 +408,3 @@ The next PR after this one skips the heavy checks on a head that changes documen
 That PR also asks why the checks take so long, which the owner saw on a Windows check of 24 minutes. The one test step of `ci.yml` holds the whole cost: 1055 seconds on the hosted Linux runner, 1206 on the hosted Windows runner, and 451 on the self-hosted Mac mini. The run of `996b3c3` gives a second reading: 872 seconds on Linux, 1518 on Windows, and 489 on the Mac mini, so the hosted runners also vary from run to run. The smoke workflow takes 48 seconds, 103 seconds, and 29 seconds, and the bit identity takes 33 seconds or less, so neither one is the cost. A profile of the suite on 2026-09-22 names ten tests that hold 73 percent of the summed duration of 20.3 minutes, and every one is a seed sweep: `EveryFloorTakesATierWhenOneFits` at 177 seconds, `ReplayReproducesHash` at 132, `EveryPolicyEndsAtTheBottomOrByDeath` at 118, `StairwellReachable` at 98, `CameraNeverInsideSolid` at 97, and `EnemyCountMatchesBudget` at 94. A smaller sweep on a pull request weakens the gate, so the owner decides any change of a seed count.
 
 After that PR: F-107 and F-108, an enemy walks no diagonal, and an enemy does not walk up a ramp. The owner saw both in the play session of PR #87.
-
-## Session 205: 2026-09-21, Codex
-
-Author: Codex
-Session: PR-86, reviewer. Branch `feat/pr-19-hud-and-navigation`. PR #86, pending owner merge.
-
-### What this session did, and why
-
-- Reviewed the complete PR-86 implementation and test diff for the HUD and controller navigation base.
-- Added `docs/reviews/pr-86.md` with the cross-provider verdict for effective head `c64e1e2`.
-
-### State of the build
-
-- Build: 0 warnings and 0 errors at the remote tip `5ea0566`.
-- Focused HUD, navigation, input, and stairwell tests passed: 30 tests.
-- Det-lint, asset QA, and STE check passed with 0 findings.
-- The Godot smoke session passed. The full test suite stalled before it returned a result.
-
-### In flight
-
-- The owner merge of PR #86.
-
-### Traps and gotchas
-
-- The PR tip `5ea0566` is metadata-only. The review effective head is `c64e1e2`.
-- The pre-review evaluate failure reported the missing `docs/reviews/pr-86.md` record. It was not a product test failure.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner can merge PR #86 after the review record and this handoff commit reach the remote branch.

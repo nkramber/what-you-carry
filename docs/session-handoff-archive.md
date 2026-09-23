@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 205: 2026-09-21, Codex
+
+Author: Codex
+Session: PR-86, reviewer. Branch `feat/pr-19-hud-and-navigation`. PR #86, pending owner merge.
+
+### What this session did, and why
+
+- Reviewed the complete PR-86 implementation and test diff for the HUD and controller navigation base.
+- Added `docs/reviews/pr-86.md` with the cross-provider verdict for effective head `c64e1e2`.
+
+### State of the build
+
+- Build: 0 warnings and 0 errors at the remote tip `5ea0566`.
+- Focused HUD, navigation, input, and stairwell tests passed: 30 tests.
+- Det-lint, asset QA, and STE check passed with 0 findings.
+- The Godot smoke session passed. The full test suite stalled before it returned a result.
+
+### In flight
+
+- The owner merge of PR #86.
+
+### Traps and gotchas
+
+- The PR tip `5ea0566` is metadata-only. The review effective head is `c64e1e2`.
+- The pre-review evaluate failure reported the missing `docs/reviews/pr-86.md` record. It was not a product test failure.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can merge PR #86 after the review record and this handoff commit reach the remote branch.
+
 ## Session 204: 2026-09-21, Claude Code
 
 Author: Claude Code
