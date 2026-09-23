@@ -126,7 +126,7 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 
 The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, `--smoke` and `--bot` exclude each other, and `--transitions` needs `--bot` and `--frame-log`.
 
-`Godot` is not on the command path of this machine, so use the full path above. `det-lint` reports one count for Core and one for Game (D-222). The PR gate names what `det-lint` and `asset-qa` read. `dotnet test` runs the STE checker over every document, so a document edit needs the test suite and not the checker alone. A local `dotnet test` needs the Godot build at the path above, or the one that `WYC_GODOT` names, for the Smoke category. The three CI jobs run `dotnet test` with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
+`Godot` is not on the command path of this machine, so use the full path above. `det-lint` reports one count for Core and one for Game (D-222). The PR gate names what `det-lint` and `asset-qa` read. A change of documents alone (the skip set of D-475) runs no full suite, for the author, a review, or a handoff. It runs `ste-check`, `doc-gate`, and `dotnet test WhatYouCarry.slnx --filter Category=Documents` (D-491, D-492). A change with any other path runs the full suite (D-493). The `csharp-conventions` skill holds the Smoke and CI filters.
 
 `texture-gen` writes `content/textures/atlas.png` from the palette and the rules under `content/textures/` (D-305). Commit the atlas after each palette or rule change, because a test compares it with the output. `audio-synth` writes a WAV file next to each sound file under `content/audio/sfx/`, and a test compares each one too (D-453). `audio-analyze` writes the band levels of a reference into a spectral layer (D-464). The `Makefile` holds the commands of this list: run `make`. The contact sheet needs a window, so it never runs in CI, and a headless run exits 1 (D-306).
 
@@ -136,7 +136,7 @@ Each project has one directory at the root, beside the solution file, and `proje
 
 A PR merges only when every line holds:
 
-- [ ] Tests written and green (T-3).
+- [ ] Tests written and green (T-3). A PR of documents alone needs the checks of D-491 green in place of the suite (D-494).
 - [ ] No silent failure. Every error carries context (T-2).
 - [ ] The three-platform bit-identity job is green (G-9).
 - [ ] The `det-lint` job is green. It reads Core for the determinism rules and Game for the string rule (G-2, G-8, G-21).

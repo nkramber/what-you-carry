@@ -94,4 +94,12 @@ dotnet build WhatYouCarry.slnx
 dotnet test WhatYouCarry.slnx --no-build
 ```
 
-A local `dotnet test` needs the Godot build for the Smoke category. The three CI jobs run the suite with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category on each platform.
+A local `dotnet test` needs the Godot build for the Smoke category, at the path of `AGENTS.md` or at the path that `WYC_GODOT` names. The three CI jobs run the suite with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
+
+A push of documents alone, in the skip set of D-475, runs no full suite (D-491, D-492). It runs `ste-check`, `doc-gate`, and this command:
+
+```
+dotnet test WhatYouCarry.slnx --filter Category=Documents
+```
+
+A push that holds a path outside the skip set runs the full suite, also when it holds documents too (D-493).

@@ -15,6 +15,7 @@ Read this table when a question asks who catches a break of a rule. Section 3.14
 | The handoff and the review record do not move the effective head | Machine | `review-gate` metadata set (D-184), and a test that pins the handoff path in that set |
 | The skill has valid front matter, stays under 7000 characters, and the agent files name its path | Machine | `dotnet test` shape tests |
 | The agent files, each skill file, each skill reference file, the handoff, and its newest entry stay under a byte ceiling | Machine | `dotnet test` context budget tests (D-382, D-384) |
+| A change of documents alone runs `ste-check`, `doc-gate`, and the `Documents` category, and no full suite | Agent, and the machine on each head | The rule of `AGENTS.md` (D-491 to D-493). The `documents` job runs the category on each head (D-476) |
 | The handoff keeps 10 entries, newest first, and each older entry moves to the archive with its text intact | Machine, when the session runs the command | `handoff-rotate` and its seed-loop test (D-379) |
 | A session reads the newest handoff entry, looks up register ids in one command, and waits on checks with one command | Agent | The read order of `AGENTS.md`, this skill, and `docs/runbooks/session-context.md` (D-377, D-378, D-380) |
 | A reviewer loads `pr-review`, and an author who answers findings loads `review-response` | Agent | The skill descriptions and `AGENTS.md` (D-381) |

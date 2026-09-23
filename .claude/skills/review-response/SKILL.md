@@ -28,6 +28,8 @@ Use this skill when you answer a review of your own PR. The reviewing provider u
 7. Record each disposition in `docs/reviews/pr-<number>-response.md`.
 8. Commit the response, the corrections, and the handoff entry, then run the session end gate (D-182, D-183, D-199).
 
+A correction of documents alone runs `ste-check`, `doc-gate`, and the `Documents` category, and no full suite (D-491, D-492). A correction that changes code runs the full suite (D-493).
+
 Push back when the evidence supports it. State the reason and show the proof:
 
 | Reason to push back | What to show |

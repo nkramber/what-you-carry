@@ -67,7 +67,7 @@ Do these steps after each push.
 18. Export every comment and thread with command F. Read the file one time, and read each open thread.
 19. Read each finding as a claim, not a fact. Reproduce its trigger. Read the rule or the decision it names.
 20. Decide the merit of the finding: full, partial, or none.
-21. For full merit, make the smallest change that fixes the finding. Commit it.
+21. For full merit, make the smallest change that fixes the finding. Commit it. Before the commit, run the checks of D-491 for documents alone, or the full suite for code (D-493).
 22. For no merit, reply on the thread with the reason and the evidence. Then resolve the thread.
 23. For partial merit, fix the part with merit. Refute the rest in the same reply.
 24. When you have commits, go to step 1. After the push, reply on each thread with the commit that fixes it.
