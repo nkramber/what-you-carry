@@ -1,3 +1,37 @@
+## Session 223: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-78, author, the hand-over. Branch `feat/pr-78-codex-review`. PR #93, pending merge. Base `e069e16`.
+
+### What this session did, and why
+
+- Round 3 of `make codex-review PR=93` approved effective head `e28ecd2` with exit 0 (Session 222). P1-1 and P2-1 are fixed, and no finding is open.
+- Exit test 3 holds: each of the 20 required checks reported on the code head `e28ecd2` and on the metadata tip `3c5b7fe`. The heavy jobs gave `skipped` on the tip, which GitHub counts as a pass.
+- The owner gets the summary of D-524 and merges this PR by hand (D-519).
+
+### State of the build
+
+- The full suite passed 1506 of 1506 at `e28ecd2`, and `ste-check` finds no issue. Gitar approved `e28ecd2` with every thread resolved.
+- The effective head is `e28ecd2`. This entry is a metadata commit.
+
+### In flight
+
+- The owner merge of PR #93. Then, on `Merged PR #93`, this session asks for the approval of the setup, and runs `docs/runbooks/main-ruleset.md`: auto-merge on, the ruleset from `main`, and the comparison of the live ruleset (D-519, exit test 4).
+
+### Traps and gotchas
+
+- The live ruleset does not exist before the setup. Until then, nothing on GitHub enforces the PR gate.
+- `smoke-linux-x64` aborted one time at the Godot shutdown (exit 134, a leaked ArrayMesh) with no Game change, and a re-run passed. A required check makes such a flake block auto-merge until a re-run.
+- The review record of round 3 lists `e28ecd2` in the `Open at:` line of P2-1, which is fixed. A fixed finding does not count, so the stop reads it correctly.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the owner merge, get the approval of the setup, apply it with `docs/runbooks/main-ruleset.md`, and write the transitional prompt.
+
 ## Session 222: 2026-09-23, Codex
 
 Author: Codex
@@ -333,39 +367,3 @@ Codex reviews PR #92. After the merge, PR-74 starts from D-496 to D-503 and the 
 - The owner added two angles for PR-74: `08-3d-top.png` and `09-3d-head-front-close.png` in the reference folder. Step 4 of the skill approved them.
 - The close-up measures the brow at y 25.0 to 26.0, the nose band at 23.2 to 24.9, and the beard at 20.8 to 23.2. Each agrees with D-497, D-501, and D-502 within 0.2 units.
 - The face paint of the close-up: hair on the top 1.5 to 2 units with a small peak, brown eyes of about 1.5 by 0.5 units under the brow, a lighter nose, and a mouth notch of about 2 by 0.5 units.
-
-## Session 213: 2026-09-22, Claude Code
-
-Author: Claude Code
-Session: PR-73, author. Branch `chore/pr-73-docs-only-no-suite`. PR #91, pending owner merge. Base `837902b`.
-
-### What this session did, and why
-
-- The owner asked that a change of documents alone run no full test suite: for the author, a review, a review response, and a handoff. A change of code still runs the full suite.
-- The owner answered in session: D-490 to D-495. Such a change runs `ste-check`, `doc-gate`, and `dotnet test WhatYouCarry.slnx --filter Category=Documents` (D-491). The skip set of D-475 names the documents (D-492). A change with any other path runs the full suite (D-493). The test line of the PR gate adds a clause (D-494). The PR template keeps its text (D-495). No decision revises an earlier one.
-- The agent files replace the rule "a document edit needs the test suite". `csharp-conventions`, `review-response`, `gitar-review` step 21, `pr-review/references/verification.md`, and `one-pr-one-session/references/enforcement.md` state the rule.
-- The design doc and the Phase 2 roadmap add the PR-73 entry, before PR-62.
-
-### State of the build
-
-- `ste-check` found 0 issues in 34 files. The `Documents` category passed 131 of 131 tests. The full suite did not run, by the rule of this PR.
-- `CLAUDE.md` and `AGENTS.md` are identical, at 14989 of 15000 bytes.
-- The effective head is the commit that holds this entry, on `origin/chore/pr-73-docs-only-no-suite`. Every path of the PR is in the skip set, so the heavy jobs skip by rule 1 of D-474.
-
-### In flight
-
-- PR #91: the automated pass of gitar, then the `review-override` label (D-188, D-190).
-
-### Traps and gotchas
-
-- The agent files have 11 bytes left under D-382. The Smoke detail moved to `csharp-conventions` to make room. A new rule there needs a move of detail to a skill, or a decision.
-- The CI filter text in `csharp-conventions` still reads `Category!=Smoke`. `ci.yml` also excludes `Sweep` since PR-71. PR-73 kept that text, because it is outside this concern.
-- An edit of `.github/pull_request_template.md` moves a PR into the code set of D-190 (D-495).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner merges PR #91. The next session starts PR-62. OQ-181 blocks it, so the owner answers OQ-181 first.
