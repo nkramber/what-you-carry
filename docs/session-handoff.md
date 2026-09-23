@@ -19,7 +19,7 @@ Session: PR-78, reviewer. Branch `feat/pr-78-codex-review`. PR #93, changes requ
 - The metadata checks passed: `ste-check` reported 0 findings, and the Documents category passed 131 tests.
 - The effective head is `b7623f4`. The remote review branch holds the metadata commit with this entry and the review record.
 - Before publication, all code-head checks passed except `evaluate`, which failed because the review record was absent. `review-gate` was skipping. Gitar passed.
-- Fresh checks after publication are in flight.
+- Checks for metadata commit `c06f6ce` finished. Gitar, `documents`, `doc-gate`, `ste-check`, and all other reported applicable checks passed. Heavy jobs skipped. `evaluate` and `review-gate` failed for the changes-required verdict.
 
 ### In flight
 
@@ -30,7 +30,7 @@ Session: PR-78, reviewer. Branch `feat/pr-78-codex-review`. PR #93, changes requ
 
 - An approved verdict skips the strike result in `ReviewOutcomeRules.Judge`. The P3 approval test does not cover an open P0 to P2 finding.
 - The review record applies to effective head `b7623f4`; the metadata commit does not change that head (D-184).
-- The publication run must report the `review-gate` result for this record.
+- `evaluate` and `review-gate` fail until a later review approves the effective head.
 
 ### Open questions that block progress
 
