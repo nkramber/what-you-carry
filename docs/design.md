@@ -575,7 +575,7 @@ Gate: the atlas and the layout match the generator, each block matches its old t
 Gate: the new tests pass, the command reviews this PR, and each required check reports on a documents head and on a code head.
 > *In plain English:* the owner started every review by hand and merged every PR by hand. Now one command starts the review, and a PR that passes every gate merges itself.
 
-**PR-74: Body art.** 🔧
+**PR-74: Body art.** ✅ Done in PR #94.
 The body gains a brow, a nose, and a beard on the head bone, and a toe box on each lower leg (D-497, D-498, D-501, D-502). Every other box stays (D-499). The face and the trim follow D-525 and D-526. The recipes gain fine shades, a clustered grain, and a gradient, so the body carries the detail of the 3D reference (D-527, D-528). A ninth ramp, umber, holds the dark browns, and each material takes the measured shade of the reference (D-529 to D-531). The owner approved the contact sheet as finished art (D-532). The Meshy images are a look reference alone (D-496).
 Gate: the clip check passes at every keyframe, and the grain paints the same bytes on each platform. The owner approves the contact sheet as finished art.
 > *In plain English:* the miner was ten plain boxes with speckled paint. This change adds a brow, a nose, a beard, and boots, and paints the body with the soft mottle of the 3D model.

@@ -857,6 +857,8 @@ Gate: exit tests 1 to 3 pass. Exit test 4 runs after the merge.
 
 ### PR-74: Body art
 
+✅ Done in PR #94.
+
 Scope:
 
 - `content/models/player.bbmodel`: the brow, the nose, and the beard on the head bone, and a toe box on each lower leg (D-497, D-498, D-501, D-502). Every other box stays (D-499).

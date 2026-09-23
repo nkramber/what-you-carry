@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 224: 2026-09-23, Claude Code
 
 Author: Claude Code
-Session: PR-74, author. Branch `feat/pr-74-body-art`. PR not open yet, pending merge. Base `6ee836d`.
+Session: PR-74, author. Branch `feat/pr-74-body-art`. PR #94, pending merge. Base `6ee836d`.
 
 ### What this session did, and why
 
@@ -23,7 +23,7 @@ Session: PR-74, author. Branch `feat/pr-74-body-art`. PR not open yet, pending m
 
 ### In flight
 
-- Open the PR, mark PR-74 done in `docs/design.md` and the roadmap, run the gitar pass, then `make codex-review PR=<n>`, then the merge summary of D-524.
+- PR #94 is open, and PR-74 is marked done in `docs/design.md` and the roadmap. Next: the gitar pass, then `make codex-review PR=94`, then the merge summary of D-524.
 
 ### Traps and gotchas
 
@@ -41,7 +41,7 @@ None.
 
 ### Next concrete action
 
-Push, open the PR, add the done marks, and run the gitar pass of `gitar-review`.
+Run the gitar pass of `gitar-review` on PR #94, then `make codex-review PR=94` in the background.
 
 ## Session 223: 2026-09-23, Claude Code
 
