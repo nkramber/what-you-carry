@@ -946,6 +946,8 @@ Gate: exit tests 1 to 4 pass. When `night-gate` stays red, the owner merges with
 
 ### PR-81: Night fix and branch nights
 
+✅ Done in PR #97.
+
 Scope:
 
 - The PR holds the fix of F-111 and the branch nights of D-538 by owner instruction, an exception to G-10 (D-538).
@@ -1087,7 +1089,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 35. PR-74.
 36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, and D-539 to D-541.
 37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544.
-38. PR-81. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-548.
+38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-548.
 39. PR-75.
 40. PR-76.
 41. Owner: answer OQ-181.

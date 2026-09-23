@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 232: 2026-09-23, Claude Code
 
 Author: Claude Code
-Session: PR-81, author. Branch `fix/pr-81-night-softlocks`. PR pending, pending merge. Base `582f346`.
+Session: PR-81, author. Branch `fix/pr-81-night-softlocks`. PR #97, pending merge. Base `582f346`.
 
 ### What this session did, and why
 
