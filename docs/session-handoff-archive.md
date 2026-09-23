@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 219: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-78, reviewer. Branch `feat/pr-78-codex-review`. PR #93, changes required. Base `e069e16`.
+
+### What this session did, and why
+
+- Reviewed PR #93 at effective head `b7623f4` for the Codex review command, the three-strike count, and the main ruleset.
+- Added review record `docs/reviews/pr-93.md`. Finding P1-1 shows that the command approves a record with an open P0, P1, or P2 finding.
+- Pushed the review record and this handoff together as one metadata commit, as D-182 and D-518 require.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx` passed with 0 warnings and 0 errors. The full test suite passed: 1,491 passed, 0 failed, 0 skipped.
+- The metadata checks passed: `ste-check` reported 0 findings, and the Documents category passed 131 tests.
+- The effective head is `b7623f4`. The remote review branch holds the metadata commit with this entry and the review record.
+- Before publication, all code-head checks passed except `evaluate`, which failed because the review record was absent. `review-gate` was skipping. Gitar passed.
+- Checks for metadata commit `c06f6ce` finished. Gitar, `documents`, `doc-gate`, `ste-check`, and all other reported applicable checks passed. Heavy jobs skipped. `evaluate` and `review-gate` failed for the changes-required verdict.
+
+### In flight
+
+- The author must correct P1-1 and run the next review round.
+- Exit test 4 checks the live ruleset after the owner approves the post-merge setup.
+
+### Traps and gotchas
+
+- An approved verdict skips the strike result in `ReviewOutcomeRules.Judge`. The P3 approval test does not cover an open P0 to P2 finding.
+- The review record applies to effective head `b7623f4`; the metadata commit does not change that head (D-184).
+- `evaluate` and `review-gate` fail until a later review approves the effective head.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author fixes P1-1, then starts the next review round after the Gitar pass.
+
 ## Session 218: 2026-09-23, Claude Code
 
 Author: Claude Code

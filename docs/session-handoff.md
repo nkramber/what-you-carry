@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 229: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Re-reviewed PR #95 at effective head `25ad21e`.
+- Verified that P2-1 is fixed: the override label and effective-head logic now use the same document path set. No new code finding remains.
+- Updated the existing review record with the finding history and current verdict.
+
+### State of the build
+
+- The focused review tests passed 119 of 119 at `25ad21e`.
+- The Documents category passed 140 of 140 after the review record and handoff edits.
+- `ste-check` passed with no findings, and `doc-gate` passed with 0 problems over 25 paths.
+- Asset QA, lint, document, STE, bot, the Linux and macOS CI platform results, Smoke, and bit-identity passed at `25ad21e`.
+- `ci-windows-x64` remained pending. The night gate failed on the D-538 record. The review gate and evaluator failed because the published round 1 record still had `Changes required`.
+
+### In flight
+
+- The review record and this handoff entry await publication on `origin/chore/pr-79-review-process`.
+- PR #95 remains blocked until the night-gate failure and missing Windows CI result are resolved or the required evidence changes.
+
+### Traps and gotchas
+
+- The code head is `25ad21e`; later review and handoff commits are documents-only and do not move the effective head (D-534).
+- The current night failure belongs to D-538, which is out of scope for PR-79. D-537 keeps the ruleset bypass for the manual merge of that work.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Resolve the D-538 night-gate failure and obtain a final `ci-windows-x64` result. Then re-review the same effective head and update the existing review record.
+
 ## Session 228: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -331,41 +368,3 @@ None.
 ### Next concrete action
 
 Complete the gitar pass of the new head, then run `make codex-review PR=93` in the background.
-
-## Session 219: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-78, reviewer. Branch `feat/pr-78-codex-review`. PR #93, changes required. Base `e069e16`.
-
-### What this session did, and why
-
-- Reviewed PR #93 at effective head `b7623f4` for the Codex review command, the three-strike count, and the main ruleset.
-- Added review record `docs/reviews/pr-93.md`. Finding P1-1 shows that the command approves a record with an open P0, P1, or P2 finding.
-- Pushed the review record and this handoff together as one metadata commit, as D-182 and D-518 require.
-
-### State of the build
-
-- `dotnet build WhatYouCarry.slnx` passed with 0 warnings and 0 errors. The full test suite passed: 1,491 passed, 0 failed, 0 skipped.
-- The metadata checks passed: `ste-check` reported 0 findings, and the Documents category passed 131 tests.
-- The effective head is `b7623f4`. The remote review branch holds the metadata commit with this entry and the review record.
-- Before publication, all code-head checks passed except `evaluate`, which failed because the review record was absent. `review-gate` was skipping. Gitar passed.
-- Checks for metadata commit `c06f6ce` finished. Gitar, `documents`, `doc-gate`, `ste-check`, and all other reported applicable checks passed. Heavy jobs skipped. `evaluate` and `review-gate` failed for the changes-required verdict.
-
-### In flight
-
-- The author must correct P1-1 and run the next review round.
-- Exit test 4 checks the live ruleset after the owner approves the post-merge setup.
-
-### Traps and gotchas
-
-- An approved verdict skips the strike result in `ReviewOutcomeRules.Judge`. The P3 approval test does not cover an open P0 to P2 finding.
-- The review record applies to effective head `b7623f4`; the metadata commit does not change that head (D-184).
-- `evaluate` and `review-gate` fail until a later review approves the effective head.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author fixes P1-1, then starts the next review round after the Gitar pass.
