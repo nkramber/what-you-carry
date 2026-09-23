@@ -15,6 +15,7 @@ namespace WhatYouCarry.Tests;
 
 /// <summary>The bot policies, the run, the runner command, and the night record (D-115, D-127, D-270 to D-273; PR-11 exit tests 1 to 4 and 7).</summary>
 [Collection(ConsoleCollection.Name)]
+[Trait("Category", SweepScope.SweepCategory)]
 public sealed class BotTests
 {
     /// <summary>A fixture policy that stands still and promises progress, so its run reads softlock.</summary>
@@ -177,9 +178,9 @@ public sealed class BotTests
     }
 
     /// <summary>
-    /// PR-11 exit test 4 and PR-16 exit test 7. Over one hundred seeds, every run of the greedy descender and of
-    /// the full clearer ends at the bottom or by a death, and never by a crash and never by a softlock. A run at
-    /// the bottom reached fifteen floors. A failure names its seed (D-66, D-403).
+    /// PR-11 exit test 4 and PR-16 exit test 7. Over one hundred seeds, twenty on a pull request (D-480), every
+    /// run of the greedy descender and of the full clearer ends at the bottom or by a death, and never by a crash
+    /// and never by a softlock. A run at the bottom reached fifteen floors. A failure names its seed (D-66, D-403).
     /// </summary>
     /// <remarks>
     /// Before PR-16 nothing could kill the player, and the descender reached the bottom on every seed. The
@@ -191,7 +192,8 @@ public sealed class BotTests
     public void EveryPolicyEndsAtTheBottomOrByDeath()
     {
         int bottoms = 0;
-        for (ulong seed = 1; seed <= 100; seed++)
+        int seeds = SweepScope.Seeds(100);
+        for (ulong seed = 1; seed <= (ulong)seeds; seed++)
         {
             IBotPolicy[] policies = [new GreedyDescender(TestWorld.Content), new FullClearer(TestWorld.Content)];
             foreach (IBotPolicy policy in policies)

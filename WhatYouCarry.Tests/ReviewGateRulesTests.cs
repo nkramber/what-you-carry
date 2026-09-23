@@ -5,6 +5,7 @@ using Xunit;
 namespace WhatYouCarry.Tests;
 
 /// <summary>The pure rules of the review gate (D-179, D-181, D-185, D-190). No git in these tests.</summary>
+[Trait("Category", DocumentsCategoryTests.DocumentsCategory)]
 public sealed class ReviewGateRulesTests
 {
     private const string Head = "0123456789abcdef0123456789abcdef01234567";

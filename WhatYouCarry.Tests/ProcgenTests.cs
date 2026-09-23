@@ -13,24 +13,25 @@ using Xunit;
 namespace WhatYouCarry.Tests;
 
 /// <summary>The floor generator, the dig canvas, the chamber budget, the footprint, and the reachability search (D-159, D-165 to D-167, D-252 to D-256, D-341 to D-344, D-352; PR-9 exit tests 1 to 7, PR-63 exit tests 1 and 2).</summary>
+[Trait("Category", SweepScope.SweepCategory)]
 public sealed class ProcgenTests
 {
     /// <summary>The environment variable that the night job sets to run the night seed counts (D-116).</summary>
     public const string NightVariable = "WYC_NIGHT_SWEEP";
 
-    /// <summary>The seeds of the reachability sweep per PR (PR-9 exit test 1).</summary>
-    public const int ReachabilitySeedsPerPr = 5000;
+    /// <summary>The seeds of the reachability sweep on main (PR-9 exit test 1, D-277). A pull request runs one fifth (D-480).</summary>
+    public const int ReachabilitySeeds = 5000;
 
     /// <summary>The seeds of the reachability sweep each night (D-116).</summary>
     public const int ReachabilitySeedsPerNight = 100000;
 
-    /// <summary>The seeds of the other property sweeps per PR.</summary>
-    public const int PropertySeeds = 1000;
+    /// <summary>The seeds of the other property sweeps on main. A pull request runs one fifth (D-480).</summary>
+    public static readonly int PropertySeeds = SweepScope.Seeds(1000);
 
-    /// <summary>The count of seeds of a sweep: the PR count, or the night count when the night variable is "1".</summary>
-    internal static int SweepSeeds(int perPr, int perNight)
+    /// <summary>The count of seeds of a sweep: the night count when the night variable is "1", or else the count of <see cref="SweepScope"/>.</summary>
+    internal static int SweepSeeds(int onMain, int perNight)
     {
-        return Environment.GetEnvironmentVariable(NightVariable) == "1" ? perNight : perPr;
+        return Environment.GetEnvironmentVariable(NightVariable) == "1" ? perNight : SweepScope.Seeds(onMain);
     }
 
     /// <summary>The floor of a sweep seed: one to fifteen in turn, so every band takes one third of the seeds.</summary>
@@ -132,7 +133,7 @@ public sealed class ProcgenTests
 
     private static SweepReport RunReachabilitySweep()
     {
-        int seeds = SweepSeeds(ReachabilitySeedsPerPr, ReachabilitySeedsPerNight);
+        int seeds = SweepSeeds(ReachabilitySeeds, ReachabilitySeedsPerNight);
         List<string> chamberFailures = [];
         List<string> detailFailures = [];
         List<string> rampFailures = [];
@@ -550,48 +551,6 @@ public sealed class ProcgenTests
         return parts.Count == 0 ? "none" : string.Join(", ", parts);
     }
 
-    /// <summary>
-    /// PR-66 exit test 2 (D-347). Over the seeds of a property sweep, no dug floor holds two walkable cells in
-    /// neighboring columns one row apart that are both plain blocks. A tunnel changes height by a ramp or by a
-    /// shaft alone, and a jump clears one block for rubble and ledges alone, so the check reads the dug floor
-    /// before the detail pass (D-165, D-258).
-    /// </summary>
-    [Fact]
-    public void TunnelsHaveNoStep()
-    {
-        List<string> failures = [];
-        for (int seed = 1; seed <= PropertySeeds && failures.Count < 10; seed++)
-        {
-            int floor = FloorOf(seed);
-            VoxelGrid grid = DugGrid(seed, floor);
-            for (int y = 1; y < grid.SizeY - 2; y++)
-            {
-                for (int z = 1; z < grid.SizeZ - 1; z++)
-                {
-                    for (int x = 1; x < grid.SizeX - 1; x++)
-                    {
-                        Cell low = new(x, y, z);
-                        if (!IsPlainFloor(grid, low))
-                        {
-                            continue;
-                        }
-
-                        Cell[] neighbors = [new(x + 1, y + 1, z), new(x - 1, y + 1, z), new(x, y + 1, z + 1), new(x, y + 1, z - 1)];
-                        foreach (Cell high in neighbors)
-                        {
-                            if (IsPlainFloor(grid, high))
-                            {
-                                failures.Add($"Seed {seed}, floor {floor}: the cell {low} and the cell {high} are plain floor cells one row apart.");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        Assert.True(failures.Count == 0, string.Join("\n", failures.Take(10)));
-    }
-
     /// <summary>Answers whether a body stands on the cell and the cell holds no ramp: a one-block step up to it is a step and not a walk (D-345, D-347).</summary>
     private static bool IsPlainFloor(VoxelGrid grid, Cell cell)
     {
@@ -626,8 +585,8 @@ public sealed class ProcgenTests
     /// <remarks>
     /// The night of 2026-09-15 found the case at seed 79146, floor 7. The dig of PR-66 changed every floor, and
     /// that seed digs no shaft now, so the test reads the rule over the shafts of the sweep in place of that one
-    /// floor. The measurement of 2026-09-20 finds about one shaft in 3300 floors, so the sweep of a PR reads few
-    /// and the sweep of a night reads about thirty (D-116).
+    /// floor. The measurement of 2026-09-20 finds about one shaft in 3300 floors, so the sweep of main reads few,
+    /// the sweep of a pull request reads fewer (D-480), and the sweep of a night reads about thirty (D-116).
     /// </remarks>
     [Fact]
     public void NoPillarStandsInTheHoleOfAShaft()
@@ -639,205 +598,8 @@ public sealed class ProcgenTests
         Assert.True(report.ChamberFailures.Count == 0, string.Join("\n", report.ChamberFailures.Take(10)));
     }
 
-    /// <summary>PR-9 exit test 2. Over one thousand seeds, no two chambers share a block, and every chamber block is air.</summary>
-    [Fact]
-    public void NoChamberOverlap()
-    {
-        for (int seed = 1; seed <= PropertySeeds; seed++)
-        {
-            FloorPlan plan = Plan(seed);
-            HashSet<Cell> taken = [];
-            foreach (Chamber chamber in plan.Chambers)
-            {
-                foreach (Cell cell in chamber.AirCells())
-                {
-                    Assert.True(taken.Add(cell), $"Seed {seed}, floor {plan.Floor}: the cell {cell} lies in chamber {chamber.Index} and in an earlier chamber.");
-                    bool pillar = plan.Detail.Pillars.Contains(new Cell(cell.X, chamber.FloorRow, cell.Z));
-                    Assert.True(pillar || !plan.Grid.IsSolid(cell.X, cell.Y, cell.Z), $"Seed {seed}, floor {plan.Floor}: the chamber {chamber.Index} cell {cell} is rock.");
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// PR-9 exit test 3. Over one thousand seeds, a path leads from the spawn to the stairwell, the stairwell is a
-    /// floor cell of one chamber, and no chamber lies farther from the spawn than that chamber (D-256).
-    /// </summary>
-    [Fact]
-    public void StairwellReachable()
-    {
-        for (int seed = 1; seed <= PropertySeeds; seed++)
-        {
-            FloorPlan plan = Plan(seed);
-            string context = $"Seed {seed}, floor {plan.Floor}";
-            Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
-            Assert.True(GridMoves.IsFloor(plan.Grid, plan.Stairwell), $"{context}: the stairwell {plan.Stairwell} is not a floor cell.");
-            Assert.True(reach.IsReachable(plan.Stairwell), $"{context}: the stairwell {plan.Stairwell} is not reachable from {reach.Start}.");
-            Assert.NotEqual(reach.Start, plan.Stairwell);
-
-            Chamber? holder = null;
-            foreach (Chamber chamber in plan.Chambers)
-            {
-                foreach (Column column in chamber.Footprint)
-                {
-                    if (column.X == plan.Stairwell.X && column.Z == plan.Stairwell.Z && chamber.FloorRow == plan.Stairwell.Y)
-                    {
-                        holder = chamber;
-                    }
-                }
-            }
-
-            Assert.True(holder is not null, $"{context}: the stairwell {plan.Stairwell} lies in no chamber.");
-            int holderDistance = NearestDistance(holder!, plan.Grid, reach);
-            foreach (Chamber chamber in plan.Chambers)
-            {
-                int distance = NearestDistance(chamber, plan.Grid, reach);
-                Assert.True(distance <= holderDistance, $"{context}: chamber {chamber.Index} lies {distance} moves away, past the stairwell chamber {holder!.Index} at {holderDistance}.");
-            }
-
-            int stairwellDistance = reach.Distance(plan.Stairwell);
-            foreach (Column column in holder!.Footprint)
-            {
-                Cell cell = new(column.X, holder.FloorRow, column.Z);
-                if (GridMoves.IsFloor(plan.Grid, cell) && reach.IsReachable(cell))
-                {
-                    Assert.True(reach.Distance(cell) <= stairwellDistance, $"{context}: the cell {cell} of the stairwell chamber lies farther than the stairwell.");
-                }
-            }
-        }
-    }
-
-    /// <summary>PR-9 exit test 4. Over one thousand seeds, the sum of chamber weights lies within 10 percent of the floor budget, and the count inside the room count range (D-167).</summary>
-    [Fact]
-    public void BudgetWithinTolerance()
-    {
-        for (int seed = 1; seed <= PropertySeeds; seed++)
-        {
-            FloorPlan plan = Plan(seed);
-            string context = $"Seed {seed}, floor {plan.Floor}";
-            long sum = 0;
-            foreach (Chamber chamber in plan.Chambers)
-            {
-                sum += chamber.Kind.Weight;
-                Assert.Contains(chamber.Kind, TestWorld.Content.Chambers);
-            }
-
-            long budget = plan.Template.DifficultyBudget;
-            Assert.True(sum >= ChamberBudget.WindowBottom(budget) && sum <= ChamberBudget.WindowTop(budget), $"{context}: the weights sum to {sum}, outside the window of the budget {budget}.");
-            Assert.True(plan.Chambers.Count >= plan.Template.RoomCountMin && plan.Chambers.Count <= plan.Template.RoomCountMax, $"{context}: {plan.Chambers.Count} chambers, outside {plan.Template.RoomCountMin} to {plan.Template.RoomCountMax}.");
-        }
-    }
-
     /// <summary>The count of cells that a three by three window reaches past its cell on each axis.</summary>
     private const int WindowReach = 2;
-
-    /// <summary>
-    /// PR-63 exit test 2 and PR-9 exit test 5. Over one thousand seeds, every stamp of the gallery is air over the
-    /// gallery width and height of its template, and every stamp of a drift is air over the drift width and height
-    /// (D-341, D-342). Every tunnel air cell also sits inside an air cross-section three blocks wide and three blocks
-    /// high (D-166). A pillar and the rubble of a collapse fill cells on purpose, so both checks step over them (PR-59).
-    /// </summary>
-    [Fact]
-    public void TunnelCrossSection()
-    {
-        int galleryStamps = 0;
-        int driftStamps = 0;
-        for (int seed = 1; seed <= PropertySeeds; seed++)
-        {
-            FloorPlan plan = Plan(seed);
-            VoxelGrid grid = plan.Grid;
-            FloorTemplate template = plan.Template;
-            HashSet<Cell> collapses = [.. plan.Detail.Collapses];
-            HashSet<Column> pillarColumns = [];
-            foreach (Cell pillar in plan.Detail.Pillars)
-            {
-                pillarColumns.Add(new Column(pillar.X, pillar.Z));
-            }
-
-            // The size of each stamp comes from the template, and not from the plan, so a plan that digs another size fails.
-            BlockId pillarBlock = DetailPass.PillarBlock(template.Band);
-            foreach (TunnelStamp stamp in plan.Tunnels)
-            {
-                string tunnel = stamp.Gallery ? "gallery" : "drift";
-                int width = stamp.Gallery ? template.GalleryWidth : template.DriftWidth;
-                int height = stamp.Gallery ? template.GalleryHeight : template.DriftHeight;
-                galleryStamps += stamp.Gallery ? 1 : 0;
-                driftStamps += stamp.Gallery ? 0 : 1;
-                for (int z = stamp.Center.Z - (width / 2); z <= stamp.Center.Z + (width / 2); z++)
-                {
-                    for (int x = stamp.Center.X - (width / 2); x <= stamp.Center.X + (width / 2); x++)
-                    {
-                        for (int y = stamp.Center.Y + 1; y <= stamp.Center.Y + height; y++)
-                        {
-                            BlockId block = grid.Get(x, y, z);
-                            if (block == BlockId.Air || collapses.Contains(new Cell(x, y, z)) || (block == pillarBlock && pillarColumns.Contains(new Column(x, z))))
-                            {
-                                continue;
-                            }
-
-                            Assert.Fail($"Seed {seed}, floor {plan.Floor}: the {tunnel} stamp at {stamp.Center} holds {block} at ({x}, {y}, {z}), inside its {width} by {height} blocks.");
-                        }
-                    }
-                }
-            }
-
-            // No window of a cell reads past the window reach, so a rubble cell cuts the windows of the cells within
-            // that reach alone. A pillar cuts the windows of the columns around it, and a pool cell is water under chamber air.
-            bool[] outside = new bool[grid.SizeX * grid.SizeY * grid.SizeZ];
-            foreach (Chamber chamber in plan.Chambers)
-            {
-                foreach (Cell cell in chamber.AirCells())
-                {
-                    MarkOutside(outside, grid, cell.X, cell.Y, cell.Z);
-                }
-            }
-
-            foreach (Cell cell in plan.Detail.Collapses)
-            {
-                for (int dz = -WindowReach; dz <= WindowReach; dz++)
-                {
-                    for (int dx = -WindowReach; dx <= WindowReach; dx++)
-                    {
-                        for (int dy = -WindowReach; dy <= WindowReach; dy++)
-                        {
-                            MarkOutside(outside, grid, cell.X + dx, cell.Y + dy, cell.Z + dz);
-                        }
-                    }
-                }
-            }
-
-            foreach (Cell pillar in plan.Detail.Pillars)
-            {
-                for (int dz = -WindowReach; dz <= WindowReach; dz++)
-                {
-                    for (int dx = -WindowReach; dx <= WindowReach; dx++)
-                    {
-                        for (int y = 0; y < grid.SizeY; y++)
-                        {
-                            MarkOutside(outside, grid, pillar.X + dx, y, pillar.Z + dz);
-                        }
-                    }
-                }
-            }
-
-            for (int y = 0; y < grid.SizeY; y++)
-            {
-                for (int z = 0; z < grid.SizeZ; z++)
-                {
-                    for (int x = 0; x < grid.SizeX; x++)
-                    {
-                        bool tunnelAir = !grid.IsSolid(x, y, z) && grid.Get(x, y, z) != BlockId.StillWater && !outside[CellIndex(grid, x, y, z)];
-                        if (tunnelAir && !HasCrossSection(grid, x, y, z))
-                        {
-                            Assert.Fail($"Seed {seed}, floor {plan.Floor}: the air cell ({x}, {y}, {z}) has no three by three window of air.");
-                        }
-                    }
-                }
-            }
-        }
-
-        Assert.True(galleryStamps > 0 && driftStamps > 0, $"The sweep saw {galleryStamps} gallery stamps and {driftStamps} drift stamps.");
-    }
 
     /// <summary>The array index of one cell: x fastest, then z, then y, as the grid stores it.</summary>
     private static int CellIndex(VoxelGrid grid, int x, int y, int z)
@@ -909,49 +671,6 @@ public sealed class ProcgenTests
 
         ContentSet sweep = WhatYouCarry.Tools.BitIdentity.BitIdentitySweep.SweepContent();
         Assert.Equal(3, sweep.Floors.Count);
-    }
-
-    /// <summary>
-    /// PR-59 exit test 6. Over one thousand seeds, every water cell has a reachable dry floor cell beside it, one
-    /// block up, so the search that reads water as air holds for a body (D-258).
-    /// </summary>
-    [Fact]
-    public void EveryPoolHasAWayOut()
-    {
-        int poolsSeen = 0;
-        for (int seed = 1; seed <= PropertySeeds; seed++)
-        {
-            FloorPlan plan = Plan(seed);
-            if (plan.Detail.Pools.Count == 0)
-            {
-                continue;
-            }
-
-            Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
-            foreach (Cell pool in plan.Detail.Pools)
-            {
-                poolsSeen++;
-                int row = pool.Y;
-                Cell below = new(pool.X, row - 1, pool.Z);
-                Assert.True(GridMoves.IsFloor(plan.Grid, below), $"Seed {seed}, floor {plan.Floor}: the pool cell {pool} has no floor under its water.");
-                Assert.True(reach.IsReachable(below), $"Seed {seed}, floor {plan.Floor}: the floor under the pool cell {pool} is not reachable.");
-
-                bool wayOut = false;
-                Column[] neighbors = [new(pool.X + 1, pool.Z), new(pool.X - 1, pool.Z), new(pool.X, pool.Z + 1), new(pool.X, pool.Z - 1)];
-                foreach (Column neighbor in neighbors)
-                {
-                    Cell floor = new(neighbor.X, row, neighbor.Z);
-                    if (plan.Grid.Get(floor.X, floor.Y, floor.Z) != BlockId.StillWater && GridMoves.IsFloor(plan.Grid, floor) && reach.IsReachable(floor))
-                    {
-                        wayOut = true;
-                    }
-                }
-
-                Assert.True(wayOut, $"Seed {seed}, floor {plan.Floor}: the pool cell {pool} has no dry floor cell beside it.");
-            }
-        }
-
-        Assert.True(poolsSeen > 0, "The sweep saw no pool.");
     }
 
     /// <summary>A template of a band that D-210 does not name is an error that names the band (T-2).</summary>
@@ -1257,5 +976,302 @@ public sealed class ProcgenTests
         ContentSet noKinds = TestWorld.Content with { Chambers = [] };
         ContextException none = Assert.Throws<ContextException>(() => FloorGenerator.Generate(1UL, 1, noKinds));
         Assert.Contains("no chamber kind", none.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>The stairwell sweep, a class of its own, so it runs beside the other sweeps (D-478). xUnit runs the tests of one class in sequence, and each nested class is a class of its own.</summary>
+    [Trait("Category", SweepScope.SweepCategory)]
+    public sealed class StairwellSweep
+    {
+        /// <summary>
+        /// PR-9 exit test 3. Over the property seeds, a path leads from the spawn to the stairwell, the stairwell is a
+        /// floor cell of one chamber, and no chamber lies farther from the spawn than that chamber (D-256).
+        /// </summary>
+        [Fact]
+        public void StairwellReachable()
+        {
+            for (int seed = 1; seed <= PropertySeeds; seed++)
+            {
+                FloorPlan plan = Plan(seed);
+                string context = $"Seed {seed}, floor {plan.Floor}";
+                Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
+                Assert.True(GridMoves.IsFloor(plan.Grid, plan.Stairwell), $"{context}: the stairwell {plan.Stairwell} is not a floor cell.");
+                Assert.True(reach.IsReachable(plan.Stairwell), $"{context}: the stairwell {plan.Stairwell} is not reachable from {reach.Start}.");
+                Assert.NotEqual(reach.Start, plan.Stairwell);
+
+                Chamber? holder = null;
+                foreach (Chamber chamber in plan.Chambers)
+                {
+                    foreach (Column column in chamber.Footprint)
+                    {
+                        if (column.X == plan.Stairwell.X && column.Z == plan.Stairwell.Z && chamber.FloorRow == plan.Stairwell.Y)
+                        {
+                            holder = chamber;
+                        }
+                    }
+                }
+
+                Assert.True(holder is not null, $"{context}: the stairwell {plan.Stairwell} lies in no chamber.");
+                int holderDistance = NearestDistance(holder!, plan.Grid, reach);
+                foreach (Chamber chamber in plan.Chambers)
+                {
+                    int distance = NearestDistance(chamber, plan.Grid, reach);
+                    Assert.True(distance <= holderDistance, $"{context}: chamber {chamber.Index} lies {distance} moves away, past the stairwell chamber {holder!.Index} at {holderDistance}.");
+                }
+
+                int stairwellDistance = reach.Distance(plan.Stairwell);
+                foreach (Column column in holder!.Footprint)
+                {
+                    Cell cell = new(column.X, holder.FloorRow, column.Z);
+                    if (GridMoves.IsFloor(plan.Grid, cell) && reach.IsReachable(cell))
+                    {
+                        Assert.True(reach.Distance(cell) <= stairwellDistance, $"{context}: the cell {cell} of the stairwell chamber lies farther than the stairwell.");
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>The tunnel sweeps, a class of their own, so they run beside the other sweeps (D-478). xUnit runs the tests of one class in sequence, and each nested class is a class of its own.</summary>
+    [Trait("Category", SweepScope.SweepCategory)]
+    public sealed class TunnelSweeps
+    {
+        /// <summary>
+        /// PR-66 exit test 2 (D-347). Over the seeds of a property sweep, no dug floor holds two walkable cells in
+        /// neighboring columns one row apart that are both plain blocks. A tunnel changes height by a ramp or by a
+        /// shaft alone, and a jump clears one block for rubble and ledges alone, so the check reads the dug floor
+        /// before the detail pass (D-165, D-258).
+        /// </summary>
+        [Fact]
+        public void TunnelsHaveNoStep()
+        {
+            List<string> failures = [];
+            for (int seed = 1; seed <= PropertySeeds && failures.Count < 10; seed++)
+            {
+                int floor = FloorOf(seed);
+                VoxelGrid grid = DugGrid(seed, floor);
+                for (int y = 1; y < grid.SizeY - 2; y++)
+                {
+                    for (int z = 1; z < grid.SizeZ - 1; z++)
+                    {
+                        for (int x = 1; x < grid.SizeX - 1; x++)
+                        {
+                            Cell low = new(x, y, z);
+                            if (!IsPlainFloor(grid, low))
+                            {
+                                continue;
+                            }
+
+                            Cell[] neighbors = [new(x + 1, y + 1, z), new(x - 1, y + 1, z), new(x, y + 1, z + 1), new(x, y + 1, z - 1)];
+                            foreach (Cell high in neighbors)
+                            {
+                                if (IsPlainFloor(grid, high))
+                                {
+                                    failures.Add($"Seed {seed}, floor {floor}: the cell {low} and the cell {high} are plain floor cells one row apart.");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Assert.True(failures.Count == 0, string.Join("\n", failures.Take(10)));
+        }
+
+        /// <summary>
+        /// PR-63 exit test 2 and PR-9 exit test 5. Over the property seeds, every stamp of the gallery is air over the
+        /// gallery width and height of its template, and every stamp of a drift is air over the drift width and height
+        /// (D-341, D-342). Every tunnel air cell also sits inside an air cross-section three blocks wide and three blocks
+        /// high (D-166). A pillar and the rubble of a collapse fill cells on purpose, so both checks step over them (PR-59).
+        /// </summary>
+        [Fact]
+        public void TunnelCrossSection()
+        {
+            int galleryStamps = 0;
+            int driftStamps = 0;
+            for (int seed = 1; seed <= PropertySeeds; seed++)
+            {
+                FloorPlan plan = Plan(seed);
+                VoxelGrid grid = plan.Grid;
+                FloorTemplate template = plan.Template;
+                HashSet<Cell> collapses = [.. plan.Detail.Collapses];
+                HashSet<Column> pillarColumns = [];
+                foreach (Cell pillar in plan.Detail.Pillars)
+                {
+                    pillarColumns.Add(new Column(pillar.X, pillar.Z));
+                }
+
+                // The size of each stamp comes from the template, and not from the plan, so a plan that digs another size fails.
+                BlockId pillarBlock = DetailPass.PillarBlock(template.Band);
+                foreach (TunnelStamp stamp in plan.Tunnels)
+                {
+                    string tunnel = stamp.Gallery ? "gallery" : "drift";
+                    int width = stamp.Gallery ? template.GalleryWidth : template.DriftWidth;
+                    int height = stamp.Gallery ? template.GalleryHeight : template.DriftHeight;
+                    galleryStamps += stamp.Gallery ? 1 : 0;
+                    driftStamps += stamp.Gallery ? 0 : 1;
+                    for (int z = stamp.Center.Z - (width / 2); z <= stamp.Center.Z + (width / 2); z++)
+                    {
+                        for (int x = stamp.Center.X - (width / 2); x <= stamp.Center.X + (width / 2); x++)
+                        {
+                            for (int y = stamp.Center.Y + 1; y <= stamp.Center.Y + height; y++)
+                            {
+                                BlockId block = grid.Get(x, y, z);
+                                if (block == BlockId.Air || collapses.Contains(new Cell(x, y, z)) || (block == pillarBlock && pillarColumns.Contains(new Column(x, z))))
+                                {
+                                    continue;
+                                }
+
+                                Assert.Fail($"Seed {seed}, floor {plan.Floor}: the {tunnel} stamp at {stamp.Center} holds {block} at ({x}, {y}, {z}), inside its {width} by {height} blocks.");
+                            }
+                        }
+                    }
+                }
+
+                // No window of a cell reads past the window reach, so a rubble cell cuts the windows of the cells within
+                // that reach alone. A pillar cuts the windows of the columns around it, and a pool cell is water under chamber air.
+                bool[] outside = new bool[grid.SizeX * grid.SizeY * grid.SizeZ];
+                foreach (Chamber chamber in plan.Chambers)
+                {
+                    foreach (Cell cell in chamber.AirCells())
+                    {
+                        MarkOutside(outside, grid, cell.X, cell.Y, cell.Z);
+                    }
+                }
+
+                foreach (Cell cell in plan.Detail.Collapses)
+                {
+                    for (int dz = -WindowReach; dz <= WindowReach; dz++)
+                    {
+                        for (int dx = -WindowReach; dx <= WindowReach; dx++)
+                        {
+                            for (int dy = -WindowReach; dy <= WindowReach; dy++)
+                            {
+                                MarkOutside(outside, grid, cell.X + dx, cell.Y + dy, cell.Z + dz);
+                            }
+                        }
+                    }
+                }
+
+                foreach (Cell pillar in plan.Detail.Pillars)
+                {
+                    for (int dz = -WindowReach; dz <= WindowReach; dz++)
+                    {
+                        for (int dx = -WindowReach; dx <= WindowReach; dx++)
+                        {
+                            for (int y = 0; y < grid.SizeY; y++)
+                            {
+                                MarkOutside(outside, grid, pillar.X + dx, y, pillar.Z + dz);
+                            }
+                        }
+                    }
+                }
+
+                for (int y = 0; y < grid.SizeY; y++)
+                {
+                    for (int z = 0; z < grid.SizeZ; z++)
+                    {
+                        for (int x = 0; x < grid.SizeX; x++)
+                        {
+                            bool tunnelAir = !grid.IsSolid(x, y, z) && grid.Get(x, y, z) != BlockId.StillWater && !outside[CellIndex(grid, x, y, z)];
+                            if (tunnelAir && !HasCrossSection(grid, x, y, z))
+                            {
+                                Assert.Fail($"Seed {seed}, floor {plan.Floor}: the air cell ({x}, {y}, {z}) has no three by three window of air.");
+                            }
+                        }
+                    }
+                }
+            }
+
+            Assert.True(galleryStamps > 0 && driftStamps > 0, $"The sweep saw {galleryStamps} gallery stamps and {driftStamps} drift stamps.");
+        }
+    }
+
+    /// <summary>The chamber sweeps, a class of their own, so they run beside the other sweeps (D-478). xUnit runs the tests of one class in sequence, and each nested class is a class of its own.</summary>
+    [Trait("Category", SweepScope.SweepCategory)]
+    public sealed class ChamberSweeps
+    {
+        /// <summary>PR-9 exit test 2. Over the property seeds, no two chambers share a block, and every chamber block is air.</summary>
+        [Fact]
+        public void NoChamberOverlap()
+        {
+            for (int seed = 1; seed <= PropertySeeds; seed++)
+            {
+                FloorPlan plan = Plan(seed);
+                HashSet<Cell> taken = [];
+                foreach (Chamber chamber in plan.Chambers)
+                {
+                    foreach (Cell cell in chamber.AirCells())
+                    {
+                        Assert.True(taken.Add(cell), $"Seed {seed}, floor {plan.Floor}: the cell {cell} lies in chamber {chamber.Index} and in an earlier chamber.");
+                        bool pillar = plan.Detail.Pillars.Contains(new Cell(cell.X, chamber.FloorRow, cell.Z));
+                        Assert.True(pillar || !plan.Grid.IsSolid(cell.X, cell.Y, cell.Z), $"Seed {seed}, floor {plan.Floor}: the chamber {chamber.Index} cell {cell} is rock.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>PR-9 exit test 4. Over the property seeds, the sum of chamber weights lies within 10 percent of the floor budget, and the count inside the room count range (D-167).</summary>
+        [Fact]
+        public void BudgetWithinTolerance()
+        {
+            for (int seed = 1; seed <= PropertySeeds; seed++)
+            {
+                FloorPlan plan = Plan(seed);
+                string context = $"Seed {seed}, floor {plan.Floor}";
+                long sum = 0;
+                foreach (Chamber chamber in plan.Chambers)
+                {
+                    sum += chamber.Kind.Weight;
+                    Assert.Contains(chamber.Kind, TestWorld.Content.Chambers);
+                }
+
+                long budget = plan.Template.DifficultyBudget;
+                Assert.True(sum >= ChamberBudget.WindowBottom(budget) && sum <= ChamberBudget.WindowTop(budget), $"{context}: the weights sum to {sum}, outside the window of the budget {budget}.");
+                Assert.True(plan.Chambers.Count >= plan.Template.RoomCountMin && plan.Chambers.Count <= plan.Template.RoomCountMax, $"{context}: {plan.Chambers.Count} chambers, outside {plan.Template.RoomCountMin} to {plan.Template.RoomCountMax}.");
+            }
+        }
+
+        /// <summary>
+        /// PR-59 exit test 6. Over the property seeds, every water cell has a reachable dry floor cell beside it, one
+        /// block up, so the search that reads water as air holds for a body (D-258).
+        /// </summary>
+        [Fact]
+        public void EveryPoolHasAWayOut()
+        {
+            int poolsSeen = 0;
+            for (int seed = 1; seed <= PropertySeeds; seed++)
+            {
+                FloorPlan plan = Plan(seed);
+                if (plan.Detail.Pools.Count == 0)
+                {
+                    continue;
+                }
+
+                Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
+                foreach (Cell pool in plan.Detail.Pools)
+                {
+                    poolsSeen++;
+                    int row = pool.Y;
+                    Cell below = new(pool.X, row - 1, pool.Z);
+                    Assert.True(GridMoves.IsFloor(plan.Grid, below), $"Seed {seed}, floor {plan.Floor}: the pool cell {pool} has no floor under its water.");
+                    Assert.True(reach.IsReachable(below), $"Seed {seed}, floor {plan.Floor}: the floor under the pool cell {pool} is not reachable.");
+
+                    bool wayOut = false;
+                    Column[] neighbors = [new(pool.X + 1, pool.Z), new(pool.X - 1, pool.Z), new(pool.X, pool.Z + 1), new(pool.X, pool.Z - 1)];
+                    foreach (Column neighbor in neighbors)
+                    {
+                        Cell floor = new(neighbor.X, row, neighbor.Z);
+                        if (plan.Grid.Get(floor.X, floor.Y, floor.Z) != BlockId.StillWater && GridMoves.IsFloor(plan.Grid, floor) && reach.IsReachable(floor))
+                        {
+                            wayOut = true;
+                        }
+                    }
+
+                    Assert.True(wayOut, $"Seed {seed}, floor {plan.Floor}: the pool cell {pool} has no dry floor cell beside it.");
+                }
+            }
+
+            Assert.True(poolsSeen > 0, "The sweep saw no pool.");
+        }
     }
 }

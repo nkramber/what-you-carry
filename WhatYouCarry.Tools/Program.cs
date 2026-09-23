@@ -3,6 +3,7 @@ using WhatYouCarry.Tools.AssetQa;
 using WhatYouCarry.Tools.AudioSynth;
 using WhatYouCarry.Tools.BitIdentity;
 using WhatYouCarry.Tools.BotRunner;
+using WhatYouCarry.Tools.CiSkip;
 using WhatYouCarry.Tools.DetLint;
 using WhatYouCarry.Tools.DocGate;
 using WhatYouCarry.Tools.HandoffRotate;
@@ -15,7 +16,7 @@ namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, doc-gate, handoff-rotate, ste-check, det-lint, asset-qa, texture-gen, audio-synth, audio-analyze, bit-identity, bot-run, night-record, night-gate.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, doc-gate, handoff-rotate, ste-check, det-lint, asset-qa, texture-gen, audio-synth, audio-analyze, bit-identity, bot-run, night-record, night-gate, ci-skip.";
 
     public static int Main(string[] args)
     {
@@ -55,6 +56,8 @@ public static class Program
                 return NightRecordCommand.Run(commandArgs);
             case "night-gate":
                 return NightGateCommand.Run(commandArgs);
+            case "ci-skip":
+                return CiSkipCommand.Run(commandArgs);
             default:
                 Console.Error.WriteLine($"Unknown command '{command}'. {Usage}");
                 return 2;

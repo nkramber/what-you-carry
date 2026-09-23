@@ -2,6 +2,45 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 209: 2026-09-22, Claude Code
+
+Author: Claude Code
+Session: PR-71, author. Branch `chore/ci-skip-for-document-heads`. PR #89, pending owner merge. Base `a2473ec` (PR #87 merged).
+
+### What this session did, and why
+
+- The owner asked for the CI skip of a documents head and a study of the CI duration, in one PR (D-471). The PR description records that exception to G-10.
+- The new `ci-skip` command and the composite action `.github/actions/ci-skip` skip the heavy jobs of `ci.yml`, `bit-identity.yml`, `smoke.yml`, and `bots.yml` (D-472 to D-477). Rule 1 covers a PR of documents alone. Rule 2 covers a push of documents after a head whose run of that workflow passed.
+- Each test class that reads a document carries the category `Documents`, and the `documents` job runs it on each head (D-476).
+- F-109 records the CI duration. The fixes: a class split of `ProcgenTests` (D-478), two jobs on each hosted leg (D-479), and one fifth of each seed sweep on a pull request (D-480, D-481). No NuGet cache (D-482).
+
+### State of the build
+
+- Build: 0 warnings and 0 errors. `ste-check` and `det-lint` report 0 findings.
+- Local suite with `WYC_PR_SWEEP=1`: 1343 passed in 1 minute 47 seconds. At the full count: 1343 passed in 5 minutes 9 seconds. Before the change: 1294 tests in 9 minutes 10 seconds.
+- The remote head and the CI of the first push follow in the next entry of this PR, or in the PR comments.
+
+### In flight
+
+- The first CI run of PR #89, then the automated pass of gitar, then the hand-over to Codex for the review.
+- Exit test 4 needs one push of documents alone after a green head. Exit test 5 needs the job times of the first code head.
+
+### Traps and gotchas
+
+- A skipped job reports success. The `!cancelled()` condition runs every heavy job when `ci-skip` fails, so a fault never passes in silence.
+- xUnit reads no trait of an outer class on a nested class. Each nested class of `ProcgenTests` carries its own `Sweep` trait, and `EveryNestedClassOfASweepClassTakesTheCategory` checks it.
+- A class that calls a command joins the console collection, or `EveryConsoleTestIsInTheCollection` fails.
+- `CLAUDE.md` sits 43 bytes under the ceiling of D-382, so the reviewer rule for a skipped job lives in the pr-review verification reference.
+- `main` has no branch protection yet (D-387), so no required check reads the skipped jobs today.
+
+### Open questions that block progress
+
+None. The owner answered each question of this PR: D-471 to D-482.
+
+### Next concrete action
+
+Wait for the CI of the first push, answer the automated pass of gitar, then hand PR #89 to Codex. After the merge, the next session reads the first push to `main` for exit test 6 (D-473).
+
 ## Session 208: 2026-09-22, Codex
 
 Author: Codex
@@ -366,38 +405,3 @@ None. Exit test 6 waits on the Deck of the owner, and no question blocks it.
 ### Next concrete action
 
 Wait for CI with the command of `docs/runbooks/session-context.md`, then load `gitar-review` and answer the automated pass. Then hand PR #85 to Codex for the cross-provider review.
-
-## Session 199: 2026-09-21, Codex
-
-Author: Codex
-Session: PR-84, repeat cross-provider review. Branch `feat/pr-17-timer-and-hunter`. PR #84, ready for owner merge.
-
-### What this session did, and why
-
-- Reopened the review record after the author added the empty-post regression test.
-- Recomputed the effective head as `5242ff6`.
-- Verified that P1-1 does not reproduce and marked it withdrawn.
-- Set the current verdict to `Ready for owner merge`.
-
-### State of the build
-
-- The focused timer suite passed 17 of 17 tests.
-- The author reported 1208 of 1208 tests with the Smoke category.
-- Required implementation checks and the automated pass are green at the new head.
-
-### In flight
-
-- The review record and this handoff are pushed at `1a2da98`.
-
-### Traps and gotchas
-
-- The prior finding stays in the review record as withdrawn.
-- The effective head is the test commit `5242ff6`. The review commit remains metadata.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner can merge PR #84 after the review-gate record turns green.

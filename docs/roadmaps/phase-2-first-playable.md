@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-67, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-71, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -32,6 +32,7 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-97 | The tunnels felt cramped in play, and every rise in a tunnel needed a jump | PR-63, PR-64, PR-65, PR-66, PR-16 |
 | F-98 | On the wide sizes, about one floor in 96000 ran the dig job cap with a chamber still in rock | PR-63, PR-67, PR-66 |
 | F-101 | The night of 2026-09-15 found a shaft that lands on an unreachable floor on the wide sizes: seed 79146, floor 7 | PR-68, PR-66 |
+| F-109 | A code head waited 18 to 21 minutes for the hosted CI legs, and a push of documents alone ran every check again | PR-71 |
 
 ## 3. Guardrails for this phase
 
@@ -694,6 +695,37 @@ Gate: exit tests 1 to 5 pass.
 
 > *In plain English:* a tool makes every sound from a recipe, and the first sounds give the sword and the hunter their weight.
 
+### PR-71: CI skip and faster tests
+
+✅ Done in PR #89.
+
+Scope:
+
+- `WhatYouCarry.Tools/CiSkip/`: the `ci-skip` command decides whether the heavy jobs of one workflow skip a PR head. Rule 1: every path of the PR is a document. Rule 2: every path of the push after the previous head is a document, and the newest run of the workflow on that head passed (D-474). The skip set is `docs/`, `.claude/skills/`, `CLAUDE.md`, `AGENTS.md`, `README.md`, and `LICENSE` (D-475). A push to `main` never skips (D-473).
+- `.github/actions/ci-skip/`: a composite action writes the runs of the previous head from the GitHub API and runs the command. The workflows `ci.yml`, `bit-identity.yml`, `smoke.yml`, and `bots.yml` take a first job `ci-skip`, and each heavy job skips on its output (D-477). The six other workflows run on each head (D-472).
+- `.github/workflows/ci.yml`: the `documents` job runs the test category `Documents` on each head (D-476). The hosted Linux and Windows legs each split into two jobs (D-479). The variable `WYC_PR_SWEEP` is `1` on a pull request (D-481).
+- `WhatYouCarry.Tests/`: each class that reads a document carries the category `Documents`, and a guard test finds a class without it (D-476). `SweepScope` gives one fifth of each seed sweep on a pull request (D-480). `ProcgenTests` splits into nested classes, so its sweeps run in parallel (D-478).
+- `docs/design.md`: F-109 records the measurements of the CI duration.
+
+Out of scope: a cache of the NuGet packages (D-482), and the fixes of F-107 and F-108 (a later PR).
+
+Exit tests:
+
+1. `CiSkipTests` pass: the two rules, the push to `main`, the skip set, the facts from git, the runs file, and the shape of the ten workflows.
+2. `DocumentsCategoryTests` pass: every class that reads a document carries the category, and the `documents` job runs it on each head with no condition.
+3. `SweepScopeTests` pass, and the suite passes with `WYC_PR_SWEEP=1` and with no variable.
+4. On this PR, a push of documents alone after a green head skips the heavy jobs of the four workflows. The log of each `ci-skip` job names rule 2.
+5. The CI run of a code head of this PR gives the time of each job, beside run 35771495463 of PR #87 (G-17). The PR description records both.
+6. After the merge, the push to `main` runs every job of the four workflows (D-473). The next session reads that run and records the result in its handoff entry.
+
+Review focus: the skip rules and their fallback to a full run (T-2), the conditions of the workflow jobs, and the test split with the seed share.
+
+Check clause: none.
+
+Gate: exit tests 1 to 5 pass. Exit test 6 runs after the merge.
+
+> *In plain English:* each push waited up to 21 minutes for the full checks, also a push that changed a document alone. This change skips the heavy checks for such a push after a green one. It also runs fewer seeds on a pull request and splits the slow tests, so they run side by side.
+
 ### PR-62: Art quality pass
 
 Scope:
@@ -760,10 +792,11 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 27. PR-19.
 28. Owner: answer OQ-48 and OQ-182. ✅ Answered 2026-09-21 and 2026-09-22. The answers of PR-20 run from D-450, which D-462 supersedes, to D-470.
 29. PR-20. ✅ Done in PR #87.
-30. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
-31. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-32. Tier 4 pass on the screenshot fixture (D-133).
-33. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
+31. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
+32. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+33. Tier 4 pass on the screenshot fixture (D-133).
+34. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

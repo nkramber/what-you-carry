@@ -25,7 +25,27 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
 
 jobs:
+  # The first job decides whether the heavy jobs skip a head that changes documents alone (D-474, D-475).
+  ci-skip:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.ci-skip.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: ci-skip
+        uses: ./.github/actions/ci-skip
+        with:
+          workflow-file: smoke.yml
+
   linux-x64:
+    needs: ci-skip
+    # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
+    if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -54,6 +74,9 @@ jobs:
         run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Smoke"
 
   windows-x64:
+    needs: ci-skip
+    # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
+    if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -82,6 +105,9 @@ jobs:
         run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Smoke"
 
   macos-arm64:
+    needs: ci-skip
+    # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
+    if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
     runs-on: [self-hosted, macos-arm64-self-hosted]
     steps:
       - uses: actions/checkout@v5

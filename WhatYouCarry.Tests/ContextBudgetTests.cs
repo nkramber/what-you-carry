@@ -15,6 +15,7 @@ namespace WhatYouCarry.Tests;
 /// ceiling needs a decision. D-384 ends the separate ceiling of the review skill, and it holds every file under
 /// <c>.claude/skills/</c> to one ceiling, a reference file included.
 /// </summary>
+[Trait("Category", DocumentsCategoryTests.DocumentsCategory)]
 public sealed class ContextBudgetTests
 {
     private const int AgentFileByteCeiling = 15000;

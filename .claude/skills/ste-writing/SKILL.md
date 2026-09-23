@@ -60,6 +60,7 @@ Use one term for one concept (rules 1.11 and 9.4). A session meets these terms i
 | automated pass | the review of gitar on a PR head, and the answer of the author to it (D-250) |
 | effective head | the newest commit that changes a path outside the metadata set (D-184) |
 | metadata set | `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184) |
+| skip set | the paths that count as documents for the CI skip of a PR head (D-475) |
 | property test | a seed loop that asserts an invariant, and names its seed on a failure (D-66) |
 | bot sweep | the bot policy runs of the night, at five thousand seeds |
 | seed sweep | the reachability sweep of the night, at one hundred thousand seeds |

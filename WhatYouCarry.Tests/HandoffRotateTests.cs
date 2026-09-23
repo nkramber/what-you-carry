@@ -14,6 +14,7 @@ namespace WhatYouCarry.Tests;
 /// conservation of every entry, the order errors, and the exit codes of the command.
 /// </summary>
 [Collection(ConsoleCollection.Name)]
+[Trait("Category", DocumentsCategoryTests.DocumentsCategory)]
 public sealed class HandoffRotateTests
 {
     private const string HandoffPreamble = "# Session handoff\n\nRule (D-146): the rule text.\n\n";

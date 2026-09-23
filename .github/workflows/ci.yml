@@ -1,4 +1,7 @@
-# Build and test on three platforms (D-71, D-100, D-148). One job per platform.
+# Build and test on three platforms (D-71, D-100, D-148). The test jobs skip a head that
+# changes documents alone (D-474), and the documents job runs on each head (D-476).
+# Each hosted leg runs its tests in two jobs: the Sweep category, and every other test (D-479). The Mac mini has one
+# runner, so its leg keeps one job.
 # The SDK comes from actions/setup-dotnet and global.json on every platform (D-189).
 # The test of the Smoke category starts the engine, and these jobs hold none, so the smoke workflow runs it (PR-12).
 name: CI
@@ -11,6 +14,10 @@ on:
 permissions:
   contents: read
 
+# A pull request runs one fifth of each seed sweep, and a push to main runs the full count (D-480, D-481).
+env:
+  WYC_PR_SWEEP: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+
 # A newer event on a PR cancels the older run of this workflow for that PR, so the one Mac runner serves the newest
 # head (D-356, F-99). A push to main takes the group of its own commit, so every merge commit keeps its run.
 concurrency:
@@ -18,7 +25,41 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
 
 jobs:
+  # The first job decides whether the heavy jobs skip a head that changes documents alone (D-474, D-475).
+  ci-skip:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.ci-skip.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: ci-skip
+        uses: ./.github/actions/ci-skip
+        with:
+          workflow-file: ci.yml
+
+  # The tests that read a document of the checkout run on each head, and a skip of the test jobs below never
+  # skips them (D-476). The test jobs run them too.
+  documents:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Test the documents
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Documents"
+
   linux-x64:
+    needs: ci-skip
+    # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
+    if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -28,9 +69,27 @@ jobs:
       - name: Build
         run: dotnet build WhatYouCarry.slnx
       - name: Test
-        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category!=Smoke"
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category!=Smoke&Category!=Sweep"
+
+  linux-x64-sweeps:
+    needs: ci-skip
+    # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
+    if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Test
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Sweep"
 
   windows-x64:
+    needs: ci-skip
+    # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
+    if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -40,9 +99,27 @@ jobs:
       - name: Build
         run: dotnet build WhatYouCarry.slnx
       - name: Test
-        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category!=Smoke"
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category!=Smoke&Category!=Sweep"
+
+  windows-x64-sweeps:
+    needs: ci-skip
+    # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
+    if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Test
+        run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Sweep"
 
   macos-arm64:
+    needs: ci-skip
+    # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
+    if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
     runs-on: [self-hosted, macos-arm64-self-hosted]
     steps:
       - uses: actions/checkout@v5
