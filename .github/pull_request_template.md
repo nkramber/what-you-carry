@@ -16,6 +16,7 @@ Each line holds before the merge, by auto-merge or by the owner (`CLAUDE.md`, PR
 - [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-184). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
 - [ ] The `review-gate` check is green. Red means no review record, or a review that does not approve this head (D-181, D-185, D-521).
 - [ ] No review thread stays open, and the ruleset of `main` holds (D-522).
+- [ ] The owner confirmed the merge after a summary of one paragraph (D-524).
 - [ ] `docs/decisions.md` has every new decision.
 - [ ] `docs/questions.md` has every new question.
 - [ ] `docs/design.md` matches intent.

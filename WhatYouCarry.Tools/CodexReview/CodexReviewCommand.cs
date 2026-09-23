@@ -69,7 +69,7 @@ public static class CodexReviewCommand
         ProcessResult versionResult;
         try
         {
-            versionResult = ExternalProcess.Run(codex, ["--version"], root);
+            versionResult = ExternalProcess.Run(codex, ["--version"], root, CodexReviewSettings.ApiCredentialVariables);
         }
         catch (InvalidOperationException exception)
         {
@@ -84,7 +84,8 @@ public static class CodexReviewCommand
             return Refuse(pullRequest, [StartChecks.NotOpenProblem(pullRequest, view.State)]);
         }
 
-        StartFacts facts = GatherStartFacts(root, git, pullRequest, view, version);
+        string loginStatus = ExternalProcess.Run(codex, CodexReviewSettings.LoginStatusArguments, root, CodexReviewSettings.ApiCredentialVariables).StandardOutput;
+        StartFacts facts = GatherStartFacts(root, git, pullRequest, view, version, loginStatus);
         var problems = new List<string>(StartChecks.Problems(facts));
         if (problems.Count == 0)
         {
@@ -112,7 +113,7 @@ public static class CodexReviewCommand
         Console.WriteLine($"Transcript: {transcript}");
 
         IReadOnlyList<string> arguments = CodexReviewSettings.ReviewArguments(worktree, lastMessage, CodexReviewSettings.ReviewPrompt(pullRequest, view.Branch));
-        int codexExit = ExternalProcess.RunToFiles(codex, arguments, worktree, transcript, errorLog);
+        int codexExit = ExternalProcess.RunToFiles(codex, arguments, worktree, transcript, errorLog, CodexReviewSettings.ApiCredentialVariables);
         if (codexExit != 0)
         {
             Console.Error.WriteLine($"codex-review: {CodexReviewExit.Fault} (exit {(int)CodexReviewExit.Fault}). Codex exited {codexExit}. Read the transcript {transcript} and the log {errorLog}. The worktree stays at {worktree}.");
@@ -170,7 +171,7 @@ public static class CodexReviewCommand
             RequiredString(pr, "baseRefName", pullRequest));
     }
 
-    private static StartFacts GatherStartFacts(string root, GitRepository git, int pullRequest, PullRequestView view, CodexVersion version)
+    private static StartFacts GatherStartFacts(string root, GitRepository git, int pullRequest, PullRequestView view, CodexVersion version, string loginStatus)
     {
         FetchBranch(git, view.Branch);
         FetchBranch(git, view.BaseBranch);
@@ -187,6 +188,7 @@ public static class CodexReviewCommand
         {
             PullRequestNumber = pullRequest,
             Version = version,
+            LoginStatus = loginStatus,
             PullRequestState = view.State,
             PullRequestBranch = view.Branch,
             PullRequestHead = view.Head,
@@ -268,7 +270,7 @@ public static class CodexReviewCommand
     {
         string directory = Path.Combine(Path.GetTempPath(), "wyc-codex-probe-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
-        ProcessResult result = ExternalProcess.Run(codex, CodexReviewSettings.ProbeArguments(directory), directory);
+        ProcessResult result = ExternalProcess.Run(codex, CodexReviewSettings.ProbeArguments(directory), directory, CodexReviewSettings.ApiCredentialVariables);
         Directory.Delete(directory, recursive: true);
         if (result.ExitCode == 0 && result.StandardOutput.Contains("agent_message", StringComparison.Ordinal))
         {

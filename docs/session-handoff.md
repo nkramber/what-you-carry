@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 220: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-78, author, the answer to round 1. Branch `feat/pr-78-codex-review`. PR #93, pending merge. Base `e069e16`.
+
+### What this session did, and why
+
+- `make codex-review PR=93` ran round 1 end to end: exit 10 with P1-1 open, and no fault. The Codex entry is Session 219.
+- P1-1 has full merit. An approving record with an open P0 to P2 finding is now a fault. `docs/reviews/pr-93-response.md` holds the answer.
+- The owner added D-523 (no API pricing: the command strips the three credential variables, forces the ChatGPT login, and checks `codex login status`) and D-524 (a summary of one paragraph and the owner confirmation before each merge).
+
+### State of the build
+
+- The build passes. The full suite passes, and `ste-check` finds no issue. The P1-1 tests fail on the old code, 3 of 3.
+- The effective head is the commit that holds this entry. Round 1 reviewed `b7623f4`.
+
+### In flight
+
+- PR #93: the gitar pass of the new head, then round 2 with `make codex-review PR=93`.
+- After the owner merge: the setup of D-519 on approval.
+
+### Traps and gotchas
+
+- `codex login status` reads `auth.json` alone. It gave `Logged in using ChatGPT` with a fake `OPENAI_API_KEY` set, so the command also strips the variables from each Codex process.
+- The API keys in the `.env` of decktome serve its paid deck gate. D-523 changes the Codex child processes alone, and it revokes no key.
+- A `git stash pop` refuses a file that a later edit touched. Save the new hunk as a patch first.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Complete the gitar pass of the new head, then run `make codex-review PR=93` in the background.
+
 ## Session 219: 2026-09-23, Codex
 
 Author: Codex
@@ -333,40 +368,3 @@ None.
 ### Next concrete action
 
 Codex reviews PR #90 at the effective head `09926b6` and writes `docs/reviews/pr-90.md`. The owner starts it with "Review PR #90" in Codex Desktop.
-
-## Session 210: 2026-09-22, Codex
-
-Author: Codex
-Session: PR-71, reviewer. Branch `chore/ci-skip-for-document-heads`. PR #89, pending owner merge. Base `a2473ec`.
-
-### What this session did, and why
-
-- Reviewed PR #89 at effective head `05aa78a` for its CI skip, document tests, seed share, and test split.
-- Found no defect. Added the review record under `docs/reviews/pr-89.md` for the owner and the review gate.
-
-### State of the build
-
-- The focused local suite passed: 216 tests, 0 failed, with `WYC_PR_SWEEP=1`.
-- The full local suite passed: 1351 tests, 0 failed, with the full seed counts.
-- CI, smoke, bit identity, bots, and the documents job passed on `05aa78a`.
-- The documents push at `34109e6` passed the document, STE, doc-gate, det-lint, asset-QA, and night-gate checks. The four heavy workflows skipped by Rule 2. `evaluate` failed because the review record was not on the branch yet.
-- The remote head before this metadata commit was `34109e6`.
-- After review publication at `1f06e28`, `evaluate`, `review-gate`, and every required check passed. The heavy workflows skipped by Rule 2, and Gitar passed again.
-
-### In flight
-
-- Exit test 6 waits for the merge and the first push to `main`.
-- The next session reads those workflow runs and records the result.
-
-### Traps and gotchas
-
-- `05aa78a` is the effective head. `34109e6` changes only `docs/session-handoff.md`.
-- `--no-renames` lists both paths of a move. Keep `CodeMovedIntoTheSkipSetRunsEveryJob` as the guard for moves into the skip set.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the owner merges PR #89, read the first push to `main` for exit test 6.

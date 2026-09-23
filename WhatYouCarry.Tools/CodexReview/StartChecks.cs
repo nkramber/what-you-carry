@@ -13,6 +13,9 @@ public sealed class StartFacts
 
     public required CodexVersion Version { get; init; }
 
+    /// <summary>The output of <c>codex login status</c>, with every API credential variable removed (D-523).</summary>
+    public required string LoginStatus { get; init; }
+
     /// <summary>The state of the PR on GitHub: <c>OPEN</c>, <c>CLOSED</c>, or <c>MERGED</c>.</summary>
     public required string PullRequestState { get; init; }
 
@@ -67,6 +70,11 @@ public static class StartChecks
         if (!facts.Version.IsAtLeast(CodexReviewSettings.MinimumVersion))
         {
             problems.Add($"The Codex CLI is {facts.Version}, and the minimum is {CodexReviewSettings.MinimumVersion} (D-512). Run `npm install -g @openai/codex@latest`.");
+        }
+
+        if (!facts.LoginStatus.StartsWith(CodexReviewSettings.ChatGptLoginStatus, StringComparison.Ordinal))
+        {
+            problems.Add($"`codex login status` gives '{facts.LoginStatus.Trim()}', and a review needs '{CodexReviewSettings.ChatGptLoginStatus}', so it never uses API pricing (D-523). Run `codex login` and choose ChatGPT.");
         }
 
         if (facts.PullRequestState != OpenState)

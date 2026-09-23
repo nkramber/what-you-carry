@@ -21,6 +21,20 @@ public static class CodexReviewSettings
 
     public const string ProbePrompt = "Reply with the single word OK.";
 
+    /// <summary>
+    /// The environment variables that give the CLI an API credential. The command removes each one from every Codex
+    /// process that it starts, so no review uses API pricing (D-523).
+    /// </summary>
+    public static readonly string[] ApiCredentialVariables = ["OPENAI_API_KEY", "CODEX_API_KEY", "CODEX_ACCESS_TOKEN"];
+
+    /// <summary>The login that each Codex call demands: the ChatGPT account, and never an API key (D-523).</summary>
+    public const string ForcedLogin = "forced_login_method=\"chatgpt\"";
+
+    public static readonly string[] LoginStatusArguments = ["login", "status"];
+
+    /// <summary>The first line of <c>codex login status</c> for a ChatGPT login, verified 2026-09-23 on 0.156.1.</summary>
+    public const string ChatGptLoginStatus = "Logged in using ChatGPT";
+
     /// <summary>The oldest CLI that ran the model probe, 2026-09-23 (D-512).</summary>
     public static readonly CodexVersion MinimumVersion = new(0, 156, 1, string.Empty);
 
@@ -44,6 +58,7 @@ public static class CodexReviewSettings
             "-m", Model,
             "-c", $"model_reasoning_effort=\"{ReasoningEffort}\"",
             "-c", $"approval_policy=\"{ApprovalPolicy}\"",
+            "-c", ForcedLogin,
             "-s", ReviewSandbox,
             "-C", worktree,
             "--json",
@@ -61,6 +76,7 @@ public static class CodexReviewSettings
             "-m", Model,
             "-c", $"model_reasoning_effort=\"{ReasoningEffort}\"",
             "-c", $"approval_policy=\"{ApprovalPolicy}\"",
+            "-c", ForcedLogin,
             "-s", ProbeSandbox,
             "-C", directory,
             "--skip-git-repo-check",

@@ -63,6 +63,7 @@ public static class ReviewOutcomeRules
         }
 
         var openIds = new List<string>();
+        var blockingIds = new List<string>();
         var strikeIds = new List<string>();
         foreach (ReviewFinding finding in findings)
         {
@@ -78,10 +79,27 @@ public static class ReviewOutcomeRules
             }
 
             openIds.Add(finding.Id);
+            if (finding.Severity <= HighestCountedSeverity)
+            {
+                blockingIds.Add(finding.Id);
+            }
+
             if (finding.Severity <= HighestCountedSeverity && finding.OpenAt.Count >= StrikeLimit)
             {
                 strikeIds.Add(finding.Id);
             }
+        }
+
+        if (record.Verdict == ReviewGateRules.ApprovedVerdict && blockingIds.Count > 0)
+        {
+            // An approval needs no blocking finding (review-record.md). A P2 with an owner disposition carries the
+            // status "accepted risk", so an open P0 to P2 finding under an approval is a record that contradicts itself.
+            return new ReviewOutcome(
+                CodexReviewExit.Fault,
+                record.Verdict,
+                openIds,
+                strikeIds,
+                $"'{reviewFile}' gives '{record.Verdict}' with the open blocking finding(s) {string.Join(", ", blockingIds)}. An approval needs no open P0 to P2 finding.");
         }
 
         if (record.Verdict == ReviewGateRules.ApprovedVerdict)

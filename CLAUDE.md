@@ -55,8 +55,8 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 - Mark a change to an earlier decision in its `Effect` column (D-186). Use `Superseded by D-N` when the whole answer changes. Use `Revised in part by D-N` when one part changes, and name the part that changed and the parts that stand.
 - A citation of a superseded decision must name the superseding decision. A decision revised in part stays citable.
 - A reviewer loads `pr-review`. An author who answers review findings loads `review-response` (D-381).
-- When `make codex-review` stops at the third round of one finding, turn off auto-merge, stop the fix loop, and ask the owner (D-513).
-- One session is one harness invocation, one PR, and one role (D-121, D-375). The author session starts the reviewer session with `make codex-review` (D-511). Load `.claude/skills/one-pr-one-session/SKILL.md` before all PR work: implementation, a new or continued PR, a review, an answer to findings, or the documents of a PR. No PR exists only to record an earlier PR. Each PR has its own handoff entry (D-146).
+- On the three-strike stop of `make codex-review`, turn off auto-merge and ask the owner (D-513).
+- One session is one harness invocation, one PR, and one role (D-121, D-375). The author starts the review with `make codex-review` (D-511). Load `.claude/skills/one-pr-one-session/SKILL.md` before all PR work: implementation, a new or continued PR, a review, an answer to findings, or the documents of a PR. No PR exists only to record an earlier PR. Each PR has its own handoff entry (D-146).
 
 ## Session handoff
 
@@ -85,7 +85,7 @@ The `csharp-conventions` skill holds the code rules. It covers the language, the
 
 ## Git rules
 
-- Trunk is `main`. Work on a short branch. A PR squash-merges by auto-merge on the green light, or by the owner (D-126, D-516).
+- Trunk is `main`. Work on a short branch. A PR squash-merges by auto-merge or by the owner. First give the owner a summary of one paragraph, and get the merge confirmation (D-126, D-516, D-524).
 - Commit subjects use a conventional prefix: `feat`, `fix`, `docs`, `test`, `chore`.
 - After a push, wait on the checks with the one command of the `one-pr-one-session` skill, and never poll (D-380).
 - One concern per PR (G-10).
@@ -116,7 +116,7 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Sounds: `make sounds` renders them, and `make analyze SOUND=<name>` analyses one reference.
 - Bit identity: `tools bit-identity`
 - Review gate, local run: `tools review-gate --input request.json --output check-run.json`
-- Cross-provider review: `make codex-review PR=<n>`. The exit code names the outcome, and make prints it as `Error <code>` (D-511).
+- Cross-provider review: `make codex-review PR=<n>`. Make prints its exit code as `Error <code>` (D-511).
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Smoke session, local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke`
 - Test exit session, a headless smoke session that presses Escape or Start at a tick: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke --press escape 100`. The other name is `start`.

@@ -65,6 +65,7 @@ public sealed class CodexReviewTests
         AssertPair(args, "-o", "/tmp/last.md");
         Assert.Contains("model_reasoning_effort=\"medium\"", args);
         Assert.Contains("approval_policy=\"never\"", args);
+        Assert.Contains("forced_login_method=\"chatgpt\"", args);
         Assert.Contains("--json", args);
         Assert.Equal("Review PR #93.", args[^1]);
     }
@@ -77,6 +78,7 @@ public sealed class CodexReviewTests
         AssertPair(args, "-m", CodexReviewSettings.Model);
         AssertPair(args, "-s", "read-only");
         Assert.Contains("model_reasoning_effort=\"medium\"", args);
+        Assert.Contains("forced_login_method=\"chatgpt\"", args);
         Assert.Contains("--skip-git-repo-check", args);
         Assert.Contains("--ephemeral", args);
     }
@@ -151,6 +153,27 @@ public sealed class CodexReviewTests
 
         Assert.Equal(CodexReviewExit.Approve, outcome.Exit);
         Assert.Equal(["P3-1"], outcome.OpenFindingIds);
+    }
+
+    [Theory]
+    [InlineData("P0-1")]
+    [InlineData("P1-1")]
+    [InlineData("P2-1")]
+    public void AnApprovalWithAnOpenBlockingFindingIsAFault(string id)
+    {
+        // PR #93 review P1-1: an approval needs no blocking finding, so the command never reports it as an approval.
+        ReviewOutcome outcome = Judge(Record(Head, Approve, Finding(id, "open", Head)));
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains(id, outcome.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AnApprovalWithAnAcceptedRiskApproves()
+    {
+        ReviewOutcome outcome = Judge(Record(Head, Approve, Finding("P2-1", "accepted risk, D-524", RoundOne, RoundTwo)));
+
+        Assert.Equal(CodexReviewExit.Approve, outcome.Exit);
     }
 
     [Fact]
@@ -242,6 +265,8 @@ public sealed class CodexReviewTests
         return new TheoryData<string, string>
         {
             { "old-cli", "minimum is 0.156.1" },
+            { "api-login", "never uses API pricing" },
+            { "no-login", "never uses API pricing" },
             { "closed", "is MERGED" },
             { "other-branch", "The checkout is on 'main'" },
             { "local-ahead", "differs from origin" },
@@ -264,6 +289,8 @@ public sealed class CodexReviewTests
         StartFacts facts = change switch
         {
             "old-cli" => With(good, version: CodexVersion.Parse("codex-cli 0.155.0-alpha.9.2")),
+            "api-login" => With(good, loginStatus: "Logged in using an API key - sk-proj-***\n"),
+            "no-login" => With(good, loginStatus: "Not logged in\n"),
             "closed" => With(good, state: "MERGED"),
             "other-branch" => With(good, localBranch: "main"),
             "local-ahead" => With(good, localHead: "3333333333333333333333333333333333333333"),
@@ -281,6 +308,44 @@ public sealed class CodexReviewTests
 
         string problem = Assert.Single(problems);
         Assert.Contains(expected, problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EveryApiCredentialVariableLeavesTheCodexEnvironment()
+    {
+        // D-523: the CLI reads a credential from each of these three variables. Each Codex process loses all three.
+        Assert.Equal(["OPENAI_API_KEY", "CODEX_API_KEY", "CODEX_ACCESS_TOKEN"], CodexReviewSettings.ApiCredentialVariables);
+    }
+
+    [Fact]
+    public void TheChildLosesARemovedVariableAndTheParentKeepsIt()
+    {
+        // A unique name, so no other test sees the variable.
+        string name = "WYC_TEST_CREDENTIAL_" + Guid.NewGuid().ToString("N");
+        Environment.SetEnvironmentVariable(name, "fake-value");
+        try
+        {
+            string stripped = ReadChildEnvironment([name]);
+            string kept = ReadChildEnvironment([]);
+
+            Assert.DoesNotContain(name, stripped, StringComparison.Ordinal);
+            Assert.Contains(name + "=fake-value", kept, StringComparison.Ordinal);
+            Assert.Equal("fake-value", Environment.GetEnvironmentVariable(name));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(name, null);
+        }
+    }
+
+    /// <summary>The environment that a child process prints, with the removed variables.</summary>
+    private static string ReadChildEnvironment(IReadOnlyList<string> removed)
+    {
+        string directory = System.IO.Path.GetTempPath();
+        ProcessResult result = OperatingSystem.IsWindows()
+            ? ExternalProcess.Run("cmd.exe", ["/c", "set"], directory, removed)
+            : ExternalProcess.Run("env", [], directory, removed);
+        return result.RequireSuccess();
     }
 
     [Fact]
@@ -334,6 +399,7 @@ public sealed class CodexReviewTests
         {
             PullRequestNumber = 93,
             Version = CodexVersion.Parse("codex-cli 0.156.1"),
+            LoginStatus = "Logged in using ChatGPT\n",
             PullRequestState = "OPEN",
             PullRequestBranch = "feat/pr-78-codex-review",
             PullRequestHead = Head,
@@ -351,6 +417,7 @@ public sealed class CodexReviewTests
     private static StartFacts With(
         StartFacts facts,
         CodexVersion? version = null,
+        string? loginStatus = null,
         string? state = null,
         string? localBranch = null,
         string? localHead = null,
@@ -365,6 +432,7 @@ public sealed class CodexReviewTests
         {
             PullRequestNumber = facts.PullRequestNumber,
             Version = version ?? facts.Version,
+            LoginStatus = loginStatus ?? facts.LoginStatus,
             PullRequestState = state ?? facts.PullRequestState,
             PullRequestBranch = facts.PullRequestBranch,
             PullRequestHead = pullRequestHead ?? facts.PullRequestHead,

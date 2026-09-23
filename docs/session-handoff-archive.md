@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 210: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-71, reviewer. Branch `chore/ci-skip-for-document-heads`. PR #89, pending owner merge. Base `a2473ec`.
+
+### What this session did, and why
+
+- Reviewed PR #89 at effective head `05aa78a` for its CI skip, document tests, seed share, and test split.
+- Found no defect. Added the review record under `docs/reviews/pr-89.md` for the owner and the review gate.
+
+### State of the build
+
+- The focused local suite passed: 216 tests, 0 failed, with `WYC_PR_SWEEP=1`.
+- The full local suite passed: 1351 tests, 0 failed, with the full seed counts.
+- CI, smoke, bit identity, bots, and the documents job passed on `05aa78a`.
+- The documents push at `34109e6` passed the document, STE, doc-gate, det-lint, asset-QA, and night-gate checks. The four heavy workflows skipped by Rule 2. `evaluate` failed because the review record was not on the branch yet.
+- The remote head before this metadata commit was `34109e6`.
+- After review publication at `1f06e28`, `evaluate`, `review-gate`, and every required check passed. The heavy workflows skipped by Rule 2, and Gitar passed again.
+
+### In flight
+
+- Exit test 6 waits for the merge and the first push to `main`.
+- The next session reads those workflow runs and records the result.
+
+### Traps and gotchas
+
+- `05aa78a` is the effective head. `34109e6` changes only `docs/session-handoff.md`.
+- `--no-renames` lists both paths of a move. Keep `CodeMovedIntoTheSkipSetRunsEveryJob` as the guard for moves into the skip set.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the owner merges PR #89, read the first push to `main` for exit test 6.
+
 ## Session 209: 2026-09-22, Claude Code
 
 Author: Claude Code
