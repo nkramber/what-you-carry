@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 232: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-81, author. Branch `fix/pr-81-night-softlocks`. PR pending, pending merge. Base `582f346`.
+
+### What this session did, and why
+
+- Reproduced the 26 greedy-descender softlocks of the night at `e069e16`. They pass at `170f08c` and `ea84473`, and they softlock at `837902b`, so PR-72 made them (F-111).
+- Found two faults with a trace of each seed. The wedge count of `PathFollower` read a wedge on a detour of a diagonal path (24 seeds). `DiagonalMove` took a drop under an overhang as one diagonal drop (seeds 2669 and 2879).
+- The owner chose both fixes (D-545, D-546), the effective head for a branch night (D-547), and a re-run of the gate by the night (D-548).
+- Built the branch nights of D-538: the record on `night-branch/<branch>`, the gate read of it, and the re-run step.
+
+### State of the build
+
+- Local: `det-lint` 0, `ste-check` 0. The full suite and a local night of five policies at 5000 seeds are in flight.
+- Remote head: not pushed yet.
+
+### In flight
+
+- The local night: random walker, timer tester, and coward read no softlock.
+- The PR, its CI, a branch night by hand, and `make codex-review PR=<n> -- --skip-gitar-review`.
+
+### Traps and gotchas
+
+- The self-hosted runner is this Mac. A local night slows the Mac CI legs, and a rebuild of the checkout during `bot-run --no-build` breaks the run. Run a local night from its own worktree.
+- A trace of one seed needs the follower of the policy, which is private. A scratch test with reflection read it, and the scratch test is not in the PR.
+- The seeds of the greedy descender: 751 764 940 947 1087 1268 1456 1566 1597 1785 1986 2064 2091 2412 2523 2669 2879 3052 3298 3347 3589 3757 3881 3994 4014 4870.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Push, open the PR, wait on the checks, dispatch the branch night, then run the review.
+
 ## Session 231: 2026-09-23, Codex
 
 Author: Codex
@@ -327,41 +363,3 @@ None.
 ### Next concrete action
 
 After the owner merge, get the approval of the setup, apply it with `docs/runbooks/main-ruleset.md`, and write the transitional prompt.
-
-## Session 222: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-78, reviewer, round 3. Branch `feat/pr-78-codex-review`. PR #93, Ready for owner merge. Base `e069e16`.
-
-### What this session did, and why
-
-- Re-reviewed PR #93 at effective head `e28ecd2` after the author fixed P2-1 and the malformed-heading cases.
-- Confirmed that P1-1 and P2-1 pass their regression checks. The review record now preserves both earlier verdicts and gives the current verdict.
-- The latest automated pass approved the code fixes. Its review threads have replies and are resolved.
-
-### State of the build
-
-- The focused Codex review, ruleset, and review-gate tests passed: 70 passed, 0 failed, 0 skipped. The build succeeded as part of the test command.
-- Required code checks passed on `e28ecd2`. After metadata commit `a91b075`, `evaluate`, `review-gate`, and the document checks passed. Code-only jobs skipped on the metadata head under the documents-only rule.
-- The effective head is `e28ecd2`. The review record and this entry are metadata.
-
-### In flight
-
-- The author gives the owner the merge summary required by D-524 after the fresh results pass.
-
-### Traps and gotchas
-
-- Only P3 is nonblocking. The parser now faults on an unsupported severity or a malformed heading in the Findings section.
-- Exit test 4, the live ruleset setup, waits until after merge under D-519.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author checks the fresh publication results, then gives the owner the required merge summary.
-
-# Session handoff
-
-Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.

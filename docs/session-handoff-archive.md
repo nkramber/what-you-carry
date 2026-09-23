@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 222: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-78, reviewer, round 3. Branch `feat/pr-78-codex-review`. PR #93, Ready for owner merge. Base `e069e16`.
+
+### What this session did, and why
+
+- Re-reviewed PR #93 at effective head `e28ecd2` after the author fixed P2-1 and the malformed-heading cases.
+- Confirmed that P1-1 and P2-1 pass their regression checks. The review record now preserves both earlier verdicts and gives the current verdict.
+- The latest automated pass approved the code fixes. Its review threads have replies and are resolved.
+
+### State of the build
+
+- The focused Codex review, ruleset, and review-gate tests passed: 70 passed, 0 failed, 0 skipped. The build succeeded as part of the test command.
+- Required code checks passed on `e28ecd2`. After metadata commit `a91b075`, `evaluate`, `review-gate`, and the document checks passed. Code-only jobs skipped on the metadata head under the documents-only rule.
+- The effective head is `e28ecd2`. The review record and this entry are metadata.
+
+### In flight
+
+- The author gives the owner the merge summary required by D-524 after the fresh results pass.
+
+### Traps and gotchas
+
+- Only P3 is nonblocking. The parser now faults on an unsupported severity or a malformed heading in the Findings section.
+- Exit test 4, the live ruleset setup, waits until after merge under D-519.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author checks the fresh publication results, then gives the owner the required merge summary.
+
+# Session handoff
+
+Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
+
 ## Session 221: 2026-09-23, Codex
 
 Author: Codex
