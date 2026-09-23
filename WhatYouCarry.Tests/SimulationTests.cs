@@ -117,12 +117,12 @@ public sealed class SimulationTests
         Assert.Throws<ContextException>(() => Intent.Decode(frame, -1));
     }
 
-    /// <summary>The loop runs at 60 Hz, and the simulation version is 15 since the path search took the diagonal move of D-486 and the jump rule read the slope under the feet (D-73, D-151, G-20).</summary>
+    /// <summary>The loop runs at 60 Hz, and the simulation version is 16 since a diagonal drop needed an open fall and a waypoint arrival started the wedge count again (D-73, D-151, D-545, D-546, G-20).</summary>
     [Fact]
     public void TheConstantsHold()
     {
         Assert.Equal(60, SimulationLoop.TicksPerSecond);
-        Assert.Equal(15, SimulationVersion.Value);
+        Assert.Equal(16, SimulationVersion.Value);
     }
 
     /// <summary>One intent is one tick, and the loop starts at tick zero.</summary>
