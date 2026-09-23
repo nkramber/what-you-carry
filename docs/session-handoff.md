@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 231: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-80, reviewer. Branch `chore/pr-80-gitar-pause`. PR #96, pending merge. Base `25afe34`.
+
+### What this session did, and why
+
+- Reviewed PR #96 at effective head `f331068` under D-542 to D-544.
+- The review found no issue in the Gitar pause, the flag path, the thread check, or the supporting documents.
+- Added `docs/reviews/pr-96.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `dotnet test WhatYouCarry.slnx` passed 1573 of 1573 tests at `f331068`.
+- The remote head of PR #96 was `f331068`. The required CI checks passed, except `night-gate`, which failed on `e069e16` under D-544. The review-gate failure came from the missing review record.
+- The review record and this handoff entry are published to `origin/chore/pr-80-gitar-pause`.
+
+### In flight
+
+- PR #96 awaits the owner merge process. The owner uses the merge summary of D-533 and the bypass of D-544 if `night-gate` remains red.
+
+### Traps and gotchas
+
+- `make -n codex-review PR=96 -- --skip-gitar-review` confirms that Make passes the flag after the required options.
+- Gitar posted a free-plan notice and no review feedback. The review export found no open review thread.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner checks the merge conditions for PR #96 and follows D-533.
+
 ## Session 230: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -330,40 +364,3 @@ The author checks the fresh publication results, then gives the owner the requir
 # Session handoff
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
-
-## Session 221: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-78, reviewer, round 2. Branch `feat/pr-78-codex-review`. PR #93, changes required. Base `e069e16`.
-
-### What this session did, and why
-
-- Re-reviewed PR #93 at effective head `4e850b9` after the author fixed P1-1 and the login check.
-- P1-1 is fixed in `2dca4fe`. The approving record now rejects an open P0 to P2 finding.
-- Added P2-1: the parser accepts unsupported severities P4 to P9, and the outcome rules treat them as nonblocking.
-- Updated `docs/reviews/pr-93.md` with the prior verdict, the fixed finding, P2-1, and this round’s evidence.
-
-### State of the build
-
-- The focused Codex review, ruleset, and review gate tests passed: 64 passed, 0 failed, 0 skipped. The build succeeded as part of the test command.
-- Required code checks passed on `4e850b9`. `evaluate` and `review-gate` failed because the published review still required changes. Fresh results are pending this record.
-- The effective head is `4e850b9`. This review record and this entry are metadata.
-
-### In flight
-
-- Fresh `evaluate` and `review-gate` results after the metadata commit.
-- The author must fix P2-1 and start another review round after the Gitar pass.
-
-### Traps and gotchas
-
-- The finding format defines P0 to P3. Only P3 is nonblocking.
-- The code and workflow checks pass at the effective head, but the review gate is not green until a review approves it.
-- Exit test 4, the live ruleset setup, waits until after merge under D-519.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author rejects unsupported finding severities, then starts the next round after the Gitar pass.

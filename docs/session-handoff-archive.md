@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 221: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-78, reviewer, round 2. Branch `feat/pr-78-codex-review`. PR #93, changes required. Base `e069e16`.
+
+### What this session did, and why
+
+- Re-reviewed PR #93 at effective head `4e850b9` after the author fixed P1-1 and the login check.
+- P1-1 is fixed in `2dca4fe`. The approving record now rejects an open P0 to P2 finding.
+- Added P2-1: the parser accepts unsupported severities P4 to P9, and the outcome rules treat them as nonblocking.
+- Updated `docs/reviews/pr-93.md` with the prior verdict, the fixed finding, P2-1, and this round’s evidence.
+
+### State of the build
+
+- The focused Codex review, ruleset, and review gate tests passed: 64 passed, 0 failed, 0 skipped. The build succeeded as part of the test command.
+- Required code checks passed on `4e850b9`. `evaluate` and `review-gate` failed because the published review still required changes. Fresh results are pending this record.
+- The effective head is `4e850b9`. This review record and this entry are metadata.
+
+### In flight
+
+- Fresh `evaluate` and `review-gate` results after the metadata commit.
+- The author must fix P2-1 and start another review round after the Gitar pass.
+
+### Traps and gotchas
+
+- The finding format defines P0 to P3. Only P3 is nonblocking.
+- The code and workflow checks pass at the effective head, but the review gate is not green until a review approves it.
+- Exit test 4, the live ruleset setup, waits until after merge under D-519.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author rejects unsupported finding severities, then starts the next round after the Gitar pass.
+
 ## Session 220: 2026-09-23, Claude Code
 
 Author: Claude Code
