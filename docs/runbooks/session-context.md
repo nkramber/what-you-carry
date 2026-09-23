@@ -83,6 +83,7 @@ The author starts the cross-provider review with one command after the gitar pas
 
 ```
 make codex-review PR=<number>
+make codex-review PR=<number> -- --skip-gitar-review
 ```
 
 Run no status command while the round runs. The last lines of the output give the outcome, the verdict, the open finding ids, and the transcript path. The file `.claude/skills/one-pr-one-session/references/review-and-merge.md` gives the next step for each exit code.

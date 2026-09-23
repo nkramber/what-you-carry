@@ -56,8 +56,9 @@ Session: PR-80, author. Branch `chore/pr-80-gitar-pause`. PR #96, pending merge.
 
 ### In flight
 
-- PR #96 waits for `make codex-review PR=96 -- --skip-gitar-review`.
-- Exit test 4 of PR-79 and of PR-80: a documents commit after the approving review keeps `review-gate` green.
+- `make codex-review PR=96 -- --skip-gitar-review` approved the effective head `f331068` with no finding (session 231).
+- Exit test 4 of PR-79 and of PR-80: the runbook commit after the approval is a documents commit. `review-gate` must stay green on it.
+- The Gitar dashboard gave "Gitar is working" at 18:26 UTC, with no thread. Read the PR comments again before the merge summary.
 
 ### Traps and gotchas
 
@@ -70,7 +71,7 @@ None.
 
 ### Next concrete action
 
-Run the review with the flag, answer each finding, and give the owner the merge summary of D-533.
+Confirm `review-gate` on the new head, read the PR comments, and give the owner the merge summary of D-533.
 
 ## Session 229: 2026-09-23, Codex
 
