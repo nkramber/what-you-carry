@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 223: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-78, author, the hand-over. Branch `feat/pr-78-codex-review`. PR #93, pending merge. Base `e069e16`.
+
+### What this session did, and why
+
+- Round 3 of `make codex-review PR=93` approved effective head `e28ecd2` with exit 0 (Session 222). P1-1 and P2-1 are fixed, and no finding is open.
+- Exit test 3 holds: each of the 20 required checks reported on the code head `e28ecd2` and on the metadata tip `3c5b7fe`. The heavy jobs gave `skipped` on the tip, which GitHub counts as a pass.
+- The owner gets the summary of D-524 and merges this PR by hand (D-519).
+
+### State of the build
+
+- The full suite passed 1506 of 1506 at `e28ecd2`, and `ste-check` finds no issue. Gitar approved `e28ecd2` with every thread resolved.
+- The effective head is `e28ecd2`. This entry is a metadata commit.
+
+### In flight
+
+- The owner merge of PR #93. Then, on `Merged PR #93`, this session asks for the approval of the setup, and runs `docs/runbooks/main-ruleset.md`: auto-merge on, the ruleset from `main`, and the comparison of the live ruleset (D-519, exit test 4).
+
+### Traps and gotchas
+
+- The live ruleset does not exist before the setup. Until then, nothing on GitHub enforces the PR gate.
+- `smoke-linux-x64` aborted one time at the Godot shutdown (exit 134, a leaked ArrayMesh) with no Game change, and a re-run passed. A required check makes such a flake block auto-merge until a re-run.
+- The review record of round 3 lists `e28ecd2` in the `Open at:` line of P2-1, which is fixed. A fixed finding does not count, so the stop reads it correctly.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the owner merge, get the approval of the setup, apply it with `docs/runbooks/main-ruleset.md`, and write the transitional prompt.
+
 ## Session 222: 2026-09-23, Codex
 
 Author: Codex

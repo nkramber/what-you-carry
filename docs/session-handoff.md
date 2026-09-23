@@ -1,5 +1,41 @@
 # Session handoff
 
+## Session 233: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Blocked at effective head `ba7f448`.
+
+### What this session did, and why
+
+- Reviewed PR #97 as the opposite provider and found no code defect.
+- Recorded that the required branch night and its `night-gate` result remain incomplete.
+- The remote PR head after publication is recorded by the review-gate check; the effective code head remains `ba7f448`.
+
+### State of the build
+
+- Build and 12 focused regression and gate tests passed locally.
+- CI, smoke, bit identity, bot, lint, asset QA, and document checks passed at effective head `ba7f448`.
+- Branch night run 35909827024 was in progress at hand-over. The current `night-gate` failed because its branch record did not yet exist.
+- The review record and this handoff entry were pushed together as one metadata commit. The remote PR head was checked with `gh pr view`.
+
+### In flight
+
+- Branch night run 35909827024 and its re-run of `night-gate`.
+- The fresh `review-gate` run after publication of the review record.
+
+### Traps and gotchas
+
+- The branch night tests the effective head `ba7f448`. Later document commits do not change the code it tested (D-534, D-547).
+- Gitar's only comment says it is working. The exported comments contain no feedback or review thread.
+
+### Open questions that block progress
+
+None. Required night evidence is incomplete.
+
+### Next concrete action
+
+Check run 35909827024 and the new `night-gate` result. Re-review the same PR after the branch night passes, or record any night failure.
+
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
 ## Session 232: 2026-09-23, Claude Code
@@ -339,37 +375,3 @@ None.
 ### Next concrete action
 
 Run the gitar pass of `gitar-review` on PR #94, then `make codex-review PR=94` in the background. PR-74 needs the owner merge with the bypass checkbox, because `night-gate` is red. After PR #94 merges, the next session opens one process PR for D-533 and D-534: a new roadmap item, the effective head in `ReviewGate` and `CodexReview` over the skip set of D-475, the tests, and the summary form in `one-pr-one-session`. The PR after it is the night fix of D-538: bisect the softlocks from `170f08c` to `e069e16` (PR-72 first), fix them, and let a hand night on the PR branch count for that PR.
-
-## Session 223: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-78, author, the hand-over. Branch `feat/pr-78-codex-review`. PR #93, pending merge. Base `e069e16`.
-
-### What this session did, and why
-
-- Round 3 of `make codex-review PR=93` approved effective head `e28ecd2` with exit 0 (Session 222). P1-1 and P2-1 are fixed, and no finding is open.
-- Exit test 3 holds: each of the 20 required checks reported on the code head `e28ecd2` and on the metadata tip `3c5b7fe`. The heavy jobs gave `skipped` on the tip, which GitHub counts as a pass.
-- The owner gets the summary of D-524 and merges this PR by hand (D-519).
-
-### State of the build
-
-- The full suite passed 1506 of 1506 at `e28ecd2`, and `ste-check` finds no issue. Gitar approved `e28ecd2` with every thread resolved.
-- The effective head is `e28ecd2`. This entry is a metadata commit.
-
-### In flight
-
-- The owner merge of PR #93. Then, on `Merged PR #93`, this session asks for the approval of the setup, and runs `docs/runbooks/main-ruleset.md`: auto-merge on, the ruleset from `main`, and the comparison of the live ruleset (D-519, exit test 4).
-
-### Traps and gotchas
-
-- The live ruleset does not exist before the setup. Until then, nothing on GitHub enforces the PR gate.
-- `smoke-linux-x64` aborted one time at the Godot shutdown (exit 134, a leaked ArrayMesh) with no Game change, and a re-run passed. A required check makes such a flake block auto-merge until a re-run.
-- The review record of round 3 lists `e28ecd2` in the `Open at:` line of P2-1, which is fixed. A fixed finding does not count, so the stop reads it correctly.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the owner merge, get the approval of the setup, apply it with `docs/runbooks/main-ruleset.md`, and write the transitional prompt.
