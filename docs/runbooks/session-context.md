@@ -79,10 +79,11 @@ Run no other status command while the wait runs. Read the result one time, when 
 
 ## The review round
 
-The author starts the cross-provider review with one command after the gitar pass (D-511). A round takes longer than the ten-minute limit of a tool call, so run it in the background and wait for the completion notice.
+The author starts the cross-provider review with one command after the gitar pass (D-511). During the gitar pause, add `-- --skip-gitar-review` (D-542, D-543). A round takes longer than the ten-minute limit of a tool call, so run it in the background and wait for the completion notice.
 
 ```
 make codex-review PR=<number>
+make codex-review PR=<number> -- --skip-gitar-review
 ```
 
 Run no status command while the round runs. The last lines of the output give the outcome, the verdict, the open finding ids, and the transcript path. The file `.claude/skills/one-pr-one-session/references/review-and-merge.md` gives the next step for each exit code.
@@ -90,6 +91,8 @@ Run no status command while the round runs. The last lines of the output give th
 ## Wait for gitar
 
 The `gitar-review` skill holds the procedure and the proof that a review is current (D-374). This section holds the two commands of the wait. Do the full push wait of three minutes after each push, and do it also when gitar paused the automatic reviews (D-160).
+
+**Pause (D-542).** During the gitar pause of the owner, do no wait. Use the comment export below before `make codex-review` and before the merge summary.
 
 ```
 repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)

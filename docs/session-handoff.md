@@ -2,6 +2,77 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 231: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-80, reviewer. Branch `chore/pr-80-gitar-pause`. PR #96, pending merge. Base `25afe34`.
+
+### What this session did, and why
+
+- Reviewed PR #96 at effective head `f331068` under D-542 to D-544.
+- The review found no issue in the Gitar pause, the flag path, the thread check, or the supporting documents.
+- Added `docs/reviews/pr-96.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `dotnet test WhatYouCarry.slnx` passed 1573 of 1573 tests at `f331068`.
+- The remote head of PR #96 was `f331068`. The required CI checks passed, except `night-gate`, which failed on `e069e16` under D-544. The review-gate failure came from the missing review record.
+- The review record and this handoff entry are published to `origin/chore/pr-80-gitar-pause`.
+
+### In flight
+
+- PR #96 awaits the owner merge process. The owner uses the merge summary of D-533 and the bypass of D-544 if `night-gate` remains red.
+
+### Traps and gotchas
+
+- `make -n codex-review PR=96 -- --skip-gitar-review` confirms that Make passes the flag after the required options.
+- Gitar posted a free-plan notice and no review feedback. The review export found no open review thread.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner checks the merge conditions for PR #96 and follows D-533.
+
+## Session 230: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-80, author. Branch `chore/pr-80-gitar-pause`. PR #96, pending merge. Base `25afe34`.
+
+### What this session did, and why
+
+- The owner paused the gitar requirement until a later PR of the owner (D-542). The author answers each gitar comment that comes in. A gitar review with feedback stops the session, and the session alerts the owner.
+- Added the flag `--skip-gitar-review` to `codex-review`, through `make codex-review PR=<n> -- --skip-gitar-review` (D-543). The flag drops the Gitar check run and the Gitar dashboard checks. The thread check stays (D-522). The flag stays after the pause.
+- Each text of the pause outside the registers names D-542, so `grep -rn 'D-542'` finds each one for the PR that ends the pause.
+- `AGENTS.md` was 19 bytes under its ceiling. The Game argument rules and the generated file rules moved to `docs/runbooks/commands.md` (D-382).
+- The owner put this PR before the night fix of D-538, with a bypass merge when `night-gate` stays red (D-544).
+
+### State of the build
+
+- The full suite passed 1573 of 1573 locally. `ste-check` gave no finding.
+- The remote head of `main` is `25afe34`. The newest night failed at `e069e16` (D-538), so `night-gate` stays red.
+
+### In flight
+
+- `make codex-review PR=96 -- --skip-gitar-review` approved the effective head `f331068` with no finding (session 231).
+- Exit test 4 of PR-79 and of PR-80: the runbook commit after the approval is a documents commit. `review-gate` must stay green on it.
+- The Gitar dashboard gave "Gitar is working" at 18:26 UTC, with no thread. Read the PR comments again before the merge summary.
+
+### Traps and gotchas
+
+- Make reads each word after `--` as a goal. The `--%` rule of the `Makefile` keeps make from a stop, and the target passes each such goal to the command.
+- `AGENTS.md` holds 14842 bytes of 15000. Move detail to a runbook before a new rule.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Confirm `review-gate` on the new head, read the PR comments, and give the owner the merge summary of D-533.
+
 ## Session 229: 2026-09-23, Codex
 
 Author: Codex
@@ -294,78 +365,3 @@ The author checks the fresh publication results, then gives the owner the requir
 # Session handoff
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
-
-## Session 221: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-78, reviewer, round 2. Branch `feat/pr-78-codex-review`. PR #93, changes required. Base `e069e16`.
-
-### What this session did, and why
-
-- Re-reviewed PR #93 at effective head `4e850b9` after the author fixed P1-1 and the login check.
-- P1-1 is fixed in `2dca4fe`. The approving record now rejects an open P0 to P2 finding.
-- Added P2-1: the parser accepts unsupported severities P4 to P9, and the outcome rules treat them as nonblocking.
-- Updated `docs/reviews/pr-93.md` with the prior verdict, the fixed finding, P2-1, and this round’s evidence.
-
-### State of the build
-
-- The focused Codex review, ruleset, and review gate tests passed: 64 passed, 0 failed, 0 skipped. The build succeeded as part of the test command.
-- Required code checks passed on `4e850b9`. `evaluate` and `review-gate` failed because the published review still required changes. Fresh results are pending this record.
-- The effective head is `4e850b9`. This review record and this entry are metadata.
-
-### In flight
-
-- Fresh `evaluate` and `review-gate` results after the metadata commit.
-- The author must fix P2-1 and start another review round after the Gitar pass.
-
-### Traps and gotchas
-
-- The finding format defines P0 to P3. Only P3 is nonblocking.
-- The code and workflow checks pass at the effective head, but the review gate is not green until a review approves it.
-- Exit test 4, the live ruleset setup, waits until after merge under D-519.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author rejects unsupported finding severities, then starts the next round after the Gitar pass.
-
-## Session 220: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-78, author, the answers to rounds 1 and 2. Branch `feat/pr-78-codex-review`. PR #93, pending merge. Base `e069e16`.
-
-### What this session did, and why
-
-- `make codex-review PR=93` ran round 1 end to end: exit 10 with P1-1 open, and no fault. The Codex entry is Session 219.
-- P1-1 has full merit. An approving record with an open P0 to P2 finding is now a fault. `docs/reviews/pr-93-response.md` holds the answer.
-- The gitar pass of `2dca4fe` found one bug with full merit: `codex login status` writes its status to stderr, and the command read stdout alone, so every round refused. The command now reads both streams, and a test starts a real child that writes to stderr.
-- Round 2 at `4e850b9` exited 10 with P2-1 open: a severity outside P0 to P3, or a heading that the parser skipped, passed as nonblocking. The parser now faults on both. P1-1 is fixed in `2dca4fe`.
-- The gitar pass of `7159ad2` found one more skipped heading form, `####` or `###P`, now a fault. `smoke-linux-x64` aborted at the Godot shutdown there (exit 134, a leaked ArrayMesh) with no Game change, and the author re-ran it.
-- The owner added D-523 (no API pricing: the command strips the three credential variables, forces the ChatGPT login, and checks `codex login status`) and D-524 (a summary of one paragraph and the owner confirmation before each merge).
-
-### State of the build
-
-- The build passes. The full suite passes, and `ste-check` finds no issue. The P1-1 tests fail on the old code, 3 of 3.
-- The effective head is the commit that holds this entry. Round 1 reviewed `b7623f4`, and round 2 reviewed `4e850b9`.
-
-### In flight
-
-- PR #93: the gitar pass of the new head, then round 2 with `make codex-review PR=93`.
-- After the owner merge: the setup of D-519 on approval.
-
-### Traps and gotchas
-
-- `codex login status` writes to stderr, and a terminal hides that. It also reads `auth.json` alone. It gave `Logged in using ChatGPT` with a fake `OPENAI_API_KEY` set, so the command also strips the variables from each Codex process.
-- The API keys in the `.env` of decktome serve its paid deck gate. D-523 changes the Codex child processes alone, and it revokes no key.
-- A `git stash pop` refuses a file that a later edit touched. Save the new hunk as a patch first.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Complete the gitar pass of the new head, then run `make codex-review PR=93` in the background.

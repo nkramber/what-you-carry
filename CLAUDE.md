@@ -96,6 +96,13 @@ The `csharp-conventions` skill holds the code rules. It covers the language, the
 
 An automated reviewer, gitar, comments on every PR after a push (D-250). The author answers every comment before the hand-over to the other provider, or before the override request on a documentation PR.
 
+**Pause (D-542).** The owner paused the gitar requirement until a later PR of the owner. This paragraph and its list win over the rest of this section.
+
+- Do no push wait, and post no `Gitar review` comment.
+- Before `make codex-review` and before the merge summary, export the PR comments. Answer each gitar comment.
+- When a gitar review holds feedback, stop at once and alert the owner.
+- Run each review as `make codex-review PR=<n> -- --skip-gitar-review` (D-543).
+
 - Load the `gitar-review` skill after each push. It holds the author procedure, the proof that a review is current, and the commands (D-374).
 - When the pass ends, run `make codex-review PR=<n>` in the background, or ask for the override (D-511, D-517).
 - The reviewing provider reads the PR comments into its review and never addresses gitar (`pr-review`).
@@ -116,7 +123,7 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Sounds: `make sounds` renders them, and `make analyze SOUND=<name>` analyses one reference.
 - Bit identity: `tools bit-identity`
 - Review gate, local run: `tools review-gate --input request.json --output check-run.json`
-- Cross-provider review: `make codex-review PR=<n>`. Make prints its exit code as `Error <code>` (D-511).
+- Cross-provider review: `make codex-review PR=<n>`. Make prints its exit code as `Error <code>` (D-511). `-- --skip-gitar-review` drops the Gitar start checks (D-543).
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Smoke session, local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke`
 - Test exit session, a headless smoke session that presses Escape or Start at a tick: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke --press escape 100`. The other name is `start`.
@@ -126,11 +133,9 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Contact sheet, a local run with a window: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
 - HUD shot, the Deck frame of the HUD fixture, with a window (D-133): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --hud-shot hud.png`
 
-The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, `--smoke` and `--bot` exclude each other, and `--transitions` needs `--bot` and `--frame-log`.
-
 `Godot` is not on the command path of this machine, so use the full path above. `det-lint` reports one count for Core and one for Game (D-222). The PR gate names what `det-lint` and `asset-qa` read. A change of documents alone (the skip set of D-475) runs no full suite, for the author, a review, or a handoff. It runs `ste-check`, `doc-gate`, and `dotnet test WhatYouCarry.slnx --filter Category=Documents` (D-491, D-492). A change with any other path runs the full suite (D-493). The `csharp-conventions` skill holds the Smoke and CI filters.
 
-`texture-gen` writes `content/textures/atlas.png` and `layout.json` from the palette, the recipes, and the paint files (D-305, D-505). Commit both after each change, because a test compares them with the output. `audio-synth` writes a WAV file next to each sound file under `content/audio/sfx/`, and a test compares each one too (D-453). `audio-analyze` writes the band levels of a reference into a spectral layer (D-464). The `Makefile` holds the commands of this list: run `make`. The contact sheet needs a window, so it never runs in CI, and a headless run exits 1 (D-306).
+`docs/runbooks/commands.md` holds the rules of the Game arguments and of the generated files. The `Makefile` holds the commands of this list: run `make`.
 
 Each project has one directory at the root, beside the solution file, and `project.godot` sits in `WhatYouCarry.Game/`. Each project file names its target framework, because the Godot editor writes `net8.0` into a project file that has none.
 
@@ -146,7 +151,7 @@ A PR merges only when every line holds:
 - [ ] The `ste-check` job is green (G-14).
 - [ ] The `night-gate` job is green: a success record from a night inside 48 hours, at a commit on the base branch (D-115, D-177, D-274, D-275).
 - [ ] The `smoke` job is green on all three platforms: the headless smoke session of the Game layer, with the pinned Godot binary (D-114, D-149).
-- [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250).
+- [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250). Paused by D-542: every gitar comment has its answer.
 - [ ] The other provider reviewed it through `make codex-review`, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185, D-534). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
 - [ ] The `review-gate` check run is green. Red means no review record, or a review that does not approve this head (D-179, D-181, D-185, D-521).
 - [ ] `docs/decisions.md` has every new decision.

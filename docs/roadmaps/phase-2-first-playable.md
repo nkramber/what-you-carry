@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-79, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-80, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -915,6 +915,35 @@ Gate: exit tests 1 to 3 pass. Exit test 4 runs after the merge.
 
 > *In plain English:* a fix of one word in a document after the approval of a PR asked for a second full review. Now a change of documents alone keeps the approval, and gitar still reads each push.
 
+### PR-80: Gitar pause
+
+✅ Done in PR #96.
+
+Scope:
+
+- `WhatYouCarry.Tools/CodexReview/`: the flag `--skip-gitar-review` drops the Gitar check run and the Gitar dashboard from the start checks. The thread check stays (D-543).
+- `Makefile`: the `codex-review` target passes each word after `--` that starts with `--` to the command (D-543).
+- `WhatYouCarry.Tests/`: `CodexReviewTests` and `RulesetTests`.
+- `CLAUDE.md` and `AGENTS.md`, the PR template, the skills `gitar-review`, `review-response`, and `one-pr-one-session`, and `docs/runbooks/session-context.md`: a pause note that names D-542.
+- `docs/runbooks/commands.md`: the rules of the Game arguments and of the generated files leave `AGENTS.md`, which stays under its byte ceiling (D-382).
+
+Out of scope: the end of the pause, which a later PR of the owner holds. The night fix of D-538 comes after this PR (D-544).
+
+Exit tests:
+
+1. `CodexReviewTests` and `RulesetTests` pass. The flag drops each Gitar problem, and an open thread still refuses the round.
+2. `make codex-review PR=<this PR> -- --skip-gitar-review` reviews this PR with no Gitar check. The author answers each finding until the verdict approves or the three-strike stop fires.
+3. `grep -rn 'D-542'` outside `docs/decisions.md` lists each text of the pause.
+4. A documents commit after the approving review keeps `review-gate` green. This test is exit test 4 of PR-79.
+
+Review focus: the option parse and the Makefile pass of the flag, the start checks with and without the flag, and the pause texts against D-542.
+
+Check clause: none.
+
+Gate: exit tests 1 to 4 pass. When `night-gate` stays red, the owner merges with the bypass (D-544).
+
+> *In plain English:* each PR waited for an automated review before the second review. The owner pauses that wait. A review that still comes in gets an answer, and the owner hears about it at once.
+
 ### PR-75: Sword art
 
 Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
@@ -1023,13 +1052,14 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 34. PR-78. ✅ Done in PR #93. ✅ The owner answers of 2026-09-23: D-511 to D-524.
 35. PR-74.
 36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, and D-539 to D-541.
-37. PR-75.
-38. PR-76.
-39. Owner: answer OQ-181.
-40. PR-77.
-41. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-42. Tier 4 pass on the screenshot fixture (D-133).
-43. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544.
+38. PR-75.
+39. PR-76.
+40. Owner: answer OQ-181.
+41. PR-77.
+42. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+43. Tier 4 pass on the screenshot fixture (D-133).
+44. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

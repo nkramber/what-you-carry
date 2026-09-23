@@ -277,7 +277,7 @@ public sealed class CodexReviewTests
     [Fact]
     public void StartChecksPassWhenEveryConditionHolds()
     {
-        Assert.Empty(StartChecks.Problems(GoodFacts()));
+        Assert.Empty(StartChecks.Problems(GoodFacts(), skipGitarReview: false));
     }
 
     public static TheoryData<string, string> StartProblems()
@@ -324,7 +324,7 @@ public sealed class CodexReviewTests
             _ => throw new ArgumentException($"Unknown change '{change}'."),
         };
 
-        IReadOnlyList<string> problems = StartChecks.Problems(facts);
+        IReadOnlyList<string> problems = StartChecks.Problems(facts, skipGitarReview: false);
 
         string problem = Assert.Single(problems);
         Assert.Contains(expected, problem, StringComparison.Ordinal);
@@ -368,7 +368,7 @@ public sealed class CodexReviewTests
 
         Assert.Equal(string.Empty, result.StandardOutput);
         Assert.StartsWith(CodexReviewSettings.ChatGptLoginStatus, CodexReviewSettings.LoginStatusText(result), StringComparison.Ordinal);
-        Assert.Empty(StartChecks.Problems(With(GoodFacts(), loginStatus: CodexReviewSettings.LoginStatusText(result))));
+        Assert.Empty(StartChecks.Problems(With(GoodFacts(), loginStatus: CodexReviewSettings.LoginStatusText(result)), skipGitarReview: false));
     }
 
     /// <summary>The environment that a child process prints, with the removed variables.</summary>
@@ -385,7 +385,7 @@ public sealed class CodexReviewTests
     public void ADocumentsOnlyPullRequestIsRefused()
     {
         // D-540: no commit lies outside the skip set, so the review has nothing to approve. The problem names the label.
-        IReadOnlyList<string> problems = StartChecks.Problems(With(GoodFacts(), clearEffectiveHead: true));
+        IReadOnlyList<string> problems = StartChecks.Problems(With(GoodFacts(), clearEffectiveHead: true), skipGitarReview: false);
 
         string problem = Assert.Single(problems);
         Assert.Contains(ReviewGateRules.OverrideLabel, problem, StringComparison.Ordinal);
@@ -396,7 +396,7 @@ public sealed class CodexReviewTests
     public void AMetadataOnlyPullRequestIsRefusedWithOneProblem()
     {
         // A PR of metadata alone has no work head either. The Gitar checks need a work head, so they add nothing.
-        IReadOnlyList<string> problems = StartChecks.Problems(With(GoodFacts(), clearEffectiveHead: true, clearWorkHead: true, gitarChecks: []));
+        IReadOnlyList<string> problems = StartChecks.Problems(With(GoodFacts(), clearEffectiveHead: true, clearWorkHead: true, gitarChecks: []), skipGitarReview: false);
 
         string problem = Assert.Single(problems);
         Assert.Contains(ReviewGateRules.OverrideLabel, problem, StringComparison.Ordinal);
@@ -407,7 +407,7 @@ public sealed class CodexReviewTests
     {
         // D-534: the Gitar pass keeps the metadata set of D-184, so a missing check names the work head.
         const string work = "6666666666666666666666666666666666666666";
-        IReadOnlyList<string> problems = StartChecks.Problems(With(GoodFacts(), workHead: work, gitarChecks: []));
+        IReadOnlyList<string> problems = StartChecks.Problems(With(GoodFacts(), workHead: work, gitarChecks: []), skipGitarReview: false);
 
         Assert.Contains(problems, problem => problem.Contains($"the work head {work}", StringComparison.Ordinal));
     }
@@ -421,7 +421,81 @@ public sealed class CodexReviewTests
         DateTimeOffset dashboard = good.DashboardEditedAt!.Value;
         StartFacts facts = With(good, gitarChecks: [good.GitarChecks[0], new GitarCheck("5555555555555555555555555555555555555555", "completed", dashboard.AddMinutes(5))]);
 
-        Assert.Empty(StartChecks.Problems(facts));
+        Assert.Empty(StartChecks.Problems(facts, skipGitarReview: false));
+    }
+
+    [Theory]
+    [InlineData("no-gitar-check")]
+    [InlineData("gitar-running")]
+    [InlineData("no-dashboard")]
+    [InlineData("stale-dashboard")]
+    public void TheSkipFlagDropsEachGitarProblem(string change)
+    {
+        // D-543: with --skip-gitar-review, no Gitar check run and no Gitar dashboard refuses the round.
+        StartFacts good = GoodFacts();
+        DateTimeOffset started = good.GitarChecks[0].StartedAt;
+        StartFacts facts = change switch
+        {
+            "no-gitar-check" => With(good, gitarChecks: []),
+            "gitar-running" => With(good, gitarChecks: [new GitarCheck(Head, "in_progress", started)]),
+            "no-dashboard" => With(good, clearDashboard: true),
+            "stale-dashboard" => With(good, dashboard: started.AddSeconds(-1)),
+            _ => throw new ArgumentException($"Unknown change '{change}'."),
+        };
+
+        Assert.NotEmpty(StartChecks.Problems(facts, skipGitarReview: false));
+        Assert.Empty(StartChecks.Problems(facts, skipGitarReview: true));
+    }
+
+    [Fact]
+    public void TheSkipFlagKeepsTheThreadCheck()
+    {
+        // D-522, D-543: the ruleset of main requires resolved threads, so an open thread refuses the round with the flag.
+        StartFacts facts = With(GoodFacts(), gitarChecks: [], clearDashboard: true, unresolved: 1);
+
+        string problem = Assert.Single(StartChecks.Problems(facts, skipGitarReview: true));
+        Assert.Contains("1 unresolved review thread(s)", problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheSkipFlagKeepsEveryOtherCheck()
+    {
+        // D-543: the flag drops the Gitar checks alone. A dirty tree and an old CLI still refuse the round.
+        StartFacts facts = With(GoodFacts(), version: CodexVersion.Parse("codex-cli 0.155.0"), status: " M Makefile\n", gitarChecks: []);
+
+        IReadOnlyList<string> problems = StartChecks.Problems(facts, skipGitarReview: true);
+
+        Assert.Equal(2, problems.Count);
+        Assert.Contains(problems, problem => problem.Contains("minimum is 0.156.1", StringComparison.Ordinal));
+        Assert.Contains(problems, problem => problem.Contains("The working tree is dirty", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(new[] { "--root", ".", "--pr", "96", "--codex", "codex" }, false)]
+    [InlineData(new[] { "--root", ".", "--pr", "96", "--codex", "codex", "--skip-gitar-review" }, true)]
+    [InlineData(new[] { "--skip-gitar-review", "--root", ".", "--pr", "96", "--codex", "codex" }, true)]
+    [InlineData(new[] { "--root", ".", "--skip-gitar-review", "--pr", "96", "--codex", "codex" }, true)]
+    public void TheOptionsReadTheSkipFlagInAnyPlace(string[] args, bool skip)
+    {
+        // D-543: `make codex-review PR=<n> -- --skip-gitar-review` puts the flag after the three options.
+        CodexReviewOptions? options = CodexReviewCommand.ParseOptions(args, out string problem);
+
+        Assert.NotNull(options);
+        Assert.Equal(string.Empty, problem);
+        Assert.Equal(new CodexReviewOptions(".", 96, "codex", skip), options);
+    }
+
+    [Theory]
+    [InlineData(new[] { "--root", ".", "--pr", "96", "--codex", "codex", "--skip-gitar" }, "Unknown option '--skip-gitar'.")]
+    [InlineData(new[] { "--root", ".", "--pr", "96", "--codex" }, "The option '--codex' needs a value.")]
+    [InlineData(new[] { "--root", ".", "--pr", "x96", "--codex", "codex" }, "Found --pr 'x96'.")]
+    [InlineData(new[] { "--root", ".", "--codex", "codex", "--skip-gitar-review" }, "Found --pr ''.")]
+    public void TheOptionsRefuseAnUnknownOrIncompleteForm(string[] args, string expected)
+    {
+        CodexReviewOptions? options = CodexReviewCommand.ParseOptions(args, out string problem);
+
+        Assert.Null(options);
+        Assert.Contains(expected, problem, StringComparison.Ordinal);
     }
 
     private static ReviewOutcome Judge(string record)

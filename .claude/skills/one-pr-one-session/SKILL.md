@@ -78,7 +78,7 @@ A PR cannot know its merge commit or its merge time. Git and GitHub hold both, a
 
 ## Wait for the checks
 
-Each status poll costs a model call over the whole context. After each push, wait with the one command under "Wait for the checks" in `docs/runbooks/session-context.md` (D-380). Run no other status command while the wait runs, and read the result one time. For a job that ends "not acquired", apply D-358, and then wait again. For gitar, follow `gitar-review`.
+Each status poll costs a model call over the whole context. After each push, wait with the one command under "Wait for the checks" in `docs/runbooks/session-context.md` (D-380). Run no other status command while the wait runs, and read the result one time. For a job that ends "not acquired", apply D-358, and then wait again. For gitar, follow `gitar-review` and its pause note (D-542).
 
 ## Procedure: the completion gate
 
