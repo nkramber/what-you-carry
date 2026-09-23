@@ -41,11 +41,37 @@ public static class SweptAabb
 
     /// <summary>
     /// Moves a box by a displacement and gives back the part of it that the grid allows, and the axes that a
-    /// solid part cut. The vertical part of the result holds the lifts onto a ramp.
+    /// solid part cut. The vertical part of the result holds the lifts onto a ramp. The box after the move is
+    /// <c>box.Moved(result.Allowed)</c>, and the sweep reads that same box (F-112).
     /// </summary>
     /// <exception cref="ContextException">A coordinate is not finite, the box has no volume, or the box already overlaps a solid part.</exception>
     public static SweepResult Sweep(VoxelGrid grid, Aabb box, Vector3 delta)
     {
+        Vector3 none = new(0.0f, 0.0f, 0.0f);
+        return Run(grid, new SweepFrame(box.Min, none, box.Max, none), delta);
+    }
+
+    /// <summary>
+    /// Moves the box of a body by a displacement: the box of the feet center <paramref name="feet"/>, with a
+    /// half-width on X and on Z and a height over the feet. The box after the move is the box of
+    /// <c>feet + result.Allowed</c>, built as <see cref="Entities.PlayerBody.Box"/> builds it, and the sweep reads
+    /// that same box (F-112).
+    /// </summary>
+    /// <exception cref="ContextException">A coordinate is not finite, the box has no volume, or the box already overlaps a solid part.</exception>
+    public static SweepResult SweepFeet(VoxelGrid grid, Vector3 feet, float halfWidth, float height, Vector3 delta)
+    {
+        return Run(grid, new SweepFrame(feet, new Vector3(-halfWidth, 0.0f, -halfWidth), feet, new Vector3(halfWidth, height, halfWidth)), delta);
+    }
+
+    /// <summary>
+    /// The sweep of <see cref="Sweep"/> and <see cref="SweepFeet"/>. After each axis the box comes again from the
+    /// start and the whole displacement so far, in the form that the caller uses after the move. A box that the
+    /// sweep moved one step at a time can sit one ulp away from the box of the caller. A face one ulp past a block
+    /// face then leaves that block out of the next axis, and the caller box overlaps it (F-112).
+    /// </summary>
+    private static SweepResult Run(VoxelGrid grid, SweepFrame frame, Vector3 delta)
+    {
+        Aabb box = frame.At(new Vector3(0.0f, 0.0f, 0.0f));
         CheckFinite("box.Min", box.Min);
         CheckFinite("box.Max", box.Max);
         CheckFinite("delta", delta);
@@ -69,19 +95,23 @@ public static class SweptAabb
         }
 
         float allowedY = SweepVertical(grid, box, delta.Y, out bool blockedY);
-        box = box.Moved(new Vector3(0.0f, allowedY, 0.0f));
+        Vector3 moved = new(0.0f, allowedY, 0.0f);
+        box = frame.At(moved);
 
         // A slope that rises under the end of a move lifts the box first, so the move runs over the slope (D-345).
         float liftX = RampLift(grid, box, Axis.X, delta.X);
-        box = box.Moved(new Vector3(0.0f, liftX, 0.0f));
+        moved = new Vector3(0.0f, moved.Y + liftX, 0.0f);
+        box = frame.At(moved);
         float allowedX = SweepAcross(grid, box, Axis.X, delta.X, out bool blockedX);
-        box = box.Moved(new Vector3(allowedX, 0.0f, 0.0f));
+        moved = new Vector3(allowedX, moved.Y, 0.0f);
+        box = frame.At(moved);
 
         float liftZ = RampLift(grid, box, Axis.Z, delta.Z);
-        box = box.Moved(new Vector3(0.0f, liftZ, 0.0f));
+        moved = new Vector3(allowedX, moved.Y + liftZ, 0.0f);
+        box = frame.At(moved);
         float allowedZ = SweepAcross(grid, box, Axis.Z, delta.Z, out bool blockedZ);
 
-        return new SweepResult(new Vector3(allowedX, allowedY + liftX + liftZ, allowedZ), blockedX, blockedY, blockedZ);
+        return new SweepResult(new Vector3(allowedX, moved.Y, allowedZ), blockedX, blockedY, blockedZ);
     }
 
     /// <summary>
@@ -446,3 +476,18 @@ public static class SweptAabb
 /// move.
 /// </summary>
 public readonly record struct SweepResult(Vector3 Allowed, bool BlockedX, bool BlockedY, bool BlockedZ);
+
+/// <summary>
+/// The start of a sweep, in the form that the caller builds its box after the move: the low corner is
+/// <c>(LowOrigin + moved) + LowOffset</c>, and the high corner is <c>(HighOrigin + moved) + HighOffset</c> (F-112).
+/// A plain box has its corners as the origins and zero offsets. A body has its feet as both origins and its size
+/// as the offsets.
+/// </summary>
+internal readonly record struct SweepFrame(Vector3 LowOrigin, Vector3 LowOffset, Vector3 HighOrigin, Vector3 HighOffset)
+{
+    /// <summary>The box after a displacement from the start.</summary>
+    public Aabb At(Vector3 moved)
+    {
+        return new Aabb((this.LowOrigin + moved) + this.LowOffset, (this.HighOrigin + moved) + this.HighOffset);
+    }
+}

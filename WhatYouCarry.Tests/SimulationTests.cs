@@ -117,7 +117,7 @@ public sealed class SimulationTests
         Assert.Throws<ContextException>(() => Intent.Decode(frame, -1));
     }
 
-    /// <summary>The loop runs at 60 Hz, and the simulation version is 16 since a diagonal drop needed an open fall and a waypoint arrival started the wedge count again (D-73, D-151, D-545, D-546, G-20).</summary>
+    /// <summary>The loop runs at 60 Hz, and the simulation version is 16 since a diagonal drop needed an open fall, a waypoint arrival started the wedge count again, and the sweep read the box of the caller (D-73, D-151, D-545, D-546, D-549, G-20).</summary>
     [Fact]
     public void TheConstantsHold()
     {

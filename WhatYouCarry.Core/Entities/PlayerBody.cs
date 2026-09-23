@@ -101,7 +101,10 @@ public sealed class PlayerBody
     /// <summary>The vertical velocity, in meters per second. Positive is up.</summary>
     public float VerticalVelocity { get; private set; }
 
-    /// <summary>The box of the body at its position.</summary>
+    /// <summary>
+    /// The box of the body at its position. <see cref="SweptAabb.SweepFeet"/> builds each box from the feet in the
+    /// same way, bit for bit, so the box after a move is the box that the sweep read (F-112).
+    /// </summary>
     public Aabb Box => new(
         new Vector3(this.Position.X - HalfWidth, this.Position.Y, this.Position.Z - HalfWidth),
         new Vector3(this.Position.X + HalfWidth, this.Position.Y + Height, this.Position.Z + HalfWidth));
@@ -193,7 +196,7 @@ public sealed class PlayerBody
         this.VerticalVelocity -= Gravity * gravityFactor * TickSeconds;
 
         Vector3 delta = new(velocity.X * TickSeconds, this.VerticalVelocity * TickSeconds, velocity.Z * TickSeconds);
-        SweepResult result = SweptAabb.Sweep(this.grid, this.Box, delta);
+        SweepResult result = SweptAabb.SweepFeet(this.grid, this.Position, HalfWidth, Height, delta);
         this.Position += result.Allowed;
 
         // A landing and a hit on a ceiling both end the vertical motion.
@@ -211,7 +214,7 @@ public sealed class PlayerBody
         // such drop finds the slope, and a sweep that finds nothing moves nothing, so the body falls as before.
         float step = DetMath.Abs(result.Allowed.X) + DetMath.Abs(result.Allowed.Z);
         float reach = (step / Ramp.SteepestRun) + SweptAabb.GroundProbe;
-        SweepResult down = SweptAabb.Sweep(this.grid, this.Box, new Vector3(0.0f, -reach, 0.0f));
+        SweepResult down = SweptAabb.SweepFeet(this.grid, this.Position, HalfWidth, Height, new Vector3(0.0f, -reach, 0.0f));
         if (down.BlockedY)
         {
             this.Position += down.Allowed;
