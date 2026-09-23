@@ -14,7 +14,8 @@ Session: PR-74, author. Branch `feat/pr-74-body-art`. PR #94, pending merge. Bas
 - The body gains the brow, the nose, the beard, and the two toe boxes at the places of D-497, D-498, D-501, and D-502. The face layout and the trim come from owner answers (D-525, D-526).
 - The owner rejected the noise sheets of D-503 (0.12, 0.20, 0.30): "None of them match the level of detail that the 3D model screenshots have." D-527 supersedes D-503. The recipe system gains a `shade` field, a clustered `grain`, and a `gradient`, in whole numbers alone. The palette gains three fine shades between each pair of colors (D-528), and a ninth ramp, umber, for the dark browns (D-530). The body takes the measured shades of the unlit 3D reference (D-529, D-531).
 - The owner approved the sheet b2 as finished art (D-532, exit test 4). The owner kept D-525 where the brow hides the eye row from the camera of the sheet.
-- The owner asked to remove the "Merge without waiting for requirements" option. D-535 supersedes D-520: the ruleset has no bypass actor. The session updated the live ruleset (id 23883816) at once, by owner choice, and the comparison with the file gives an empty diff. A night gate deadlock now needs the owner to disable the ruleset for one merge (runbook procedure).
+- The owner asked to remove the bypass checkbox (D-535), and then called it a mistake. D-537 restores the bypass of D-520. The live ruleset (id 23883816) had no bypass from about 16:10 to 16:25 UTC, and it matches the file again. PR-74 carries no bypass change.
+- The night of 2026-09-23 on `main` failed: greedy-descender softlocked 26 of 5000 seeds at `e069e16`. `night-gate` is red on every PR. D-538 plans the fix and a night gate that counts a hand night on the PR branch.
 - The owner waived the gitar pass for this PR. Gitar never reviewed a head of PR #94, and the Codex review starts by hand with the invocation of `make codex-review` (D-536).
 - The owner asked for two process changes, recorded for the next PR: the merge summary of four sections (D-533), and a `review-gate` that stays green after a later documents commit (D-534). The gitar pass still reviews each push.
 - No roadmap item improves the player animation beyond the clips and the walk of PR-15 (D-331, D-333). The owner asked, and no item exists.
@@ -45,7 +46,7 @@ None.
 
 ### Next concrete action
 
-Run the gitar pass of `gitar-review` on PR #94, then `make codex-review PR=94` in the background. After PR #94 merges, the next session opens one process PR for D-533 and D-534: a new roadmap item, the effective head in `ReviewGate` and `CodexReview` over the skip set of D-475, the tests, and the summary form in `one-pr-one-session`.
+Run the gitar pass of `gitar-review` on PR #94, then `make codex-review PR=94` in the background. PR-74 needs the owner merge with the bypass checkbox, because `night-gate` is red. After PR #94 merges, the next session opens one process PR for D-533 and D-534: a new roadmap item, the effective head in `ReviewGate` and `CodexReview` over the skip set of D-475, the tests, and the summary form in `one-pr-one-session`. The PR after it is the night fix of D-538: bisect the softlocks from `170f08c` to `e069e16` (PR-72 first), fix them, and let a hand night on the PR branch count for that PR.
 
 ## Session 223: 2026-09-23, Claude Code
 

@@ -571,7 +571,7 @@ Gate: the atlas and the layout match the generator, each block matches its old t
 > *In plain English:* each box face read one plain tile of noise, so no box showed a face, a belt, or a boot. Now each face gets its own painted canvas, and nothing changes on screen yet.
 
 **PR-78: Codex review and auto-merge.** ✅ Done in PR #93.
-`make codex-review PR=<n>` starts the cross-provider review through the Codex CLI in a detached worktree, and the `codex-review` command judges the record that the review pushes (D-511, D-512). A finding open in three rounds stops the fix loop for the owner (D-513 to D-515). A ruleset on `main` requires every gate check, and a PR with the green light merges by auto-merge after the owner confirms (D-516, D-517, D-520 to D-522, D-524). D-535 supersedes D-520, so no role bypasses the ruleset. The review uses the ChatGPT login alone (D-523).
+`make codex-review PR=<n>` starts the cross-provider review through the Codex CLI in a detached worktree, and the `codex-review` command judges the record that the review pushes (D-511, D-512). A finding open in three rounds stops the fix loop for the owner (D-513 to D-515). A ruleset on `main` requires every gate check, and a PR with the green light merges by auto-merge after the owner confirms (D-516, D-517, D-520 to D-522, D-524). The review uses the ChatGPT login alone (D-523).
 Gate: the new tests pass, the command reviews this PR, and each required check reports on a documents head and on a code head.
 > *In plain English:* the owner started every review by hand and merged every PR by hand. Now one command starts the review, and a PR that passes every gate merges itself.
 

@@ -9,7 +9,7 @@ using Xunit;
 namespace WhatYouCarry.Tests;
 
 /// <summary>
-/// The ruleset of <c>main</c> in <c>.github/rulesets/main.json</c> (D-516, D-522, D-535). A required check that no job
+/// The ruleset of <c>main</c> in <c>.github/rulesets/main.json</c> (D-516, D-520, D-522). A required check that no job
 /// reports blocks every merge, and a job that the ruleset does not require passes a merge in silence. These tests
 /// bind the file to the workflows, so a renamed or a new job fails here.
 /// </summary>
@@ -95,13 +95,15 @@ public sealed class RulesetTests
     }
 
     [Fact]
-    public void NoOneBypassesTheRuleset()
+    public void TheOwnerBypassesThroughAPullRequestAlone()
     {
-        // D-535 supersedes D-520: no role bypasses the rules, so no merge button offers to skip them. A night gate
-        // deadlock needs the owner to disable the ruleset for one merge (docs/runbooks/main-ruleset.md).
+        // D-520: the admin role bypasses on a PR merge, for a night gate deadlock, and never by a direct push.
         using JsonDocument document = JsonDocument.Parse(RepositoryRoot.ReadFile(RulesetPath));
+        JsonElement actor = Assert.Single(document.RootElement.GetProperty("bypass_actors").EnumerateArray());
 
-        Assert.Empty(document.RootElement.GetProperty("bypass_actors").EnumerateArray());
+        Assert.Equal("RepositoryRole", actor.GetProperty("actor_type").GetString());
+        Assert.Equal(5, actor.GetProperty("actor_id").GetInt32());
+        Assert.Equal("pull_request", actor.GetProperty("bypass_mode").GetString());
     }
 
     [Fact]

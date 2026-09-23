@@ -12,7 +12,7 @@ The file `.github/rulesets/main.json` holds the ruleset of `main`. The live rule
 - No extra approval for a commit of an unlinked author, and no required reviewers. GitHub adds both fields with other values when the file omits them, and an extra approval blocks every auto-merge of a one-owner repository.
 - 20 required checks, each from the GitHub Actions app (id 15368). The job name of each check is unique across the workflows (F-110).
 - No rule for the newest `main` on the branch, because the PRs go one at a time.
-- No bypass, so no merge button offers to skip the rules (D-535 supersedes D-520). A night gate deadlock needs the procedure below.
+- One bypass: the repository admin role, through a pull request merge alone (D-520). It clears a night gate deadlock.
 - No deletion of `main`, and no force push to it.
 
 A skipped job reports success to a required check. The heavy jobs skip a documents head (D-474), so each required check reports on a documents head and on a code head. A job that never reports blocks every merge.
@@ -45,16 +45,6 @@ gh api --method POST "repos/$repo/rulesets" --input /tmp/main-ruleset.json --jq 
 id=$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main") | .id')
 gh api --method PUT "repos/$repo/rulesets/$id" --input /tmp/main-ruleset.json --jq '{id, name, enforcement}'
 ```
-
-## Procedure: a night gate deadlock
-
-A fix PR for a night failure cannot turn `night-gate` green, and the ruleset has no bypass (D-535). The owner does these steps for that one merge alone.
-
-1. Open Settings, then Rules, then the ruleset `main`.
-2. Set the enforcement to `Disabled`, and save.
-3. Merge the fix PR.
-4. Set the enforcement to `Active`, and save.
-5. Compare the live ruleset with the file.
 
 ## Compare the live ruleset with the file
 
