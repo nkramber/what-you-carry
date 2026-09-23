@@ -2,6 +2,44 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 219: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-78, reviewer. Branch `feat/pr-78-codex-review`. PR #93, changes required. Base `e069e16`.
+
+### What this session did, and why
+
+- Reviewed PR #93 at effective head `b7623f4` for the Codex review command, the three-strike count, and the main ruleset.
+- Added review record `docs/reviews/pr-93.md`. Finding P1-1 shows that the command approves a record with an open P0, P1, or P2 finding.
+- Pushed the review record and this handoff together as one metadata commit, as D-182 and D-518 require.
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx` passed with 0 warnings and 0 errors. The full test suite passed: 1,491 passed, 0 failed, 0 skipped.
+- The metadata checks passed: `ste-check` reported 0 findings, and the Documents category passed 131 tests.
+- The effective head is `b7623f4`. The remote review branch holds the metadata commit with this entry and the review record.
+- Before publication, all code-head checks passed except `evaluate`, which failed because the review record was absent. `review-gate` was skipping. Gitar passed.
+- Fresh checks after publication are in flight.
+
+### In flight
+
+- The author must correct P1-1 and run the next review round.
+- Exit test 4 checks the live ruleset after the owner approves the post-merge setup.
+
+### Traps and gotchas
+
+- An approved verdict skips the strike result in `ReviewOutcomeRules.Judge`. The P3 approval test does not cover an open P0 to P2 finding.
+- The review record applies to effective head `b7623f4`; the metadata commit does not change that head (D-184).
+- The publication run must report the `review-gate` result for this record.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author fixes P1-1, then starts the next review round after the Gitar pass.
+
 ## Session 218: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -332,45 +370,3 @@ None.
 ### Next concrete action
 
 After the owner merges PR #89, read the first push to `main` for exit test 6.
-
-## Session 209: 2026-09-22, Claude Code
-
-Author: Claude Code
-Session: PR-71, author. Branch `chore/ci-skip-for-document-heads`. PR #89, pending owner merge. Base `a2473ec` (PR #87 merged).
-
-### What this session did, and why
-
-- The owner asked for the CI skip of a documents head and a study of the CI duration, in one PR (D-471). The PR description records that exception to G-10.
-- The new `ci-skip` command and the composite action `.github/actions/ci-skip` skip the heavy jobs of `ci.yml`, `bit-identity.yml`, `smoke.yml`, and `bots.yml` (D-472 to D-477). Rule 1 covers a PR of documents alone. Rule 2 covers a push of documents after a head whose run of that workflow passed.
-- Each test class that reads a document carries the category `Documents`, and the `documents` job runs it on each head (D-476).
-- F-109 records the CI duration. The fixes: a class split of `ProcgenTests` (D-478), two jobs on each hosted leg (D-479), and one fifth of each seed sweep on a pull request (D-480, D-481). No NuGet cache (D-482).
-
-### State of the build
-
-- Build: 0 warnings and 0 errors. `ste-check` and `det-lint` report 0 findings.
-- Local suite with `WYC_PR_SWEEP=1`: 1343 passed in 1 minute 47 seconds. At the full count: 1343 passed in 5 minutes 9 seconds. Before the change: 1294 tests in 9 minutes 10 seconds.
-- The effective head is `05aa78a`, the fix of the one gitar finding. Gitar approved it, and every check passed except `evaluate`, which waits for the review record (D-251).
-- CI of `05aa78a` against run 35771495463 of PR #87, the test step alone: Linux 1055 to 384 seconds, with 204 in `linux-x64-sweeps`. Windows 1206 to 437, with 88 in `windows-x64-sweeps`. Mac mini 451 to 113. The `documents` job took 32 seconds.
-
-### In flight
-
-- The hand-over of PR #89 to Codex for the review.
-- Exit test 4: the push of this entry is a documents push after the green head `05aa78a`, so the heavy jobs of the four workflows skip by rule 2. The PR comment of exit tests 4 and 5 holds the result.
-- On the hosted legs the rest job is slower than the sweeps job: 384 against 204 seconds on Linux. A move of `EnemyTests` into the `Sweep` category can balance them, and the owner decides.
-
-### Traps and gotchas
-
-- A skipped job reports success. The `!cancelled()` condition runs every heavy job when `ci-skip` fails, so a fault never passes in silence.
-- xUnit reads no trait of an outer class on a nested class. Each nested class of `ProcgenTests` carries its own `Sweep` trait, and `EveryNestedClassOfASweepClassTakesTheCategory` checks it.
-- A class that calls a command joins the console collection, or `EveryConsoleTestIsInTheCollection` fails.
-- `git diff --name-only` hides the old path of a move. `ChangedPaths` passes `--no-renames`, so a code file moved into `docs/` still runs every job (gitar finding on PR #89, `CodeMovedIntoTheSkipSetRunsEveryJob`).
-- `CLAUDE.md` sits 43 bytes under the ceiling of D-382, so the reviewer rule for a skipped job lives in the pr-review verification reference.
-- `main` has no branch protection yet (D-387), so no required check reads the skipped jobs today.
-
-### Open questions that block progress
-
-None. The owner answered each question of this PR: D-471 to D-482.
-
-### Next concrete action
-
-Hand PR #89 to Codex for the review. After the merge, the next session reads the first push to `main` for exit test 6 (D-473).
