@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 200: 2026-09-21, Claude Code
+
+Author: Claude Code
+Session: PR-18, author. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
+
+### What this session did, and why
+
+- Asked the owner OQ-44, OQ-161, and the five PR-18 answers before any code. Later asked three more: the coward sweeps, the smoke order, and the enemies of the transition test. Recorded D-427 to D-437.
+- Core: `NextFloorWorker`, a pure function of the seed and the floor (D-429), and `SimulationLoop.OfferNextFloor`. `StairwellPrompt` opens on the stairwell cell (D-431). The `coward` policy (D-433) and the `ascend` end state (D-430).
+- Game: `ChunkSwap` digs on a task, uploads four chunks each frame, and swaps in one frame. Before this PR, the world mesh never changed after a descent. The prompt text, the smoke walk to the stairwell (D-436), and `--transitions` (D-435, D-437).
+- Tools and workflows: the ascend count in the bot summary and the night record, and the coward in `bots.yml` and `night.yml` (D-434).
+
+### State of the build
+
+- Local: 1223 of 1223 tests, the Smoke category included. `det-lint`, `asset-qa`, and `ste-check` report 0 findings.
+- The code head is `46c4b9d`. The status marks and this entry follow it in one docs commit. CI runs on the push.
+- A local headless run with `--transitions 10` exits 0. Three of the ten swaps read `fromWorker: false`, because a headless run goes faster than real time.
+
+### In flight
+
+- PR #85 waits for CI, the automated pass, and the cross-provider review.
+- Exit test 6 needs the owner: run the transition command of `CLAUDE.md` on the Deck (D-428). Exit 0 passes. Record `transitionMicrosMax` from the end line.
+
+### Traps and gotchas
+
+- The smoke script alone dies to the scavengers of seed 1 at tick 273. The walk comes first for that reason (D-436).
+- The descender with enemies dies on floor 2 of seed 1. The transition test loads no enemy family (D-437).
+- `OfferedFloorKeepsTheRunHash` waits on the task when the prompt opens. A test that needs the task to end first fails under the load of the full suite.
+- A descent on floor 15 still throws, because no template covers floor 16. The bots ascend there. PR-35, the ending, holds that stairwell.
+
+### Open questions that block progress
+
+None. Exit test 6 waits on the Deck of the owner, and no question blocks it.
+
+### Next concrete action
+
+Wait for CI with the command of `docs/runbooks/session-context.md`, then load `gitar-review` and answer the automated pass. Then hand PR #85 to Codex for the cross-provider review.
+
 ## Session 199: 2026-09-21, Codex
 
 Author: Codex
