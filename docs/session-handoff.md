@@ -18,12 +18,14 @@ Session: PR-71, author. Branch `chore/ci-skip-for-document-heads`. PR #89, pendi
 
 - Build: 0 warnings and 0 errors. `ste-check` and `det-lint` report 0 findings.
 - Local suite with `WYC_PR_SWEEP=1`: 1343 passed in 1 minute 47 seconds. At the full count: 1343 passed in 5 minutes 9 seconds. Before the change: 1294 tests in 9 minutes 10 seconds.
-- The remote head and the CI of the first push follow in the next entry of this PR, or in the PR comments.
+- The effective head is `05aa78a`, the fix of the one gitar finding. Gitar approved it, and every check passed except `evaluate`, which waits for the review record (D-251).
+- CI of `05aa78a` against run 35771495463 of PR #87, the test step alone: Linux 1055 to 384 seconds, with 204 in `linux-x64-sweeps`. Windows 1206 to 437, with 88 in `windows-x64-sweeps`. Mac mini 451 to 113. The `documents` job took 32 seconds.
 
 ### In flight
 
-- The first CI run of PR #89, then the automated pass of gitar, then the hand-over to Codex for the review.
-- Exit test 4 needs one push of documents alone after a green head. Exit test 5 needs the job times of the first code head.
+- The hand-over of PR #89 to Codex for the review.
+- Exit test 4: the push of this entry is a documents push after the green head `05aa78a`, so the heavy jobs of the four workflows skip by rule 2. The PR comment of exit tests 4 and 5 holds the result.
+- On the hosted legs the rest job is slower than the sweeps job: 384 against 204 seconds on Linux. A move of `EnemyTests` into the `Sweep` category can balance them, and the owner decides.
 
 ### Traps and gotchas
 
@@ -40,7 +42,7 @@ None. The owner answered each question of this PR: D-471 to D-482.
 
 ### Next concrete action
 
-Wait for the CI of the first push, answer the automated pass of gitar, then hand PR #89 to Codex. After the merge, the next session reads the first push to `main` for exit test 6 (D-473).
+Hand PR #89 to Codex for the review. After the merge, the next session reads the first push to `main` for exit test 6 (D-473).
 
 ## Session 208: 2026-09-22, Codex
 
