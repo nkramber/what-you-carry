@@ -59,8 +59,8 @@ public static class PathWalk
     /// <para>
     /// The ground is the slope under the feet at that same point, because the slope carries the body up to it
     /// with no jump. A body at the middle of a ramp cell stands half a place under the face of the next place, so
-    /// a rule that read the feet alone gave a jump on each place of a climb (F-108). Off a ramp, the ground is the
-    /// feet.
+    /// a rule that read the feet alone gave a jump on each place of a climb (F-108). The ground is the higher of the
+    /// feet and that slope. Off a ramp, the ground is the feet.
     /// </para>
     /// </remarks>
     public static bool NeedsAJump(VoxelGrid grid, Cell next, Vector3 feet)
@@ -78,8 +78,11 @@ public static class PathWalk
         Cell under = FloorCellOf(feet);
         if (grid.TryGetRamp(under.X, under.Y, under.Z, out Ramp slopeUnder))
         {
+            // A box can rest on the edge of a higher block with its center over the ramp, so the ground is never
+            // under the feet.
             float alongUnder = DetMath.Clamp(slopeUnder.Along(under.X, under.Z, entryX, entryZ), 0.0f, 1.0f);
-            ground = slopeUnder.SlopeAt(under.Y, alongUnder);
+            float slopeGround = slopeUnder.SlopeAt(under.Y, alongUnder);
+            ground = slopeGround > feet.Y ? slopeGround : feet.Y;
         }
 
         return floor - ground > Arrival;

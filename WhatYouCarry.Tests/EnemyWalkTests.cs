@@ -129,6 +129,24 @@ public sealed class EnemyWalkTests
     }
 
     /// <summary>
+    /// PR-72 exit test 2. A box that rests on the edge of a block with its center over a ramp beside it stands at the
+    /// top of the block, so a walk onto that block needs no jump. The ground is the higher of the feet and the slope,
+    /// and never the slope under the feet alone.
+    /// </summary>
+    [Fact]
+    public void ABodyOnTheEdgeOfABlockOverARampNeedsNoJumpOntoIt()
+    {
+        VoxelGrid grid = TestWorld.FlatFloor(10, 6);
+        grid.Set(4, 1, 3, new Ramp(RampRise.PlusX, 4, 0).Id);
+        grid.Set(4, 1, 4, BlockId.RawStone);
+
+        // The box spans Z 3.5 to 4.1, so its edge rests on the block top at 2.0, over the ramp column.
+        Vector3 feet = new(4.5f, 2.0f, 3.8f);
+        Assert.Equal(new Cell(4, 1, 3), PathWalk.FloorCellOf(feet));
+        Assert.False(PathWalk.NeedsAJump(grid, new Cell(4, 1, 4), feet));
+    }
+
+    /// <summary>
     /// PR-72 exit test 3. A hunting brain walks from the low floor of a course to the player on the high floor for
     /// every rise and run, and it never leaves the ground (F-108).
     /// </summary>
