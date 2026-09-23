@@ -173,6 +173,8 @@ public sealed class CodexReviewTests
     [InlineData("### P10-1: A defect", "severity P10")]
     [InlineData("### P1: A defect", "not a finding heading")]
     [InlineData("### Notes", "not a finding heading")]
+    [InlineData("#### P1-1: A defect", "not a finding heading")]
+    [InlineData("###P1-1: A defect", "not a finding heading")]
     public void AFindingHeadingOutsideTheFormatIsAFault(string heading, string expected)
     {
         // PR #93 review P2-1: a severity outside P0 to P3, or a heading that the parser skips, never passes as

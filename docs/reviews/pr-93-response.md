@@ -37,4 +37,10 @@ Regression check: `AFindingHeadingOutsideTheFormatIsAFault` for `P4-1`, `P10-1`,
 
 Gitar found at `2dca4fe` that `codex login status` writes its status to stderr, and the command read stdout alone, so each round refused. `4e850b9` reads both streams, and `TheLoginStatusReadsTheStderrOfTheCli` starts a real child that writes to stderr. The thread has its reply and is resolved.
 
+## The automated pass after round 2
+
+- At `7159ad2`, Gitar found that a `#### P1-1:` or `###P1-1:` heading still passed the guard with no fault. Full merit, the same class as P2-1. The guard now faults on each line that starts with `###`, and two more cases of `AFindingHeadingOutsideTheFormatIsAFault` cover it. On the parser of `7159ad2`, both cases failed.
+- Gitar found that one line of the PR comments section of `pr-93.md` says that round 2 approved, and the verdict of round 2 is `Changes required`. The claim is correct. The review record belongs to the reviewing provider (D-101, D-182), so the author makes no edit, and the next round reads the thread and corrects the section.
+- `smoke-linux-x64` failed at `7159ad2` with exit 134 after the session ended, on a Godot shutdown error ("Leaked unsafe reference to object: ArrayMesh"). The PR changes no Game code, and the same job passed at `b7623f4` and `4e850b9`. The author re-ran the failed job.
+
 New ids: D-523, D-524. No new F-# id.

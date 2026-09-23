@@ -27,8 +27,8 @@ public static partial class ReviewFindings
 
     /// <summary>
     /// Every finding under the section heading, in the order of the file. A finding heading is
-    /// <c>### P&lt;severity&gt;-&lt;index&gt;: &lt;title&gt;</c>, with a severity from P0 to P3. Any other third-level heading in
-    /// the section is an error that names it, because a skipped finding blocks nothing in silence (T-2, PR #93 P2-1).
+    /// <c>### P&lt;severity&gt;-&lt;index&gt;: &lt;title&gt;</c>, with a severity from P0 to P3. Any other line that starts with three
+    /// or more hashes in the section is an error that names it, because a skipped finding blocks nothing in silence (T-2, PR #93 P2-1).
     /// A finding with no status line is an error that names it too. A finding with no <c>Open at:</c> line has an
     /// empty list, and the outcome rule judges that.
     /// </summary>
@@ -50,7 +50,8 @@ public static partial class ReviewFindings
         {
             string line = lines[index].Trim();
             Match heading = FindingHeading().Match(line);
-            if (!heading.Success && line.StartsWith("### ", StringComparison.Ordinal))
+            // A line of three or more hashes is a heading of level 3 or deeper, with a space or without one.
+            if (!heading.Success && line.StartsWith("###", StringComparison.Ordinal))
             {
                 throw new FormatException($"The heading '{line}' in the '{SectionHeading}' section is not a finding heading of the form '### P<0 to {HighestSeverity}>-<index>: <title>'.");
             }
