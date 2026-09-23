@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 211: 2026-09-22, Claude Code
 
 Author: Claude Code
-Session: PR-72, author. Branch `fix/pr-72-enemy-movement`. PR number follows on open, pending owner merge. Base `ea84473`.
+Session: PR-72, author. Branch `fix/pr-72-enemy-movement`. PR #90, pending owner merge. Base `ea84473`.
 
 ### What this session did, and why
 
@@ -22,7 +22,7 @@ Session: PR-72, author. Branch `fix/pr-72-enemy-movement`. PR number follows on 
 
 ### In flight
 
-- Open the PR, then add `✅ Done in PR #N.` to the roadmap and the design doc, and the PR number here.
+- The status marks `✅ Done in PR #90.` are in the roadmap and the design doc.
 - The CI of the code head, then the gitar pass, then the hand-over to Codex.
 
 ### Traps and gotchas
@@ -38,7 +38,7 @@ None.
 
 ### Next concrete action
 
-Push, open PR-72, add the status marks, wait for the checks, and load `gitar-review`.
+Finish the gitar pass on PR #90, then hand over to Codex for the review.
 
 ## Session 210: 2026-09-22, Codex
 

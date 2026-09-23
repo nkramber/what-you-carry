@@ -730,6 +730,8 @@ Gate: exit tests 1 to 5 pass. Exit test 6 runs after the merge.
 
 ### PR-72: Enemy diagonals and ramp climb
 
+✅ Done in PR #90.
+
 Scope:
 
 - The PR holds the fixes of F-107 and F-108 by owner instruction, an exception to G-10 (D-483, D-484).
@@ -828,7 +830,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 28. Owner: answer OQ-48 and OQ-182. ✅ Answered 2026-09-21 and 2026-09-22. The answers of PR-20 run from D-450, which D-462 supersedes, to D-470.
 29. PR-20. ✅ Done in PR #87.
 30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
-31. PR-72. ✅ The owner answers of 2026-09-22: D-483 to D-489.
+31. PR-72. ✅ Done in PR #90. ✅ The owner answers of 2026-09-22: D-483 to D-489.
 32. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
 33. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
 34. Tier 4 pass on the screenshot fixture (D-133).
