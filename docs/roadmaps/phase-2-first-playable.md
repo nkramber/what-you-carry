@@ -834,7 +834,7 @@ Scope:
 - The login: the command removes the three API credential variables from each Codex process. It forces the ChatGPT login, and refuses any other login (D-523).
 - The three-strike count: the `Open at:` line of each finding gives the heads of the rounds in which it is open (D-513 to D-515).
 - `Makefile`: the `codex-review` target updates the npm CLI and runs the command (D-512).
-- `.github/rulesets/main.json`: the ruleset of `main` (D-520, D-522). `.github/review-gate-mode` holds `enforced` (D-521). The platform jobs of CI, Smoke, and Bit identity take check names with the prefix of the workflow (F-110).
+- `.github/rulesets/main.json`: the ruleset of `main` (D-520, D-522). D-535 supersedes D-520, the bypass. `.github/review-gate-mode` holds `enforced` (D-521). The platform jobs of CI, Smoke, and Bit identity take check names with the prefix of the workflow (F-110).
 - `WhatYouCarry.Tests/`: `CodexReviewTests`, `CodexReviewGitTests`, and `RulesetTests`.
 - `CLAUDE.md`, `AGENTS.md`, and the skills `one-pr-one-session`, `pr-review`, `review-response`, and `gitar-review`: the author loop, the three-strike stop, the auto-merge, and the merge confirmation (D-513, D-516, D-517, D-524). `docs/runbooks/main-ruleset.md` holds the ruleset commands. The agent files name the Tools prefix one time and the play session by its make target, to stay under the ceiling of D-382.
 
