@@ -55,7 +55,8 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 - Mark a change to an earlier decision in its `Effect` column (D-186). Use `Superseded by D-N` when the whole answer changes. Use `Revised in part by D-N` when one part changes, and name the part that changed and the parts that stand.
 - A citation of a superseded decision must name the superseding decision. A decision revised in part stays citable.
 - A reviewer loads `pr-review`. An author who answers review findings loads `review-response` (D-381).
-- One session is one harness invocation, one PR, and one role (D-121, D-375). Load `.claude/skills/one-pr-one-session/SKILL.md` before all PR work: implementation, a new or continued PR, a review, an answer to findings, or the documents of a PR. No PR exists only to record an earlier PR. Each PR has its own handoff entry (D-146).
+- On the three-strike stop of `make codex-review`, turn off auto-merge and ask the owner (D-513).
+- One session is one harness invocation, one PR, and one role (D-121, D-375). The author starts the review with `make codex-review` (D-511). Load `.claude/skills/one-pr-one-session/SKILL.md` before all PR work: implementation, a new or continued PR, a review, an answer to findings, or the documents of a PR. No PR exists only to record an earlier PR. Each PR has its own handoff entry (D-146).
 
 ## Session handoff
 
@@ -84,7 +85,7 @@ The `csharp-conventions` skill holds the code rules. It covers the language, the
 
 ## Git rules
 
-- Trunk is `main`. Work on a short branch. The owner squash-merges (D-126).
+- Trunk is `main`. Work on a short branch. A PR squash-merges by auto-merge or by the owner. First give the owner a summary of one paragraph, and get the merge confirmation (D-126, D-516, D-524).
 - Commit subjects use a conventional prefix: `feat`, `fix`, `docs`, `test`, `chore`.
 - After a push, wait on the checks with the one command of the `one-pr-one-session` skill, and never poll (D-380).
 - One concern per PR (G-10).
@@ -96,29 +97,30 @@ The `csharp-conventions` skill holds the code rules. It covers the language, the
 An automated reviewer, gitar, comments on every PR after a push (D-250). The author answers every comment before the hand-over to the other provider, or before the override request on a documentation PR.
 
 - Load the `gitar-review` skill after each push. It holds the author procedure, the proof that a review is current, and the commands (D-374).
-- When the pass ends, tell the owner that the PR is ready for the other provider, or for the override.
+- When the pass ends, run `make codex-review PR=<n>` in the background, or ask for the override (D-511, D-517).
 - The reviewing provider reads the PR comments into its review and never addresses gitar (`pr-review`).
 - A reply names no provider, harness, or model as the source of work (T-6).
 
 ## Build and test commands
 
-The build needs the SDK version in `global.json`. Run each command from the checkout root.
+The build needs the SDK version in `global.json`. Run each command from the checkout root. A command in the form `tools <command>` runs `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- <command>`.
 
 - Build: `dotnet build WhatYouCarry.slnx`
 - Test: `dotnet test WhatYouCarry.slnx --no-build`
-- STE check, the reference check, and the session number check: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .`
-- Handoff rotation: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- handoff-rotate --root .`
-- Documentation gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- doc-gate --root . --base origin/main --head HEAD --body <file> --title "<title>" --branch <branch>`
-- Determinism and string lint: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --root .`
-- Asset QA: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- asset-qa --root .`
-- Texture generator: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- texture-gen --root .`
+- STE check, the reference check, and the session number check: `tools ste-check --root .`
+- Handoff rotation: `tools handoff-rotate --root .`
+- Documentation gate, local run: `tools doc-gate --root . --base origin/main --head HEAD --body <file> --title "<title>" --branch <branch>`
+- Determinism and string lint: `tools det-lint --root .`
+- Asset QA: `tools asset-qa --root .`
+- Texture generator: `tools texture-gen --root .`
 - Sounds: `make sounds` renders them, and `make analyze SOUND=<name>` analyses one reference.
-- Bit identity: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- bit-identity`
-- Review gate, local run: `dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json`
+- Bit identity: `tools bit-identity`
+- Review gate, local run: `tools review-gate --input request.json --output check-run.json`
+- Cross-provider review: `make codex-review PR=<n>`. Make prints its exit code as `Error <code>` (D-511).
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Smoke session, local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke`
 - Test exit session, a headless smoke session that presses Escape or Start at a tick: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke --press escape 100`. The other name is `start`.
-- Play session, a local run after the build: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game`. It opens borderless fullscreen at the display resolution and captures the mouse (D-310). Escape or the Start button ends it (D-311). The engine flag `--windowed` opens a window.
+- Play session: `make play` builds and opens it borderless fullscreen at the display resolution, with the mouse captured (D-310). Escape or the Start button ends it (D-311). `make windowed` opens a window.
 - Bot session with a frame log, for M-3: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt`
 - Transition test, PR-18 exit test 6 on the Deck (D-428, D-435): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt --transitions 10`. On the Deck, use the Linux Godot .NET binary of D-294 in place of that path.
 - Contact sheet, a local run with a window: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
@@ -145,12 +147,13 @@ A PR merges only when every line holds:
 - [ ] The `night-gate` job is green: a success record from a night inside 48 hours, at a commit on the base branch (D-115, D-177, D-274, D-275).
 - [ ] The `smoke` job is green on all three platforms: the headless smoke session of the Game layer, with the pinned Godot binary (D-114, D-149).
 - [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250).
-- [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
-- [ ] The `review-gate` check run is green. Grey means no review record yet, and the job line reads red then (D-251). Red means the review does not approve this head (D-179, D-181, D-185).
+- [ ] The other provider reviewed it through `make codex-review`, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
+- [ ] The `review-gate` check run is green. Red means no review record, or a review that does not approve this head (D-179, D-181, D-185, D-521).
 - [ ] `docs/decisions.md` has every new decision.
 - [ ] `docs/questions.md` has every new question.
 - [ ] `docs/design.md` matches intent.
 - [ ] Each check that does not exist yet has a line that names the PR that creates it (D-148, G-19).
 - [ ] `docs/session-handoff.md` is current.
 - [ ] The `doc-gate` job is green: the handoff entry names this branch, and the documents matrix gives each category a disposition and a reason (D-375, D-376).
+- [ ] No review thread stays open, and the ruleset of `main` holds (D-522).
 - [ ] No attribution anywhere (T-6).

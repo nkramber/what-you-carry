@@ -122,7 +122,7 @@ A claim that is wrong in substance stays a finding. The reviewer corrects a stal
 A line under `## Out of scope` never gives the verdict `Changes required`.
 No findings does not mean no risk. State material limits without a claim of zero regressions.
 Approval applies only to the recorded revision. A new base or head requires assessment of the changed scope and evidence.
-The owner alone merges the PR (D-102, D-126).
+An approving record lets the author turn on auto-merge, and the owner can also merge the PR (D-516).
 
 When the review record enters the PR, retain the assessed implementation head in that file.
 Check any later metadata commit before the final verdict.
@@ -137,17 +137,16 @@ PR-1 adds a `review-gate` check (D-179, D-181, D-185). It applies three rules:
 2. The verdict is `Ready for owner merge`.
 3. The head in the Identity list is the effective head.
 
-The check has three states. Read the color before you start:
+The check has two states in enforced mode. Read the color before you start:
 
 | Color | Meaning | What to do |
 |---|---|---|
-| Grey | No review record exists for this PR. The job line reads red (D-251). | Write one. This is the normal state before a review. |
-| Red | A review record exists, and it does not approve this head. | Read the findings. The author corrects them. |
-| Green | An approved review covers the effective head. | The owner may merge (D-102, D-126). |
+| Red | No review record exists, or the record does not approve this head. | Write the record, or read the findings. The author corrects them. |
+| Green | An approved review covers the effective head. | The author turns on auto-merge, or the owner merges (D-516). |
 
-Grey appears only while the check is advisory. At launch the same case turns red (D-181, D-185).
+The mode is `enforced` from PR-78, and the ruleset of `main` requires the check (D-521, D-522).
 GitHub counts a neutral conclusion as a success for a required check, so enforced mode never uses grey.
-The check is advisory until launch, because GitHub locks branch protection on a private free repository (D-170, D-180).
+Advisory mode gave a grey check for a missing record (D-181, D-185). The workflow reads the mode from the base branch, so each run uses the mode that `main` holds at that time.
 
 Rule 3 fails when the author pushes code after the approval. That result is correct.
 Reassess the new diff, then update the head field and the verdict together.

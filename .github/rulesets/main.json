@@ -1,0 +1,130 @@
+{
+  "name": "main",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": [
+        "refs/heads/main"
+      ],
+      "exclude": []
+    }
+  },
+  "bypass_actors": [
+    {
+      "actor_id": 5,
+      "actor_type": "RepositoryRole",
+      "bypass_mode": "pull_request"
+    }
+  ],
+  "rules": [
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "allowed_merge_methods": [
+          "squash"
+        ],
+        "dismiss_stale_reviews_on_push": false,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_approving_review_count": 0,
+        "required_review_thread_resolution": true
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "do_not_enforce_on_create": false,
+        "strict_required_status_checks_policy": false,
+        "required_status_checks": [
+          {
+            "context": "documents",
+            "integration_id": 15368
+          },
+          {
+            "context": "ci-linux-x64",
+            "integration_id": 15368
+          },
+          {
+            "context": "ci-linux-x64-sweeps",
+            "integration_id": 15368
+          },
+          {
+            "context": "ci-windows-x64",
+            "integration_id": 15368
+          },
+          {
+            "context": "ci-windows-x64-sweeps",
+            "integration_id": 15368
+          },
+          {
+            "context": "ci-macos-arm64",
+            "integration_id": 15368
+          },
+          {
+            "context": "smoke-linux-x64",
+            "integration_id": 15368
+          },
+          {
+            "context": "smoke-windows-x64",
+            "integration_id": 15368
+          },
+          {
+            "context": "smoke-macos-arm64",
+            "integration_id": 15368
+          },
+          {
+            "context": "bit-identity-linux-x64",
+            "integration_id": 15368
+          },
+          {
+            "context": "bit-identity-windows-x64",
+            "integration_id": 15368
+          },
+          {
+            "context": "bit-identity-macos-arm64",
+            "integration_id": 15368
+          },
+          {
+            "context": "bit-identity-compare",
+            "integration_id": 15368
+          },
+          {
+            "context": "bots",
+            "integration_id": 15368
+          },
+          {
+            "context": "det-lint",
+            "integration_id": 15368
+          },
+          {
+            "context": "asset-qa",
+            "integration_id": 15368
+          },
+          {
+            "context": "ste-check",
+            "integration_id": 15368
+          },
+          {
+            "context": "doc-gate",
+            "integration_id": 15368
+          },
+          {
+            "context": "night-gate",
+            "integration_id": 15368
+          },
+          {
+            "context": "review-gate",
+            "integration_id": 15368
+          }
+        ]
+      }
+    }
+  ]
+}

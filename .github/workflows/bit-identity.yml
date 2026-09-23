@@ -20,6 +20,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
 
+# Each job name below is a check name, unique across the workflows, because the ruleset of main requires each
+# one by name (D-522). The job id stays short for the needs lists.
 jobs:
   # The first job decides whether the heavy jobs skip a head that changes documents alone (D-474, D-475).
   ci-skip:
@@ -39,6 +41,7 @@ jobs:
           workflow-file: bit-identity.yml
 
   linux-x64:
+    name: bit-identity-linux-x64
     needs: ci-skip
     # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
     if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
@@ -61,6 +64,7 @@ jobs:
           echo "hash=${hash}" >> "$GITHUB_OUTPUT"
 
   windows-x64:
+    name: bit-identity-windows-x64
     needs: ci-skip
     # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
     if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
@@ -84,6 +88,7 @@ jobs:
           echo "hash=${hash}" >> "$GITHUB_OUTPUT"
 
   macos-arm64:
+    name: bit-identity-macos-arm64
     needs: ci-skip
     # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
     if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
@@ -106,6 +111,7 @@ jobs:
           echo "hash=${hash}" >> "$GITHUB_OUTPUT"
 
   compare:
+    name: bit-identity-compare
     needs: [ci-skip, linux-x64, windows-x64, macos-arm64]
     # The compare job skips with the three platform jobs. An empty hash below fails it when a platform job fails (T-2).
     if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}

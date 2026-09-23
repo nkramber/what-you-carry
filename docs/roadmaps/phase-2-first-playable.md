@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-77, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-78, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-78 applies D-511 to D-524. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -35,6 +35,7 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-107 | An enemy walks no diagonal, so every path is a staircase of side steps | PR-72 |
 | F-108 | An enemy climbs a ramp in slow jumps | PR-72 |
 | F-109 | A code head waited 18 to 21 minutes for the hosted CI legs, and a push of documents alone ran every check again | PR-71 |
+| F-110 | Three workflows gave three jobs the same check names, so a required check by name matched three jobs | PR-78 |
 
 ## 3. Guardrails for this phase
 
@@ -823,6 +824,37 @@ Gate: exit tests 1 to 6 pass.
 
 > *In plain English:* each box face read one plain tile of noise, so no box showed a face, a belt, or a boot. Now each face gets its own painted canvas, and nothing changes on screen yet.
 
+### PR-78: Codex review and auto-merge
+
+✅ Done in PR #93.
+
+Scope:
+
+- `WhatYouCarry.Tools/CodexReview/`: the `codex-review` command. It checks the start conditions and probes the model. It runs one review round in a detached worktree at the PR head, and judges the pushed record (D-511). The Codex call names the model, the effort, the approval policy, and the sandbox (D-511, D-512).
+- The login: the command removes the three API credential variables from each Codex process. It forces the ChatGPT login, and refuses any other login (D-523).
+- The three-strike count: the `Open at:` line of each finding gives the heads of the rounds in which it is open (D-513 to D-515).
+- `Makefile`: the `codex-review` target updates the npm CLI and runs the command (D-512).
+- `.github/rulesets/main.json`: the ruleset of `main` (D-520, D-522). `.github/review-gate-mode` holds `enforced` (D-521). The platform jobs of CI, Smoke, and Bit identity take check names with the prefix of the workflow (F-110).
+- `WhatYouCarry.Tests/`: `CodexReviewTests`, `CodexReviewGitTests`, and `RulesetTests`.
+- `CLAUDE.md`, `AGENTS.md`, and the skills `one-pr-one-session`, `pr-review`, `review-response`, and `gitar-review`: the author loop, the three-strike stop, the auto-merge, and the merge confirmation (D-513, D-516, D-517, D-524). `docs/runbooks/main-ruleset.md` holds the ruleset commands. The agent files name the Tools prefix one time and the play session by its make target, to stay under the ceiling of D-382.
+
+Out of scope: the live repository settings, which the PR-78 session applies after the owner merge (D-519).
+
+Exit tests:
+
+1. `CodexReviewTests`, `CodexReviewGitTests`, and `RulesetTests` pass. A finding open in rounds 1 and 2 passes, and a finding open in round 3 stops. A fixed and reopened finding counts each open round (D-514).
+2. `make codex-review PR=<this PR>` reviews this PR, and the author answers each finding until the verdict approves or the three-strike stop fires.
+3. Each of the 20 required checks of the ruleset reports on a code head and on a documents head of this PR. The PR description names both heads.
+4. After the merge, the owner approves the setup, and the live ruleset matches `.github/rulesets/main.json` (D-519). The PR-78 session runs this test.
+
+Review focus: the start conditions and the outcome rules against T-2, the three-strike count, and the ruleset against the jobs that report on each head.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass. Exit test 4 runs after the merge.
+
+> *In plain English:* the owner started every review by hand and merged every PR by hand. Now one command starts the review, and a PR that passes every gate merges itself.
+
 ### PR-74: Body art
 
 Scope:
@@ -953,14 +985,15 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 31. PR-72. ✅ Done in PR #90. ✅ The owner answers of 2026-09-22: D-483 to D-489.
 32. PR-73. ✅ Done in PR #91. ✅ The owner answers of 2026-09-22: D-490 to D-495.
 33. PR-62. ✅ Done in PR #92. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-509.
-34. PR-74.
-35. PR-75.
-36. PR-76.
-37. Owner: answer OQ-181.
-38. PR-77.
-39. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-40. Tier 4 pass on the screenshot fixture (D-133).
-41. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+34. PR-78. ✅ Done in PR #93. ✅ The owner answers of 2026-09-23: D-511 to D-524.
+35. PR-74.
+36. PR-75.
+37. PR-76.
+38. Owner: answer OQ-181.
+39. PR-77.
+40. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+41. Tier 4 pass on the screenshot fixture (D-133).
+42. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

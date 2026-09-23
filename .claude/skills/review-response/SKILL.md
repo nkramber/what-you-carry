@@ -27,6 +27,7 @@ Use this skill when you answer a review of your own PR. The reviewing provider u
 6. Correct every finding that has merit. Use the smallest change that restores the contract.
 7. Record each disposition in `docs/reviews/pr-<number>-response.md`.
 8. Commit the response, the corrections, and the handoff entry, then run the session end gate (D-182, D-183, D-199).
+9. Do the gitar pass of the new head, then start the next round with `make codex-review PR=<n>` (D-511).
 
 A correction of documents alone runs `ste-check`, `doc-gate`, and the `Documents` category, and no full suite (D-491, D-492). A correction that changes code runs the full suite (D-493).
 
@@ -42,7 +43,7 @@ Push back when the evidence supports it. State the reason and show the proof:
 | The finding states a style preference. | Name the contract that the code does not break. |
 | The finding repeats a risk that a decision already accepted. | Quote the D-# id and its accepted risk. |
 | The finding asks for work outside the PR scope. | Quote the roadmap entry and the exit tests. Name the PR that holds the work. |
-| The finding reopens one id for the third time. | Name the three triggers and ask the owner to settle the scope (D-124). |
+| `make codex-review` exits 11 for an id. | Do the three-strike stop of `one-pr-one-session`, `references/review-and-merge.md` (D-513). |
 
 A disagreement belongs in the response file, with the evidence. Never delete a finding from the review record.
 The reviewer sets a refuted finding to `withdrawn` and keeps the evidence that refuted it.
@@ -77,6 +78,7 @@ Load `.claude/skills/gitar-review/SKILL.md` after each push, and follow its proc
 
 - The author alone answers gitar. The reviewing provider never replies to gitar (`pr-review`, `references/repeat-review.md`).
 - A reply names no provider, harness, or model as the source of the work (T-6, D-176).
-- When the pass ends, tell the owner that the PR is ready for the other provider, or for the override. It is not ready to merge yet.
+- Resolve each thread after its reply, also after a fix. The ruleset of `main` needs each thread resolved (D-522).
+- When the pass ends, run `make codex-review PR=<n>`, or apply the override label (D-511, D-517). The file `references/review-and-merge.md` of `one-pr-one-session` holds the loop and the auto-merge.
 - Record the pass in the handoff entry. Give the count of findings, the count with merit, and the commit that answered each one.
 - Record each `Gitar review` comment in the handoff entry too (D-303).

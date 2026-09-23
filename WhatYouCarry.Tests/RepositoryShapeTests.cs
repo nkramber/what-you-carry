@@ -439,6 +439,7 @@ public sealed class RepositoryShapeTests
         Assert.Contains("references/merge-prompt.md", skill, StringComparison.Ordinal);
         string reference = RepositoryRoot.ReadFile($".claude/skills/{OnePrOneSessionSkill}/references/merge-prompt.md");
         Assert.Contains("the owner merges the PR and says `Merged PR #x`", reference, StringComparison.Ordinal);
+        Assert.Contains("GitHub auto-merge merges it on the green light", reference, StringComparison.Ordinal);
         Assert.Contains("it does no other work", reference, StringComparison.Ordinal);
         foreach (string part in MergePromptBlockParts)
         {
@@ -460,11 +461,12 @@ public sealed class RepositoryShapeTests
     private const int SessionSkillCharacterLimit = 7000;
 
     [Fact]
-    public void ReviewGateModeFileHoldsAdvisory()
+    public void ReviewGateModeFileHoldsEnforced()
     {
-        // D-185: PR-1 creates the mode file with advisory.
+        // D-521: a missing review record fails the required check. Advisory mode gives neutral, and GitHub counts a
+        // neutral conclusion as a pass for a required check (D-181).
         string mode = RepositoryRoot.ReadFile(".github/review-gate-mode");
-        Assert.Equal("advisory", mode.Trim());
+        Assert.Equal("enforced", mode.Trim());
     }
 }
 
@@ -500,6 +502,44 @@ internal static class WorkflowText
             if (currentJob is not null && trimmed.StartsWith("runs-on:", StringComparison.Ordinal))
             {
                 result[currentJob] = trimmed["runs-on:".Length..].Trim();
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Maps each job id under <c>jobs:</c> to its check name: the <c>name:</c> line of the job, or the job id when the
+    /// job has none. A step name stands deeper than four spaces, so it never counts.
+    /// </summary>
+    public static Dictionary<string, string> CheckNameByJob(string workflow)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        bool inJobs = false;
+        string? currentJob = null;
+        foreach (string line in workflow.Split('\n'))
+        {
+            if (line.StartsWith("jobs:", StringComparison.Ordinal))
+            {
+                inJobs = true;
+                continue;
+            }
+
+            if (!inJobs)
+            {
+                continue;
+            }
+
+            if (line.Length > 2 && line.StartsWith("  ", StringComparison.Ordinal) && line[2] != ' ' && line[2] != '#' && line.TrimEnd().EndsWith(':'))
+            {
+                currentJob = line.Trim().TrimEnd(':');
+                result[currentJob] = currentJob;
+                continue;
+            }
+
+            if (currentJob is not null && line.StartsWith("    name: ", StringComparison.Ordinal))
+            {
+                result[currentJob] = line["    name: ".Length..].Trim();
             }
         }
 

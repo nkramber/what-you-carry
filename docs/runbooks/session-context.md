@@ -77,6 +77,16 @@ Run no other status command while the wait runs. Read the result one time, when 
 - A time limit of the harness can stop the wait. Start the same command again.
 - The result names each failed job. For a job that ends "not acquired", apply D-358, and then wait again with the same command.
 
+## The review round
+
+The author starts the cross-provider review with one command after the gitar pass (D-511). A round takes longer than the ten-minute limit of a tool call, so run it in the background and wait for the completion notice.
+
+```
+make codex-review PR=<number>
+```
+
+Run no status command while the round runs. The last lines of the output give the outcome, the verdict, the open finding ids, and the transcript path. The file `.claude/skills/one-pr-one-session/references/review-and-merge.md` gives the next step for each exit code.
+
 ## Wait for gitar
 
 The `gitar-review` skill holds the procedure and the proof that a review is current (D-374). This section holds the two commands of the wait. Do the full push wait of three minutes after each push, and do it also when gitar paused the automatic reviews (D-160).

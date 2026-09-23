@@ -52,6 +52,8 @@ Keep the id for the life of the PR. Never renumber a finding on a repeat review.
 
 Status: <open | fixed in `<sha>` | accepted risk, D-# | withdrawn>.
 
+Open at: `<sha>`, `<sha>`.
+
 File: `<path>:<line range>`, or Commit: `<sha>`.
 
 Trigger: the input or state that produces the defect.
@@ -68,6 +70,12 @@ Regression check: the command or test that establishes the fix, and the result t
 ```
 
 A withdrawn finding stays in the file with the evidence that refuted it. Never delete a finding.
+
+## The Open at line
+
+The `Open at:` line lists the effective head of each review round in which the finding is open, in backticks (D-514). Write each head one time, in the order of the rounds. A round that opens the finding writes its head. A repeat review adds its head to each finding that stays open or opens again. It never removes a head.
+
+`make codex-review` counts the heads. A P0 to P2 finding with three heads in a round that does not approve stops the fix loop, and the owner decides (D-513, D-515). An open finding whose line does not name the head of the round fails the round (T-2). Each `###` heading of the Findings section is a finding heading with a severity from P0 to P3. Any other line that starts with `###` fails the round.
 
 ## Do not raise a tool name as attribution
 
