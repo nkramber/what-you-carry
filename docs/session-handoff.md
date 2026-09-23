@@ -1,3 +1,7 @@
+# Session handoff
+
+Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
+
 ## Session 211: 2026-09-22, Claude Code
 
 Author: Claude Code
@@ -26,6 +30,7 @@ Session: PR-72, author. Branch `fix/pr-72-enemy-movement`. PR number follows on 
 - The walk sweep is `EnemyWalkTests.DiagonalSweep`, in the `Sweep` category, at a fixed 120 seeds (about 8 s local). A seed count on floor 1 alone missed every fault. The faults sat on floors 6 to 15.
 - An arrival alone proves little. A follower that searches again walks the two side moves, so the sweep also counts the jumps.
 - `GridMoves.FloorHeightAt` works in 24ths of a block, so the rule stays in integers (G-9).
+- On `main`, the Session 210 entry sat above the `# Session handoff` title. `doc-gate` finds the newest entry by `\n## Session `, so it read Session 209 and failed this branch. This entry puts the title and the rule line back on top, with Session 210 unchanged under Session 211. Add an entry under the rule line.
 
 ### Open questions that block progress
 
@@ -71,9 +76,6 @@ None.
 ### Next concrete action
 
 After the owner merges PR #89, read the first push to `main` for exit test 6.
-# Session handoff
-
-Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
 ## Session 209: 2026-09-22, Claude Code
 
