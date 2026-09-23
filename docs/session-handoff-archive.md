@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 207: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-20, reviewer. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, changes required.
+
+### What this session did, and why
+
+- Reviewed the complete PR #87 change at effective head `06cd3b3` for the contracts of D-450 to D-470 and the five exit tests.
+- Found two input defects: `audio-analyze` accepts path traversal, and `WavReader` overflows on a malformed chunk length.
+- Wrote `docs/reviews/pr-87.md` with the findings and the `Changes required` verdict.
+
+### State of the build
+
+- The full suite passed: 1295 tests, 0 failures, 0 skips, in 7 minutes and 35 seconds. The STE check, determinism lint, and asset check each report 0 findings.
+- At the last status read before publication, the remote head was `5853e7b`, and the effective head was `06cd3b3` (D-184). Linux and Windows jobs were in progress. `evaluate` failed because the review record was absent, and `review-gate` was neutral for the same reason.
+- The checks wait ran for about 14 minutes without a result, then stopped. It did not establish a pass or a failure for the pending jobs.
+
+### In flight
+
+- The author must correct P2-1 and P2-2 with regression tests, then request a repeat review.
+
+### Traps and gotchas
+
+- `audio-analyze --sound ../../../pwn` wrote `pwn.json` at the checkout root in an isolated run.
+- A 20-byte RIFF file with chunk length `2147483640` made `WavReader` throw an unhandled `ArgumentOutOfRangeException`.
+- The two pending platform jobs do not count as complete evidence.
+- F-107 and F-108 remain in the later gameplay PR.
+
+### Open questions that block progress
+
+None. OQ-48 and OQ-182 are answered. The two findings block owner merge until the author corrects them.
+
+### Next concrete action
+
+The author adds a name check to `audio-analyze`, makes the WAV chunk bounds overflow-safe, adds regression tests, and requests a repeat review.
+
 ## Session 206: 2026-09-22, Claude Code
 
 Author: Claude Code

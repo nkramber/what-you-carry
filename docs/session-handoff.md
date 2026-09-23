@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 217: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
+
+### What this session did, and why
+
+- Re-reviewed PR #92 at effective head `d96ae19` and updated `docs/reviews/pr-92.md`.
+- Verified P2-1. The parser and packer now reject overflowing bounds. The new tests pass on this head and fail on the old code.
+- D-510 closes exit test 6. The owner confirmed that the contact sheet keeps the look.
+
+### State of the build
+
+- The focused recipe and texture tests passed 100 of 100. The old-code comparison failed only on the four overflow cases.
+- CI, Smoke, bit identity, `ste-check`, `det-lint`, `asset-qa`, `doc-gate`, `documents`, `night-gate`, `bots`, and Gitar passed at effective head `d96ae19`.
+- The effective head is `d96ae19`. The review record and this handoff are metadata. The review gate must pass on the published metadata tip.
+
+### In flight
+
+- PR #92: publish the review record and handoff, then verify the checks on the metadata tip.
+
+### Traps and gotchas
+
+- A bounds check compares each size with the room that remains. It does not add two large values.
+- OQ-181 blocks PR-77, not PR-62 (D-504).
+
+### Open questions that block progress
+
+None for PR-62.
+
+### Next concrete action
+
+Verify the review gate and session end gate after the push. The owner can merge PR #92. Then a clean author session can start PR-74 from Session 214 and D-496 to D-503.
+
 ## Session 216: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -338,39 +372,3 @@ None. OQ-48 and OQ-182 are resolved by D-450 to D-470.
 ### Next concrete action
 
 Wait for all checks after the review publication to pass, then hand PR #87 to the owner for merge.
-
-## Session 207: 2026-09-22, Codex
-
-Author: Codex
-Session: PR-20, reviewer. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, changes required.
-
-### What this session did, and why
-
-- Reviewed the complete PR #87 change at effective head `06cd3b3` for the contracts of D-450 to D-470 and the five exit tests.
-- Found two input defects: `audio-analyze` accepts path traversal, and `WavReader` overflows on a malformed chunk length.
-- Wrote `docs/reviews/pr-87.md` with the findings and the `Changes required` verdict.
-
-### State of the build
-
-- The full suite passed: 1295 tests, 0 failures, 0 skips, in 7 minutes and 35 seconds. The STE check, determinism lint, and asset check each report 0 findings.
-- At the last status read before publication, the remote head was `5853e7b`, and the effective head was `06cd3b3` (D-184). Linux and Windows jobs were in progress. `evaluate` failed because the review record was absent, and `review-gate` was neutral for the same reason.
-- The checks wait ran for about 14 minutes without a result, then stopped. It did not establish a pass or a failure for the pending jobs.
-
-### In flight
-
-- The author must correct P2-1 and P2-2 with regression tests, then request a repeat review.
-
-### Traps and gotchas
-
-- `audio-analyze --sound ../../../pwn` wrote `pwn.json` at the checkout root in an isolated run.
-- A 20-byte RIFF file with chunk length `2147483640` made `WavReader` throw an unhandled `ArgumentOutOfRangeException`.
-- The two pending platform jobs do not count as complete evidence.
-- F-107 and F-108 remain in the later gameplay PR.
-
-### Open questions that block progress
-
-None. OQ-48 and OQ-182 are answered. The two findings block owner merge until the author corrects them.
-
-### Next concrete action
-
-The author adds a name check to `audio-analyze`, makes the WAV chunk bounds overflow-safe, adds regression tests, and requests a repeat review.
