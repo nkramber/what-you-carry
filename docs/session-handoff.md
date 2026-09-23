@@ -11,6 +11,7 @@ Session: PR-78, author, the answer to round 1. Branch `feat/pr-78-codex-review`.
 
 - `make codex-review PR=93` ran round 1 end to end: exit 10 with P1-1 open, and no fault. The Codex entry is Session 219.
 - P1-1 has full merit. An approving record with an open P0 to P2 finding is now a fault. `docs/reviews/pr-93-response.md` holds the answer.
+- The gitar pass of `2dca4fe` found one bug with full merit: `codex login status` writes its status to stderr, and the command read stdout alone, so every round refused. The command now reads both streams, and a test starts a real child that writes to stderr.
 - The owner added D-523 (no API pricing: the command strips the three credential variables, forces the ChatGPT login, and checks `codex login status`) and D-524 (a summary of one paragraph and the owner confirmation before each merge).
 
 ### State of the build
@@ -25,7 +26,7 @@ Session: PR-78, author, the answer to round 1. Branch `feat/pr-78-codex-review`.
 
 ### Traps and gotchas
 
-- `codex login status` reads `auth.json` alone. It gave `Logged in using ChatGPT` with a fake `OPENAI_API_KEY` set, so the command also strips the variables from each Codex process.
+- `codex login status` writes to stderr, and a terminal hides that. It also reads `auth.json` alone. It gave `Logged in using ChatGPT` with a fake `OPENAI_API_KEY` set, so the command also strips the variables from each Codex process.
 - The API keys in the `.env` of decktome serve its paid deck gate. D-523 changes the Codex child processes alone, and it revokes no key.
 - A `git stash pop` refuses a file that a later edit touched. Save the new hunk as a patch first.
 

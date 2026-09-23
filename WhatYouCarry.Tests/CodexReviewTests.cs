@@ -338,6 +338,19 @@ public sealed class CodexReviewTests
         }
     }
 
+    [Fact]
+    public void TheLoginStatusReadsTheStderrOfTheCli()
+    {
+        // PR #93 automated pass: `codex login status` writes its status line to stderr, and stdout stays empty.
+        ProcessResult result = OperatingSystem.IsWindows()
+            ? ExternalProcess.Run("cmd.exe", ["/c", "echo Logged in using ChatGPT 1>&2"], System.IO.Path.GetTempPath())
+            : ExternalProcess.Run("sh", ["-c", "echo 'Logged in using ChatGPT' >&2"], System.IO.Path.GetTempPath());
+
+        Assert.Equal(string.Empty, result.StandardOutput);
+        Assert.StartsWith(CodexReviewSettings.ChatGptLoginStatus, CodexReviewSettings.LoginStatusText(result), StringComparison.Ordinal);
+        Assert.Empty(StartChecks.Problems(With(GoodFacts(), loginStatus: CodexReviewSettings.LoginStatusText(result))));
+    }
+
     /// <summary>The environment that a child process prints, with the removed variables.</summary>
     private static string ReadChildEnvironment(IReadOnlyList<string> removed)
     {

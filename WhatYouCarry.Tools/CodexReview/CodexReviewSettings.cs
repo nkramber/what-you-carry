@@ -35,6 +35,15 @@ public static class CodexReviewSettings
     /// <summary>The first line of <c>codex login status</c> for a ChatGPT login, verified 2026-09-23 on 0.156.1.</summary>
     public const string ChatGptLoginStatus = "Logged in using ChatGPT";
 
+    /// <summary>
+    /// The status text of <c>codex login status</c>. The CLI 0.156.1 writes the status to stderr and nothing to stdout,
+    /// so the text joins both streams, stderr first (PR #93 automated pass).
+    /// </summary>
+    public static string LoginStatusText(ProcessResult result)
+    {
+        return (result.StandardError + result.StandardOutput).Trim();
+    }
+
     /// <summary>The oldest CLI that ran the model probe, 2026-09-23 (D-512).</summary>
     public static readonly CodexVersion MinimumVersion = new(0, 156, 1, string.Empty);
 

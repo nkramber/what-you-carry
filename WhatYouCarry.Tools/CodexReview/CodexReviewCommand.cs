@@ -84,7 +84,7 @@ public static class CodexReviewCommand
             return Refuse(pullRequest, [StartChecks.NotOpenProblem(pullRequest, view.State)]);
         }
 
-        string loginStatus = ExternalProcess.Run(codex, CodexReviewSettings.LoginStatusArguments, root, CodexReviewSettings.ApiCredentialVariables).StandardOutput;
+        string loginStatus = CodexReviewSettings.LoginStatusText(ExternalProcess.Run(codex, CodexReviewSettings.LoginStatusArguments, root, CodexReviewSettings.ApiCredentialVariables));
         StartFacts facts = GatherStartFacts(root, git, pullRequest, view, version, loginStatus);
         var problems = new List<string>(StartChecks.Problems(facts));
         if (problems.Count == 0)
