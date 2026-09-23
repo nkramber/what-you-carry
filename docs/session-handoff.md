@@ -1,3 +1,7 @@
+# Session handoff
+
+Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
+
 ## Session 224: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -29,6 +33,7 @@ Session: PR-74, author. Branch `feat/pr-74-body-art`. PR not open yet, pending m
 - The `leather` recipe is now the sword grip alone. The body reads `trousers`, `boot`, and `boot-toe`.
 - `SendUserFile` cannot deliver in this session type. The sheets and the comparisons are in the git-ignored folder `artifacts/reference/meshy-miner-2026-09-22/`, files 10 to 17.
 - A restore with `cp "$bk"/*.json` put `layout.json` into the recipe folder one time. Back up the recipes alone.
+- PR #93 dropped the title and the rule line at the top of this file. `doc-gate` finds the newest entry by `\n## Session `, so an entry at byte 0 reads as absent. This PR restores both lines.
 
 ### Open questions that block progress
 
