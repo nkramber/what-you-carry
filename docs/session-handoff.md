@@ -19,12 +19,13 @@ Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending m
 - The Documents category passed 140 of 140 after the review record and handoff edits.
 - `ste-check` passed with no findings, and `doc-gate` passed with 0 problems over 25 paths.
 - Asset QA, lint, document, STE, bot, the Linux and macOS CI platform results, Smoke, and bit-identity passed at `25ad21e`.
-- `ci-windows-x64` remained pending. The night gate failed on the D-538 record. The review gate and evaluator failed because the published round 1 record still had `Changes required`.
+- The Windows CI job later passed at 17:42 UTC. The metadata-only run skipped heavy jobs under D-474 rule 2 after the previous code-head CI run passed.
+- The night gate failed on the D-538 record. The review gate and evaluator fail on the published `Blocked` verdict.
 
 ### In flight
 
 - The review record and this handoff entry await publication on `origin/chore/pr-79-review-process`.
-- PR #95 remains blocked until the night-gate failure and missing Windows CI result are resolved or the required evidence changes.
+- PR #95 remains blocked by the D-538 night-gate failure.
 
 ### Traps and gotchas
 
@@ -37,7 +38,7 @@ None.
 
 ### Next concrete action
 
-Resolve the D-538 night-gate failure and obtain a final `ci-windows-x64` result. Then re-review the same effective head and update the existing review record.
+Resolve the D-538 night-gate failure. Then re-review the same effective head and update the existing review record.
 
 ## Session 228: 2026-09-23, Claude Code
 
