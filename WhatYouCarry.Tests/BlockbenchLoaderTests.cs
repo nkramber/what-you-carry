@@ -15,10 +15,13 @@ namespace WhatYouCarry.Tests;
 /// <summary>The Blockbench loader of the Assets project and the box geometry of Game (D-9, D-18, D-86, D-87, D-299, OQ-159; PR-13 exit tests 1 and 2).</summary>
 public sealed class BlockbenchLoaderTests
 {
-    /// <summary>The pivots of the ten boxes of the player model, in meters: sixteen file units per meter.</summary>
+    /// <summary>The pivots of the fifteen boxes of the player model, in meters: sixteen file units per meter. The brow, the nose, and the beard turn with the head, and each toe with its lower leg (D-497, D-498, D-501, D-502).</summary>
     public static readonly IReadOnlyDictionary<string, CoreVector3> PlayerPivots = new Dictionary<string, CoreVector3>
     {
         ["head_box"] = new(0.0f, 1.3f, 0.0f),
+        ["brow_box"] = new(0.0f, 1.3f, 0.0f),
+        ["nose_box"] = new(0.0f, 1.3f, 0.0f),
+        ["beard_box"] = new(0.0f, 1.3f, 0.0f),
         ["torso_box"] = new(0.0f, 0.625f, 0.0f),
         ["arm_left_upper_box"] = new(-0.40625f, 1.3f, 0.0f),
         ["arm_left_lower_box"] = new(-0.40625f, 0.9625f, 0.0f),
@@ -28,9 +31,11 @@ public sealed class BlockbenchLoaderTests
         ["leg_left_lower_box"] = new(-0.15625f, 0.3125f, 0.0f),
         ["leg_right_upper_box"] = new(0.15625f, 0.625f, 0.0f),
         ["leg_right_lower_box"] = new(0.15625f, 0.3125f, 0.0f),
+        ["toe_left_box"] = new(-0.15625f, 0.3125f, 0.0f),
+        ["toe_right_box"] = new(0.15625f, 0.3125f, 0.0f),
     };
 
-    /// <summary>PR-13 exit test 1. The player model has ten boxes, each with its declared pivot, and each box mesh has six quads.</summary>
+    /// <summary>PR-13 exit test 1. The player model has fifteen boxes (PR-74), each with its declared pivot, and each box mesh has six quads.</summary>
     [Fact]
     public void LoaderBuildsEveryBox()
     {
@@ -47,6 +52,47 @@ public sealed class BlockbenchLoaderTests
             Assert.Equal(BoxGeometry.Faces, mesh.QuadCount);
             Assert.Equal(BoxGeometry.Faces * MeshData.QuadVertices, mesh.Positions.Count);
         }
+    }
+
+    /// <summary>
+    /// The brow, the nose, the beard, and the toes stand where the owner placed them, in file units, and each one
+    /// shares a face with its neighbor (D-301, D-497, D-498, D-501, D-502). Minus Z is the front (D-234).
+    /// </summary>
+    [Theory]
+    [InlineData("brow_box", -3.0f, 24.8f, -5.0f, 3.0f, 25.8f, -4.0f)]
+    [InlineData("nose_box", -0.5f, 23.3f, -4.75f, 0.5f, 24.8f, -4.0f)]
+    [InlineData("beard_box", -4.0f, 20.8f, -4.75f, 4.0f, 23.3f, -4.0f)]
+    [InlineData("toe_left_box", -4.5f, 0.0f, -5.0f, -0.5f, 2.0f, -2.0f)]
+    [InlineData("toe_right_box", 0.5f, 0.0f, -5.0f, 4.5f, 2.0f, -2.0f)]
+    public void FaceAndToeBoxesStandWhereTheOwnerPlacedThem(string name, float fromX, float fromY, float fromZ, float toX, float toY, float toZ)
+    {
+        BlockbenchModel model = PlayerModel();
+        ModelBox box = model.Box(name) ?? throw new InvalidOperationException($"The player has no box '{name}'.");
+
+        AssertFileUnits(new CoreVector3(fromX, fromY, fromZ), box.From, name + " from");
+        AssertFileUnits(new CoreVector3(toX, toY, toZ), box.To, name + " to");
+    }
+
+    /// <summary>The front boxes of the head touch the head and each other by shared faces alone (D-301, D-502).</summary>
+    [Fact]
+    public void FrontBoxesOfTheHeadShareFaces()
+    {
+        BlockbenchModel model = PlayerModel();
+        ModelBox head = model.Box("head_box") ?? throw new InvalidOperationException("The player has no head box.");
+        ModelBox brow = model.Box("brow_box") ?? throw new InvalidOperationException("The player has no brow box.");
+        ModelBox nose = model.Box("nose_box") ?? throw new InvalidOperationException("The player has no nose box.");
+        ModelBox beard = model.Box("beard_box") ?? throw new InvalidOperationException("The player has no beard box.");
+        ModelBox leg = model.Box("leg_left_lower_box") ?? throw new InvalidOperationException("The player has no left lower leg box.");
+        ModelBox toe = model.Box("toe_left_box") ?? throw new InvalidOperationException("The player has no left toe box.");
+
+        Assert.Equal(head.From.Z, brow.To.Z);
+        Assert.Equal(head.From.Z, nose.To.Z);
+        Assert.Equal(head.From.Z, beard.To.Z);
+        Assert.Equal(brow.From.Y, nose.To.Y);
+        Assert.Equal(beard.To.Y, nose.From.Y);
+        Assert.Equal(head.From.Y, beard.From.Y);
+        Assert.Equal(leg.From.Z, toe.To.Z);
+        Assert.Equal(leg.From.Y, toe.From.Y);
     }
 
     /// <summary>PR-13 exit test 2. A box with no size is an error that names the box and the field.</summary>
@@ -288,6 +334,18 @@ public sealed class BlockbenchLoaderTests
     }
 
     /// <summary>The player model of the checkout, which the root node loads at boot.</summary>
+    /// <summary>Asserts that a corner in meters lies at a corner in file units, sixteen to the meter.</summary>
+    private static void AssertFileUnits(CoreVector3 expectedUnits, CoreVector3 actualMeters, string label)
+    {
+        const float UnitsPerMeter = 16.0f;
+        const float Tolerance = 0.0001f;
+        Assert.True(
+            MathF.Abs((actualMeters.X * UnitsPerMeter) - expectedUnits.X) < Tolerance
+                && MathF.Abs((actualMeters.Y * UnitsPerMeter) - expectedUnits.Y) < Tolerance
+                && MathF.Abs((actualMeters.Z * UnitsPerMeter) - expectedUnits.Z) < Tolerance,
+            $"The corner {label} is ({actualMeters.X * UnitsPerMeter}, {actualMeters.Y * UnitsPerMeter}, {actualMeters.Z * UnitsPerMeter}) units, and the owner placed it at ({expectedUnits.X}, {expectedUnits.Y}, {expectedUnits.Z}).");
+    }
+
     private static BlockbenchModel PlayerModel()
     {
         string file = Path.Combine(RepositoryRoot.Find(), "content", AssetPaths.BodyModel);

@@ -7,7 +7,7 @@ description: The art steps of every asset, from a Meshy prompt to a finished box
 
 The owner makes the look reference of each asset in Meshy (D-496, D-509). The agent writes the prompts and reviews each result. The agent then builds the asset in this repository. A Meshy mesh never loads, because the model loader reads cube and locator elements alone. Meshy output is a look reference, and nothing more.
 
-The body of PR-74 is the first asset of this procedure. Its owner answers, D-496 to D-503, are the worked example.
+The body of PR-74 is the first asset of this procedure. Its owner answers, D-496 to D-502 and D-525 to D-532, are the worked example. D-527 supersedes D-503.
 
 ## Terms
 
@@ -25,7 +25,7 @@ The body of PR-74 is the first asset of this procedure. Its owner answers, D-496
 
 - Avoid the Minecraft tells (D-83). No eye whites, and no flat pixel face layout.
 - Keep the cuboid style and the shared proportion set (D-82). A body change needs an owner decision.
-- Use the palette of D-304 alone. A new color needs a decision.
+- Use the palette alone: the ramps of D-304 and D-530, and the fine shades of D-528. A new color needs a decision.
 - Each face has 32 texels per meter (D-308). One unit is 2 texels, so an edge on a whole texel sits on a multiple of 0.5 units.
 - The game light and the vertex occlusion shade the boxes (D-81). A recipe paints no shade.
 - Every fix goes through the model JSON, a recipe, or a paint file (D-86). Blockbench is for review alone.
@@ -102,12 +102,12 @@ Meshy artifacts to ignore:
 
 ### Step 5: The build
 
-1. Write the owner questions: the proportions, each box feature, the paint details, and the noise.
+1. Write the owner questions: the proportions, each box feature, the paint details, and the grain.
 2. Ask them with `AskUserQuestion`, and give options, reasons, and a recommendation.
 3. Record each answer in `docs/decisions.md` with the next D-# and the local date.
 4. Edit the `.bbmodel` file. Keep the rest pose, rotation zero, and a unique name for each box.
 5. Put each new box flush on its neighbor: a shared face, and no penetration (D-301).
-6. Write the recipes under `content/textures/recipes/`, and the paint file of the model.
+6. Write the recipes under `content/textures/recipes/`, and the paint file of the model. Take the base shade of each material from the unlit view (D-529).
 7. Run `texture-gen` with `--root .`, and commit the atlas and the layout together.
 8. Run the build, the full test suite, and `asset-qa`.
 9. Render the contact sheet, and show it beside the approved concept image.
@@ -128,10 +128,14 @@ A recipe is an ordered list of layers (D-507):
 
 | Kind | Fields | Use |
 |---|---|---|
-| `fill` | `color`, `noise`, `seed` | The first layer, and only the first: the base material |
+| `fill` | `color`, `shade`, `noise`, `seed` | The first layer, and only the first: the base material |
 | `edge` | `steps` | A darker outer ring, as on hewn stone |
-| `rect` | `x`, `y`, `width`, `height`, `color`, `noise`, `seed` | A face feature, a cuff, a collar |
-| `band` | `side`, `depth`, `shift` | A darker hem, a boot band, grime at one side |
+| `rect` | `x`, `y`, `width`, `height`, `color`, `shade`, `noise`, `seed` | A face feature, a cuff, a collar, a knee |
+| `band` | `side`, `depth`, `shift` | A boot band, a hem, one color step at one side |
+| `grain` | `cell`, `amount`, `seed` | The clustered mottle of a 3D reference (D-527) |
+| `gradient` | `side`, `depth`, `shift` | Grime that fades from one side, in fine steps |
+
+A `shade` from -3 to 3 names a fine step between two colors (D-528). The `noise` of `fill` and `rect`, `edge`, and `band` move whole color steps. `grain` and `gradient` move fine steps. For the mottle of a 3D reference, use `noise` 0 and a `grain`. Measure the variation of the texels in the unlit view, and match it: cell 2 and amount 2 gave the shirt of PR-74. A layer after a `grain` keeps its exact shade, so paint the eyes and the mouth last.
 
 A recipe can extend another with a ramp swap: `{"extends": "skin", "swap": {"bone": "lichen"}}`. Use a swap for an enemy family or an armor tier that keeps the shape and changes the colors.
 

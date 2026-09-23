@@ -33,7 +33,7 @@ public static class PngWriter
 
     /// <summary>The file of one indexed image: the size, the palette colors, and one palette index per pixel, row by row.</summary>
     /// <exception cref="ArgumentException">The size is not positive, the pixel count differs from the size, the palette is empty or past <see cref="Palette.MaxColors"/>, or a pixel names an index past the palette.</exception>
-    public static byte[] Write(int width, int height, IReadOnlyList<PaletteColor> colors, byte[] pixels)
+    public static byte[] Write(int width, int height, IReadOnlyList<AtlasColor> colors, byte[] pixels)
     {
         CheckImage(width, height, colors, pixels);
         List<byte> file = [.. Signature];
@@ -45,7 +45,7 @@ public static class PngWriter
     }
 
     /// <summary>The size, the pixel count, the palette count, and every pixel index must agree.</summary>
-    private static void CheckImage(int width, int height, IReadOnlyList<PaletteColor> colors, byte[] pixels)
+    private static void CheckImage(int width, int height, IReadOnlyList<AtlasColor> colors, byte[] pixels)
     {
         if (width <= 0 || height <= 0)
         {
@@ -86,10 +86,10 @@ public static class PngWriter
     }
 
     /// <summary>The palette chunk data: the red, green, and blue bytes of each color, in index order.</summary>
-    private static byte[] PaletteEntries(IReadOnlyList<PaletteColor> colors)
+    private static byte[] PaletteEntries(IReadOnlyList<AtlasColor> colors)
     {
         List<byte> entries = [];
-        foreach (PaletteColor color in colors)
+        foreach (AtlasColor color in colors)
         {
             entries.Add(color.Red);
             entries.Add(color.Green);

@@ -1,6 +1,6 @@
 {
   "layers": [
-    {"kind": "fill", "color": 6, "noise": 0.20, "seed": 1002},
+    {"kind": "fill", "color": 6, "shade": 0, "noise": 0.20, "seed": 1002},
     {"kind": "edge", "steps": 1}
   ]
 }

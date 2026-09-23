@@ -84,6 +84,12 @@ public sealed class RulesetTests
         Assert.True(pullRequest.GetProperty("required_review_thread_resolution").GetBoolean());
         Assert.Equal(0, pullRequest.GetProperty("required_approving_review_count").GetInt32());
 
+        // GitHub adds these two fields when the file omits them, and its default of true asks for an approval that
+        // the one owner cannot give to a commit of an unlinked author, so auto-merge waits forever (owner choice,
+        // 2026-09-23). The file declares both, so the comparison of the live ruleset stays empty.
+        Assert.False(pullRequest.GetProperty("require_extra_approval_for_unattributed_changes").GetBoolean());
+        Assert.Empty(pullRequest.GetProperty("required_reviewers").EnumerateArray());
+
         // PRs go one at a time, so a rule that the branch holds the newest main only forces a rebase (D-522).
         Assert.False(Parameters(ruleset, "required_status_checks").GetProperty("strict_required_status_checks_policy").GetBoolean());
     }

@@ -10,20 +10,33 @@ namespace WhatYouCarry.Tools.TextureGen;
 /// <summary>One paint layer of a recipe (D-507). <see cref="CanvasPainter"/> applies the layers in file order.</summary>
 public abstract record RecipeLayer;
 
-/// <summary>The first layer of every recipe: each pixel takes the color, and the noise moves it one step on its ramp.</summary>
+/// <summary>The first layer of every recipe: each pixel takes the color at its shade, and the noise moves it one step on its ramp.</summary>
 /// <param name="Color">The flat palette index of the color.</param>
+/// <param name="Shade">The fine steps from the color, from -3 to 3 (D-527, D-528). Zero paints the color itself.</param>
 /// <param name="Noise">The chance, from 0 to 1, that a pixel moves one step. Half of the chance moves it down, and the other half moves it up.</param>
 /// <param name="Seed">The seed of the noise, not zero.</param>
-public sealed record FillLayer(int Color, double Noise, uint Seed) : RecipeLayer;
+public sealed record FillLayer(int Color, int Shade, double Noise, uint Seed) : RecipeLayer;
 
 /// <summary>The outer ring of pixels of the canvas moves down its ramp by a count of steps.</summary>
 public sealed record EdgeLayer(int Steps) : RecipeLayer;
 
-/// <summary>A rectangle of the canvas, from its top left corner, takes a color with its own noise. The canvas clips it.</summary>
-public sealed record RectLayer(int X, int Y, int Width, int Height, int Color, double Noise, uint Seed) : RecipeLayer;
+/// <summary>A rectangle of the canvas, from its top left corner, takes a color at its shade with its own noise. The canvas clips it.</summary>
+public sealed record RectLayer(int X, int Y, int Width, int Height, int Color, int Shade, double Noise, uint Seed) : RecipeLayer;
 
 /// <summary>The pixels within a depth of one side of the canvas move up or down their ramp by a shift in steps.</summary>
 public sealed record BandLayer(CanvasSide Side, int Depth, int Shift) : RecipeLayer;
+
+/// <summary>
+/// Clustered noise (D-527): each pixel moves by a smooth value of a lattice with a spacing of <paramref name="Cell"/>
+/// pixels, times <paramref name="Amount"/> fine steps, plus a dither of its own.
+/// </summary>
+/// <param name="Cell">The spacing of the lattice, in pixels, 1 or more.</param>
+/// <param name="Amount">The largest move of the smooth value, in fine steps, 1 or more.</param>
+/// <param name="Seed">The seed of the lattice and the dither, not zero.</param>
+public sealed record GrainLayer(int Cell, int Amount, uint Seed) : RecipeLayer;
+
+/// <summary>The pixels within a depth of one side move by up to a shift in fine steps, the full shift at the side and less toward the depth (D-527).</summary>
+public sealed record GradientLayer(CanvasSide Side, int Depth, int Shift) : RecipeLayer;
 
 /// <summary>The four sides of a canvas, as its texture shows them.</summary>
 public enum CanvasSide
@@ -75,6 +88,8 @@ public static class RecipeFile
     private const string EdgeKind = "edge";
     private const string RectKind = "rect";
     private const string BandKind = "band";
+    private const string GrainKind = "grain";
+    private const string GradientKind = "gradient";
     private const string ColorKey = "color";
     private const string NoiseKey = "noise";
     private const string SeedKey = "seed";
@@ -86,13 +101,21 @@ public static class RecipeFile
     private const string SideKey = "side";
     private const string DepthKey = "depth";
     private const string ShiftKey = "shift";
+    private const string ShadeKey = "shade";
+    private const string CellKey = "cell";
+    private const string AmountKey = "amount";
+
+    /// <summary>The most fine steps that a shade names from its color: one short of the next color (D-528).</summary>
+    private const int ShadeLimit = Palette.ShadesPerStep - 1;
 
     private static readonly string[] LayerForm = [LayersKey];
     private static readonly string[] ExtendForm = [ExtendsKey, SwapKey];
-    private static readonly string[] FillFields = [KindKey, ColorKey, NoiseKey, SeedKey];
+    private static readonly string[] FillFields = [KindKey, ColorKey, ShadeKey, NoiseKey, SeedKey];
     private static readonly string[] EdgeFields = [KindKey, StepsKey];
-    private static readonly string[] RectFields = [KindKey, XKey, YKey, WidthKey, HeightKey, ColorKey, NoiseKey, SeedKey];
+    private static readonly string[] RectFields = [KindKey, XKey, YKey, WidthKey, HeightKey, ColorKey, ShadeKey, NoiseKey, SeedKey];
     private static readonly string[] BandFields = [KindKey, SideKey, DepthKey, ShiftKey];
+    private static readonly string[] GrainFields = [KindKey, CellKey, AmountKey, SeedKey];
+    private static readonly string[] GradientFields = [KindKey, SideKey, DepthKey, ShiftKey];
     private static readonly string[] SideNames = ["top", "bottom", "left", "right"];
 
     /// <summary>The recipe name of one file path: the file name without the directory and the extension.</summary>
@@ -184,25 +207,36 @@ public static class RecipeFile
         {
             case FillKind:
                 JsonShape.CheckNoUnknownMember(path, item, owner, FillFields);
-                return new FillLayer(ReadColor(path, item, owner, palette), ReadFraction(path, item, owner, NoiseKey), ReadSeed(path, item, owner));
+                int fillColor = ReadColor(path, item, owner, palette);
+                return new FillLayer(fillColor, ReadShade(path, item, owner, palette, fillColor), ReadFraction(path, item, owner, NoiseKey), ReadSeed(path, item, owner));
             case EdgeKind:
                 JsonShape.CheckNoUnknownMember(path, item, owner, EdgeFields);
                 return new EdgeLayer(ReadAtLeast(path, item, owner, StepsKey, 1));
             case RectKind:
                 JsonShape.CheckNoUnknownMember(path, item, owner, RectFields);
+                int rectColor = ReadColor(path, item, owner, palette);
                 return new RectLayer(
                     ReadAtLeast(path, item, owner, XKey, 0),
                     ReadAtLeast(path, item, owner, YKey, 0),
                     ReadAtLeast(path, item, owner, WidthKey, 1),
                     ReadAtLeast(path, item, owner, HeightKey, 1),
-                    ReadColor(path, item, owner, palette),
+                    rectColor,
+                    ReadShade(path, item, owner, palette, rectColor),
                     ReadFraction(path, item, owner, NoiseKey),
                     ReadSeed(path, item, owner));
             case BandKind:
                 JsonShape.CheckNoUnknownMember(path, item, owner, BandFields);
                 return new BandLayer(ReadSide(path, item, owner), ReadAtLeast(path, item, owner, DepthKey, 1), ReadShift(path, item, owner));
+            case GrainKind:
+                JsonShape.CheckNoUnknownMember(path, item, owner, GrainFields);
+                return new GrainLayer(ReadAtLeast(path, item, owner, CellKey, 1), ReadFineSteps(path, item, owner, AmountKey, palette, 1), ReadSeed(path, item, owner));
+            case GradientKind:
+                JsonShape.CheckNoUnknownMember(path, item, owner, GradientFields);
+                int shift = ReadShift(path, item, owner);
+                CheckWithinLongestRamp(path, owner, ShiftKey, shift, palette);
+                return new GradientLayer(ReadSide(path, item, owner), ReadAtLeast(path, item, owner, DepthKey, 1), shift);
             default:
-                throw ContentError.Make(path, KindKey, $"on '{owner}' is '{kind}', and a layer kind is one of {FillKind}, {EdgeKind}, {RectKind}, and {BandKind} (D-507)");
+                throw ContentError.Make(path, KindKey, $"on '{owner}' is '{kind}', and a layer kind is one of {FillKind}, {EdgeKind}, {RectKind}, {BandKind}, {GrainKind}, and {GradientKind} (D-507, D-527)");
         }
     }
 
@@ -312,6 +346,55 @@ public static class RecipeFile
         return color;
     }
 
+    /// <summary>The shade member: fine steps from the color, from -3 to 3, that keep the pixel on the ramp of the color (D-527, D-528).</summary>
+    private static int ReadShade(string path, JsonElement item, string owner, Palette palette, int color)
+    {
+        int shade = JsonShape.WholeNumber(path, item, owner, ShadeKey);
+        if (shade < -ShadeLimit || shade > ShadeLimit)
+        {
+            throw ContentError.Make(path, ShadeKey, $"on '{owner}' is {Text(shade)}, and a shade is from {Text(-ShadeLimit)} to {Text(ShadeLimit)} fine steps (D-528)");
+        }
+
+        PaletteColor named = palette.Colors[color];
+        int fineStep = (named.Step * Palette.ShadesPerStep) + shade;
+        if (fineStep < 0 || fineStep > palette.FineTop(named.Ramp))
+        {
+            throw ContentError.Make(path, ShadeKey, $"on '{owner}' is {Text(shade)}, and it moves the color {Text(color)} off the end of the ramp '{palette.Ramps[named.Ramp].Name}'");
+        }
+
+        return shade;
+    }
+
+    /// <summary>A whole count of fine steps from 1 to the fine steps of the longest ramp.</summary>
+    private static int ReadFineSteps(string path, JsonElement item, string owner, string name, Palette palette, int least)
+    {
+        int value = ReadAtLeast(path, item, owner, name, least);
+        CheckWithinLongestRamp(path, owner, name, value, palette);
+        return value;
+    }
+
+    /// <summary>A move of more fine steps than the longest ramp passes the end of every ramp, so it is an error.</summary>
+    private static void CheckWithinLongestRamp(string path, string owner, string name, int fineSteps, Palette palette)
+    {
+        int most = LongestRamp(palette);
+        if (fineSteps < -most || fineSteps > most)
+        {
+            throw ContentError.Make(path, name, $"on '{owner}' is {Text(fineSteps)}, and a move passes no more than {Text(most)} fine steps, the length of the longest ramp");
+        }
+    }
+
+    /// <summary>The fine steps of the longest ramp of the palette.</summary>
+    private static int LongestRamp(Palette palette)
+    {
+        int longest = 0;
+        for (int ramp = 0; ramp < palette.Ramps.Count; ramp++)
+        {
+            longest = System.Math.Max(longest, palette.FineTop(ramp));
+        }
+
+        return longest;
+    }
+
     /// <summary>A number member from 0 to 1, as a double, so the value in the file is the value that the painter compares.</summary>
     private static double ReadFraction(string path, JsonElement item, string owner, string name)
     {
@@ -352,7 +435,7 @@ public static class RecipeFile
         int shift = JsonShape.WholeNumber(path, item, owner, ShiftKey);
         if (shift == 0)
         {
-            throw ContentError.Make(path, ShiftKey, $"on '{owner}' is 0, and a band of no shift paints nothing");
+            throw ContentError.Make(path, ShiftKey, $"on '{owner}' is 0, and a layer of no shift paints nothing");
         }
 
         return shift;

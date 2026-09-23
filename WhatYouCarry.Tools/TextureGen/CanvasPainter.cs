@@ -11,9 +11,16 @@ namespace WhatYouCarry.Tools.TextureGen;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Each pixel holds a ramp and a step on it while the layers run. A step can leave the ramp during the layers, and
-/// the painter clamps it to the ramp once, after the last layer. A fill with noise and then an edge therefore give
-/// the pixels of a rule of PR-14 with the same base, noise, edge, and seed (D-309).
+/// Each pixel holds a ramp and a fine step on it while the layers run (D-528). The noise of a fill or a rectangle, an
+/// edge, and a band move a pixel by whole steps of a color, four fine steps each. A grain and a gradient move it by
+/// fine steps. A step can leave the ramp during the layers, and the painter clamps it to the ramp once, after the last
+/// layer. A fill with noise and then an edge therefore give the pixels of a rule of PR-14 with the same base, noise,
+/// edge, and seed (D-309).
+/// </para>
+/// <para>
+/// A grain uses whole numbers alone, so each platform paints the same bytes (D-527). Its lattice holds values from
+/// -256 to 256, and a smoothstep in 256ths joins them. Each pixel adds a dither of up to one and a half fine steps,
+/// which gives the texel mottle of the 3D reference.
 /// </para>
 /// <para>
 /// The noise of a fill or a rectangle comes from a xorshift sequence of 32 bits, one step per pixel, rows from the
@@ -29,6 +36,12 @@ public static class CanvasPainter
 
     /// <summary>The salt of a block canvas.</summary>
     public const uint BlockSalt = 0;
+
+    /// <summary>The fixed point of a grain: a value of 256 is one whole unit.</summary>
+    private const int GrainUnit = 256;
+
+    /// <summary>The dither of a grain, in 256ths of a fine step: each pixel adds a value from minus this to one less than this.</summary>
+    private const int GrainDither = 384;
 
     private const uint FnvOffset = 2166136261;
     private const uint FnvPrime = 16777619;
@@ -55,16 +68,22 @@ public static class CanvasPainter
             switch (layer)
             {
                 case FillLayer fill:
-                    PaintNoise(palette, fill.Color, fill.Noise, StartState(fill.Seed, salt, recipe, canvasName), ramps, steps, width, 0, 0, width, height);
+                    PaintNoise(palette, fill.Color, fill.Shade, fill.Noise, StartState(fill.Seed, salt, recipe, canvasName), ramps, steps, width, 0, 0, width, height);
                     break;
                 case EdgeLayer edge:
-                    ShiftRing(steps, width, height, -edge.Steps);
+                    ShiftRing(steps, width, height, -edge.Steps * Palette.ShadesPerStep);
                     break;
                 case RectLayer rect:
                     PaintRect(palette, rect, StartState(rect.Seed, salt, recipe, canvasName), ramps, steps, width, height, recipe, canvasName);
                     break;
                 case BandLayer band:
-                    ShiftBand(steps, width, height, band);
+                    ShiftSide(steps, width, height, band.Side, band.Depth, _ => band.Shift * Palette.ShadesPerStep);
+                    break;
+                case GrainLayer grain:
+                    AddGrain(grain, StartState(grain.Seed, salt, recipe, canvasName), steps, width, height);
+                    break;
+                case GradientLayer gradient:
+                    ShiftSide(steps, width, height, gradient.Side, gradient.Depth, distance => GradientShift(gradient, distance));
                     break;
                 default:
                     throw new InvalidOperationException($"The recipe '{recipe.Name}' holds a layer of the type {layer.GetType().Name}, and the painter has no case for it.");
@@ -74,9 +93,8 @@ public static class CanvasPainter
         byte[] pixels = new byte[width * height];
         for (int pixel = 0; pixel < pixels.Length; pixel++)
         {
-            PaletteRamp ramp = palette.Ramps[ramps[pixel]];
-            int step = Math.Clamp(steps[pixel], 0, ramp.Count - 1);
-            pixels[pixel] = (byte)(ramp.First + step);
+            int fineStep = Math.Clamp(steps[pixel], 0, palette.FineTop(ramps[pixel]));
+            pixels[pixel] = (byte)palette.AtlasIndex(ramps[pixel], fineStep);
         }
 
         return pixels;
@@ -117,12 +135,13 @@ public static class CanvasPainter
     }
 
     /// <summary>
-    /// Sets the pixels of a rectangle of the canvas to a color with noise. A roll below half the noise amount moves the
-    /// pixel one step down, and a roll above one minus half the amount moves it one step up.
+    /// Sets the pixels of a rectangle of the canvas to a color at a shade, with noise. A roll below half the noise
+    /// amount moves the pixel one step of a color down, and a roll above one minus half the amount moves it one up.
     /// </summary>
-    private static void PaintNoise(Palette palette, int color, double noise, uint state, int[] ramps, int[] steps, int width, int left, int top, int right, int bottom)
+    private static void PaintNoise(Palette palette, int color, int shade, double noise, uint state, int[] ramps, int[] steps, int width, int left, int top, int right, int bottom)
     {
         PaletteColor baseColor = palette.Colors[color];
+        int baseStep = (baseColor.Step * Palette.ShadesPerStep) + shade;
         double half = noise / 2.0;
         for (int y = top; y < bottom; y++)
         {
@@ -130,14 +149,14 @@ public static class CanvasPainter
             {
                 state = NextState(state);
                 double roll = state / StateRange;
-                int step = baseColor.Step;
+                int step = baseStep;
                 if (roll < half)
                 {
-                    step -= 1;
+                    step -= Palette.ShadesPerStep;
                 }
                 else if (roll > 1.0 - half)
                 {
-                    step += 1;
+                    step += Palette.ShadesPerStep;
                 }
 
                 ramps[(y * width) + x] = baseColor.Ramp;
@@ -156,7 +175,7 @@ public static class CanvasPainter
             throw new ContextException($"The recipe '{recipe.ContentPath}' paints a rectangle at ({Text(rect.X)}, {Text(rect.Y)}), outside the canvas {canvasName} of {Text(width)} by {Text(height)} pixels, so it paints nothing. Bind the face to another recipe.");
         }
 
-        PaintNoise(palette, rect.Color, rect.Noise, state, ramps, steps, width, rect.X, rect.Y, right, bottom);
+        PaintNoise(palette, rect.Color, rect.Shade, rect.Noise, state, ramps, steps, width, rect.X, rect.Y, right, bottom);
     }
 
     /// <summary>Moves each pixel of the outer ring by a count of steps.</summary>
@@ -174,26 +193,96 @@ public static class CanvasPainter
         }
     }
 
-    /// <summary>Moves each pixel within the depth of one side by the shift of the band. A band deeper than the canvas covers all of it.</summary>
-    private static void ShiftBand(int[] steps, int width, int height, BandLayer band)
+    /// <summary>
+    /// Moves each pixel within the depth of one side by the shift for its distance from that side, zero at the side. A
+    /// depth past the canvas covers all of it.
+    /// </summary>
+    private static void ShiftSide(int[] steps, int width, int height, CanvasSide side, int depth, Func<int, int> shiftAt)
     {
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
-                bool inside = band.Side switch
+                int distance = side switch
                 {
-                    CanvasSide.Top => y < band.Depth,
-                    CanvasSide.Bottom => y >= height - band.Depth,
-                    CanvasSide.Left => x < band.Depth,
-                    _ => x >= width - band.Depth,
+                    CanvasSide.Top => y,
+                    CanvasSide.Bottom => height - 1 - y,
+                    CanvasSide.Left => x,
+                    _ => width - 1 - x,
                 };
-                if (inside)
+                if (distance < depth)
                 {
-                    steps[(y * width) + x] += band.Shift;
+                    steps[(y * width) + x] += shiftAt(distance);
                 }
             }
         }
+    }
+
+    /// <summary>The fine steps of a gradient at a distance from its side: the full shift at the side, rounded to the nearest whole step toward the depth.</summary>
+    private static int GradientShift(GradientLayer gradient, int distance)
+    {
+        int share = gradient.Depth - distance;
+        return FloorDivide((2 * gradient.Shift * share) + gradient.Depth, 2 * gradient.Depth);
+    }
+
+    /// <summary>
+    /// Adds the grain to each pixel. The sequence first fills the lattice, row by row, and then gives one dither to each
+    /// pixel, rows from the top and pixels from the left.
+    /// </summary>
+    private static void AddGrain(GrainLayer grain, uint state, int[] steps, int width, int height)
+    {
+        int columns = (width / grain.Cell) + 2;
+        int rows = (height / grain.Cell) + 2;
+        int[] lattice = new int[columns * rows];
+        for (int point = 0; point < lattice.Length; point++)
+        {
+            state = NextState(state);
+            lattice[point] = (int)(state % ((2 * GrainUnit) + 1)) - GrainUnit;
+        }
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                state = NextState(state);
+                int dither = (int)(state % (2 * GrainDither)) - GrainDither;
+                long smooth = LatticeValue(lattice, columns, grain.Cell, x, y);
+                long moved = (grain.Amount * smooth) + dither + (GrainUnit / 2);
+                steps[(y * width) + x] += (int)FloorDivide(moved, GrainUnit);
+            }
+        }
+    }
+
+    /// <summary>The value of the lattice at one pixel, from -256 to 256: the four points around it, joined by a smoothstep in 256ths.</summary>
+    private static int LatticeValue(int[] lattice, int columns, int cell, int x, int y)
+    {
+        int left = x / cell;
+        int top = y / cell;
+        int across = Smoothstep(x % cell * GrainUnit / cell);
+        int down = Smoothstep(y % cell * GrainUnit / cell);
+        int upper = (lattice[(top * columns) + left] * (GrainUnit - across)) + (lattice[(top * columns) + left + 1] * across);
+        int lower = (lattice[((top + 1) * columns) + left] * (GrainUnit - across)) + (lattice[((top + 1) * columns) + left + 1] * across);
+        return FloorDivide((upper * (GrainUnit - down)) + (lower * down), GrainUnit * GrainUnit);
+    }
+
+    /// <summary>The smoothstep of a fraction in 256ths: 3t^2 - 2t^3, in 256ths.</summary>
+    private static int Smoothstep(int fraction)
+    {
+        return fraction * fraction * ((3 * GrainUnit) - (2 * fraction)) / (GrainUnit * GrainUnit);
+    }
+
+    /// <summary>The quotient rounded toward minus infinity, for a positive divisor.</summary>
+    private static int FloorDivide(int value, int divisor)
+    {
+        int quotient = value / divisor;
+        return value % divisor < 0 ? quotient - 1 : quotient;
+    }
+
+    /// <summary>The quotient rounded toward minus infinity, for a positive divisor.</summary>
+    private static long FloorDivide(long value, long divisor)
+    {
+        long quotient = value / divisor;
+        return value % divisor < 0 ? quotient - 1 : quotient;
     }
 
     private static string Text(int number)
