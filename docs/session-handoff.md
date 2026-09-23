@@ -24,8 +24,8 @@ Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending m
 
 ### In flight
 
-- The review record and this handoff entry await publication on `origin/chore/pr-79-review-process`.
-- PR #95 remains blocked by the D-538 night-gate failure.
+- The review record and this handoff entry are published on `origin/chore/pr-79-review-process`.
+- PR #95 remains blocked by the D-538 night-gate failure. The review gate and evaluator fail on the `Blocked` verdict; metadata-only jobs pass or skip under D-474 rule 2.
 
 ### Traps and gotchas
 
