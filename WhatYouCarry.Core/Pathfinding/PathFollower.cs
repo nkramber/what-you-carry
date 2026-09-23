@@ -73,7 +73,7 @@ public sealed class PathFollower
     }
 
     /// <summary>
-    /// Counts the ticks since the body last came nearer its goal, in the steps along X and Z that
+    /// Counts the ticks since the body last came nearer its goal, in the octile distance that
     /// <see cref="GridPathfinder.Estimate"/> gives. A goal that moved starts the count again.
     /// </summary>
     /// <remarks>

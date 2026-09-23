@@ -43,9 +43,12 @@ public sealed class BitIdentityTests
     /// enemy spawns of each floor (D-395 to D-405, G-20). PR-17 moved it from `d701dca6d5cee4d8` when the simulation
     /// version rose to 14, the state gained the floor timer, the Overseer, and the waves, and the sweep content gained
     /// a timer of 3 seconds, waves each 2 seconds, and a hunter with a pick of one damage, so the replay runs past
-    /// expiry (D-407 to D-425, G-20).
+    /// expiry (D-407 to D-425, G-20). PR-72 moved it from `6f7da3d2313688bd` when the simulation version rose to 15,
+    /// the path search took the diagonal move of D-486 and D-489, and the jump rule read the slope under the feet
+    /// (F-107, F-108, G-20). The new walk with the version at 14 gave `5edea237bc4e2fae`, so the walks of the sweep
+    /// moved the hash as well as the version.
     /// </remarks>
-    private const string ExpectedHash = "6f7da3d2313688bd";
+    private const string ExpectedHash = "dc4258105649a548";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-71, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-72, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -32,6 +32,8 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-97 | The tunnels felt cramped in play, and every rise in a tunnel needed a jump | PR-63, PR-64, PR-65, PR-66, PR-16 |
 | F-98 | On the wide sizes, about one floor in 96000 ran the dig job cap with a chamber still in rock | PR-63, PR-67, PR-66 |
 | F-101 | The night of 2026-09-15 found a shaft that lands on an unreachable floor on the wide sizes: seed 79146, floor 7 | PR-68, PR-66 |
+| F-107 | An enemy walks no diagonal, so every path is a staircase of side steps | PR-72 |
+| F-108 | An enemy climbs a ramp in slow jumps | PR-72 |
 | F-109 | A code head waited 18 to 21 minutes for the hosted CI legs, and a push of documents alone ran every check again | PR-71 |
 
 ## 3. Guardrails for this phase
@@ -726,6 +728,39 @@ Gate: exit tests 1 to 5 pass. Exit test 6 runs after the merge.
 
 > *In plain English:* each push waited up to 21 minutes for the full checks, also a push that changed a document alone. This change skips the heavy checks for such a push after a green one. It also runs fewer seeds on a pull request and splits the slow tests, so they run side by side.
 
+### PR-72: Enemy diagonals and ramp climb
+
+Scope:
+
+- The PR holds the fixes of F-107 and F-108 by owner instruction, an exception to G-10 (D-483, D-484).
+- `WhatYouCarry.Core/Pathfinding/PathWalk.cs`: the jump rule reads the floor of the next cell against the slope under the feet. It reads both at the point where the body enters the next cell. A climb of a ramp then takes no jump (F-108, D-485).
+- `WhatYouCarry.Core/Pathfinding/GridMoves.cs`: the diagonal move. Two side moves reach the corner column in either order (D-486). The move rises one block at most, in rows and over the floor under the middle of the start (D-165). The start and the corner columns hold two open cells over the higher floor. A level move and a drop pass one solid corner, and a step up passes none (D-489). `Reachability` keeps the side moves, so the floors do not change (D-488).
+- `WhatYouCarry.Core/Pathfinding/GridPathfinder.cs`: a side move costs 10, a diagonal move costs 14, and the estimate is the octile distance (D-487). The enemies, the Overseer, and the bots walk the diagonal moves through `PathFollower` (D-488).
+- `WhatYouCarry.Core/Simulation/SimulationVersion.cs`: the version rises to 15, and the bit-identity answer moves (G-20).
+- `WhatYouCarry.Tests/`: `EnemyWalkTests` holds the case of D-485, the jump rule, the diagonal rule, the search, and the diagonal walk sweep. `EnemyTests` reads the diagonal move.
+- `docs/design.md`: F-107 and F-108.
+
+Out of scope: a jump across a gap, which D-486 did not take, and the straight walk of a brain near its target (F-104).
+
+Exit tests:
+
+1. `EnemiesClimbTheRampsOfTheOwnerFloorWithNoJump` passes: on seed 1, floor 1, a scavenger and the Overseer climb each ramp with no tick in the air (D-485). It fails on the old jump rule.
+2. `AWalkAlongARampNeedsNoJump` passes for every rise and run, and `AStepOntoABlockOrTheSideOfARampNeedsAJump` passes.
+3. `ABrainClimbsARampWithNoJump` passes for every rise and run.
+4. The diagonal rule tests pass: open floor, one solid corner and not two, a step up and a drop (D-486). A diagonal move cuts no climb out of a ramp, and a step up passes no corner (D-489).
+5. `TheSearchTakesDiagonalMovesAcrossOpenFloor` passes, and `PathfinderRespectsMoveRule` finds diagonal moves in the paths of 60 seeds (D-487).
+6. `DiagonalSweep.ABodyWalksEveryDiagonalMove` passes: on 120 seeds over every floor, a body crosses each diagonal move in 120 ticks with one jump at most.
+7. The simulation version is 15, and `BitIdentityKnownAnswer` passes with `dc4258105649a548` on the three platforms (G-9, G-20).
+8. The bot tests and `TimerTesterAlwaysDies` pass with the new walk.
+
+Review focus: the diagonal rule against the body physics (D-486, D-489), the jump rule on a ramp, and the cost and the estimate of the search.
+
+Check clause: none.
+
+Gate: exit tests 1 to 8 pass.
+
+> *In plain English:* enemies walked in staircases of side steps and hopped up ramps in slow jumps. They now cut corners where a player can, and they walk up a ramp as the player does.
+
 ### PR-62: Art quality pass
 
 Scope:
@@ -793,10 +828,11 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 28. Owner: answer OQ-48 and OQ-182. ✅ Answered 2026-09-21 and 2026-09-22. The answers of PR-20 run from D-450, which D-462 supersedes, to D-470.
 29. PR-20. ✅ Done in PR #87.
 30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
-31. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
-32. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-33. Tier 4 pass on the screenshot fixture (D-133).
-34. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+31. PR-72. ✅ The owner answers of 2026-09-22: D-483 to D-489.
+32. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
+33. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+34. Tier 4 pass on the screenshot fixture (D-133).
+35. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

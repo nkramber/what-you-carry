@@ -3,13 +3,13 @@ using WhatYouCarry.Core.World;
 namespace WhatYouCarry.Core.Pathfinding;
 
 /// <summary>
-/// The move rule of a body on the voxel grid (D-76, D-165, D-345): one block up, any drop, or a walk along a
-/// ramp. It holds no state, and it reads the grid alone.
+/// The move rule of a body on the voxel grid (D-76, D-165, D-345, D-486): one block up, any drop, or a walk along a
+/// ramp to a side column, and a diagonal move to a corner column. It holds no state, and it reads the grid alone.
 /// </summary>
 /// <remarks>
 /// <para>
 /// A floor cell is a solid cell with two open cells above it, so the box of D-165 stands on it. A ramp is a floor
-/// cell too, and the body stands on its slope. A move goes to one of the four neighbor columns. A step up needs the
+/// cell too, and the body stands on its slope. A side move goes to one of the four neighbor columns. A step up needs the
 /// block of the step, two open cells over it, and a third open cell over the start for the jump. A flat move or a
 /// drop needs two open cells in the neighbor column at the height of the start, and the body then lands on the
 /// first solid cell below.
@@ -21,8 +21,13 @@ namespace WhatYouCarry.Core.Pathfinding;
 /// then hold a path that no enemy can walk.
 /// </para>
 /// <para>
-/// Every answer steps in integers and reads the grid alone, so one grid gives one answer everywhere (G-9). A body
-/// can cut a corner that this rule does not, so the rule names no move that a body cannot make.
+/// A diagonal move goes to one of the four corner columns (D-486). It is legal when two side moves reach the corner
+/// column, in either order, and it rises one block at most, so it reaches no cell that the side moves do not.
+/// <see cref="Procgen.Reachability"/> reads the side moves alone (D-488), and the floors that the generator digs do
+/// not change.
+/// </para>
+/// <para>
+/// Every answer steps in integers and reads the grid alone, so one grid gives one answer everywhere (G-9).
 /// </para>
 /// </remarks>
 public static class GridMoves
@@ -38,6 +43,21 @@ public static class GridMoves
 
     /// <summary>The Z step of each direction, in the order that every search reads them.</summary>
     public static readonly int[] StepZ = [0, 0, 1, -1];
+
+    /// <summary>
+    /// The units of one block in a floor height. The middle and the edges of every place of every run of D-346 meet
+    /// a whole unit, so the rule compares heights in integers.
+    /// </summary>
+    private const int HeightUnits = 24;
+
+    /// <summary>The count of corner columns of a diagonal move (D-486).</summary>
+    public const int Corners = 4;
+
+    /// <summary>The X step of each corner, in the order that the path search reads them.</summary>
+    public static readonly int[] CornerStepX = [1, 1, -1, -1];
+
+    /// <summary>The Z step of each corner, in the order that the path search reads them.</summary>
+    public static readonly int[] CornerStepZ = [1, -1, 1, -1];
 
     /// <summary>Answers whether a body stands on the cell: a block or a ramp, with two open cells above it. A cell outside the grid is no floor.</summary>
     public static bool IsFloor(VoxelGrid grid, Cell cell)
@@ -61,6 +81,72 @@ public static class GridMoves
         }
 
         return Landing(grid, x, y, z, neighborX, neighborZ);
+    }
+
+    /// <summary>
+    /// The floor row that a diagonal move reaches in a corner column from a floor cell, or <see cref="NoMove"/> when
+    /// no such move leads there (D-486). The move takes two side moves in one order: along X first, or along Z
+    /// first. It rises one block at most, as a jump does (D-165). The two orders can land on two rows, so a search
+    /// reads both.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A jump starts from the middle of the start cell, and the body enters the corner column at the corner that the
+    /// two cells share. The floor of the landing at that corner stands one block over the floor under the middle of
+    /// the start at most. Two side moves can each rise, for example a walk up a ramp into the next row and then a step
+    /// onto a block, and the diagonal move then cuts out the climb that the ramp gave.
+    /// </para>
+    /// <para>
+    /// The body crosses the corner point of the four columns on a straight line, at the height of the higher of the
+    /// two floors. The start column and the corner column need two open cells over that floor: a drop leaves the
+    /// start at its own height, and a step up jumps in place from the start. A solid side column stops the box on one
+    /// axis, and the body slides along the block edge as a player does. Two solid side columns shut the line, so the
+    /// move needs one side column open over that floor. A step up needs both side columns open, because a slide
+    /// during the jump takes the body past the top of its arc, and it lands short (D-489).
+    /// </para>
+    /// </remarks>
+    /// <param name="grid">The grid of the floor.</param>
+    /// <param name="x">The X of the floor cell of the start.</param>
+    /// <param name="y">The row of the floor cell of the start.</param>
+    /// <param name="z">The Z of the floor cell of the start.</param>
+    /// <param name="stepX">The X step to the corner column: 1 or -1.</param>
+    /// <param name="stepZ">The Z step to the corner column: 1 or -1.</param>
+    /// <param name="alongXFirst">True for the order along X first, and false for the order along Z first.</param>
+    public static int DiagonalMove(VoxelGrid grid, int x, int y, int z, int stepX, int stepZ, bool alongXFirst)
+    {
+        int sideX = alongXFirst ? x + stepX : x;
+        int sideZ = alongXFirst ? z : z + stepZ;
+        int sideY = Move(grid, x, y, z, sideX, sideZ);
+        if (sideY == NoMove)
+        {
+            return NoMove;
+        }
+
+        // Two side moves can each rise one block, and one jump clears one block alone (D-165).
+        int cornerY = Move(grid, sideX, sideY, sideZ, x + stepX, z + stepZ);
+        if (cornerY == NoMove || cornerY > y + 1)
+        {
+            return NoMove;
+        }
+
+        // The heights are in half blocks: the corner that the two cells share, and the middle of the start.
+        Cell start = new(x, y, z);
+        Cell landing = new(x + stepX, cornerY, z + stepZ);
+        int shareX = stepX > 0 ? (x + 1) * 2 : x * 2;
+        int shareZ = stepZ > 0 ? (z + 1) * 2 : z * 2;
+        int landingFloor = FloorHeightAt(grid, landing, shareX, shareZ);
+        if (landingFloor - FloorHeightAt(grid, start, (x * 2) + 1, (z * 2) + 1) > HeightUnits)
+        {
+            return NoMove;
+        }
+
+        int higher = cornerY > y ? cornerY : y;
+        bool openEnds = IsOpenOver(grid, x, z, higher) && IsOpenOver(grid, landing.X, landing.Z, higher);
+        bool openAlongX = IsOpenOver(grid, landing.X, z, higher);
+        bool openAlongZ = IsOpenOver(grid, x, landing.Z, higher);
+        bool stepUp = landingFloor > FloorHeightAt(grid, start, shareX, shareZ);
+        bool openSides = stepUp ? openAlongX && openAlongZ : openAlongX || openAlongZ;
+        return openEnds && openSides ? cornerY : NoMove;
     }
 
     /// <summary>
@@ -201,5 +287,43 @@ public static class GridMoves
         }
 
         return landingY;
+    }
+
+    /// <summary>
+    /// The height of the floor of a floor cell at one point of its top face, in units of <see cref="HeightUnits"/>
+    /// to a block. The point is in half blocks, so the middle of a cell and each of its corners is a whole number. The
+    /// floor of a block is flat, and the floor of a ramp is its slope at that point (D-345).
+    /// </summary>
+    private static int FloorHeightAt(VoxelGrid grid, Cell cell, int halfX, int halfZ)
+    {
+        if (!grid.TryGetRamp(cell.X, cell.Y, cell.Z, out Ramp slope))
+        {
+            return (cell.Y + 1) * HeightUnits;
+        }
+
+        int halfAlong;
+        switch (slope.Rise)
+        {
+            case RampRise.PlusX:
+                halfAlong = halfX - (cell.X * 2);
+                break;
+            case RampRise.MinusX:
+                halfAlong = ((cell.X + 1) * 2) - halfX;
+                break;
+            case RampRise.PlusZ:
+                halfAlong = halfZ - (cell.Z * 2);
+                break;
+            default:
+                halfAlong = ((cell.Z + 1) * 2) - halfZ;
+                break;
+        }
+
+        return (cell.Y * HeightUnits) + ((((slope.Place * 2) + halfAlong) * HeightUnits) / (2 * slope.Run));
+    }
+
+    /// <summary>Answers whether the two cells of a column over one floor row hold no solid part, so the box of D-165 passes there. A cell outside the grid is solid.</summary>
+    private static bool IsOpenOver(VoxelGrid grid, int x, int z, int floorRow)
+    {
+        return !grid.IsSolid(x, floorRow + 1, z) && !grid.IsSolid(x, floorRow + 2, z);
     }
 }
