@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 234: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Ready for owner merge at effective head `4282206`.
+
+### What this session did, and why
+
+- Re-reviewed PR #97 after the sweep correction and after the branch night finished.
+- Found no defect. Updated the existing review record and preserved its earlier blocked verdict.
+- The remote code head is `4282206`. Later PR commits change documents only.
+
+### State of the build
+
+- The focused sweep regression test passed locally.
+- CI, smoke, bit identity, bots, asset QA, lint, STE, and doc-gate passed at code head `4282206`.
+- The branch night passed at `4282206`; the fresh `night-gate` passed at PR tip `87e4712`.
+- The prior review-gate run read the old blocked verdict. The metadata push must start a fresh review-gate run.
+
+### In flight
+
+- The fresh review-gate run after this metadata commit.
+
+### Traps and gotchas
+
+- Later commits after `4282206` change documents only, so the effective code head remains `4282206`.
+- The only gitar comment says it is working. D-550 says that notice needs no answer.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Check the fresh review-gate result after this metadata push.
+
 ## Session 233: 2026-09-23, Codex
 
 Author: Codex
@@ -37,7 +72,6 @@ None. Required night evidence is incomplete.
 ### Next concrete action
 
 Check run 35909827024 and the new `night-gate` result. Re-review the same PR after the branch night passes, or record any night failure.
-
 
 ## Session 232: 2026-09-23, Claude Code
 
@@ -336,49 +370,3 @@ None. OQ-181 blocks PR-77 alone.
 ### Next concrete action
 
 Reassess PR #94 after the owner resolves the night-gate block of D-538 and a fresh three-platform Smoke run completes.
-
-## Session 224: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-74, author. Branch `feat/pr-74-body-art`. PR #94, pending merge. Base `6ee836d`.
-
-### What this session did, and why
-
-- PR-78 exit test 4, run by the PR-78 session after the merge of PR #93: `allow_auto_merge` is on, and the ruleset `main` (id 23883816) is active. The live ruleset matched `.github/rulesets/main.json` at `6ee836d`, plus two fields of the `pull_request` rule: `require_extra_approval_for_unattributed_changes: false` (owner choice, 2026-09-23) and `required_reviewers: []`.
-- Second concern, by owner approval with no decision: the file now declares both fields, and `RulesetTests` asserts each. The comparison of `docs/runbooks/main-ruleset.md` against the live ruleset gives an empty diff.
-- The body gains the brow, the nose, the beard, and the two toe boxes at the places of D-497, D-498, D-501, and D-502. The face layout and the trim come from owner answers (D-525, D-526).
-- The owner rejected the noise sheets of D-503 (0.12, 0.20, 0.30): "None of them match the level of detail that the 3D model screenshots have." D-527 supersedes D-503. The recipe system gains a `shade` field, a clustered `grain`, and a `gradient`, in whole numbers alone. The palette gains three fine shades between each pair of colors (D-528), and a ninth ramp, umber, for the dark browns (D-530). The body takes the measured shades of the unlit 3D reference (D-529, D-531).
-- The owner approved the sheet b2 as finished art (D-532, exit test 4). The owner kept D-525 where the brow hides the eye row from the camera of the sheet.
-- The owner asked to remove the bypass checkbox (D-535), and then called it a mistake. D-537 restores the bypass of D-520. The live ruleset (id 23883816) had no bypass from about 16:10 to 16:25 UTC, and it matches the file again. PR-74 carries no bypass change.
-- The night of 2026-09-23 on `main` failed: greedy-descender softlocked 26 of 5000 seeds at `e069e16`. `night-gate` is red on every PR. D-538 plans the fix and a night gate that counts a hand night on the PR branch.
-- The owner waived the gitar pass for this PR. Gitar never reviewed a head of PR #94, and the Codex review starts by hand with the invocation of `make codex-review` (D-536).
-- The owner asked for two process changes, recorded for the next PR: the merge summary of four sections (D-533), and a `review-gate` that stays green after a later documents commit (D-534). The gitar pass still reviews each push.
-- No roadmap item improves the player animation beyond the clips and the walk of PR-15 (D-331, D-333). The owner asked, and no item exists.
-
-### State of the build
-
-- The full suite passed 1525 of 1526 at the code commit before the last documents fix, and the one failure was the citation of D-503, now fixed. Smoke and Documents pass 138 of 138. `ste-check`, `asset-qa`, and `det-lint` give 0 findings.
-- Every block and the sword keep their exact pixels. The atlas palette grows from 32 to 117 entries.
-- The remote head and the PR number go into the next entry after the push.
-
-### In flight
-
-- PR #94 is open, and PR-74 is marked done in `docs/design.md` and the roadmap. Next: the gitar pass, then `make codex-review PR=94`, then the merge summary of D-524.
-
-### Traps and gotchas
-
-- Colors keep their flat indices 0 to 35 in a recipe. The atlas holds the 36 colors first and then the shades, so a block pixel keeps its index. Umber is 32 to 35.
-- Every `fill` and `rect` needs `shade`. The `noise` of `fill` and `rect`, `edge`, and `band` still move a whole color step (four fine steps).
-- The painter clamps once after the last layer. A texel that the noise moved down and a band moved up stays at the base.
-- The `leather` recipe is now the sword grip alone. The body reads `trousers`, `boot`, and `boot-toe`.
-- `SendUserFile` cannot deliver in this session type. The sheets and the comparisons are in the git-ignored folder `artifacts/reference/meshy-miner-2026-09-22/`, files 10 to 17.
-- A restore with `cp "$bk"/*.json` put `layout.json` into the recipe folder one time. Back up the recipes alone.
-- PR #93 dropped the title and the rule line at the top of this file. `doc-gate` finds the newest entry by `\n## Session `, so an entry at byte 0 reads as absent. This PR restores both lines.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Run the gitar pass of `gitar-review` on PR #94, then `make codex-review PR=94` in the background. PR-74 needs the owner merge with the bypass checkbox, because `night-gate` is red. After PR #94 merges, the next session opens one process PR for D-533 and D-534: a new roadmap item, the effective head in `ReviewGate` and `CodexReview` over the skip set of D-475, the tests, and the summary form in `one-pr-one-session`. The PR after it is the night fix of D-538: bisect the softlocks from `170f08c` to `e069e16` (PR-72 first), fix them, and let a hand night on the PR branch count for that PR.
