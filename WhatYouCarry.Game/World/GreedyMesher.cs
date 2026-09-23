@@ -35,7 +35,7 @@ public static class GreedyMesher
 
     /// <summary>The mesh of one chunk. The chunk indices count from zero along X and Z.</summary>
     /// <exception cref="Core.Logging.ContextException">The chunk is outside the layout of the grid.</exception>
-    public static MeshData MeshChunk(VoxelGrid grid, int chunkX, int chunkZ)
+    public static MeshData MeshChunk(VoxelGrid grid, int chunkX, int chunkZ, BlockTiles tiles)
     {
         if (chunkX < 0 || chunkX >= ChunkLayout.CountX(grid) || chunkZ < 0 || chunkZ >= ChunkLayout.CountZ(grid))
         {
@@ -58,12 +58,12 @@ public static class GreedyMesher
             int axis = FaceDirection.Axis(direction);
             for (int slice = low[axis]; slice < high[axis]; slice++)
             {
-                MeshSlice(grid, data, direction, slice, low, high);
+                MeshSlice(grid, data, direction, slice, low, high, tiles);
             }
         }
 
-        RampFaces.AddSlopes(grid, data, low, high);
-        RampFaces.AddCellFaces(grid, data, low, high);
+        RampFaces.AddSlopes(grid, data, low, high, tiles);
+        RampFaces.AddCellFaces(grid, data, low, high, tiles);
         return data;
     }
 
@@ -100,7 +100,7 @@ public static class GreedyMesher
     /// One slice of one direction: the mask of visible faces, then the greedy sweep. The two axes of the slice
     /// are the next two after the face axis, in cyclic order, so their cross product points along the face axis.
     /// </summary>
-    private static void MeshSlice(VoxelGrid grid, MeshData data, int direction, int slice, int[] low, int[] high)
+    private static void MeshSlice(VoxelGrid grid, MeshData data, int direction, int slice, int[] low, int[] high, BlockTiles tiles)
     {
         int axis = FaceDirection.Axis(direction);
         int sign = FaceDirection.Sign(direction);
@@ -146,7 +146,7 @@ public static class GreedyMesher
 
         foreach (MaskRectangle<FaceKey> rectangle in GreedySweep.Rectangles(mask, sizeU, sizeV))
         {
-            EmitQuad(data, axis, sign, slice, low[axisU] + rectangle.U, low[axisV] + rectangle.V, rectangle.Width, rectangle.Height, rectangle.Key);
+            EmitQuad(data, axis, sign, slice, low[axisU] + rectangle.U, low[axisV] + rectangle.V, rectangle.Width, rectangle.Height, rectangle.Key, tiles);
         }
     }
 
@@ -155,7 +155,7 @@ public static class GreedyMesher
     /// run clockwise as seen from the outer side, and the diagonal joins the two corners with the lower sum of
     /// occlusion, so the dark of a corner does not spread across the face.
     /// </summary>
-    private static void EmitQuad(MeshData data, int axis, int sign, int slice, int startU, int startV, int width, int height, FaceKey key)
+    private static void EmitQuad(MeshData data, int axis, int sign, int slice, int startU, int startV, int width, int height, FaceKey key, BlockTiles tiles)
     {
         int axisU = (axis + 1) % 3;
         int axisV = (axis + 2) % 3;
@@ -198,7 +198,7 @@ public static class GreedyMesher
         float[] normal = new float[3];
         normal[axis] = sign;
         bool flip = orderedLevels[0] + orderedLevels[2] > orderedLevels[1] + orderedLevels[3];
-        data.AddQuad(orderedPositions, new Vector3(normal[0], normal[1], normal[2]), orderedColors, orderedUvs, AtlasTile.Origin(key.Block), flip);
+        data.AddQuad(orderedPositions, new Vector3(normal[0], normal[1], normal[2]), orderedColors, orderedUvs, tiles.Origin(key.Block), flip);
     }
 
     /// <summary>

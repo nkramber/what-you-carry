@@ -1,0 +1,15 @@
+{
+  "model": "models/player.bbmodel",
+  "boxes": {
+    "head_box": {"recipe": "skin", "faces": {}},
+    "torso_box": {"recipe": "cloth", "faces": {}},
+    "arm_left_upper_box": {"recipe": "cloth", "faces": {}},
+    "arm_left_lower_box": {"recipe": "cloth", "faces": {}},
+    "arm_right_upper_box": {"recipe": "cloth", "faces": {}},
+    "arm_right_lower_box": {"recipe": "cloth", "faces": {}},
+    "leg_left_upper_box": {"recipe": "leather", "faces": {}},
+    "leg_left_lower_box": {"recipe": "leather", "faces": {}},
+    "leg_right_upper_box": {"recipe": "leather", "faces": {}},
+    "leg_right_lower_box": {"recipe": "leather", "faces": {}}
+  }
+}

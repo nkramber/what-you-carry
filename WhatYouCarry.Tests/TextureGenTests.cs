@@ -2,24 +2,27 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
+using Vector2 = Godot.Vector2;
 using WhatYouCarry.Assets;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.World;
+using WhatYouCarry.Game.Models;
+using WhatYouCarry.Game.Render;
 using WhatYouCarry.Tools.TextureGen;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
 
 /// <summary>
-/// The texture generator of PR-14: the palette, the rules, the atlas, the PNG file, the command, and the body faces
-/// (D-85, D-304, D-305, D-307, D-308; PR-14 exit tests 1 to 4).
+/// The texture generator over the repository content: the palette, the atlas, the layout, the PNG file, and the
+/// command (D-85, D-304, D-305, D-308, D-505, D-506; PR-14 exit tests 1 to 4, PR-62 exit tests 1, 2, and 4).
 /// </summary>
 [Collection(ConsoleCollection.Name)]
 public sealed class TextureGenTests
 {
-    private const string BadRule = "textures/rules/bad.json";
-    private const float UvTolerance = 0.001f;
+    private const float UvTolerance = 0.0001f;
 
     /// <summary>The ramp names of the palette of D-304, in file order.</summary>
     private static readonly string[] OwnerRampNames = ["rock", "slate", "timber", "ochre", "rust", "water", "lichen", "bone"];
@@ -37,12 +40,27 @@ public sealed class TextureGenTests
         "#775d50", "#9f836f", "#c0aa92", "#e1d6c2",
     ];
 
+    /// <summary>
+    /// The SHA-256 hash of the palette indices of each block tile of the atlas of PR-14, 32 by 32, row by row. The
+    /// hashes come from the committed atlas at the base of PR-62, before the recipe system (D-504).
+    /// </summary>
+    public static TheoryData<int, string> BlockTilesOfPr14 => new()
+    {
+        { 1, "981083a1115b20d2690854eae699e4ef77056dd4359505a5d34981138a861556" },
+        { 2, "357660711b5e8669096250b54911cd42feaec44302b5da156ae34c3dbb8cd48f" },
+        { 3, "2bc18cd11e78cb3ada7d1c5738886e9f463f86612291d12792d1190e32274467" },
+        { 4, "f29ccbe11f118f8f421b46f38bf3960aeb1bc51604627b3e8990a517419a4b32" },
+        { 5, "30b6c15ff74b8532a3200c760fd2e5843db0d01b9cbff5ca8ca27f405e804833" },
+        { 6, "611fc1c60bfdba59157f3fc5938c428e8c74a06872d6b31bf28a105defffbb57" },
+        { 7, "749e352201daa86a731cc2899f47f66fe65c1f15e27a8f6b0b9328fe1c997b90" },
+    };
+
     /// <summary>PR-14 exit test 1. The palette chunk of the atlas is the palette, and every pixel names an index inside it.</summary>
     [Fact]
     public void GeneratorUsesPaletteOnly()
     {
         Palette palette = RepositoryPalette();
-        PngImage image = PngReader.Read(TextureGenCommand.AtlasBytes(ContentRoot()));
+        PngImage image = PngReader.Read(TextureGenCommand.Generate(ContentRoot()).Atlas);
 
         byte[] expected = palette.Colors.SelectMany(color => new[] { color.Red, color.Green, color.Blue }).ToArray();
         Assert.Equal(expected, image.PaletteBytes);
@@ -52,61 +70,48 @@ public sealed class TextureGenTests
         }
     }
 
-    /// <summary>PR-14 exit test 2. Two runs of the generator give equal bytes.</summary>
+    /// <summary>PR-14 exit test 2 and PR-62 exit test 1. Two runs of the generator give equal atlas bytes and equal layout text.</summary>
     [Fact]
     public void GeneratorIsDeterministic()
     {
-        byte[] first = TextureGenCommand.AtlasBytes(ContentRoot());
-        byte[] second = TextureGenCommand.AtlasBytes(ContentRoot());
+        GeneratorOutput first = TextureGenCommand.Generate(ContentRoot());
+        GeneratorOutput second = TextureGenCommand.Generate(ContentRoot());
 
-        Assert.Equal(first, second);
+        Assert.Equal(first.Atlas, second.Atlas);
+        Assert.Equal(first.Layout, second.Layout);
     }
 
-    /// <summary>The committed atlas equals the generator output, so a palette or rule change without a new atlas fails here (D-305).</summary>
+    /// <summary>PR-62 exit test 1. The committed atlas equals the generator output, so an input change without a new atlas fails here (D-305).</summary>
     [Fact]
     public void CommittedAtlasMatchesTheGenerator()
     {
         byte[] committed = File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage));
-        byte[] generated = TextureGenCommand.AtlasBytes(ContentRoot());
+        byte[] generated = TextureGenCommand.Generate(ContentRoot()).Atlas;
 
-        Assert.True(committed.SequenceEqual(generated), "The committed atlas differs from the generator output. Run the texture-gen command with --root on the checkout, and commit textures/atlas.png (D-305).");
+        Assert.True(committed.SequenceEqual(generated), "The committed atlas differs from the generator output. Run the texture-gen command with --root on the checkout, and commit textures/atlas.png and textures/layout.json (D-305, D-505).");
     }
 
-    /// <summary>PR-14 exit test 3. A rule that names a color index past the palette fails, and the error names the index and the file.</summary>
+    /// <summary>PR-62 exit test 1. The committed layout equals the generator output byte for byte (D-505).</summary>
     [Fact]
-    public void RuleWithUnknownColorFails()
+    public void CommittedLayoutMatchesTheGenerator()
     {
-        ContextException error = Assert.Throws<ContextException>(() => TextureRule.Parse(BadRule, RuleBytes(baseIndex: "32"), RepositoryPalette()));
+        string committed = File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.LayoutFile));
+        string generated = TextureGenCommand.Generate(ContentRoot()).Layout;
 
-        Assert.Contains(BadRule, error.Message, StringComparison.Ordinal);
-        Assert.Contains("The field 'base' names the color index 32", error.Message, StringComparison.Ordinal);
-        Assert.Contains("indices 0 to 31", error.Message, StringComparison.Ordinal);
+        Assert.True(committed == generated, "The committed layout differs from the generator output. Run the texture-gen command with --root on the checkout, and commit textures/atlas.png and textures/layout.json (D-505).");
     }
 
-    /// <summary>PR-14 exit test 4. The atlas is a square whose side is a power of two, made of whole tiles.</summary>
+    /// <summary>PR-14 exit test 4. The atlas is a square of 512 pixels, a power of two, that holds whole block canvases (D-506).</summary>
     [Fact]
     public void AtlasIsPowerOfTwo()
     {
-        PngImage image = PngReader.Read(TextureGenCommand.AtlasBytes(ContentRoot()));
+        PngImage image = PngReader.Read(TextureGenCommand.Generate(ContentRoot()).Atlas);
 
+        Assert.Equal(512, AtlasLayout.AtlasPixels);
         Assert.Equal(AtlasLayout.AtlasPixels, image.Width);
         Assert.Equal(AtlasLayout.AtlasPixels, image.Height);
         Assert.Equal(0, image.Width & (image.Width - 1));
-        Assert.Equal(0, image.Width % AtlasLayout.TilePixels);
-    }
-
-    /// <summary>The layout has 64 tiles, a block tile is its id, the body tiles start the second row, the metal tile follows them, and a tile outside the atlas is an error (D-85, D-259, D-307, D-330).</summary>
-    [Fact]
-    public void AtlasLayoutPlacesTheBodyTiles()
-    {
-        Assert.Equal(64, AtlasLayout.TileCount);
-        Assert.Equal((7, 0), (AtlasLayout.Column((int)BlockId.Plank), AtlasLayout.Row((int)BlockId.Plank)));
-        Assert.Equal((0, 1), (AtlasLayout.Column(AtlasLayout.SkinTile), AtlasLayout.Row(AtlasLayout.SkinTile)));
-        Assert.Equal((1, 1), (AtlasLayout.Column(AtlasLayout.ClothTile), AtlasLayout.Row(AtlasLayout.ClothTile)));
-        Assert.Equal((2, 1), (AtlasLayout.Column(AtlasLayout.LeatherTile), AtlasLayout.Row(AtlasLayout.LeatherTile)));
-        Assert.Equal((3, 1), (AtlasLayout.Column(AtlasLayout.MetalTile), AtlasLayout.Row(AtlasLayout.MetalTile)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => AtlasLayout.Column(AtlasLayout.TileCount));
-        Assert.Throws<ArgumentOutOfRangeException>(() => AtlasLayout.Row(-1));
+        Assert.Equal(0, image.Width % AtlasLayout.BlockPixels);
     }
 
     /// <summary>The palette file holds the choice of the owner: eight ramps of four colors, with the values of D-304.</summary>
@@ -121,138 +126,150 @@ public sealed class TextureGenTests
         Assert.Equal(OwnerColors, colors);
     }
 
-    /// <summary>The rules paint the seven blocks of D-259, the three body tiles, and the metal tile of the sword, and no other tile (D-307, D-330).</summary>
-    [Fact]
-    public void RulesPaintEveryBlockAndTheBody()
+    /// <summary>
+    /// PR-62 exit test 2. The canvas of each block in the committed atlas holds the pixels of its tile in the atlas of
+    /// PR-14, so the world keeps its look (D-504, D-309).
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(BlockTilesOfPr14))]
+    public void BlockCanvasEqualsItsTileOfPr14(int block, string hash)
     {
-        IReadOnlyList<TextureRule> rules = TextureGenCommand.ReadRules(ContentRoot(), RepositoryPalette());
+        PngImage image = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
+        AtlasRect place = RepositoryTextures.Layout.Block(block);
 
-        int[] tiles = rules.Select(rule => rule.Tile).OrderBy(tile => tile).ToArray();
-        int[] expected =
-        [
-            (int)BlockId.RawStone, (int)BlockId.HewnStone, (int)BlockId.TimberBeam, (int)BlockId.OreVein,
-            (int)BlockId.StillWater, (int)BlockId.Rubble, (int)BlockId.Plank,
-            AtlasLayout.SkinTile, AtlasLayout.ClothTile, AtlasLayout.LeatherTile, AtlasLayout.MetalTile,
-        ];
-        Assert.Equal(expected, tiles);
+        byte[] pixels = new byte[AtlasLayout.BlockPixels * AtlasLayout.BlockPixels];
+        for (int y = 0; y < AtlasLayout.BlockPixels; y++)
+        {
+            for (int x = 0; x < AtlasLayout.BlockPixels; x++)
+            {
+                pixels[(y * AtlasLayout.BlockPixels) + x] = image.Pixels[((place.Y + y) * image.Width) + place.X + x];
+            }
+        }
+
+        Assert.Equal(hash, Convert.ToHexString(SHA256.HashData(pixels)).ToLowerInvariant());
     }
 
     /// <summary>
-    /// Four tiles of the atlas equal the tiles of the palette preview that the owner chose from (D-304): the first row
-    /// of each, and the count of each palette index over the tile. The preview ran the same sequence and comparisons.
+    /// A block canvas of each of four recipes equals the tile of the palette preview that the owner chose from (D-304):
+    /// the first row, and the count of each palette index. The skin recipe at the block salt gives the old skin tile.
     /// </summary>
     [Theory]
-    [InlineData(1, "0,1,1,1,1,0,1,0,1,0,0,0,1,1,1,1", "0:194,1:614,2:216")]
-    [InlineData(2, "4,5,5,5,5,5,5,5,5,6,5,5,5,6,5,5", "4:15,5:214,6:707,7:88")]
-    [InlineData(4, "12,12,12,13,12,12,12,12,12,12,13,13,12,12,12,13", "12:753,13:271")]
-    [InlineData(8, "29,29,29,29,29,29,29,29,30,29,29,29,29,29,30,29", "28:56,29:896,30:72")]
-    public void TilesMatchThePalettePreview(int tile, string firstRow, string counts)
+    [InlineData("raw-stone", "0,1,1,1,1,0,1,0,1,0,0,0,1,1,1,1", "0:194,1:614,2:216")]
+    [InlineData("hewn-stone", "4,5,5,5,5,5,5,5,5,6,5,5,5,6,5,5", "4:15,5:214,6:707,7:88")]
+    [InlineData("ore-vein", "12,12,12,13,12,12,12,12,12,12,13,13,12,12,12,13", "12:753,13:271")]
+    [InlineData("skin", "29,29,29,29,29,29,29,29,30,29,29,29,29,29,30,29", "28:56,29:896,30:72")]
+    public void BlockCanvasesMatchThePalettePreview(string recipe, string firstRow, string counts)
     {
         Palette palette = RepositoryPalette();
-        byte[] pixels = TextureGenerator.Paint(palette, TextureGenCommand.ReadRules(ContentRoot(), palette));
+        IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(TextureGenCommand.ReadRecipeFiles(ContentRoot()), palette);
+        byte[] pixels = CanvasPainter.Paint(palette, recipes[recipe], AtlasLayout.BlockPixels, AtlasLayout.BlockPixels, CanvasPainter.BlockSalt, recipe);
 
-        int[] row = Enumerable.Range(0, 16).Select(x => (int)TilePixel(pixels, tile, x, 0)).ToArray();
-        Assert.Equal(firstRow, string.Join(",", row));
-
-        SortedDictionary<int, int> histogram = new();
-        for (int y = 0; y < AtlasLayout.TilePixels; y++)
-        {
-            for (int x = 0; x < AtlasLayout.TilePixels; x++)
-            {
-                int value = TilePixel(pixels, tile, x, y);
-                histogram[value] = histogram.GetValueOrDefault(value) + 1;
-            }
-        }
-
-        Assert.Equal(counts, string.Join(",", histogram.Select(pair => $"{pair.Key}:{pair.Value}")));
+        Assert.Equal(firstRow, string.Join(",", pixels.Take(16)));
+        string histogram = string.Join(",", pixels.GroupBy(value => value).OrderBy(group => group.Key).Select(group => $"{group.Key}:{group.Count()}"));
+        Assert.Equal(counts, histogram);
     }
 
-    /// <summary>Over two hundred seeds, heavy noise and a deep edge never move a pixel off the ramp of its base. A failure names the seed (D-66).</summary>
-    [Fact]
-    public void NoiseStaysOnTheRampOfItsBase()
+    /// <summary>
+    /// PR-62 exit test 4. Each face of the player and the sword has a canvas in the committed layout, of its size at 32
+    /// texels per meter, and the box mesh reads that many texels of it (D-308, D-505).
+    /// </summary>
+    [Theory]
+    [InlineData("models/player.bbmodel", 10)]
+    [InlineData("models/sword-basic.bbmodel", 4)]
+    public void EveryFaceHasACanvasAtWorldDensity(string modelPath, int boxes)
     {
-        Palette palette = RepositoryPalette();
-        PaletteRamp timber = palette.Ramps[2];
-        for (uint seed = 1; seed <= 200; seed++)
+        BlockbenchModel model = BlockbenchLoader.Parse(modelPath, File.ReadAllBytes(Path.Combine(ContentRoot(), modelPath)));
+
+        Assert.Equal(boxes, model.Boxes.Count);
+        foreach (ModelBox box in model.Boxes)
         {
-            byte[] pixels = new byte[AtlasLayout.AtlasPixels * AtlasLayout.AtlasPixels];
-            TextureGenerator.PaintTile(pixels, palette, new TextureRule(BadRule, 3, timber.First + 1, 0.9, 3, seed));
-            HashSet<int> seen = [];
-            for (int y = 0; y < AtlasLayout.TilePixels; y++)
+            MeshData mesh = BoxGeometry.Build(model.Path, box, RepositoryTextures.Layout);
+            for (int side = 0; side < BoxFaces.Names.Count; side++)
             {
-                for (int x = 0; x < AtlasLayout.TilePixels; x++)
+                string face = TextureLayout.FaceName(model.Path, box.Name, (BoxSide)side);
+                AtlasRect canvas = RepositoryTextures.Layout.Face(model.Path, box.Name, (BoxSide)side);
+                (int canvasWidth, int canvasHeight) = BoxFaces.CanvasTexels(box, (BoxSide)side);
+                Assert.True(canvas.Width == canvasWidth && canvas.Height == canvasHeight, $"The canvas of {face} is {canvas.Width} by {canvas.Height}, and the face needs {canvasWidth} by {canvasHeight} (D-308).");
+
+                (float width, float height) = BoxFaces.Texels(box, (BoxSide)side);
+                Vector2 topLeft = mesh.Uvs[side * MeshData.QuadVertices];
+                Vector2 bottomRight = mesh.Uvs[(side * MeshData.QuadVertices) + 2];
+                Assert.Equal((float)canvas.X / AtlasLayout.AtlasPixels, topLeft.X, UvTolerance);
+                Assert.Equal((float)canvas.Y / AtlasLayout.AtlasPixels, topLeft.Y, UvTolerance);
+                Assert.Equal(width, (bottomRight.X - topLeft.X) * AtlasLayout.AtlasPixels, 0.01f);
+                Assert.Equal(height, (bottomRight.Y - topLeft.Y) * AtlasLayout.AtlasPixels, 0.01f);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The paint files keep the materials of D-308 and D-330: the head reads skin, the torso and the arms cloth, the legs
+    /// leather, and the sword a leather grip, a plank guard, and a metal blade and tip. No face overrides its box yet.
+    /// </summary>
+    [Fact]
+    public void PaintFilesKeepTheMaterials()
+    {
+        Dictionary<string, string> expected = new()
+        {
+            ["models/player.bbmodel:head_box"] = "skin",
+            ["models/player.bbmodel:torso_box"] = "cloth",
+            ["models/player.bbmodel:arm_left_upper_box"] = "cloth",
+            ["models/player.bbmodel:arm_left_lower_box"] = "cloth",
+            ["models/player.bbmodel:arm_right_upper_box"] = "cloth",
+            ["models/player.bbmodel:arm_right_lower_box"] = "cloth",
+            ["models/player.bbmodel:leg_left_upper_box"] = "leather",
+            ["models/player.bbmodel:leg_left_lower_box"] = "leather",
+            ["models/player.bbmodel:leg_right_upper_box"] = "leather",
+            ["models/player.bbmodel:leg_right_lower_box"] = "leather",
+            ["models/sword-basic.bbmodel:grip_box"] = "leather",
+            ["models/sword-basic.bbmodel:guard_box"] = "plank",
+            ["models/sword-basic.bbmodel:blade_box"] = "metal",
+            ["models/sword-basic.bbmodel:tip_box"] = "metal",
+        };
+
+        Assert.Equal(expected.Count * BoxFaces.Names.Count, RepositoryTextures.Layout.Faces.Count);
+        foreach (FacePlace place in RepositoryTextures.Layout.Faces)
+        {
+            Assert.Equal(expected[place.Model + ":" + place.Box], place.Recipe);
+        }
+    }
+
+    /// <summary>Every block id other than air has a canvas of 32 pixels in the committed layout, bound to the recipe of its material (D-259, D-505).</summary>
+    [Fact]
+    public void EveryBlockHasACanvas()
+    {
+        string[] recipes = ["raw-stone", "hewn-stone", "timber-beam", "ore-vein", "still-water", "rubble", "plank"];
+        Assert.Equal(recipes.Length, RepositoryTextures.Layout.Blocks.Count);
+        for (int index = 0; index < recipes.Length; index++)
+        {
+            BlockPlace place = RepositoryTextures.Layout.Blocks[index];
+            Assert.Equal(index + 1, place.Block);
+            Assert.Equal(recipes[index], place.Recipe);
+            Assert.Equal(AtlasLayout.BlockPixels, place.At.Width);
+            Assert.Equal(AtlasLayout.BlockPixels, place.At.Height);
+        }
+    }
+
+    /// <summary>The gutter of every canvas of the committed atlas repeats the nearest pixel of the canvas, so a sample at a face edge never reads a neighbor.</summary>
+    [Fact]
+    public void GutterRepeatsTheCanvasEdge()
+    {
+        PngImage image = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
+        List<AtlasRect> places = [.. RepositoryTextures.Layout.Blocks.Select(place => place.At), .. RepositoryTextures.Layout.Faces.Select(place => place.At)];
+        foreach (AtlasRect place in places)
+        {
+            for (int y = -1; y <= place.Height; y++)
+            {
+                for (int x = -1; x <= place.Width; x++)
                 {
-                    int value = TilePixel(pixels, 3, x, y);
-                    Assert.True(value >= timber.First && value < timber.First + timber.Count, $"Seed {seed}: the pixel ({x}, {y}) holds the index {value}, off the ramp '{timber.Name}' at the indices {timber.First} to {timber.First + timber.Count - 1}.");
-                    seen.Add(value);
+                    int sourceX = Math.Clamp(x, 0, place.Width - 1);
+                    int sourceY = Math.Clamp(y, 0, place.Height - 1);
+                    byte gutter = image.Pixels[((place.Y + y) * image.Width) + place.X + x];
+                    byte source = image.Pixels[((place.Y + sourceY) * image.Width) + place.X + sourceX];
+                    Assert.True(gutter == source, $"The pixel ({x}, {y}) of the canvas at ({place.X}, {place.Y}) holds {gutter}, and the nearest canvas pixel holds {source}.");
                 }
             }
-
-            Assert.True(seen.Count >= 3, $"Seed {seed}: heavy noise gave {seen.Count} indices, and it moves pixels both down and up the ramp.");
         }
-    }
-
-    /// <summary>With no noise, the edge darkness moves the outer ring down the ramp and the inside keeps the base. A deep edge stops at the dark end.</summary>
-    [Fact]
-    public void EdgeDarkensTheRing()
-    {
-        Palette palette = RepositoryPalette();
-        PaletteRamp timber = palette.Ramps[2];
-        byte[] pixels = new byte[AtlasLayout.AtlasPixels * AtlasLayout.AtlasPixels];
-
-        TextureGenerator.PaintTile(pixels, palette, new TextureRule(BadRule, 3, timber.First + 2, 0.0, 1, 7));
-        AssertRingAndInside(pixels, 3, timber.First + 1, timber.First + 2);
-
-        TextureGenerator.PaintTile(pixels, palette, new TextureRule(BadRule, 3, timber.First + 2, 0.0, 5, 7));
-        AssertRingAndInside(pixels, 3, timber.First, timber.First + 2);
-    }
-
-    /// <summary>Two rules for one tile are an error that names the tile and both files.</summary>
-    [Fact]
-    public void TwoRulesForOneTileFail()
-    {
-        Palette palette = RepositoryPalette();
-        TextureRule first = TextureRule.Parse("textures/rules/a.json", RuleBytes(tile: "3"), palette);
-        TextureRule second = TextureRule.Parse("textures/rules/b.json", RuleBytes(tile: "3"), palette);
-
-        ContextException error = Assert.Throws<ContextException>(() => TextureGenerator.Paint(palette, [first, second]));
-
-        Assert.Contains("'textures/rules/a.json'", error.Message, StringComparison.Ordinal);
-        Assert.Contains("'textures/rules/b.json'", error.Message, StringComparison.Ordinal);
-        Assert.Contains("the tile 3", error.Message, StringComparison.Ordinal);
-    }
-
-    /// <summary>Each field of a rule has its bounds, and an unknown field is an error. Each error names the file and the field (D-168, T-2).</summary>
-    [Theory]
-    [InlineData("64", "1", "0.4", "0", "1001", "", "tile")]
-    [InlineData("-1", "1", "0.4", "0", "1001", "", "tile")]
-    [InlineData("1", "-1", "0.4", "0", "1001", "", "base")]
-    [InlineData("1", "1", "1.5", "0", "1001", "", "noise")]
-    [InlineData("1", "1", "-0.1", "0", "1001", "", "noise")]
-    [InlineData("1", "1", "\"much\"", "0", "1001", "", "noise")]
-    [InlineData("1", "1", "0.4", "-1", "1001", "", "edge")]
-    [InlineData("1", "1", "0.4", "0", "0", "", "seed")]
-    [InlineData("1", "1", "0.4", "0", "4294967296", "", "seed")]
-    [InlineData("1", "1", "0.4", "0", "1001", ", \"glow\": 3", "glow")]
-    public void RuleRejectsAFieldOutsideItsBounds(string tile, string baseIndex, string noise, string edge, string seed, string extra, string field)
-    {
-        byte[] bytes = RuleBytes(tile, baseIndex, noise, edge, seed, extra);
-
-        ContextException error = Assert.Throws<ContextException>(() => TextureRule.Parse(BadRule, bytes, RepositoryPalette()));
-
-        Assert.Contains(BadRule, error.Message, StringComparison.Ordinal);
-        Assert.Contains($"The field '{field}'", error.Message, StringComparison.Ordinal);
-    }
-
-    /// <summary>An absent field of a rule is an error that names the field (D-92).</summary>
-    [Fact]
-    public void RuleRejectsAnAbsentField()
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes("{\"tile\": 1, \"base\": 1, \"noise\": 0.4, \"edge\": 0}");
-
-        ContextException error = Assert.Throws<ContextException>(() => TextureRule.Parse(BadRule, bytes, RepositoryPalette()));
-
-        Assert.Contains("The field 'seed' is absent", error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A palette file with a bad color, a repeated color or name, an empty list, an unknown field, or no object is an error that names the file (D-168, T-2).</summary>
@@ -335,46 +352,43 @@ public sealed class TextureGenTests
         Assert.Throws<ArgumentException>(() => PngWriter.Write(1, 1, [], [0]));
     }
 
-    /// <summary>The command writes the atlas of the palette and the rules under the root, and the file equals the generator output.</summary>
+    /// <summary>The command writes the atlas and the layout of a small content directory, and both files equal the generator output.</summary>
     [Fact]
-    public void CommandWritesTheAtlas()
+    public void CommandWritesTheAtlasAndTheLayout()
     {
-        using TemporaryContentDirectory content = new();
-        content.Write(AssetPaths.PaletteFile, File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
-        content.Write(AssetPaths.RuleDirectory + "raw-stone.json", Encoding.UTF8.GetString(RuleBytes()));
+        using TemporaryContentDirectory content = MinimalContent();
 
         Assert.Equal(0, TextureGenCommand.Run(["--root", content.Root]));
 
-        byte[] written = File.ReadAllBytes(Path.Combine(content.Content, AssetPaths.AtlasImage));
-        Assert.Equal(TextureGenCommand.AtlasBytes(content.Content), written);
+        GeneratorOutput expected = TextureGenCommand.Generate(content.Content);
+        Assert.Equal(expected.Atlas, File.ReadAllBytes(Path.Combine(content.Content, AssetPaths.AtlasImage)));
+        Assert.Equal(expected.Layout, File.ReadAllText(Path.Combine(content.Content, AssetPaths.LayoutFile)));
     }
 
-    /// <summary>A bad rule is exit code 1, and the command writes no atlas (T-2).</summary>
+    /// <summary>A bad recipe is exit code 1, and the command writes neither file (T-2).</summary>
     [Fact]
-    public void CommandReportsABadRuleAndWritesNothing()
+    public void CommandReportsABadRecipeAndWritesNothing()
     {
-        using TemporaryContentDirectory content = new();
-        content.Write(AssetPaths.PaletteFile, File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
-        content.Write(AssetPaths.RuleDirectory + "raw-stone.json", Encoding.UTF8.GetString(RuleBytes(baseIndex: "99")));
+        using TemporaryContentDirectory content = MinimalContent();
+        content.Write(AssetPaths.RecipeDirectory + "stone.json", "{\"layers\": [{\"kind\": \"fill\", \"color\": 99, \"noise\": 0.4, \"seed\": 1001}]}");
 
         Assert.Equal(1, TextureGenCommand.Run(["--root", content.Root]));
 
         Assert.False(File.Exists(Path.Combine(content.Content, AssetPaths.AtlasImage)));
+        Assert.False(File.Exists(Path.Combine(content.Content, AssetPaths.LayoutFile)));
     }
 
-    /// <summary>A rule file that the user cannot read is exit code 1 with the file name, and never an unhandled exception (T-2, PR #56 review P2-1).</summary>
+    /// <summary>A recipe file that the user cannot read is exit code 1 with the file name, and never an unhandled exception (T-2, PR #56 review P2-1).</summary>
     [Fact]
-    public void CommandReportsAnUnreadableRule()
+    public void CommandReportsAnUnreadableRecipe()
     {
-        using TemporaryContentDirectory content = new();
-        content.Write(AssetPaths.PaletteFile, File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
-        content.Write(AssetPaths.RuleDirectory + "raw-stone.json", Encoding.UTF8.GetString(RuleBytes()));
-        string rule = Path.Combine(content.Content, AssetPaths.RuleDirectory, "raw-stone.json");
+        using TemporaryContentDirectory content = MinimalContent();
+        string recipe = Path.Combine(content.Content, AssetPaths.RecipeDirectory, "stone.json");
 
-        (int exit, string errors) = RunWithUnreadableFile(content.Root, rule);
+        (int exit, string errors) = RunWithUnreadableFile(content.Root, recipe);
 
         Assert.Equal(1, exit);
-        Assert.Contains("raw-stone.json", errors, StringComparison.Ordinal);
+        Assert.Contains("recipes", errors, StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(content.Content, AssetPaths.AtlasImage)));
     }
 
@@ -382,9 +396,7 @@ public sealed class TextureGenTests
     [Fact]
     public void CommandReportsAnUnreadablePalette()
     {
-        using TemporaryContentDirectory content = new();
-        content.Write(AssetPaths.PaletteFile, File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
-        content.Write(AssetPaths.RuleDirectory + "raw-stone.json", Encoding.UTF8.GetString(RuleBytes()));
+        using TemporaryContentDirectory content = MinimalContent();
         string palette = Path.Combine(content.Content, AssetPaths.PaletteFile);
 
         (int exit, string errors) = RunWithUnreadableFile(content.Root, palette);
@@ -392,6 +404,69 @@ public sealed class TextureGenTests
         Assert.Equal(1, exit);
         Assert.Contains("palette.json", errors, StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(content.Content, AssetPaths.AtlasImage)));
+    }
+
+    /// <summary>An absent palette, an absent recipe directory, an empty recipe directory, and an absent block file are each an error that names the place.</summary>
+    [Fact]
+    public void AnAbsentInputIsAnError()
+    {
+        using TemporaryContentDirectory content = new();
+        ContextException noPalette = Assert.Throws<ContextException>(() => TextureGenCommand.Generate(content.Content));
+        Assert.Contains("palette.json", noPalette.Message, StringComparison.Ordinal);
+
+        content.Write(AssetPaths.PaletteFile, File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
+        ContextException noDirectory = Assert.Throws<ContextException>(() => TextureGenCommand.Generate(content.Content));
+        Assert.Contains("does not exist", noDirectory.Message, StringComparison.Ordinal);
+
+        Directory.CreateDirectory(Path.Combine(content.Content, AssetPaths.RecipeDirectory));
+        ContextException noRecipe = Assert.Throws<ContextException>(() => TextureGenCommand.Generate(content.Content));
+        Assert.Contains("holds no recipe file", noRecipe.Message, StringComparison.Ordinal);
+
+        content.Write(AssetPaths.RecipeDirectory + "stone.json", StoneRecipe);
+        ContextException noBlocks = Assert.Throws<ContextException>(() => TextureGenCommand.Generate(content.Content));
+        Assert.Contains("blocks.json", noBlocks.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A model with no paint file, and a paint file with no model, are each an error that names the file (D-508).</summary>
+    [Fact]
+    public void EachModelHasOnePaintFile()
+    {
+        using TemporaryContentDirectory content = MinimalContent();
+        content.Write("models/rig.bbmodel", ModelJson.SiblingRig());
+        ContextException noPaint = Assert.Throws<ContextException>(() => TextureGenCommand.Generate(content.Content));
+        Assert.Contains("'models/rig.bbmodel' has no paint file 'models/rig.paint.json'", noPaint.Message, StringComparison.Ordinal);
+
+        content.Write("models/rig.paint.json", "{\"model\": \"models/rig.bbmodel\", \"boxes\": {\"torso\": {\"recipe\": \"stone\", \"faces\": {}}, \"arm\": {\"recipe\": \"stone\", \"faces\": {}}}}");
+        GeneratorOutput output = TextureGenCommand.Generate(content.Content);
+        TextureLayout layout = TextureLayout.Parse(AssetPaths.LayoutFile, Encoding.UTF8.GetBytes(output.Layout));
+        Assert.Equal(2 * BoxFaces.Names.Count, layout.Faces.Count);
+
+        content.Write("models/ghost.paint.json", "{}");
+        ContextException orphan = Assert.Throws<ContextException>(() => TextureGenCommand.Generate(content.Content));
+        Assert.Contains("'models/ghost.paint.json' names no model file", orphan.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>The command needs the root option with a value, and it takes no other argument.</summary>
+    [Fact]
+    public void CommandNeedsTheRoot()
+    {
+        Assert.Equal(2, TextureGenCommand.Run([]));
+        Assert.Equal(2, TextureGenCommand.Run(["--other"]));
+        Assert.Equal(2, TextureGenCommand.Run(["--root"]));
+    }
+
+    /// <summary>A recipe of one fill, which the small content directories of these tests bind to every block.</summary>
+    private const string StoneRecipe = "{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"noise\": 0.4, \"seed\": 1001}]}";
+
+    /// <summary>A content directory of the repository palette, one recipe, and a block file that binds the recipe to every block.</summary>
+    private static TemporaryContentDirectory MinimalContent()
+    {
+        TemporaryContentDirectory content = new();
+        content.Write(AssetPaths.PaletteFile, File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
+        content.Write(AssetPaths.RecipeDirectory + "stone.json", StoneRecipe);
+        IEnumerable<string> entries = Enumerable.Range(1, 7).Select(block => "{\"block\": " + block + ", \"recipe\": \"stone\"}");
+        content.Write(AssetPaths.BlockPaintFile, "{\"blocks\": [" + string.Join(", ", entries) + "]}");
+        return content;
     }
 
     /// <summary>
@@ -442,99 +517,6 @@ public sealed class TextureGenTests
         }
     }
 
-    /// <summary>An absent palette, an absent rule directory, and a rule directory with no rule are each an error that names the place.</summary>
-    [Fact]
-    public void AnAbsentPaletteOrRuleIsAnError()
-    {
-        using TemporaryContentDirectory content = new();
-        ContextException noPalette = Assert.Throws<ContextException>(() => TextureGenCommand.AtlasBytes(content.Content));
-        Assert.Contains("palette.json", noPalette.Message, StringComparison.Ordinal);
-
-        content.Write(AssetPaths.PaletteFile, File.ReadAllText(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
-        ContextException noDirectory = Assert.Throws<ContextException>(() => TextureGenCommand.AtlasBytes(content.Content));
-        Assert.Contains("does not exist", noDirectory.Message, StringComparison.Ordinal);
-
-        Directory.CreateDirectory(Path.Combine(content.Content, AssetPaths.RuleDirectory));
-        ContextException noRule = Assert.Throws<ContextException>(() => TextureGenCommand.AtlasBytes(content.Content));
-        Assert.Contains("holds no rule file", noRule.Message, StringComparison.Ordinal);
-    }
-
-    /// <summary>The command needs the root option with a value, and it takes no other argument.</summary>
-    [Fact]
-    public void CommandNeedsTheRoot()
-    {
-        Assert.Equal(2, TextureGenCommand.Run([]));
-        Assert.Equal(2, TextureGenCommand.Run(["--other"]));
-        Assert.Equal(2, TextureGenCommand.Run(["--root"]));
-    }
-
-    /// <summary>
-    /// Every face of the player model reads one body tile at the world density of 32 texels per meter (D-308). The
-    /// head reads skin, the torso and the arms read cloth, and the legs read leather (D-307).
-    /// </summary>
-    [Fact]
-    public void BodyFacesReadOneBodyTileAtWorldDensity()
-    {
-        string file = Path.Combine(ContentRoot(), AssetPaths.BodyModel);
-        BlockbenchModel body = BlockbenchLoader.Parse(AssetPaths.BodyModel, File.ReadAllBytes(file));
-
-        Assert.Equal(10, body.Boxes.Count);
-        foreach (ModelBox box in body.Boxes)
-        {
-            AssertFacesReadTile(box, BodyTileOf(box.Name));
-        }
-    }
-
-    /// <summary>
-    /// Every face of the sword model reads one tile at the world density of 32 texels per meter, as a body face does: the
-    /// blade and the tip read metal, the guard reads plank, and the grip reads leather (D-308, D-330).
-    /// </summary>
-    [Fact]
-    public void SwordFacesReadTheirTileAtWorldDensity()
-    {
-        const string swordPath = "models/sword-basic.bbmodel";
-        BlockbenchModel sword = BlockbenchLoader.Parse(swordPath, File.ReadAllBytes(Path.Combine(ContentRoot(), swordPath)));
-        Dictionary<string, int> tiles = new()
-        {
-            ["grip_box"] = AtlasLayout.LeatherTile,
-            ["guard_box"] = (int)BlockId.Plank,
-            ["blade_box"] = AtlasLayout.MetalTile,
-            ["tip_box"] = AtlasLayout.MetalTile,
-        };
-
-        Assert.Equal(tiles.Count, sword.Boxes.Count);
-        foreach (ModelBox box in sword.Boxes)
-        {
-            AssertFacesReadTile(box, tiles[box.Name]);
-        }
-    }
-
-    /// <summary>Every face of one box reads a rectangle inside one tile at 32 texels per meter (D-308).</summary>
-    private static void AssertFacesReadTile(ModelBox box, int tile)
-    {
-        {
-            float tileLeft = AtlasLayout.Column(tile) * AtlasLayout.TilePixels;
-            float tileTop = AtlasLayout.Row(tile) * AtlasLayout.TilePixels;
-            for (int side = 0; side < box.Faces.Count; side++)
-            {
-                FaceUv uv = box.Faces[side];
-                string face = $"{box.Name}.{(BoxSide)side}";
-                float left = uv.LowU * AtlasLayout.AtlasPixels;
-                float top = uv.LowV * AtlasLayout.AtlasPixels;
-                float right = uv.HighU * AtlasLayout.AtlasPixels;
-                float bottom = uv.HighV * AtlasLayout.AtlasPixels;
-                Assert.True(left >= tileLeft - UvTolerance && right <= tileLeft + AtlasLayout.TilePixels + UvTolerance, $"The face {face} spans the pixels {left} to {right} across, outside the tile {tile} (D-308).");
-                Assert.True(top >= tileTop - UvTolerance && bottom <= tileTop + AtlasLayout.TilePixels + UvTolerance, $"The face {face} spans the pixels {top} to {bottom} down, outside the tile {tile} (D-308).");
-
-                (float width, float height) = FaceMeters((BoxSide)side, box);
-                float texelsWide = width * AtlasLayout.TexelsPerMeter;
-                float texelsHigh = height * AtlasLayout.TexelsPerMeter;
-                Assert.True(Math.Abs((right - left) - texelsWide) < UvTolerance, $"The face {face} is {right - left} texels wide, and {width} meters needs {texelsWide} (D-308).");
-                Assert.True(Math.Abs((bottom - top) - texelsHigh) < UvTolerance, $"The face {face} is {bottom - top} texels high, and {height} meters needs {texelsHigh} (D-308).");
-            }
-        }
-    }
-
     private static string ContentRoot()
     {
         return Path.Combine(RepositoryRoot.Find(), "content");
@@ -543,76 +525,5 @@ public sealed class TextureGenTests
     private static Palette RepositoryPalette()
     {
         return Palette.Parse(AssetPaths.PaletteFile, File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.PaletteFile)));
-    }
-
-    /// <summary>The palette index of one pixel of one tile, from its top left corner.</summary>
-    private static byte TilePixel(byte[] pixels, int tile, int x, int y)
-    {
-        int left = AtlasLayout.Column(tile) * AtlasLayout.TilePixels;
-        int top = AtlasLayout.Row(tile) * AtlasLayout.TilePixels;
-        return pixels[((top + y) * AtlasLayout.AtlasPixels) + left + x];
-    }
-
-    /// <summary>Every pixel of the outer ring of a tile holds one index, and every pixel inside holds another.</summary>
-    private static void AssertRingAndInside(byte[] pixels, int tile, int ring, int inside)
-    {
-        int last = AtlasLayout.TilePixels - 1;
-        for (int y = 0; y < AtlasLayout.TilePixels; y++)
-        {
-            for (int x = 0; x < AtlasLayout.TilePixels; x++)
-            {
-                bool onRing = x == 0 || y == 0 || x == last || y == last;
-                int expected = onRing ? ring : inside;
-                int value = TilePixel(pixels, tile, x, y);
-                Assert.True(value == expected, $"The pixel ({x}, {y}) of the tile {tile} holds the index {value}, and the rule gives {expected}.");
-            }
-        }
-    }
-
-    /// <summary>The bytes of one rule file with the given field texts.</summary>
-    private static byte[] RuleBytes(string tile = "1", string baseIndex = "1", string noise = "0.4", string edge = "0", string seed = "1001", string extra = "")
-    {
-        string json = "{\"tile\": " + tile + ", \"base\": " + baseIndex + ", \"noise\": " + noise + ", \"edge\": " + edge + ", \"seed\": " + seed + extra + "}";
-        return Encoding.UTF8.GetBytes(json);
-    }
-
-    /// <summary>The body material tile of one box of the player model, by the name of the box (D-307).</summary>
-    private static int BodyTileOf(string boxName)
-    {
-        if (boxName.StartsWith("head_", StringComparison.Ordinal))
-        {
-            return AtlasLayout.SkinTile;
-        }
-
-        if (boxName.StartsWith("torso_", StringComparison.Ordinal) || boxName.StartsWith("arm_", StringComparison.Ordinal))
-        {
-            return AtlasLayout.ClothTile;
-        }
-
-        if (boxName.StartsWith("leg_", StringComparison.Ordinal))
-        {
-            return AtlasLayout.LeatherTile;
-        }
-
-        throw new InvalidOperationException($"The box '{boxName}' has no body material in D-307.");
-    }
-
-    /// <summary>The width and the height of one face in meters, as the texture shows it (the order of the corners in BoxGeometry).</summary>
-    private static (float Width, float Height) FaceMeters(BoxSide side, ModelBox box)
-    {
-        float x = box.To.X - box.From.X;
-        float y = box.To.Y - box.From.Y;
-        float z = box.To.Z - box.From.Z;
-        switch (side)
-        {
-            case BoxSide.North:
-            case BoxSide.South:
-                return (x, y);
-            case BoxSide.East:
-            case BoxSide.West:
-                return (z, y);
-            default:
-                return (x, z);
-        }
     }
 }

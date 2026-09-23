@@ -8,7 +8,7 @@ shader_type spatial;
 render_mode cull_back;
 
 uniform sampler2D atlas : source_color, filter_nearest;
-uniform vec2 tile_size = vec2(0.125, 0.125);
+uniform vec2 tile_size = vec2(0.0625, 0.0625);
 uniform vec3 fade_start = vec3(0.0, 0.0, 0.0);
 uniform vec3 fade_end = vec3(0.0, 0.0, 0.0);
 uniform float fade_radius = 0.75;

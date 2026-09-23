@@ -42,7 +42,7 @@ public static class RampFaces
     /// Adds the slopes of every ramp cell inside the bounds, one row at a time. The bounds are the low corner and the
     /// high corner of the chunk, the high corner outside it, as the mesher gives them.
     /// </summary>
-    public static void AddSlopes(VoxelGrid grid, MeshData data, int[] low, int[] high)
+    public static void AddSlopes(VoxelGrid grid, MeshData data, int[] low, int[] high, BlockTiles tiles)
     {
         int sizeX = high[AxisX] - low[AxisX];
         int sizeZ = high[AxisZ] - low[AxisZ];
@@ -80,7 +80,7 @@ public static class RampFaces
             // The sweep clears every cell that it takes, so the mask is empty again for the next row.
             foreach (MaskRectangle<SlopeKey> rectangle in GreedySweep.Rectangles(mask, sizeX, sizeZ))
             {
-                AddSlope(data, row, low[AxisX] + rectangle.U, low[AxisZ] + rectangle.V, rectangle.Width, rectangle.Height, rectangle.Key);
+                AddSlope(data, row, low[AxisX] + rectangle.U, low[AxisZ] + rectangle.V, rectangle.Width, rectangle.Height, rectangle.Key, tiles);
             }
         }
     }
@@ -89,7 +89,7 @@ public static class RampFaces
     /// Adds each end, side, and bottom of every ramp cell inside the bounds that shows. A ramp has no top, because its
     /// slope stands in place of the top, so the face toward up never shows.
     /// </summary>
-    public static void AddCellFaces(VoxelGrid grid, MeshData data, int[] low, int[] high)
+    public static void AddCellFaces(VoxelGrid grid, MeshData data, int[] low, int[] high, BlockTiles tiles)
     {
         for (int y = low[AxisY]; y < high[AxisY]; y++)
         {
@@ -114,11 +114,11 @@ public static class RampFaces
 
                         if (direction == FaceDirection.Down)
                         {
-                            AddBottom(grid, data, x, y, z);
+                            AddBottom(grid, data, x, y, z, tiles);
                         }
                         else
                         {
-                            AddSide(grid, data, x, y, z, direction, FaceShape.OfFace(block, direction));
+                            AddSide(grid, data, x, y, z, direction, FaceShape.OfFace(block, direction), tiles);
                         }
                     }
                 }
@@ -147,7 +147,7 @@ public static class RampFaces
     /// clockwise as seen from above, and the diagonal follows the rule of a block face, so the dark of a corner does not
     /// spread across the slope.
     /// </summary>
-    private static void AddSlope(MeshData data, int row, int startX, int startZ, int width, int depth, SlopeKey key)
+    private static void AddSlope(MeshData data, int row, int startX, int startZ, int width, int depth, SlopeKey key, BlockTiles tiles)
     {
         // Clockwise as seen from above: the low X and low Z corner, then high X, then high X and high Z, then high Z.
         int[] cornersX = [startX, startX + width, startX + width, startX];
@@ -176,11 +176,11 @@ public static class RampFaces
 
         Vector3 normal = risesAlongX ? new Vector3(-uphillSign, key.Run, 0.0f) : new Vector3(0.0f, key.Run, -uphillSign);
         bool flip = levels[0] + levels[2] > levels[1] + levels[3];
-        data.AddQuad(positions, normal.Normalized(), colors, uvs, AtlasTile.Origin(Tile), flip);
+        data.AddQuad(positions, normal.Normalized(), colors, uvs, tiles.Origin(Tile), flip);
     }
 
     /// <summary>The bottom of one ramp cell: a whole square at the bottom of the row, clockwise as seen from below.</summary>
-    private static void AddBottom(VoxelGrid grid, MeshData data, int x, int y, int z)
+    private static void AddBottom(VoxelGrid grid, MeshData data, int x, int y, int z, BlockTiles tiles)
     {
         int[] under = [x, y - 1, z];
 
@@ -202,7 +202,7 @@ public static class RampFaces
         }
 
         bool flip = levels[0] + levels[2] > levels[1] + levels[3];
-        data.AddQuad(positions, Vector3.Down, colors, uvs, AtlasTile.Origin(Tile), flip);
+        data.AddQuad(positions, Vector3.Down, colors, uvs, tiles.Origin(Tile), flip);
     }
 
     /// <summary>
@@ -212,7 +212,7 @@ public static class RampFaces
     /// one such end is a triangle.
     /// </summary>
     /// <exception cref="ContextException">The shape is empty, so the side has no face.</exception>
-    private static void AddSide(VoxelGrid grid, MeshData data, int x, int y, int z, int direction, FaceShape shape)
+    private static void AddSide(VoxelGrid grid, MeshData data, int x, int y, int z, int direction, FaceShape shape, BlockTiles tiles)
     {
         if (shape.IsEmpty)
         {
@@ -267,12 +267,12 @@ public static class RampFaces
         Vector3 faceNormal = new(normal[0], normal[1], normal[2]);
         if (positions.Count == MeshData.TriangleVertices)
         {
-            data.AddTriangle(positions.ToArray(), faceNormal, colors.ToArray(), uvs.ToArray(), AtlasTile.Origin(Tile));
+            data.AddTriangle(positions.ToArray(), faceNormal, colors.ToArray(), uvs.ToArray(), tiles.Origin(Tile));
             return;
         }
 
         bool flip = levels[0] + levels[2] > levels[1] + levels[3];
-        data.AddQuad(positions.ToArray(), faceNormal, colors.ToArray(), uvs.ToArray(), AtlasTile.Origin(Tile), flip);
+        data.AddQuad(positions.ToArray(), faceNormal, colors.ToArray(), uvs.ToArray(), tiles.Origin(Tile), flip);
     }
 
     /// <summary>

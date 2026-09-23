@@ -8,11 +8,12 @@ namespace WhatYouCarry.Assets;
 /// meters in the frame of D-234. The loader builds one, the asset QA poses it, and the Game layer hands it to
 /// the engine (D-299).
 /// </summary>
+/// <param name="Path">The path of the model file, relative to the content directory. The texture layout names each face by it (D-505).</param>
 /// <param name="Name">The model name from the file.</param>
 /// <param name="Bones">Every bone, in file order. A parent comes before its children.</param>
 /// <param name="Boxes">Every box, in file order.</param>
 /// <param name="Attachments">Every attachment point, one per equipment slot that the model declares.</param>
-public sealed record BlockbenchModel(string Name, IReadOnlyList<ModelBone> Bones, IReadOnlyList<ModelBox> Boxes, IReadOnlyList<AttachmentPoint> Attachments)
+public sealed record BlockbenchModel(string Path, string Name, IReadOnlyList<ModelBone> Bones, IReadOnlyList<ModelBox> Boxes, IReadOnlyList<AttachmentPoint> Attachments)
 {
     /// <summary>The index of the bone with a name, or <see cref="ModelBone.NoParent"/> when no bone has it.</summary>
     public int BoneIndex(string name)
@@ -57,21 +58,15 @@ public sealed record ModelBone(string Name, Vector3 Pivot, int Parent)
 }
 
 /// <summary>
-/// One box: a cube element of the file. Its six faces take the sides of <see cref="BoxSide"/>, in that order.
+/// One box: a cube element of the file. Its six faces take the sides of <see cref="BoxSide"/>. The texture layout
+/// places each face (D-505).
 /// </summary>
 /// <param name="Name">The box name, unique in the model.</param>
 /// <param name="Bone">The index of the bone that holds the box.</param>
 /// <param name="From">The low corner, in meters in model space.</param>
 /// <param name="To">The high corner, in meters in model space.</param>
 /// <param name="Pivot">The pivot of the box, in meters in model space. The box mesh sits at it.</param>
-/// <param name="Faces">The texture rectangle of each side, in the order of <see cref="BoxSide"/>.</param>
-public sealed record ModelBox(string Name, int Bone, Vector3 From, Vector3 To, Vector3 Pivot, IReadOnlyList<FaceUv> Faces);
-
-/// <summary>
-/// The texture rectangle of one face, as fractions of the texture: the low corner and the high corner. A
-/// Blockbench file gives pixels of the model resolution, and the loader divides them out.
-/// </summary>
-public readonly record struct FaceUv(float LowU, float LowV, float HighU, float HighV);
+public sealed record ModelBox(string Name, int Bone, Vector3 From, Vector3 To, Vector3 Pivot);
 
 /// <summary>The six sides of a box, in the names of Blockbench. The frame is the frame of D-234.</summary>
 public enum BoxSide

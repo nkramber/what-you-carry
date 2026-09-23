@@ -25,7 +25,7 @@ public static class ContactSheetScene
     public static readonly Vector3 FarPoint = new(0.0f, -1000.0f, 0.0f);
 
     /// <summary>The viewport and the camera, with every subject of <see cref="ContactSheet.Shots"/> in the viewport.</summary>
-    public static ContactSheetNodes Build(Texture2D atlas, BlockbenchModel body, BlockbenchModel sword, Material modelMaterial)
+    public static ContactSheetNodes Build(Texture2D atlas, TextureLayout layout, BlockbenchModel body, BlockbenchModel sword, Material modelMaterial)
     {
         SubViewport viewport = new()
         {
@@ -35,13 +35,14 @@ public static class ContactSheetScene
         };
 
         ShaderMaterial worldMaterial = WorldMaterial.Create(atlas);
+        BlockTiles tiles = new(layout);
         WorldMaterial.SetFade(worldMaterial, FarPoint, FarPoint);
         foreach (SheetShot shot in ContactSheet.Shots())
         {
             if (shot.IsBody)
             {
-                ModelNodeTree nodes = ModelNodes.Build(body, modelMaterial);
-                ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(sword, modelMaterial).Root);
+                ModelNodeTree nodes = ModelNodes.Build(body, modelMaterial, layout);
+                ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(sword, modelMaterial, layout).Root);
                 nodes.Root.Position = shot.Origin;
                 nodes.Root.RotationDegrees = new Vector3(0.0f, shot.BodyYawDegrees, 0.0f);
                 viewport.AddChild(nodes.Root);
@@ -50,7 +51,7 @@ public static class ContactSheetScene
 
             if (Ramp.IsRamp(shot.Block))
             {
-                foreach (MeshInstance3D chunk in ChunkNodes.Build(ContactSheet.RampScene(Ramp.FromId(shot.Block).Run), worldMaterial))
+                foreach (MeshInstance3D chunk in ChunkNodes.Build(ContactSheet.RampScene(Ramp.FromId(shot.Block).Run), worldMaterial, tiles))
                 {
                     // The ramp scene grid starts at the origin of the shot.
                     chunk.Position = shot.Origin;
@@ -62,7 +63,7 @@ public static class ContactSheetScene
 
             VoxelGrid grid = new(GridSide, GridSide, GridSide);
             grid.Set(1, 1, 1, shot.Block);
-            foreach (MeshInstance3D chunk in ChunkNodes.Build(grid, worldMaterial))
+            foreach (MeshInstance3D chunk in ChunkNodes.Build(grid, worldMaterial, tiles))
             {
                 // The middle cell of the grid starts at (1, 1, 1), so the chunk moves back by one meter on each axis.
                 chunk.Position = shot.Origin - new Vector3(1.0f, 1.0f, 1.0f);

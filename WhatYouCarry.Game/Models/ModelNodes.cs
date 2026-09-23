@@ -38,8 +38,9 @@ public static class ModelNodes
     private const string SlotField = "slot";
     private const string ModelField = "model";
 
-    /// <summary>The node tree of a model, with one material on every box.</summary>
-    public static ModelNodeTree Build(BlockbenchModel model, Material material)
+    /// <summary>The node tree of a model, with one material on every box. Each face reads its canvas from the texture layout (D-505).</summary>
+    /// <exception cref="ContextException">The layout has no canvas for a face of the model.</exception>
+    public static ModelNodeTree Build(BlockbenchModel model, Material material, TextureLayout layout)
     {
         Node3D root = new() { Name = model.Name };
         Node3D[] boneNodes = new Node3D[model.Bones.Count];
@@ -60,7 +61,7 @@ public static class ModelNodes
             MeshInstance3D instance = new()
             {
                 Name = box.Name,
-                Mesh = ArrayMeshBuilder.Build(BoxGeometry.Build(box)),
+                Mesh = ArrayMeshBuilder.Build(BoxGeometry.Build(model.Path, box, layout)),
                 MaterialOverride = material,
                 Position = RenderInterpolation.ToGodot(box.Pivot - model.Bones[box.Bone].Pivot),
             };

@@ -51,8 +51,8 @@ public sealed class ContentLoader
     public const string AnimationExtension = ".json";
 
     /// <summary>
-    /// The directory of the palette, the texture rules, and the atlas, which Core never reads (D-305). Every content
-    /// source skips it, so a palette change leaves the content hash of D-163 as it was.
+    /// The directory of the palette, the recipes, the atlas, and the layout, which Core never reads (D-305, D-505).
+    /// Every content source skips it, so a palette change leaves the content hash of D-163 as it was.
     /// </summary>
     public const string TextureDirectory = "textures/";
 

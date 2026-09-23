@@ -4,7 +4,7 @@ using WhatYouCarry.Core.Logging;
 
 namespace WhatYouCarry.Tools.TextureGen;
 
-/// <summary>The JSON parse of a palette file or a rule file. A file that does not parse is an error that names the file (T-2).</summary>
+/// <summary>The JSON parse of a palette file, a recipe file, or a binding file. A file that does not parse is an error that names the file (T-2).</summary>
 public static class TextureJson
 {
     /// <summary>The name of the root object in an error.</summary>

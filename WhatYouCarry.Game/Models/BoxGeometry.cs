@@ -6,7 +6,7 @@ namespace WhatYouCarry.Game.Models;
 
 /// <summary>
 /// The six quads of one box, relative to its pivot, so the mesh instance sits at the pivot and a bone rotation
-/// of PR-15 turns the box about it (D-87). Each face takes its texture rectangle from the model file.
+/// of PR-15 turns the box about it (D-87). Each face reads its canvas in the atlas, from the texture layout (D-505).
 /// </summary>
 /// <remarks>
 /// The corners of each face run clockwise as seen from outside, which is the front-face order of the engine.
@@ -32,8 +32,15 @@ public static class BoxGeometry
         new(0.0f, -1.0f, 0.0f),
     ];
 
-    /// <summary>The mesh of one box: six quads, twenty-four vertices, relative to the pivot of the box.</summary>
-    public static MeshData Build(ModelBox box)
+    /// <summary>
+    /// The mesh of one box: six quads, twenty-four vertices, relative to the pivot of the box. Each face reads the top
+    /// left part of its canvas at 32 texels per meter (D-308): a face of 21.6 texels reads that much of a canvas of 22.
+    /// </summary>
+    /// <param name="modelPath">The path of the model file that holds the box, which the layout names each face by.</param>
+    /// <param name="box">The box.</param>
+    /// <param name="layout">The texture layout of the atlas.</param>
+    /// <exception cref="WhatYouCarry.Core.Logging.ContextException">The layout has no canvas for a face of the box.</exception>
+    public static MeshData Build(string modelPath, ModelBox box, TextureLayout layout)
     {
         MeshData data = new();
         Vector3 low = RenderInterpolation.ToGodot(box.From - box.Pivot);
@@ -41,13 +48,18 @@ public static class BoxGeometry
         for (int side = 0; side < Faces; side++)
         {
             Vector3[] corners = Corners((BoxSide)side, low, high);
-            FaceUv uv = box.Faces[side];
+            AtlasRect canvas = layout.Face(modelPath, box.Name, (BoxSide)side);
+            (float width, float height) = BoxFaces.Texels(box, (BoxSide)side);
+            float lowU = (float)canvas.X / AtlasLayout.AtlasPixels;
+            float lowV = (float)canvas.Y / AtlasLayout.AtlasPixels;
+            float highU = (canvas.X + width) / AtlasLayout.AtlasPixels;
+            float highV = (canvas.Y + height) / AtlasLayout.AtlasPixels;
             Vector2[] uvs =
             [
-                new(uv.LowU, uv.LowV),
-                new(uv.HighU, uv.LowV),
-                new(uv.HighU, uv.HighV),
-                new(uv.LowU, uv.HighV),
+                new(lowU, lowV),
+                new(highU, lowV),
+                new(highU, highV),
+                new(lowU, highV),
             ];
             data.AddQuad(corners, Normals[side], [Unshaded, Unshaded, Unshaded, Unshaded], uvs, Vector2.Zero, flipDiagonal: false);
         }

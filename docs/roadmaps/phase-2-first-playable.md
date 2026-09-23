@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-77, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-508. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-77, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -800,6 +800,7 @@ Scope:
 - Game: the mesher and the model mesh read the place of each block and each face from the layout (D-505). They ignore the UVs of the model file.
 - Look: every block keeps its pixels. The body and the sword keep their material, base color, and noise (D-504).
 - The owner answers of the art pass for the later PRs: D-496 to D-503.
+- Skill: `.claude/skills/asset-texture-creation/` gives the five steps of the art of every asset, from the Meshy prompt to the box model (D-509).
 
 Out of scope: the new body boxes and the face (PR-74), the sword (PR-75), the enemy models (PR-76), the light (PR-77), the armor overlays (PR-22).
 
@@ -949,7 +950,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
 31. PR-72. ✅ Done in PR #90. ✅ The owner answers of 2026-09-22: D-483 to D-489.
 32. PR-73. ✅ Done in PR #91. ✅ The owner answers of 2026-09-22: D-490 to D-495.
-33. PR-62. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-508.
+33. PR-62. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-509.
 34. PR-74.
 35. PR-75.
 36. PR-76.

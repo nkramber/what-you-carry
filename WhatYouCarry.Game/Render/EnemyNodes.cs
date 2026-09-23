@@ -32,6 +32,7 @@ public sealed class EnemyNodes
     private readonly BlockbenchModel body;
     private readonly BlockbenchModel sword;
     private readonly Material material;
+    private readonly TextureLayout layout;
     private readonly List<ModelNodeTree> trees = [];
     private readonly List<CoreVector3> previous = [];
     private readonly List<CoreVector3> current = [];
@@ -45,9 +46,11 @@ public sealed class EnemyNodes
     /// <param name="body">The body model of PR-13, which every enemy draws with (D-401).</param>
     /// <param name="sword">The weapon model of PR-15, which every enemy holds (D-397).</param>
     /// <param name="material">The one model material of the scene (D-85).</param>
+    /// <param name="layout">The texture layout, which places each face of both models (D-505).</param>
     /// <param name="lowest">The lowest box corner of the rest pose, which the root offset reads.</param>
-    public EnemyNodes(Node parent, BlockbenchModel body, BlockbenchModel sword, Material material, float lowest)
+    public EnemyNodes(Node parent, BlockbenchModel body, BlockbenchModel sword, Material material, TextureLayout layout, float lowest)
     {
+        this.layout = layout;
         this.parent = parent;
         this.body = body;
         this.sword = sword;
@@ -128,8 +131,8 @@ public sealed class EnemyNodes
     /// <summary>One tree of the body model with the sword in the weapon slot, under the parent (D-397, D-401).</summary>
     private ModelNodeTree BuildTree()
     {
-        ModelNodeTree tree = ModelNodes.Build(this.body, this.material);
-        ModelNodes.Hold(tree, EquipmentSlots.Weapon, ModelNodes.Build(this.sword, this.material).Root);
+        ModelNodeTree tree = ModelNodes.Build(this.body, this.material, this.layout);
+        ModelNodes.Hold(tree, EquipmentSlots.Weapon, ModelNodes.Build(this.sword, this.material, this.layout).Root);
         this.parent.AddChild(tree.Root);
         return tree;
     }

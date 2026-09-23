@@ -712,9 +712,10 @@ public partial class Main : Node3D
         BlockbenchModel bodyModel = BlockbenchLoader.Parse(AssetPaths.BodyModel, AssetFile.Read(contentDirectory, AssetPaths.BodyModel));
         BlockbenchModel swordModel = BlockbenchLoader.Parse(weapon.Model, AssetFile.Read(contentDirectory, weapon.Model));
         ImageTexture atlas = AtlasFile.Load(contentDirectory);
+        TextureLayout layout = TextureLayoutFile.Load(contentDirectory);
         if (ContactSheet.IsRequested(arguments))
         {
-            this.RenderContactSheet(ContactSheet.PathOf(arguments), atlas, bodyModel, swordModel);
+            this.RenderContactSheet(ContactSheet.PathOf(arguments), atlas, layout, bodyModel, swordModel);
             return;
         }
 
@@ -739,12 +740,12 @@ public partial class Main : Node3D
         this.previousPose = this.currentPose;
 
         this.worldMaterial = WorldMaterial.Create(atlas);
-        this.chunks = new ChunkSwap(this, this.worldMaterial, new NextFloorWorker(content), loop.Seed);
+        this.chunks = new ChunkSwap(this, this.worldMaterial, new BlockTiles(layout), new NextFloorWorker(content), loop.Seed);
         this.chunks.Start(loop);
 
         StandardMaterial3D modelMaterial = ModelMaterial(atlas);
-        ModelNodeTree nodes = ModelNodes.Build(bodyModel, modelMaterial);
-        ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(swordModel, modelMaterial).Root);
+        ModelNodeTree nodes = ModelNodes.Build(bodyModel, modelMaterial, layout);
+        ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(swordModel, modelMaterial, layout).Root);
         this.playerNodes = nodes;
         this.playerModel = bodyModel;
         this.clips = playerClips;
@@ -754,7 +755,7 @@ public partial class Main : Node3D
         // Every enemy draws with the body model until PR-62 gives its family one (D-401). The rest pose stands on
         // the feet, so the root offset reads the lowest corner of that pose.
         float restLowest = ModelPose.LowestPoint(AssetPaths.BodyModel, bodyModel, BodyPose.RestRotations());
-        EnemyNodes enemies = new(this, bodyModel, swordModel, modelMaterial, restLowest);
+        EnemyNodes enemies = new(this, bodyModel, swordModel, modelMaterial, layout, restLowest);
         enemies.Rebuild(loop.Enemies);
         this.enemyNodes = enemies;
         this.drawnFloor = loop.Floor;
@@ -814,7 +815,7 @@ public partial class Main : Node3D
     /// camera moves. The headless display, a shot with no image, and a write failure are each an error line and
     /// exit code 1 (T-2).
     /// </summary>
-    private async void RenderContactSheet(string path, Texture2D atlas, BlockbenchModel bodyModel, BlockbenchModel swordModel)
+    private async void RenderContactSheet(string path, Texture2D atlas, TextureLayout layout, BlockbenchModel bodyModel, BlockbenchModel swordModel)
     {
         LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
         fields.Add(FileField, path);
@@ -825,7 +826,7 @@ public partial class Main : Node3D
                 throw new ContextException(ContactSheetNeedsWindow);
             }
 
-            ContactSheetNodes nodes = ContactSheetScene.Build(atlas, bodyModel, swordModel, ModelMaterial(atlas));
+            ContactSheetNodes nodes = ContactSheetScene.Build(atlas, layout, bodyModel, swordModel, ModelMaterial(atlas));
             this.AddChild(nodes.Viewport);
             Image sheet = Image.CreateEmpty(ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(), false, Image.Format.Rgb8);
             await this.WaitFrames(ContactSheet.WarmUpFrames);
