@@ -1,3 +1,43 @@
+## Session 224: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-74, author. Branch `feat/pr-74-body-art`. PR not open yet, pending merge. Base `6ee836d`.
+
+### What this session did, and why
+
+- PR-78 exit test 4, run by the PR-78 session after the merge of PR #93: `allow_auto_merge` is on, and the ruleset `main` (id 23883816) is active. The live ruleset matched `.github/rulesets/main.json` at `6ee836d`, plus two fields of the `pull_request` rule: `require_extra_approval_for_unattributed_changes: false` (owner choice, 2026-09-23) and `required_reviewers: []`.
+- Second concern, by owner approval with no decision: the file now declares both fields, and `RulesetTests` asserts each. The comparison of `docs/runbooks/main-ruleset.md` against the live ruleset gives an empty diff.
+- The body gains the brow, the nose, the beard, and the two toe boxes at the places of D-497, D-498, D-501, and D-502. The face layout and the trim come from owner answers (D-525, D-526).
+- The owner rejected the noise sheets of D-503 (0.12, 0.20, 0.30): "None of them match the level of detail that the 3D model screenshots have." D-527 supersedes D-503. The recipe system gains a `shade` field, a clustered `grain`, and a `gradient`, in whole numbers alone. The palette gains three fine shades between each pair of colors (D-528), and a ninth ramp, umber, for the dark browns (D-530). The body takes the measured shades of the unlit 3D reference (D-529, D-531).
+- The owner approved the sheet b2 as finished art (D-532, exit test 4). The owner kept D-525 where the brow hides the eye row from the camera of the sheet.
+
+### State of the build
+
+- The full suite passed 1525 of 1526 at the code commit before the last documents fix, and the one failure was the citation of D-503, now fixed. Smoke and Documents pass 138 of 138. `ste-check`, `asset-qa`, and `det-lint` give 0 findings.
+- Every block and the sword keep their exact pixels. The atlas palette grows from 32 to 117 entries.
+- The remote head and the PR number go into the next entry after the push.
+
+### In flight
+
+- Open the PR, mark PR-74 done in `docs/design.md` and the roadmap, run the gitar pass, then `make codex-review PR=<n>`, then the merge summary of D-524.
+
+### Traps and gotchas
+
+- Colors keep their flat indices 0 to 35 in a recipe. The atlas holds the 36 colors first and then the shades, so a block pixel keeps its index. Umber is 32 to 35.
+- Every `fill` and `rect` needs `shade`. The `noise` of `fill` and `rect`, `edge`, and `band` still move a whole color step (four fine steps).
+- The painter clamps once after the last layer. A texel that the noise moved down and a band moved up stays at the base.
+- The `leather` recipe is now the sword grip alone. The body reads `trousers`, `boot`, and `boot-toe`.
+- `SendUserFile` cannot deliver in this session type. The sheets and the comparisons are in the git-ignored folder `artifacts/reference/meshy-miner-2026-09-22/`, files 10 to 17.
+- A restore with `cp "$bk"/*.json` put `layout.json` into the recipe folder one time. Back up the recipes alone.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Push, open the PR, add the done marks, and run the gitar pass of `gitar-review`.
+
 ## Session 223: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -323,47 +363,3 @@ None for PR-62. The owner confirmation and the missing checks are exit evidence,
 ### Next concrete action
 
 The author fixes P2-1 and adds the overflow regression test. The owner confirms the contact sheet. Codex re-reviews PR #92.
-
-## Session 214: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-62, author. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
-
-### What this session did, and why
-
-- The owner started PR-62 from a Meshy look reference of the body (`artifacts/reference/meshy-miner-2026-09-22/`, git ignores it). The owner answered in session: D-496 to D-509.
-- D-504 splits the art pass. PR-62 is the texture recipe system. PR-74 is the body, PR-75 the sword, PR-76 the enemy models, and PR-77 the light with OQ-181. OQ-181 now blocks PR-77.
-- The body answers for PR-74: the brow, the toe, the beard, and the nose boxes (D-497, D-498, D-501, D-502), the kept proportions (D-499), the colors (D-500), and the noise pick on the sheet (D-503).
-- The recipe system (D-505 to D-508): recipes under `content/textures/recipes/`, the block file `content/textures/blocks.json`, and a paint file next to each model. `texture-gen` paints one canvas per block and per face, packs them into a 512 atlas with a gutter, and writes `content/textures/layout.json`. Game reads every UV from the layout. The loader reads no face UV.
-- Every block canvas keeps its PR-14 pixels, and a hash test holds that. The body and the sword keep their materials, and each face now draws its own noise.
-- The owner asked for the skill `asset-texture-creation` in this PR (D-509). It gives the five Meshy steps of every asset.
-
-### State of the build
-
-- The full suite passed 1431 of 1431, Smoke included. `ste-check`, `det-lint`, and `asset-qa` gave 0 findings.
-- The contact sheets before and after sit in `artifacts/pr-62/`. `body-before-after.png` shows the body.
-- The remote head is the commit that holds this entry, on `origin/feat/pr-62-texture-recipes`. That commit adds the done marks, so it is the effective head.
-
-### In flight
-
-- PR #92: CI is green except the review gate (D-251). Gitar approved the effective head `6654571` with no finding. The PR changes code, so it needs a review record, not the override.
-- Exit test 6 needs the owner: confirm that the look stayed the same on the contact sheet.
-
-### Traps and gotchas
-
-- `models/*.paint.json` is not an animation. `AssetSet` skips the suffix, so no animation can take the name `paint`.
-- A rectangle layer wholly outside a face canvas is an error. Bind that face to another recipe in the paint file.
-- A change to a model box size moves the packer, so run `texture-gen` and commit the atlas and the layout together.
-- The agent files have 11 bytes left under D-382.
-
-### Open questions that block progress
-
-None for PR-62. OQ-181 blocks PR-77.
-
-### Next concrete action
-
-Codex reviews PR #92. After the merge, PR-74 starts from D-496 to D-503 and the skill `asset-texture-creation`.
-
-- The owner added two angles for PR-74: `08-3d-top.png` and `09-3d-head-front-close.png` in the reference folder. Step 4 of the skill approved them.
-- The close-up measures the brow at y 25.0 to 26.0, the nose band at 23.2 to 24.9, and the beard at 20.8 to 23.2. Each agrees with D-497, D-501, and D-502 within 0.2 units.
-- The face paint of the close-up: hair on the top 1.5 to 2 units with a small peak, brown eyes of about 1.5 by 0.5 units under the brow, a lighter nose, and a mouth notch of about 2 by 0.5 units.
