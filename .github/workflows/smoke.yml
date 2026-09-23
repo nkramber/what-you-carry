@@ -24,6 +24,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
 
+# Each job name below is a check name, unique across the workflows, because the ruleset of main requires each
+# one by name (D-522). The job id stays short for the needs lists.
 jobs:
   # The first job decides whether the heavy jobs skip a head that changes documents alone (D-474, D-475).
   ci-skip:
@@ -43,6 +45,7 @@ jobs:
           workflow-file: smoke.yml
 
   linux-x64:
+    name: smoke-linux-x64
     needs: ci-skip
     # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
     if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
@@ -74,6 +77,7 @@ jobs:
         run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Smoke"
 
   windows-x64:
+    name: smoke-windows-x64
     needs: ci-skip
     # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
     if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
@@ -105,6 +109,7 @@ jobs:
         run: dotnet test WhatYouCarry.slnx --no-build --filter "Category=Smoke"
 
   macos-arm64:
+    name: smoke-macos-arm64
     needs: ci-skip
     # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
     if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}

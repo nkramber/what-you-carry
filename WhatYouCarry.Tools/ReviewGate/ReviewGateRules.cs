@@ -199,7 +199,7 @@ public static class ReviewGateRules
     }
 
     /// <summary>A short hash in the review file matches the full hash by prefix. Seven characters is the minimum.</summary>
-    private static bool HeadMatches(string recorded, string effective)
+    public static bool HeadMatches(string recorded, string effective)
     {
         if (recorded.Length < 7 || recorded.Length > effective.Length)
         {

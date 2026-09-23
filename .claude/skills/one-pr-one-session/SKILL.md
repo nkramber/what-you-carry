@@ -12,7 +12,8 @@ This skill does not copy `AGENTS.md`. The rules and the PR gate stay there.
 | Reference file | Load it at this step |
 |---|---|
 | `references/enforcement.md` | A question about who enforces a rule: a machine, the agent, or the owner |
-| `references/merge-prompt.md` | The owner says `Merged PR #N`, to write the prompt of the next session |
+| `references/review-and-merge.md` | The gitar pass ends: the review loop, the three-strike stop, and the auto-merge |
+| `references/merge-prompt.md` | The bound PR merges, to write the prompt of the next session |
 
 ## Procedure: the start gate
 
@@ -71,7 +72,7 @@ A PR cannot know its merge commit or its merge time. Git and GitHub hold both, a
 
 - Mark the item in `docs/design.md` and in the focused roadmap as `✅ Done in PR #N.` Write no merge date and no merge commit.
 - Write the mark after the PR opens, and before the gitar pass. A design doc or roadmap commit moves the effective head (D-184).
-- The handoff entry names the branch and the state "pending owner merge". The handoff and the review record are metadata, so they do not move the effective head.
+- The handoff entry names the branch and the state "pending merge". The handoff and the review record are metadata, so they do not move the effective head.
 - A later session reads the merge from git. It does not open a PR to record the merge.
 - An exit test that needs a run on `main` after the merge stays in the PR. The next session runs it and states the result in its own handoff entry.
 
@@ -81,13 +82,13 @@ Each status poll costs a model call over the whole context. After each push, wai
 
 ## Procedure: the completion gate
 
-Before the hand-over to the other provider, or to the override, confirm items 1 to 5, 7, and 8. Before the owner merge, confirm all eight.
+Before `make codex-review`, or the override, confirm items 1 to 5, 7, and 8. Before the auto-merge or the owner merge, confirm all eight.
 
 1. The PR holds the code and the regression tests (T-3).
 2. `docs/decisions.md` and `docs/questions.md` hold each new decision and question.
 3. The design doc and the focused roadmap agree with the PR.
 4. The documents matrix is complete, and the `doc-gate` job is green.
-5. The handoff entry names this branch and the state "pending owner merge".
+5. The handoff entry names this branch and the state "pending merge".
 6. The review record approves the effective head, or the override label applies (D-188, D-190).
 7. Each other line of the PR gate in `AGENTS.md` holds.
 8. No required work waits for a second PR.
@@ -96,4 +97,4 @@ At the hand-over and at the merge, run the session end gate (D-199). Then write 
 
 `This session is bound to PR #N and is complete. End this session. Start a new clean session before beginning another PR.`
 
-When the owner says `Merged PR #N` for the bound PR, load `references/merge-prompt.md`, write the one transitional prompt of that file, and do no other work. That message is the one exception to step 2 of the start gate. Do not offer to start the next PR. The owner can bring findings on the same PR back to this session.
+When the bound PR merges by auto-merge, or the owner says `Merged PR #N`, load `references/merge-prompt.md`. Write the one transitional prompt of that file, and do no other work. That message is the one exception to step 2 of the start gate. Do not offer to start the next PR. The owner can bring findings on the same PR back to this session.

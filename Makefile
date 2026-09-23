@@ -4,9 +4,11 @@ GODOT ?= $(if $(WYC_GODOT),$(WYC_GODOT),/Applications/Godot_mono.app/Contents/Ma
 SOLUTION := WhatYouCarry.slnx
 GAME := WhatYouCarry.Game
 TOOLS := dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --
+# The Codex CLI of the cross-provider review. The codex-review target installs the newest release first (D-512).
+CODEX ?= $(shell npm prefix -g)/bin/codex
 
 .DEFAULT_GOAL := help
-.PHONY: help play windowed build build-game test test-fast smoke bot sounds analyze lint
+.PHONY: help play windowed build build-game test test-fast smoke bot sounds analyze lint codex-review
 
 help: ## Print this list
 	@grep -hE '^[a-z-]+:.*##' $(MAKEFILE_LIST) | sed -E 's/:.*## /\t/' | expand -t 14
@@ -45,3 +47,8 @@ lint: ## Run the STE check, the determinism lint, and the asset check
 	$(TOOLS) ste-check --root .
 	$(TOOLS) det-lint --root .
 	$(TOOLS) asset-qa --root .
+
+codex-review: ## Run the cross-provider review of one PR through the Codex CLI: make codex-review PR=93 (D-511)
+	@test -n "$(PR)" || { echo "Name the PR: make codex-review PR=<number>" >&2; exit 2; }
+	npm install -g @openai/codex@latest
+	$(TOOLS) codex-review --root . --pr $(PR) --codex $(CODEX)

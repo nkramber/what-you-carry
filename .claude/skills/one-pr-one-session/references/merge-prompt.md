@@ -4,9 +4,11 @@ A session ends at the hand-over point (D-375). The next PR starts in a new clean
 
 ## The trigger
 
-After the hand-over point, the owner merges the PR and says `Merged PR #x`. The session then writes one transitional prompt, and it does no other work. The message alone starts this step. The owner asks for no prompt.
+The bound PR merges in one of two ways. GitHub auto-merge merges it on the green light, and the session reads the state `MERGED` from `gh pr view` (D-516). Or the owner merges the PR and says `Merged PR #x`. The session then writes one transitional prompt, and it does no other work. The merge alone starts this step, with no wait for a message. The owner asks for no prompt.
 
-Write the prompt for the bound PR of the session alone. A merge message for another PR gets the blocked result of the start gate. A merge message for the bound PR is the one exception to step 2 of the start gate.
+A decision can put one step before the prompt. D-519 puts the repository setup of PR-78 there, after an owner approval.
+
+Write the prompt for the bound PR of the session alone. A merge message for another PR gets the blocked result of the start gate. The merge of the bound PR is the one exception to step 2 of the start gate.
 
 The prompt names no provider, harness, or model as the source of work (T-6, D-137).
 

@@ -2,6 +2,45 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 218: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-78, author. Branch `feat/pr-78-codex-review`. PR #93, pending merge. Base `e069e16`.
+
+### What this session did, and why
+
+- The owner asked for an automated Codex review, a three-strike stop, and a gated auto-merge. D-511 to D-522 record the direction and the answers of 2026-09-23.
+- `make codex-review PR=<n>` updates the npm CLI and runs the new `codex-review` command of Tools (D-511, D-512). The command checks the start conditions, probes `gpt-6-luna` at effort `medium`, runs Codex in a detached worktree, and judges the pushed record.
+- The `Open at:` line of each finding counts the review rounds. A P0 to P2 finding open in three rounds exits 11 (D-513 to D-515).
+- `.github/rulesets/main.json` holds the ruleset of `main`, and `.github/review-gate-mode` turns `enforced` (D-520 to D-522). The platform jobs got unique check names (F-110).
+- The owner merges this PR by hand. After the merge, the session applies the settings on approval (D-519).
+
+### State of the build
+
+- The build passes with no warnings. The new tests pass: `CodexReviewTests`, `CodexReviewGitTests`, and `RulesetTests`. `ste-check` finds no issue.
+- The effective head is the commit that holds this entry. Origin holds it after the push.
+- The CLI facts of 2026-09-23: npm `@openai/codex` 0.156.1 answered the probe. Homebrew holds 0.39.0, and the app bundles 0.155.0-alpha.9.2.
+
+### In flight
+
+- PR #93: the gitar pass, then `make codex-review PR=93`, then the answers to the findings.
+- After the owner merge: the setup of D-519, and the live ruleset check with `docs/runbooks/main-ruleset.md`.
+
+### Traps and gotchas
+
+- GNU make exits 2 for each failed target. The exit code of the command shows as `Error <code>`, and the first output line names the outcome.
+- `codex exec` reads a piped stdin into the prompt, so the command closes stdin.
+- A skipped job reports success to a required check. A job that never reports blocks every merge, so `RulesetTests` binds each required name to one job.
+- The agent files stand at 14987 of 15000 bytes. The Tools commands now use the `tools <command>` form.
+
+### Open questions that block progress
+
+None. The owner answered each question of this PR in session.
+
+### Next concrete action
+
+Complete the gitar pass of PR #93, then run `make codex-review PR=93` in the background.
+
 ## Session 217: 2026-09-23, Codex
 
 Author: Codex
@@ -335,40 +374,3 @@ None. The owner answered each question of this PR: D-471 to D-482.
 ### Next concrete action
 
 Hand PR #89 to Codex for the review. After the merge, the next session reads the first push to `main` for exit test 6 (D-473).
-
-## Session 208: 2026-09-22, Codex
-
-Author: Codex
-Session: PR-20, reviewer. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, review ready; publication CI pending.
-
-### What this session did, and why
-
-- Re-reviewed PR #87 after the author fixed P2-1 and P2-2. The effective head is `996b3c3`; the later commit `de98480` changes only this handoff.
-- Both earlier findings are fixed. The path-name check and the overflow-safe WAV bound have six regression cases in total.
-- Updated `docs/reviews/pr-87.md` to record the fixes and the `Ready for owner merge` verdict.
-
-### State of the build
-
-- Build: 0 warnings and 0 errors. The full suite passed: 1301 tests, 0 failures, 0 skips. `det-lint`, `asset-qa`, and `ste-check` each report 0 findings.
-- Before this review publication, the remote tip was `de98480`; the effective head remains `996b3c3`.
-- The CI run for effective head `996b3c3` passed Linux, macOS, Windows, Gitar, bots, `doc-gate`, `night-gate`, `det-lint`, `asset-qa`, `ste-check`, and compare. `evaluate` and `review-gate` failed because the review record still had its earlier verdict.
-- The review publication is in flight. Its fresh checks must pass before owner merge.
-
-### In flight
-
-- The push of the review record and this handoff, followed by the CI wait for the updated record.
-
-### Traps and gotchas
-
-- P2-1 rejected `../../../pwn`, directory names, dot segments, and empty names before it built paths.
-- P2-2 rejected chunk lengths 2147483640, `int.MaxValue`, and 40 with a contextual WAV error.
-- `de98480` is a metadata commit. It does not change the effective head under D-184.
-- F-107 and F-108 remain in the later gameplay PR.
-
-### Open questions that block progress
-
-None. OQ-48 and OQ-182 are resolved by D-450 to D-470.
-
-### Next concrete action
-
-Wait for all checks after the review publication to pass, then hand PR #87 to the owner for merge.

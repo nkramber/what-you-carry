@@ -43,7 +43,18 @@ A review ends with one of three verdicts: `Blocked`, `Changes required`, or `Rea
 
 Write one verdict name in the `## Verdict` section, exactly as that file spells it. The `review-gate` job reads that section, and it fails a section that names two verdicts (D-269). A line under `## Out of scope` never gives the verdict `Changes required`.
 
-The owner alone merges the PR (D-102, D-126). Approval applies to the recorded revision alone.
+An approving record lets the author turn on auto-merge, and the owner can also merge the PR (D-516). Approval applies to the recorded revision alone.
+
+## A review that `make codex-review` starts
+
+The author session starts the review as a separate Codex process (D-511). That process is a session of its own, in the reviewer role (D-375). The procedure, the depth, and the record format do not change.
+
+- The checkout is a detached worktree at the PR head. Push the metadata commit with `git push origin HEAD:<branch>`.
+- A detached head shows no `[ahead N]`. In the session end gate, compare `git rev-parse HEAD` with the head from `gh pr view`.
+- Commit the record and your own handoff entry together (D-182, D-518).
+- Give each finding its `Open at:` line (`references/findings.md`). The command counts the heads (D-514).
+- No owner answers during the run. A question that blocks the review gives the verdict `Blocked`, and the record names the question. The author asks the owner.
+- Push no change outside the metadata set. The command then fails the round (D-184).
 
 ## Rules that hold at every step
 

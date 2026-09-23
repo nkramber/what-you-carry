@@ -39,6 +39,7 @@ gh pr view <number> --json headRefOid --jq .headRefOid
 ```
 
 The status line must show no `[ahead N]`. The hash from `gh pr view` must equal `git rev-parse HEAD`.
+A review that `make codex-review` starts runs on a detached head, and its status line names no branch. The hash comparison alone is the proof there (D-511).
 Write the push line in the Verification section of the review record, and name the remote head in the handoff entry.
 A record with no push line is incomplete, and the next session treats it as unpushed.
 

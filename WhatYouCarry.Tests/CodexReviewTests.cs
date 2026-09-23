@@ -1,0 +1,397 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using WhatYouCarry.Tools.CodexReview;
+using Xunit;
+
+namespace WhatYouCarry.Tests;
+
+/// <summary>
+/// The rules of <c>codex-review</c> (D-511 to D-515): the CLI version, the Codex arguments, the start checks, and
+/// the outcome of a round with the three-strike count.
+/// </summary>
+public sealed class CodexReviewTests
+{
+    private const string Head = "1111111111111111111111111111111111111111";
+    private const string RoundOne = "aaaaaaa";
+    private const string RoundTwo = "bbbbbbb";
+    private const string ReviewFile = "docs/reviews/pr-93.md";
+    private const string Approve = "Ready for owner merge";
+    private const string Changes = "Changes required";
+
+    [Theory]
+    [InlineData("codex-cli 0.156.1\n", 0, 156, 1, "")]
+    [InlineData("codex-cli 0.155.0-alpha.9.2", 0, 155, 0, "alpha.9.2")]
+    public void VersionReadsTheNumbersAndThePrerelease(string output, int major, int minor, int patch, string prerelease)
+    {
+        Assert.Equal(new CodexVersion(major, minor, patch, prerelease), CodexVersion.Parse(output));
+    }
+
+    [Theory]
+    [InlineData("codex-cli 0.156.1", true)]
+    [InlineData("codex-cli 0.156.2", true)]
+    [InlineData("codex-cli 0.157.0-alpha.11", true)]
+    [InlineData("codex-cli 1.0.0", true)]
+    [InlineData("codex-cli 0.156.1-alpha.1", false)]
+    [InlineData("codex-cli 0.155.0-alpha.9.2", false)]
+    [InlineData("codex-cli 0.39.0", false)]
+    public void VersionPassesTheMinimumOrNewer(string output, bool passes)
+    {
+        // D-512: 0.156.1 ran the model probe on 2026-09-23. The Homebrew 0.39.0 and the app bundle build are older.
+        Assert.Equal(passes, CodexVersion.Parse(output).IsAtLeast(CodexReviewSettings.MinimumVersion));
+    }
+
+    [Theory]
+    [InlineData("codex 0.156.1")]
+    [InlineData("codex-cli 0.156")]
+    [InlineData("codex-cli 0.x.1")]
+    public void VersionRefusesAnotherForm(string output)
+    {
+        FormatException exception = Assert.Throws<FormatException>(() => CodexVersion.Parse(output));
+        Assert.Contains("version", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewRunNamesTheModelTheEffortAndTheSandbox()
+    {
+        // D-511: the effort comes from the command line, and never from the user configuration.
+        IReadOnlyList<string> args = CodexReviewSettings.ReviewArguments("/tmp/worktree", "/tmp/last.md", "Review PR #93.");
+
+        Assert.Equal("exec", args[0]);
+        AssertPair(args, "-m", "gpt-6-luna");
+        AssertPair(args, "-s", "danger-full-access");
+        AssertPair(args, "-C", "/tmp/worktree");
+        AssertPair(args, "-o", "/tmp/last.md");
+        Assert.Contains("model_reasoning_effort=\"medium\"", args);
+        Assert.Contains("approval_policy=\"never\"", args);
+        Assert.Contains("--json", args);
+        Assert.Equal("Review PR #93.", args[^1]);
+    }
+
+    [Fact]
+    public void ProbeNamesTheSameModelAndEffortWithNoWriteAccess()
+    {
+        IReadOnlyList<string> args = CodexReviewSettings.ProbeArguments("/tmp/probe");
+
+        AssertPair(args, "-m", CodexReviewSettings.Model);
+        AssertPair(args, "-s", "read-only");
+        Assert.Contains("model_reasoning_effort=\"medium\"", args);
+        Assert.Contains("--skip-git-repo-check", args);
+        Assert.Contains("--ephemeral", args);
+    }
+
+    [Fact]
+    public void ReviewPromptIsTheOwnerTextWithTheSkillAndThePush()
+    {
+        string prompt = CodexReviewSettings.ReviewPrompt(93, "feat/pr-78-codex-review");
+
+        Assert.StartsWith("Review PR #93.\n", prompt, StringComparison.Ordinal);
+        Assert.Contains("`.claude/skills/pr-review/SKILL.md`", prompt, StringComparison.Ordinal);
+        Assert.Contains("`git push origin HEAD:feat/pr-78-codex-review`", prompt, StringComparison.Ordinal);
+        Assert.Contains("(D-182)", prompt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AnApprovingRecordOfTheEffectiveHeadApproves()
+    {
+        ReviewOutcome outcome = Judge(Record(Head, Approve));
+
+        Assert.Equal(CodexReviewExit.Approve, outcome.Exit);
+        Assert.Empty(outcome.OpenFindingIds);
+    }
+
+    [Fact]
+    public void AFindingOpenInRoundsOneAndTwoDoesNotStop()
+    {
+        ReviewOutcome outcome = Judge(Record(Head, Changes, Finding("P1-1", "open", RoundOne, Head)));
+
+        Assert.Equal(CodexReviewExit.ChangesRequired, outcome.Exit);
+        Assert.Equal(["P1-1"], outcome.OpenFindingIds);
+        Assert.Empty(outcome.StrikeFindingIds);
+    }
+
+    [Fact]
+    public void AFindingOpenInRoundThreeStops()
+    {
+        // D-513: the third round in which one id is open stops the fix loop.
+        ReviewOutcome outcome = Judge(Record(Head, Changes, Finding("P2-1", "open", RoundOne, RoundTwo, Head), Finding("P1-2", "open", Head)));
+
+        Assert.Equal(CodexReviewExit.ThreeStrikes, outcome.Exit);
+        Assert.Equal(["P2-1"], outcome.StrikeFindingIds);
+        Assert.Equal(["P2-1", "P1-2"], outcome.OpenFindingIds);
+    }
+
+    [Fact]
+    public void AFixedAndReopenedFindingCountsEachOpenRound()
+    {
+        // D-514: the same id counts one time for each round in which it is open. Round three fixed it, and round
+        // four reopened it, so round four is the third open round.
+        ReviewOutcome third = Judge(Record(Head, Changes, Finding("P1-1", "open", RoundOne, RoundTwo, Head)));
+        ReviewOutcome second = Judge(Record(Head, Changes, Finding("P1-1", "open", RoundOne, Head)));
+
+        Assert.Equal(CodexReviewExit.ThreeStrikes, third.Exit);
+        Assert.Equal(CodexReviewExit.ChangesRequired, second.Exit);
+    }
+
+    [Fact]
+    public void AP3FindingNeverStops()
+    {
+        // D-515: a P3 never blocks the merge, so it never drives the fix loop.
+        ReviewOutcome outcome = Judge(Record(Head, Changes, Finding("P3-1", "open", RoundOne, RoundTwo, Head), Finding("P2-1", "open", Head)));
+
+        Assert.Equal(CodexReviewExit.ChangesRequired, outcome.Exit);
+        Assert.Empty(outcome.StrikeFindingIds);
+    }
+
+    [Fact]
+    public void AnApprovalWinsOverAnOpenCount()
+    {
+        ReviewOutcome outcome = Judge(Record(Head, Approve, Finding("P3-1", "open", RoundOne, RoundTwo, Head)));
+
+        Assert.Equal(CodexReviewExit.Approve, outcome.Exit);
+        Assert.Equal(["P3-1"], outcome.OpenFindingIds);
+    }
+
+    [Fact]
+    public void ABlockedRecordAsksForChanges()
+    {
+        Assert.Equal(CodexReviewExit.ChangesRequired, Judge(Record(Head, "Blocked")).Exit);
+    }
+
+    [Fact]
+    public void AClosedFindingNeedsNoHeadOfThisRound()
+    {
+        ReviewOutcome outcome = Judge(Record(Head, Approve, Finding("P1-1", "fixed in `2222222`", RoundOne, RoundTwo)));
+
+        Assert.Equal(CodexReviewExit.Approve, outcome.Exit);
+    }
+
+    [Fact]
+    public void NoRecordIsAFault()
+    {
+        ReviewOutcome outcome = ReviewOutcomeRules.Judge(null, ReviewFile, Head);
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains(ReviewFile, outcome.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AStaleHeadIsAFault()
+    {
+        ReviewOutcome outcome = Judge(Record("2222222", Approve));
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains("stale", outcome.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("no 'Open at:' line")]
+    [InlineData("does not list the head of this review")]
+    [InlineData("two times")]
+    [InlineData("seven characters")]
+    public void AnOpenFindingWithAWrongHeadListIsAFault(string expected)
+    {
+        // T-2: a count that a reviewer forgot to extend is wrong in silence, so the rule stops.
+        string finding = expected switch
+        {
+            "no 'Open at:' line" => Finding("P1-1", "open"),
+            "does not list the head of this review" => Finding("P1-1", "open", RoundOne, RoundTwo),
+            "two times" => Finding("P1-1", "open", RoundOne, "aaaaaaaaaa", Head),
+            _ => Finding("P1-1", "open", "abc", Head),
+        };
+
+        ReviewOutcome outcome = Judge(Record(Head, Changes, finding));
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains("P1-1", outcome.Message, StringComparison.Ordinal);
+        Assert.Contains(expected, outcome.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AFindingWithNoStatusIsAFault()
+    {
+        string record = Record(Head, Changes, "### P1-1: A defect\n\nFile: `a.cs:1`.\n");
+
+        ReviewOutcome outcome = Judge(record);
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains("P1-1", outcome.Message, StringComparison.Ordinal);
+        Assert.Contains("Status:", outcome.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AFindingHeadingOutsideTheFindingsSectionDoesNotCount()
+    {
+        string record = Record(Head, Approve) + "\n## Earlier notes\n\n### P1-9: Old\n\nStatus: open.\n";
+
+        ReviewOutcome outcome = Judge(record);
+
+        Assert.Equal(CodexReviewExit.Approve, outcome.Exit);
+        Assert.Empty(outcome.OpenFindingIds);
+    }
+
+    [Fact]
+    public void StartChecksPassWhenEveryConditionHolds()
+    {
+        Assert.Empty(StartChecks.Problems(GoodFacts()));
+    }
+
+    public static TheoryData<string, string> StartProblems()
+    {
+        return new TheoryData<string, string>
+        {
+            { "old-cli", "minimum is 0.156.1" },
+            { "closed", "is MERGED" },
+            { "other-branch", "The checkout is on 'main'" },
+            { "local-ahead", "differs from origin" },
+            { "github-behind", "GitHub gives the PR head" },
+            { "dirty", "The working tree is dirty" },
+            { "no-gitar-check", "has a Gitar check run" },
+            { "gitar-running", "is 'in_progress'" },
+            { "no-dashboard", "has no Gitar dashboard comment" },
+            { "stale-dashboard", "is not current" },
+            { "open-thread", "2 unresolved review thread(s)" },
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(StartProblems))]
+    public void StartChecksRefuseEachFailedCondition(string change, string expected)
+    {
+        StartFacts good = GoodFacts();
+        DateTimeOffset started = good.GitarChecks[0].StartedAt;
+        StartFacts facts = change switch
+        {
+            "old-cli" => With(good, version: CodexVersion.Parse("codex-cli 0.155.0-alpha.9.2")),
+            "closed" => With(good, state: "MERGED"),
+            "other-branch" => With(good, localBranch: "main"),
+            "local-ahead" => With(good, localHead: "3333333333333333333333333333333333333333"),
+            "github-behind" => With(good, pullRequestHead: "4444444444444444444444444444444444444444"),
+            "dirty" => With(good, status: " M Makefile\n"),
+            "no-gitar-check" => With(good, gitarChecks: []),
+            "gitar-running" => With(good, gitarChecks: [new GitarCheck(Head, "in_progress", started)]),
+            "no-dashboard" => With(good, dashboard: null, clearDashboard: true),
+            "stale-dashboard" => With(good, dashboard: started.AddSeconds(-1)),
+            "open-thread" => With(good, unresolved: 2),
+            _ => throw new ArgumentException($"Unknown change '{change}'."),
+        };
+
+        IReadOnlyList<string> problems = StartChecks.Problems(facts);
+
+        string problem = Assert.Single(problems);
+        Assert.Contains(expected, problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AMetadataTipKeepsThePassOfTheEffectiveHead()
+    {
+        // D-184: a paused Gitar attaches a check to a metadata tip and edits no dashboard. The pass of the effective
+        // head stays current, so the later check does not refuse the round.
+        StartFacts good = GoodFacts();
+        DateTimeOffset dashboard = good.DashboardEditedAt!.Value;
+        StartFacts facts = With(good, gitarChecks: [good.GitarChecks[0], new GitarCheck("5555555555555555555555555555555555555555", "completed", dashboard.AddMinutes(5))]);
+
+        Assert.Empty(StartChecks.Problems(facts));
+    }
+
+    private static ReviewOutcome Judge(string record)
+    {
+        return ReviewOutcomeRules.Judge(record, ReviewFile, Head);
+    }
+
+    /// <summary>A record with the skeleton of <c>review-record.md</c>: the Identity list, the findings, and one verdict.</summary>
+    private static string Record(string head, string verdict, params string[] findings)
+    {
+        var text = new StringBuilder();
+        text.Append("# PR-93 review\n\nDate: 2026-09-23\n\n## Identity\n\n- PR: 93\n");
+        text.Append(CultureInfo.InvariantCulture, $"- Head: `{head}`\n\n## Findings\n\n");
+        text.Append(findings.Length == 0 ? "No finding.\n" : string.Join("\n", findings));
+        text.Append(CultureInfo.InvariantCulture, $"\n## Out of scope\n\nNone.\n\n## Verdict\n\n**{verdict}.** This verdict applies to head `{head}`.\n");
+        return text.ToString();
+    }
+
+    /// <summary>A finding in the format of <c>findings.md</c>. No head gives no <c>Open at:</c> line.</summary>
+    private static string Finding(string id, string status, params string[] openAt)
+    {
+        var text = new StringBuilder();
+        text.Append(CultureInfo.InvariantCulture, $"### {id}: A defect\n\nStatus: {status}.\n\n");
+        if (openAt.Length > 0)
+        {
+            text.Append("Open at: ");
+            text.Append(string.Join(", ", Array.ConvertAll(openAt, head => $"`{head}`")));
+            text.Append(".\n\n");
+        }
+
+        text.Append("File: `a.cs:1`.\n");
+        return text.ToString();
+    }
+
+    private static StartFacts GoodFacts()
+    {
+        DateTimeOffset started = DateTimeOffset.Parse("2026-09-23T10:00:00Z", CultureInfo.InvariantCulture);
+        return new StartFacts
+        {
+            PullRequestNumber = 93,
+            Version = CodexVersion.Parse("codex-cli 0.156.1"),
+            PullRequestState = "OPEN",
+            PullRequestBranch = "feat/pr-78-codex-review",
+            PullRequestHead = Head,
+            LocalBranch = "feat/pr-78-codex-review",
+            LocalHead = Head,
+            OriginHead = Head,
+            WorkingTreeStatus = string.Empty,
+            EffectiveHead = Head,
+            GitarChecks = [new GitarCheck(Head, "completed", started)],
+            DashboardEditedAt = started.AddMinutes(2),
+            UnresolvedThreadCount = 0,
+        };
+    }
+
+    private static StartFacts With(
+        StartFacts facts,
+        CodexVersion? version = null,
+        string? state = null,
+        string? localBranch = null,
+        string? localHead = null,
+        string? pullRequestHead = null,
+        string? status = null,
+        IReadOnlyList<GitarCheck>? gitarChecks = null,
+        DateTimeOffset? dashboard = null,
+        bool clearDashboard = false,
+        int? unresolved = null)
+    {
+        return new StartFacts
+        {
+            PullRequestNumber = facts.PullRequestNumber,
+            Version = version ?? facts.Version,
+            PullRequestState = state ?? facts.PullRequestState,
+            PullRequestBranch = facts.PullRequestBranch,
+            PullRequestHead = pullRequestHead ?? facts.PullRequestHead,
+            LocalBranch = localBranch ?? facts.LocalBranch,
+            LocalHead = localHead ?? facts.LocalHead,
+            OriginHead = facts.OriginHead,
+            WorkingTreeStatus = status ?? facts.WorkingTreeStatus,
+            EffectiveHead = facts.EffectiveHead,
+            GitarChecks = gitarChecks ?? facts.GitarChecks,
+            DashboardEditedAt = clearDashboard ? null : dashboard ?? facts.DashboardEditedAt,
+            UnresolvedThreadCount = unresolved ?? facts.UnresolvedThreadCount,
+        };
+    }
+
+    private static void AssertPair(IReadOnlyList<string> args, string option, string value)
+    {
+        int index = -1;
+        for (int i = 0; i < args.Count; i++)
+        {
+            if (args[i] == option)
+            {
+                index = i;
+                break;
+            }
+        }
+
+        Assert.True(index >= 0 && index + 1 < args.Count, $"The arguments hold no option '{option}': {string.Join(' ', args)}");
+        Assert.Equal(value, args[index + 1]);
+    }
+}

@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 208: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-20, reviewer. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, review ready; publication CI pending.
+
+### What this session did, and why
+
+- Re-reviewed PR #87 after the author fixed P2-1 and P2-2. The effective head is `996b3c3`; the later commit `de98480` changes only this handoff.
+- Both earlier findings are fixed. The path-name check and the overflow-safe WAV bound have six regression cases in total.
+- Updated `docs/reviews/pr-87.md` to record the fixes and the `Ready for owner merge` verdict.
+
+### State of the build
+
+- Build: 0 warnings and 0 errors. The full suite passed: 1301 tests, 0 failures, 0 skips. `det-lint`, `asset-qa`, and `ste-check` each report 0 findings.
+- Before this review publication, the remote tip was `de98480`; the effective head remains `996b3c3`.
+- The CI run for effective head `996b3c3` passed Linux, macOS, Windows, Gitar, bots, `doc-gate`, `night-gate`, `det-lint`, `asset-qa`, `ste-check`, and compare. `evaluate` and `review-gate` failed because the review record still had its earlier verdict.
+- The review publication is in flight. Its fresh checks must pass before owner merge.
+
+### In flight
+
+- The push of the review record and this handoff, followed by the CI wait for the updated record.
+
+### Traps and gotchas
+
+- P2-1 rejected `../../../pwn`, directory names, dot segments, and empty names before it built paths.
+- P2-2 rejected chunk lengths 2147483640, `int.MaxValue`, and 40 with a contextual WAV error.
+- `de98480` is a metadata commit. It does not change the effective head under D-184.
+- F-107 and F-108 remain in the later gameplay PR.
+
+### Open questions that block progress
+
+None. OQ-48 and OQ-182 are resolved by D-450 to D-470.
+
+### Next concrete action
+
+Wait for all checks after the review publication to pass, then hand PR #87 to the owner for merge.
+
 ## Session 207: 2026-09-22, Codex
 
 Author: Codex

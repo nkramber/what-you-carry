@@ -179,7 +179,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 ### 3.14 Process
 
-Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one role (D-121, D-375). The PR carries its code, tests, registers, design and roadmap state, review record, and handoff entry. No PR exists only to record an earlier PR (D-375). Each PR has its own handoff entry (D-146). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250). The heavy CI jobs skip a PR head that changes documents alone, and a push to `main` runs every job (D-473, D-474). The tests that read a document run on each head (D-476).
+Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one role (D-121, D-375). The PR carries its code, tests, registers, design and roadmap state, review record, and handoff entry. No PR exists only to record an earlier PR (D-375). Each PR has its own handoff entry (D-146). The owner starts every session, and an author session starts the reviewer session with `make codex-review` (D-103, D-511). The owner owns every open question (D-124). A PR with the green light merges itself by GitHub auto-merge, and the owner can still merge (D-102, D-516). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). A finding that is open in three review rounds stops the fix loop, and the owner decides (D-513, D-514). A ruleset on `main` requires each gate check and resolved conversations (D-522). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250). The heavy CI jobs skip a PR head that changes documents alone, and a push to `main` runs every job (D-473, D-474). The tests that read a document run on each head (D-476).
 
 The document protocol (D-118, D-120, D-125, D-129, D-132):
 
@@ -192,7 +192,7 @@ The document protocol (D-118, D-120, D-125, D-129, D-132):
 - `CLAUDE.md` and `AGENTS.md`: identical pointer files (D-122).
 - The PR description: the documents matrix, one line for each category (D-376).
 
-The lifecycle of a PR (D-375, D-376). The `one-pr-one-session` skill holds the procedure. A PR cannot know its merge commit or its merge time, so its documents say "Done in PR #N" and "pending owner merge", and git holds the merge. The file `.claude/skills/one-pr-one-session/references/enforcement.md` holds the table of every rule and its enforcement: a machine, the agent, the owner, or not observable (D-383).
+The lifecycle of a PR (D-375, D-376). The `one-pr-one-session` skill holds the procedure. A PR cannot know its merge commit or its merge time, so its documents say "Done in PR #N" and "pending merge", and git holds the merge. The file `.claude/skills/one-pr-one-session/references/enforcement.md` holds the table of every rule and its enforcement: a machine, the agent, the owner, or not observable (D-383).
 
 ## 4. Cost model (what we pay, what we do not know)
 
@@ -272,8 +272,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-48 | PR #1 review P1-2: PR-11 created the `night-gate` job and the night job together, so the gate had no result to read on its first run, against G-19 | 2026-09-07 | ✅ D-177 splits them. PR-11 merged as PR #34, two nights ran by hand, and PR-58 merged 2026-09-10 as PR #40 with the gate green on its own PR (G-19) |
 | F-52 | Two providers picked the same session number on the same day, because each read the handoff before the other wrote it | 2026-09-07 | ✅ D-187. Fetch and re-read before the handoff commit. The PR-2 session number check fails on a duplicate |
 | F-53 | One `Revised by` marker made every citation of a partly revised decision stale. Partial revisions carried 33 of 48 citations and caused three rounds of churn | 2026-09-07 | ✅ doc. D-186 splits the marker into `Superseded by` and `Revised in part by`. The D-178 check keys on the first only |
-| F-51 | A grey `review-gate` would stop blocking at launch. GitHub counts a neutral conclusion as a success for a required check, verified 2026-09-07 | 2026-09-07 | 🔧 D-181, D-185. Advisory mode gives neutral. Enforced mode gives failure. The tracked file `.github/review-gate-mode` selects the mode, and the workflow reads it from the base branch |
-| F-50 | Nothing on GitHub stops a merge without a cross-provider review. T-4 and D-101 are rules only, and D-170 leaves `main` unprotected | 2026-09-07 | 🔧 D-179 and D-181, D-185 add the `review-gate` job in PR-1. D-180 makes it a required check at launch. Advisory until then |
+| F-51 | A grey `review-gate` would stop blocking at launch. GitHub counts a neutral conclusion as a success for a required check, verified 2026-09-07 | 2026-09-07 | ✅ D-181, D-185. Advisory mode gives neutral. Enforced mode gives failure. The tracked file `.github/review-gate-mode` selects the mode, and the workflow reads it from the base branch. D-521 sets `enforced` in PR-78 |
+| F-50 | Nothing on GitHub stops a merge without a cross-provider review. T-4 and D-101 are rules only, and D-170 leaves `main` unprotected | 2026-09-07 | ✅ D-179 and D-181, D-185 add the `review-gate` job in PR-1. D-521 and D-522 make it enforced and a required check of the ruleset of `main` in PR-78 |
 | F-49 | PR #1 review P2-1: six lines cited D-172 or OQ-2 as a current answer after D-173 and D-175 revised them | 2026-09-07 | ✅ doc. All six corrected. ✅ D-178. PR-2 holds the reference check |
 | F-54 | A launch agent cannot read an external volume. macOS denied `/Volumes/SSD-1TB/actions-runner/runsvc.sh` with `Operation not permitted`, and the agent exited 126. A launchd probe repeated the denial, and a login shell read the same path correctly, verified 2026-09-07 | 2026-09-07 | ✅ D-193. Full Disk Access for `/bin/bash` and the runner `node` binary. Binds PR-1 and every machine rebuild |
 | F-55 | The Phase 1 roadmap named `WhatYouCarry.sln`, and the .NET 10 SDK creates a `.slnx` file. `dotnet new sln --format` gives `Default: slnx`, and a smoke job on the runner made `Smoke.slnx`, verified 2026-09-07 | 2026-09-07 | ✅ D-194. `WhatYouCarry.slnx`. Godot 4.7.2 accepts it. Binds PR-1 |
@@ -331,6 +331,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-107 | An enemy walks no diagonal. `GridMoves.Directions` is 4, with the steps (1,0), (-1,0), (0,1), and (0,-1), so every path of an enemy is a staircase of side steps, and no enemy cuts a corner | 2026-09-22 | ✅ PR #90 (PR-72): the diagonal move of D-486 to D-489 in `GridMoves` and `GridPathfinder`. The owner saw it in the play session of PR-20 |
 | F-108 | An enemy does not walk up a ramp, as the owner saw in the play session of PR-20. The cause is open: `GridMoves.RampWalk` models a walk on a ramp, and `Enemy.Step` and `Hunter.Step` each pass the slope rule of the body, as the player does. The path follower, the ramp geometry check, or the approach of the brain holds the fault. Cause found 2026-09-22 in PR-72: the enemy climbed in slow jumps (D-485). `PathWalk.NeedsAJump` read the feet against the face of the next place, and the feet at the middle of a place stand under that face. On seed 1, floor 1, 80 to 87 percent of the ticks of each climb were in the air | 2026-09-22 | ✅ PR #90 (PR-72): the jump rule reads the slope under the feet |
 | F-109 | A code head waited 18 to 21 minutes for the hosted CI legs. Run 35771495463 on `06cd3b3` of PR #87 took 1055 seconds for the test step on Linux, 1206 on Windows, and 451 on the Mac mini. The build took 22 to 29 seconds. A local profile of 2026-09-22 read 1294 tests: 23.4 minutes of summed test time, 22.4 minutes of CPU time, and 9 minutes 10 seconds of wall time. Ten seed sweeps held 75 percent of the summed time. `ProcgenTests` summed to 549 seconds in one class, and xUnit runs the tests of one class in sequence, so that class set the wall time of the Mac mini and of a local run. The hosted runners have 4 vCPUs, so CPU time bound them. Each push of documents alone also ran every check again | 2026-09-22 | ✅ PR #89 (PR-71): the CI skip (D-472 to D-477), the class split (D-478), the job split (D-479), and one fifth of each sweep on a pull request (D-480, D-481) |
+| F-110 | The CI, Smoke, and Bit identity workflows each named three jobs `linux-x64`, `windows-x64`, and `macos-arm64`, as the check runs of PR #92 at `d96ae19` show. A ruleset requires a check by its name, so one required name matched three jobs, and a pass of one hid a failure of another | 2026-09-23 | ✅ PR #93 (PR-78): each platform job has a check name with the prefix of its workflow, and `RulesetTests` fails on a name that two jobs carry (D-522) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -364,7 +365,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 15. **G-15.** The Steam Deck at 800p is the readability and performance floor for every UI and render change (D-15).
 16. **G-16.** Every dependency has a decision entry that justifies it.
 17. **G-17.** Every optimization has a profile before it and a measurement after it (D-109).
-18. **G-18.** Squash merge by the owner, from a short branch, with a conventional commit subject (D-126).
+18. **G-18.** Squash merge from a short branch, with a conventional commit subject (D-126). GitHub auto-merge merges a PR with the green light, and the owner can merge too (D-516).
 19. **G-19.** A PR that creates a check passes that check. A PR names any check that does not exist yet, with the PR that creates it (D-148).
 20. **G-20.** Every Core behavior change bumps the simulation version constant, and the review confirms it (D-151).
 21. **G-21.** No `System.Random`, `DateTime`, `Stopwatch`, or `Environment.TickCount` in Core. The seed and the tick are the only sources of randomness and time (D-69, D-73).
@@ -569,6 +570,11 @@ Split from the art pass of D-339 (D-504). A recipe under `content/textures/recip
 Gate: the atlas and the layout match the generator, each block matches its old tile, and the owner confirms that the look stayed the same.
 > *In plain English:* each box face read one plain tile of noise, so no box showed a face, a belt, or a boot. Now each face gets its own painted canvas, and nothing changes on screen yet.
 
+**PR-78: Codex review and auto-merge.** ✅ Done in PR #93.
+`make codex-review PR=<n>` starts the cross-provider review through the Codex CLI in a detached worktree, and the `codex-review` command judges the record that the review pushes (D-511, D-512). A finding open in three rounds stops the fix loop for the owner (D-513 to D-515). A ruleset on `main` requires every gate check, and a PR with the green light merges by auto-merge (D-516, D-517, D-520 to D-522).
+Gate: the new tests pass, the command reviews this PR, and each required check reports on a documents head and on a code head.
+> *In plain English:* the owner started every review by hand and merged every PR by hand. Now one command starts the review, and a PR that passes every gate merges itself.
+
 **PR-74: Body art.** 🔧
 The body gains a brow, a nose, and a beard on the head bone, and a toe box on each lower leg (D-497, D-498, D-501, D-502). Every other box stays (D-499). New recipes paint the face, the hair, the cuffs, the collar, the belt, and the boots in the colors of D-500. The owner picks the noise on the sheet (D-503). The Meshy images are a look reference alone (D-496).
 Gate: the clip check passes at every keyframe, and the owner approves the contact sheet beside the front concept as finished art.
@@ -758,7 +764,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-74, PR-75, PR-76, PR-77.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-75, PR-76, PR-77.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

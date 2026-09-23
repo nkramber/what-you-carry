@@ -70,9 +70,9 @@ Do these steps after each push.
 21. For full merit, make the smallest change that fixes the finding. Commit it. Before the commit, run the checks of D-491 for documents alone, or the full suite for code (D-493).
 22. For no merit, reply on the thread with the reason and the evidence. Then resolve the thread.
 23. For partial merit, fix the part with merit. Refute the rest in the same reply.
-24. When you have commits, go to step 1. After the push, reply on each thread with the commit that fixes it.
+24. When you have commits, go to step 1. After the push, reply on each thread with the commit that fixes it. Resolve the thread when the repo needs resolved threads.
 25. Stop when a current review approves, or when a current review adds no finding and each finding has its answer.
-26. Tell the owner that the pull request is ready to merge.
+26. Start the next step that the repo names. When the repo names none, tell the owner that the pull request is ready to merge.
 
 ## Find an automatic review
 
