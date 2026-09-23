@@ -200,7 +200,7 @@ What we pay:
 
 - Owner time: near full time (D-107).
 - Tokens: a generous budget on two harnesses (D-107). The amount per PR is unknown until M-4. The token audit of 2026-09-16 measured 10 sessions of each harness. The median input was 32.3 million tokens for a Claude Code session and 4.3 million for a Codex session, most of it from the cache. D-377 to D-382 act on the largest causes.
-- CI: GitHub-hosted Linux x64 and Windows x64 minutes on every PR (D-100). Wall time per PR is unknown until M-1. F-109 measured it again on 2026-09-22: 18 to 21 minutes on the hosted legs of a code head. A push of documents alone skips the heavy jobs after a green head (D-474).
+- CI: GitHub-hosted Linux x64 and Windows x64 minutes on every PR (D-100). Wall time per PR is unknown until M-1. F-109 measured it again on 2026-09-22: 18 to 21 minutes on the hosted legs of a code head. A push of documents alone skips the heavy jobs after a green head (D-474). A session runs no full suite for such a change either (D-491).
 - The Mac Mini as a self-hosted macOS arm64 runner: power, and RAM shared with the editor and the harness (D-100, D-105).
 - Purchases that do not exist yet (D-142):
   - an external SSD before PR-1. Ordered, arrives 2026-09-08 (D-145).
@@ -559,6 +559,11 @@ Fix F-107 and F-108 in one PR (D-483, D-484). The path search takes a diagonal m
 Gate: the enemy walk tests, the diagonal walk sweep, the bot tests, and the new bit-identity answer pass.
 > *In plain English:* enemies walked in staircases of side steps and hopped up ramps. They now cut corners where a player can, and they walk up a ramp as the player does.
 
+**PR-73: No suite for documents.** 🔧
+A change of documents alone runs no full test suite for the author, a review, a review response, or a handoff (D-490, D-491). It runs `ste-check`, `doc-gate`, and the `Documents` category of D-476. The skip set of D-475 names the documents (D-492). A change with any other path runs the full suite (D-493). The test line of the PR gate says so (D-494).
+Gate: the agent files, the skills, and the registers agree on the rule, and the `Documents` category passes.
+> *In plain English:* each session ran every test also for a change that touched only a document. Now such a change runs only the checks that read documents.
+
 **PR-62: Art quality pass.** 🔧
 Raise the art from the first pass of PR-14 and PR-15 to finished quality (D-338, D-339): richer texture rules, a more detailed body and sword, the scene light, and the enemy models of PR-16. The owner answers the rule kinds and the looks before the code.
 Gate: the owner approves a new contact sheet as finished art.
@@ -733,7 +738,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
-12. PR-19, PR-20, PR-71, PR-72, PR-62.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

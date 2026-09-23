@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-72, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-73, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -763,6 +763,31 @@ Gate: exit tests 1 to 8 pass.
 
 > *In plain English:* enemies walked in staircases of side steps and hopped up ramps in slow jumps. They now cut corners where a player can, and they walk up a ramp as the player does.
 
+### PR-73: No suite for documents
+
+Scope:
+
+- `CLAUDE.md` and `AGENTS.md`: a change of documents alone runs `ste-check`, `doc-gate`, and the `Documents` category, and no full suite (D-491, D-492). A change with any other path runs the full suite (D-493). The test line of the PR gate adds the clause of D-494. The Smoke detail moves to `csharp-conventions`, so the agent files stay under the ceiling of D-382.
+- `.claude/skills/`: `csharp-conventions`, `review-response`, `gitar-review`, and the `verification.md` reference of `pr-review` state the same rule. The `enforcement.md` reference of `one-pr-one-session` names its enforcement.
+- `docs/design.md`: the cost model and this entry.
+
+Out of scope: the PR template, which keeps its text (D-495), and a change of the CI jobs, which PR-71 made (D-474 to D-477).
+
+Exit tests:
+
+1. `ste-check` finds no issue, and the `Documents` category passes.
+2. `CLAUDE.md` and `AGENTS.md` are identical and under 15000 bytes (D-122, D-382).
+3. `grep -rn "needs the test suite" CLAUDE.md AGENTS.md .claude/skills docs/runbooks` finds nothing.
+4. The heavy jobs of the four workflows of D-477 skip this PR by rule 1 of D-474.
+
+Review focus: each place that asks for a test run on a change, and the byte ceilings of the changed files.
+
+Check clause: none.
+
+Gate: exit tests 1 to 4 pass.
+
+> *In plain English:* each session ran every test also for a change that touched only a document. Now such a change runs only the checks that read documents.
+
 ### PR-62: Art quality pass
 
 Scope:
@@ -831,10 +856,11 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 29. PR-20. ✅ Done in PR #87.
 30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
 31. PR-72. ✅ Done in PR #90. ✅ The owner answers of 2026-09-22: D-483 to D-489.
-32. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
-33. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-34. Tier 4 pass on the screenshot fixture (D-133).
-35. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+32. PR-73. ✅ The owner answers of 2026-09-22: D-490 to D-495.
+33. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
+34. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+35. Tier 4 pass on the screenshot fixture (D-133).
+36. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
