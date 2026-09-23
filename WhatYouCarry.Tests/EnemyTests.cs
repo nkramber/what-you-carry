@@ -30,8 +30,9 @@ public sealed class EnemyTests
     private const int ShortestPathSeeds = 50;
 
     /// <summary>
-    /// PR-16 exit test 1. Every move of a path is a move of the rule of D-165 as D-345 revises it: one block up,
-    /// any drop, or a walk along a ramp. No move is a step of two blocks, and no move leaves the four sides.
+    /// PR-16 exit test 1. Every move of a path is a move of the rule of D-165 as D-345 and D-486 revise it: one
+    /// block up, any drop, or a walk along a ramp to a side column, or a diagonal move to a corner column. No move is
+    /// a step of two blocks, and no move goes farther than one column along X and one along Z.
     /// </summary>
     [Fact]
     public void PathfinderRespectsMoveRule()
@@ -40,6 +41,7 @@ public sealed class EnemyTests
         int ramps = 0;
         int drops = 0;
         int steps = 0;
+        int diagonals = 0;
         for (ulong seed = 1; seed <= 60; seed++)
         {
             FloorPlan plan = FloorGenerator.Generate(seed, ScavengerFloor, TestWorld.Content);
@@ -55,13 +57,23 @@ public sealed class EnemyTests
                     Cell to = path[step];
                     int alongX = to.X - from.X;
                     int alongZ = to.Z - from.Z;
-                    int sides = (alongX < 0 ? -alongX : alongX) + (alongZ < 0 ? -alongZ : alongZ);
-                    Assert.Equal(1, sides);
+                    Assert.InRange(alongX, -1, 1);
+                    Assert.InRange(alongZ, -1, 1);
 
                     int rise = to.Y - from.Y;
                     Assert.True(rise <= 1, $"Seed {seed}: the move from {from} to {to} rises {rise} blocks, and a move rises one at most (D-165).");
                     Assert.True(GridMoves.IsFloor(plan.Grid, to), $"Seed {seed}: the move from {from} lands on {to}, and that is no floor cell.");
 
+                    if (alongX != 0 && alongZ != 0)
+                    {
+                        bool alongXFirst = GridMoves.DiagonalMove(plan.Grid, from.X, from.Y, from.Z, alongX, alongZ, true) == to.Y;
+                        bool alongZFirst = GridMoves.DiagonalMove(plan.Grid, from.X, from.Y, from.Z, alongX, alongZ, false) == to.Y;
+                        Assert.True(alongXFirst || alongZFirst, $"Seed {seed}: the move from {from} to {to} is no diagonal move of D-486.");
+                        diagonals++;
+                        continue;
+                    }
+
+                    Assert.True(alongX != 0 || alongZ != 0, $"Seed {seed}: the move from {from} to {to} stays in its column.");
                     bool walk = GridMoves.RampWalk(plan.Grid, from.X, from.Y, from.Z, to.X, to.Z) == to.Y;
                     bool landing = GridMoves.Landing(plan.Grid, from.X, from.Y, from.Z, to.X, to.Z) == to.Y;
                     Assert.True(walk || landing, $"Seed {seed}: the move from {from} to {to} is no walk along a ramp and no step or drop (D-345).");
@@ -87,11 +99,14 @@ public sealed class EnemyTests
         Assert.True(ramps > 0, "The sweep found no walk along a ramp (D-345).");
         Assert.True(drops > 0, "The sweep found no drop (D-165).");
         Assert.True(steps >= 0, "The count of steps up is never below zero.");
+        Assert.True(diagonals > 0, "The sweep found no diagonal move (D-486).");
     }
 
     /// <summary>
-    /// PR-16 exit test 2. Over one thousand seeds, a path joins every enemy spawn and the stairwell, and the count
-    /// of moves of that path is the count that the reachability search of the generator gives.
+    /// PR-16 exit test 2. Over one thousand seeds, a path joins every enemy spawn and the stairwell. The reachability
+    /// search of the generator reads the side moves alone (D-488), so its path is a path of the search too. The cost
+    /// of the path of the search is then at most the side cost for each move of the generator path, and at least
+    /// the estimate.
     /// </summary>
     [Fact]
     public void PathfinderFindsStairwell()
@@ -109,13 +124,14 @@ public sealed class EnemyTests
             {
                 Assert.True(finder.TryFind(enemy.Cell, plan.Stairwell, out IReadOnlyList<Cell> path), $"Seed {seed}: no path joins the enemy cell {enemy.Cell} and the stairwell {plan.Stairwell}.");
 
-                // The A* search and the breadth-first search read one move rule, so both give a shortest path. A
-                // search over the whole grid costs far more than one A* search, so the count check reads the first
+                // A search over the whole grid costs far more than one A* search, so the cost check reads the first
                 // seeds and the path check reads every seed.
                 if (seed <= ShortestPathSeeds)
                 {
                     Reachability reach = Reachability.From(plan.Grid, enemy.Cell);
-                    Assert.Equal(reach.Distance(plan.Stairwell), path.Count - 1);
+                    int cost = EnemyWalkTests.PathCost(path);
+                    Assert.True(cost <= GridPathfinder.SideCost * reach.Distance(plan.Stairwell), $"Seed {seed}: the path from {enemy.Cell} costs {cost}, more than the {reach.Distance(plan.Stairwell)} side moves of the generator path.");
+                    Assert.True(cost >= GridPathfinder.Estimate(enemy.Cell, plan.Stairwell), $"Seed {seed}: the path from {enemy.Cell} costs {cost}, under the estimate.");
                 }
             }
         }
@@ -376,7 +392,8 @@ public sealed class EnemyTests
         Assert.True(finder.TryFind(start, goal, out IReadOnlyList<Cell> first));
         Assert.True(finder.TryFind(start, goal, out IReadOnlyList<Cell> second));
         Assert.Equal(first, second);
-        Assert.Equal(GridPathfinder.Estimate(start, goal) + 1, first.Count);
+        Assert.Equal(11, first.Count);
+        Assert.Equal(GridPathfinder.Estimate(start, goal), EnemyWalkTests.PathCost(first));
 
         // A wall of stone across the floor cuts the far side off, so no move reaches it.
         for (int z = 0; z < grid.SizeZ; z++)

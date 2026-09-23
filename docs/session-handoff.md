@@ -1,3 +1,80 @@
+# Session handoff
+
+Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
+
+## Session 212: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-72, reviewer. Branch `fix/pr-72-enemy-movement`. PR #90, pending owner merge. Base `ea84473`.
+
+### What this session did, and why
+
+- Reviewed PR #90 at effective head `09926b6` against the enemy diagonal and ramp movement contracts.
+- Confirmed the fix for the closed gitar finding and added the review record.
+
+### State of the build
+
+- The focused review suite passed 53 tests. The full suite passed 1385 tests with no skips. `ste-check` found 0 issues in 34 files.
+- CI, Smoke, bit identity, and bots passed after effective head `09926b6` on metadata commit `751431d`.
+- The review record and this handoff reached the PR in `cb103bf`. The fresh `evaluate`, `review-gate`, documents, STE, doc-gate, det-lint, asset-QA, night-gate, and gitar checks passed. The heavy jobs skipped under Rule 2.
+
+### In flight
+
+- PR #90 awaits owner merge. The review approves effective head `09926b6`.
+
+### Traps and gotchas
+
+- The effective head is `09926b6`. Later commits change only metadata.
+- The diagonal sweep covers 120 seeds. D-480 keeps the full count on `main` and in the night.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner merges PR #90.
+
+## Session 211: 2026-09-22, Claude Code
+
+Author: Claude Code
+Session: PR-72, author. Branch `fix/pr-72-enemy-movement`. PR #90, pending owner merge. Base `ea84473`.
+
+### What this session did, and why
+
+- PR-71 exit test 6 passes. The push runs of `ea84473` on `main` ran every job of `ci.yml` (7 jobs), `smoke.yml` (4), `bit-identity.yml` (5), and `bots.yml` (2), and each passed. No job skipped. Each `ci-skip` log reads "The event 'push' runs every job. A push to main never skips (D-473)." Runs 35806594707, 35806594677, 35806594709, and 35806594708.
+- Owner answers D-483 to D-489: the id PR-72, one PR for F-107 and F-108, the F-108 case (seed 1, floor 1), the diagonal rule, the costs 10 and 14, the walkers, and no diagonal step up past a corner.
+- F-108: six probes on seed 1, floor 1 found no stall. The owner then said the enemy "slowly jumped up the ramp". `PathWalk.NeedsAJump` read the feet against the face of the next place, so 80 to 87 percent of the ticks of a climb were in the air. It now reads the slope under the feet at the entry point.
+- F-107: `GridMoves.DiagonalMove` and the search costs of D-487. Three faults came out of the tests and a sweep of 431597 diagonal moves over 120 seeds: a two-block rise from two side steps, a climb cut out of a ramp, and a drop into a landing column with a block at body height (the Overseer of `TimerTesterAlwaysDies` seed 662). The rule now limits the rise in rows and in floor height, and it needs the start and landing columns open. D-489 closed the fourth: a step up past a corner lands short.
+
+### State of the build
+
+- Local: the full suite passed (1377 tests, Smoke apart), then Smoke 7 of 7, the Godot build check, `det-lint` 0, `ste-check` 0.
+- Simulation version 15. Bit identity `dc4258105649a548`. With version 14 the new walk gives `5edea237bc4e2fae`, so the walk moved the hash too.
+- Effective head `09926b6`. CI, Smoke, bit identity, bots, det-lint, asset-QA, STE, doc-gate, night-gate, and gitar passed on `751431d`, every heavy job ran. `evaluate` reads red until the review record exists (D-251).
+- Remote head before this metadata commit: `751431d`.
+
+### In flight
+
+- The status marks `✅ Done in PR #90.` are in the roadmap and the design doc.
+- The review by Codex of the effective head `09926b6`.
+- CI passed on `b1e3ab5`, `evaluate` apart (D-251). The gitar pass of `35311d8` gave one finding: a box on the edge of a block over a ramp got a needless jump. The fix takes the higher of the feet and the slope, with the test `ABodyOnTheEdgeOfABlockOverARampNeedsNoJumpOntoIt`. The bit-identity answer did not move.
+
+### Traps and gotchas
+
+- The walk sweep is `EnemyWalkTests.DiagonalSweep`, in the `Sweep` category, at a fixed 120 seeds (about 8 s local). A seed count on floor 1 alone missed every fault. The faults sat on floors 6 to 15.
+- An arrival alone proves little. A follower that searches again walks the two side moves, so the sweep also counts the jumps.
+- `GridMoves.FloorHeightAt` works in 24ths of a block, so the rule stays in integers (G-9).
+- On `main`, the Session 210 entry sat above the `# Session handoff` title. `doc-gate` finds the newest entry by `\n## Session `, so it read Session 209 and failed this branch. This entry puts the title and the rule line back on top, with Session 210 unchanged under Session 211. Add an entry under the rule line.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Codex reviews PR #90 at the effective head `09926b6` and writes `docs/reviews/pr-90.md`. The owner starts it with "Review PR #90" in Codex Desktop.
+
 ## Session 210: 2026-09-22, Codex
 
 Author: Codex
@@ -34,9 +111,6 @@ None.
 ### Next concrete action
 
 After the owner merges PR #89, read the first push to `main` for exit test 6.
-# Session handoff
-
-Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
 ## Session 209: 2026-09-22, Claude Code
 
@@ -330,79 +404,3 @@ None.
 ### Next concrete action
 
 The owner merges PR #85. After the merge, start a new session and run the night on `main`.
-
-## Session 202: 2026-09-21, Claude Code
-
-Author: Claude Code
-Session: PR-18, author, after the review of session 201. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
-
-### What this session did, and why
-
-- Exit test 6 failed on the Deck at 52.8 ms. A trace of each transition found 38 to 46 ms of chunk mesh work in one main-thread frame. The worker task now meshes the chunks. The next Deck run passed at 11.1 ms on `c3ca60a`.
-- The night of `ad7589a` read a full-clearer softlock on seeds 2100 and 2109. By D-438 this PR fixes it: the clearer leaves when the time runs short (D-439). The owner took the merge past the red night gate (D-440).
-- The owner asked for the splash image off in this PR with no decision entry. The PR description records the override.
-- Filed OQ-181, the antialiasing of the world, against PR-62.
-- Rotated the handoff after session 201 left 11 entries.
-
-### State of the build
-
-- Local: 1229 of 1229 tests, the Smoke category included. A local sweep of 5000 full-clearer seeds read 0 softlocks.
-- PR checks at `bab19cc`: every check green except `review-gate`, which waits for the repeat review, and `night-gate`, which D-440 overrides.
-- The hand night on the branch, run 35638438679, passed every step.
-
-### In flight
-
-- The repeat cross-provider review of PR #85. The review of session 201 covered `46c4b9d`. The mesh fix, the clearer fix, and D-440 came after it.
-
-### Traps and gotchas
-
-- The Deck needs `git pull` and `dotnet build` before a run. A dig line with no `meshMicros` field means an old build.
-- `FullClearerClearsFloor` (PR-16 exit test 5) now allows the enemies that a leaving clearer leaves alive (D-439).
-- A descent on floor 15 still throws, because no template covers floor 16. PR-35 holds that stairwell.
-- `main` has no branch protection, although D-387 asks for it.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Codex: review PR #85 again at the effective head. After the owner merge, dispatch a night on `main` so that the night gate reads green (D-440).
-
-## Session 201: 2026-09-21, Codex
-
-Author: Codex
-Session: PR-18, reviewer. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
-
-### What this session did, and why
-
-- Reviewed PR #85 at effective head `46c4b9d` under the cross-provider gate.
-- Inspected the full diff, the transition state, the chunk swap, the bot and night workflows, the focused roadmap, the applicable decisions, and the Gitar comment.
-- Wrote `docs/reviews/pr-85.md`. The record has no finding and a blocked verdict because the Steam Deck transition exit test remains unresolved.
-
-### State of the build
-
-- Remote PR head: `5bac1cd`.
-- Build passed with 0 warnings and 0 errors.
-- Focused transition, measurement, and smoke tests passed, 31 of 31.
-- `det-lint`, `asset-qa`, and `ste-check` passed with 0 findings.
-- A local three-transition headless bot session exited 0 and recorded `transitionMicrosMax` of 16667 microseconds.
-- The full local test command produced no result after the build and was interrupted. CI reports the test, Smoke, Bit identity, Bots, Night gate, Asset QA, Determinism lint, Doc gate, STE check, and Gitar checks as passed.
-
-### In flight
-
-- The review record and this handoff entry are pushed in metadata commit `5bac1cd`.
-- The owner must run the Deck transition command in `CLAUDE.md` and record exit test 6.
-
-### Traps and gotchas
-
-- The review applies to effective head `46c4b9d`, not metadata tip `14f0378`.
-- The transition test removes enemy content by design under D-437.
-
-### Open questions that block progress
-
-- None. The Deck result is a required exit test, not an open owner question.
-
-### Next concrete action
-
-Wait for the owner to record the Deck result and rerun the review gate.

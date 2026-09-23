@@ -7,14 +7,20 @@ namespace WhatYouCarry.Core.Pathfinding;
 
 /// <summary>
 /// An A* search over the walkable cells of one grid (D-76). Every move is a move of <see cref="GridMoves"/>: one
-/// block up, any drop, or a walk along a ramp (D-165, D-345).
+/// block up, any drop, or a walk along a ramp to a side column, and a diagonal move to a corner column (D-165,
+/// D-345, D-486).
 /// </summary>
 /// <remarks>
 /// <para>
-/// Every move costs one, so the path that the search gives holds the fewest moves. The estimate to the goal is the
-/// count of steps along X and Z, because one move changes X or Z by exactly one and the row by any amount. That
-/// estimate never overstates the moves that remain, and it falls by at most one over a move, so the first pop of
-/// the goal holds a shortest path.
+/// A side move costs <see cref="SideCost"/> and a diagonal move costs <see cref="DiagonalCost"/>, near the ratio of
+/// the square root of two (D-487). The path that the search gives is then the shortest in distance over the ground,
+/// and a straight line across open floor takes diagonal moves and not a staircase of side moves (F-107).
+/// </para>
+/// <para>
+/// The estimate to the goal is the octile distance: a diagonal move for each step that X and Z share, and a side
+/// move for each step that remains. A move changes X and Z by one at most and the row by any amount, so that
+/// estimate never overstates the cost that remains, and it falls by at most the cost of a move. The first pop of
+/// the goal then holds a shortest path.
 /// </para>
 /// <para>
 /// The search reads the grid and the two cells alone, and it steps in integers, so one grid and one pair of cells
@@ -35,6 +41,12 @@ namespace WhatYouCarry.Core.Pathfinding;
 /// </remarks>
 public sealed class GridPathfinder
 {
+    /// <summary>The cost of a side move (D-487).</summary>
+    public const int SideCost = 10;
+
+    /// <summary>The cost of a diagonal move (D-487).</summary>
+    public const int DiagonalCost = 14;
+
     /// <summary>The value in the parent array of the cell that a search started from.</summary>
     private const int NoParent = -1;
 
@@ -118,23 +130,19 @@ public sealed class GridPathfinder
                 int neighborX = x + GridMoves.StepX[direction];
                 int neighborZ = z + GridMoves.StepZ[direction];
                 int landingY = GridMoves.Move(this.grid, x, y, z, neighborX, neighborZ);
-                if (landingY == GridMoves.NoMove)
-                {
-                    continue;
-                }
+                this.Offer(index, new Cell(neighborX, landingY, neighborZ), SideCost, goal);
+            }
 
-                int landing = this.Index(neighborX, landingY, neighborZ);
-                int next = this.cost[index] + 1;
-                bool known = this.written[landing] == this.search;
-                if (known && next >= this.cost[landing])
-                {
-                    continue;
-                }
-
-                this.written[landing] = this.search;
-                this.cost[landing] = next;
-                this.parent[landing] = index;
-                this.open.Push(landing, next + Estimate(new Cell(neighborX, landingY, neighborZ), goal));
+            // The two orders of a diagonal move can land on two rows, so each order offers its own landing. An order
+            // that lands where the other did offers no better cost, and the search drops it (D-486).
+            for (int corner = 0; corner < GridMoves.Corners; corner++)
+            {
+                int stepX = GridMoves.CornerStepX[corner];
+                int stepZ = GridMoves.CornerStepZ[corner];
+                int alongXFirst = GridMoves.DiagonalMove(this.grid, x, y, z, stepX, stepZ, true);
+                this.Offer(index, new Cell(x + stepX, alongXFirst, z + stepZ), DiagonalCost, goal);
+                int alongZFirst = GridMoves.DiagonalMove(this.grid, x, y, z, stepX, stepZ, false);
+                this.Offer(index, new Cell(x + stepX, alongZFirst, z + stepZ), DiagonalCost, goal);
             }
         }
 
@@ -142,12 +150,42 @@ public sealed class GridPathfinder
         return false;
     }
 
-    /// <summary>The moves that remain at least: the steps along X and along Z, because one move changes X or Z by exactly one.</summary>
+    /// <summary>
+    /// The cost that remains at least: the octile distance (D-487). A diagonal move covers one step along X and one
+    /// along Z, and a side move covers each step that remains.
+    /// </summary>
     public static int Estimate(Cell from, Cell goal)
     {
         int alongX = from.X > goal.X ? from.X - goal.X : goal.X - from.X;
         int alongZ = from.Z > goal.Z ? from.Z - goal.Z : goal.Z - from.Z;
-        return alongX + alongZ;
+        int shared = alongX < alongZ ? alongX : alongZ;
+        int straight = (alongX + alongZ) - (2 * shared);
+        return (DiagonalCost * shared) + (SideCost * straight);
+    }
+
+    /// <summary>
+    /// Offers one move from an open cell to a landing cell. A landing row of <see cref="GridMoves.NoMove"/> offers
+    /// nothing. A landing that this search reached at an equal or lower cost keeps its path.
+    /// </summary>
+    private void Offer(int from, Cell landing, int moveCost, Cell goal)
+    {
+        if (landing.Y == GridMoves.NoMove)
+        {
+            return;
+        }
+
+        int index = this.Index(landing.X, landing.Y, landing.Z);
+        int next = this.cost[from] + moveCost;
+        bool known = this.written[index] == this.search;
+        if (known && next >= this.cost[index])
+        {
+            return;
+        }
+
+        this.written[index] = this.search;
+        this.cost[index] = next;
+        this.parent[index] = from;
+        this.open.Push(index, next + Estimate(landing, goal));
     }
 
     /// <summary>The path from the start to one cell, read backward through the parent array and then turned around.</summary>

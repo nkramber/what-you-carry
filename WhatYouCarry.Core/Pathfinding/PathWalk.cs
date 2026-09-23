@@ -47,24 +47,45 @@ public static class PathWalk
 
     /// <summary>
     /// Answers whether a body needs a jump to reach the floor of the next cell (D-165). The rule reads the height
-    /// of that floor against the feet, and not the row of the cell, because a body on a ramp stands inside its own
-    /// row and the floor of a ramp cell lies between its row and the next (D-345).
+    /// of that floor against the ground under the body, and not the row of the cell, because a body on a ramp
+    /// stands inside its own row and the floor of a ramp cell lies between its row and the next (D-345).
     /// </summary>
     /// <remarks>
-    /// The floor of a ramp cell is its slope where the body enters it, so a walk along a ramp needs no jump: the
-    /// slope meets the floor of the cell before it at their shared face (D-362). A walk onto the side of a ramp
-    /// meets the slope higher up, and that rise needs a jump like any other.
+    /// <para>
+    /// The body enters the next cell at the point of that cell nearest the feet: a face for a side move, and a
+    /// corner for a diagonal move. The floor of a ramp cell is its slope at that point. A walk onto the side of a
+    /// ramp meets the slope higher up, and that rise needs a jump like any other.
+    /// </para>
+    /// <para>
+    /// The ground is the slope under the feet at that same point, because the slope carries the body up to it
+    /// with no jump. A body at the middle of a ramp cell stands half a place under the face of the next place, so
+    /// a rule that read the feet alone gave a jump on each place of a climb (F-108). The ground is the higher of the
+    /// feet and that slope. Off a ramp, the ground is the feet.
+    /// </para>
     /// </remarks>
     public static bool NeedsAJump(VoxelGrid grid, Cell next, Vector3 feet)
     {
+        float entryX = DetMath.Clamp(feet.X, next.X, next.X + 1.0f);
+        float entryZ = DetMath.Clamp(feet.Z, next.Z, next.Z + 1.0f);
         float floor = next.Y + 1.0f;
         if (grid.TryGetRamp(next.X, next.Y, next.Z, out Ramp slope))
         {
-            float along = DetMath.Clamp(slope.Along(next.X, next.Z, feet.X, feet.Z), 0.0f, 1.0f);
+            float along = DetMath.Clamp(slope.Along(next.X, next.Z, entryX, entryZ), 0.0f, 1.0f);
             floor = slope.SlopeAt(next.Y, along);
         }
 
-        return floor - feet.Y > Arrival;
+        float ground = feet.Y;
+        Cell under = FloorCellOf(feet);
+        if (grid.TryGetRamp(under.X, under.Y, under.Z, out Ramp slopeUnder))
+        {
+            // A box can rest on the edge of a higher block with its center over the ramp, so the ground is never
+            // under the feet.
+            float alongUnder = DetMath.Clamp(slopeUnder.Along(under.X, under.Z, entryX, entryZ), 0.0f, 1.0f);
+            float slopeGround = slopeUnder.SlopeAt(under.Y, alongUnder);
+            ground = slopeGround > feet.Y ? slopeGround : feet.Y;
+        }
+
+        return floor - ground > Arrival;
     }
 
     /// <summary>The feet center of the middle of one cell, in meters: the point that a walk to that cell aims at.</summary>

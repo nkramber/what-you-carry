@@ -1,5 +1,81 @@
 # Session handoff archive
 
+## Session 202: 2026-09-21, Claude Code
+
+Author: Claude Code
+Session: PR-18, author, after the review of session 201. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
+
+### What this session did, and why
+
+- Exit test 6 failed on the Deck at 52.8 ms. A trace of each transition found 38 to 46 ms of chunk mesh work in one main-thread frame. The worker task now meshes the chunks. The next Deck run passed at 11.1 ms on `c3ca60a`.
+- The night of `ad7589a` read a full-clearer softlock on seeds 2100 and 2109. By D-438 this PR fixes it: the clearer leaves when the time runs short (D-439). The owner took the merge past the red night gate (D-440).
+- The owner asked for the splash image off in this PR with no decision entry. The PR description records the override.
+- Filed OQ-181, the antialiasing of the world, against PR-62.
+- Rotated the handoff after session 201 left 11 entries.
+
+### State of the build
+
+- Local: 1229 of 1229 tests, the Smoke category included. A local sweep of 5000 full-clearer seeds read 0 softlocks.
+- PR checks at `bab19cc`: every check green except `review-gate`, which waits for the repeat review, and `night-gate`, which D-440 overrides.
+- The hand night on the branch, run 35638438679, passed every step.
+
+### In flight
+
+- The repeat cross-provider review of PR #85. The review of session 201 covered `46c4b9d`. The mesh fix, the clearer fix, and D-440 came after it.
+
+### Traps and gotchas
+
+- The Deck needs `git pull` and `dotnet build` before a run. A dig line with no `meshMicros` field means an old build.
+- `FullClearerClearsFloor` (PR-16 exit test 5) now allows the enemies that a leaving clearer leaves alive (D-439).
+- A descent on floor 15 still throws, because no template covers floor 16. PR-35 holds that stairwell.
+- `main` has no branch protection, although D-387 asks for it.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Codex: review PR #85 again at the effective head. After the owner merge, dispatch a night on `main` so that the night gate reads green (D-440).
+
+## Session 201: 2026-09-21, Codex
+
+Author: Codex
+Session: PR-18, reviewer. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
+
+### What this session did, and why
+
+- Reviewed PR #85 at effective head `46c4b9d` under the cross-provider gate.
+- Inspected the full diff, the transition state, the chunk swap, the bot and night workflows, the focused roadmap, the applicable decisions, and the Gitar comment.
+- Wrote `docs/reviews/pr-85.md`. The record has no finding and a blocked verdict because the Steam Deck transition exit test remains unresolved.
+
+### State of the build
+
+- Remote PR head: `5bac1cd`.
+- Build passed with 0 warnings and 0 errors.
+- Focused transition, measurement, and smoke tests passed, 31 of 31.
+- `det-lint`, `asset-qa`, and `ste-check` passed with 0 findings.
+- A local three-transition headless bot session exited 0 and recorded `transitionMicrosMax` of 16667 microseconds.
+- The full local test command produced no result after the build and was interrupted. CI reports the test, Smoke, Bit identity, Bots, Night gate, Asset QA, Determinism lint, Doc gate, STE check, and Gitar checks as passed.
+
+### In flight
+
+- The review record and this handoff entry are pushed in metadata commit `5bac1cd`.
+- The owner must run the Deck transition command in `CLAUDE.md` and record exit test 6.
+
+### Traps and gotchas
+
+- The review applies to effective head `46c4b9d`, not metadata tip `14f0378`.
+- The transition test removes enemy content by design under D-437.
+
+### Open questions that block progress
+
+- None. The Deck result is a required exit test, not an open owner question.
+
+### Next concrete action
+
+Wait for the owner to record the Deck result and rerun the review gate.
+
 ## Session 200: 2026-09-21, Claude Code
 
 Author: Claude Code
