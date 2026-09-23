@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 212: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-72, reviewer. Branch `fix/pr-72-enemy-movement`. PR #90, pending owner merge. Base `ea84473`.
+
+### What this session did, and why
+
+- Reviewed PR #90 at effective head `09926b6` against the enemy diagonal and ramp movement contracts.
+- Confirmed the fix for the closed gitar finding and added the review record.
+
+### State of the build
+
+- The focused review suite passed 53 tests. The full suite passed 1385 tests with no skips. `ste-check` found 0 issues in 34 files.
+- CI, Smoke, bit identity, and bots passed after effective head `09926b6` on metadata commit `751431d`.
+- The review record and this handoff reached the PR in `cb103bf`. The fresh `evaluate`, `review-gate`, documents, STE, doc-gate, det-lint, asset-QA, night-gate, and gitar checks passed. The heavy jobs skipped under Rule 2.
+
+### In flight
+
+- PR #90 awaits owner merge. The review approves effective head `09926b6`.
+
+### Traps and gotchas
+
+- The effective head is `09926b6`. Later commits change only metadata.
+- The diagonal sweep covers 120 seeds. D-480 keeps the full count on `main` and in the night.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner merges PR #90.
+
 ## Session 211: 2026-09-22, Claude Code
 
 Author: Claude Code

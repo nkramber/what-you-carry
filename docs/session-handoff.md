@@ -1,3 +1,38 @@
+## Session 222: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-78, reviewer, round 3. Branch `feat/pr-78-codex-review`. PR #93, Ready for owner merge. Base `e069e16`.
+
+### What this session did, and why
+
+- Re-reviewed PR #93 at effective head `e28ecd2` after the author fixed P2-1 and the malformed-heading cases.
+- Confirmed that P1-1 and P2-1 pass their regression checks. The review record now preserves both earlier verdicts and gives the current verdict.
+- The latest automated pass approved the code fixes. Its review threads have replies and are resolved.
+
+### State of the build
+
+- The focused Codex review, ruleset, and review-gate tests passed: 70 passed, 0 failed, 0 skipped. The build succeeded as part of the test command.
+- Required code checks passed on `e28ecd2`. At the old record, `evaluate` and `review-gate` failed. Fresh results wait for this metadata commit.
+- The effective head is `e28ecd2`. The review record and this entry are metadata.
+
+### In flight
+
+- Fresh `evaluate` and `review-gate` results after the metadata commit.
+- The author gives the owner the merge summary required by D-524 after the fresh results pass.
+
+### Traps and gotchas
+
+- Only P3 is nonblocking. The parser now faults on an unsupported severity or a malformed heading in the Findings section.
+- Exit test 4, the live ruleset setup, waits until after merge under D-519.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author checks the fresh publication results, then gives the owner the required merge summary.
+
 # Session handoff
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
@@ -335,36 +370,3 @@ None.
 ### Next concrete action
 
 The owner merges PR #91. The next session starts PR-62. OQ-181 blocks it, so the owner answers OQ-181 first.
-
-## Session 212: 2026-09-22, Codex
-
-Author: Codex
-Session: PR-72, reviewer. Branch `fix/pr-72-enemy-movement`. PR #90, pending owner merge. Base `ea84473`.
-
-### What this session did, and why
-
-- Reviewed PR #90 at effective head `09926b6` against the enemy diagonal and ramp movement contracts.
-- Confirmed the fix for the closed gitar finding and added the review record.
-
-### State of the build
-
-- The focused review suite passed 53 tests. The full suite passed 1385 tests with no skips. `ste-check` found 0 issues in 34 files.
-- CI, Smoke, bit identity, and bots passed after effective head `09926b6` on metadata commit `751431d`.
-- The review record and this handoff reached the PR in `cb103bf`. The fresh `evaluate`, `review-gate`, documents, STE, doc-gate, det-lint, asset-QA, night-gate, and gitar checks passed. The heavy jobs skipped under Rule 2.
-
-### In flight
-
-- PR #90 awaits owner merge. The review approves effective head `09926b6`.
-
-### Traps and gotchas
-
-- The effective head is `09926b6`. Later commits change only metadata.
-- The diagonal sweep covers 120 seeds. D-480 keeps the full count on `main` and in the night.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner merges PR #90.
