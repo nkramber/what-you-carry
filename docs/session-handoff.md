@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 227: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Reviewed PR #95 at effective head `d13f73c`.
+- Found that a PR of only `README.md` or `LICENSE` cannot pass the review gate by review or by label. The review record names the correction and regression checks.
+
+### State of the build
+
+- The focused review tests passed 111 of 111. They built all projects.
+- At remote head `b019737`, the CI platform, bot, content, document, bit-identity, lint, and STE checks passed. The night gate failed on the known record in D-538. The Smoke jobs were skipped.
+
+### In flight
+
+- PR #95 needs a correction for P2-1 and a repeat review.
+- The night gate remains red until the work in D-538 lands.
+
+### Traps and gotchas
+
+- D-475 skips root `README.md` and `LICENSE` for review. D-190 does not allow the override label for either path.
+- The failed night record belongs to D-538, which is outside PR-79.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Correct P2-1 on PR #95 and request a repeat review. Handle the night failure in the next PR under D-538.
+
 ## Session 226: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -341,37 +374,3 @@ None. The owner answered each question of this PR in session.
 ### Next concrete action
 
 Complete the gitar pass of PR #93, then run `make codex-review PR=93` in the background.
-
-## Session 217: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
-
-### What this session did, and why
-
-- Re-reviewed PR #92 at effective head `d96ae19` and updated `docs/reviews/pr-92.md`.
-- Verified P2-1. The parser and packer now reject overflowing bounds. The new tests pass on this head and fail on the old code.
-- D-510 closes exit test 6. The owner confirmed that the contact sheet keeps the look.
-
-### State of the build
-
-- The focused recipe and texture tests passed 100 of 100. The old-code comparison failed only on the four overflow cases.
-- CI, Smoke, bit identity, `ste-check`, `det-lint`, `asset-qa`, `doc-gate`, `documents`, `night-gate`, `bots`, and Gitar passed at effective head `d96ae19`.
-- The effective head is `d96ae19`. The review record and this handoff are metadata. The review gate and `evaluate` passed on metadata tip `c8f73cc`.
-
-### In flight
-
-- PR #92: publish the check results in this record, then verify the session end gate.
-
-### Traps and gotchas
-
-- A bounds check compares each size with the room that remains. It does not add two large values.
-- OQ-181 blocks PR-77, not PR-62 (D-504).
-
-### Open questions that block progress
-
-None for PR-62.
-
-### Next concrete action
-
-Verify the session end gate after the push. The owner can merge PR #92. Then a clean author session can start PR-74 from Session 214 and D-496 to D-503.

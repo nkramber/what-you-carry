@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 217: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
+
+### What this session did, and why
+
+- Re-reviewed PR #92 at effective head `d96ae19` and updated `docs/reviews/pr-92.md`.
+- Verified P2-1. The parser and packer now reject overflowing bounds. The new tests pass on this head and fail on the old code.
+- D-510 closes exit test 6. The owner confirmed that the contact sheet keeps the look.
+
+### State of the build
+
+- The focused recipe and texture tests passed 100 of 100. The old-code comparison failed only on the four overflow cases.
+- CI, Smoke, bit identity, `ste-check`, `det-lint`, `asset-qa`, `doc-gate`, `documents`, `night-gate`, `bots`, and Gitar passed at effective head `d96ae19`.
+- The effective head is `d96ae19`. The review record and this handoff are metadata. The review gate and `evaluate` passed on metadata tip `c8f73cc`.
+
+### In flight
+
+- PR #92: publish the check results in this record, then verify the session end gate.
+
+### Traps and gotchas
+
+- A bounds check compares each size with the room that remains. It does not add two large values.
+- OQ-181 blocks PR-77, not PR-62 (D-504).
+
+### Open questions that block progress
+
+None for PR-62.
+
+### Next concrete action
+
+Verify the session end gate after the push. The owner can merge PR #92. Then a clean author session can start PR-74 from Session 214 and D-496 to D-503.
+
 ## Session 216: 2026-09-23, Claude Code
 
 Author: Claude Code
