@@ -12,7 +12,8 @@ Read this table when a question asks who catches a break of a rule. Section 3.14
 | Each matrix line agrees with the changed paths | Machine | `doc-gate` |
 | The description and the newest handoff entry put no documents off to later work | Machine, by a fixed list of phrases | `doc-gate` |
 | No PR title or branch names a merge record | Machine | `doc-gate` |
-| The handoff and the review record do not move the effective head | Machine | `review-gate` metadata set (D-184), and a test that pins the handoff path in that set |
+| The handoff and the review record do not move the work head or the effective head | Machine | `review-gate` metadata set (D-184), and a test that pins the handoff path in that set |
+| A documents commit after an approving review keeps `review-gate` green | Machine | `review-gate` reads the effective head, which skips each commit in the skip set (D-534) |
 | The skill has valid front matter, stays under 7000 characters, and the agent files name its path | Machine | `dotnet test` shape tests |
 | The agent files, each skill file, each skill reference file, the handoff, and its newest entry stay under a byte ceiling | Machine | `dotnet test` context budget tests (D-382, D-384) |
 | A change of documents alone runs `ste-check`, `doc-gate`, and the `Documents` category, and no full suite | Agent, and the machine on each head | The rule of `AGENTS.md` (D-491 to D-493). The `documents` job runs the category on each head (D-476) |
@@ -20,12 +21,13 @@ Read this table when a question asks who catches a break of a rule. Section 3.14
 | A session reads the newest handoff entry, looks up register ids in one command, and waits on checks with one command | Agent | The read order of `AGENTS.md`, this skill, and `docs/runbooks/session-context.md` (D-377, D-378, D-380) |
 | A reviewer loads `pr-review`, and an author who answers findings loads `review-response` | Agent | The skill descriptions and `AGENTS.md` (D-381) |
 | A review round starts only on an open PR, a clean checkout at the origin head, a current CLI, a model that answers, and a gitar pass with no open thread | Machine, when the author runs the command | `make codex-review` refuses with exit 3 (D-511, D-512) |
-| A review round pushes a record of the effective head, and no commit outside the metadata set | Machine | `make codex-review` fails the round with exit 1 (D-511, D-184) |
+| A review round pushes a record of the effective head, and no commit outside the metadata set | Machine | `make codex-review` fails the round with exit 1 (D-511, D-184, D-534) |
+| A PR of documents alone takes the `review-override` label, and no review record | Machine | `review-gate` fails the review path, and `make codex-review` refuses with exit 3 (D-540) |
 | A P0 to P2 finding open in three rounds stops the fix loop, and the owner decides | Machine for the stop, owner for the answer | `make codex-review` exits 11 from the `Open at:` lines (D-513 to D-515) |
 | A PR merges only with every gate check green, every review thread resolved, and a squash merge | Machine | The ruleset of `main` in `.github/rulesets/main.json` (D-522) |
 | The session turns on auto-merge only after the record approves the effective head and the gitar pass is complete | Agent, and the machine for the checks | `references/review-and-merge.md`, then the ruleset and `review-gate` (D-516, D-521) |
 | No review round uses API pricing | Machine | `make codex-review` removes the API credential variables, forces the ChatGPT login, and refuses another login (D-523) |
-| The owner confirms each merge after a summary of one paragraph | Agent and owner | `references/review-and-merge.md` asks before `gh pr merge --auto` (D-524). No machine reads the confirmation |
+| The owner confirms each merge after the merge summary: What, How, CI, and Codex review | Agent and owner | `references/review-and-merge.md` asks before `gh pr merge --auto` (D-524, D-533). No machine reads the summary or the confirmation |
 | The top-level gitar comments have their answers before the auto-merge | Agent | The `gitar-review` skill. They are not review threads, so the ruleset does not read them |
 | No live document cites a superseded decision as current | Machine | `ste-check` reference check (D-178) |
 | A reason is true and specific | Agent and owner | The author writes it, and the cross-provider review checks it |

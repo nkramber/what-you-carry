@@ -23,8 +23,17 @@ public sealed class ReviewGateFacts
     /// <summary>Every path in the diff of the merge base and the head.</summary>
     public required IReadOnlyList<string> ChangedPaths { get; init; }
 
-    /// <summary>The newest commit outside the metadata set, or null when every commit in the range is a metadata commit (D-184).</summary>
+    /// <summary>
+    /// The newest commit outside the skip set of D-475, or null when every commit in the range changes documents alone.
+    /// The review path reads it (D-534).
+    /// </summary>
     public required CommitStamp? EffectiveHead { get; init; }
+
+    /// <summary>
+    /// The newest commit outside the metadata set, or null when every commit in the range is a metadata commit. The
+    /// override label reads it (D-184, D-190, D-539).
+    /// </summary>
+    public required CommitStamp? WorkHead { get; init; }
 
     /// <summary>The review file on the PR head, or null when it is absent (D-179).</summary>
     public required string? ReviewFileText { get; init; }
@@ -45,7 +54,8 @@ public sealed class ReviewGateFacts
             HasOverrideLabel = request.Labels.Contains(ReviewGateRules.OverrideLabel),
             NewestOverrideLabelEvent = NewestEvent(request.OverrideLabelEvents),
             ChangedPaths = git.ChangedPaths(mergeBase, request.HeadSha),
-            EffectiveHead = git.NewestCommitOutside(mergeBase, request.HeadSha, ReviewGateRules.MetadataPaths),
+            EffectiveHead = git.NewestCommitOutside(mergeBase, request.HeadSha, ReviewGateRules.SkipPaths),
+            WorkHead = git.NewestCommitOutside(mergeBase, request.HeadSha, ReviewGateRules.MetadataPaths),
             ReviewFileText = git.ReadFileOrNull(request.HeadSha, ReviewGateRules.ReviewFilePath(request.PullRequestNumber)),
             ReviewFileCommit = git.NewestCommitThatChanged(request.HeadSha, ReviewGateRules.ReviewFilePath(request.PullRequestNumber)),
         };

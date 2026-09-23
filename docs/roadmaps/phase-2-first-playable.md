@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-78, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-79, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -886,6 +886,35 @@ Gate: exit tests 1 to 6 pass.
 
 > *In plain English:* the miner was ten plain boxes with speckled paint. This change adds a brow, a nose, a beard, and boots, and paints the body with the soft mottle of the 3D model.
 
+### PR-79: Review process after approval
+
+✅ Done in PR #95.
+
+Scope:
+
+- `WhatYouCarry.Tools/ReviewGate/`: the effective head skips each commit whose paths all lie in the skip set of D-475, and the review path reads it (D-534). The override label reads the work head, the newest commit outside the metadata set (D-539). A PR of documents alone fails the review path, and the failure names the label (D-540). The label covers each path of the skip set, the root `README.md` and `LICENSE` included (D-541).
+- `WhatYouCarry.Tools/CodexReview/`: the record names the effective head (D-534). The Gitar start checks and the guard of the round read the work head (D-182, D-184). A PR of documents alone is a refusal with exit 3 (D-540).
+- `WhatYouCarry.Tests/`: `ReviewGateRulesTests`, `ReviewGateGitTests`, `CodexReviewTests`, and `CodexReviewGitTests`.
+- The skill `one-pr-one-session` and its reference `review-and-merge.md`: the merge summary of four sections, What, How, CI, and Codex review (D-533). `CLAUDE.md` and `AGENTS.md` name it.
+- The skills `pr-review`, `gitar-review`, and `ste-writing`: the effective head of the review and the work head of the gitar pass (D-534).
+
+Out of scope: the night fix and the branch nights of D-538, which the next PR holds. The ruleset bypass stays (D-537).
+
+Exit tests:
+
+1. The four test classes pass. A documents commit after an approving review keeps `review-gate` green, and a commit outside the skip set turns it red.
+2. `make codex-review PR=<this PR>` reviews this PR, and the author answers each finding until the verdict approves or the three-strike stop fires.
+3. The merge confirmation of this PR uses the merge summary of D-533.
+4. After the merge, a documents commit after the approving review of a later PR keeps its `review-gate` green. The workflow runs the tool of `main`, so the next PR runs this test, and its session states the result in its handoff entry.
+
+Review focus: the two heads in `review-gate` and in `codex-review`, the override path against D-190, D-539, and D-541, and test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass. Exit test 4 runs after the merge.
+
+> *In plain English:* a fix of one word in a document after the approval of a PR asked for a second full review. Now a change of documents alone keeps the approval, and gitar still reads each push.
+
 ### PR-75: Sword art
 
 Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
@@ -993,13 +1022,14 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 33. PR-62. ✅ Done in PR #92. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-509.
 34. PR-78. ✅ Done in PR #93. ✅ The owner answers of 2026-09-23: D-511 to D-524.
 35. PR-74.
-36. PR-75.
-37. PR-76.
-38. Owner: answer OQ-181.
-39. PR-77.
-40. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-41. Tier 4 pass on the screenshot fixture (D-133).
-42. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, and D-539 to D-541.
+37. PR-75.
+38. PR-76.
+39. Owner: answer OQ-181.
+40. PR-77.
+41. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+42. Tier 4 pass on the screenshot fixture (D-133).
+43. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

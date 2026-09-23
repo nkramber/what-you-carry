@@ -2,6 +2,146 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 229: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Re-reviewed PR #95 at effective head `25ad21e`.
+- Verified that P2-1 is fixed: the override label and effective-head logic now use the same document path set. No new code finding remains.
+- Updated the existing review record with the finding history and current verdict.
+
+### State of the build
+
+- The focused review tests passed 119 of 119 at `25ad21e`.
+- The Documents category passed 140 of 140 after the review record and handoff edits.
+- `ste-check` passed with no findings, and `doc-gate` passed with 0 problems over 25 paths.
+- Asset QA, lint, document, STE, bot, the Linux and macOS CI platform results, Smoke, and bit-identity passed at `25ad21e`.
+- The Windows CI job later passed at 17:42 UTC. The metadata-only run skipped heavy jobs under D-474 rule 2 after the previous code-head CI run passed.
+- The night gate failed on the D-538 record. The review gate and evaluator fail on the published `Blocked` verdict.
+
+### In flight
+
+- The review record and this handoff entry are published on `origin/chore/pr-79-review-process`.
+- PR #95 remains blocked by the D-538 night-gate failure. The review gate and evaluator fail on the `Blocked` verdict; metadata-only jobs pass or skip under D-474 rule 2.
+
+### Traps and gotchas
+
+- The code head is `25ad21e`; later review and handoff commits are documents-only and do not move the effective head (D-534).
+- The current night failure belongs to D-538, which is out of scope for PR-79. D-537 keeps the ruleset bypass for the manual merge of that work.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Resolve the D-538 night-gate failure. Then re-review the same effective head and update the existing review record.
+
+## Session 228: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-79, author. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Answered round 1 of the Codex review (`Changes required` at `d13f73c`). P2-1 has full merit: a PR of the root `README.md` or `LICENSE` alone passed neither by review nor by label.
+- Recorded the owner instruction as D-541: the `review-override` label covers each path of the skip set of D-475. `review-gate` now reads the one list of the CI skip for the label. D-190 carries a partial revision mark.
+- Wrote `docs/reviews/pr-95-response.md`. It also shows that the Smoke jobs ran and passed at `d13f73c`.
+
+### State of the build
+
+- `dotnet build` passed with no warning. The full suite result and the new code head are in the response file and the PR.
+- Four new tests fail on the old `ReviewGateRules.cs` and pass with the correction.
+
+### In flight
+
+- Round 2 of the Codex review on the new code head, then the merge summary and the owner confirmation.
+
+### Traps and gotchas
+
+- `review-gate` runs the tool of `main`, so round 2 must record the new code head. The correction commit holds code, so the old rule and the new rule give one head.
+- The night gate stays red on the record of D-538. D-537 keeps the bypass for the merge.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read round 2 of the Codex review of PR #95. On approval, write the merge summary of D-533 and ask the owner to confirm the merge.
+
+## Session 227: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Reviewed PR #95 at effective head `d13f73c`.
+- Found that a PR of only `README.md` or `LICENSE` cannot pass the review gate by review or by label. The review record names the correction and regression checks.
+
+### State of the build
+
+- The focused review tests passed 111 of 111. They built all projects.
+- At code head `d13f73c`, the CI platform, bot, content, document, bit-identity, lint, and STE checks passed. At metadata head `7781d3b`, the document checks passed, and the heavy jobs skipped.
+- The night gate failed on the known record in D-538. The Smoke jobs were skipped. The review gate failed because P2-1 remains open.
+
+### In flight
+
+- PR #95 needs a correction for P2-1 and a repeat review.
+- The night gate remains red until the work in D-538 lands.
+
+### Traps and gotchas
+
+- D-475 skips root `README.md` and `LICENSE` for review. D-190 does not allow the override label for either path.
+- The failed night record belongs to D-538, which is outside PR-79.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Correct P2-1 on PR #95 and request a repeat review. Handle the night failure in the next PR under D-538.
+
+## Session 226: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-79, author. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Built D-534. `review-gate` and `make codex-review` read the effective head, the newest commit outside the skip set of D-475. A documents commit after an approving review keeps the gate green.
+- Kept the metadata set of D-184 for the gitar pass and for the override label, as the work head. The owner answered the two open points in session: D-539 (the label keeps D-190) and D-540 (a PR of documents alone needs the label).
+- Wrote the merge summary of D-533 (What, How, CI, Codex review) into `one-pr-one-session`, `review-and-merge.md`, the agent files, and the PR template.
+- Added the PR-79 entry to the Phase 2 roadmap and to the design doc, with `✅ Done in PR #95.`
+
+### State of the build
+
+- Code head `d13f73c`, and it is the effective head under the old rule and the new rule. `dotnet build` passed with no warning. `dotnet test` passed 1550 of 1550, Smoke included. `ste-check` gave 0 findings.
+- Six new tests fail when `SkipPaths` returns the metadata set, so they prove D-534.
+
+### In flight
+
+- The Codex review of `d13f73c`, then the merge summary and the owner confirmation.
+
+### Traps and gotchas
+
+- `review-gate` runs the tool of `main` (`pull_request_target`, D-197). This PR is judged by the old rule until it merges. Keep a code path in the last commit outside the metadata set before each review round, so the two rules give one head. A documents-only fix needs a new round, or a commit that also holds code.
+- Exit test 4 runs on the first PR after the merge: a documents commit after its approval must keep `review-gate` green.
+- Sequence item 35 of the Phase 2 roadmap still reads `PR-74.` with no done mark, although PR #94 merged.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the Codex review of PR #95, and answer each finding. Then write the merge summary and ask the owner to confirm the merge. The night fix of D-538 is the next PR, in a new session.
+
 ## Session 225: 2026-09-23, Codex
 
 Author: Codex
@@ -229,147 +369,3 @@ None.
 ### Next concrete action
 
 Complete the gitar pass of the new head, then run `make codex-review PR=93` in the background.
-
-## Session 219: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-78, reviewer. Branch `feat/pr-78-codex-review`. PR #93, changes required. Base `e069e16`.
-
-### What this session did, and why
-
-- Reviewed PR #93 at effective head `b7623f4` for the Codex review command, the three-strike count, and the main ruleset.
-- Added review record `docs/reviews/pr-93.md`. Finding P1-1 shows that the command approves a record with an open P0, P1, or P2 finding.
-- Pushed the review record and this handoff together as one metadata commit, as D-182 and D-518 require.
-
-### State of the build
-
-- `dotnet build WhatYouCarry.slnx` passed with 0 warnings and 0 errors. The full test suite passed: 1,491 passed, 0 failed, 0 skipped.
-- The metadata checks passed: `ste-check` reported 0 findings, and the Documents category passed 131 tests.
-- The effective head is `b7623f4`. The remote review branch holds the metadata commit with this entry and the review record.
-- Before publication, all code-head checks passed except `evaluate`, which failed because the review record was absent. `review-gate` was skipping. Gitar passed.
-- Checks for metadata commit `c06f6ce` finished. Gitar, `documents`, `doc-gate`, `ste-check`, and all other reported applicable checks passed. Heavy jobs skipped. `evaluate` and `review-gate` failed for the changes-required verdict.
-
-### In flight
-
-- The author must correct P1-1 and run the next review round.
-- Exit test 4 checks the live ruleset after the owner approves the post-merge setup.
-
-### Traps and gotchas
-
-- An approved verdict skips the strike result in `ReviewOutcomeRules.Judge`. The P3 approval test does not cover an open P0 to P2 finding.
-- The review record applies to effective head `b7623f4`; the metadata commit does not change that head (D-184).
-- `evaluate` and `review-gate` fail until a later review approves the effective head.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author fixes P1-1, then starts the next review round after the Gitar pass.
-
-## Session 218: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-78, author. Branch `feat/pr-78-codex-review`. PR #93, pending merge. Base `e069e16`.
-
-### What this session did, and why
-
-- The owner asked for an automated Codex review, a three-strike stop, and a gated auto-merge. D-511 to D-522 record the direction and the answers of 2026-09-23.
-- `make codex-review PR=<n>` updates the npm CLI and runs the new `codex-review` command of Tools (D-511, D-512). The command checks the start conditions, probes `gpt-6-luna` at effort `medium`, runs Codex in a detached worktree, and judges the pushed record.
-- The `Open at:` line of each finding counts the review rounds. A P0 to P2 finding open in three rounds exits 11 (D-513 to D-515).
-- `.github/rulesets/main.json` holds the ruleset of `main`, and `.github/review-gate-mode` turns `enforced` (D-520 to D-522). The platform jobs got unique check names (F-110).
-- The owner merges this PR by hand. After the merge, the session applies the settings on approval (D-519).
-
-### State of the build
-
-- The build passes with no warnings. The new tests pass: `CodexReviewTests`, `CodexReviewGitTests`, and `RulesetTests`. `ste-check` finds no issue.
-- The effective head is the commit that holds this entry. Origin holds it after the push.
-- The CLI facts of 2026-09-23: npm `@openai/codex` 0.156.1 answered the probe. Homebrew holds 0.39.0, and the app bundles 0.155.0-alpha.9.2.
-
-### In flight
-
-- PR #93: the gitar pass, then `make codex-review PR=93`, then the answers to the findings.
-- After the owner merge: the setup of D-519, and the live ruleset check with `docs/runbooks/main-ruleset.md`.
-
-### Traps and gotchas
-
-- GNU make exits 2 for each failed target. The exit code of the command shows as `Error <code>`, and the first output line names the outcome.
-- `codex exec` reads a piped stdin into the prompt, so the command closes stdin.
-- A skipped job reports success to a required check. A job that never reports blocks every merge, so `RulesetTests` binds each required name to one job.
-- The agent files stand at 14987 of 15000 bytes. The Tools commands now use the `tools <command>` form.
-
-### Open questions that block progress
-
-None. The owner answered each question of this PR in session.
-
-### Next concrete action
-
-Complete the gitar pass of PR #93, then run `make codex-review PR=93` in the background.
-
-## Session 217: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
-
-### What this session did, and why
-
-- Re-reviewed PR #92 at effective head `d96ae19` and updated `docs/reviews/pr-92.md`.
-- Verified P2-1. The parser and packer now reject overflowing bounds. The new tests pass on this head and fail on the old code.
-- D-510 closes exit test 6. The owner confirmed that the contact sheet keeps the look.
-
-### State of the build
-
-- The focused recipe and texture tests passed 100 of 100. The old-code comparison failed only on the four overflow cases.
-- CI, Smoke, bit identity, `ste-check`, `det-lint`, `asset-qa`, `doc-gate`, `documents`, `night-gate`, `bots`, and Gitar passed at effective head `d96ae19`.
-- The effective head is `d96ae19`. The review record and this handoff are metadata. The review gate and `evaluate` passed on metadata tip `c8f73cc`.
-
-### In flight
-
-- PR #92: publish the check results in this record, then verify the session end gate.
-
-### Traps and gotchas
-
-- A bounds check compares each size with the room that remains. It does not add two large values.
-- OQ-181 blocks PR-77, not PR-62 (D-504).
-
-### Open questions that block progress
-
-None for PR-62.
-
-### Next concrete action
-
-Verify the session end gate after the push. The owner can merge PR #92. Then a clean author session can start PR-74 from Session 214 and D-496 to D-503.
-
-## Session 216: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-62, correction author. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
-
-### What this session did, and why
-
-- Answered the review of Session 215 in `docs/reviews/pr-92-response.md`.
-- P2-1 had full merit. The layout parse accepted a canvas whose `x + width` wrapped past the int limit. The check now compares each size with the room that the start leaves. The packer had the same wrap, and it now rejects a size past the atlas before any sum. New cases in `RecipeTests` failed on the old code and pass now.
-- The owner confirmed exit test 6: the look stayed the same (D-510).
-
-### State of the build
-
-- The full suite passed 1436 of 1436, Smoke included. `ste-check` gave 0 findings.
-- The committed atlas and layout did not change.
-- The remote head is the commit that holds this entry. It holds the correction, so it is the new effective head.
-
-### In flight
-
-- PR #92: the automated pass of gitar on the new head, then the repeat review of Codex.
-
-### Traps and gotchas
-
-- A bounds check of two ints adds no two large values. Compare the size with the room that remains.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Codex re-reviews PR #92 at the new effective head. After the merge, PR-74 starts from Session 214 and D-496 to D-503.

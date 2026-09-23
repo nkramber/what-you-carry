@@ -58,7 +58,8 @@ Use one term for one concept (rules 1.11 and 9.4). A session meets these terms i
 | documents matrix | the `## Documents` section of the PR description, one line for each category (D-376) |
 | cross-provider review | the review by the provider that did not write the PR (T-4) |
 | automated pass | the review of gitar on a PR head, and the answer of the author to it (D-250) |
-| effective head | the newest commit that changes a path outside the metadata set (D-184) |
+| effective head | the newest commit that changes a path outside the skip set. The cross-provider review reads it (D-534) |
+| work head | the newest commit that changes a path outside the metadata set. The automated pass and the override label read it (D-184, D-539) |
 | metadata set | `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184) |
 | skip set | the paths that count as documents for the CI skip of a PR head (D-475) |
 | property test | a seed loop that asserts an invariant, and names its seed on a failure (D-66) |

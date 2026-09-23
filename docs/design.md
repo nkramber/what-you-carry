@@ -580,6 +580,11 @@ The body gains a brow, a nose, and a beard on the head bone, and a toe box on ea
 Gate: the clip check passes at every keyframe, and the grain paints the same bytes on each platform. The owner approves the contact sheet as finished art.
 > *In plain English:* the miner was ten plain boxes with speckled paint. This change adds a brow, a nose, a beard, and boots, and paints the body with the soft mottle of the 3D model.
 
+**PR-79: Review process after approval.** ✅ Done in PR #95.
+The effective head that `review-gate` and `make codex-review` read skips each commit whose paths all lie in the skip set of D-475 (D-534). An approving review then stays green after a later documents commit. The gitar pass and the override label keep the metadata set of D-184 (D-539). A PR of documents alone needs the `review-override` label, and the label covers each path of the skip set (D-540, D-541). Before the owner confirms a merge, the session writes the merge summary: What, How, CI, and Codex review (D-533).
+Gate: the review gate and the review command tests pass, and the merge confirmation of this PR uses the merge summary.
+> *In plain English:* a fix of one word in a document after the approval of a PR asked for a second full review. Now a change of documents alone keeps the approval, and gitar still reads each push.
+
 **PR-75: Sword art.** 🔧
 The sword of PR-15 gains the detail that the owner asks for, on the recipes of PR-62 (D-504).
 Gate: the clip check passes, and the owner approves a contact sheet of the sword.
@@ -764,7 +769,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-75, PR-76, PR-77.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-75, PR-76, PR-77.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

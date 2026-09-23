@@ -17,12 +17,18 @@ The `review-gate` job reads the review record (D-179, D-181, D-185). Three parts
 | The head field | `- Head: ` and the hash in backticks, in the Identity list | The hash is the effective head. A short hash is permitted. |
 | The verdict | One of the three verdict names, in the `## Verdict` section | Write the name exactly. Do not reword it. |
 
-The effective head is the newest commit that changes a path outside the metadata set (D-184).
-The metadata set is `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md`.
-A commit that changes only those paths is a metadata commit, and it does not change the effective head.
+The effective head is the newest commit that changes a path outside the skip set of D-475 (D-534).
+The skip set is `docs/`, `.claude/skills/`, `CLAUDE.md`, `AGENTS.md`, `README.md`, and `LICENSE`.
+A commit that changes only those paths does not change the effective head. A later documents commit keeps the approval.
+Read the effective head with this command, and take the first line:
+
+```
+git log --format='%H %s' origin/main..HEAD -- . ':!docs/' ':!.claude/skills/' ':!CLAUDE.md' ':!AGENTS.md' ':!README.md' ':!LICENSE'
+```
+
+The metadata set is `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184).
 The required review commit holds the review record and the handoff entry, so it is always a metadata commit (D-182).
-Without that rule the review commit invalidates the review that it publishes.
-Record the effective head, not the tip, when the review commit is the last commit.
+Record the effective head, not the tip. A PR with no commit outside the skip set needs the `review-override` label, and no record approves it (D-540).
 
 Use this skeleton. Keep the heading text and the order.
 
@@ -125,9 +131,9 @@ Approval applies only to the recorded revision. A new base or head requires asse
 An approving record lets the author turn on auto-merge, and the owner can also merge the PR (D-516).
 
 When the review record enters the PR, retain the assessed implementation head in that file.
-Check any later metadata commit before the final verdict.
+Check any later documents commit before the final verdict.
 Do not require the review file to contain its own commit hash.
-A metadata commit cannot hide code, content, requirement, or test changes.
+A documents commit cannot hide code, content, configuration, or test changes.
 
 ## The review gate check
 

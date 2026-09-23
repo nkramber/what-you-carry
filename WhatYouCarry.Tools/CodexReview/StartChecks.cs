@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using WhatYouCarry.Tools.ReviewGate;
 
 namespace WhatYouCarry.Tools.CodexReview;
 
@@ -35,12 +36,15 @@ public sealed class StartFacts
     /// <summary>The output of <c>git status --porcelain</c>. Empty text means a clean tree.</summary>
     public required string WorkingTreeStatus { get; init; }
 
-    /// <summary>The newest commit outside the metadata set (D-184).</summary>
-    public required string EffectiveHead { get; init; }
+    /// <summary>The newest commit outside the skip set of D-475, or null when the PR changes documents alone (D-534).</summary>
+    public required string? EffectiveHead { get; init; }
+
+    /// <summary>The newest commit outside the metadata set, or null when the PR changes metadata alone (D-184).</summary>
+    public required string? WorkHead { get; init; }
 
     /// <summary>
-    /// Every Gitar check run on the commits from the effective head to the PR head. A metadata commit keeps the
-    /// pass of the effective head current (D-184), so a check on a later commit is not required.
+    /// Every Gitar check run on the commits from the work head to the PR head. A metadata commit keeps the pass of
+    /// the work head current (D-184, D-534), so a check on a later commit is not required.
     /// </summary>
     public required IReadOnlyList<GitarCheck> GitarChecks { get; init; }
 
@@ -82,6 +86,11 @@ public static class StartChecks
             problems.Add(NotOpenProblem(facts.PullRequestNumber, facts.PullRequestState));
         }
 
+        if (facts.EffectiveHead is null)
+        {
+            problems.Add($"No commit of PR #{facts.PullRequestNumber} changes a path outside the skip set of D-475, so the review has nothing to approve. The '{ReviewGateRules.OverrideLabel}' label covers such a PR (D-540).");
+        }
+
         AddCheckoutProblems(facts, problems);
         AddGitarProblems(facts, problems);
         return problems;
@@ -117,6 +126,12 @@ public static class StartChecks
     /// </summary>
     private static void AddGitarProblems(StartFacts facts, List<string> problems)
     {
+        if (facts.WorkHead is null)
+        {
+            // The effective head problem already names the label, and a metadata commit gives Gitar no work.
+            return;
+        }
+
         GitarCheck? earliest = null;
         foreach (GitarCheck check in facts.GitarChecks)
         {
@@ -133,7 +148,7 @@ public static class StartChecks
 
         if (earliest is null)
         {
-            problems.Add($"No commit from the effective head {facts.EffectiveHead} to the PR head {facts.PullRequestHead} has a Gitar check run. Follow the gitar-review skill.");
+            problems.Add($"No commit from the work head {facts.WorkHead} to the PR head {facts.PullRequestHead} has a Gitar check run. Follow the gitar-review skill.");
         }
 
         if (facts.DashboardEditedAt is null)
@@ -142,7 +157,7 @@ public static class StartChecks
         }
         else if (earliest is not null && facts.DashboardEditedAt <= earliest.StartedAt)
         {
-            problems.Add($"The Gitar dashboard comment has its last edit at {facts.DashboardEditedAt:O}, not after the Gitar check run on {earliest.Sha} started at {earliest.StartedAt:O}. The review of the effective head is not current. Follow the gitar-review skill.");
+            problems.Add($"The Gitar dashboard comment has its last edit at {facts.DashboardEditedAt:O}, not after the Gitar check run on {earliest.Sha} started at {earliest.StartedAt:O}. The review of the work head is not current. Follow the gitar-review skill.");
         }
 
         if (facts.UnresolvedThreadCount > 0)

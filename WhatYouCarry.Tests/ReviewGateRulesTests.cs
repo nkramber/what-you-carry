@@ -176,6 +176,18 @@ public sealed class ReviewGateRulesTests
         Assert.Equal(ReviewGateResult.Success, ReviewGateRules.Evaluate(facts).Conclusion);
     }
 
+    [Theory]
+    [InlineData("WhatYouCarry.Game/README.md")]
+    [InlineData(".github/pull_request_template.md")]
+    public void ReviewGateFailsOnOverrideLabelWithADocumentOutsideTheSkipSet(string path)
+    {
+        // D-541: only the root README and LICENSE join the set. A Markdown file in another directory stays outside it.
+        ReviewGateFacts facts = Facts(mode: "enforced", reviewFile: null, overrideLabel: true, changedPaths: [path]);
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(path, result.Summary, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void ReviewGateFailsOnOverrideLabelWithCodePath()
     {
@@ -208,6 +220,52 @@ public sealed class ReviewGateRulesTests
         AssertNamesRuleExpectedAndFound(result);
     }
 
+    [Fact]
+    public void ReviewGateOverrideLabelReadsTheWorkHead()
+    {
+        // D-539: the label keeps the metadata set of D-190. A documents commit after the label has no effective head,
+        // and the label still needs to come again.
+        ReviewGateFacts facts = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"], documentsOnly: true,
+            commitTime: DateTimeOffset.Parse("2026-09-07T12:00:01Z", System.Globalization.CultureInfo.InvariantCulture));
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains("Add the label again", result.Summary, StringComparison.Ordinal);
+        Assert.Contains("D-539", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGateFailsOnAnApprovalOfADocumentsOnlyPullRequest()
+    {
+        // D-540: a PR of documents alone has no effective head, so the review path has nothing to approve. The
+        // failure names the label.
+        ReviewGateFacts facts = Facts(mode: "enforced", reviewFile: ReviewFixture.Text(Head, "Ready for owner merge"), changedPaths: ["docs/design.md"], documentsOnly: true);
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(ReviewGateRules.OverrideLabel, result.Summary, StringComparison.Ordinal);
+        Assert.Contains("D-540", result.Summary, StringComparison.Ordinal);
+        AssertNamesRuleExpectedAndFound(result);
+    }
+
+    [Theory]
+    [InlineData("README.md")]
+    [InlineData("LICENSE")]
+    [InlineData("AGENTS.md")]
+    [InlineData(".claude/skills/pr-review/SKILL.md")]
+    public void ReviewGatePassesOnOverrideLabelForEachPathOfTheSkipSet(string path)
+    {
+        // D-541: the label covers each path of the skip set of D-475, the root README and LICENSE included.
+        ReviewGateFacts facts = Facts(mode: "enforced", reviewFile: null, overrideLabel: true, changedPaths: [path], documentsOnly: true);
+        Assert.Equal(ReviewGateResult.Success, ReviewGateRules.Evaluate(facts).Conclusion);
+    }
+
+    [Fact]
+    public void TheSkipPathsAreTheDocumentsOfTheCiSkip()
+    {
+        // D-534: the review follows the skip set of D-475, and the CI skip owns that list.
+        Assert.Equal(WhatYouCarry.Tools.CiSkip.CiSkipRules.DocumentPaths, ReviewGateRules.SkipPaths);
+        Assert.Equal(["docs/", ".claude/skills/", "CLAUDE.md", "AGENTS.md", "README.md", "LICENSE"], ReviewGateRules.SkipPaths);
+    }
+
     private static void AssertNamesRuleExpectedAndFound(ReviewGateResult result)
     {
         // T-2: each failure names the rule, the expected value, and the value found.
@@ -222,7 +280,8 @@ public sealed class ReviewGateRulesTests
         bool overrideLabel = false,
         string[]? changedPaths = null,
         bool labelEvent = true,
-        DateTimeOffset? commitTime = null)
+        DateTimeOffset? commitTime = null,
+        bool documentsOnly = false)
     {
         DateTimeOffset labelTime = DateTimeOffset.Parse("2026-09-07T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture);
         return new ReviewGateFacts
@@ -233,7 +292,8 @@ public sealed class ReviewGateRulesTests
             HasOverrideLabel = overrideLabel,
             NewestOverrideLabelEvent = labelEvent ? new LabelEvent { CreatedAt = labelTime.ToString("O"), Actor = "owner-login" } : null,
             ChangedPaths = changedPaths ?? ["WhatYouCarry.Core/Core.cs"],
-            EffectiveHead = new CommitStamp(Head, commitTime ?? labelTime.AddHours(-1)),
+            EffectiveHead = documentsOnly ? null : new CommitStamp(Head, commitTime ?? labelTime.AddHours(-1)),
+            WorkHead = new CommitStamp(Head, commitTime ?? labelTime.AddHours(-1)),
             ReviewFileText = reviewFile,
             ReviewFileCommit = reviewFile is null ? null : new CommitSubject("fedcba9876543210fedcba9876543210fedcba98", "docs: review PR #7"),
         };

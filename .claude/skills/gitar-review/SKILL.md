@@ -14,7 +14,7 @@ Each repo that uses Gitar keeps a copy of this file. A rule of the repo wins ove
 - **Head**: the newest commit of the pull request branch on GitHub.
 - **Metadata set**: the paths that hold a record of the work and no work: `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184).
 - **Metadata commit**: a commit that changes paths inside the metadata set alone.
-- **Effective head**: the newest commit that changes a path outside the metadata set (D-184). A metadata commit does not move it.
+- **Work head**: the newest commit that changes a path outside the metadata set (D-184). A metadata commit does not move it. The cross-provider review reads the effective head of D-534, which skips a documents commit too.
 - **Dashboard comment**: the Gitar comment on the pull request that holds the collapsed `Code Review` block. Gitar edits this comment for each review. Gitar can also delete it and post a new one with a new id.
 - **Pause note**: the note at the top of the dashboard comment that starts "Automatic reviews are paused".
 - **Manual review**: the review that a `Gitar review` comment starts.
@@ -28,20 +28,20 @@ Gitar reviews each push until it pauses automatic reviews. After the pause, a pu
 
 A manual review also goes stale when a push comes after the `Gitar review` comment. On 2026-09-16, four pull requests in two repos had a review older than the head. Each one had a push after the last request, or a push and no request.
 
-## The effective head
+## The work head
 
-This repository reviews the effective head, and not the tip (D-184). A commit of metadata records the work, and it changes no code, no content, no configuration, and no test. Such a commit keeps a pass current.
+The automated pass reviews the work head, and not the tip (D-184, D-534). A commit of metadata records the work, and it changes no code, no content, no configuration, and no test. Such a commit keeps a pass current.
 
-- A push that changes a path outside the metadata set moves the effective head. Start the procedure below for that new head.
+- A push that changes a path outside the metadata set moves the work head. Start the procedure below for that new head.
 - A push of metadata alone keeps the pass of the earlier head current. Do not ask for a review again.
 - The commit that holds the review record and the handoff entry is always a metadata commit (D-182). Without this rule that commit invalidates the pass that it publishes.
-- Read the effective head with the staged read of `docs/runbooks/session-context.md`. Take the newest commit that names a path outside the metadata set.
+- Read the work head with the staged read of `docs/runbooks/session-context.md`. Take the newest commit that names a path outside the metadata set.
 
 ```
 git log --format='%H %s' origin/main..HEAD --name-only
 ```
 
-Every condition below reads the effective head where it says head. The tip of the branch can be newer.
+Every condition below reads the work head where it says head. The tip of the branch can be newer.
 
 ## Procedure
 
@@ -49,7 +49,7 @@ Do these steps after each push.
 
 1. Push all the commits of this round of changes. Push one time, not one time for each fix.
 2. Run command A. Continue only when the local head and the pull request head are the same commit.
-3. Record the effective head and the push time from command A. A push of metadata alone ends here, because the pass stays current.
+3. Record the work head and the push time from command A. A push of metadata alone ends here, because the pass stays current.
 4. Do the push wait with command E. Always do the full push wait, also when Gitar paused automatic reviews.
 5. Do not comment `Gitar review` before the push wait ends.
 6. After the push wait, run the Gitar check part of command E. Then run command B.
@@ -91,7 +91,7 @@ On 2026-09-16, the Gitar check on the heads of #30, #31, and #32 started 8 to 31
 
 A review is current only when each of these conditions is true:
 
-- The effective head from command B is the head that you recorded in step 3.
+- The work head from command B is the head that you recorded in step 3.
 - The dashboard comment has an edit time later than the push time that you recorded in step 3.
 - After a `Gitar review` comment, Gitar replied "On it", and the dashboard comment has an edit time later than that reply.
 - You read the newest dashboard comment. Gitar can delete the dashboard comment and post a new one with a new id.

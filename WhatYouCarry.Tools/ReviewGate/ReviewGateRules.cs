@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using WhatYouCarry.Tools.CiSkip;
 
 namespace WhatYouCarry.Tools.ReviewGate;
 
@@ -13,7 +14,7 @@ public sealed record ReviewGateResult(string Conclusion, string Title, string Su
 }
 
 /// <summary>
-/// The rules of the review gate (D-179, D-181, D-184, D-185, D-190). Pure: the facts go in, and a result comes out.
+/// The rules of the review gate (D-179, D-181, D-184, D-185, D-190, D-534, D-541). Pure: the facts go in, and a result comes out.
 /// Every failure names the rule, the expected value, and the value found (T-2).
 /// </summary>
 public static class ReviewGateRules
@@ -25,11 +26,15 @@ public static class ReviewGateRules
     public const string ModeAdvisory = "advisory";
     public const string ModeEnforced = "enforced";
 
-    /// <summary>A commit that changes only these paths is a metadata commit (D-184).</summary>
+    /// <summary>A commit that changes only these paths is a metadata commit (D-184). It does not move the work head.</summary>
     public static readonly string[] MetadataPaths = ["docs/reviews/", "docs/session-handoff.md", "docs/session-handoff-archive.md"];
 
-    /// <summary>The override label covers a PR whose every changed path starts with one of these (D-190).</summary>
-    public static readonly string[] EligiblePaths = ["docs/", "CLAUDE.md", "AGENTS.md", ".claude/skills/"];
+    /// <summary>
+    /// A commit that changes only paths of the skip set of D-475 does not move the effective head (D-534). The override
+    /// label covers a PR whose every changed path lies in this set (D-541). The CI skip owns the list, so the three rules
+    /// never disagree on what a document is.
+    /// </summary>
+    public static IReadOnlyList<string> SkipPaths => CiSkipRules.DocumentPaths;
 
     public static string ReviewFilePath(int pullRequestNumber)
     {
@@ -82,7 +87,7 @@ public static class ReviewGateRules
         var codePaths = new List<string>();
         foreach (string path in facts.ChangedPaths)
         {
-            if (!IsEligible(path))
+            if (!CiSkipRules.IsDocument(path))
             {
                 codePaths.Add(path);
             }
@@ -91,9 +96,9 @@ public static class ReviewGateRules
         if (codePaths.Count > 0)
         {
             return Fail(
-                $"Override label '{OverrideLabel}': every changed path is in the eligible set ({string.Join(", ", EligiblePaths)})",
-                "no changed path outside the eligible set",
-                $"{codePaths.Count} path(s) outside the eligible set: {string.Join(", ", codePaths)}");
+                $"Override label '{OverrideLabel}': every changed path is in the skip set of D-475 ({string.Join(", ", SkipPaths)}) (D-541)",
+                "no changed path outside the skip set",
+                $"{codePaths.Count} path(s) outside the skip set: {string.Join(", ", codePaths)}");
         }
 
         LabelEvent? labelEvent = facts.NewestOverrideLabelEvent;
@@ -105,20 +110,22 @@ public static class ReviewGateRules
                 "no labeled event in the timeline");
         }
 
+        // The label reads the work head and not the effective head, so a documents commit after the label needs the
+        // label again (D-190, D-539).
         DateTimeOffset labelTime = DateTimeOffset.Parse(labelEvent.CreatedAt, CultureInfo.InvariantCulture);
-        string effectiveHeadText = facts.EffectiveHead?.Sha ?? "none (every commit in the range is a metadata commit)";
-        if (facts.EffectiveHead is not null && facts.EffectiveHead.CommitTime > labelTime)
+        string workHeadText = facts.WorkHead?.Sha ?? "none (every commit in the range is a metadata commit)";
+        if (facts.WorkHead is not null && facts.WorkHead.CommitTime > labelTime)
         {
             return Fail(
-                $"Override label '{OverrideLabel}': no commit outside the metadata set is newer than the label event",
-                $"effective head committed at or before {labelTime:O}",
-                $"effective head {facts.EffectiveHead.Sha} committed at {facts.EffectiveHead.CommitTime:O}. Add the label again.");
+                $"Override label '{OverrideLabel}': no commit outside the metadata set is newer than the label event (D-539)",
+                $"work head committed at or before {labelTime:O}",
+                $"work head {facts.WorkHead.Sha} committed at {facts.WorkHead.CommitTime:O}. Add the label again.");
         }
 
         return new ReviewGateResult(
             ReviewGateResult.Success,
             $"Override by label '{OverrideLabel}'",
-            $"Label: {OverrideLabel}\nAdded by: {labelEvent.Actor} at {labelTime:O}\nEffective head: {effectiveHeadText}\nEvery changed path is in the eligible set (D-190).");
+            $"Label: {OverrideLabel}\nAdded by: {labelEvent.Actor} at {labelTime:O}\nWork head: {workHeadText}\nEvery changed path is in the skip set of D-475 (D-190, D-541).");
     }
 
     private static ReviewGateResult EvaluateReview(ReviewGateFacts facts, string mode)
@@ -147,17 +154,17 @@ public static class ReviewGateRules
         if (facts.EffectiveHead is null)
         {
             return Fail(
-                "The head that the review records is the effective head",
-                "one commit outside the metadata set",
-                $"no commit outside the metadata set in the range. Every path is metadata, so the review path has nothing to approve. The '{OverrideLabel}' label covers this PR.");
+                "The head that the review records is the effective head (D-534)",
+                "one commit outside the skip set of D-475",
+                $"no commit outside the skip set in the range. Every path is a document, so the review path has nothing to approve. The '{OverrideLabel}' label covers this PR (D-540).");
         }
 
         if (!HeadMatches(record.RecordedHead, facts.EffectiveHead.Sha))
         {
             return Fail(
-                "The head that the review records is the effective head (D-184)",
+                "The head that the review records is the effective head (D-534)",
                 $"'{facts.EffectiveHead.Sha}'",
-                $"'{record.RecordedHead}'. A commit outside the metadata set came after the review.");
+                $"'{record.RecordedHead}'. A commit outside the skip set of D-475 came after the review.");
         }
 
         return new ReviewGateResult(
@@ -178,24 +185,6 @@ public static class ReviewGateRules
         }
 
         return $"Review file last changed by: {facts.ReviewFileCommit.Sha} \"{facts.ReviewFileCommit.Subject}\"";
-    }
-
-    private static bool IsEligible(string path)
-    {
-        foreach (string eligible in EligiblePaths)
-        {
-            if (eligible.EndsWith('/') && path.StartsWith(eligible, StringComparison.Ordinal))
-            {
-                return true;
-            }
-
-            if (path == eligible)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /// <summary>A short hash in the review file matches the full hash by prefix. Seven characters is the minimum.</summary>

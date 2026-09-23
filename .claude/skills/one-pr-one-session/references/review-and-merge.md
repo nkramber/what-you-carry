@@ -1,6 +1,6 @@
 # The review loop and the merge
 
-The `one-pr-one-session` skill names this file at the end of the gitar pass. It holds the author loop of the cross-provider review, the three-strike stop, and the auto-merge (D-511 to D-517, D-524). The `review-response` skill holds the answer to each finding.
+The `one-pr-one-session` skill names this file at the end of the gitar pass. It holds the author loop of the cross-provider review, the three-strike stop, the auto-merge, and the merge summary (D-511 to D-517, D-524, D-533). The `review-response` skill holds the answer to each finding.
 
 ## Procedure: the author loop
 
@@ -14,13 +14,15 @@ No round uses API pricing. The command removes each API credential variable from
 
 | Exit | Outcome | Next step |
 |---|---|---|
-| 0 | The review approves the effective head | Do the auto-merge below |
+| 0 | The review approves the effective head (D-534) | Do the auto-merge below |
 | 10 | `Changes required` or `Blocked` | Answer the findings with `review-response`, then go to step 1 |
 | 11 | The three-strike stop | Do the three-strike stop below |
 | 3 | A start condition failed | Correct each condition that the output names, then go to step 3 |
-| 1 | A fault: no record, a stale head, no pushed commit, a moved effective head, or a Codex error | Read the transcript, correct the cause, then go to step 3 |
+| 1 | A fault: no record, a stale head, no pushed commit, a moved work head, or a Codex error | Read the transcript, correct the cause, then go to step 3 |
 
 Make exits 2 for each failed target, and it prints the exit code of the command as `Error <code>`. The first line of the command output names the outcome.
+
+The record names the effective head, which skips each documents commit (D-534). A documents commit after an approving round keeps `review-gate` green, so no new round is due. The gitar pass still reads each push, because it follows the work head. A round fails when any commit outside the metadata set arrives during the round, a documents commit included.
 
 ## Procedure: the three-strike stop
 
@@ -39,7 +41,7 @@ A P0, P1, or P2 finding that is open in three review rounds stops the fix loop (
 2. Push the commit, and run the session end gate (D-199).
 3. Prove the gitar pass of the new tip with `gitar-review`.
 4. Confirm that the record gives `Ready for owner merge` for the effective head.
-5. Write a summary of the PR in one paragraph: the change, the review result, and the checks.
+5. Write the merge summary below (D-533).
 6. Ask the owner to confirm the merge with `AskUserQuestion` (D-524).
 7. Stop when the owner does not confirm. Do the next step that the owner names.
 8. Run `gh pr merge <n> --auto --squash` (D-516).
@@ -48,8 +50,19 @@ A P0, P1, or P2 finding that is open in three review rounds stops the fix loop (
 11. When a Mac job ends "not acquired", re-run the failed jobs (D-358), then go to step 9.
 12. When the state is `MERGED`, load `merge-prompt.md` and write the prompt.
 
-A documents-only PR with the `review-override` label merges the same way, the owner confirmation included. It needs no review record, and `review-gate` is green by the label (D-517). For a PR that the owner merges by hand, give the summary at the hand-over (D-524).
+A documents-only PR with the `review-override` label merges the same way, the owner confirmation included. It needs no review record, and `review-gate` is green by the label (D-517). For a PR that the owner merges by hand, give the merge summary at the hand-over (D-524).
 
 The night gate or a Mac leg can hold the merge for hours, and that is normal. When every check is green and the state stays `OPEN`, read `gh pr view <n> --json mergeStateStatus,autoMergeRequest`. An unresolved thread or a stale check blocks the merge.
 
 The ruleset of `main` is the machine gate (D-522). It requires the 20 checks of `.github/rulesets/main.json` and resolved conversations, and it allows squash merges alone. The top-level gitar comments are not review threads, so step 3 proves them.
+
+## The merge summary
+
+Before the owner confirms a merge, write four sections of a few sentences each (D-533). Use these headings, in this order:
+
+- **What**: the change, and the roadmap item that it closes.
+- **How**: the method, and the parts of the code or the documents that changed.
+- **CI**: green or not. Name each red check, and the cause when you know it.
+- **Codex review**: the verdict of the record, `Ready for owner merge`, `Blocked`, or `Changes required`, and the effective head that it names.
+
+A PR with the `review-override` label has no review record. Its Codex review section names the label and the account that added it (D-190).
