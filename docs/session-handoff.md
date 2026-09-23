@@ -23,7 +23,7 @@ Session: PR-72, author. Branch `fix/pr-72-enemy-movement`. PR #90, pending owner
 ### In flight
 
 - The status marks `✅ Done in PR #90.` are in the roadmap and the design doc.
-- The CI of the code head, then the gitar pass, then the hand-over to Codex.
+- CI passed on `b1e3ab5`, `evaluate` apart (D-251). The gitar pass of `35311d8` gave one finding: a box on the edge of a block over a ramp got a needless jump. The fix takes the higher of the feet and the slope, with the test `ABodyOnTheEdgeOfABlockOverARampNeedsNoJumpOntoIt`. The bit-identity answer did not move.
 
 ### Traps and gotchas
 
