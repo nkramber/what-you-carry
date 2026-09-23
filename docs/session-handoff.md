@@ -1,6 +1,84 @@
+## Session 210: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-71, reviewer. Branch `chore/ci-skip-for-document-heads`. PR #89, pending owner merge. Base `a2473ec`.
+
+### What this session did, and why
+
+- Reviewed PR #89 at effective head `05aa78a` for its CI skip, document tests, seed share, and test split.
+- Found no defect. Added the review record under `docs/reviews/pr-89.md` for the owner and the review gate.
+
+### State of the build
+
+- The focused local suite passed: 216 tests, 0 failed, with `WYC_PR_SWEEP=1`.
+- The full local suite passed: 1351 tests, 0 failed, with the full seed counts.
+- CI, smoke, bit identity, bots, and the documents job passed on `05aa78a`.
+- The documents push at `34109e6` passed the document, STE, doc-gate, det-lint, asset-QA, and night-gate checks. The four heavy workflows skipped by Rule 2. `evaluate` failed because the review record was not on the branch yet.
+- The remote head before this metadata commit was `34109e6`.
+- After review publication at `1f06e28`, `evaluate`, `review-gate`, and every required check passed. The heavy workflows skipped by Rule 2, and Gitar passed again.
+
+### In flight
+
+- Exit test 6 waits for the merge and the first push to `main`.
+- The next session reads those workflow runs and records the result.
+
+### Traps and gotchas
+
+- `05aa78a` is the effective head. `34109e6` changes only `docs/session-handoff.md`.
+- `--no-renames` lists both paths of a move. Keep `CodeMovedIntoTheSkipSetRunsEveryJob` as the guard for moves into the skip set.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the owner merges PR #89, read the first push to `main` for exit test 6.
 # Session handoff
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
+
+## Session 209: 2026-09-22, Claude Code
+
+Author: Claude Code
+Session: PR-71, author. Branch `chore/ci-skip-for-document-heads`. PR #89, pending owner merge. Base `a2473ec` (PR #87 merged).
+
+### What this session did, and why
+
+- The owner asked for the CI skip of a documents head and a study of the CI duration, in one PR (D-471). The PR description records that exception to G-10.
+- The new `ci-skip` command and the composite action `.github/actions/ci-skip` skip the heavy jobs of `ci.yml`, `bit-identity.yml`, `smoke.yml`, and `bots.yml` (D-472 to D-477). Rule 1 covers a PR of documents alone. Rule 2 covers a push of documents after a head whose run of that workflow passed.
+- Each test class that reads a document carries the category `Documents`, and the `documents` job runs it on each head (D-476).
+- F-109 records the CI duration. The fixes: a class split of `ProcgenTests` (D-478), two jobs on each hosted leg (D-479), and one fifth of each seed sweep on a pull request (D-480, D-481). No NuGet cache (D-482).
+
+### State of the build
+
+- Build: 0 warnings and 0 errors. `ste-check` and `det-lint` report 0 findings.
+- Local suite with `WYC_PR_SWEEP=1`: 1343 passed in 1 minute 47 seconds. At the full count: 1343 passed in 5 minutes 9 seconds. Before the change: 1294 tests in 9 minutes 10 seconds.
+- The effective head is `05aa78a`, the fix of the one gitar finding. Gitar approved it, and every check passed except `evaluate`, which waits for the review record (D-251).
+- CI of `05aa78a` against run 35771495463 of PR #87, the test step alone: Linux 1055 to 384 seconds, with 204 in `linux-x64-sweeps`. Windows 1206 to 437, with 88 in `windows-x64-sweeps`. Mac mini 451 to 113. The `documents` job took 32 seconds.
+
+### In flight
+
+- The hand-over of PR #89 to Codex for the review.
+- Exit test 4: the push of this entry is a documents push after the green head `05aa78a`, so the heavy jobs of the four workflows skip by rule 2. The PR comment of exit tests 4 and 5 holds the result.
+- On the hosted legs the rest job is slower than the sweeps job: 384 against 204 seconds on Linux. A move of `EnemyTests` into the `Sweep` category can balance them, and the owner decides.
+
+### Traps and gotchas
+
+- A skipped job reports success. The `!cancelled()` condition runs every heavy job when `ci-skip` fails, so a fault never passes in silence.
+- xUnit reads no trait of an outer class on a nested class. Each nested class of `ProcgenTests` carries its own `Sweep` trait, and `EveryNestedClassOfASweepClassTakesTheCategory` checks it.
+- A class that calls a command joins the console collection, or `EveryConsoleTestIsInTheCollection` fails.
+- `git diff --name-only` hides the old path of a move. `ChangedPaths` passes `--no-renames`, so a code file moved into `docs/` still runs every job (gitar finding on PR #89, `CodeMovedIntoTheSkipSetRunsEveryJob`).
+- `CLAUDE.md` sits 43 bytes under the ceiling of D-382, so the reviewer rule for a skipped job lives in the pr-review verification reference.
+- `main` has no branch protection yet (D-387), so no required check reads the skipped jobs today.
+
+### Open questions that block progress
+
+None. The owner answered each question of this PR: D-471 to D-482.
+
+### Next concrete action
+
+Hand PR #89 to Codex for the review. After the merge, the next session reads the first push to `main` for exit test 6 (D-473).
 
 ## Session 208: 2026-09-22, Codex
 
@@ -328,76 +406,3 @@ Session: PR-18, reviewer. Branch `feat/pr-18-stairwell-and-transition`. PR #85, 
 ### Next concrete action
 
 Wait for the owner to record the Deck result and rerun the review gate.
-
-## Session 200: 2026-09-21, Claude Code
-
-Author: Claude Code
-Session: PR-18, author. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
-
-### What this session did, and why
-
-- Asked the owner OQ-44, OQ-161, and the five PR-18 answers before any code. Later asked three more: the coward sweeps, the smoke order, and the enemies of the transition test. Recorded D-427 to D-437.
-- Core: `NextFloorWorker`, a pure function of the seed and the floor (D-429), and `SimulationLoop.OfferNextFloor`. `StairwellPrompt` opens on the stairwell cell (D-431). The `coward` policy (D-433) and the `ascend` end state (D-430).
-- Game: `ChunkSwap` digs on a task, uploads four chunks each frame, and swaps in one frame. Before this PR, the world mesh never changed after a descent. The prompt text, the smoke walk to the stairwell (D-436), and `--transitions` (D-435, D-437).
-- Tools and workflows: the ascend count in the bot summary and the night record, and the coward in `bots.yml` and `night.yml` (D-434).
-
-### State of the build
-
-- Local: 1223 of 1223 tests, the Smoke category included. `det-lint`, `asset-qa`, and `ste-check` report 0 findings.
-- The code head is `46c4b9d`. The status marks and this entry follow it in one docs commit. CI runs on the push.
-- A local headless run with `--transitions 10` exits 0. Three of the ten swaps read `fromWorker: false`, because a headless run goes faster than real time.
-
-### In flight
-
-- PR #85 waits for CI, the automated pass, and the cross-provider review.
-- Exit test 6 needs the owner: run the transition command of `CLAUDE.md` on the Deck (D-428). Exit 0 passes. Record `transitionMicrosMax` from the end line.
-
-### Traps and gotchas
-
-- The smoke script alone dies to the scavengers of seed 1 at tick 273. The walk comes first for that reason (D-436).
-- The descender with enemies dies on floor 2 of seed 1. The transition test loads no enemy family (D-437).
-- `OfferedFloorKeepsTheRunHash` waits on the task when the prompt opens. A test that needs the task to end first fails under the load of the full suite.
-- A descent on floor 15 still throws, because no template covers floor 16. The bots ascend there. PR-35, the ending, holds that stairwell.
-
-### Open questions that block progress
-
-None. Exit test 6 waits on the Deck of the owner, and no question blocks it.
-
-### Next concrete action
-
-Wait for CI with the command of `docs/runbooks/session-context.md`, then load `gitar-review` and answer the automated pass. Then hand PR #85 to Codex for the cross-provider review.
-
-## Session 199: 2026-09-21, Codex
-
-Author: Codex
-Session: PR-84, repeat cross-provider review. Branch `feat/pr-17-timer-and-hunter`. PR #84, ready for owner merge.
-
-### What this session did, and why
-
-- Reopened the review record after the author added the empty-post regression test.
-- Recomputed the effective head as `5242ff6`.
-- Verified that P1-1 does not reproduce and marked it withdrawn.
-- Set the current verdict to `Ready for owner merge`.
-
-### State of the build
-
-- The focused timer suite passed 17 of 17 tests.
-- The author reported 1208 of 1208 tests with the Smoke category.
-- Required implementation checks and the automated pass are green at the new head.
-
-### In flight
-
-- The review record and this handoff are pushed at `1a2da98`.
-
-### Traps and gotchas
-
-- The prior finding stays in the review record as withdrawn.
-- The effective head is the test commit `5242ff6`. The review commit remains metadata.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner can merge PR #84 after the review-gate record turns green.

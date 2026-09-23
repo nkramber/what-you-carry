@@ -12,6 +12,7 @@ using Xunit;
 namespace WhatYouCarry.Tests;
 
 /// <summary>The orbit camera and aim assist (D-13, D-14, D-75, D-77, D-88, D-241 to D-249; PR-8 exit tests 1 to 4).</summary>
+[Trait("Category", SweepScope.SweepCategory)]
 public sealed class CameraTests
 {
     private const float Sin80 = 0.98480775f;
@@ -276,14 +277,15 @@ public sealed class CameraTests
     }
 
     /// <summary>
-    /// PR-8 exit test 1. Over one thousand seeds on dug floors, with random look deltas and movement, the
-    /// camera position is never inside the material after any tick, and the aim ray starts at the camera.
-    /// A failure names its seed (D-66).
+    /// PR-8 exit test 1. Over one thousand seeds on dug floors, one fifth on a pull request (D-480), with random
+    /// look deltas and movement, the camera position is never inside the material after any tick, and the aim ray
+    /// starts at the camera. A failure names its seed (D-66).
     /// </summary>
     [Fact]
     public void CameraNeverInsideSolid()
     {
-        for (int seed = 1; seed <= 1000; seed++)
+        int seeds = SweepScope.Seeds(1000);
+        for (int seed = 1; seed <= seeds; seed++)
         {
             Random random = new(seed);
             SimulationLoop loop = TestWorld.NewLoop((ulong)seed);

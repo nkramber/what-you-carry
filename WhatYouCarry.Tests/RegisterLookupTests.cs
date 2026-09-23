@@ -11,6 +11,7 @@ namespace WhatYouCarry.Tests;
 /// place for the ids of the task. These tests read the command from the agent file and apply its patterns to the
 /// committed registers.
 /// </summary>
+[Trait("Category", DocumentsCategoryTests.DocumentsCategory)]
 public sealed class RegisterLookupTests
 {
     private static readonly Regex VariableLine = new(@"^d='[0-9|]+'; q='[0-9|]+'$");

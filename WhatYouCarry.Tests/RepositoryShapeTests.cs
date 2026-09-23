@@ -8,6 +8,7 @@ using Xunit;
 
 namespace WhatYouCarry.Tests;
 
+[Trait("Category", DocumentsCategoryTests.DocumentsCategory)]
 public sealed class RepositoryShapeTests
 {
     [Fact]
@@ -75,12 +76,18 @@ public sealed class RepositoryShapeTests
     [Fact]
     public void CiWorkflowHasOneJobPerPlatform()
     {
-        // D-71, D-100, D-157: one job per platform, and the macOS job selects the self-hosted runner label.
+        // D-71, D-100, D-157: each platform runs the tests, and the macOS job selects the self-hosted runner label.
+        // The ci-skip job and the documents job run on Linux (D-474, D-476).
         string workflow = RepositoryRoot.ReadFile(".github/workflows/ci.yml");
         Dictionary<string, string> runsOnByJob = WorkflowText.RunsOnByJob(workflow);
-        Assert.Equal(3, runsOnByJob.Count);
+        // Each hosted leg runs its tests in two jobs (D-479).
+        Assert.Equal(7, runsOnByJob.Count);
+        Assert.Equal("ubuntu-latest", runsOnByJob["ci-skip"]);
+        Assert.Equal("ubuntu-latest", runsOnByJob["documents"]);
         Assert.Equal("ubuntu-latest", runsOnByJob["linux-x64"]);
+        Assert.Equal("ubuntu-latest", runsOnByJob["linux-x64-sweeps"]);
         Assert.Equal("windows-latest", runsOnByJob["windows-x64"]);
+        Assert.Equal("windows-latest", runsOnByJob["windows-x64-sweeps"]);
         Assert.Contains("macos-arm64-self-hosted", runsOnByJob["macos-arm64"], StringComparison.Ordinal);
         Assert.Contains("self-hosted", runsOnByJob["macos-arm64"], StringComparison.Ordinal);
     }
@@ -115,14 +122,15 @@ public sealed class RepositoryShapeTests
         // D-69, D-71, G-9: the sweep runs on the three platforms, and one job compares the three hashes.
         string workflow = RepositoryRoot.ReadFile(".github/workflows/bit-identity.yml");
         Dictionary<string, string> runsOnByJob = WorkflowText.RunsOnByJob(workflow);
-        Assert.Equal(4, runsOnByJob.Count);
+        Assert.Equal(5, runsOnByJob.Count);
+        Assert.Equal("ubuntu-latest", runsOnByJob["ci-skip"]);
         Assert.Equal("ubuntu-latest", runsOnByJob["linux-x64"]);
         Assert.Equal("windows-latest", runsOnByJob["windows-x64"]);
         Assert.Contains("macos-arm64-self-hosted", runsOnByJob["macos-arm64"], StringComparison.Ordinal);
         Assert.Equal("ubuntu-latest", runsOnByJob["compare"]);
 
-        // The compare job must wait for all three, or it would compare an absent hash.
-        Assert.Contains("needs: [linux-x64, windows-x64, macos-arm64]", workflow, StringComparison.Ordinal);
+        // The compare job must wait for all three, or it would compare an absent hash. It skips with them (D-474).
+        Assert.Contains("needs: [ci-skip, linux-x64, windows-x64, macos-arm64]", workflow, StringComparison.Ordinal);
 
         // Each platform job passes its hash up, and the compare job reads all three.
         foreach (string job in new[] { "linux-x64", "windows-x64", "macos-arm64" })
@@ -496,6 +504,31 @@ internal static class WorkflowText
         }
 
         return result;
+    }
+
+    /// <summary>The text of one job under <c>jobs:</c>, from its id line to the next job id or the end of the workflow.</summary>
+    public static string JobText(string workflow, string job)
+    {
+        int start = workflow.IndexOf($"\n  {job}:\n", StringComparison.Ordinal);
+        if (start < 0)
+        {
+            throw new InvalidOperationException($"The workflow has no job '{job}'.");
+        }
+
+        int end = start + 1;
+        while (true)
+        {
+            end = workflow.IndexOf("\n  ", end + 1, StringComparison.Ordinal);
+            if (end < 0)
+            {
+                return workflow[start..];
+            }
+
+            if (workflow.Length > end + 3 && workflow[end + 3] != ' ' && workflow[end + 3] != '#')
+            {
+                return workflow[start..end];
+            }
+        }
     }
 
     /// <summary>Reads the list in the <c>types:</c> line under <c>pull_request:</c>.</summary>

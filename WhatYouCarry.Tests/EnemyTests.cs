@@ -20,8 +20,8 @@ namespace WhatYouCarry.Tests;
 /// </summary>
 public sealed class EnemyTests
 {
-    /// <summary>The seeds of a property test loop. Each failure names its seed (D-66).</summary>
-    private const int Seeds = 1000;
+    /// <summary>The seeds of a property test loop: 1000 on main, and one fifth on a pull request (D-480). Each failure names its seed (D-66).</summary>
+    private static readonly int Seeds = SweepScope.Seeds(1000);
 
     /// <summary>The floor that the scavenger covers, which every spawn test reads (D-395).</summary>
     private const int ScavengerFloor = 1;
@@ -96,7 +96,7 @@ public sealed class EnemyTests
     [Fact]
     public void PathfinderFindsStairwell()
     {
-        for (ulong seed = 1; seed <= Seeds; seed++)
+        for (ulong seed = 1; seed <= (ulong)Seeds; seed++)
         {
             FloorPlan plan = FloorGenerator.Generate(seed, ScavengerFloor, TestWorld.Content);
             if (plan.EnemySpawns.Count == 0)
@@ -164,7 +164,7 @@ public sealed class EnemyTests
     [Fact]
     public void EnemyCountMatchesBudget()
     {
-        for (ulong seed = 1; seed <= Seeds; seed++)
+        for (ulong seed = 1; seed <= (ulong)Seeds; seed++)
         {
             FloorPlan plan = FloorGenerator.Generate(seed, ScavengerFloor, TestWorld.Content);
             Assert.True(EnemyPlacement.TryFamilyOf(plan.Floor, TestWorld.Content.Enemies, out EnemyDefinition family), $"Seed {seed}: no enemy family covers floor {plan.Floor}.");

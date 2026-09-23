@@ -1,0 +1,66 @@
+# The CI skip of a head that changes documents alone (D-474, D-475). The first job of each heavy workflow runs this
+# action after a checkout with the full history. The action writes the runs of the previous head to a file, and the
+# command ci-skip of WhatYouCarry.Tools decides from git and that file. The rules live in the command alone.
+#
+# Each value of the event reaches the script through the environment, and never through the script text.
+name: CI skip
+description: Decides whether the heavy jobs of one workflow skip a head that changes documents alone.
+
+inputs:
+  workflow-file:
+    description: The file name of the calling workflow under .github/workflows/, for the runs of the previous head.
+    required: true
+
+outputs:
+  skip:
+    description: The text true when the heavy jobs skip, and false when they run.
+    value: ${{ steps.decide.outputs.skip }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-dotnet@v5
+      with:
+        global-json-file: global.json
+
+    - name: Write the runs of the previous head
+      shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        EVENT_ACTION: ${{ github.event.action }}
+        BEFORE_SHA: ${{ github.event.before }}
+        REPOSITORY: ${{ github.repository }}
+        WORKFLOW_FILE: ${{ inputs.workflow-file }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        runs="$RUNNER_TEMP/ci-skip-runs.jsonl"
+        : > "$runs"
+
+        # Only a push to a PR has a previous head. The command checks that the commit is an ancestor of the head.
+        if [ "$EVENT_NAME" != "pull_request" ] || [ "$EVENT_ACTION" != "synchronize" ] ||
+           [ -z "$BEFORE_SHA" ] || [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+          echo "The event '$EVENT_NAME' with the action '$EVENT_ACTION' gives no previous head."
+          exit 0
+        fi
+
+        # One JSON object per line. The API gives the newest attempt of each run, so a re-run of D-358 counts.
+        gh api --paginate "repos/$REPOSITORY/actions/workflows/$WORKFLOW_FILE/runs?head_sha=$BEFORE_SHA&event=pull_request&per_page=100" \
+          --jq '.workflow_runs[] | {id, status, conclusion, created_at}' > "$runs"
+        echo "The runs of $WORKFLOW_FILE on the previous head $BEFORE_SHA:"
+        cat "$runs"
+
+    - name: Decide
+      id: decide
+      shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        EVENT_ACTION: ${{ github.event.action }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        BEFORE_SHA: ${{ github.event.before }}
+      run: |
+        set -euo pipefail
+        dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ci-skip --root "$GITHUB_WORKSPACE" \
+          --event "$EVENT_NAME" --action "$EVENT_ACTION" --base "$BASE_SHA" --head "$HEAD_SHA" --before "$BEFORE_SHA" \
+          --runs "$RUNNER_TEMP/ci-skip-runs.jsonl" --output "$GITHUB_OUTPUT"

@@ -168,7 +168,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 ### 3.13 Test tiers
 
-- Tier 1: property tests over seeds. Thousands per PR, one hundred thousand each night (D-116).
+- Tier 1: property tests over seeds. The full count on `main`, one fifth of it on a pull request (D-480), and one hundred thousand each night (D-116).
 - Tier 2: scripted bots. A few hundred runs per PR, ten thousand each night (D-115, D-127).
 - Tier 3: LLM play over a socket. Weekly on main, plus every economy PR (D-128).
 - Tier 3b: an LLM reads the outlier run logs.
@@ -179,7 +179,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 ### 3.14 Process
 
-Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one role (D-121, D-375). The PR carries its code, tests, registers, design and roadmap state, review record, and handoff entry. No PR exists only to record an earlier PR (D-375). Each PR has its own handoff entry (D-146). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250).
+Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one role (D-121, D-375). The PR carries its code, tests, registers, design and roadmap state, review record, and handoff entry. No PR exists only to record an earlier PR (D-375). Each PR has its own handoff entry (D-146). The owner starts every session, merges every PR, and owns every open question (D-102, D-103, D-124). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250). The heavy CI jobs skip a PR head that changes documents alone, and a push to `main` runs every job (D-473, D-474). The tests that read a document run on each head (D-476).
 
 The document protocol (D-118, D-120, D-125, D-129, D-132):
 
@@ -200,7 +200,7 @@ What we pay:
 
 - Owner time: near full time (D-107).
 - Tokens: a generous budget on two harnesses (D-107). The amount per PR is unknown until M-4. The token audit of 2026-09-16 measured 10 sessions of each harness. The median input was 32.3 million tokens for a Claude Code session and 4.3 million for a Codex session, most of it from the cache. D-377 to D-382 act on the largest causes.
-- CI: GitHub-hosted Linux x64 and Windows x64 minutes on every PR (D-100). Wall time per PR is unknown until M-1.
+- CI: GitHub-hosted Linux x64 and Windows x64 minutes on every PR (D-100). Wall time per PR is unknown until M-1. F-109 measured it again on 2026-09-22: 18 to 21 minutes on the hosted legs of a code head. A push of documents alone skips the heavy jobs after a green head (D-474).
 - The Mac Mini as a self-hosted macOS arm64 runner: power, and RAM shared with the editor and the harness (D-100, D-105).
 - Purchases that do not exist yet (D-142):
   - an external SSD before PR-1. Ordered, arrives 2026-09-08 (D-145).
@@ -330,6 +330,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-106 | A handoff entry added at the end of `docs/session-handoff.md`, under an older session, fails `HandoffRotateTests.RepositoryFilesHoldTheRule` and reds the three build legs of its branch. The rule of D-146 keeps the newest entry first. Four sessions did this: Session 191 on the base of PR #83, and Sessions 193 and 194 on its branch. Each one held the review of PR #83 at `Blocked` for CI that the same entry had reddened, and the review commits moved the tip again on each pass. `handoff-rotate` reported the order and changed nothing, so every repair was by hand | 2026-09-20 | ✅ PR #83. D-406: the rotation puts the entry back in place and names it |
 | F-107 | An enemy walks no diagonal. `GridMoves.Directions` is 4, with the steps (1,0), (-1,0), (0,1), and (0,-1), so every path of an enemy is a staircase of side steps, and no enemy cuts a corner | 2026-09-22 | ⚠ Binds a later PR. The owner saw it in the play session of PR-20 |
 | F-108 | An enemy does not walk up a ramp, as the owner saw in the play session of PR-20. The cause is open: `GridMoves.RampWalk` models a walk on a ramp, and `Enemy.Step` and `Hunter.Step` each pass the slope rule of the body, as the player does. The path follower, the ramp geometry check, or the approach of the brain holds the fault | 2026-09-22 | ⚠ Binds a later PR. It needs a seed and a floor that repeat it |
+| F-109 | A code head waited 18 to 21 minutes for the hosted CI legs. Run 35771495463 on `06cd3b3` of PR #87 took 1055 seconds for the test step on Linux, 1206 on Windows, and 451 on the Mac mini. The build took 22 to 29 seconds. A local profile of 2026-09-22 read 1294 tests: 23.4 minutes of summed test time, 22.4 minutes of CPU time, and 9 minutes 10 seconds of wall time. Ten seed sweeps held 75 percent of the summed time. `ProcgenTests` summed to 549 seconds in one class, and xUnit runs the tests of one class in sequence, so that class set the wall time of the Mac mini and of a local run. The hosted runners have 4 vCPUs, so CPU time bound them. Each push of documents alone also ran every check again | 2026-09-22 | ✅ PR #89 (PR-71): the CI skip (D-472 to D-477), the class split (D-478), the job split (D-479), and one fifth of each sweep on a pull request (D-480, D-481) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -548,6 +549,11 @@ Implement the C# synthesizer that renders each sound from its file to a WAV file
 Gate: the owner approves the sword and hunter sounds (D-457, D-470).
 > *In plain English:* a tool makes every sound from a recipe, and the first sounds give the sword and the hunter their weight.
 
+**PR-71: CI skip and faster tests.** ✅ Done in PR #89.
+Skip the heavy jobs of `ci.yml`, `bit-identity.yml`, `smoke.yml`, and `bots.yml` on a PR head that changes documents alone: a PR of documents alone, or a push of documents after a green head (D-473 to D-477). The `ci-skip` command of Tools holds the rules. The tests that read a document run on each head (D-476). Split `ProcgenTests` into nested classes and each hosted leg into two jobs (D-478, D-479). A pull request runs one fifth of each seed sweep (D-480, D-481). F-109 holds the measurements.
+Gate: a documents push after a green head skips the heavy jobs. A code head of the PR records the time of each job against run 35771495463.
+> *In plain English:* each push waited up to 21 minutes for the full checks, also a push that changed a document alone. Such a push now skips the heavy checks, and a pull request runs fewer seeds on more runners.
+
 **PR-62: Art quality pass.** 🔧
 Raise the art from the first pass of PR-14 and PR-15 to finished quality (D-338, D-339): richer texture rules, a more detailed body and sword, the scene light, and the enemy models of PR-16. The owner answers the rule kinds and the looks before the code.
 Gate: the owner approves a new contact sheet as finished art.
@@ -722,7 +728,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
-12. PR-19, PR-20, PR-62.
+12. PR-19, PR-20, PR-71, PR-62.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

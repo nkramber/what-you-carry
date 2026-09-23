@@ -10,6 +10,7 @@ namespace WhatYouCarry.Tests;
 
 /// <summary>The fixture, the repository, the reference check, the session number check, and the CI job (PR-2 exit tests 2 to 9).</summary>
 [Collection(ConsoleCollection.Name)]
+[Trait("Category", DocumentsCategoryTests.DocumentsCategory)]
 public sealed class SteCheckTests
 {
     /// <summary>One violation per rule, and nothing else.</summary>

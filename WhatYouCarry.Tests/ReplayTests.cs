@@ -9,6 +9,7 @@ using Xunit;
 namespace WhatYouCarry.Tests;
 
 /// <summary>The run record, the recorder, and the replay (D-97, D-151, D-152, D-163; PR-6 exit tests 1 to 6). The loops run on floor 1 of the seed, dug from the repository content (D-236, PR-9). The header tests use a fixed hash, and the replay tests use the hash of that content.</summary>
+[Trait("Category", SweepScope.SweepCategory)]
 public sealed class ReplayTests
 {
     private const string Hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -62,11 +63,12 @@ public sealed class ReplayTests
         return (sink.Record(), live.Hash().ToString());
     }
 
-    /// <summary>PR-6 exit test 1. The live run and the replay end with one state hash, over one thousand seeds (D-66).</summary>
+    /// <summary>PR-6 exit test 1. The live run and the replay end with one state hash, over one thousand seeds on main and one fifth on a pull request (D-66, D-480).</summary>
     [Fact]
     public void ReplayReproducesHash()
     {
-        for (int seed = 1; seed <= 1000; seed++)
+        int seeds = SweepScope.Seeds(1000);
+        for (int seed = 1; seed <= seeds; seed++)
         {
             Random random = new(seed);
             int frames = random.Next(0, 200);

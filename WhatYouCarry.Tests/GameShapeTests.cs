@@ -184,7 +184,8 @@ public sealed class GameShapeTests
     {
         string workflow = RepositoryRoot.ReadFile(".github/workflows/smoke.yml");
         Dictionary<string, string> runsOnByJob = WorkflowText.RunsOnByJob(workflow);
-        Assert.Equal(3, runsOnByJob.Count);
+        Assert.Equal(4, runsOnByJob.Count);
+        Assert.Equal("ubuntu-latest", runsOnByJob["ci-skip"]);
         Assert.Equal("ubuntu-latest", runsOnByJob["linux-x64"]);
         Assert.Equal("windows-latest", runsOnByJob["windows-x64"]);
         Assert.Contains("macos-arm64-self-hosted", runsOnByJob["macos-arm64"], StringComparison.Ordinal);
@@ -195,12 +196,23 @@ public sealed class GameShapeTests
         Assert.Equal(3, Count(workflow, $"--filter \"Category={SmokeSessionTests.SmokeCategory}\""));
     }
 
-    /// <summary>The three CI jobs hold no engine, so they leave the smoke category to the smoke workflow.</summary>
+    /// <summary>
+    /// The CI jobs hold no engine, so they leave the smoke category to the smoke workflow. Each hosted leg runs the
+    /// sweep category in one job and every other test in the other job, so the two jobs cover the suite (D-479).
+    /// </summary>
     [Fact]
     public void CiWorkflowLeavesTheSmokeCategoryToTheSmokeWorkflow()
     {
         string workflow = RepositoryRoot.ReadFile(".github/workflows/ci.yml");
-        Assert.Equal(3, Count(workflow, $"dotnet test WhatYouCarry.slnx --no-build --filter \"Category!={SmokeSessionTests.SmokeCategory}\""));
+        string smoke = SmokeSessionTests.SmokeCategory;
+        string sweep = SweepScope.SweepCategory;
+        Assert.Equal(1, Count(workflow, $"dotnet test WhatYouCarry.slnx --no-build --filter \"Category!={smoke}\""));
+        Assert.Contains($"--filter \"Category!={smoke}\"", WorkflowText.JobText(workflow, "macos-arm64"), StringComparison.Ordinal);
+        foreach (string leg in new[] { "linux-x64", "windows-x64" })
+        {
+            Assert.Contains($"--filter \"Category!={smoke}&Category!={sweep}\"", WorkflowText.JobText(workflow, leg), StringComparison.Ordinal);
+            Assert.Contains($"--filter \"Category={sweep}\"", WorkflowText.JobText(workflow, $"{leg}-sweeps"), StringComparison.Ordinal);
+        }
     }
 
     /// <summary>The first engine physics or navigation name in a source text, as a message, or null when there is none.</summary>

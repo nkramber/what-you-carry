@@ -14,6 +14,7 @@ namespace WhatYouCarry.Tests;
 /// The user argument check of PR-61 (D-313, D-317; PR-61 exit tests 1 to 5 and 7). No test here starts the engine. The
 /// engine test, exit test 6, is in <see cref="SmokeSessionTests"/>.
 /// </summary>
+[Trait("Category", DocumentsCategoryTests.DocumentsCategory)]
 public sealed class UserArgumentsTests
 {
     /// <summary>The separator of the engine before the user arguments, with a space on each side, as a command in `CLAUDE.md` writes it.</summary>
