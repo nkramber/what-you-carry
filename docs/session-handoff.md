@@ -2,6 +2,46 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 214: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-62, author. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
+
+### What this session did, and why
+
+- The owner started PR-62 from a Meshy look reference of the body (`artifacts/reference/meshy-miner-2026-09-22/`, git ignores it). The owner answered in session: D-496 to D-509.
+- D-504 splits the art pass. PR-62 is the texture recipe system. PR-74 is the body, PR-75 the sword, PR-76 the enemy models, and PR-77 the light with OQ-181. OQ-181 now blocks PR-77.
+- The body answers for PR-74: the brow, the toe, the beard, and the nose boxes (D-497, D-498, D-501, D-502), the kept proportions (D-499), the colors (D-500), and the noise pick on the sheet (D-503).
+- The recipe system (D-505 to D-508): recipes under `content/textures/recipes/`, the block file `content/textures/blocks.json`, and a paint file next to each model. `texture-gen` paints one canvas per block and per face, packs them into a 512 atlas with a gutter, and writes `content/textures/layout.json`. Game reads every UV from the layout. The loader reads no face UV.
+- Every block canvas keeps its PR-14 pixels, and a hash test holds that. The body and the sword keep their materials, and each face now draws its own noise.
+- The owner asked for the skill `asset-texture-creation` in this PR (D-509). It gives the five Meshy steps of every asset.
+
+### State of the build
+
+- The full suite passed 1431 of 1431, Smoke included. `ste-check`, `det-lint`, and `asset-qa` gave 0 findings.
+- The contact sheets before and after sit in `artifacts/pr-62/`. `body-before-after.png` shows the body.
+- The remote head is the commit that holds this entry, on `origin/feat/pr-62-texture-recipes`. That commit adds the done marks, so it is the effective head.
+
+### In flight
+
+- PR #92: the CI run, the automated pass of gitar, and then the cross-provider review. The PR changes code, so it needs a review record, not the override.
+- Exit test 6 needs the owner: confirm that the look stayed the same on the contact sheet.
+
+### Traps and gotchas
+
+- `models/*.paint.json` is not an animation. `AssetSet` skips the suffix, so no animation can take the name `paint`.
+- A rectangle layer wholly outside a face canvas is an error. Bind that face to another recipe in the paint file.
+- A change to a model box size moves the packer, so run `texture-gen` and commit the atlas and the layout together.
+- The agent files have 11 bytes left under D-382.
+
+### Open questions that block progress
+
+None for PR-62. OQ-181 blocks PR-77.
+
+### Next concrete action
+
+Finish the automated pass of gitar on PR #92, then hand over to Codex for the review. After the merge, PR-74 starts from D-496 to D-503 and the skill `asset-texture-creation`.
+
 ## Session 213: 2026-09-22, Claude Code
 
 Author: Claude Code
@@ -363,44 +403,3 @@ None.
 ### Next concrete action
 
 The owner can merge PR #86 after the review record and this handoff commit reach the remote branch.
-
-## Session 204: 2026-09-21, Claude Code
-
-Author: Claude Code
-Session: PR-19, author. Branch `feat/pr-19-hud-and-navigation`. PR #86, pending owner merge.
-
-### What this session did, and why
-
-- Dispatched the night on `main` at `32e7909` under D-440. Run 35655210549 passed, and the local `night-gate` command reads the record as a pass.
-- Asked the owner the HUD answers that the roadmap named. D-441 to D-448 record them.
-- Built the HUD, the layout scale, the damage numbers, the focus map, and the fixture screen. Added the tap and the hold at the stairwell prompt, the prompt device, and the `--hud-shot` fixture.
-- The smoke session found that the accept action of Godot 4.7 has no controller input. The owner chose the A button (D-449).
-
-### State of the build
-
-- Build: 0 warnings and 0 errors. The Godot build check passed.
-- Local tests: 1246 of 1246 outside the Smoke category, and 7 of 7 in it.
-- Det-lint, asset QA, and STE check: 0 findings.
-- The HUD shot rendered on the Mac, exit code 0.
-- Remote PR head: the commit of this entry. Effective head: `c64e1e2`.
-
-### In flight
-
-- The gitar pass on PR #86, and the CI of the head.
-- The cross-provider review of PR #86 after the gitar pass.
-
-### Traps and gotchas
-
-- A Game literal that is not a const, such as an exception message or a context key, is a det-lint finding. Use a const field.
-- A static field of an engine type, such as `StringName`, runs engine code when a test first reads the class. Keep const names.
-- The string rule of det-lint does not read an interpolated string. `HudReadsStringTable` reads it for the Ui directory.
-- `StairwellHold` sets the interact bit on the release of a tap, and not on the press. A bot sends its intents past it.
-- The HUD scale goes on the canvas layer alone. A root stretch changes the mouse motion of the look.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Finish the gitar pass on PR #86, then hand the PR to the other provider for the review.

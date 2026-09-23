@@ -1,5 +1,46 @@
 # Session handoff archive
 
+## Session 204: 2026-09-21, Claude Code
+
+Author: Claude Code
+Session: PR-19, author. Branch `feat/pr-19-hud-and-navigation`. PR #86, pending owner merge.
+
+### What this session did, and why
+
+- Dispatched the night on `main` at `32e7909` under D-440. Run 35655210549 passed, and the local `night-gate` command reads the record as a pass.
+- Asked the owner the HUD answers that the roadmap named. D-441 to D-448 record them.
+- Built the HUD, the layout scale, the damage numbers, the focus map, and the fixture screen. Added the tap and the hold at the stairwell prompt, the prompt device, and the `--hud-shot` fixture.
+- The smoke session found that the accept action of Godot 4.7 has no controller input. The owner chose the A button (D-449).
+
+### State of the build
+
+- Build: 0 warnings and 0 errors. The Godot build check passed.
+- Local tests: 1246 of 1246 outside the Smoke category, and 7 of 7 in it.
+- Det-lint, asset QA, and STE check: 0 findings.
+- The HUD shot rendered on the Mac, exit code 0.
+- Remote PR head: the commit of this entry. Effective head: `c64e1e2`.
+
+### In flight
+
+- The gitar pass on PR #86, and the CI of the head.
+- The cross-provider review of PR #86 after the gitar pass.
+
+### Traps and gotchas
+
+- A Game literal that is not a const, such as an exception message or a context key, is a det-lint finding. Use a const field.
+- A static field of an engine type, such as `StringName`, runs engine code when a test first reads the class. Keep const names.
+- The string rule of det-lint does not read an interpolated string. `HudReadsStringTable` reads it for the Ui directory.
+- `StairwellHold` sets the interact bit on the release of a tap, and not on the press. A bot sends its intents past it.
+- The HUD scale goes on the canvas layer alone. A root stretch changes the mouse motion of the look.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Finish the gitar pass on PR #86, then hand the PR to the other provider for the review.
+
 ## Session 203: 2026-09-21, Codex
 
 Author: Codex

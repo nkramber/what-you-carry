@@ -564,7 +564,7 @@ A change of documents alone runs no full test suite for the author, a review, a 
 Gate: the agent files, the skills, and the registers agree on the rule, and the `Documents` category passes.
 > *In plain English:* each session ran every test also for a change that touched only a document. Now such a change runs only the checks that read documents.
 
-**PR-62: Texture recipe system.** 🔧
+**PR-62: Texture recipe system.** ✅ Done in PR #92.
 Split from the art pass of D-339 (D-504). A recipe under `content/textures/recipes/` is an ordered list of paint layers: `fill` with noise, `edge`, `rect`, `band`, and a color swap of a recipe that extends another (D-505, D-507). A file next to each model names a recipe for each box and face (D-508). The generator sizes each face at 32 texels per meter, packs it into an atlas of 512 (D-506), and writes `content/textures/layout.json`. Game reads each place from the layout. Every block keeps its pixels, and the body and the sword keep their materials (D-504). The skill `asset-texture-creation` gives the art steps of every asset, from the Meshy prompt to the box model (D-509).
 Gate: the atlas and the layout match the generator, each block matches its old tile, and the owner confirms that the look stayed the same.
 > *In plain English:* each box face read one plain tile of noise, so no box showed a face, a belt, or a boot. Now each face gets its own painted canvas, and nothing changes on screen yet.

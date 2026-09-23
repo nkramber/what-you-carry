@@ -792,6 +792,8 @@ Gate: exit tests 1 to 4 pass.
 
 ### PR-62: Texture recipe system
 
+✅ Done in PR #92.
+
 Scope:
 
 - Recipes: `content/textures/recipes/` replaces `content/textures/rules/`. A recipe is an ordered list of paint layers of the five kinds of D-507. A recipe can extend another with a color swap (D-505).
@@ -950,7 +952,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
 31. PR-72. ✅ Done in PR #90. ✅ The owner answers of 2026-09-22: D-483 to D-489.
 32. PR-73. ✅ Done in PR #91. ✅ The owner answers of 2026-09-22: D-490 to D-495.
-33. PR-62. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-509.
+33. PR-62. ✅ Done in PR #92. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-509.
 34. PR-74.
 35. PR-75.
 36. PR-76.
