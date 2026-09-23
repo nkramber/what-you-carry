@@ -17,11 +17,11 @@ Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, pending o
 
 - The focused recipe and texture tests passed 100 of 100. The old-code comparison failed only on the four overflow cases.
 - CI, Smoke, bit identity, `ste-check`, `det-lint`, `asset-qa`, `doc-gate`, `documents`, `night-gate`, `bots`, and Gitar passed at effective head `d96ae19`.
-- The effective head is `d96ae19`. The review record and this handoff are metadata. The review gate must pass on the published metadata tip.
+- The effective head is `d96ae19`. The review record and this handoff are metadata. The review gate and `evaluate` passed on metadata tip `c8f73cc`.
 
 ### In flight
 
-- PR #92: publish the review record and handoff, then verify the checks on the metadata tip.
+- PR #92: publish the check results in this record, then verify the session end gate.
 
 ### Traps and gotchas
 
@@ -34,7 +34,7 @@ None for PR-62.
 
 ### Next concrete action
 
-Verify the review gate and session end gate after the push. The owner can merge PR #92. Then a clean author session can start PR-74 from Session 214 and D-496 to D-503.
+Verify the session end gate after the push. The owner can merge PR #92. Then a clean author session can start PR-74 from Session 214 and D-496 to D-503.
 
 ## Session 216: 2026-09-23, Claude Code
 
