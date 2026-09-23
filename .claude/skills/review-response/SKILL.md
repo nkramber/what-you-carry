@@ -79,6 +79,7 @@ An automated reviewer, gitar, reviews every PR after a push (D-250). The author 
 Load `.claude/skills/gitar-review/SKILL.md` after each push, and follow its procedure (D-374). That skill holds the steps, the proof that a review is current, the traps, and the commands. This section gives only the rules of this repo, and each rule wins over that skill:
 
 - The author alone answers gitar. The reviewing provider never replies to gitar (`pr-review`, `references/repeat-review.md`).
+- Do not answer a gitar notice: a comment with no specific item, such as "Gitar is working" or a plan notice (D-550).
 - A reply names no provider, harness, or model as the source of the work (T-6, D-176).
 - Resolve each thread after its reply, also after a fix. The ruleset of `main` needs each thread resolved (D-522).
 - When the pass ends, run `make codex-review PR=<n>`, or apply the override label (D-511, D-517). The file `references/review-and-merge.md` of `one-pr-one-session` holds the loop and the auto-merge.

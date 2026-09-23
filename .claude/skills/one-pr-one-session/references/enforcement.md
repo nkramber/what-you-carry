@@ -28,7 +28,7 @@ Read this table when a question asks who catches a break of a rule. Section 3.14
 | The session turns on auto-merge only after the record approves the effective head and the gitar pass is complete | Agent, and the machine for the checks | `references/review-and-merge.md`, then the ruleset and `review-gate` (D-516, D-521) |
 | No review round uses API pricing | Machine | `make codex-review` removes the API credential variables, forces the ChatGPT login, and refuses another login (D-523) |
 | The owner confirms each merge after the merge summary: What, How, CI, and Codex review | Agent and owner | `references/review-and-merge.md` asks before `gh pr merge --auto` (D-524, D-533). No machine reads the summary or the confirmation |
-| The top-level gitar comments have their answers before the auto-merge | Agent | The `gitar-review` skill. They are not review threads, so the ruleset does not read them |
+| The top-level gitar comments with an item have their answers before the auto-merge (D-550) | Agent | The `gitar-review` skill. They are not review threads, so the ruleset does not read them |
 | No live document cites a superseded decision as current | Machine | `ste-check` reference check (D-178) |
 | A reason is true and specific | Agent and owner | The author writes it, and the cross-provider review checks it |
 | The design doc, the registers, and the roadmap agree with the PR | Agent | The author, then the cross-provider review |

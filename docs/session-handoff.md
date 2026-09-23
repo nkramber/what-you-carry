@@ -52,6 +52,7 @@ Session: PR-81, author. Branch `fix/pr-81-night-softlocks`. PR #97, pending merg
 - Built the branch nights of D-538: the record on `night-branch/<branch>`, the gate read of it, and the re-run step.
 - The local night then crashed seed 4119 of the greedy descender (F-112). The sweep box and the body box ended one ulp apart, and the body box overlapped a block. The owner chose the exact fix: the sweep builds each box in the form of the caller (D-549).
 - The first review round at `ba7f448` found no code issue. It read `Blocked` for the branch night that had not ended.
+- The owner asked that a gitar notice, a comment with no specific item, get no answer and block no verdict (D-550). The skills and the agent files take the rule in PR-81. The PR template takes it in the next PR (D-551).
 
 ### State of the build
 
@@ -76,9 +77,11 @@ None.
 
 ### Next concrete action
 
-This session: push the sweep fix, wait on the checks of PR #97, dispatch a new branch night, then run review round 2.
+This session: wait on branch night run 35915259159 and its re-run of `night-gate`, then run review round 2.
 
-The next session, after PR #97 merges, takes the owner focus of 2026-09-23: the fixed seeds of the night. The owner names it in place of PR-75.
+The next session, after PR #97 merges, makes one PR alone (D-551). The gitar line of the PR gate in `.github/pull_request_template.md` takes the rule of D-550: "every gitar comment with an item has its answer (D-550)". PR-81 changed the same line in `CLAUDE.md` and `AGENTS.md`. Ask the owner for its roadmap id.
+
+The session after it takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551).
 
 - The night runs seeds 1 to 5000 for each bot policy and seeds 1 to 100000 for the seed sweep, every night (D-115, D-116).
 - A fixed set gives a clean before and after, a replay of each failure, and a stable gate. The PR-81 bisect used all three.

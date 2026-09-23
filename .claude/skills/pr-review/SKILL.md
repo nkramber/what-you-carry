@@ -62,6 +62,7 @@ The author session starts the review as a separate Codex process (D-511). That p
 - Continue through the scope after the first finding. Record any area that remains uninspected.
 - Do not invent findings to meet a quota. A thorough review can produce no actionable findings.
 - Never reply to gitar, never resolve a thread, and never write a comment on the PR. Take each comment into the review as a claim to verify (D-250).
+- Ignore a gitar notice: a gitar comment with no specific item to address, such as "Gitar is working", a plan or quota notice, or a summary with no finding. It is no claim, it needs no author answer, and it never blocks the verdict (D-550).
 - Name no provider, agent, harness, or model in the PR description or in a GitHub comment (T-6, D-137). The review record and the handoff author field are the two exempt places.
 - Quote both statements when owner decisions conflict. File the question in `docs/questions.md` and stop dependent work (D-124, D-138).
 - Load `.claude/skills/one-pr-one-session/SKILL.md` and bind the session in the reviewer role (D-375). Load `.claude/skills/ste-writing/SKILL.md` before any review text (D-139).

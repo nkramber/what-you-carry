@@ -2,7 +2,7 @@
 
 The `one-pr-one-session` skill names this file at the end of the gitar pass. It holds the author loop of the cross-provider review, the three-strike stop, the auto-merge, and the merge summary (D-511 to D-517, D-524, D-533). The `review-response` skill holds the answer to each finding.
 
-**Pause (D-542).** During the gitar pause, step 2 of the author loop and step 3 of the auto-merge change. Export the PR comments, answer each gitar comment, and do no push wait. Step 3 of the author loop runs `make codex-review PR=<n> -- --skip-gitar-review` (D-543). When a gitar review holds feedback, stop at once and alert the owner.
+**Pause (D-542).** During the gitar pause, step 2 of the author loop and step 3 of the auto-merge change. Export the PR comments, answer each gitar comment with an item, and do no push wait. A gitar notice needs no answer (D-550). Step 3 of the author loop runs `make codex-review PR=<n> -- --skip-gitar-review` (D-543). When a gitar review holds feedback, stop at once and alert the owner.
 
 ## Procedure: the author loop
 

@@ -10,7 +10,7 @@ The `pr-review` skill names this file at steps 2 and 3. It holds what a review r
 - Read the PR request, its acceptance criteria, prior review, and applicable focused roadmap.
 - Look up each cited D-# and OQ-# with the one lookup command of `AGENTS.md` (D-378). Resolve decision revisions through the `Effect` column in `docs/decisions.md` (D-186). `Superseded by D-N` replaces the whole answer. `Revised in part by D-N` changes only the named part, and the rest of that decision stays current.
 - Check `docs/questions.md` for unresolved choices that affect this change (D-124, D-144).
-- Read every existing comment on the PR: the automated pass of gitar and the author's replies (D-250). Take each one into the review as a claim to verify, and never as a finding of your own. See `references/repeat-review.md`.
+- Read every existing comment on the PR: the automated pass of gitar and the author's replies (D-250). Take each one into the review as a claim to verify, and never as a finding of your own. Ignore a gitar notice, which names no item (D-550). See `references/repeat-review.md`.
 - Export the comments in one command. The runbook `docs/runbooks/session-context.md` holds it under "The comment export". It writes every issue comment and every review thread to one file, with each thread id and each comment id. Read that file one time.
 - Record the PR number, target branch, base commit, merge base, and head commit.
 - Verify that the local checkout and diff represent those commits.

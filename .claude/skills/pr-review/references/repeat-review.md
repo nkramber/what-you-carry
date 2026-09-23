@@ -39,5 +39,6 @@ The reviewing provider reads the existing PR comments and takes them into its ow
 
 - A comment of the automated pass is a claim about the code, like any finding. Verify it against the head, and record the result under `## PR comments` in the review record.
 - An author reply is evidence, and the review checks it: the trigger, the contract, and the commit it names.
-- An automated comment that the author refuted with evidence is not a finding. An automated comment that the author fixed is a fix to verify. An automated comment that stays open without an answer blocks the verdict, because the author's pass is not complete (D-250).
+- An automated comment that the author refuted with evidence is not a finding. An automated comment that the author fixed is a fix to verify. An automated comment with a specific item that stays open without an answer blocks the verdict, because the author's pass is not complete (D-250).
+- A gitar notice names no specific item: "Gitar is working", a plan or quota notice, or a summary with no finding. Ignore it. It needs no author answer, and it never blocks the verdict (D-550).
 - The automated pass does not make gitar an author. The provider gate reads the providers of the substantive commits alone.
