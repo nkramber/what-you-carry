@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 212: 2026-09-22, Codex
+
+Author: Codex
+Session: PR-72, reviewer. Branch `fix/pr-72-enemy-movement`. PR #90, pending owner merge. Base `ea84473`.
+
+### What this session did, and why
+
+- Reviewed PR #90 at effective head `09926b6` against the enemy diagonal and ramp movement contracts.
+- Confirmed the fix for the closed gitar finding and added the review record.
+
+### State of the build
+
+- The focused review suite passed 53 tests. The full suite passed 1385 tests with no skips. `ste-check` found 0 issues in 34 files.
+- CI, Smoke, bit identity, and bots passed after effective head `09926b6` on metadata commit `751431d`.
+- The latest metadata tip before this review commit was `b2c7f41`. Its Rule 2 skip, documents, STE, doc-gate, det-lint, asset-QA, night-gate, and gitar checks passed. `evaluate` waits for this review record.
+
+### In flight
+
+- Publish `docs/reviews/pr-90.md` and this entry, then verify the fresh review gate.
+
+### Traps and gotchas
+
+- The effective head is `09926b6`. Later commits change only metadata.
+- The diagonal sweep covers 120 seeds. D-480 keeps the full count on `main` and in the night.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Run the check wait after publication, then verify the remote head and clean status.
+
 ## Session 211: 2026-09-22, Claude Code
 
 Author: Claude Code
@@ -371,41 +404,3 @@ None.
 ### Next concrete action
 
 The owner merges PR #85. After the merge, start a new session and run the night on `main`.
-
-## Session 202: 2026-09-21, Claude Code
-
-Author: Claude Code
-Session: PR-18, author, after the review of session 201. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
-
-### What this session did, and why
-
-- Exit test 6 failed on the Deck at 52.8 ms. A trace of each transition found 38 to 46 ms of chunk mesh work in one main-thread frame. The worker task now meshes the chunks. The next Deck run passed at 11.1 ms on `c3ca60a`.
-- The night of `ad7589a` read a full-clearer softlock on seeds 2100 and 2109. By D-438 this PR fixes it: the clearer leaves when the time runs short (D-439). The owner took the merge past the red night gate (D-440).
-- The owner asked for the splash image off in this PR with no decision entry. The PR description records the override.
-- Filed OQ-181, the antialiasing of the world, against PR-62.
-- Rotated the handoff after session 201 left 11 entries.
-
-### State of the build
-
-- Local: 1229 of 1229 tests, the Smoke category included. A local sweep of 5000 full-clearer seeds read 0 softlocks.
-- PR checks at `bab19cc`: every check green except `review-gate`, which waits for the repeat review, and `night-gate`, which D-440 overrides.
-- The hand night on the branch, run 35638438679, passed every step.
-
-### In flight
-
-- The repeat cross-provider review of PR #85. The review of session 201 covered `46c4b9d`. The mesh fix, the clearer fix, and D-440 came after it.
-
-### Traps and gotchas
-
-- The Deck needs `git pull` and `dotnet build` before a run. A dig line with no `meshMicros` field means an old build.
-- `FullClearerClearsFloor` (PR-16 exit test 5) now allows the enemies that a leaving clearer leaves alive (D-439).
-- A descent on floor 15 still throws, because no template covers floor 16. PR-35 holds that stairwell.
-- `main` has no branch protection, although D-387 asks for it.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Codex: review PR #85 again at the effective head. After the owner merge, dispatch a night on `main` so that the night gate reads green (D-440).

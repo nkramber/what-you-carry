@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 202: 2026-09-21, Claude Code
+
+Author: Claude Code
+Session: PR-18, author, after the review of session 201. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
+
+### What this session did, and why
+
+- Exit test 6 failed on the Deck at 52.8 ms. A trace of each transition found 38 to 46 ms of chunk mesh work in one main-thread frame. The worker task now meshes the chunks. The next Deck run passed at 11.1 ms on `c3ca60a`.
+- The night of `ad7589a` read a full-clearer softlock on seeds 2100 and 2109. By D-438 this PR fixes it: the clearer leaves when the time runs short (D-439). The owner took the merge past the red night gate (D-440).
+- The owner asked for the splash image off in this PR with no decision entry. The PR description records the override.
+- Filed OQ-181, the antialiasing of the world, against PR-62.
+- Rotated the handoff after session 201 left 11 entries.
+
+### State of the build
+
+- Local: 1229 of 1229 tests, the Smoke category included. A local sweep of 5000 full-clearer seeds read 0 softlocks.
+- PR checks at `bab19cc`: every check green except `review-gate`, which waits for the repeat review, and `night-gate`, which D-440 overrides.
+- The hand night on the branch, run 35638438679, passed every step.
+
+### In flight
+
+- The repeat cross-provider review of PR #85. The review of session 201 covered `46c4b9d`. The mesh fix, the clearer fix, and D-440 came after it.
+
+### Traps and gotchas
+
+- The Deck needs `git pull` and `dotnet build` before a run. A dig line with no `meshMicros` field means an old build.
+- `FullClearerClearsFloor` (PR-16 exit test 5) now allows the enemies that a leaving clearer leaves alive (D-439).
+- A descent on floor 15 still throws, because no template covers floor 16. PR-35 holds that stairwell.
+- `main` has no branch protection, although D-387 asks for it.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Codex: review PR #85 again at the effective head. After the owner merge, dispatch a night on `main` so that the night gate reads green (D-440).
+
 ## Session 201: 2026-09-21, Codex
 
 Author: Codex
