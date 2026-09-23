@@ -24,7 +24,7 @@ Session: PR-62, author. Branch `feat/pr-62-texture-recipes`. PR #92, pending own
 
 ### In flight
 
-- PR #92: the CI run, the automated pass of gitar, and then the cross-provider review. The PR changes code, so it needs a review record, not the override.
+- PR #92: CI is green except the review gate (D-251). Gitar approved the effective head `6654571` with no finding. The PR changes code, so it needs a review record, not the override.
 - Exit test 6 needs the owner: confirm that the look stayed the same on the contact sheet.
 
 ### Traps and gotchas
@@ -40,7 +40,11 @@ None for PR-62. OQ-181 blocks PR-77.
 
 ### Next concrete action
 
-Finish the automated pass of gitar on PR #92, then hand over to Codex for the review. After the merge, PR-74 starts from D-496 to D-503 and the skill `asset-texture-creation`.
+Codex reviews PR #92. After the merge, PR-74 starts from D-496 to D-503 and the skill `asset-texture-creation`.
+
+- The owner added two angles for PR-74: `08-3d-top.png` and `09-3d-head-front-close.png` in the reference folder. Step 4 of the skill approved them.
+- The close-up measures the brow at y 25.0 to 26.0, the nose band at 23.2 to 24.9, and the beard at 20.8 to 23.2. Each agrees with D-497, D-501, and D-502 within 0.2 units.
+- The face paint of the close-up: hair on the top 1.5 to 2 units with a small peak, brown eyes of about 1.5 by 0.5 units under the brow, a lighter nose, and a mouth notch of about 2 by 0.5 units.
 
 ## Session 213: 2026-09-22, Claude Code
 
