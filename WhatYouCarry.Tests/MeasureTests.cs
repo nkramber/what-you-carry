@@ -129,14 +129,14 @@ public sealed class MeasureTests
     public async Task ChunkSwapMeshesOnTheTask()
     {
         FloorPlan plan = FloorGenerator.Generate(1, 2, TestWorld.Content);
-        IReadOnlyList<MeshData> onTask = await Task.Run(() => ChunkSwap.MeshAll(plan.Grid));
+        IReadOnlyList<MeshData> onTask = await Task.Run(() => ChunkSwap.MeshAll(plan.Grid, RepositoryTextures.Tiles));
         Assert.Equal(ChunkLayout.Count(plan.Grid), onTask.Count);
         int index = 0;
         for (int chunkZ = 0; chunkZ < ChunkLayout.CountZ(plan.Grid); chunkZ++)
         {
             for (int chunkX = 0; chunkX < ChunkLayout.CountX(plan.Grid); chunkX++)
             {
-                MeshData here = GreedyMesher.MeshChunk(plan.Grid, chunkX, chunkZ);
+                MeshData here = GreedyMesher.MeshChunk(plan.Grid, chunkX, chunkZ, RepositoryTextures.Tiles);
                 Assert.Equal(here.Positions, onTask[index].Positions);
                 Assert.Equal(here.Indices, onTask[index].Indices);
                 Assert.Equal(here.Colors, onTask[index].Colors);

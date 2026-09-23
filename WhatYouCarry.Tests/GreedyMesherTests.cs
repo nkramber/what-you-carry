@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using WhatYouCarry.Assets;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.World;
@@ -41,7 +42,7 @@ public sealed class GreedyMesherTests
             }
         }
 
-        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0, RepositoryTextures.Tiles);
 
         Assert.Equal(6, mesh.QuadCount);
         Assert.Equal(6 * MeshData.QuadVertices, mesh.Positions.Count);
@@ -72,8 +73,8 @@ public sealed class GreedyMesherTests
             {
                 for (int chunkX = 0; chunkX < ChunkLayout.CountX(grid); chunkX++)
                 {
-                    MeshData first = GreedyMesher.MeshChunk(grid, chunkX, chunkZ);
-                    MeshData second = GreedyMesher.MeshChunk(grid, chunkX, chunkZ);
+                    MeshData first = GreedyMesher.MeshChunk(grid, chunkX, chunkZ, RepositoryTextures.Tiles);
+                    MeshData second = GreedyMesher.MeshChunk(grid, chunkX, chunkZ, RepositoryTextures.Tiles);
                     Assert.Equal(first.Positions, second.Positions);
                     Assert.Equal(first.Normals, second.Normals);
                     Assert.Equal(first.Colors, second.Colors);
@@ -103,7 +104,7 @@ public sealed class GreedyMesherTests
         {
             for (int chunkX = 0; chunkX < ChunkLayout.CountX(maximum); chunkX++)
             {
-                MeshData mesh = GreedyMesher.MeshChunk(maximum, chunkX, chunkZ);
+                MeshData mesh = GreedyMesher.MeshChunk(maximum, chunkX, chunkZ, RepositoryTextures.Tiles);
                 if (mesh.TriangleCount > 0)
                 {
                     worldMeshes++;
@@ -137,7 +138,7 @@ public sealed class GreedyMesherTests
         grid.Set(3, 1, 4, BlockId.RawStone);
         grid.Set(4, 1, 3, BlockId.RawStone);
 
-        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0, RepositoryTextures.Tiles);
 
         // Every floor vertex at the inner corner has two solid edge cells, so every one takes the darkest level.
         Vector3 innerCorner = new(4.0f, 1.0f, 4.0f);
@@ -200,7 +201,7 @@ public sealed class GreedyMesherTests
             }
         }
 
-        Assert.Equal(0, GreedyMesher.MeshChunk(grid, 0, 0).TriangleCount);
+        Assert.Equal(0, GreedyMesher.MeshChunk(grid, 0, 0, RepositoryTextures.Tiles).TriangleCount);
     }
 
     /// <summary>A pool shows its surface against the air, the stone shows through the water, and the water hides its own sides.</summary>
@@ -218,14 +219,14 @@ public sealed class GreedyMesherTests
 
         grid.Set(4, 1, 4, BlockId.StillWater);
 
-        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0, RepositoryTextures.Tiles);
 
         // The surface of the pool at y = 2, and the stone floor around it at y = 2.
-        Assert.Equal(AtlasTile.Origin(BlockId.StillWater), TileAt(mesh, new Vector3(4.5f, 2.0f, 4.5f), Vector3.Up));
+        Assert.Equal(RepositoryTextures.Tiles.Origin(BlockId.StillWater), TileAt(mesh, new Vector3(4.5f, 2.0f, 4.5f), Vector3.Up));
 
         // The stone under the pool shows its top face against the water, and the pool walls show their sides.
-        Assert.Equal(AtlasTile.Origin(BlockId.RawStone), TileAt(mesh, new Vector3(4.5f, 1.0f, 4.5f), Vector3.Up));
-        Assert.Equal(AtlasTile.Origin(BlockId.RawStone), TileAt(mesh, new Vector3(4.0f, 1.5f, 4.5f), Vector3.Right));
+        Assert.Equal(RepositoryTextures.Tiles.Origin(BlockId.RawStone), TileAt(mesh, new Vector3(4.5f, 1.0f, 4.5f), Vector3.Up));
+        Assert.Equal(RepositoryTextures.Tiles.Origin(BlockId.RawStone), TileAt(mesh, new Vector3(4.0f, 1.5f, 4.5f), Vector3.Right));
 
         // The water shows no side face and no bottom face of its own.
         Assert.False(HasFace(mesh, new Vector3(4.0f, 1.5f, 4.5f), Vector3.Left));
@@ -246,8 +247,8 @@ public sealed class GreedyMesherTests
         }
 
         Assert.Equal(2, ChunkLayout.Count(grid));
-        MeshData first = GreedyMesher.MeshChunk(grid, 0, 0);
-        MeshData second = GreedyMesher.MeshChunk(grid, 1, 0);
+        MeshData first = GreedyMesher.MeshChunk(grid, 0, 0, RepositoryTextures.Tiles);
+        MeshData second = GreedyMesher.MeshChunk(grid, 1, 0, RepositoryTextures.Tiles);
 
         // The slab continues past the border, so neither chunk shows a face toward the other. The ends of the
         // slab touch the edge of the world, which is rock, so no face shows there either (D-237).
@@ -282,8 +283,8 @@ public sealed class GreedyMesherTests
             grid.Set(19, 1, z, BlockId.RawStone);
         }
 
-        MeshData first = GreedyMesher.MeshChunk(grid, 0, 0);
-        MeshData second = GreedyMesher.MeshChunk(grid, 1, 0);
+        MeshData first = GreedyMesher.MeshChunk(grid, 0, 0, RepositoryTextures.Tiles);
+        MeshData second = GreedyMesher.MeshChunk(grid, 1, 0, RepositoryTextures.Tiles);
 
         // Places 1 and 2 meet at the border at one height, so neither chunk shows an end there.
         Assert.False(HasFace(first, new Vector3(16.0f, 1.25f, 2.0f), Vector3.Right));
@@ -302,7 +303,7 @@ public sealed class GreedyMesherTests
         VoxelGrid grid = TestWorld.FlatFloor();
         grid.Set(4, 1, 4, BlockId.RawStone);
         grid.Set(4, 2, 4, BlockId.RawStone);
-        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0, RepositoryTextures.Tiles);
 
         Assert.True(mesh.QuadCount > 6);
         for (int triangle = 0; triangle < mesh.Indices.Count; triangle += 3)
@@ -328,7 +329,7 @@ public sealed class GreedyMesherTests
             }
         }
 
-        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(grid, 0, 0, RepositoryTextures.Tiles);
 
         float maxU = 0.0f;
         float maxV = 0.0f;
@@ -341,7 +342,7 @@ public sealed class GreedyMesherTests
 
             maxU = System.Math.Max(maxU, mesh.Uvs[vertex].X);
             maxV = System.Math.Max(maxV, mesh.Uvs[vertex].Y);
-            Assert.Equal(AtlasTile.Origin(BlockId.OreVein), mesh.TileOrigins[vertex]);
+            Assert.Equal(RepositoryTextures.Tiles.Origin(BlockId.OreVein), mesh.TileOrigins[vertex]);
         }
 
         Assert.Equal(4.0f, maxU);
@@ -368,19 +369,24 @@ public sealed class GreedyMesherTests
     public void MeshChunkRejectsAChunkOutsideTheLayout()
     {
         VoxelGrid grid = new(20, 3, 4);
-        ContextException error = Assert.Throws<ContextException>(() => GreedyMesher.MeshChunk(grid, 2, 0));
+        ContextException error = Assert.Throws<ContextException>(() => GreedyMesher.MeshChunk(grid, 2, 0, RepositoryTextures.Tiles));
         Assert.Contains("(2, 0)", error.Message, System.StringComparison.Ordinal);
-        Assert.Throws<ContextException>(() => GreedyMesher.MeshChunk(grid, 0, -1));
+        Assert.Throws<ContextException>(() => GreedyMesher.MeshChunk(grid, 0, -1, RepositoryTextures.Tiles));
     }
 
-    /// <summary>The tile of a block is its id, eight tiles per row of 32 pixels (D-85, D-259).</summary>
+    /// <summary>The origin of each block canvas is its place in the committed layout, as a fraction of the atlas of 512 pixels (D-85, D-505, D-506).</summary>
     [Fact]
-    public void TileOriginsFollowTheBlockId()
+    public void TileOriginsFollowTheLayout()
     {
-        Assert.Equal(new Vector2(0.0f, 0.0f), AtlasTile.Origin(BlockId.Air));
-        Assert.Equal(new Vector2(0.125f, 0.0f), AtlasTile.Origin(BlockId.RawStone));
-        Assert.Equal(new Vector2(0.875f, 0.0f), AtlasTile.Origin(BlockId.Plank));
-        Assert.Equal(0.125f, AtlasTile.Size);
+        foreach (BlockPlace place in RepositoryTextures.Layout.Blocks)
+        {
+            Vector2 expected = new((float)place.At.X / AtlasLayout.AtlasPixels, (float)place.At.Y / AtlasLayout.AtlasPixels);
+            Assert.Equal(expected, RepositoryTextures.Tiles.Origin((BlockId)place.Block));
+        }
+
+        Assert.Equal(1.0f / 16.0f, BlockTiles.Size);
+        ContextException air = Assert.Throws<ContextException>(() => RepositoryTextures.Tiles.Origin(BlockId.Air));
+        Assert.Contains("no canvas for the block", air.Message, System.StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -393,11 +399,11 @@ public sealed class GreedyMesherTests
     public void RampGivesItsSlopeAndSideFaces(RampRise rise, int run)
     {
         RampCourse course = NarrowCourse(rise, run);
-        MeshData mesh = GreedyMesher.MeshChunk(course.Grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(course.Grid, 0, 0, RepositoryTextures.Tiles);
         Vector3 slopeNormal = SlopeNormal(course);
         Vector3 across = AcrossOf(course);
         Vector3 uphill = UphillOf(course);
-        Vector2 rawStone = AtlasTile.Origin(BlockId.RawStone);
+        Vector2 rawStone = RepositoryTextures.Tiles.Origin(BlockId.RawStone);
         for (int place = 0; place < run; place++)
         {
             float along = RampCourse.RampStart + place + 0.5f;
@@ -412,7 +418,7 @@ public sealed class GreedyMesherTests
             float underSlope = RampCourse.LowTop + ((place + 0.5f) / run / 2.0f);
             Assert.Equal(rawStone, TileAt(mesh, PointOf(course, along, underSlope, NarrowFirst), -across));
             Assert.False(HasFace(mesh, PointOf(course, along, underSlope, NarrowLast + 1), across), $"The side of place {place} toward the wall shows.");
-            Assert.Equal(AtlasTile.Origin(BlockId.HewnStone), TileAt(mesh, PointOf(course, along, RampCourse.HighTop - 0.05f, NarrowLast + 1), -across));
+            Assert.Equal(RepositoryTextures.Tiles.Origin(BlockId.HewnStone), TileAt(mesh, PointOf(course, along, RampCourse.HighTop - 0.05f, NarrowLast + 1), -across));
         }
 
         // The floor at the foot shows. The top of the run and the end of the landing meet at one height, so neither shows.
@@ -430,7 +436,7 @@ public sealed class GreedyMesherTests
     [MemberData(nameof(Courses))]
     public void RampTrianglesRunClockwiseWithArea(RampRise rise, int run)
     {
-        MeshData mesh = GreedyMesher.MeshChunk(NarrowCourse(rise, run).Grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(NarrowCourse(rise, run).Grid, 0, 0, RepositoryTextures.Tiles);
 
         for (int triangle = 0; triangle < mesh.Indices.Count; triangle += MeshData.TriangleVertices)
         {
@@ -453,7 +459,7 @@ public sealed class GreedyMesherTests
     public void SlopeVerticesLieOnTheSlope(RampRise rise, int run)
     {
         RampCourse course = NarrowCourse(rise, run);
-        MeshData mesh = GreedyMesher.MeshChunk(course.Grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(course.Grid, 0, 0, RepositoryTextures.Tiles);
         Vector3 slopeNormal = SlopeNormal(course);
 
         int slopeVertices = 0;
@@ -482,7 +488,7 @@ public sealed class GreedyMesherTests
     [MemberData(nameof(Courses))]
     public void EveryFaceKeepsTheTexelDensity(RampRise rise, int run)
     {
-        MeshData mesh = GreedyMesher.MeshChunk(NarrowCourse(rise, run).Grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(NarrowCourse(rise, run).Grid, 0, 0, RepositoryTextures.Tiles);
 
         for (int triangle = 0; triangle < mesh.Indices.Count; triangle += MeshData.TriangleVertices)
         {
@@ -506,7 +512,7 @@ public sealed class GreedyMesherTests
     [MemberData(nameof(Courses))]
     public void SlopesMergeAcrossTheWidth(RampRise rise, int run)
     {
-        MeshData mesh = GreedyMesher.MeshChunk(new RampCourse(rise, run).Grid, 0, 0);
+        MeshData mesh = GreedyMesher.MeshChunk(new RampCourse(rise, run).Grid, 0, 0, RepositoryTextures.Tiles);
 
         Assert.Equal(3 * 2, CountSlopeTriangles(mesh));
     }
@@ -542,7 +548,7 @@ public sealed class GreedyMesherTests
                 }
 
                 RampCourse narrow = NarrowCourse(rise, run);
-                MeshData mesh = GreedyMesher.MeshChunk(narrow.Grid, 0, 0);
+                MeshData mesh = GreedyMesher.MeshChunk(narrow.Grid, 0, 0, RepositoryTextures.Tiles);
                 Vector3 slopeNormal = SlopeNormal(narrow);
                 Color open = AmbientOcclusion.ColorOf(AmbientOcclusion.Open);
                 Assert.Equal(open, ColorAt(mesh, PointOf(narrow, RampCourse.RampStart, RampCourse.LowTop, NarrowFirst), slopeNormal));

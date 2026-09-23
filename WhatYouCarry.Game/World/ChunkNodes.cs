@@ -12,14 +12,14 @@ namespace WhatYouCarry.Game.World;
 public static class ChunkNodes
 {
     /// <summary>The mesh instances of every chunk of the grid that shows a face, in chunk order.</summary>
-    public static IReadOnlyList<MeshInstance3D> Build(VoxelGrid grid, Material material)
+    public static IReadOnlyList<MeshInstance3D> Build(VoxelGrid grid, Material material, BlockTiles tiles)
     {
         List<MeshInstance3D> instances = [];
         for (int chunkZ = 0; chunkZ < ChunkLayout.CountZ(grid); chunkZ++)
         {
             for (int chunkX = 0; chunkX < ChunkLayout.CountX(grid); chunkX++)
             {
-                MeshData data = GreedyMesher.MeshChunk(grid, chunkX, chunkZ);
+                MeshData data = GreedyMesher.MeshChunk(grid, chunkX, chunkZ, tiles);
                 if (data.TriangleCount == 0)
                 {
                     continue;

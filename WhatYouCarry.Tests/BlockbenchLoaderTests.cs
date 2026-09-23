@@ -43,7 +43,7 @@ public sealed class BlockbenchLoaderTests
             Assert.Equal(pivot, box.Pivot);
             Assert.True(box.Bone >= 0 && box.Bone < model.Bones.Count, $"The box '{box.Name}' names bone {box.Bone}, and the model has {model.Bones.Count} bones.");
 
-            MeshData mesh = BoxGeometry.Build(box);
+            MeshData mesh = BoxGeometry.Build(model.Path, box, RepositoryTextures.Layout);
             Assert.Equal(BoxGeometry.Faces, mesh.QuadCount);
             Assert.Equal(BoxGeometry.Faces * MeshData.QuadVertices, mesh.Positions.Count);
         }
@@ -105,16 +105,27 @@ public sealed class BlockbenchLoaderTests
         }
     }
 
-    /// <summary>The face rectangles divide by the model resolution, so a face reads as a fraction of the texture.</summary>
+    /// <summary>
+    /// The loader reads no face rectangle and no resolution, because the texture layout places each face (D-505). A cube
+    /// with no faces and a file with no resolution load, and the box mesh reads each face from the layout.
+    /// </summary>
     [Fact]
-    public void LoaderDividesTheFacesByTheResolution()
+    public void LoaderReadsNoFaceRectangle()
     {
-        BlockbenchModel model = PlayerModel();
-        ModelBox head = Assert.Single(model.Boxes, box => box.Name == "head_box");
+        string json = ModelJson.Model(
+            elements: ModelJson.Cube("torso", "e1", from: "[0, 0, 0]", to: "[8, 16, 4]", origin: "[0, 0, 0]").Replace(", \"faces\": {", ", \"unused\": {", StringComparison.Ordinal),
+            groups: ModelJson.Group("body", "g1"),
+            outliner: "[{\"uuid\": \"g1\", \"children\": [\"e1\"]}]").Replace("\"resolution\": {\"width\": 64, \"height\": 64}, ", string.Empty, StringComparison.Ordinal);
 
-        // The north face of the head is at pixels (0, 32) to (16, 48) of 256: the top left of the skin tile (D-308).
-        FaceUv north = head.Faces[(int)BoxSide.North];
-        Assert.Equal(new FaceUv(0.0f, 0.125f, 0.0625f, 0.1875f), north);
+        BlockbenchModel model = BlockbenchLoader.Parse("models/bare.bbmodel", Encoding.UTF8.GetBytes(json));
+        Assert.DoesNotContain("resolution", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"faces\"", json, StringComparison.Ordinal);
+
+        ModelBox torso = Assert.Single(model.Boxes);
+        MeshData mesh = BoxGeometry.Build(model.Path, torso, RepositoryTextures.LayoutFor(model));
+        Assert.Equal(BoxGeometry.Faces, mesh.QuadCount);
+        ContextException absent = Assert.Throws<ContextException>(() => BoxGeometry.Build(model.Path, torso, RepositoryTextures.Layout));
+        Assert.Contains("models/bare.bbmodel:torso:north", absent.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A rotation on a box or a bone is an error that names it, because the model file holds the rest pose alone (D-298).</summary>
@@ -241,8 +252,9 @@ public sealed class BlockbenchLoaderTests
     [Fact]
     public void BoxFacesAreClockwiseFromOutside()
     {
-        ModelBox box = Assert.Single(PlayerModel().Boxes, box => box.Name == "head_box");
-        MeshData mesh = BoxGeometry.Build(box);
+        BlockbenchModel model = PlayerModel();
+        ModelBox box = Assert.Single(model.Boxes, box => box.Name == "head_box");
+        MeshData mesh = BoxGeometry.Build(model.Path, box, RepositoryTextures.Layout);
 
         for (int triangle = 0; triangle < mesh.Indices.Count; triangle += 3)
         {
@@ -258,8 +270,9 @@ public sealed class BlockbenchLoaderTests
     [Fact]
     public void BoxVerticesAreRelativeToThePivot()
     {
-        ModelBox box = Assert.Single(PlayerModel().Boxes, box => box.Name == "head_box");
-        MeshData mesh = BoxGeometry.Build(box);
+        BlockbenchModel model = PlayerModel();
+        ModelBox box = Assert.Single(model.Boxes, box => box.Name == "head_box");
+        MeshData mesh = BoxGeometry.Build(model.Path, box, RepositoryTextures.Layout);
 
         Vector3 low = RenderInterpolation.ToGodot(box.From - box.Pivot);
         Vector3 high = RenderInterpolation.ToGodot(box.To - box.Pivot);

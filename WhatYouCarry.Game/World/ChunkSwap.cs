@@ -53,6 +53,7 @@ public sealed class ChunkSwap
     private readonly Material material;
     private readonly NextFloorWorker worker;
     private readonly ulong seed;
+    private readonly BlockTiles tiles;
     private List<MeshInstance3D> shown = [];
     private int shownFloor;
     private Task<NextFloor>? digging;
@@ -62,11 +63,12 @@ public sealed class ChunkSwap
     private List<MeshInstance3D> stagedNodes = [];
     private int stagedChunk;
 
-    /// <summary>A swap that adds its nodes under the parent, with the world material on each.</summary>
-    public ChunkSwap(Node parent, Material material, NextFloorWorker worker, ulong seed)
+    /// <summary>A swap that adds its nodes under the parent, with the world material on each, and meshes with the block canvases of the layout.</summary>
+    public ChunkSwap(Node parent, Material material, BlockTiles tiles, NextFloorWorker worker, ulong seed)
     {
         this.parent = parent;
         this.material = material;
+        this.tiles = tiles;
         this.worker = worker;
         this.seed = seed;
     }
@@ -137,14 +139,14 @@ public sealed class ChunkSwap
     }
 
     /// <summary>The mesh data of every chunk of a grid, in chunk order: Z outer, X inner. It calls no engine API, so a task can run it.</summary>
-    public static IReadOnlyList<MeshData> MeshAll(VoxelGrid grid)
+    public static IReadOnlyList<MeshData> MeshAll(VoxelGrid grid, BlockTiles tiles)
     {
         List<MeshData> meshes = [];
         for (int chunkZ = 0; chunkZ < ChunkLayout.CountZ(grid); chunkZ++)
         {
             for (int chunkX = 0; chunkX < ChunkLayout.CountX(grid); chunkX++)
             {
-                meshes.Add(GreedyMesher.MeshChunk(grid, chunkX, chunkZ));
+                meshes.Add(GreedyMesher.MeshChunk(grid, chunkX, chunkZ, tiles));
             }
         }
 
@@ -219,7 +221,7 @@ public sealed class ChunkSwap
             FloorPlan plan = dig.Generate(runSeed, floor);
             long digMicros = (long)Stopwatch.GetElapsedTime(digStarted).TotalMicroseconds;
             long meshStarted = Stopwatch.GetTimestamp();
-            IReadOnlyList<MeshData> meshes = MeshAll(plan.Grid);
+            IReadOnlyList<MeshData> meshes = MeshAll(plan.Grid, this.tiles);
             return new NextFloor(plan, meshes, digMicros, (long)Stopwatch.GetElapsedTime(meshStarted).TotalMicroseconds);
         });
     }
@@ -246,7 +248,7 @@ public sealed class ChunkSwap
     private List<MeshInstance3D> BuildAll(VoxelGrid grid, bool visible)
     {
         List<MeshInstance3D> nodes = [];
-        foreach (MeshData data in MeshAll(grid))
+        foreach (MeshData data in MeshAll(grid, this.tiles))
         {
             this.AddNode(data, visible, nodes);
         }

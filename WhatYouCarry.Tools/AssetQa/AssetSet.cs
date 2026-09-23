@@ -12,7 +12,7 @@ namespace WhatYouCarry.Tools.AssetQa;
 /// </summary>
 /// <param name="Bodies">The models at the top of the model directory, in path order.</param>
 /// <param name="Overlays">The armor overlays under the armor directory, in path order (D-300).</param>
-/// <param name="Animations">The animation files next to the models, in path order (D-298).</param>
+/// <param name="Animations">The animation files next to the models, in path order (D-298). A paint file of D-508 is not an animation.</param>
 /// <param name="LoadFindings">One finding per file that did not load, with the loader message.</param>
 public sealed record AssetSet(IReadOnlyList<LoadedModel> Bodies, IReadOnlyList<LoadedModel> Overlays, IReadOnlyList<LoadedAnimation> Animations, IReadOnlyList<AssetFinding> LoadFindings)
 {
@@ -48,6 +48,12 @@ public sealed record AssetSet(IReadOnlyList<LoadedModel> Bodies, IReadOnlyList<L
 
         foreach (string file in SortedFiles(modelDirectory, AnimationPattern))
         {
+            // A paint file names the recipes of a model, and the texture generator reads it (D-508).
+            if (file.EndsWith(AssetPaths.PaintExtension, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             ReadAnimation(contentRoot, file, animations, findings);
         }
 

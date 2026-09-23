@@ -1,0 +1,9 @@
+{
+  "model": "models/sword-basic.bbmodel",
+  "boxes": {
+    "grip_box": {"recipe": "leather", "faces": {}},
+    "guard_box": {"recipe": "plank", "faces": {}},
+    "blade_box": {"recipe": "metal", "faces": {}},
+    "tip_box": {"recipe": "metal", "faces": {}}
+  }
+}

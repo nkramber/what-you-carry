@@ -21,7 +21,7 @@ public static class WorldMaterial
     /// <summary>The uniform that holds the atlas.</summary>
     public const string AtlasName = "atlas";
 
-    /// <summary>The uniform that holds the side of one tile as a fraction of the atlas.</summary>
+    /// <summary>The uniform that holds the side of one block canvas as a fraction of the atlas.</summary>
     public const string TileSizeName = "tile_size";
 
     /// <summary>The uniform that holds the camera end of the fade segment.</summary>
@@ -41,7 +41,7 @@ public static class WorldMaterial
             Shader = GD.Load<Shader>(ShaderPath),
         };
         material.SetShaderParameter(AtlasName, atlas);
-        material.SetShaderParameter(TileSizeName, new Vector2(AtlasTile.Size, AtlasTile.Size));
+        material.SetShaderParameter(TileSizeName, new Vector2(BlockTiles.Size, BlockTiles.Size));
         material.SetShaderParameter(FadeRadiusName, FadeRadius);
         return material;
     }

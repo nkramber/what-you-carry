@@ -258,6 +258,23 @@ public sealed class AssetQaTests
         Assert.Contains("'Player.png'", finding.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>A paint file next to a model is not an animation, so the asset set skips it, and its model reference still counts for the case check (D-508).</summary>
+    [Fact]
+    public void PaintFileIsNotAnAnimation()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write(AssetPaths.BodyModel, ModelJson.TorsoBody());
+        content.Write("models/player.paint.json", "{\"model\": \"models/Player.bbmodel\", \"boxes\": {}}");
+
+        AssetSet set = AssetSet.Read(content.Content);
+
+        Assert.Empty(set.Animations);
+        Assert.Empty(set.LoadFindings);
+        AssetFinding finding = Assert.Single(Findings(content));
+        Assert.Equal("models/player.paint.json", finding.Path);
+        Assert.Contains("'models/Player.bbmodel'", finding.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>PR-57 exit test 4. Every model, overlay, and animation of the checkout passes, and the checkout holds the body.</summary>
     [Fact]
     public void RepositoryModelsPass()

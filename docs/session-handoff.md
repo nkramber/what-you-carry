@@ -2,6 +2,152 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 217: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
+
+### What this session did, and why
+
+- Re-reviewed PR #92 at effective head `d96ae19` and updated `docs/reviews/pr-92.md`.
+- Verified P2-1. The parser and packer now reject overflowing bounds. The new tests pass on this head and fail on the old code.
+- D-510 closes exit test 6. The owner confirmed that the contact sheet keeps the look.
+
+### State of the build
+
+- The focused recipe and texture tests passed 100 of 100. The old-code comparison failed only on the four overflow cases.
+- CI, Smoke, bit identity, `ste-check`, `det-lint`, `asset-qa`, `doc-gate`, `documents`, `night-gate`, `bots`, and Gitar passed at effective head `d96ae19`.
+- The effective head is `d96ae19`. The review record and this handoff are metadata. The review gate and `evaluate` passed on metadata tip `c8f73cc`.
+
+### In flight
+
+- PR #92: publish the check results in this record, then verify the session end gate.
+
+### Traps and gotchas
+
+- A bounds check compares each size with the room that remains. It does not add two large values.
+- OQ-181 blocks PR-77, not PR-62 (D-504).
+
+### Open questions that block progress
+
+None for PR-62.
+
+### Next concrete action
+
+Verify the session end gate after the push. The owner can merge PR #92. Then a clean author session can start PR-74 from Session 214 and D-496 to D-503.
+
+## Session 216: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-62, correction author. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
+
+### What this session did, and why
+
+- Answered the review of Session 215 in `docs/reviews/pr-92-response.md`.
+- P2-1 had full merit. The layout parse accepted a canvas whose `x + width` wrapped past the int limit. The check now compares each size with the room that the start leaves. The packer had the same wrap, and it now rejects a size past the atlas before any sum. New cases in `RecipeTests` failed on the old code and pass now.
+- The owner confirmed exit test 6: the look stayed the same (D-510).
+
+### State of the build
+
+- The full suite passed 1436 of 1436, Smoke included. `ste-check` gave 0 findings.
+- The committed atlas and layout did not change.
+- The remote head is the commit that holds this entry. It holds the correction, so it is the new effective head.
+
+### In flight
+
+- PR #92: the automated pass of gitar on the new head, then the repeat review of Codex.
+
+### Traps and gotchas
+
+- A bounds check of two ints adds no two large values. Compare the size with the room that remains.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Codex re-reviews PR #92 at the new effective head. After the merge, PR-74 starts from Session 214 and D-496 to D-503.
+
+## Session 215: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-62, reviewer. Branch `feat/pr-62-texture-recipes`. PR #92, changes required. Base `97a12ff`.
+
+### What this session did, and why
+
+- Reviewed the texture recipes, atlas packer, layout parser, Game UV consumers, tests, and the PR documents.
+- Found P2-1: an overflowing canvas coordinate can pass the layout bounds check. Added the review record for effective head `6654571`.
+- Reviewed the before-and-after contact sheet. It looks consistent at sheet scale, but exit test 6 still needs the owner's confirmation.
+
+### State of the build
+
+- The focused recipe, texture, and model tests passed 113 of 113. `ste-check`, `det-lint`, and `asset-qa` passed with 0 findings.
+- The local full suite stalled without output and was interrupted. Its result is incomplete. The remote CI, smoke, bit-identity, and bot checks passed on effective head `6654571`.
+- CI passed on Linux, Windows, and macOS, with Linux and Windows sweeps. Bit identity passed on all three platforms and in compare.
+- The remote branch tip before this review was `adfe9c7`. This session pushed the review record and this handoff to `origin/feat/pr-62-texture-recipes`.
+
+### In flight
+
+- PR #92 needs a fix and regression test for P2-1, and the owner's confirmation of exit test 6.
+
+### Traps and gotchas
+
+- Later handoff-only commits do not change the effective head (D-184).
+- OQ-181 blocks PR-77, not PR-62 (D-504).
+
+### Open questions that block progress
+
+None for PR-62. The owner confirmation and the missing checks are exit evidence, not open questions.
+
+### Next concrete action
+
+The author fixes P2-1 and adds the overflow regression test. The owner confirms the contact sheet. Codex re-reviews PR #92.
+
+## Session 214: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-62, author. Branch `feat/pr-62-texture-recipes`. PR #92, pending owner merge. Base `97a12ff`.
+
+### What this session did, and why
+
+- The owner started PR-62 from a Meshy look reference of the body (`artifacts/reference/meshy-miner-2026-09-22/`, git ignores it). The owner answered in session: D-496 to D-509.
+- D-504 splits the art pass. PR-62 is the texture recipe system. PR-74 is the body, PR-75 the sword, PR-76 the enemy models, and PR-77 the light with OQ-181. OQ-181 now blocks PR-77.
+- The body answers for PR-74: the brow, the toe, the beard, and the nose boxes (D-497, D-498, D-501, D-502), the kept proportions (D-499), the colors (D-500), and the noise pick on the sheet (D-503).
+- The recipe system (D-505 to D-508): recipes under `content/textures/recipes/`, the block file `content/textures/blocks.json`, and a paint file next to each model. `texture-gen` paints one canvas per block and per face, packs them into a 512 atlas with a gutter, and writes `content/textures/layout.json`. Game reads every UV from the layout. The loader reads no face UV.
+- Every block canvas keeps its PR-14 pixels, and a hash test holds that. The body and the sword keep their materials, and each face now draws its own noise.
+- The owner asked for the skill `asset-texture-creation` in this PR (D-509). It gives the five Meshy steps of every asset.
+
+### State of the build
+
+- The full suite passed 1431 of 1431, Smoke included. `ste-check`, `det-lint`, and `asset-qa` gave 0 findings.
+- The contact sheets before and after sit in `artifacts/pr-62/`. `body-before-after.png` shows the body.
+- The remote head is the commit that holds this entry, on `origin/feat/pr-62-texture-recipes`. That commit adds the done marks, so it is the effective head.
+
+### In flight
+
+- PR #92: CI is green except the review gate (D-251). Gitar approved the effective head `6654571` with no finding. The PR changes code, so it needs a review record, not the override.
+- Exit test 6 needs the owner: confirm that the look stayed the same on the contact sheet.
+
+### Traps and gotchas
+
+- `models/*.paint.json` is not an animation. `AssetSet` skips the suffix, so no animation can take the name `paint`.
+- A rectangle layer wholly outside a face canvas is an error. Bind that face to another recipe in the paint file.
+- A change to a model box size moves the packer, so run `texture-gen` and commit the atlas and the layout together.
+- The agent files have 11 bytes left under D-382.
+
+### Open questions that block progress
+
+None for PR-62. OQ-181 blocks PR-77.
+
+### Next concrete action
+
+Codex reviews PR #92. After the merge, PR-74 starts from D-496 to D-503 and the skill `asset-texture-creation`.
+
+- The owner added two angles for PR-74: `08-3d-top.png` and `09-3d-head-front-close.png` in the reference folder. Step 4 of the skill approved them.
+- The close-up measures the brow at y 25.0 to 26.0, the nose band at 23.2 to 24.9, and the beard at 20.8 to 23.2. Each agrees with D-497, D-501, and D-502 within 0.2 units.
+- The face paint of the close-up: hair on the top 1.5 to 2 units with a small peak, brown eyes of about 1.5 by 0.5 units under the brow, a lighter nose, and a mouth notch of about 2 by 0.5 units.
+
 ## Session 213: 2026-09-22, Claude Code
 
 Author: Claude Code
@@ -226,181 +372,3 @@ None. OQ-48 and OQ-182 are resolved by D-450 to D-470.
 ### Next concrete action
 
 Wait for all checks after the review publication to pass, then hand PR #87 to the owner for merge.
-
-## Session 207: 2026-09-22, Codex
-
-Author: Codex
-Session: PR-20, reviewer. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, changes required.
-
-### What this session did, and why
-
-- Reviewed the complete PR #87 change at effective head `06cd3b3` for the contracts of D-450 to D-470 and the five exit tests.
-- Found two input defects: `audio-analyze` accepts path traversal, and `WavReader` overflows on a malformed chunk length.
-- Wrote `docs/reviews/pr-87.md` with the findings and the `Changes required` verdict.
-
-### State of the build
-
-- The full suite passed: 1295 tests, 0 failures, 0 skips, in 7 minutes and 35 seconds. The STE check, determinism lint, and asset check each report 0 findings.
-- At the last status read before publication, the remote head was `5853e7b`, and the effective head was `06cd3b3` (D-184). Linux and Windows jobs were in progress. `evaluate` failed because the review record was absent, and `review-gate` was neutral for the same reason.
-- The checks wait ran for about 14 minutes without a result, then stopped. It did not establish a pass or a failure for the pending jobs.
-
-### In flight
-
-- The author must correct P2-1 and P2-2 with regression tests, then request a repeat review.
-
-### Traps and gotchas
-
-- `audio-analyze --sound ../../../pwn` wrote `pwn.json` at the checkout root in an isolated run.
-- A 20-byte RIFF file with chunk length `2147483640` made `WavReader` throw an unhandled `ArgumentOutOfRangeException`.
-- The two pending platform jobs do not count as complete evidence.
-- F-107 and F-108 remain in the later gameplay PR.
-
-### Open questions that block progress
-
-None. OQ-48 and OQ-182 are answered. The two findings block owner merge until the author corrects them.
-
-### Next concrete action
-
-The author adds a name check to `audio-analyze`, makes the WAV chunk bounds overflow-safe, adds regression tests, and requests a repeat review.
-
-## Session 206: 2026-09-22, Claude Code
-
-Author: Claude Code
-Session: PR-20, author. Branch `feat/pr-20-audio-synth-and-effects`. PR #87, pending owner merge.
-
-### What this session did, and why
-
-- Asked the owner OQ-48 and every open answer of PR-20 before the code, and recorded D-450 to D-470.
-- Built the sound tool: `audio-synth` renders each sound file to a WAV file, and `audio-analyze` writes the band levels of a CC0 reference into a spectral layer. The render holds no transcendental of the runtime, so the three platforms give equal bytes.
-- The owner rejected the sfxr sounds of the first design, so D-459 and D-462 to D-469 moved the path twice: first to the spectral layer of analysed references, then to CC0 recordings for the pitched sounds.
-- Shipped nine sounds: the sword swing, the sword hit, the footstep, the dodge, the player hit, the hunter spawn, the hunter step, the timer alarm, and the timer tick. The owner picked the reference of each one by ear from CC0 candidates.
-- Gave Core five action events for the gameplay facts of the sounds (D-454), and the Game layer four buses, one player per sound, the stride rhythm of D-463, and the hunter pitch of D-455.
-- Wrote the `Makefile` at the root, under an owner override of G-10 for a second concern in this PR.
-
-### State of the build
-
-- Build: 0 warnings and 0 errors. The remote head is `77f215d`, and the effective head is `06cd3b3` (D-184).
-- The full suite passed on the tree of the first commit: 1295 tests, 0 failures, 7 minutes and 55 seconds.
-- The STE check, the determinism lint, and the asset check each report 0 findings.
-- Every CI check of the effective head passed: the three platforms of CI, of bit identity, and of the smoke session, with `doc-gate`, `night-gate`, `det-lint`, `asset-qa`, `ste-check`, and `bots`.
-- The headless smoke session passed with no leaked object and no error line. The play session of the owner ended clean, and the sound bank loaded nine files on the CoreAudio driver.
-- Gitar approved the effective head with no finding, and the review has no open thread. The `evaluate` check fails until a review record exists (D-251).
-
-### In flight
-
-- The owner merge of PR #87, after Codex confirms the corrections of the review.
-
-### The review of Codex, and the answer
-
-- Codex reviewed the effective head `06cd3b3` and asked for changes: `docs/reviews/pr-87.md`.
-- P2-1: the analysis command joined the sound name into a path, so `--sound ../../../pwn` wrote a file outside the sound directory. Both findings reproduced before the correction.
-- P2-2: a chunk length near the top of an int made `body + length` turn negative, so a malformed reference raised an unhandled error with no file and no chunk in it.
-- Both have full merit. The corrections and the evidence stand in `docs/reviews/pr-87-response.md`. Six new test cases cover them, and each one fails on the code before the correction.
-- The corrections went to the remote as `996b3c3`, which is the effective head now. The full suite passed on that tree: 1301 tests, 0 failures, 7 minutes and 13 seconds.
-- The automated pass of gitar ran on `996b3c3` and approved it with no finding and no open thread. The pass of the earlier head `06cd3b3` also had no finding, and no session asked for a manual review.
-- Every CI check of `996b3c3` passed but two: `evaluate` and `review-gate` fail while the review record holds the verdict `Changes required` (D-251). The reviewer alone changes that verdict.
-
-### Traps and gotchas
-
-- The dummy audio driver of a headless session mixes nothing, so a playback never ends and the engine reports it leaked. The bank plays nothing on that driver, and the boot line names the driver.
-- A level of a spectral layer had a ceiling of 40 decibels, which clamped the loudest bands of three sounds. The ceiling is 80 now, and `ALoudRecordingDoesNotReachTheCeiling` guards it.
-- The band noise of a spectral layer drops the pitch of a tone, so a horn or a bell must ship as its recording (D-467).
-- `afplay` cannot play OGG, and `afconvert` writes the extensible WAV header. The reader takes that header.
-- The Freesound key of the owner lives in `~/.zshrc` as `FREESOUND_API_KEY`, and never in this repository.
-
-### Open questions that block progress
-
-None. OQ-48 and OQ-182 are answered.
-
-### Next concrete action
-
-Codex reviews PR #87 and writes `docs/reviews/pr-87.md` for the effective head `06cd3b3`.
-
-The next PR after this one skips the heavy checks on a head that changes documents alone. The owner asks for it before the bug fixes, and it takes the pattern of PR #54 of the repository `the-thing-below`. The owner wants no document change for it in PR #87, because a change outside the metadata set moves the effective head and starts CI again. The plan:
-
-- A new command of Tools answers one question: does every path of a diff belong to the documents? The rule lives in C# with its own tests, as `doc-gate` and `night-gate` do. A path under `content/`, `.github/workflows/`, or any project directory is never a document.
-- The workflows `ci.yml`, `bit-identity.yml`, and `smoke.yml` gain a first job on Linux that runs the command and gives a boolean output. Each platform job takes that job in `needs`, and runs under `if`. A skipped job reports success to the branch rules, so the PR gate stays green with no job that hangs.
-- The cheap checks always run: `ste-check`, `doc-gate`, `review-gate`, `night-gate`, `det-lint`, and `asset-qa`. They read the documents, so a document change must not skip them.
-- The skip reads the diff from the base of the pull request to the head, so a pull request of documents alone skips from its first push, and a pull request with code runs every check on every push, as today.
-- This automates D-357, which a session applies by hand today, and it frees the one Mac runner (D-356, F-99).
-- Risks to check first: a skipped required check must count as a pass in the branch ruleset, the skip must not move what D-184 names the effective head, and the list of document paths must be narrow.
-- The owner answers three questions in that session: the id of the entry in the roadmap, whether `det-lint` and `asset-qa` skip too, and whether a push to `main` skips as well.
-
-That PR also asks why the checks take so long, which the owner saw on a Windows check of 24 minutes. The one test step of `ci.yml` holds the whole cost: 1055 seconds on the hosted Linux runner, 1206 on the hosted Windows runner, and 451 on the self-hosted Mac mini. The run of `996b3c3` gives a second reading: 872 seconds on Linux, 1518 on Windows, and 489 on the Mac mini, so the hosted runners also vary from run to run. The smoke workflow takes 48 seconds, 103 seconds, and 29 seconds, and the bit identity takes 33 seconds or less, so neither one is the cost. A profile of the suite on 2026-09-22 names ten tests that hold 73 percent of the summed duration of 20.3 minutes, and every one is a seed sweep: `EveryFloorTakesATierWhenOneFits` at 177 seconds, `ReplayReproducesHash` at 132, `EveryPolicyEndsAtTheBottomOrByDeath` at 118, `StairwellReachable` at 98, `CameraNeverInsideSolid` at 97, and `EnemyCountMatchesBudget` at 94. A smaller sweep on a pull request weakens the gate, so the owner decides any change of a seed count.
-
-After that PR: F-107 and F-108, an enemy walks no diagonal, and an enemy does not walk up a ramp. The owner saw both in the play session of PR #87.
-
-## Session 205: 2026-09-21, Codex
-
-Author: Codex
-Session: PR-86, reviewer. Branch `feat/pr-19-hud-and-navigation`. PR #86, pending owner merge.
-
-### What this session did, and why
-
-- Reviewed the complete PR-86 implementation and test diff for the HUD and controller navigation base.
-- Added `docs/reviews/pr-86.md` with the cross-provider verdict for effective head `c64e1e2`.
-
-### State of the build
-
-- Build: 0 warnings and 0 errors at the remote tip `5ea0566`.
-- Focused HUD, navigation, input, and stairwell tests passed: 30 tests.
-- Det-lint, asset QA, and STE check passed with 0 findings.
-- The Godot smoke session passed. The full test suite stalled before it returned a result.
-
-### In flight
-
-- The owner merge of PR #86.
-
-### Traps and gotchas
-
-- The PR tip `5ea0566` is metadata-only. The review effective head is `c64e1e2`.
-- The pre-review evaluate failure reported the missing `docs/reviews/pr-86.md` record. It was not a product test failure.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner can merge PR #86 after the review record and this handoff commit reach the remote branch.
-
-## Session 204: 2026-09-21, Claude Code
-
-Author: Claude Code
-Session: PR-19, author. Branch `feat/pr-19-hud-and-navigation`. PR #86, pending owner merge.
-
-### What this session did, and why
-
-- Dispatched the night on `main` at `32e7909` under D-440. Run 35655210549 passed, and the local `night-gate` command reads the record as a pass.
-- Asked the owner the HUD answers that the roadmap named. D-441 to D-448 record them.
-- Built the HUD, the layout scale, the damage numbers, the focus map, and the fixture screen. Added the tap and the hold at the stairwell prompt, the prompt device, and the `--hud-shot` fixture.
-- The smoke session found that the accept action of Godot 4.7 has no controller input. The owner chose the A button (D-449).
-
-### State of the build
-
-- Build: 0 warnings and 0 errors. The Godot build check passed.
-- Local tests: 1246 of 1246 outside the Smoke category, and 7 of 7 in it.
-- Det-lint, asset QA, and STE check: 0 findings.
-- The HUD shot rendered on the Mac, exit code 0.
-- Remote PR head: the commit of this entry. Effective head: `c64e1e2`.
-
-### In flight
-
-- The gitar pass on PR #86, and the CI of the head.
-- The cross-provider review of PR #86 after the gitar pass.
-
-### Traps and gotchas
-
-- A Game literal that is not a const, such as an exception message or a context key, is a det-lint finding. Use a const field.
-- A static field of an engine type, such as `StringName`, runs engine code when a test first reads the class. Keep const names.
-- The string rule of det-lint does not read an interpolated string. `HudReadsStringTable` reads it for the Ui directory.
-- `StairwellHold` sets the interact bit on the release of a tap, and not on the press. A bot sends its intents past it.
-- The HUD scale goes on the canvas layer alone. A root stretch changes the mouse motion of the look.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Finish the gitar pass on PR #86, then hand the PR to the other provider for the review.

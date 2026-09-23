@@ -23,6 +23,10 @@ namespace WhatYouCarry.Assets;
 /// rotation lives in an animation file (D-87, D-298), and a silent drop of a rotation would show a wrong model
 /// (T-2). Every failure names the file and the box, the bone, or the point at fault (D-92).
 /// </para>
+/// <para>
+/// The faces and the resolution of the file serve Blockbench alone. The texture generator places each face in the
+/// atlas and writes the layout that Game reads (D-505, D-508).
+/// </para>
 /// </remarks>
 public static class BlockbenchLoader
 {
@@ -32,16 +36,10 @@ public static class BlockbenchLoader
     /// <summary>The lowest major format version that the loader reads. Blockbench 5 writes the flat groups list.</summary>
     public const int MinimumFormatMajor = 5;
 
-    /// <summary>The count of numbers of a face rectangle: two corners.</summary>
-    public const int RectangleLength = 4;
-
     private const string RootName = "the file";
     private const string MetaKey = "meta";
     private const string FormatVersionKey = "format_version";
     private const string NameKey = "name";
-    private const string ResolutionKey = "resolution";
-    private const string WidthKey = "width";
-    private const string HeightKey = "height";
     private const string ElementsKey = "elements";
     private const string GroupsKey = "groups";
     private const string OutlinerKey = "outliner";
@@ -53,14 +51,11 @@ public static class BlockbenchLoader
     private const string ToKey = "to";
     private const string OriginKey = "origin";
     private const string RotationKey = "rotation";
-    private const string FacesKey = "faces";
-    private const string UvKey = "uv";
     private const string PositionKey = "position";
     private const string ChildrenKey = "children";
 
     private const string NotOneObject = "the file must hold one JSON object";
     private const string NotAList = "is not a list";
-    private const string ResolutionNotPositive = "must be above zero";
     private const string RotationNotZero = "is not zero, and the model file holds the rest pose alone (D-87, D-298)";
     private const string FromAboveTo = "has a component above the same component of 'to'";
     private const string NotASlot = "is a locator whose name is not an equipment slot of D-18";
@@ -72,15 +67,6 @@ public static class BlockbenchLoader
     private const string UnknownId = "names an id that the file does not declare";
     private const string ElementAtRoot = "is an element at the root of the outliner, and every element hangs from a bone";
 
-    private const string NorthFace = "north";
-    private const string EastFace = "east";
-    private const string SouthFace = "south";
-    private const string WestFace = "west";
-    private const string UpFace = "up";
-    private const string DownFace = "down";
-
-    /// <summary>The face names of the file, in the order of <see cref="BoxSide"/>.</summary>
-    private static readonly string[] FaceNames = [NorthFace, EastFace, SouthFace, WestFace, UpFace, DownFace];
 
     /// <summary>The model of one file.</summary>
     /// <exception cref="ContextException">The file is not valid JSON, its format is too old, or a field is absent, of another kind, or outside its bounds. The error names the box, the bone, or the point.</exception>
@@ -106,7 +92,6 @@ public static class BlockbenchLoader
 
             CheckFormatVersion(path, root);
             string name = JsonShape.Text(path, root, RootName, NameKey);
-            TextureResolution resolution = ReadResolution(path, root);
             Dictionary<string, JsonElement> groups = ReadById(path, root, GroupsKey);
             Dictionary<string, JsonElement> elements = ReadById(path, root, ElementsKey);
 
@@ -130,7 +115,7 @@ public static class BlockbenchLoader
                 string type = JsonShape.Text(path, element, elementName, TypeKey);
                 if (type == CubeType)
                 {
-                    boxes.Add(ReadBox(path, element, elementName, entry.Parent, resolution));
+                    boxes.Add(ReadBox(path, element, elementName, entry.Parent));
                 }
                 else if (type == LocatorType)
                 {
@@ -143,7 +128,7 @@ public static class BlockbenchLoader
             }
 
             CheckUniqueNames(path, bones, boxes);
-            return new BlockbenchModel(name, bones, boxes, attachments);
+            return new BlockbenchModel(path, name, bones, boxes, attachments);
         }
     }
 
@@ -164,25 +149,6 @@ public static class BlockbenchLoader
         {
             throw ContentError.Make(path, FormatVersionKey, $"is '{version}', and the loader reads version {MinimumFormatMajor.ToString(CultureInfo.InvariantCulture)} or later, which Blockbench 5 writes");
         }
-    }
-
-    /// <summary>The texture resolution of the model, in pixels. The face rectangles divide by it.</summary>
-    private static TextureResolution ReadResolution(string path, JsonElement root)
-    {
-        JsonElement resolution = JsonShape.Member(path, root, RootName, ResolutionKey);
-        float width = JsonShape.Number(path, resolution, ResolutionKey, WidthKey);
-        float height = JsonShape.Number(path, resolution, ResolutionKey, HeightKey);
-        if (width <= 0.0f)
-        {
-            throw ContentError.Make(path, WidthKey, ResolutionNotPositive);
-        }
-
-        if (height <= 0.0f)
-        {
-            throw ContentError.Make(path, HeightKey, ResolutionNotPositive);
-        }
-
-        return new TextureResolution(width, height);
     }
 
     /// <summary>Every object of one list, by its id. A repeated id is an error.</summary>
@@ -305,8 +271,11 @@ public static class BlockbenchLoader
         return new ModelBone(name, ToMeters(pivot), parent);
     }
 
-    /// <summary>One box from one cube element. The six face rectangles divide by the resolution.</summary>
-    private static ModelBox ReadBox(string path, JsonElement element, string name, int bone, TextureResolution resolution)
+    /// <summary>
+    /// One box from one cube element. The loader does not read the face rectangles of the file: the texture layout
+    /// of the generator places each face (D-505).
+    /// </summary>
+    private static ModelBox ReadBox(string path, JsonElement element, string name, int bone)
     {
         Vector3 from = JsonShape.Vector(path, element, name, FromKey);
         Vector3 to = JsonShape.Vector(path, element, name, ToKey);
@@ -317,17 +286,7 @@ public static class BlockbenchLoader
             throw ContentError.Make(path, FromKey, $"on '{name}' {FromAboveTo}");
         }
 
-        JsonElement faces = JsonShape.Member(path, element, name, FacesKey);
-        FaceUv[] uvs = new FaceUv[FaceNames.Length];
-        for (int side = 0; side < FaceNames.Length; side++)
-        {
-            JsonElement face = JsonShape.Member(path, faces, name, FaceNames[side]);
-            string faceName = $"{name}.{FaceNames[side]}";
-            float[] rectangle = JsonShape.Numbers(path, JsonShape.Member(path, face, faceName, UvKey), faceName, UvKey, RectangleLength);
-            uvs[side] = new FaceUv(rectangle[0] / resolution.Width, rectangle[1] / resolution.Height, rectangle[2] / resolution.Width, rectangle[3] / resolution.Height);
-        }
-
-        return new ModelBox(name, bone, ToMeters(from), ToMeters(to), ToMeters(pivot), uvs);
+        return new ModelBox(name, bone, ToMeters(from), ToMeters(to), ToMeters(pivot));
     }
 
     /// <summary>One attachment point from one locator element. The name is a slot, and each slot has one point.</summary>
@@ -390,5 +349,4 @@ public static class BlockbenchLoader
     private readonly record struct OutlinerEntry(string Id, bool IsGroup, int Parent);
 
     /// <summary>The texture size of the model, in pixels.</summary>
-    private readonly record struct TextureResolution(float Width, float Height);
 }

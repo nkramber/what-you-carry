@@ -137,8 +137,8 @@ public sealed class GameShapeTests
     }
 
     /// <summary>
-    /// Every content source skips the model, texture, and audio directories, because the animation, palette, rule, and
-    /// sound parameter files there are JSON that Core never reads (D-298, D-305, D-453).
+    /// Every content source skips the model, texture, and audio directories, because the animation, paint, palette,
+    /// recipe, layout, and sound parameter files there are JSON that Core never reads (D-298, D-305, D-453, D-505).
     /// </summary>
     [Fact]
     public void ContentSourcesSkipTheAssetDirectories()
@@ -146,9 +146,12 @@ public sealed class GameShapeTests
         using TemporaryContentDirectory content = new();
         content.Write("floors/a.json", "{}");
         content.Write("models/rig.attack.json", "{}");
+        content.Write("models/rig.paint.json", "{}");
         content.Write("models/armor/chest.json", "{}");
         content.Write("textures/palette.json", "{}");
-        content.Write("textures/rules/raw-stone.json", "{}");
+        content.Write("textures/recipes/raw-stone.json", "{}");
+        content.Write("textures/blocks.json", "{}");
+        content.Write("textures/layout.json", "{}");
         content.Write("texturesets/b.json", "{}");
         content.Write("audio/sfx/footstep.json", "{}");
 

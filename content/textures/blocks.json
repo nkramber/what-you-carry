@@ -1,0 +1,11 @@
+{
+  "blocks": [
+    {"block": 1, "recipe": "raw-stone"},
+    {"block": 2, "recipe": "hewn-stone"},
+    {"block": 3, "recipe": "timber-beam"},
+    {"block": 4, "recipe": "ore-vein"},
+    {"block": 5, "recipe": "still-water"},
+    {"block": 6, "recipe": "rubble"},
+    {"block": 7, "recipe": "plank"}
+  ]
+}

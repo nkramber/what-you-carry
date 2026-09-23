@@ -38,7 +38,7 @@ voxel, greedy meshing, pathfinding, lighting, ambient occlusion.
 
 ## Art terms
 
-atlas, tile, palette, ramp, texture rule, texel, contact sheet, game zoom.
+atlas, canvas, palette, ramp, recipe, paint file, texture layout, texel, contact sheet, game zoom, concept image, look reference.
 
 ## Save terms
 

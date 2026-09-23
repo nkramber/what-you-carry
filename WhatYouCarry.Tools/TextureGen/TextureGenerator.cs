@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using WhatYouCarry.Assets;
@@ -6,106 +5,111 @@ using WhatYouCarry.Core.Logging;
 
 namespace WhatYouCarry.Tools.TextureGen;
 
+/// <summary>The atlas pixels and the texture layout of one generator run.</summary>
+/// <param name="Pixels">The palette index of every pixel of the atlas, row by row from the top left corner.</param>
+/// <param name="Layout">The place of each block canvas and each face canvas.</param>
+public sealed record AtlasResult(byte[] Pixels, TextureLayout Layout);
+
 /// <summary>
-/// Paints the atlas from the palette and the rules (D-85, D-304, D-307). The result is one palette index per pixel,
-/// row by row from the top left corner, so the atlas holds palette colors alone. A tile that no rule paints holds
-/// index 0.
+/// Paints the atlas from the palette, the recipes, and the bindings (D-305, D-505). Each block id has a canvas of
+/// 32 by 32 pixels. Each face of each box of each model has a canvas of its size at 32 texels per meter (D-308). The
+/// packer places every canvas, and a gutter around each canvas repeats its edge pixels. A pixel that no canvas and no
+/// gutter covers holds index 0.
 /// </summary>
-/// <remarks>
-/// The noise of a tile comes from a xorshift sequence of 32 bits, from the seed of its rule. The sequence and the
-/// comparisons are the ones that the palette preview of OQ-1 ran, so the atlas shows the tiles that the owner chose
-/// from (D-304). The order is fixed: one step of the sequence per pixel, rows from the top, pixels from the left.
-/// </remarks>
 public static class TextureGenerator
 {
-    /// <summary>The count of values of 32 bits: the divisor that turns a state into a roll from 0 to 1.</summary>
-    public const double StateRange = 4294967296.0;
-
-    /// <summary>The palette index of every pixel of the atlas.</summary>
-    /// <exception cref="ContextException">Two rules paint one tile.</exception>
-    public static byte[] Paint(Palette palette, IReadOnlyList<TextureRule> rules)
+    /// <summary>The atlas and the layout of the given recipes and bindings.</summary>
+    /// <param name="palette">The palette of the atlas.</param>
+    /// <param name="recipes">Every recipe, by name.</param>
+    /// <param name="blocks">The recipe of each block id, in order of the id.</param>
+    /// <param name="models">The paint of each model, in order of the model path.</param>
+    /// <exception cref="ContextException">A face has no area, a rectangle paints nothing, a seed gives a zero state, or the atlas has no room.</exception>
+    public static AtlasResult Generate(Palette palette, IReadOnlyDictionary<string, Recipe> recipes, IReadOnlyList<BlockPaint> blocks, IReadOnlyList<ModelPaint> models)
     {
-        CheckOneRulePerTile(rules);
-        byte[] pixels = new byte[AtlasLayout.AtlasPixels * AtlasLayout.AtlasPixels];
-        foreach (TextureRule rule in rules)
+        List<CanvasSize> sizes = [];
+        List<byte[]> canvases = [];
+        foreach (BlockPaint block in blocks)
         {
-            PaintTile(pixels, palette, rule);
+            string name = "block " + Text(block.Block);
+            sizes.Add(new CanvasSize(name, AtlasLayout.BlockPixels, AtlasLayout.BlockPixels));
+            canvases.Add(CanvasPainter.Paint(palette, recipes[block.Recipe], AtlasLayout.BlockPixels, AtlasLayout.BlockPixels, CanvasPainter.BlockSalt, name));
         }
 
-        return pixels;
+        foreach (ModelPaint paint in models)
+        {
+            for (int boxIndex = 0; boxIndex < paint.Model.Boxes.Count; boxIndex++)
+            {
+                ModelBox box = paint.Model.Boxes[boxIndex];
+                for (int side = 0; side < BoxFaces.Names.Count; side++)
+                {
+                    string name = TextureLayout.FaceName(paint.Model.Path, box.Name, (BoxSide)side);
+                    (int width, int height) = BoxFaces.CanvasTexels(box, (BoxSide)side);
+                    if (width <= 0 || height <= 0)
+                    {
+                        throw new ContextException($"The face {name} has no area, so no canvas can paint it. Give the box a size on each axis.");
+                    }
+
+                    Recipe recipe = recipes[paint.Recipes[boxIndex][side]];
+                    sizes.Add(new CanvasSize(name, width, height));
+                    canvases.Add(CanvasPainter.Paint(palette, recipe, width, height, CanvasPainter.SaltOf(name), name));
+                }
+            }
+        }
+
+        IReadOnlyList<AtlasRect> places = AtlasPacker.Pack(sizes);
+        byte[] pixels = new byte[AtlasLayout.AtlasPixels * AtlasLayout.AtlasPixels];
+        for (int index = 0; index < canvases.Count; index++)
+        {
+            Place(pixels, canvases[index], places[index]);
+        }
+
+        return new AtlasResult(pixels, Layout(blocks, models, places));
     }
 
     /// <summary>
-    /// Paints the tile of one rule. Each pixel starts at the step of the base color on its ramp. A roll below half the
-    /// noise amount moves the pixel one step down, and a roll above one minus half the amount moves it one step up. A
-    /// pixel on the outer ring then moves down by the edge darkness, and the step stays inside the ramp.
+    /// Copies one canvas into the atlas at its place, and fills its gutter: each gutter pixel takes the nearest pixel
+    /// of the canvas, the corners included.
     /// </summary>
-    /// <exception cref="ArgumentException">The pixel buffer is not the size of the atlas.</exception>
-    public static void PaintTile(byte[] pixels, Palette palette, TextureRule rule)
+    private static void Place(byte[] atlas, byte[] canvas, AtlasRect place)
     {
-        int atlasArea = AtlasLayout.AtlasPixels * AtlasLayout.AtlasPixels;
-        if (pixels.Length != atlasArea)
+        int gutter = AtlasLayout.Gutter;
+        for (int y = -gutter; y < place.Height + gutter; y++)
         {
-            throw new ArgumentException($"The pixel buffer holds {Text(pixels.Length)} pixels, and the atlas needs {Text(atlasArea)}.", nameof(pixels));
-        }
-
-        PaletteColor baseColor = palette.Colors[rule.Base];
-        PaletteRamp ramp = palette.Ramps[baseColor.Ramp];
-        int left = AtlasLayout.Column(rule.Tile) * AtlasLayout.TilePixels;
-        int top = AtlasLayout.Row(rule.Tile) * AtlasLayout.TilePixels;
-        int last = AtlasLayout.TilePixels - 1;
-        double half = rule.Noise / 2.0;
-        uint state = rule.Seed;
-        for (int y = 0; y < AtlasLayout.TilePixels; y++)
-        {
-            for (int x = 0; x < AtlasLayout.TilePixels; x++)
+            int sourceY = System.Math.Clamp(y, 0, place.Height - 1);
+            for (int x = -gutter; x < place.Width + gutter; x++)
             {
-                state = NextState(state);
-                double roll = state / StateRange;
-                int step = baseColor.Step;
-                if (roll < half)
-                {
-                    step -= 1;
-                }
-                else if (roll > 1.0 - half)
-                {
-                    step += 1;
-                }
-
-                if (x == 0 || y == 0 || x == last || y == last)
-                {
-                    step -= rule.Edge;
-                }
-
-                step = Math.Clamp(step, 0, ramp.Count - 1);
-                pixels[((top + y) * AtlasLayout.AtlasPixels) + left + x] = (byte)(ramp.First + step);
+                int sourceX = System.Math.Clamp(x, 0, place.Width - 1);
+                atlas[((place.Y + y) * AtlasLayout.AtlasPixels) + place.X + x] = canvas[(sourceY * place.Width) + sourceX];
             }
         }
     }
 
-    /// <summary>One step of the xorshift sequence of 32 bits, with the shifts 13, 17, and 5.</summary>
-    public static uint NextState(uint state)
+    /// <summary>The layout of the places, in the order that the canvases took: the blocks, then the faces by model, box, and side.</summary>
+    private static TextureLayout Layout(IReadOnlyList<BlockPaint> blocks, IReadOnlyList<ModelPaint> models, IReadOnlyList<AtlasRect> places)
     {
-        state ^= state << 13;
-        state ^= state >> 17;
-        state ^= state << 5;
-        return state;
-    }
-
-    /// <summary>No two rules paint one tile. The error names the tile and both files.</summary>
-    private static void CheckOneRulePerTile(IReadOnlyList<TextureRule> rules)
-    {
-        TextureRule?[] owners = new TextureRule?[AtlasLayout.TileCount];
-        foreach (TextureRule rule in rules)
+        List<BlockPlace> blockPlaces = [];
+        int index = 0;
+        foreach (BlockPaint block in blocks)
         {
-            TextureRule? earlier = owners[rule.Tile];
-            if (earlier is not null)
-            {
-                throw new ContextException($"The rules '{earlier.ContentPath}' and '{rule.ContentPath}' both paint the tile {Text(rule.Tile)}, and each tile has one rule.");
-            }
-
-            owners[rule.Tile] = rule;
+            blockPlaces.Add(new BlockPlace(block.Block, block.Recipe, places[index]));
+            index++;
         }
+
+        List<FacePlace> facePlaces = [];
+        foreach (ModelPaint paint in models)
+        {
+            for (int boxIndex = 0; boxIndex < paint.Model.Boxes.Count; boxIndex++)
+            {
+                for (int side = 0; side < BoxFaces.Names.Count; side++)
+                {
+                    string recipe = paint.Recipes[boxIndex][side];
+                    facePlaces.Add(new FacePlace(paint.Model.Path, paint.Model.Boxes[boxIndex].Name, (BoxSide)side, recipe, places[index]));
+                    index++;
+                }
+            }
+        }
+
+        return new TextureLayout(blockPlaces, facePlaces);
     }
 
     private static string Text(int number)
