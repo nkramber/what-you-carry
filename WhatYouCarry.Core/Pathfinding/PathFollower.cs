@@ -28,7 +28,8 @@ namespace WhatYouCarry.Core.Pathfinding;
 /// <para>
 /// A body can wedge against the slope of a ramp and come no nearer its goal with a clear path ahead of it
 /// (F-105). <see cref="IsWedged"/> reads that state after <see cref="WedgedTicks"/> ticks with no gain, and a
-/// caller answers it with a jump, which lifts the body off the slope.
+/// caller answers it with a jump, which lifts the body off the slope. An arrival at a waypoint is a gain, so a
+/// detour away from the goal reads no wedge (F-111).
 /// </para>
 /// </remarks>
 public sealed class PathFollower
@@ -58,7 +59,7 @@ public sealed class PathFollower
     /// <summary>Answers whether the last search ran and found no path to the goal. A search that did not run leaves it as it was.</summary>
     public bool LastSearchFailed { get; private set; }
 
-    /// <summary>Answers whether the body came no nearer its goal for <see cref="WedgedTicks"/> ticks, which a walk never does on open ground (F-105).</summary>
+    /// <summary>Answers whether the body came no nearer its goal and arrived at no waypoint for <see cref="WedgedTicks"/> ticks, which a walk never does on open ground (F-105, F-111).</summary>
     public bool IsWedged => this.stillTicks >= WedgedTicks;
 
     /// <summary>Drops the path, so the next call searches a new one.</summary>
@@ -77,8 +78,15 @@ public sealed class PathFollower
     /// <see cref="GridPathfinder.Estimate"/> gives. A goal that moved starts the count again.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A count of the ticks in one cell reads no wedge when the body swings over a cell face, because its cell
     /// then changes on every second tick. The estimate to the goal falls only when the body takes ground.
+    /// </para>
+    /// <para>
+    /// A path can lead away from the goal for more than four seconds, around a wall or down a long ramp. The
+    /// estimate then does not fall, so an arrival at a waypoint also starts the count again (D-546). A body that a
+    /// slope wedges arrives at no waypoint (F-111).
+    /// </para>
     /// </remarks>
     private void ReadGain(Cell cell, Cell goal)
     {
@@ -117,7 +125,9 @@ public sealed class PathFollower
 
         while (this.waypoint < this.path.Count && PathWalk.Arrived(feet, onGround, this.path[this.waypoint]))
         {
+            // An arrival is a gain along the path, also on a detour that takes the body away from the goal (F-111).
             this.waypoint++;
+            this.stillTicks = 0;
         }
 
         if (this.waypoint >= this.path.Count)

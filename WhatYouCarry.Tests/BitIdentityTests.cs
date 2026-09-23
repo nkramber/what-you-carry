@@ -46,9 +46,12 @@ public sealed class BitIdentityTests
     /// expiry (D-407 to D-425, G-20). PR-72 moved it from `6f7da3d2313688bd` when the simulation version rose to 15,
     /// the path search took the diagonal move of D-486 and D-489, and the jump rule read the slope under the feet
     /// (F-107, F-108, G-20). The new walk with the version at 14 gave `5edea237bc4e2fae`, so the walks of the sweep
-    /// moved the hash as well as the version.
+    /// moved the hash as well as the version. PR-81 moved it from `dc4258105649a548` when the simulation version rose
+    /// to 16, a diagonal drop needed an open fall in the corner column, and a waypoint arrival started the wedge
+    /// count again (D-545, D-546, F-111, G-20). The new rules with the version at 15 gave `dc4258105649a548`, so the
+    /// version alone moved the hash.
     /// </remarks>
-    private const string ExpectedHash = "dc4258105649a548";
+    private const string ExpectedHash = "a2e1c2c6f72bc19e";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

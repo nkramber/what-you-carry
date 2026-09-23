@@ -67,6 +67,7 @@ Use one term for one concept (rules 1.11 and 9.4). A session meets these terms i
 | seed sweep | the reachability sweep of the night, at one hundred thousand seeds |
 | smoke session | the headless Game session that the `smoke` job runs on three platforms (D-114) |
 | night record | `night.json` on the branch `night-results`, which the `night-gate` job reads (D-273) |
+| branch night | a night by hand on a PR branch. It writes `night.json` to the branch `night-branch/<branch>` (D-538) |
 | foundation gate | the gate that a phase passes before the next phase starts |
 | exit test | one numbered test of a roadmap entry, which the gate of that entry names |
 
