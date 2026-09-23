@@ -51,6 +51,82 @@ public sealed class ReviewGateGitTests
     }
 
     [Fact]
+    public void ReviewGateKeepsAnApprovalAfterADocumentsCommit()
+    {
+        // D-534: a commit whose paths all lie in the skip set of D-475 does not move the effective head, so the
+        // approval stays green, and no new review is due.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string reviewed = repo.Commit("feat: first", Files(("WhatYouCarry.Core/A.cs", "// a")));
+        repo.Commit("docs: review", Files((ReviewFile, ReviewFixture.Text(reviewed, "Ready for owner merge"))));
+        string documents = repo.Commit("docs: the roadmap mark and the agent files", Files(
+            ("docs/design.md", "mark"),
+            ("docs/decisions.md", "row"),
+            (".claude/skills/pr-review/SKILL.md", "skill"),
+            ("CLAUDE.md", "agent"),
+            ("AGENTS.md", "agent"),
+            ("README.md", "readme"),
+            ("LICENSE", "license")));
+
+        ReviewGateResult result = Evaluate(repo, documents);
+
+        Assert.Equal(ReviewGateResult.Success, result.Conclusion);
+        Assert.Contains($"Effective head: {reviewed}", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(".github/pull_request_template.md")]
+    [InlineData("WhatYouCarry.Game/README.md")]
+    [InlineData("content/audio/sfx/sword-swing.json")]
+    [InlineData("docs.md")]
+    public void ReviewGateFailsOnACommitOutsideTheSkipSetAfterTheReview(string path)
+    {
+        // D-475: a path outside the skip set moves the effective head, also when it is a Markdown file.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string reviewed = repo.Commit("feat: first", Files(("WhatYouCarry.Core/A.cs", "// a")));
+        repo.Commit("docs: review", Files((ReviewFile, ReviewFixture.Text(reviewed, "Ready for owner merge"))));
+        string later = repo.Commit("chore: a path outside the skip set", Files((path, "text")));
+
+        ReviewGateResult result = Evaluate(repo, later);
+
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(later, result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGateFailsOnCodeMovedIntoTheSkipSet()
+    {
+        // A move deletes the code path, so the commit changes a path outside the skip set (PR #89 review).
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string reviewed = repo.Commit("feat: first", Files(("WhatYouCarry.Core/A.cs", "// a")));
+        repo.Commit("docs: review", Files((ReviewFile, ReviewFixture.Text(reviewed, "Ready for owner merge"))));
+        repo.Git(["mv", "WhatYouCarry.Core/A.cs", "docs/A.cs"]);
+        string move = repo.Commit("docs: move the code into docs", Files());
+
+        ReviewGateResult result = Evaluate(repo, move);
+
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(move, result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGateFailsOnAnApprovalOfADocumentsOnlyPullRequestInGit()
+    {
+        // D-540: every commit changes documents alone, so the review path has nothing to approve.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string documents = repo.Commit("docs: a skill", Files((".claude/skills/pr-review/SKILL.md", "skill")));
+        string head = repo.Commit("docs: review", Files((ReviewFile, ReviewFixture.Text(documents, "Ready for owner merge"))));
+
+        ReviewGateResult result = Evaluate(repo, head);
+
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(ReviewGateRules.OverrideLabel, result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReviewGateNamesARewriteOfTheReviewFile()
     {
         // D-198: a later commit that rewrites the review file keeps the effective head, and the output names that commit.
@@ -113,6 +189,7 @@ public sealed class ReviewGateGitTests
     [Fact]
     public void ReviewGateFailsOnOverrideLabelBeforeNewCommitInGit()
     {
+        // D-539: the label reads the work head, so a documents commit after the label needs the label again.
         using var repo = new TemporaryGitRepository();
         StartBranch(repo);
         string head = repo.Commit("docs: after the label", Files(("docs/design.md", "text")), LabelTime.AddMinutes(5));

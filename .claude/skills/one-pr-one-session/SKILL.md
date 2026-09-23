@@ -12,7 +12,7 @@ This skill does not copy `AGENTS.md`. The rules and the PR gate stay there.
 | Reference file | Load it at this step |
 |---|---|
 | `references/enforcement.md` | A question about who enforces a rule: a machine, the agent, or the owner |
-| `references/review-and-merge.md` | The gitar pass ends: the review loop, the three-strike stop, and the auto-merge |
+| `references/review-and-merge.md` | The gitar pass ends: the review loop, the three-strike stop, the auto-merge, and the merge summary |
 | `references/merge-prompt.md` | The bound PR merges, to write the prompt of the next session |
 
 ## Procedure: the start gate
@@ -71,8 +71,8 @@ The `doc-gate` job runs the same rules on each push and on each edit of the desc
 A PR cannot know its merge commit or its merge time. Git and GitHub hold both, and no document copies them.
 
 - Mark the item in `docs/design.md` and in the focused roadmap as `✅ Done in PR #N.` Write no merge date and no merge commit.
-- Write the mark after the PR opens, and before the gitar pass. A design doc or roadmap commit moves the effective head (D-184).
-- The handoff entry names the branch and the state "pending merge". The handoff and the review record are metadata, so they do not move the effective head.
+- Write the mark after the PR opens, and before the gitar pass. A design doc or roadmap commit moves the work head, and the gitar pass reads it (D-184, D-534).
+- The handoff entry names the branch and the state "pending merge". The handoff and the review record are metadata, so they do not move the work head.
 - A later session reads the merge from git. It does not open a PR to record the merge.
 - An exit test that needs a run on `main` after the merge stays in the PR. The next session runs it and states the result in its own handoff entry.
 
@@ -82,7 +82,7 @@ Each status poll costs a model call over the whole context. After each push, wai
 
 ## Procedure: the completion gate
 
-Before `make codex-review`, or the override, confirm items 1 to 5, 7, and 8. Before the auto-merge or the owner merge, confirm all eight.
+Before `make codex-review`, or the override, confirm items 1 to 5, 7, and 8. Before the auto-merge or the owner merge, confirm all eight. Then write the merge summary of `references/review-and-merge.md`: What, How, CI, and Codex review (D-533).
 
 1. The PR holds the code and the regression tests (T-3).
 2. `docs/decisions.md` and `docs/questions.md` hold each new decision and question.

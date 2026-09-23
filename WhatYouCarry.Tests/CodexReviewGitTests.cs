@@ -46,7 +46,7 @@ public sealed class CodexReviewGitTests
     [Fact]
     public void ACodeCommitDuringTheRoundIsAFault()
     {
-        // D-182, D-184: the reviewer pushes a metadata commit alone, so the effective head must not move.
+        // D-182, D-184: the reviewer pushes a metadata commit alone, so the work head must not move.
         using var repo = new TemporaryGitRepository();
         string reviewed = StartBranch(repo);
         repo.Commit("docs: review", Files((ReviewFile, Record(reviewed))));
@@ -60,6 +60,39 @@ public sealed class CodexReviewGitTests
     }
 
     [Fact]
+    public void ADocumentsCommitDuringTheRoundIsAFault()
+    {
+        // D-182, D-534: a documents commit keeps the effective head, and it moves the work head. The reviewer pushes
+        // a metadata commit alone, so the round fails.
+        using var repo = new TemporaryGitRepository();
+        string reviewed = StartBranch(repo);
+        repo.Commit("docs: review", Files((ReviewFile, Record(reviewed))));
+        string documents = repo.Commit("docs: a design change", Files(("docs/design.md", "text")));
+        SetOrigin(repo, Branch, documents);
+
+        ReviewOutcome outcome = CodexReviewCommand.JudgeRound(new GitRepository(repo.Path), PullRequestNumber, View, reviewed, reviewed);
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains(documents, outcome.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ARecordOfTheEffectiveHeadApprovesAfterADocumentsCommit()
+    {
+        // D-534: the round starts after a documents commit. The record names the code commit, and that commit is the
+        // effective head.
+        using var repo = new TemporaryGitRepository();
+        string reviewed = StartBranch(repo);
+        string documents = repo.Commit("docs: the roadmap mark", Files(("docs/roadmaps/phase-2.md", "mark")));
+        string record = repo.Commit("docs: review", Files((ReviewFile, Record(reviewed)), ("docs/session-handoff.md", "entry")));
+        SetOrigin(repo, Branch, record);
+
+        ReviewOutcome outcome = CodexReviewCommand.JudgeRound(new GitRepository(repo.Path), PullRequestNumber, View, documents, documents);
+
+        Assert.Equal(CodexReviewExit.Approve, outcome.Exit);
+    }
+
+    [Fact]
     public void TheEffectiveHeadSkipsTheMetadataCommits()
     {
         using var repo = new TemporaryGitRepository();
@@ -67,6 +100,35 @@ public sealed class CodexReviewGitTests
         string metadata = repo.Commit("docs: handoff", Files(("docs/session-handoff.md", "entry"), ("docs/reviews/pr-93-response.md", "answer")));
 
         Assert.Equal(reviewed, CodexReviewCommand.EffectiveHead(new GitRepository(repo.Path), View, metadata));
+        Assert.Equal(reviewed, CodexReviewCommand.WorkHead(new GitRepository(repo.Path), View, metadata));
+    }
+
+    [Fact]
+    public void TheEffectiveHeadSkipsTheDocumentsCommitsAndTheWorkHeadDoesNot()
+    {
+        // D-534: the review follows the skip set of D-475, and the Gitar pass follows the metadata set of D-184.
+        using var repo = new TemporaryGitRepository();
+        string reviewed = StartBranch(repo);
+        string documents = repo.Commit("docs: a skill and the agent files", Files((".claude/skills/pr-review/SKILL.md", "skill"), ("AGENTS.md", "agent")));
+        var git = new GitRepository(repo.Path);
+
+        Assert.Equal(reviewed, CodexReviewCommand.EffectiveHead(git, View, documents));
+        Assert.Equal(documents, CodexReviewCommand.WorkHead(git, View, documents));
+    }
+
+    [Fact]
+    public void ADocumentsOnlyPullRequestHasNoEffectiveHead()
+    {
+        // D-540: the start checks refuse such a PR and name the label.
+        using var repo = new TemporaryGitRepository();
+        string root = repo.Commit("chore: root", Files(("README.md", "root")));
+        SetOrigin(repo, "main", root);
+        repo.CreateBranch(Branch);
+        string documents = repo.Commit("docs: a design change", Files(("docs/design.md", "text")));
+        var git = new GitRepository(repo.Path);
+
+        Assert.Null(CodexReviewCommand.EffectiveHead(git, View, documents));
+        Assert.Equal(documents, CodexReviewCommand.WorkHead(git, View, documents));
     }
 
     /// <summary>A root commit on main, then one code commit on the PR branch. Returns the code commit.</summary>

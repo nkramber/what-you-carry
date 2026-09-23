@@ -54,7 +54,7 @@ The author session starts the review as a separate Codex process (D-511). That p
 - Commit the record and your own handoff entry together (D-182, D-518).
 - Give each finding its `Open at:` line (`references/findings.md`). The command counts the heads (D-514).
 - No owner answers during the run. A question that blocks the review gives the verdict `Blocked`, and the record names the question. The author asks the owner.
-- Push no change outside the metadata set. The command then fails the round (D-184).
+- Push no change outside the metadata set. The command then fails the round, also for a documents change (D-182, D-184).
 
 ## Rules that hold at every step
 

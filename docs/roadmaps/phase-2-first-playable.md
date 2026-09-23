@@ -888,6 +888,8 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-79: Review process after approval
 
+✅ Done in PR #95.
+
 Scope:
 
 - `WhatYouCarry.Tools/ReviewGate/`: the effective head skips each commit whose paths all lie in the skip set of D-475, and the review path reads it (D-534). The override label reads the work head, the newest commit outside the metadata set (D-539). A PR of documents alone fails the review path, and the failure names the label (D-540).
@@ -1020,7 +1022,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 33. PR-62. ✅ Done in PR #92. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-509.
 34. PR-78. ✅ Done in PR #93. ✅ The owner answers of 2026-09-23: D-511 to D-524.
 35. PR-74.
-36. PR-79. ✅ The owner answers of 2026-09-23: D-533, D-534, D-539, and D-540.
+36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, D-539, and D-540.
 37. PR-75.
 38. PR-76.
 39. Owner: answer OQ-181.

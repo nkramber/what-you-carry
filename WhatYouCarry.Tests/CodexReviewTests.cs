@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using WhatYouCarry.Tools.CodexReview;
+using WhatYouCarry.Tools.ReviewGate;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
@@ -381,10 +382,41 @@ public sealed class CodexReviewTests
     }
 
     [Fact]
-    public void AMetadataTipKeepsThePassOfTheEffectiveHead()
+    public void ADocumentsOnlyPullRequestIsRefused()
     {
-        // D-184: a paused Gitar attaches a check to a metadata tip and edits no dashboard. The pass of the effective
-        // head stays current, so the later check does not refuse the round.
+        // D-540: no commit lies outside the skip set, so the review has nothing to approve. The problem names the label.
+        IReadOnlyList<string> problems = StartChecks.Problems(With(GoodFacts(), clearEffectiveHead: true));
+
+        string problem = Assert.Single(problems);
+        Assert.Contains(ReviewGateRules.OverrideLabel, problem, StringComparison.Ordinal);
+        Assert.Contains("D-540", problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AMetadataOnlyPullRequestIsRefusedWithOneProblem()
+    {
+        // A PR of metadata alone has no work head either. The Gitar checks need a work head, so they add nothing.
+        IReadOnlyList<string> problems = StartChecks.Problems(With(GoodFacts(), clearEffectiveHead: true, clearWorkHead: true, gitarChecks: []));
+
+        string problem = Assert.Single(problems);
+        Assert.Contains(ReviewGateRules.OverrideLabel, problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheGitarProblemNamesTheWorkHead()
+    {
+        // D-534: the Gitar pass keeps the metadata set of D-184, so a missing check names the work head.
+        const string work = "6666666666666666666666666666666666666666";
+        IReadOnlyList<string> problems = StartChecks.Problems(With(GoodFacts(), workHead: work, gitarChecks: []));
+
+        Assert.Contains(problems, problem => problem.Contains($"the work head {work}", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AMetadataTipKeepsThePassOfTheWorkHead()
+    {
+        // D-184: a paused Gitar attaches a check to a metadata tip and edits no dashboard. The pass of the work head
+        // stays current, so the later check does not refuse the round.
         StartFacts good = GoodFacts();
         DateTimeOffset dashboard = good.DashboardEditedAt!.Value;
         StartFacts facts = With(good, gitarChecks: [good.GitarChecks[0], new GitarCheck("5555555555555555555555555555555555555555", "completed", dashboard.AddMinutes(5))]);
@@ -440,6 +472,7 @@ public sealed class CodexReviewTests
             OriginHead = Head,
             WorkingTreeStatus = string.Empty,
             EffectiveHead = Head,
+            WorkHead = Head,
             GitarChecks = [new GitarCheck(Head, "completed", started)],
             DashboardEditedAt = started.AddMinutes(2),
             UnresolvedThreadCount = 0,
@@ -458,7 +491,10 @@ public sealed class CodexReviewTests
         IReadOnlyList<GitarCheck>? gitarChecks = null,
         DateTimeOffset? dashboard = null,
         bool clearDashboard = false,
-        int? unresolved = null)
+        int? unresolved = null,
+        string? workHead = null,
+        bool clearEffectiveHead = false,
+        bool clearWorkHead = false)
     {
         return new StartFacts
         {
@@ -472,7 +508,8 @@ public sealed class CodexReviewTests
             LocalHead = localHead ?? facts.LocalHead,
             OriginHead = facts.OriginHead,
             WorkingTreeStatus = status ?? facts.WorkingTreeStatus,
-            EffectiveHead = facts.EffectiveHead,
+            EffectiveHead = clearEffectiveHead ? null : facts.EffectiveHead,
+            WorkHead = clearWorkHead ? null : workHead ?? facts.WorkHead,
             GitarChecks = gitarChecks ?? facts.GitarChecks,
             DashboardEditedAt = clearDashboard ? null : dashboard ?? facts.DashboardEditedAt,
             UnresolvedThreadCount = unresolved ?? facts.UnresolvedThreadCount,

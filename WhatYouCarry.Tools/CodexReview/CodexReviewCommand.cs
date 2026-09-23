@@ -101,7 +101,9 @@ public static class CodexReviewCommand
             return Refuse(pullRequest, problems);
         }
 
-        string effectiveBefore = facts.EffectiveHead;
+        // The start checks refuse a PR with no effective head, and a PR with an effective head has a work head too.
+        string effectiveBefore = facts.EffectiveHead ?? throw new InvalidOperationException($"PR #{pullRequest} passed the start checks with no effective head.");
+        string workBefore = facts.WorkHead ?? throw new InvalidOperationException($"PR #{pullRequest} passed the start checks with no work head.");
         string workDirectory = Path.Combine(Path.GetTempPath(), "wyc-codex-review", $"pr-{pullRequest}-{DateTimeOffset.UtcNow:yyyyMMddTHHmmssZ}");
         Directory.CreateDirectory(workDirectory);
         string worktree = Path.Combine(workDirectory, "worktree");
@@ -123,16 +125,17 @@ public static class CodexReviewCommand
         git.Run(["worktree", "remove", "--force", worktree]);
         FetchBranch(git, view.Branch);
         FetchBranch(git, view.BaseBranch);
-        ReviewOutcome outcome = JudgeRound(git, pullRequest, view, facts.OriginHead, effectiveBefore);
+        ReviewOutcome outcome = JudgeRound(git, pullRequest, view, facts.OriginHead, workBefore);
         Print(outcome, effectiveBefore, transcript, lastMessage);
         return outcome.Exit;
     }
 
     /// <summary>
     /// Judges the round from the branch on origin after the fetch. The round must push a new commit, and that commit
-    /// must keep the effective head, because a reviewer pushes a metadata commit alone (D-182, D-184).
+    /// must keep the work head, because a reviewer pushes a metadata commit alone (D-182, D-184). The record must
+    /// name the effective head (D-534).
     /// </summary>
-    public static ReviewOutcome JudgeRound(GitRepository git, int pullRequest, PullRequestView view, string headBefore, string effectiveBefore)
+    public static ReviewOutcome JudgeRound(GitRepository git, int pullRequest, PullRequestView view, string headBefore, string workBefore)
     {
         string headAfter = git.Run(["rev-parse", $"refs/remotes/origin/{view.Branch}"]).Trim();
         if (headAfter == headBefore)
@@ -140,23 +143,37 @@ public static class CodexReviewCommand
             return new ReviewOutcome(CodexReviewExit.Fault, "none", [], [], $"origin/{view.Branch} is still at {headBefore}. The review pushed no commit.");
         }
 
-        string effectiveAfter = EffectiveHead(git, view, headAfter);
-        if (effectiveAfter != effectiveBefore)
+        string? workAfter = WorkHead(git, view, headAfter);
+        if (workAfter != workBefore)
         {
-            return new ReviewOutcome(CodexReviewExit.Fault, "none", [], [], $"The effective head moved from {effectiveBefore} to {effectiveAfter} during the review. A commit outside the metadata set arrived (D-184).");
+            return new ReviewOutcome(CodexReviewExit.Fault, "none", [], [], $"The work head moved from {workBefore} to {workAfter ?? "none"} during the review. A commit outside the metadata set arrived (D-182, D-184).");
         }
 
+        // The work head stayed, so every new commit is a metadata commit, and the effective head stayed too.
+        string effectiveAfter = EffectiveHead(git, view, headAfter)
+            ?? throw new InvalidOperationException($"origin/{view.Branch} at {headAfter} has the work head {workAfter} and no effective head.");
         string reviewFile = ReviewGateRules.ReviewFilePath(pullRequest);
         return ReviewOutcomeRules.Judge(git.ReadFileOrNull(headAfter, reviewFile), reviewFile, effectiveAfter);
     }
 
-    /// <summary>The newest commit from the merge base to the head that changes a path outside the metadata set (D-184).</summary>
-    public static string EffectiveHead(GitRepository git, PullRequestView view, string head)
+    /// <summary>
+    /// The newest commit from the merge base to the head that changes a path outside the skip set of D-475, or null
+    /// when every commit changes documents alone. The review record names it (D-534).
+    /// </summary>
+    public static string? EffectiveHead(GitRepository git, PullRequestView view, string head)
     {
         string mergeBase = git.MergeBase($"refs/remotes/origin/{view.BaseBranch}", head);
-        CommitStamp? effective = git.NewestCommitOutside(mergeBase, head, ReviewGateRules.MetadataPaths);
-        return effective?.Sha
-            ?? throw new InvalidOperationException($"No commit from {mergeBase} to {head} changes a path outside the metadata set, so the review has nothing to approve. The '{ReviewGateRules.OverrideLabel}' label covers such a PR (D-190).");
+        return git.NewestCommitOutside(mergeBase, head, ReviewGateRules.SkipPaths)?.Sha;
+    }
+
+    /// <summary>
+    /// The newest commit from the merge base to the head that changes a path outside the metadata set, or null when
+    /// every commit is a metadata commit. The Gitar pass reads it (D-184, D-534).
+    /// </summary>
+    public static string? WorkHead(GitRepository git, PullRequestView view, string head)
+    {
+        string mergeBase = git.MergeBase($"refs/remotes/origin/{view.BaseBranch}", head);
+        return git.NewestCommitOutside(mergeBase, head, ReviewGateRules.MetadataPaths)?.Sha;
     }
 
     private static PullRequestView ReadPullRequest(string root, int pullRequest)
@@ -177,11 +194,14 @@ public static class CodexReviewCommand
         FetchBranch(git, view.BaseBranch);
         string repository = ExternalProcess.Run("gh", ["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], root).RequireSuccess().Trim();
         string originHead = git.Run(["rev-parse", $"refs/remotes/origin/{view.Branch}"]).Trim();
-        string effectiveHead = EffectiveHead(git, view, originHead);
+        string? workHead = WorkHead(git, view, originHead);
         var gitarChecks = new List<GitarCheck>();
-        foreach (string sha in CommitsFrom(git, effectiveHead, originHead))
+        if (workHead is not null)
         {
-            gitarChecks.AddRange(ReadGitarChecks(root, repository, sha));
+            foreach (string sha in CommitsFrom(git, workHead, originHead))
+            {
+                gitarChecks.AddRange(ReadGitarChecks(root, repository, sha));
+            }
         }
 
         return new StartFacts
@@ -196,18 +216,19 @@ public static class CodexReviewCommand
             LocalHead = git.Run(["rev-parse", "HEAD"]).Trim(),
             OriginHead = originHead,
             WorkingTreeStatus = git.Run(["status", "--porcelain"]),
-            EffectiveHead = effectiveHead,
+            EffectiveHead = EffectiveHead(git, view, originHead),
+            WorkHead = workHead,
             GitarChecks = gitarChecks,
             DashboardEditedAt = ReadDashboardEditTime(root, repository, pullRequest),
             UnresolvedThreadCount = CountUnresolvedThreads(root, repository, pullRequest),
         };
     }
 
-    /// <summary>The effective head and each later commit up to the head.</summary>
-    private static List<string> CommitsFrom(GitRepository git, string effectiveHead, string head)
+    /// <summary>The work head and each later commit up to the head.</summary>
+    private static List<string> CommitsFrom(GitRepository git, string workHead, string head)
     {
-        var commits = new List<string> { effectiveHead };
-        commits.AddRange(git.Run(["rev-list", $"{effectiveHead}..{head}"]).Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        var commits = new List<string> { workHead };
+        commits.AddRange(git.Run(["rev-list", $"{workHead}..{head}"]).Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
         return commits;
     }
 
