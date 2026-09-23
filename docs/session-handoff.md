@@ -15,6 +15,7 @@ Session: PR-71, reviewer. Branch `chore/ci-skip-for-document-heads`. PR #89, pen
 - CI, smoke, bit identity, bots, and the documents job passed on `05aa78a`.
 - The documents push at `34109e6` passed the document, STE, doc-gate, det-lint, asset-QA, and night-gate checks. The four heavy workflows skipped by Rule 2. `evaluate` failed because the review record was not on the branch yet.
 - The remote head before this metadata commit was `34109e6`.
+- After review publication at `1f06e28`, `evaluate`, `review-gate`, and every required check passed. The heavy workflows skipped by Rule 2, and Gitar passed again.
 
 ### In flight
 
