@@ -18,11 +18,13 @@ Session: PR-72, author. Branch `fix/pr-72-enemy-movement`. PR #90, pending owner
 
 - Local: the full suite passed (1377 tests, Smoke apart), then Smoke 7 of 7, the Godot build check, `det-lint` 0, `ste-check` 0.
 - Simulation version 15. Bit identity `dc4258105649a548`. With version 14 the new walk gives `5edea237bc4e2fae`, so the walk moved the hash too.
-- Remote head before this entry: `b283abe`, not pushed yet.
+- Effective head `09926b6`. CI, Smoke, bit identity, bots, det-lint, asset-QA, STE, doc-gate, night-gate, and gitar passed on `751431d`, every heavy job ran. `evaluate` reads red until the review record exists (D-251).
+- Remote head before this metadata commit: `751431d`.
 
 ### In flight
 
 - The status marks `✅ Done in PR #90.` are in the roadmap and the design doc.
+- The review by Codex of the effective head `09926b6`.
 - CI passed on `b1e3ab5`, `evaluate` apart (D-251). The gitar pass of `35311d8` gave one finding: a box on the edge of a block over a ramp got a needless jump. The fix takes the higher of the feet and the slope, with the test `ABodyOnTheEdgeOfABlockOverARampNeedsNoJumpOntoIt`. The bit-identity answer did not move.
 
 ### Traps and gotchas
@@ -38,7 +40,7 @@ None.
 
 ### Next concrete action
 
-Finish the gitar pass on PR #90, then hand over to Codex for the review.
+Codex reviews PR #90 at the effective head `09926b6` and writes `docs/reviews/pr-90.md`. The owner starts it with "Review PR #90" in Codex Desktop.
 
 ## Session 210: 2026-09-22, Codex
 
