@@ -559,7 +559,7 @@ Fix F-107 and F-108 in one PR (D-483, D-484). The path search takes a diagonal m
 Gate: the enemy walk tests, the diagonal walk sweep, the bot tests, and the new bit-identity answer pass.
 > *In plain English:* enemies walked in staircases of side steps and hopped up ramps. They now cut corners where a player can, and they walk up a ramp as the player does.
 
-**PR-73: No suite for documents.** 🔧
+**PR-73: No suite for documents.** ✅ Done in PR #91.
 A change of documents alone runs no full test suite for the author, a review, a review response, or a handoff (D-490, D-491). It runs `ste-check`, `doc-gate`, and the `Documents` category of D-476. The skip set of D-475 names the documents (D-492). A change with any other path runs the full suite (D-493). The test line of the PR gate says so (D-494).
 Gate: the agent files, the skills, and the registers agree on the rule, and the `Documents` category passes.
 > *In plain English:* each session ran every test also for a change that touched only a document. Now such a change runs only the checks that read documents.

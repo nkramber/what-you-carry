@@ -765,6 +765,8 @@ Gate: exit tests 1 to 8 pass.
 
 ### PR-73: No suite for documents
 
+✅ Done in PR #91.
+
 Scope:
 
 - `CLAUDE.md` and `AGENTS.md`: a change of documents alone runs `ste-check`, `doc-gate`, and the `Documents` category, and no full suite (D-491, D-492). A change with any other path runs the full suite (D-493). The test line of the PR gate adds the clause of D-494. The Smoke detail moves to `csharp-conventions`, so the agent files stay under the ceiling of D-382.
@@ -856,7 +858,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 29. PR-20. ✅ Done in PR #87.
 30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
 31. PR-72. ✅ Done in PR #90. ✅ The owner answers of 2026-09-22: D-483 to D-489.
-32. PR-73. ✅ The owner answers of 2026-09-22: D-490 to D-495.
+32. PR-73. ✅ Done in PR #91. ✅ The owner answers of 2026-09-22: D-490 to D-495.
 33. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
 34. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
 35. Tier 4 pass on the screenshot fixture (D-133).

@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 203: 2026-09-21, Codex
+
+Author: Codex
+Session: PR-18, reviewer, after the repeat review of session 202. Branch `feat/pr-18-stairwell-and-transition`. PR #85, pending owner merge.
+
+### What this session did, and why
+
+- Re-reviewed PR #85 at effective head `bab19cc` after the full-clearer timeout fix.
+- Verified the original transition review trigger and the new clearer regression tests.
+- Updated `docs/reviews/pr-85.md` with the current verdict and evidence.
+
+### State of the build
+
+- Build passed with 0 warnings and 0 errors.
+- Focused transition, bot, and measurement tests passed, 11 of 11.
+- Det-lint, asset QA, and STE check passed.
+- PR head is `e32c6cb` on the remote. The effective head is `bab19cc`.
+- The night gate is red on the prior base-branch record under D-440. The first night on `main` after merge must pass.
+
+### In flight
+
+- The owner must merge PR #85.
+
+### Traps and gotchas
+
+- The review gate turns green after the review record reaches the PR branch.
+- The broad local test command stalled after the build. The author reported 1229 of 1229 tests, and focused tests passed locally.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner merges PR #85. After the merge, start a new session and run the night on `main`.
+
 ## Session 202: 2026-09-21, Claude Code
 
 Author: Claude Code
