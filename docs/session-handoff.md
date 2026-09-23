@@ -15,7 +15,8 @@ Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending m
 ### State of the build
 
 - The focused review tests passed 111 of 111. They built all projects.
-- At remote head `b019737`, the CI platform, bot, content, document, bit-identity, lint, and STE checks passed. The night gate failed on the known record in D-538. The Smoke jobs were skipped.
+- At code head `d13f73c`, the CI platform, bot, content, document, bit-identity, lint, and STE checks passed. At metadata head `7781d3b`, the document checks passed, and the heavy jobs skipped.
+- The night gate failed on the known record in D-538. The Smoke jobs were skipped. The review gate failed because P2-1 remains open.
 
 ### In flight
 
