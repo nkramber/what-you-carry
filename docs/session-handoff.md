@@ -17,11 +17,11 @@ Session: PR-74, reviewer. Branch `feat/pr-74-body-art`. PR #94, blocked. Base `6
 
 - `dotnet build WhatYouCarry.slnx` passed with no warnings or errors. The focused texture, recipe, model, and ruleset tests passed 152 of 152.
 - The live ruleset matches `.github/rulesets/main.json`. `asset-qa`, `det-lint`, `doc-gate`, `documents`, `ste-check`, Linux smoke, and Linux bit identity passed.
-- The known `night-gate` failure remains. Multiple platform CI, smoke, bit-identity, and bot jobs were pending when the review record was written. The effective head remains `df900d5`.
+- After the metadata push, the three CI jobs, both sweep jobs, all bit-identity jobs, and the document and asset checks passed. The three Smoke jobs and bots skipped on metadata head `3d7f08b`. `night-gate` failed, and `evaluate` and `review-gate` failed because the verdict is `Blocked`. The effective head remains `df900d5`.
 
 ### In flight
 
-- PR #94 remains blocked until required platform evidence completes and the owner resolves the night-gate block of D-538.
+- PR #94 remains blocked. The owner must resolve the night-gate block of D-538, and exit test 3 still needs fresh Smoke evidence.
 
 ### Traps and gotchas
 
@@ -35,7 +35,7 @@ None. OQ-181 blocks PR-77 alone.
 
 ### Next concrete action
 
-Read the final required checks after the metadata push. Reassess PR #94 when platform checks complete and the night-gate block has an owner disposition.
+Reassess PR #94 after the owner resolves the night-gate block of D-538 and a fresh three-platform Smoke run completes.
 
 ## Session 224: 2026-09-23, Claude Code
 
