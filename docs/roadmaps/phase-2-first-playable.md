@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-73, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-77, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-508. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -28,7 +28,7 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-29 | Four gates preceded their prerequisites | PR-12, PR-16, PR-17, PR-18, PR-57 |
 | F-40 | D-88's effect note put wall fade in the mesher. A shader test needs no mesher change | PR-13 |
 | F-41 | No item said whether a Steam Deck unit exists for M-3 | M-3 |
-| F-96 | The art stayed a first pass, and no item raised it to finished quality | PR-62 |
+| F-96 | The art stayed a first pass, and no item raised it to finished quality | PR-62, PR-74 to PR-77 |
 | F-97 | The tunnels felt cramped in play, and every rise in a tunnel needed a jump | PR-63, PR-64, PR-65, PR-66, PR-16 |
 | F-98 | On the wide sizes, about one floor in 96000 ran the dig job cap with a chamber still in rock | PR-63, PR-67, PR-66 |
 | F-101 | The night of 2026-09-15 found a shaft that lands on an unreachable floor on the wide sizes: seed 79146, floor 7 | PR-68, PR-66 |
@@ -790,32 +790,122 @@ Gate: exit tests 1 to 4 pass.
 
 > *In plain English:* each session ran every test also for a change that touched only a document. Now such a change runs only the checks that read documents.
 
-### PR-62: Art quality pass
+### PR-62: Texture recipe system
 
 Scope:
 
-- Texture rules: the generator of PR-14 gains the rule kinds of a finished material (D-305, D-339). A face then shows more than a base color with noise and an edge.
-- Models: the body of PR-13 and the sword of PR-15 gain the detail that the owner asks for. The detail stays inside the proportion set of D-82 and the rule of D-83. The enemy models of PR-16 take the same pass.
-- Light: the scene light of play and of the contact sheet moves toward the torchlight of D-59, inside the budget of D-81.
-- The edge smoothing of the world: the antialiasing mode and the texture filter that OQ-181 names, measured on the Deck against D-295.
-- The owner answers the rule kinds and the looks in the PR-62 session, before the code (D-339).
+- Recipes: `content/textures/recipes/` replaces `content/textures/rules/`. A recipe is an ordered list of paint layers of the five kinds of D-507. A recipe can extend another with a color swap (D-505).
+- Paint files: `content/models/player.paint.json` and `content/models/sword-basic.paint.json` name a recipe for each box, and for a single face where that face differs (D-508).
+- Generator: `texture-gen` sizes each box face at 32 texels per meter from its box (D-308). It paints the face and packs it into an atlas of 512 by 512 (D-506). It writes `content/textures/layout.json` (D-505). A block is a recipe of 32 by 32 texels.
+- Game: the mesher and the model mesh read the place of each block and each face from the layout (D-505). They ignore the UVs of the model file.
+- Look: every block keeps its pixels. The body and the sword keep their material, base color, and noise (D-504).
+- The owner answers of the art pass for the later PRs: D-496 to D-503.
 
-Out of scope: armor overlays (PR-22), the enemy families of PR-36 to PR-42, the polygon, pivot, and UV checks (PR-49).
+Out of scope: the new body boxes and the face (PR-74), the sword (PR-75), the enemy models (PR-76), the light (PR-77), the armor overlays (PR-22).
 
 Exit tests:
 
-1. `CommittedAtlasMatchesTheGenerator` and `GeneratorIsDeterministic` pass with the new rule kinds.
-2. `RepositoryModelsPass` passes on the new models and on every clip.
-3. `SmokeSessionPasses` passes on the three platforms with the new models and the new light.
-4. The owner approves a new contact sheet as finished art, recorded as a decision.
+1. `CommittedAtlasMatchesTheGenerator`, a layout test of the same kind, and `GeneratorIsDeterministic` pass.
+2. The canvas of each block equals its tile of the atlas of PR-14, pixel for pixel.
+3. A test for each layer kind asserts its paint. An unknown kind, a missing recipe, a missing face, and a full atlas each stop the generator with an error that names the file.
+4. `RepositoryModelsPass` passes, and each face of each model has a place in the layout at 32 texels per meter.
+5. `SmokeSessionPasses` passes on the three platforms.
+6. The owner compares a new contact sheet with the sheet of PR-15 and confirms that the look stayed the same.
 
-Review focus: presentation, content, test quality.
+Review focus: the packer and the layout contract, the error paths of the recipe reader, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 6 pass.
+
+> *In plain English:* each box face read one plain tile of noise, so no box showed a face, a belt, or a boot. Now each face gets its own painted canvas, and nothing changes on screen yet.
+
+### PR-74: Body art
+
+Scope:
+
+- `content/models/player.bbmodel`: the brow, the nose, and the beard on the head bone, and a toe box on each lower leg (D-497, D-498, D-501, D-502). Every other box stays (D-499).
+- Recipes in the colors of D-500: the face, the hair, the sleeve with a skin cuff, the torso with the collar and the belt, and the boot band. The face has no eye whites and no flat Minecraft layout (D-83).
+- The noise of the cloth and the leather comes from the pick of the owner on the contact sheet (D-503).
+
+Out of scope: the head and feet overlays that enclose the new boxes (PR-22).
+
+Exit tests:
+
+1. `RepositoryModelsPass` passes. The new boxes clip nothing at the rest pose or at any keyframe of the dodge, the stagger, and the sword swing (D-301).
+2. `CommittedAtlasMatchesTheGenerator` and the layout test pass.
+3. `SmokeSessionPasses` passes on the three platforms.
+4. The owner approves the new contact sheet beside `02-concept-final-front.png` as finished art, recorded as a decision (D-504).
+
+Review focus: the clip check of the new boxes, the face against D-83, test quality.
 
 Check clause: none.
 
 Gate: exit tests 1 to 4 pass.
 
-> *In plain English:* the blocks, the body, and the sword look like a first pass today. This change gives them the detail and the light of a finished game, before the owner signs off on the first playable.
+> *In plain English:* the miner is ten plain boxes today. This change adds a brow, a nose, a beard, boots, and a painted face from the approved concept.
+
+### PR-75: Sword art
+
+Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
+
+Out of scope: new weapons.
+
+Exit tests:
+
+1. `RepositoryModelsPass` passes on the sword and every clip.
+2. The owner approves a contact sheet of the sword, recorded as a decision.
+
+Review focus: presentation, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 and 2 pass.
+
+> *In plain English:* the sword is three plain boxes. This change gives it the detail of a finished weapon.
+
+### PR-76: Enemy models
+
+Scope: the enemy models of PR-16 gain their own boxes and recipes, and the color swap of D-507 gives each enemy its colors (D-339, D-504).
+
+Out of scope: the families of PR-36 to PR-42.
+
+Exit tests:
+
+1. `RepositoryModelsPass` passes on each enemy model and every clip.
+2. `SmokeSessionPasses` passes on the three platforms.
+3. The owner approves a contact sheet of the enemies, recorded as a decision.
+
+Review focus: presentation, the swap, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* the enemies borrow a first-pass look. This change gives them their own bodies and colors.
+
+### PR-77: Scene light and edge smoothing
+
+Scope:
+
+- The scene light of play and of the contact sheet moves toward the torchlight of D-59, inside the budget of D-81.
+- The antialiasing mode and the texture filter of OQ-181, measured on the Deck against D-295 (D-504).
+
+Out of scope: new light sources in the world.
+
+Exit tests:
+
+1. `SmokeSessionPasses` passes on the three platforms with the new light and the new edge mode.
+2. A frame log on the Deck meets D-295 with the chosen mode.
+3. The owner approves a contact sheet with the new light, recorded as a decision.
+
+Review focus: the frame time, presentation.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass. OQ-181 blocks the start.
+
+> *In plain English:* the light is one flat setting, and block edges look jagged on the Deck. This change adds torchlight and smooth edges inside the frame budget.
 
 ### M-3: Steam Deck frame time
 
@@ -859,10 +949,15 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
 31. PR-72. ✅ Done in PR #90. ✅ The owner answers of 2026-09-22: D-483 to D-489.
 32. PR-73. ✅ Done in PR #91. ✅ The owner answers of 2026-09-22: D-490 to D-495.
-33. PR-62. ✅ OQ-171 answered 2026-09-13: D-339.
-34. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-35. Tier 4 pass on the screenshot fixture (D-133).
-36. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+33. PR-62. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-508.
+34. PR-74.
+35. PR-75.
+36. PR-76.
+37. Owner: answer OQ-181.
+38. PR-77.
+39. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+40. Tier 4 pass on the screenshot fixture (D-133).
+41. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
@@ -872,7 +967,7 @@ Open:
 
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
-- OQ-181: the antialiasing of the world. Blocks PR-62.
+- OQ-181: the antialiasing of the world. Blocks PR-77 (D-504).
 
 Resolved 2026-09-21:
 

@@ -140,7 +140,7 @@ Every floor is 64 by 20 by 64 blocks, with 5 to 9 chambers (D-343, D-344). A gal
 
 A ramp cell is one block id from 8 to 43, so the grid stays one byte per cell (D-164, D-367). On a ramp, the speed along the slope is the flat speed (D-362). A walk and a sprint stay on the slope on the way down, and a roll leaves it (D-363). A body does not slide on a ramp, and it jumps and rolls from a ramp as from flat ground (D-364 to D-366). The mesher draws every face of a ramp with the raw stone tile, so a ramp reads as the floor that it joins (D-368).
 
-Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The palette is eight ramps of four colors from dark to light (D-304). A tool generates the atlas from the palette and one rule per material (D-305, D-307). Every face has 32 texels per meter, a body face too (D-308). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
+Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The palette is eight ramps of four colors from dark to light (D-304). A tool generates the atlas of 512 from the palette and the recipes (D-305, D-505, D-506). A recipe is a list of paint layers (D-507), and a file next to each model names the recipe of each face (D-508). Every face has 32 texels per meter, a body face too (D-308). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
 A C# synthesizer generates all audio from parameter files, music included (D-89, D-93). Music quality is a register risk (F-18).
 
@@ -317,7 +317,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-93 | PR #40 review P1-1: the `night-gate` workflow read `night.json` from the PR checkout when the fetch of `night-results` failed, so a PR could carry a fresh success record and pass the gate with no night | 2026-09-10 | ✅ Corrected in PR-58 before the merge. The command fetches the branch itself and reads the record from git, never from the working tree. A git failure other than an absent branch is an error that names the command |
 | F-94 | The scheduled night at 03:00 UTC on 2026-09-11 never fired: no run of the schedule event exists, the runner was free from 02:45 UTC, the old cron line stood on `main` until 03:54 UTC, and the workflow reads active on GitHub | 2026-09-11 | ✅ D-285 moves the cron to 08:07 UTC, off the start of the hour, which GitHub names as the load peak that delays or drops a schedule. Refuted 2026-09-11 as the whole cause: the 08:07 UTC night came 4 h 40 min late, and a watch read it as a miss (F-95) |
 | F-95 | The scheduled night at 08:07 UTC on 2026-09-11 never fired either: no run of the schedule event existed at 09:00 UTC, the runner was online and idle from 07:15 UTC, the `7 8 * * *` line stood on `main` from 06:27 UTC, the workflow read active, and Actions was on. The repository has no schedule run in two chances on two cron lines, githubstatus.com listed no incident after 2026-09-04, and the cause is unknown | 2026-09-11 | ✅ Refuted 2026-09-11: the night ran at 12:47 UTC as run 34600758086, 4 h 40 min after the cron, and passed. The watch stopped at 09:00 UTC and read a late run as a miss. D-286 moved the cron to 17:21 UTC for one test, and D-288 returns it to 08:07 UTC |
-| F-96 | The PR-15 contact sheet showed the art as a first pass: faces of three rule settings, a body of ten boxes, and one light. The owner asked whether these were test materials, and no roadmap item raised the art to finished quality | 2026-09-13 | 🔧 D-338 keeps the PR-15 sheet as a first pass. D-339 adds PR-62 after PR-20. Binds PR-62 |
+| F-96 | The PR-15 contact sheet showed the art as a first pass: faces of three rule settings, a body of ten boxes, and one light. The owner asked whether these were test materials, and no roadmap item raised the art to finished quality | 2026-09-13 | 🔧 D-338 keeps the PR-15 sheet as a first pass. D-339 adds PR-62 after PR-20. D-504 splits it into PR-62 and PR-74 to PR-77. Binds PR-62 and PR-74 to PR-77 |
 | F-97 | The owner played floor 1 of PR-15 and found the tunnels very cramped. The dig plan carves drifts of 3 by 3 blocks, a gallery of 5 by 3, and chambers 3 to 4 high, and every rise in a tunnel is a one-block step that needs a jump (D-165, D-253) | 2026-09-14 | 🔧 D-341 to D-351: wider and taller spaces, one floor size and one room count, ramps of three slopes, chamber tiers, and the work before PR-16. Binds PR-63 to PR-66 and PR-16 |
 | F-98 | The PR-63 measurement: on the sizes of D-341, D-343, and D-344, the two night sets of 175000 floors pass, and the largest need is 5890 jobs. A sweep of 500000 more floors found 7 that ran the 10000 jobs of D-279 with a chamber still in rock: seed 193207 floor 8, 286534 floor 5, 370718 floor 9, 451689 floor 10, 469501 floor 2, 514012 floor 8, and 573862 floor 8 | 2026-09-14 | ✅ D-353 and D-359 to D-361, merged in GitHub PR #69 on 2026-09-14. A dig that runs 1000 jobs with a chamber in rock starts again with a new chamber draw, up to 4 digs. The PR-67 sweep of the 675000 floors found 0 errors |
 | F-99 | The macOS leg of Bit identity on the PR #65 review tip `d66fd24` never started: the self-hosted runner did not acquire the job in 20 minutes, and the compare job skipped. Four pushes in 15 minutes queued about 12 macOS jobs on the one Mac runner | 2026-09-14 | ✅ D-355 to D-358, merged in GitHub PR #67 on 2026-09-14. A newer event on a PR cancels the older run of each PR workflow, and CI on the tip counts for the effective head. `RepositoryShapeTests` holds the groups. The groups do not stop a lost leg, and F-100 holds that cause |
@@ -564,10 +564,30 @@ A change of documents alone runs no full test suite for the author, a review, a 
 Gate: the agent files, the skills, and the registers agree on the rule, and the `Documents` category passes.
 > *In plain English:* each session ran every test also for a change that touched only a document. Now such a change runs only the checks that read documents.
 
-**PR-62: Art quality pass.** 🔧
-Raise the art from the first pass of PR-14 and PR-15 to finished quality (D-338, D-339): richer texture rules, a more detailed body and sword, the scene light, and the enemy models of PR-16. The owner answers the rule kinds and the looks before the code.
-Gate: the owner approves a new contact sheet as finished art.
-> *In plain English:* the blocks, the body, and the sword look like a first pass today. This change gives them the detail and the light of a finished game, before the owner signs off on the first playable.
+**PR-62: Texture recipe system.** 🔧
+Split from the art pass of D-339 (D-504). A recipe under `content/textures/recipes/` is an ordered list of paint layers: `fill` with noise, `edge`, `rect`, `band`, and a color swap of a recipe that extends another (D-505, D-507). A file next to each model names a recipe for each box and face (D-508). The generator sizes each face at 32 texels per meter, packs it into an atlas of 512 (D-506), and writes `content/textures/layout.json`. Game reads each place from the layout. Every block keeps its pixels, and the body and the sword keep their materials (D-504).
+Gate: the atlas and the layout match the generator, each block matches its old tile, and the owner confirms that the look stayed the same.
+> *In plain English:* each box face read one plain tile of noise, so no box showed a face, a belt, or a boot. Now each face gets its own painted canvas, and nothing changes on screen yet.
+
+**PR-74: Body art.** 🔧
+The body gains a brow, a nose, and a beard on the head bone, and a toe box on each lower leg (D-497, D-498, D-501, D-502). Every other box stays (D-499). New recipes paint the face, the hair, the cuffs, the collar, the belt, and the boots in the colors of D-500. The owner picks the noise on the sheet (D-503). The Meshy images are a look reference alone (D-496).
+Gate: the clip check passes at every keyframe, and the owner approves the contact sheet beside the front concept as finished art.
+> *In plain English:* the miner is ten plain boxes today. This change adds a brow, a nose, a beard, boots, and a painted face from the approved concept.
+
+**PR-75: Sword art.** 🔧
+The sword of PR-15 gains the detail that the owner asks for, on the recipes of PR-62 (D-504).
+Gate: the clip check passes, and the owner approves a contact sheet of the sword.
+> *In plain English:* the sword is three plain boxes. This change gives it the detail of a finished weapon.
+
+**PR-76: Enemy models.** 🔧
+The enemy models of PR-16 gain their own boxes and recipes, and the color swap gives each enemy its colors (D-504, D-507).
+Gate: the clip check and the smoke session pass, and the owner approves a contact sheet of the enemies.
+> *In plain English:* the enemies borrow a first-pass look. This change gives them their own bodies and colors.
+
+**PR-77: Scene light and edge smoothing.** 🔧
+The scene light moves toward the torchlight of D-59, inside the budget of D-81. The antialiasing mode and the texture filter of OQ-181 follow a measurement on the Deck against D-295 (D-504). OQ-181 blocks the start.
+Gate: a frame log on the Deck meets D-295, and the owner approves a contact sheet with the new light.
+> *In plain English:* the light is one flat setting, and block edges look jagged on the Deck. This change adds torchlight and smooth edges inside the frame budget.
 
 **M-3: Steam Deck frame time.** 🔧
 Measure the 99th percentile frame time on the Steam Deck OLED of D-296 over one full floor, with the target of D-295. Binds every render PR (F-3).
@@ -738,7 +758,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-74, PR-75, PR-76, PR-77.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.
