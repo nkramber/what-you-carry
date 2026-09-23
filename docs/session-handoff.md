@@ -16,11 +16,11 @@ Session: PR-72, reviewer. Branch `fix/pr-72-enemy-movement`. PR #90, pending own
 
 - The focused review suite passed 53 tests. The full suite passed 1385 tests with no skips. `ste-check` found 0 issues in 34 files.
 - CI, Smoke, bit identity, and bots passed after effective head `09926b6` on metadata commit `751431d`.
-- The latest metadata tip before this review commit was `b2c7f41`. Its Rule 2 skip, documents, STE, doc-gate, det-lint, asset-QA, night-gate, and gitar checks passed. `evaluate` waits for this review record.
+- The review record and this handoff reached the PR in `cb103bf`. The fresh `evaluate`, `review-gate`, documents, STE, doc-gate, det-lint, asset-QA, night-gate, and gitar checks passed. The heavy jobs skipped under Rule 2.
 
 ### In flight
 
-- Publish `docs/reviews/pr-90.md` and this entry, then verify the fresh review gate.
+- PR #90 awaits owner merge. The review approves effective head `09926b6`.
 
 ### Traps and gotchas
 
@@ -33,7 +33,7 @@ None.
 
 ### Next concrete action
 
-Run the check wait after publication, then verify the remote head and clean status.
+The owner merges PR #90.
 
 ## Session 211: 2026-09-22, Claude Code
 
