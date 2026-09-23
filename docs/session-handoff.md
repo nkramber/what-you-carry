@@ -36,7 +36,17 @@ None.
 
 ### Next concrete action
 
-Push, open the PR, wait on the checks, dispatch the branch night, then run the review.
+This session: wait on the checks of PR #97, dispatch the branch night, then run `make codex-review PR=97 -- --skip-gitar-review`.
+
+The next session, after PR #97 merges, takes the owner focus of 2026-09-23: the fixed seeds of the night. The owner names it in place of PR-75.
+
+- The night runs seeds 1 to 5000 for each bot policy and seeds 1 to 100000 for the seed sweep, every night (D-115, D-116).
+- A fixed set gives a clean before and after, a replay of each failure, and a stable gate. The PR-81 bisect used all three.
+- A fixed set also never tests a floor past its range, and a fix can pass the known seeds alone.
+- The option to put to the owner: keep the fixed set as the gate, and add a rotating slice each night, such as a window from the date. The run log names the window, so each failure replays.
+- The owner decides whether a failure in the slice blocks the merge, or files a finding that adds the seed to the fixed set.
+
+First action of that session: file the next OQ-# in `docs/questions.md` with these options and a recommendation, and ask the owner. Ask the owner for the roadmap id of the PR too. Then record each answer as a D-#.
 
 ## Session 231: 2026-09-23, Codex
 
