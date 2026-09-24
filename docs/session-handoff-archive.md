@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 225: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-74, reviewer. Branch `feat/pr-74-body-art`. PR #94, blocked. Base `6ee836d`.
+
+### What this session did, and why
+
+- Reviewed PR #94 at effective head `df900d5` under the Codex review request that Session 224 started by hand (D-536).
+- Verified the body geometry and paint recipes, fine shades, grain and gradient behavior, palette indexing, tests, documentation, and ruleset fields. No in-scope defect was found.
+- Published the review record with this handoff entry in one metadata commit (D-182).
+
+### State of the build
+
+- `dotnet build WhatYouCarry.slnx` passed with no warnings or errors. The focused texture, recipe, model, and ruleset tests passed 152 of 152.
+- The live ruleset matches `.github/rulesets/main.json`. `asset-qa`, `det-lint`, `doc-gate`, `documents`, `ste-check`, Linux smoke, and Linux bit identity passed.
+- After the metadata push, the three CI jobs, both sweep jobs, all bit-identity jobs, and the document and asset checks passed. The three Smoke jobs and bots skipped on metadata head `3d7f08b`. `night-gate` failed, and `evaluate` and `review-gate` failed because the verdict is `Blocked`. The effective head remains `df900d5`.
+
+### In flight
+
+- PR #94 remains blocked. The owner must resolve the night-gate block of D-538, and exit test 3 still needs fresh Smoke evidence.
+
+### Traps and gotchas
+
+- The owner waived Gitar for PR #94. Its in-progress dashboard has no review threads and makes no code claim.
+- The metadata commit does not change the effective head under D-184. The code head stays `df900d5`.
+- Local smoke sessions need the full Godot path in `AGENTS.md`. This checkout did not have a configured Godot binary.
+
+### Open questions that block progress
+
+None. OQ-181 blocks PR-77 alone.
+
+### Next concrete action
+
+Reassess PR #94 after the owner resolves the night-gate block of D-538 and a fresh three-platform Smoke run completes.
+
 ## Session 224: 2026-09-23, Claude Code
 
 Author: Claude Code

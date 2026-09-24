@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 235: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-82, author. Branch `chore/pr-82-template-gitar-notice`. PR #98, pending merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Ran a night by hand on `main` at `2071cb6`, run 35944586534. The record of `main` was the red night of `e069e16`. The run was in progress at the hand-over. A green night there turns `night-gate` green for this PR.
+- The owner confirmed the roadmap id PR-82 (D-553) and a test of the template line (D-554).
+- The gitar line of the PR gate in `.github/pull_request_template.md` now reads as the line in the agent files: "every gitar comment with an item has its answer" (D-550, D-551).
+- `PullRequestTemplateGitarLineMatchesThePrGate` holds the two lines equal. It failed on the old template.
+- The Phase 2 roadmap and `docs/design.md` hold the PR-82 entry.
+
+### State of the build
+
+- Local: `ste-check` 0, `det-lint` 0. The full suite passed 1586 of 1586.
+- Code head: `bc51dde`. Later commits of this PR change documents only.
+
+### In flight
+
+- The PR checks, and `make codex-review PR=98 -- --skip-gitar-review` (D-543).
+
+### Traps and gotchas
+
+- The template lies outside the skip set of D-475, so this PR runs the full suite and needs a Codex review, and not the override label.
+- The handoff of Session 232 quoted the new line with "(D-550)" at the end. The agent files have no such citation, and the test asks for equal lines, so the template has none too.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+This session: the review round, then the merge request with the summary in questions and answers (D-552).
+
+The session after the merge takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551). Follow the next concrete action of Session 232. File the next OQ-# with the options and a recommendation, and ask the owner for the roadmap id.
+
 ## Session 234: 2026-09-23, Codex
 
 Author: Codex
@@ -335,38 +372,3 @@ None.
 ### Next concrete action
 
 Read the Codex review of PR #95, and answer each finding. Then write the merge summary and ask the owner to confirm the merge. The night fix of D-538 is the next PR, in a new session.
-
-## Session 225: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-74, reviewer. Branch `feat/pr-74-body-art`. PR #94, blocked. Base `6ee836d`.
-
-### What this session did, and why
-
-- Reviewed PR #94 at effective head `df900d5` under the Codex review request that Session 224 started by hand (D-536).
-- Verified the body geometry and paint recipes, fine shades, grain and gradient behavior, palette indexing, tests, documentation, and ruleset fields. No in-scope defect was found.
-- Published the review record with this handoff entry in one metadata commit (D-182).
-
-### State of the build
-
-- `dotnet build WhatYouCarry.slnx` passed with no warnings or errors. The focused texture, recipe, model, and ruleset tests passed 152 of 152.
-- The live ruleset matches `.github/rulesets/main.json`. `asset-qa`, `det-lint`, `doc-gate`, `documents`, `ste-check`, Linux smoke, and Linux bit identity passed.
-- After the metadata push, the three CI jobs, both sweep jobs, all bit-identity jobs, and the document and asset checks passed. The three Smoke jobs and bots skipped on metadata head `3d7f08b`. `night-gate` failed, and `evaluate` and `review-gate` failed because the verdict is `Blocked`. The effective head remains `df900d5`.
-
-### In flight
-
-- PR #94 remains blocked. The owner must resolve the night-gate block of D-538, and exit test 3 still needs fresh Smoke evidence.
-
-### Traps and gotchas
-
-- The owner waived Gitar for PR #94. Its in-progress dashboard has no review threads and makes no code claim.
-- The metadata commit does not change the effective head under D-184. The code head stays `df900d5`.
-- Local smoke sessions need the full Godot path in `AGENTS.md`. This checkout did not have a configured Godot binary.
-
-### Open questions that block progress
-
-None. OQ-181 blocks PR-77 alone.
-
-### Next concrete action
-
-Reassess PR #94 after the owner resolves the night-gate block of D-538 and a fresh three-platform Smoke run completes.
