@@ -38,6 +38,8 @@ None.
 
 Wait on the CI of PR #100. Read run 36005945062 for exit test 6 of PR-83, and state its publish result in this entry. Then dispatch a branch night of this PR, and run `make codex-review PR=<n> -- --skip-gitar-review`.
 
+The next session, after PR #100 merges, makes one PR alone (D-570). It moves the night cron of `.github/workflows/night.yml` from `7 8 * * *` to `7 3 * * *`, 03:07 UTC. It goes into the Phase 2 order ahead of PR-75, the entry that was next. It updates the time comment of the workflow and the test `NightWorkflowRunsAtTwoCentralStandardTime`. It records the revision of D-284, D-285, and D-288, and it asks the owner for its roadmap id.
+
 ## Session 240: 2026-09-24, Codex
 
 Author: Codex
