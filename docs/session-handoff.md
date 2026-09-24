@@ -13,6 +13,7 @@ Session: PR-84, author, the answer to review round 1. Branch `feat/pr-84-night-f
 - Added `.github/scripts/night-failure-record.sh`. It writes the failure record with `jq` and keeps the `failedSeeds` of the record of `main`. The publish step fetches that record itself. The answer is `docs/reviews/pr-100-response.md`.
 - Added `TheFailureRecordOfABrokenBuildKeepsTheCarriedSeeds`. It runs the script, and the next plan and the promotion check then read the kept seed.
 - Session 241 holds exit test 6 of PR-83 (pass), the owner answers D-564 to D-569, and the cloud move D-570 to D-573.
+- Exit test 10 passes. Branch night run 36030984588 at `35da819` ended green at 20:33 UTC. Its record names the slice of 2026-09-24, and no carried or failed seed. The fix of P1-1 changes the publish step of a broken build alone.
 
 ### State of the build
 
@@ -23,7 +24,6 @@ Session: PR-84, author, the answer to review round 1. Branch `feat/pr-84-night-f
 ### In flight
 
 - CI of the fix push, then review round 2 through `make codex-review PR=100 -- --skip-gitar-review`.
-- Branch night run 36030984588 for exit test 10. It ran at `35da819`, before the fix. The fix changes the publish step of a broken build alone, so a night that builds runs the same steps.
 - The merge summary in Q/A form after an approved review (D-524, D-552).
 
 ### Traps and gotchas
@@ -44,7 +44,7 @@ This session: wait on CI and review round 2 of PR #100, then give the merge summ
 After PR #100 merges, the next session makes PR-85 alone (D-570, D-571, D-572, D-573). It goes ahead of PR-75 in the Phase 2 order.
 
 - The night cron of `.github/workflows/night.yml` moves from `7 8 * * *` to `7 7 * * *`, 07:07 UTC. Update the time comment and `NightWorkflowRunsAtTwoCentralStandardTime`, and revise D-284, D-285, and D-288 in part.
-- The night moves to `ubuntu-latest` as parallel jobs, one for each sweep of `NightSeeds.Sweeps`. A hosted job stops at 6 hours. The full clearer took 84 minutes on the Mac Mini, and the hosted Linux test step ran about 2.3 times slower (F-109).
+- The night moves to `ubuntu-latest` as parallel jobs, one for each sweep of `NightSeeds.Sweeps`. A hosted job stops at 6 hours. With the slice, the full clearer took 91 minutes on the Mac Mini and the night 3 h 35 min, and the hosted Linux test step ran about 2.3 times slower (F-109).
 - One job plans the seeds once, and each sweep job gets the date and the record of `main` from it. Each sweep job keeps its logs, its summary line, and its failure line as artifacts. One last job writes and publishes the record, and it re-runs the gates.
 - Keep the carry rules of D-567 and D-569, and the failure record script of a broken build.
 - Run a branch night of PR-85 on hosted Linux before the review.
