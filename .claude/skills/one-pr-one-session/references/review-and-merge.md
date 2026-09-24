@@ -54,7 +54,7 @@ A P0, P1, or P2 finding that is open in three review rounds stops the fix loop (
 
 A documents-only PR with the `review-override` label merges the same way, the owner confirmation included. It needs no review record, and `review-gate` is green by the label (D-517). For a PR that the owner merges by hand, give the merge summary at the hand-over (D-524).
 
-When the night record of `main` fails, run a night on the PR branch with `gh workflow run night.yml --ref <branch>`. Dispatch it after the PR checks, because the night and the Mac legs share one runner. The night writes its record to `night-branch/<branch>` and re-runs the `night-gate` check of the PR (D-538, D-547, D-548).
+When the night record of `main` fails, run a night on the PR branch with `gh workflow run night.yml --ref <branch>`. Dispatch it after the PR checks, because the night and the Mac legs share one runner. The night writes its record to `night-branch/<branch>` and re-runs the `night-gate` check of the PR (D-538, D-547, D-548). After the merge, `night-promote.yml` makes that night the record of `main` when the merge adds only paths of the skip set (D-555 to D-558).
 
 The night gate or a Mac leg can hold the merge for hours, and that is normal. When every check is green and the state stays `OPEN`, read `gh pr view <n> --json mergeStateStatus,autoMergeRequest`. An unresolved thread or a stale check blocks the merge.
 

@@ -7,10 +7,12 @@
 # two steps write night.json with the commit, the end time, the status, and the death and ascend counts of each bot policy,
 # to the orphan branch night-results, which holds that one file (D-273). When the build itself fails, the
 # publish step writes the failure record in shell, so the branch never keeps a stale success. PR-58 adds the
-# gate that reads it. Only a night on main writes night-results (D-373). A night on another branch writes its
+# gate that reads it. Of the nights, only a night on main writes night-results (D-373). A night on another branch writes its
 # record to the orphan branch night-branch/<branch>, so it cannot replace the record of main that the night-gate
 # job reads, and the gate of the PR of that branch reads it (D-538; PR-81). That night then re-runs the newest
-# night-gate run of its branch, so the check of the PR reads the new record (D-548). A night on a tag writes no
+# night-gate run of its branch, so the check of the PR reads the new record (D-548). A night on main re-runs the
+# newest night-gate run of each open PR, because every PR reads its record (D-559). The workflow night-promote.yml
+# also writes night-results, at a merge commit that a branch night tested (D-557). A night on a tag writes no
 # record. A failed night keeps its bot logs as a run artifact, because the runner checkout cleans them at its
 # next job (D-280).
 name: Night
@@ -23,16 +25,21 @@ on:
 permissions:
   contents: write
   actions: write
+  pull-requests: read
 
 jobs:
   night:
     runs-on: [self-hosted, macos-arm64-self-hosted]
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The order check of a night on main asks git whether the record of main comes after the night commit (D-562).
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
       - name: Build
+        id: build
         run: dotnet build WhatYouCarry.slnx
       - name: Start the bot summary
         # The runner empties its temp directory between jobs, and an explicit remove keeps a stale file out of the
@@ -69,6 +76,8 @@ jobs:
       - name: Publish the night record
         if: always() && startsWith(github.ref, 'refs/heads/')
         shell: bash
+        env:
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
         run: |
           set -euo pipefail
           # Only main writes the record that every PR reads (D-373). Another branch writes a record of its own (D-538).
@@ -81,6 +90,28 @@ jobs:
           if [ ! -f "${RUNNER_TEMP}/night.json" ]; then
             printf '{"commit":"%s","endedAt":"%s","status":"failure"}\n' "${GITHUB_SHA}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${RUNNER_TEMP}/night.json"
           fi
+          if [ "$target" = "night-results" ]; then
+            # The lease: the record of main as this step reads it. A promotion that writes in between fails the push.
+            lease=$(git ls-remote origin refs/heads/night-results | cut -f1)
+            # A promotion can write a record at a later merge commit while the night runs, and that record stays (D-562).
+            if [ "$BUILD_OUTCOME" = "success" ]; then
+              git fetch --quiet origin main
+              set +e
+              dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-publish-check --root . --remote origin --commit "${GITHUB_SHA}"
+              rc=$?
+              set -e
+              if [ "$rc" -eq 1 ]; then
+                echo "This night writes no record. Its result stays in this run."
+                exit 0
+              fi
+              if [ "$rc" -ne 0 ]; then
+                echo "The night-publish-check command exited ${rc}."
+                exit "$rc"
+              fi
+            else
+              echo "The build left no binary for the order check, so the failure record of this night replaces the record of main."
+            fi
+          fi
           work="${RUNNER_TEMP}/night-results"
           rm -rf "$work"
           git worktree add --detach "$work" HEAD
@@ -92,7 +123,11 @@ jobs:
           git config user.email "night-job@users.noreply.github.com"
           git add night.json
           git commit -qm "night: ${GITHUB_SHA} ${{ job.status }}"
-          git push --force origin "HEAD:refs/heads/${target}"
+          if [ "$target" = "night-results" ]; then
+            git push --force-with-lease="refs/heads/night-results:${lease}" origin "HEAD:refs/heads/${target}"
+          else
+            git push --force origin "HEAD:refs/heads/${target}"
+          fi
       - name: Re-run the night gate of the branch
         # The night-gate check of a PR runs on a pull_request event, so a night that ends later re-runs its newest run
         # (D-548). A run that has not ended reads the new record when it runs. A branch with no PR has no such run.
@@ -115,3 +150,7 @@ jobs:
           fi
           gh run rerun "$id" --repo "$GITHUB_REPOSITORY"
           echo "The night-gate run ${id} runs again, and it reads the record of this night."
+      - name: Re-run the night gate of each open PR
+        # Every PR reads the record of main, so a night on main re-runs the newest night-gate run of each open PR (D-559).
+        if: always() && github.ref == 'refs/heads/main'
+        uses: ./.github/actions/rerun-night-gates

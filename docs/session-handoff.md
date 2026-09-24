@@ -2,6 +2,47 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 239: 2026-09-24, Claude Code
+
+Author: Claude Code
+Session: PR-83, author. Branch `feat/pr-83-night-record-promotion`. PR #99, pending merge. Base `811c1c9`.
+
+### What this session did, and why
+
+- The owner asked that a green branch night count for `main` after the merge of its PR. PR #97 merged with a green branch night at `4282206`, and PR #98 still read the red night of `e069e16`.
+- The owner answered OQ-183 to OQ-189, and each recommendation stood: D-555 to D-563. The PR takes the id PR-83, before the fixed seeds (D-560). The PR-81 night gets no promotion (D-561).
+- Added the tool `night-promote` and the workflow `night-promote.yml`. A push to `main` promotes the branch night of the merged PR when the trees differ only in the skip set (D-555 to D-558).
+- Added `night-publish-check` to `night.yml`. A night on `main` keeps a record at a later commit (D-562). Each write of `night-results` takes a lease.
+- Added the action `rerun-night-gates`. A promotion and a night on `main` re-run the gate of each open PR (D-559).
+- PR #98 merged first as `811c1c9`. This branch rebased onto it. The PR-82 line on the fixed seeds now names the PR after PR-83 (D-560), and this entry took session 239 (D-187).
+
+### State of the build
+
+- Local before the rebase: the full suite passed 1596 of 1596, Smoke included. `det-lint` and `ste-check` read 0. `doc-gate` passed.
+- CI before the rebase, at `af39f08`: every build, test, smoke, bit-identity, bots, lint, and document job passed on the three platforms.
+- The night on `main` at `2071cb6` passed and ended at 2026-09-24T05:06:18Z (run 35944586534). A re-run of the `night-gate` job of this PR read it green. That record stays inside 48 hours until 2026-09-26T05:06Z, so this PR needs no branch night.
+- A read-only dry run of `night-promote` at `2071cb6` gave `promote`. It wrote nothing (D-561).
+- The remote head: the push of this entry. `origin/main` is `811c1c9`.
+
+### In flight
+
+- CI on the rebased head. The owner asked for the review after CI clears: `make codex-review PR=99 -- --skip-gitar-review` (D-543).
+- A first review run started at `af39f08` and stopped on the owner request before it wrote anything.
+
+### Traps and gotchas
+
+- `night-promote.yml` runs first on the merge commit of this PR. This PR has no branch night, so that run ends with `branch-absent` and writes nothing. Its first promotion comes with a later PR. Exit test 6 reads both runs.
+- The night checkout now takes the full history (`fetch-depth: 0`) for the order check of D-562.
+- The only gitar comment is a plan notice with no item (D-550).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Wait on CI of the rebased head. Then run `make codex-review PR=99 -- --skip-gitar-review`, and give the merge request in Q/A form (D-552).
+
 ## Session 238: 2026-09-24, Claude Code
 
 Author: Claude Code
@@ -336,41 +377,3 @@ None.
 ### Next concrete action
 
 Confirm `review-gate` on the new head, read the PR comments, and give the owner the merge summary of D-533.
-
-## Session 229: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
-
-### What this session did, and why
-
-- Re-reviewed PR #95 at effective head `25ad21e`.
-- Verified that P2-1 is fixed: the override label and effective-head logic now use the same document path set. No new code finding remains.
-- Updated the existing review record with the finding history and current verdict.
-
-### State of the build
-
-- The focused review tests passed 119 of 119 at `25ad21e`.
-- The Documents category passed 140 of 140 after the review record and handoff edits.
-- `ste-check` passed with no findings, and `doc-gate` passed with 0 problems over 25 paths.
-- Asset QA, lint, document, STE, bot, the Linux and macOS CI platform results, Smoke, and bit-identity passed at `25ad21e`.
-- The Windows CI job later passed at 17:42 UTC. The metadata-only run skipped heavy jobs under D-474 rule 2 after the previous code-head CI run passed.
-- The night gate failed on the D-538 record. The review gate and evaluator fail on the published `Blocked` verdict.
-
-### In flight
-
-- The review record and this handoff entry are published on `origin/chore/pr-79-review-process`.
-- PR #95 remains blocked by the D-538 night-gate failure. The review gate and evaluator fail on the `Blocked` verdict; metadata-only jobs pass or skip under D-474 rule 2.
-
-### Traps and gotchas
-
-- The code head is `25ad21e`; later review and handoff commits are documents-only and do not move the effective head (D-534).
-- The current night failure belongs to D-538, which is out of scope for PR-79. D-537 keeps the ruleset bypass for the manual merge of that work.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Resolve the D-538 night-gate failure. Then re-review the same effective head and update the existing review record.

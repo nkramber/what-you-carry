@@ -254,6 +254,67 @@ public sealed class RepositoryShapeTests
         Assert.Contains("(D-548)", workflow, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void APushToMainPromotesTheBranchNightOfItsPr()
+    {
+        // D-557: a job on each push to main finds the merged PR, and the tool night-promote decides from git and the two
+        // record branches (D-555, D-556, D-558). The push takes a lease on the record it read. D-559: a promotion
+        // re-runs the night gate of each open PR. The head branch reaches the tool through the environment alone.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night-promote.yml");
+        KeyValuePair<string, string> job = Assert.Single(WorkflowText.RunsOnByJob(workflow));
+        Assert.Equal("promote", job.Key);
+        Assert.Equal("ubuntu-latest", job.Value);
+        Assert.Contains("on:\n  push:\n    branches: [main]\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("\n  contents: write\n  actions: write\n  pull-requests: read\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("concurrency:\n  group: night-promotion\n  cancel-in-progress: false\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("fetch-depth: 0", workflow, StringComparison.Ordinal);
+        Assert.Contains("select(.merge_commit_sha == $sha)", StepText(workflow, "Find the merged PR"), StringComparison.Ordinal);
+
+        string promote = StepText(workflow, "Promote the branch night");
+        Assert.Contains("HEAD_BRANCH: ${{ steps.pr.outputs.branch }}", promote, StringComparison.Ordinal);
+        Assert.Equal(2, workflow.Split("${{ steps.pr.outputs.branch }}").Length);
+        Assert.Contains("git fetch --quiet origin \"refs/pull/${PR_NUMBER}/head\"", promote, StringComparison.Ordinal);
+        Assert.Contains("night-promote --root \"$GITHUB_WORKSPACE\" --remote origin --merge \"$MERGE_SHA\" --head-branch \"$HEAD_BRANCH\"", promote, StringComparison.Ordinal);
+        Assert.Contains("git push --force-with-lease=\"refs/heads/night-results:${lease}\" origin \"HEAD:refs/heads/night-results\"", promote, StringComparison.Ordinal);
+
+        string rerun = StepText(workflow, "Re-run the night gate of each open PR");
+        Assert.Contains("if: steps.promote.outputs.promoted == 'true'", rerun, StringComparison.Ordinal);
+        Assert.Contains("uses: ./.github/actions/rerun-night-gates", rerun, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ANightOnMainKeepsALaterRecordAndReRunsEveryGate()
+    {
+        // D-562: a night on main writes its record only when the record of main is not at a later commit, and the push
+        // takes a lease on the record it read. D-559: a night on main re-runs the night gate of each open PR.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        Assert.Contains("\n  pull-requests: read\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("fetch-depth: 0", workflow, StringComparison.Ordinal);
+        string publish = StepText(workflow, "Publish the night record");
+        Assert.Contains("BUILD_OUTCOME: ${{ steps.build.outcome }}", publish, StringComparison.Ordinal);
+        Assert.Contains("night-publish-check --root . --remote origin --commit \"${GITHUB_SHA}\"", publish, StringComparison.Ordinal);
+        Assert.Contains("git push --force-with-lease=\"refs/heads/night-results:${lease}\" origin \"HEAD:refs/heads/${target}\"", publish, StringComparison.Ordinal);
+        Assert.True(publish.IndexOf("night-publish-check", StringComparison.Ordinal) < publish.IndexOf("git worktree add", StringComparison.Ordinal), "The order check runs before the record commit.");
+
+        string rerun = StepText(workflow, "Re-run the night gate of each open PR");
+        Assert.Contains("if: always() && github.ref == 'refs/heads/main'", rerun, StringComparison.Ordinal);
+        Assert.Contains("uses: ./.github/actions/rerun-night-gates", rerun, StringComparison.Ordinal);
+        Assert.Contains("(D-559)", workflow, StringComparison.Ordinal);
+        Assert.Contains("(D-562)", workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheGateReRunActionReRunsTheNewestGateOfEachOpenPr()
+    {
+        // D-559: the action re-runs the newest night-gate run of each open PR on main that has ended.
+        string action = RepositoryRoot.ReadFile(".github/actions/rerun-night-gates/action.yml");
+        Assert.Contains("using: composite", action, StringComparison.Ordinal);
+        Assert.Contains("gh pr list --repo \"$REPOSITORY\" --state open --base main", action, StringComparison.Ordinal);
+        Assert.Contains("--workflow night-gate.yml --branch \"$branch\" --event pull_request --limit 1", action, StringComparison.Ordinal);
+        Assert.Contains("if [ \"$state\" != \"completed\" ]; then", action, StringComparison.Ordinal);
+        Assert.Contains("gh run rerun \"$id\" --repo \"$REPOSITORY\"", action, StringComparison.Ordinal);
+    }
+
     /// <summary>The concurrency block that every workflow on a pull request carries (D-356).</summary>
     private const string PullRequestConcurrency = """
         concurrency:

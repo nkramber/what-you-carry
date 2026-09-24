@@ -17,7 +17,7 @@ namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, doc-gate, handoff-rotate, ste-check, det-lint, asset-qa, texture-gen, audio-synth, audio-analyze, bit-identity, bot-run, night-record, night-gate, ci-skip, codex-review.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, doc-gate, handoff-rotate, ste-check, det-lint, asset-qa, texture-gen, audio-synth, audio-analyze, bit-identity, bot-run, night-record, night-gate, night-promote, night-publish-check, ci-skip, codex-review.";
 
     public static int Main(string[] args)
     {
@@ -57,6 +57,10 @@ public static class Program
                 return NightRecordCommand.Run(commandArgs);
             case "night-gate":
                 return NightGateCommand.Run(commandArgs);
+            case "night-promote":
+                return NightPromoteCommand.Run(commandArgs);
+            case "night-publish-check":
+                return NightPublishCheckCommand.Run(commandArgs);
             case "ci-skip":
                 return CiSkipCommand.Run(commandArgs);
             case "codex-review":

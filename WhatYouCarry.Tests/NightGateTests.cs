@@ -11,7 +11,8 @@ namespace WhatYouCarry.Tests;
 
 /// <summary>
 /// PR-58 exit tests 1 to 6 and 8: the night gate rules over fixture records, the commit check and the remote
-/// read over real repositories, and the exit codes of the command (D-115, D-177, D-274, D-275).
+/// read over real repositories, and the exit codes of the command (D-115, D-177, D-274, D-275). PR-83: the promotion
+/// of a branch night to the record of main, and the order check of a night on main (D-555 to D-558, D-562).
 /// </summary>
 [Collection(ConsoleCollection.Name)]
 public sealed class NightGateTests
@@ -307,6 +308,238 @@ public sealed class NightGateTests
         Assert.Equal(2, Program.Main(["night-gate", "--root", local.Path, "--remote", "origin", "--base", BaseRef, "--head-branch", HeadBranch, "--now", "2026-09-11T12:00:00Z"]));
         Assert.Equal(2, Program.Main(["night-gate", "--root", local.Path, "--remote", "origin", "--base", BaseRef, "--now", "yesterday"]));
         Assert.Equal(2, Program.Main(["night-gate", "--root"]));
+    }
+
+    /// <summary>
+    /// D-555 to D-558, the regression of the PR-81 case. The record of main failed at the base. The branch night
+    /// passed at the code commit of the PR. The squash merge adds only paths of the skip set of D-475. The branch night
+    /// promotes: the record names the merge commit, keeps the end time of the night, and names its source. The gate of
+    /// the next PR then reads main green, where PR #98 read it red.
+    /// </summary>
+    [Fact]
+    public void BranchNightOfTheMergedPrPromotesAndTheNextPrReadsGreen()
+    {
+        using var remote = new TemporaryGitRepository();
+        string onBase = remote.Commit("feat: base", Files(("a.cs", "a")));
+        remote.CreateBranch(HeadBranch);
+        string night = remote.Commit("fix: code", Files(("b.cs", "b")));
+        remote.Git(["checkout", "-q", "main"]);
+        string merge = remote.Commit("fix: code (#97)", Files(("b.cs", "b"), ("docs/decisions.md", "d"), (".claude/skills/s/SKILL.md", "s"), ("CLAUDE.md", "c"), ("AGENTS.md", "c")));
+        DateTimeOffset nightEnd = Now.AddHours(-9);
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-20), "failure", onBase)));
+        PublishNightOn(remote, NightGateFacts.BranchRecordPrefix + HeadBranch, ("night.json", Record(nightEnd, "success", night)));
+        using TemporaryGitRepository local = CloneOf(remote);
+
+        NightPromotionFacts facts = NightPromotionFacts.Gather(local.Path, "origin", BaseRef, HeadBranch, Now);
+        NightPromotionResult result = NightPromotionRules.Evaluate(facts);
+        Assert.True(result.Promotes, result.Message);
+        Assert.Equal(NightPromotionRules.PromoteCase, result.Case);
+        Assert.Contains(night, result.Message, StringComparison.Ordinal);
+        Assert.Contains(onBase, result.Message, StringComparison.Ordinal);
+
+        string promoted = NightPromotionRules.PromotedRecord(facts);
+        NightRecord? record = NightRecordParser.TryParse(promoted, out string error);
+        Assert.True(record is not null, error);
+        Assert.Equal(merge, record!.Commit);
+        Assert.Equal(nightEnd, record.EndedAt);
+        Assert.Equal("success", record.Status);
+        Assert.Contains($"\"{NightPromotionRules.PromotedFromName}\":{{\"branch\":\"{HeadBranch}\",\"commit\":\"{night}\"}}", promoted, StringComparison.Ordinal);
+
+        PublishNight(remote, ("night.json", promoted));
+        NightGateResult nextPr = NightGateRules.Evaluate(NightGateFacts.Gather(local.Path, "origin", BaseRef, "chore/next", "origin/main", Now));
+        Assert.True(nextPr.Passes, nextPr.Message);
+        Assert.Equal(NightGateRules.PassCase, nextPr.Case);
+        Assert.Contains(merge, nextPr.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>D-555. A merge commit that also holds a code change of another PR does not promote, and the message names the path.</summary>
+    [Fact]
+    public void BranchNightDoesNotPromoteOverACodeChangeOfAnotherPr()
+    {
+        using var remote = new TemporaryGitRepository();
+        string onBase = remote.Commit("feat: base", Files(("a.cs", "a")));
+        remote.CreateBranch(HeadBranch);
+        string night = remote.Commit("fix: code", Files(("b.cs", "b")));
+        remote.Git(["checkout", "-q", "main"]);
+        remote.Commit("feat: another PR (#96)", Files(("c.cs", "c")));
+        remote.Commit("fix: code (#97)", Files(("b.cs", "b"), ("docs/decisions.md", "d")));
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-20), "failure", onBase)));
+        PublishNightOn(remote, NightGateFacts.BranchRecordPrefix + HeadBranch, ("night.json", Record(Now.AddHours(-9), "success", night)));
+        using TemporaryGitRepository local = CloneOf(remote);
+
+        NightPromotionResult result = NightPromotionRules.Evaluate(NightPromotionFacts.Gather(local.Path, "origin", BaseRef, HeadBranch, Now));
+
+        Assert.False(result.Promotes);
+        Assert.Equal(NightPromotionRules.CodeChangedCase, result.Case);
+        Assert.Contains("c.cs", result.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("decisions.md", result.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>D-556. A branch night older than 48 hours does not promote, and one at exactly 48 hours does.</summary>
+    [Fact]
+    public void BranchNightOlderThanTheWindowDoesNotPromote()
+    {
+        NightPromotionResult stale = NightPromotionRules.Evaluate(PromotionFacts(Record(Now.AddHours(-48).AddSeconds(-1), "success", EffectiveHead), mainBeforeMerge: true));
+        NightPromotionResult fresh = NightPromotionRules.Evaluate(PromotionFacts(Record(Now.AddHours(-48), "success", EffectiveHead), mainBeforeMerge: true));
+
+        Assert.False(stale.Promotes);
+        Assert.Equal(NightPromotionRules.BranchStaleCase, stale.Case);
+        Assert.Contains(EffectiveHead, stale.Message, StringComparison.Ordinal);
+        Assert.True(fresh.Promotes, fresh.Message);
+    }
+
+    /// <summary>
+    /// D-558. A record of main at the merge commit or at a later commit stays, success or failure. A newer failed
+    /// night on main is never replaced.
+    /// </summary>
+    [Fact]
+    public void BranchNightNeverReplacesANewerNightOfMain()
+    {
+        using var remote = new TemporaryGitRepository();
+        remote.Commit("feat: base", Files(("a.cs", "a")));
+        remote.CreateBranch(HeadBranch);
+        string night = remote.Commit("fix: code", Files(("b.cs", "b")));
+        remote.Git(["checkout", "-q", "main"]);
+        string merge = remote.Commit("fix: code (#97)", Files(("b.cs", "b")));
+        string later = remote.Commit("docs: later", Files(("docs/note.md", "n")));
+        PublishNightOn(remote, NightGateFacts.BranchRecordPrefix + HeadBranch, ("night.json", Record(Now.AddHours(-9), "success", night)));
+        using TemporaryGitRepository local = CloneOf(remote);
+
+        foreach (string commit in new[] { merge, later })
+        {
+            PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "failure", commit)));
+            NightPromotionFacts facts = NightPromotionFacts.Gather(local.Path, "origin", merge, HeadBranch, Now);
+            NightPromotionResult result = NightPromotionRules.Evaluate(facts);
+            Assert.False(result.Promotes);
+            Assert.Equal(NightPromotionRules.MainKeptCase, result.Case);
+            Assert.Contains(commit, result.Message, StringComparison.Ordinal);
+            Assert.False(facts.MainBeforeMerge);
+        }
+    }
+
+    /// <summary>Each case that keeps the record of main names itself and the commit, and an absent record of main takes the promotion (T-2).</summary>
+    [Fact]
+    public void EveryCaseThatKeepsTheRecordNamesItself()
+    {
+        string night = Record(Now.AddHours(-2), "success", EffectiveHead);
+        (NightPromotionFacts Facts, string Case, string Names)[] kept =
+        [
+            (PromotionFacts(null, mainBeforeMerge: true), NightPromotionRules.BranchAbsentCase, "has no branch night-branch/" + HeadBranch),
+            (PromotionFacts("not json", mainBeforeMerge: true), NightPromotionRules.BranchMalformedCase, "not JSON"),
+            (PromotionFacts(Record(Now.AddHours(-2), "failure", EffectiveHead), mainBeforeMerge: true), NightPromotionRules.BranchNotSuccessCase, "status failure"),
+            (PromotionFacts(Record(Now.AddHours(-2), "cancelled", EffectiveHead), mainBeforeMerge: true), NightPromotionRules.BranchNotSuccessCase, "status cancelled"),
+            (PromotionFacts(night, mainBeforeMerge: true, branchCommitKnown: false), NightPromotionRules.BranchCommitUnknownCase, "lacks the commit"),
+            (PromotionFacts(night, mainBeforeMerge: true, codePaths: ["WhatYouCarry.Core/A.cs"]), NightPromotionRules.CodeChangedCase, "WhatYouCarry.Core/A.cs"),
+            (PromotionFacts(night, mainBeforeMerge: null, mainText: "[]"), NightPromotionRules.MainMalformedCase, "object"),
+            (PromotionFacts(night, mainBeforeMerge: false), NightPromotionRules.MainKeptCase, Commit),
+        ];
+        foreach ((NightPromotionFacts facts, string expectedCase, string names) in kept)
+        {
+            NightPromotionResult result = NightPromotionRules.Evaluate(facts);
+            Assert.False(result.Promotes, expectedCase);
+            Assert.Equal(expectedCase, result.Case);
+            Assert.Contains(names, result.Message, StringComparison.Ordinal);
+        }
+
+        Assert.Throws<InvalidOperationException>(() => NightPromotionRules.PromotedRecord(PromotionFacts(null, mainBeforeMerge: true)));
+
+        NightPromotionResult first = NightPromotionRules.Evaluate(PromotionFacts(night, mainBeforeMerge: null, mainText: null));
+        Assert.True(first.Promotes, first.Message);
+        Assert.Contains("record of main is absent", first.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>The command exits 0 and writes the record on a promotion, 1 and writes nothing without one, and 2 on a wrong option.</summary>
+    [Fact]
+    public void NightPromoteCommandReportsEachExitCode()
+    {
+        using var remote = new TemporaryGitRepository();
+        string onBase = remote.Commit("feat: base", Files(("a.cs", "a")));
+        remote.CreateBranch(HeadBranch);
+        string night = remote.Commit("fix: code", Files(("b.cs", "b")));
+        remote.Git(["checkout", "-q", "main"]);
+        string merge = remote.Commit("fix: code (#97)", Files(("b.cs", "b")));
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-20), "failure", onBase)));
+        using TemporaryGitRepository local = CloneOf(remote);
+        string output = Path.Combine(local.Path, "promoted.json");
+        string[] tail = ["--root", local.Path, "--remote", "origin", "--merge", "origin/main", "--head-branch", HeadBranch, "--now", "2026-09-11T12:00:00Z", "--output", output];
+
+        Assert.Equal(1, Program.Main(["night-promote", .. tail]));
+        Assert.False(File.Exists(output));
+
+        PublishNightOn(remote, NightGateFacts.BranchRecordPrefix + HeadBranch, ("night.json", Record(Now.AddHours(-9), "success", night)));
+        Assert.Equal(0, Program.Main(["night-promote", .. tail]));
+        Assert.Equal(merge, NightRecordParser.TryParse(File.ReadAllText(output), out _)!.Commit);
+
+        Assert.Equal(2, Program.Main(["night-promote", "--root", local.Path, "--remote", "origin", "--merge", "origin/main"]));
+        Assert.Equal(2, Program.Main(["night-promote", .. tail[..^2], "--now", "yesterday", "--output", output]));
+        Assert.Equal(2, Program.Main(["night-promote", "--root"]));
+    }
+
+    /// <summary>
+    /// D-562. A night on main keeps a record at a later commit, which a promotion wrote while the night ran. It
+    /// replaces a record at its own commit or an earlier one, and it writes the first record.
+    /// </summary>
+    [Fact]
+    public void NightOnMainKeepsARecordAtALaterCommit()
+    {
+        using var remote = new TemporaryGitRepository();
+        string earlier = remote.Commit("feat: earlier", Files(("a.cs", "a")));
+        string nightCommit = remote.Commit("feat: night", Files(("b.cs", "b")));
+        string later = remote.Commit("fix: merged later (#97)", Files(("c.cs", "c")));
+        using TemporaryGitRepository local = CloneOf(remote);
+        string[] args = ["night-publish-check", "--root", local.Path, "--remote", "origin", "--commit", nightCommit];
+
+        Assert.Equal(0, Program.Main(args));
+
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", later)));
+        Assert.Equal(1, Program.Main(args));
+
+        foreach (string commit in new[] { nightCommit, earlier })
+        {
+            PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", commit)));
+            Assert.Equal(0, Program.Main(args));
+        }
+
+        PublishNight(remote, ("night.json", "not json"));
+        Assert.Equal(0, Program.Main(args));
+
+        Assert.Equal(2, Program.Main(["night-publish-check", "--root", local.Path, "--remote", "origin"]));
+    }
+
+    /// <summary>The order check names each case, and keeps a record only at a later commit (D-562, T-2).</summary>
+    [Fact]
+    public void NightPublishDecisionNamesEachCase()
+    {
+        NightPublishDecision absent = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, null), null, EffectiveHead);
+        NightPublishDecision malformed = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, "[]"), null, EffectiveHead);
+        NightPublishDecision later = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, Record(Now, "failure")), true, EffectiveHead);
+        NightPublishDecision earlier = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, Record(Now, "success")), false, EffectiveHead);
+
+        Assert.True(absent.Writes);
+        Assert.Contains("absent", absent.Message, StringComparison.Ordinal);
+        Assert.True(malformed.Writes);
+        Assert.Contains("malformed", malformed.Message, StringComparison.Ordinal);
+        Assert.False(later.Writes);
+        Assert.Contains(Commit, later.Message, StringComparison.Ordinal);
+        Assert.Contains("D-562", later.Message, StringComparison.Ordinal);
+        Assert.True(earlier.Writes);
+        Assert.Contains(EffectiveHead, earlier.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>The facts of one promotion, with <see cref="EffectiveHead"/> as the commit of the branch night and a record of main at <see cref="Commit"/>.</summary>
+    private static NightPromotionFacts PromotionFacts(string? branchText, bool? mainBeforeMerge, bool branchCommitKnown = true, string[]? codePaths = null, string? mainText = "default")
+    {
+        return new NightPromotionFacts
+        {
+            Merge = "fedcba9876543210fedcba9876543210fedcba98",
+            HeadBranch = HeadBranch,
+            Main = Read(NightGateFacts.RecordBranch, mainText == "default" ? Record(Now.AddHours(-20), "failure") : mainText),
+            MainBeforeMerge = mainBeforeMerge,
+            Branch = Read(NightGateFacts.BranchRecordPrefix + HeadBranch, branchText),
+            BranchCommitKnown = branchText is null ? null : branchCommitKnown,
+            CodePaths = branchText is null || !branchCommitKnown ? null : codePaths ?? [],
+            Now = Now,
+        };
     }
 
     /// <summary>A checkout with the remote added and fetched, so the base ref of the tests exists in it.</summary>

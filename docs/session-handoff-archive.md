@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 229: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Re-reviewed PR #95 at effective head `25ad21e`.
+- Verified that P2-1 is fixed: the override label and effective-head logic now use the same document path set. No new code finding remains.
+- Updated the existing review record with the finding history and current verdict.
+
+### State of the build
+
+- The focused review tests passed 119 of 119 at `25ad21e`.
+- The Documents category passed 140 of 140 after the review record and handoff edits.
+- `ste-check` passed with no findings, and `doc-gate` passed with 0 problems over 25 paths.
+- Asset QA, lint, document, STE, bot, the Linux and macOS CI platform results, Smoke, and bit-identity passed at `25ad21e`.
+- The Windows CI job later passed at 17:42 UTC. The metadata-only run skipped heavy jobs under D-474 rule 2 after the previous code-head CI run passed.
+- The night gate failed on the D-538 record. The review gate and evaluator fail on the published `Blocked` verdict.
+
+### In flight
+
+- The review record and this handoff entry are published on `origin/chore/pr-79-review-process`.
+- PR #95 remains blocked by the D-538 night-gate failure. The review gate and evaluator fail on the `Blocked` verdict; metadata-only jobs pass or skip under D-474 rule 2.
+
+### Traps and gotchas
+
+- The code head is `25ad21e`; later review and handoff commits are documents-only and do not move the effective head (D-534).
+- The current night failure belongs to D-538, which is out of scope for PR-79. D-537 keeps the ruleset bypass for the manual merge of that work.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Resolve the D-538 night-gate failure. Then re-review the same effective head and update the existing review record.
+
 ## Session 228: 2026-09-23, Claude Code
 
 Author: Claude Code
