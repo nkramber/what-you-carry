@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 236: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, blocked. Base `2071cb6`.
+
+### What this session did, and why
+
+- Reviewed PR #98 at effective head `bc51dde`. The template line and its equality test meet the D-550 contract.
+- Added `docs/reviews/pr-98.md` with the review evidence and verdict.
+- The review found no in-scope defect. Required CI evidence blocks approval.
+
+### State of the build
+
+- The focused template test passed, and the Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
+- GitHub at `d158af7` had a failed `night-gate`. The base night record failed, and the branch-night record was absent.
+- GitHub showed Linux smoke as failed, but its run was still in progress and its failure log was unavailable. Required platform jobs, sweeps, bots, and macOS smoke remained pending.
+- The remote head at hand-over is `d158af7`. Later PR commits change documents only, so the effective head remains `bc51dde`.
+
+### In flight
+
+- PR #98 remains blocked until the required night and CI evidence passes.
+
+### Traps and gotchas
+
+- The Gitar comment is a free-plan notice with no claim. D-550 says to ignore it.
+- The review record and this entry form one metadata commit. The commit does not change the effective head.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Resolve the night-gate and remaining CI results, then request a fresh review if the effective head changes.
+
 ## Session 235: 2026-09-23, Claude Code
 
 Author: Claude Code
@@ -337,38 +372,3 @@ None.
 ### Next concrete action
 
 Correct P2-1 on PR #95 and request a repeat review. Handle the night failure in the next PR under D-538.
-
-## Session 226: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-79, author. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
-
-### What this session did, and why
-
-- Built D-534. `review-gate` and `make codex-review` read the effective head, the newest commit outside the skip set of D-475. A documents commit after an approving review keeps the gate green.
-- Kept the metadata set of D-184 for the gitar pass and for the override label, as the work head. The owner answered the two open points in session: D-539 (the label keeps D-190) and D-540 (a PR of documents alone needs the label).
-- Wrote the merge summary of D-533 (What, How, CI, Codex review) into `one-pr-one-session`, `review-and-merge.md`, the agent files, and the PR template.
-- Added the PR-79 entry to the Phase 2 roadmap and to the design doc, with `✅ Done in PR #95.`
-
-### State of the build
-
-- Code head `d13f73c`, and it is the effective head under the old rule and the new rule. `dotnet build` passed with no warning. `dotnet test` passed 1550 of 1550, Smoke included. `ste-check` gave 0 findings.
-- Six new tests fail when `SkipPaths` returns the metadata set, so they prove D-534.
-
-### In flight
-
-- The Codex review of `d13f73c`, then the merge summary and the owner confirmation.
-
-### Traps and gotchas
-
-- `review-gate` runs the tool of `main` (`pull_request_target`, D-197). This PR is judged by the old rule until it merges. Keep a code path in the last commit outside the metadata set before each review round, so the two rules give one head. A documents-only fix needs a new round, or a commit that also holds code.
-- Exit test 4 runs on the first PR after the merge: a documents commit after its approval must keep `review-gate` green.
-- Sequence item 35 of the Phase 2 roadmap still reads `PR-74.` with no done mark, although PR #94 merged.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the Codex review of PR #95, and answer each finding. Then write the merge summary and ask the owner to confirm the merge. The night fix of D-538 is the next PR, in a new session.
