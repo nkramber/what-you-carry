@@ -59,12 +59,14 @@ Session: PR-83, author. Branch `feat/pr-83-night-record-promotion`. PR #99, pend
 - CI before the rebase, at `af39f08`: every build, test, smoke, bit-identity, bots, lint, and document job passed on the three platforms.
 - The night on `main` at `2071cb6` passed and ended at 2026-09-24T05:06:18Z (run 35944586534). A re-run of the `night-gate` job of this PR read it green. That record stays inside 48 hours until 2026-09-26T05:06Z, so this PR needs no branch night.
 - A read-only dry run of `night-promote` at `2071cb6` gave `promote`. It wrote nothing (D-561).
+- CI at `3236111`, after the rebase: every build, test, smoke, bit-identity, bots, lint, document, and `night-gate` job passed on the three platforms.
+- The review through `make codex-review PR=99 -- --skip-gitar-review` approved the effective head `2b872f9` with no finding (`docs/reviews/pr-99.md`).
 - The remote head: the push of this entry. `origin/main` is `811c1c9`.
 
 ### In flight
 
-- CI on the rebased head. The owner asked for the review after CI clears: `make codex-review PR=99 -- --skip-gitar-review` (D-543).
-- A first review run started at `af39f08` and stopped on the owner request before it wrote anything.
+- The merge confirmation of the owner, after the merge summary in Q/A form (D-524, D-552).
+- A first review run started at `af39f08` and stopped on the owner request before it wrote anything. The owner asked for the rebase first, then the review after CI.
 
 ### Traps and gotchas
 
@@ -78,7 +80,7 @@ None.
 
 ### Next concrete action
 
-Wait on CI of the rebased head. Then run `make codex-review PR=99 -- --skip-gitar-review`, and give the merge request in Q/A form (D-552).
+After the merge, read the run of `night-promote.yml` at the merge commit for exit test 6. It names `branch-absent` and writes nothing, because this PR had no branch night. The next PR is the fixed seeds of the night (D-560).
 
 ## Session 238: 2026-09-24, Claude Code
 
