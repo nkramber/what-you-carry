@@ -613,6 +613,16 @@ The fixed seeds of each night stay the gate, and each night also runs a slice of
 Gate: the seed tests pass, and a branch night of this PR names the slice of its date.
 > *In plain English:* each night tested the same seeds, so a fault past them stayed hidden. Now each night also tests a new batch that the date picks, and a failure blocks merges until a fix.
 
+**PR-85: Night on hosted Linux.** 🔧
+The night cron moves to 07:07 UTC (D-571). The night moves to hosted Linux as parallel jobs, one for each sweep, and one last job writes the record (D-572, D-573). The carry rules of D-567 and D-569 stand.
+Gate: a branch night on hosted Linux ends and names the slice, and the shape tests read the new cron and jobs.
+> *In plain English:* the night ran on the Mac of the owner and blocked the checks of every PR for hours. Now it runs on free cloud machines, in parallel.
+
+**PR-86: Hosted macOS legs.** 🔧
+The macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the hosted macOS arm64 runner, and the self-hosted runner retires (D-572, D-573).
+Gate: the three macOS legs pass on the hosted runner, and no workflow names the self-hosted label.
+> *In plain English:* the last checks leave the Mac of the owner. No code from a pull request runs on that Mac again.
+
 **PR-75: Sword art.** 🔧
 The sword of PR-15 gains the detail that the owner asks for, on the recipes of PR-62 (D-504).
 Gate: the clip check passes, and the owner approves a contact sheet of the sword.
@@ -797,7 +807,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81, PR-82, PR-83, PR-84, PR-75, PR-76, PR-77.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81, PR-82, PR-83, PR-84, PR-85, PR-86, PR-75, PR-76, PR-77.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

@@ -9,26 +9,28 @@ Session: PR-84, author. Branch `feat/pr-84-night-fixed-seeds`. PR #100, pending 
 
 ### What this session did, and why
 
-- Exit test 6 of PR-83, part 1: `night-promote.yml` run 36005414678 at `55b6d3f` ended green with the case `branch-absent`. It skipped the re-run step, and `night-results` stayed at `1895652`, the record of `2071cb6`.
-- Exit test 6 of PR-83, part 2: the first night on `main` after `55b6d3f` is run 36005945062, a schedule run that started 13:28 UTC. It was on the full clearer at 14:22 UTC. The result is in flight.
-- The owner answered OQ-190 to OQ-194: D-564 to D-569. The fixed set stays the gate, and a slice of one tenth runs each night (D-564, D-566). A slice failure blocks (D-565), against the recommendation. OQ-193 and OQ-194 came from that answer: the carry of a failed seed (D-567), and the promotion check (D-569). The id is PR-84, after PR-83 (D-568).
-- Built `NightSeeds`, the command `night-seeds`, the seed list of `bot-run`, the seed fields of `night-record`, the case `carry-missing`, and the plan step of `night.yml`.
+- Exit test 6 of PR-83 passes. `night-promote.yml` run 36005414678 at `55b6d3f` ended green with `branch-absent`, and it wrote nothing. The first night on `main` after it, run 36005945062, passed at 16:47 UTC. Its `night-publish-check` gave `write`, it pushed `4ac067b` with a lease, and it re-ran the gate of PR #100.
+- The owner answered OQ-190 to OQ-194: D-564 to D-569. The fixed set stays the gate, and a slice of one tenth runs each night (D-564, D-566). A slice failure blocks (D-565), against the recommendation. From that answer came the carry (D-567) and the promotion check (D-569). The id is PR-84 (D-568).
+- Built `NightSeeds`, `night-seeds`, the seed list of `bot-run`, the seed fields of `night-record`, the case `carry-missing`, and the plan step of `night.yml`.
+- The night of 2026-09-24 had the cron time 08:07 UTC, started at 13:28 UTC, and held the Mac runner until 16:48 UTC. The owner then chose the cloud move: D-570 to D-573.
 
 ### State of the build
 
 - Local: the full suite passed 1611 of 1611, Smoke included. `det-lint`, `ste-check`, and `asset-qa` read 0.
-- Code head: `198a0c9`. The remote head: the push of this entry.
+- CI at `2135f46`: every job passed on the three platforms, `night-gate` included. `evaluate` and `review-gate` wait for the review record.
+- Code head and effective head: `198a0c9`. Later commits change documents alone. The remote head: the push of this entry.
 
 ### In flight
 
-- Run 36005945062 on `main`, then a branch night of this PR for exit test 10. The two share the one Mac runner.
-- The PR, its CI, the `night-gate` job, and review round 1.
+- A branch night of this PR for exit test 10, and review round 1 through `make codex-review PR=100 -- --skip-gitar-review`.
+- The merge summary in Q/A form after an approved review (D-524, D-552).
 
 ### Traps and gotchas
 
-- Day 0 of the slices is 2026-09-24. The first night of this code runs seeds that no night ran before, so it can fail on an old fault. The fix of such a seed is a PR of its own.
-- A failed plan step leaves no record of the seed fields. The shell failure record of the publish step then drops the carried seeds of `main`.
-- `night-record` now needs `--date`, `--failures`, and `--carry`. The step fails with exit 2 without them, and the publish step writes the shell failure record.
+- Day 0 of the slices is 2026-09-24. The first slice runs seeds that no night ran before, so it can fail on an old fault. A fix of such a seed is a PR of its own.
+- A failed plan step leaves no seed fields. The shell failure record of the publish step then drops the carried seeds of `main`.
+- `night-record` needs `--date`, `--failures`, and `--carry`.
+- A documents push skips the heavy jobs only after the runs on the previous head end green (CI skip rule 2). A push while the macOS legs wait cancels them and runs the full suite again.
 
 ### Open questions that block progress
 
@@ -36,9 +38,17 @@ None.
 
 ### Next concrete action
 
-Wait on the CI of PR #100. Read run 36005945062 for exit test 6 of PR-83, and state its publish result in this entry. Then dispatch a branch night of this PR, and run `make codex-review PR=<n> -- --skip-gitar-review`.
+This session: wait on the branch night and review round 1 of PR #100, then give the merge summary.
 
-The next session, after PR #100 merges, makes one PR alone (D-570). It moves the night cron of `.github/workflows/night.yml` from `7 8 * * *` to `7 3 * * *`, 03:07 UTC. It goes into the Phase 2 order ahead of PR-75, the entry that was next. It updates the time comment of the workflow and the test `NightWorkflowRunsAtTwoCentralStandardTime`. It records the revision of D-284, D-285, and D-288, and it asks the owner for its roadmap id.
+After PR #100 merges, the next session makes PR-85 alone (D-570, D-571, D-572, D-573). It goes ahead of PR-75 in the Phase 2 order.
+
+- The night cron of `.github/workflows/night.yml` moves from `7 8 * * *` to `7 7 * * *`, 07:07 UTC. Update the time comment and `NightWorkflowRunsAtTwoCentralStandardTime`, and revise D-284, D-285, and D-288 in part.
+- The night moves to `ubuntu-latest` as parallel jobs, one for each sweep of `NightSeeds.Sweeps`. A hosted job stops at 6 hours. The full clearer took 84 minutes on the Mac Mini, and the hosted Linux test step ran about 2.3 times slower (F-109).
+- One job plans the seeds once, and each sweep job gets the date and the record of `main` from it. Each sweep job keeps its logs, its summary line, and its failure line as artifacts. One last job writes and publishes the record, and it re-runs the gates.
+- Keep the carry rules of D-567 and D-569: a sweep job that did not end writes no failure line.
+- Run a branch night of PR-85 on hosted Linux before the review.
+
+Then PR-86: the macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the hosted macOS arm64 runner. The Free plan runs 5 macOS jobs at once. PR-86 retires `docs/runbooks/macos-runner.md` and the Mac runner rules. It revises D-100, D-157, D-192, and D-358, and it updates the cost model and the agent files. PR-75 follows.
 
 ## Session 240: 2026-09-24, Codex
 
