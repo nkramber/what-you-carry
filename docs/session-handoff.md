@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 237: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, Ready for owner merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Re-reviewed PR #98 at effective head `bc51dde` after the night and required product checks passed.
+- Updated `docs/reviews/pr-98.md` and kept the earlier Blocked verdict in its history.
+- Found no in-scope defect in the template line or its equality test.
+
+### State of the build
+
+- The Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
+- GitHub at `804ec44` showed all product checks, including `night-gate`, bit identity, sweeps, and smoke, as passed.
+- `evaluate` and `review-gate` still read the prior Blocked record. The remote head at review start was `804ec44`.
+
+### In flight
+
+- PR #98 awaits the updated `review-gate` and `evaluate` results. They must read this review record.
+
+### Traps and gotchas
+
+- The Gitar comment says only “Gitar is working.” D-550 says that notice needs no answer.
+- D-542 pauses the Gitar wait. The review record and this entry form one metadata commit.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author gives the merge summary in questions and answers, then asks the owner to confirm the merge (D-552).
+
 ## Session 236: 2026-09-23, Codex
 
 Author: Codex
@@ -338,37 +372,3 @@ None.
 ### Next concrete action
 
 Read round 2 of the Codex review of PR #95. On approval, write the merge summary of D-533 and ask the owner to confirm the merge.
-
-## Session 227: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
-
-### What this session did, and why
-
-- Reviewed PR #95 at effective head `d13f73c`.
-- Found that a PR of only `README.md` or `LICENSE` cannot pass the review gate by review or by label. The review record names the correction and regression checks.
-
-### State of the build
-
-- The focused review tests passed 111 of 111. They built all projects.
-- At code head `d13f73c`, the CI platform, bot, content, document, bit-identity, lint, and STE checks passed. At metadata head `7781d3b`, the document checks passed, and the heavy jobs skipped.
-- The night gate failed on the known record in D-538. The Smoke jobs were skipped. The review gate failed because P2-1 remains open.
-
-### In flight
-
-- PR #95 needs a correction for P2-1 and a repeat review.
-- The night gate remains red until the work in D-538 lands.
-
-### Traps and gotchas
-
-- D-475 skips root `README.md` and `LICENSE` for review. D-190 does not allow the override label for either path.
-- The failed night record belongs to D-538, which is outside PR-79.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Correct P2-1 on PR #95 and request a repeat review. Handle the night failure in the next PR under D-538.

@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 227: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Reviewed PR #95 at effective head `d13f73c`.
+- Found that a PR of only `README.md` or `LICENSE` cannot pass the review gate by review or by label. The review record names the correction and regression checks.
+
+### State of the build
+
+- The focused review tests passed 111 of 111. They built all projects.
+- At code head `d13f73c`, the CI platform, bot, content, document, bit-identity, lint, and STE checks passed. At metadata head `7781d3b`, the document checks passed, and the heavy jobs skipped.
+- The night gate failed on the known record in D-538. The Smoke jobs were skipped. The review gate failed because P2-1 remains open.
+
+### In flight
+
+- PR #95 needs a correction for P2-1 and a repeat review.
+- The night gate remains red until the work in D-538 lands.
+
+### Traps and gotchas
+
+- D-475 skips root `README.md` and `LICENSE` for review. D-190 does not allow the override label for either path.
+- The failed night record belongs to D-538, which is outside PR-79.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Correct P2-1 on PR #95 and request a repeat review. Handle the night failure in the next PR under D-538.
+
 ## Session 226: 2026-09-23, Claude Code
 
 Author: Claude Code
