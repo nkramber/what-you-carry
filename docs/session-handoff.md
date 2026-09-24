@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 241: 2026-09-24, Claude Code
+
+Author: Claude Code
+Session: PR-84, author. Branch `feat/pr-84-night-fixed-seeds`. PR pending. Base `55b6d3f`.
+
+### What this session did, and why
+
+- Exit test 6 of PR-83, part 1: `night-promote.yml` run 36005414678 at `55b6d3f` ended green with the case `branch-absent`. It skipped the re-run step, and `night-results` stayed at `1895652`, the record of `2071cb6`.
+- Exit test 6 of PR-83, part 2: the first night on `main` after `55b6d3f` is run 36005945062, a schedule run that started 13:28 UTC. It was on the full clearer at 14:22 UTC. The result is in flight.
+- The owner answered OQ-190 to OQ-194: D-564 to D-569. The fixed set stays the gate, and a slice of one tenth runs each night (D-564, D-566). A slice failure blocks (D-565), against the recommendation. OQ-193 and OQ-194 came from that answer: the carry of a failed seed (D-567), and the promotion check (D-569). The id is PR-84, after PR-83 (D-568).
+- Built `NightSeeds`, the command `night-seeds`, the seed list of `bot-run`, the seed fields of `night-record`, the case `carry-missing`, and the plan step of `night.yml`.
+
+### State of the build
+
+- Local: the full suite passed 1611 of 1611, Smoke included. `det-lint`, `ste-check`, and `asset-qa` read 0.
+- Code head: `198a0c9`. The remote head: the push of this entry.
+
+### In flight
+
+- Run 36005945062 on `main`, then a branch night of this PR for exit test 10. The two share the one Mac runner.
+- The PR, its CI, the `night-gate` job, and review round 1.
+
+### Traps and gotchas
+
+- Day 0 of the slices is 2026-09-24. The first night of this code runs seeds that no night ran before, so it can fail on an old fault. The fix of such a seed is a PR of its own.
+- A failed plan step leaves no record of the seed fields. The shell failure record of the publish step then drops the carried seeds of `main`.
+- `night-record` now needs `--date`, `--failures`, and `--carry`. The step fails with exit 2 without them, and the publish step writes the shell failure record.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Open the PR, mark PR-84 done in the design doc and the roadmap, and wait on CI. Read run 36005945062 for exit test 6 of PR-83, and state its publish result in this entry. Then dispatch a branch night of this PR, and run `make codex-review PR=<n> -- --skip-gitar-review`.
+
 ## Session 240: 2026-09-24, Codex
 
 Author: Codex
@@ -345,37 +381,3 @@ The session after it takes the owner focus of 2026-09-23: the fixed seeds of the
 - The owner decides whether a failure in the slice blocks the merge, or files a finding that adds the seed to the fixed set.
 
 First action of that session: file the next OQ-# in `docs/questions.md` with these options and a recommendation, and ask the owner. Ask the owner for the roadmap id of the PR too. Then record each answer as a D-#.
-
-## Session 231: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-80, reviewer. Branch `chore/pr-80-gitar-pause`. PR #96, pending merge. Base `25afe34`.
-
-### What this session did, and why
-
-- Reviewed PR #96 at effective head `f331068` under D-542 to D-544.
-- The review found no issue in the Gitar pause, the flag path, the thread check, or the supporting documents.
-- Added `docs/reviews/pr-96.md` with the verdict `Ready for owner merge`.
-
-### State of the build
-
-- `dotnet test WhatYouCarry.slnx` passed 1573 of 1573 tests at `f331068`.
-- The remote head of PR #96 was `f331068`. The required CI checks passed, except `night-gate`, which failed on `e069e16` under D-544. The review-gate failure came from the missing review record.
-- The review record and this handoff entry are published to `origin/chore/pr-80-gitar-pause`.
-
-### In flight
-
-- PR #96 awaits the owner merge process. The owner uses the merge summary of D-533 and the bypass of D-544 if `night-gate` remains red.
-
-### Traps and gotchas
-
-- `make -n codex-review PR=96 -- --skip-gitar-review` confirms that Make passes the flag after the required options.
-- Gitar posted a free-plan notice and no review feedback. The review export found no open review thread.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner checks the merge conditions for PR #96 and follows D-533.
