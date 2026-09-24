@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 245: 2026-09-24, Claude Code
+
+Author: Claude Code
+Session: PR-85, author. Branch `feat/pr-85-night-hosted-linux`. PR not open yet, pending merge. Base `a68348b`.
+
+### What this session did, and why
+
+- Read the two runs on `main` for PR-84:
+  - `night-promote.yml` run 36059305679 at `a68348b` ended green with the case `code-changed`. The branch night ran at `35da819`, and the merge differs in four paths outside the skip set, `.github/` included. The gate re-run step skipped, and `night-results` still holds `4ac067b` (`55b6d3f`, success), so the run wrote nothing.
+  - PR-84 exit test 11: the first night on `main` after `a68348b` has not run. Its cron is 08:07 UTC on 2026-09-25, and the read was at 21:22 UTC on 2026-09-24. Its record must name the slice of 2026-09-25: 5501-6000 for each bot policy, 110001-120000 for reachability.
+- PR-85 moves the night to 07:07 UTC on hosted Linux (D-571 to D-573). `night.yml` holds a plan job, a matrix of six sweep jobs on `NightSeeds.Sweeps`, and a record job. The record job alone holds write permissions.
+- `.github/scripts/night-gather.sh` joins the sweep artifacts, and gives the status: success only when the plan, every sweep, and the record job read success.
+- D-284, D-285, and D-288 carry "Revised in part by D-571". The roadmap entry of PR-85 holds nine exit tests.
+
+### State of the build
+
+- Local: the full suite passed 1614 of 1614, Smoke included. The new shape tests fail on the old `night.yml` (7 failures). `ste-check` reads 0.
+
+### In flight
+
+- The push, the PR, and a branch night on hosted Linux (exit test 7).
+
+### Traps and gotchas
+
+- `download-artifact` with a pattern puts each artifact in a directory of its own name. The gather script reads `<results>/*/`.
+- A sweep job creates its empty result files before the build, so a broken build still uploads a result, and the record reads "did not end".
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Push, open the PR, dispatch the branch night, and read exit test 11 of PR-84 before the review.
+
 ## Session 244: 2026-09-24, Codex
 
 Author: Codex
@@ -354,40 +389,3 @@ None.
 ### Next concrete action
 
 Resolve the night-gate and remaining CI results, then request a fresh review if the effective head changes.
-
-## Session 235: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-82, author. Branch `chore/pr-82-template-gitar-notice`. PR #98, pending merge. Base `2071cb6`.
-
-### What this session did, and why
-
-- Ran a night by hand on `main` at `2071cb6`, run 35944586534. The record of `main` was the red night of `e069e16`. The run was in progress at the hand-over. A green night there turns `night-gate` green for this PR.
-- The owner confirmed the roadmap id PR-82 (D-553) and a test of the template line (D-554).
-- The gitar line of the PR gate in `.github/pull_request_template.md` now reads as the line in the agent files: "every gitar comment with an item has its answer" (D-550, D-551).
-- `PullRequestTemplateGitarLineMatchesThePrGate` holds the two lines equal. It failed on the old template.
-- The Phase 2 roadmap and `docs/design.md` hold the PR-82 entry.
-
-### State of the build
-
-- Local: `ste-check` 0, `det-lint` 0. The full suite passed 1586 of 1586.
-- Code head: `bc51dde`. Later commits of this PR change documents only.
-
-### In flight
-
-- The PR checks, and `make codex-review PR=98 -- --skip-gitar-review` (D-543).
-
-### Traps and gotchas
-
-- The template lies outside the skip set of D-475, so this PR runs the full suite and needs a Codex review, and not the override label.
-- The handoff of Session 232 quoted the new line with "(D-550)" at the end. The agent files have no such citation, and the test asks for equal lines, so the template has none too.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-This session: the review round, then the merge request with the summary in questions and answers (D-552).
-
-The session after the merge takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551). Follow the next concrete action of Session 232. File the next OQ-# with the options and a recommendation, and ask the owner for the roadmap id.

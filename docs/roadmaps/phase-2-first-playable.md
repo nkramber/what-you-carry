@@ -1080,6 +1080,41 @@ Gate: exit tests 1 to 10 and 12 pass. Exit test 11 runs on `main` after the merg
 
 > *In plain English:* each night tested the same seeds, so a fault past them stayed hidden. Now each night also tests a new batch that the date picks. A failure stops merges until a fix, and the failed seed joins the fixed set.
 
+### PR-85: Night on hosted Linux
+
+Scope:
+
+- `.github/workflows/night.yml`: the cron moves to `7 7 * * *`, 07:07 UTC (D-571). The night leaves the Mac runner for `ubuntu-latest`, in three kinds of job (D-572, D-573):
+  - One plan job takes the UTC date and the record of `main` one time, so each sweep reads the same pair.
+  - One sweep job for each sweep of `NightSeeds.Sweeps`, in a matrix. A failed sweep does not stop the others. Each sweep job keeps its summary line and its failure line as an artifact, and its bot logs after a failure (D-280).
+  - One record job gathers the results, writes and publishes the record, and re-runs the gates (D-548, D-559). It alone holds the write permissions.
+- `.github/scripts/night-gather.sh`: joins the sweep results into the two files of `night-record`, and gives the night status. A skipped job reads failure (T-2).
+- The carry rules of D-567 and D-569 and the failure record script of a broken build stay as they are.
+- `.claude/skills/one-pr-one-session/references/review-and-merge.md` and `docs/runbooks/macos-runner.md`: the night no longer shares the Mac runner with the macOS legs.
+- `WhatYouCarry.Tests/`: `RepositoryShapeTests` and `NightSeedsTests`.
+
+Out of scope: the macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml`, and the retirement of the Mac runner, which PR-86 holds (D-573).
+
+Exit tests:
+
+1. `NightWorkflowRunsAtOneCentralStandardTime` passes (D-571).
+2. `TheNightRunsOnHostedLinuxAsOneJobForEachSweep` passes (D-572, D-573).
+3. `TheNightPlansTheSeedsOfEachSweep` and `NightAndBotWorkflowsRunEveryPolicyAndGatherTheDeaths` pass (D-403, D-564 to D-567).
+4. `NightWorkflowKeepsTheLogsOfAFailedNight` and `NightWorkflowUploadStepMustFollowEveryBotStep` pass (D-280).
+5. `TheRecordJobGathersEachSweepResultAndTheStatus` and `TheFailureRecordOfABrokenBuildKeepsTheCarriedSeeds` pass (D-567).
+6. `ABranchNightWritesARecordOfItsOwnAndReRunsTheGate` and `ANightOnMainKeepsALaterRecordAndReRunsEveryGate` pass (D-538, D-548, D-559, D-562).
+7. A branch night of this PR on hosted Linux ends green, and each sweep job ends inside the limit of 6 hours. Its record names the slice of its date and the six failure lines. The handoff entry states the wall time of each sweep job.
+8. After the merge, the first scheduled night on `main` starts from the cron of 07:07 UTC on hosted Linux. The session after the merge reads the run, and states its start time and its result in its handoff entry (D-375).
+9. `make codex-review PR=<this PR> -- --skip-gitar-review` reviews this PR (D-543). The merge request gives the merge summary as questions and answers (D-552).
+
+Review focus: the night status after a failed, skipped, or stopped sweep, the carry of a sweep that did not end, and the record job permissions.
+
+Check clause: none.
+
+Gate: exit tests 1 to 7 and 9 pass. Exit test 8 runs on `main` after the merge.
+
+> *In plain English:* the night ran on the Mac of the owner for more than three hours, and the checks of every PR waited for it. Now six free cloud machines run the six sweeps at the same time, and one more machine writes the result.
+
 ### PR-75: Sword art
 
 Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).

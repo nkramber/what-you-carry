@@ -1,38 +1,145 @@
-# The scheduled night on the self-hosted macOS runner (D-115, D-116, D-117, D-157, D-177; PR-11 exit tests 6 and 7).
-# It runs at 08:07 UTC, which is 02:07 Central Standard Time and 03:07 Central Daylight Time (D-284, D-285, D-288).
+# The scheduled night on hosted Linux, as parallel jobs (D-115, D-116, D-117, D-177, D-572, D-573; PR-11 exit tests 6
+# and 7, PR-85). It runs at 07:07 UTC, which is 01:07 Central Standard Time and 02:07 Central Daylight Time (D-571).
 # The cron reads UTC alone, and the minute stays off the start of the hour, because GitHub delays or drops a schedule
-# there under load. The 03:00 UTC run of 2026-09-11 never came (F-94), and the 08:07 UTC run of that day started
+# there under load (D-285). The 03:00 UTC run of 2026-09-11 never came (F-94), and the 08:07 UTC run of that day started
 # 4 h 40 min late, at 12:47 UTC (F-95).
 # Five thousand bot runs per policy, and the reachability sweep of PR-9 at one hundred thousand seeds. These fixed
 # seeds stay the gate, and each night also runs a slice past them, which the UTC date of the night start selects
-# (D-564, D-566). The seeds of each step also hold the extra fixed seeds of the checkout, and the failed seeds that the
-# record of main carries until a night passes them (D-567). A failed seed of a slice fails the night (D-565). The last
-# two steps write night.json with the commit, the end time, the status, and the death and ascend counts of each bot policy,
-# to the orphan branch night-results, which holds that one file (D-273). When the build itself fails, the
-# publish step writes the failure record in shell, so the branch never keeps a stale success. PR-58 adds the
-# gate that reads it. Of the nights, only a night on main writes night-results (D-373). A night on another branch writes its
-# record to the orphan branch night-branch/<branch>, so it cannot replace the record of main that the night-gate
-# job reads, and the gate of the PR of that branch reads it (D-538; PR-81). That night then re-runs the newest
-# night-gate run of its branch, so the check of the PR reads the new record (D-548). A night on main re-runs the
-# newest night-gate run of each open PR, because every PR reads its record (D-559). The workflow night-promote.yml
-# also writes night-results, at a merge commit that a branch night tested (D-557). A night on a tag writes no
-# record. A failed night keeps its bot logs as a run artifact, because the runner checkout cleans them at its
-# next job (D-280).
+# (D-564, D-566). The seeds of each sweep also hold the extra fixed seeds of the checkout, and the failed seeds that the
+# record of main carries until a night passes them (D-567). A failed seed of a slice fails the night (D-565).
+# The plan job takes the date and the record of main one time, so each sweep reads the same pair. The sweep job runs
+# one sweep of NightSeeds.Sweeps on each leg, and a hosted job stops at 6 hours (D-572). Each leg keeps its summary line
+# and its failure line as a run artifact. The record job writes night.json with the commit, the end time, the status,
+# and the death and ascend counts of each bot policy, to the orphan branch night-results, which holds that one file
+# (D-273). When the build itself fails, the publish step writes the failure record in shell, so the branch never keeps
+# a stale success. PR-58 adds the gate that reads it. Of the nights, only a night on main writes night-results (D-373).
+# A night on another branch writes its record to the orphan branch night-branch/<branch>, so it cannot replace the
+# record of main that the night-gate job reads, and the gate of the PR of that branch reads it (D-538; PR-81). That
+# night then re-runs the newest night-gate run of its branch, so the check of the PR reads the new record (D-548). A
+# night on main re-runs the newest night-gate run of each open PR, because every PR reads its record (D-559). The
+# workflow night-promote.yml also writes night-results, at a merge commit that a branch night tested (D-557). A night on
+# a tag writes no record. A failed sweep keeps its bot logs as a run artifact, because the runner is gone after the job
+# (D-280).
 name: Night
 
 on:
   schedule:
-    - cron: "7 8 * * *"
+    - cron: "7 7 * * *"
   workflow_dispatch:
 
 permissions:
-  contents: write
-  actions: write
-  pull-requests: read
+  contents: read
 
 jobs:
-  night:
-    runs-on: [self-hosted, macos-arm64-self-hosted]
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      date: ${{ steps.plan.outputs.date }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Plan the seeds
+        # D-564 to D-567: the UTC date of the night start selects the slice of every sweep. The record of main names the
+        # failed seeds that this night carries. A night on a branch carries the seeds of main too, so its promotion
+        # proves them (D-569).
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+          git fetch --quiet origin refs/heads/night-results
+          git show FETCH_HEAD:night.json > "${RUNNER_TEMP}/main-night.json"
+      - name: Keep the record of main for each job
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-night
+          path: ${{ runner.temp }}/main-night.json
+          if-no-files-found: error
+
+  sweep:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      # One failed sweep does not stop the others, so the record names the failed seeds of each sweep (D-567).
+      fail-fast: false
+      matrix:
+        # The sweeps of NightSeeds.Sweeps, in its order. The timer tester waits through each expiry, so every run
+        # lasts at least three minutes of simulated time (D-426). The coward ascends at the first stairwell, so each
+        # run lasts one floor (D-434).
+        sweep: [random-walker, greedy-descender, full-clearer, timer-tester, coward, reachability]
+    env:
+      SWEEP: ${{ matrix.sweep }}
+      NIGHT_DATE: ${{ needs.plan.outputs.date }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Start the sweep result
+        # The result holds the summary line and the failure line of this sweep. An empty failure file means that the
+        # sweep did not end (D-567). The step comes before the build, so a broken build still leaves a result.
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/sweep"
+          : > "${RUNNER_TEMP}/sweep/bot-deaths.txt"
+          : > "${RUNNER_TEMP}/sweep/seed-failures.txt"
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build WhatYouCarry.slnx
+      - name: Take the record of main from the plan
+        uses: actions/download-artifact@v4
+        with:
+          name: main-night
+          path: ${{ runner.temp }}
+      - name: List the seeds of the sweep
+        shell: bash
+        run: |
+          set -euo pipefail
+          seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep "$SWEEP" --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json")
+          echo "NIGHT_SEEDS=${seeds}" >> "$GITHUB_ENV"
+      - name: Bot sweep, the fixed seeds and the slice
+        if: matrix.sweep != 'reachability'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy "$SWEEP" --seeds "$NIGHT_SEEDS" --output bot-logs --root . --summary "${RUNNER_TEMP}/sweep/bot-deaths.txt" --failures "${RUNNER_TEMP}/sweep/seed-failures.txt"
+      - name: Seed sweep, the fixed seeds and the slice
+        if: matrix.sweep == 'reachability'
+        shell: bash
+        env:
+          WYC_NIGHT_SWEEP: "1"
+          WYC_NIGHT_FAILURES: ${{ runner.temp }}/sweep/seed-failures.txt
+        run: |
+          set -euo pipefail
+          WYC_NIGHT_SEEDS="$NIGHT_SEEDS"
+          export WYC_NIGHT_SEEDS
+          dotnet test WhatYouCarry.slnx --no-build --filter "FullyQualifiedName~EveryChamberReachable|FullyQualifiedName~DetailKeepsEveryChamberReachable"
+      - name: Keep the bot logs of a failed night
+        # The crash text of a failed run lives in its log alone, and the runner is gone after the job (D-280). A sweep
+        # that fails before its runs, or the seed sweep, has no logs, and the step says so instead of failing in silence.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bot-logs-${{ matrix.sweep }}
+          path: bot-logs
+          if-no-files-found: warn
+      - name: Keep the sweep result for the record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: night-sweep-${{ matrix.sweep }}
+          path: ${{ runner.temp }}/sweep/
+          if-no-files-found: error
+
+  record:
+    needs: [plan, sweep]
+    # A night on a tag writes no record (D-538). A failed or cancelled sweep still gets its record.
+    if: always() && startsWith(github.ref, 'refs/heads/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+      pull-requests: read
     steps:
       - uses: actions/checkout@v5
         with:
@@ -43,78 +150,40 @@ jobs:
           global-json-file: global.json
       - name: Build
         id: build
-        run: dotnet build WhatYouCarry.slnx
-      - name: Start the bot summary
-        # The runner empties its temp directory between jobs, and an explicit remove keeps a stale file out of the
-        # record whatever the runner does (D-403).
-        run: rm -f "${RUNNER_TEMP}/bot-deaths.txt"
-      - name: Plan the seeds
-        # D-564 to D-567: the UTC date of the night start selects the slice of every step. The record of main names the
-        # failed seeds that this night carries, and each step appends the failure line of its sweep to one file, which
-        # the record step reads. A night on a branch carries the seeds of main too, so its promotion proves them (D-569).
-        shell: bash
-        run: |
-          set -euo pipefail
-          : > "${RUNNER_TEMP}/seed-failures.txt"
-          echo "NIGHT_DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
-          git fetch --quiet origin refs/heads/night-results
-          git show FETCH_HEAD:night.json > "${RUNNER_TEMP}/main-night.json"
-      - name: Random walker, the fixed seeds and the slice
-        shell: bash
-        run: |
-          set -euo pipefail
-          seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep random-walker --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json")
-          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy random-walker --seeds "$seeds" --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt" --failures "${RUNNER_TEMP}/seed-failures.txt"
-      - name: Greedy descender, the fixed seeds and the slice
-        shell: bash
-        run: |
-          set -euo pipefail
-          seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep greedy-descender --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json")
-          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy greedy-descender --seeds "$seeds" --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt" --failures "${RUNNER_TEMP}/seed-failures.txt"
-      - name: Full clearer, the fixed seeds and the slice
-        shell: bash
-        run: |
-          set -euo pipefail
-          seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep full-clearer --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json")
-          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy full-clearer --seeds "$seeds" --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt" --failures "${RUNNER_TEMP}/seed-failures.txt"
-      - name: Timer tester, the fixed seeds and the slice
-        # D-426: the tester waits through each expiry, so every run lasts at least three minutes of simulated time.
-        shell: bash
-        run: |
-          set -euo pipefail
-          seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep timer-tester --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json")
-          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy timer-tester --seeds "$seeds" --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt" --failures "${RUNNER_TEMP}/seed-failures.txt"
-      - name: Coward, the fixed seeds and the slice
-        # D-434: the coward ascends at the first stairwell, so each run lasts one floor.
-        shell: bash
-        run: |
-          set -euo pipefail
-          seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep coward --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json")
-          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy coward --seeds "$seeds" --output bot-logs --root . --summary "${RUNNER_TEMP}/bot-deaths.txt" --failures "${RUNNER_TEMP}/seed-failures.txt"
-      - name: Reachability sweep, the fixed seeds and the slice
+        run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
+      - name: Take the record of main from the plan
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          name: main-night
+          path: ${{ runner.temp }}
+      - name: Take the result of each sweep
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          pattern: night-sweep-*
+          path: ${{ runner.temp }}/sweeps
+      - name: Gather the sweep results
+        # Each sweep result adds its summary line and its failure line. The status reads the plan, every sweep, and
+        # the steps of this job before it (D-177).
+        if: always()
         shell: bash
         env:
-          WYC_NIGHT_SWEEP: "1"
-          WYC_NIGHT_FAILURES: ${{ runner.temp }}/seed-failures.txt
+          PLAN_RESULT: ${{ needs.plan.result }}
+          SWEEP_RESULT: ${{ needs.sweep.result }}
+          RECORD_STATUS: ${{ job.status }}
         run: |
           set -euo pipefail
-          WYC_NIGHT_SEEDS=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep reachability --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json")
-          export WYC_NIGHT_SEEDS
-          dotnet test WhatYouCarry.slnx --no-build --filter "FullyQualifiedName~EveryChamberReachable|FullyQualifiedName~DetailKeepsEveryChamberReachable"
-      - name: Keep the bot logs of a failed night
-        # The crash text of a failed run lives in its log alone, and the next job on the runner cleans the directory (D-280).
-        # A night that fails before the bot steps has no logs, and the step says so instead of failing in silence.
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: bot-logs
-          path: bot-logs
-          if-no-files-found: warn
+          mkdir -p "${RUNNER_TEMP}/sweeps"
+          status=$(bash .github/scripts/night-gather.sh "${RUNNER_TEMP}/sweeps" "${RUNNER_TEMP}" "$PLAN_RESULT" "$SWEEP_RESULT" "$RECORD_STATUS")
+          echo "NIGHT_STATUS=${status}" >> "$GITHUB_ENV"
       - name: Write the night record
-        if: always() && startsWith(github.ref, 'refs/heads/')
-        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-record --commit "${GITHUB_SHA}" --status "${{ job.status }}" --output "${RUNNER_TEMP}/night.json" --summary "${RUNNER_TEMP}/bot-deaths.txt" --date "${NIGHT_DATE}" --failures "${RUNNER_TEMP}/seed-failures.txt" --carry "${RUNNER_TEMP}/main-night.json"
+        if: always()
+        env:
+          NIGHT_DATE: ${{ needs.plan.outputs.date }}
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-record --commit "${GITHUB_SHA}" --status "${NIGHT_STATUS}" --output "${RUNNER_TEMP}/night.json" --summary "${RUNNER_TEMP}/bot-deaths.txt" --date "${NIGHT_DATE}" --failures "${RUNNER_TEMP}/seed-failures.txt" --carry "${RUNNER_TEMP}/main-night.json"
       - name: Publish the night record
-        if: always() && startsWith(github.ref, 'refs/heads/')
+        if: always()
         shell: bash
         env:
           BUILD_OUTCOME: ${{ steps.build.outcome }}
@@ -126,8 +195,8 @@ jobs:
           else
             target="night-branch/${GITHUB_REF_NAME}"
           fi
-          # A broken build leaves no binary for night-record, and the plan step did not run. A script writes the failure
-          # record, and it keeps the failed seeds of the record of main, so the carry survives (D-567, PR #100 review P1-1).
+          # A broken build leaves no binary for night-record. A script writes the failure record, and it keeps the
+          # failed seeds of the record of main, so the carry survives (D-567, PR #100 review P1-1).
           if [ ! -f "${RUNNER_TEMP}/night.json" ]; then
             git fetch --quiet origin refs/heads/night-results
             git show FETCH_HEAD:night.json > "${RUNNER_TEMP}/main-night-now.json"
@@ -155,6 +224,8 @@ jobs:
               echo "The build left no binary for the order check, so the failure record of this night replaces the record of main."
             fi
           fi
+          # The commit names the status of the file that it writes, which the failure record script can set.
+          status=$(jq -r '.status' "${RUNNER_TEMP}/night.json")
           work="${RUNNER_TEMP}/night-results"
           rm -rf "$work"
           git worktree add --detach "$work" HEAD
@@ -165,7 +236,7 @@ jobs:
           git config user.name "night job"
           git config user.email "night-job@users.noreply.github.com"
           git add night.json
-          git commit -qm "night: ${GITHUB_SHA} ${{ job.status }}"
+          git commit -qm "night: ${GITHUB_SHA} ${status}"
           if [ "$target" = "night-results" ]; then
             git push --force-with-lease="refs/heads/night-results:${lease}" origin "HEAD:refs/heads/${target}"
           else
@@ -174,7 +245,7 @@ jobs:
       - name: Re-run the night gate of the branch
         # The night-gate check of a PR runs on a pull_request event, so a night that ends later re-runs its newest run
         # (D-548). A run that has not ended reads the new record when it runs. A branch with no PR has no such run.
-        if: always() && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main'
+        if: always() && github.ref != 'refs/heads/main'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
