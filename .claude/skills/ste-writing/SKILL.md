@@ -64,8 +64,10 @@ Use one term for one concept (rules 1.11 and 9.4). A session meets these terms i
 | metadata set | `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184) |
 | skip set | the paths that count as documents for the CI skip of a PR head (D-475) |
 | property test | a seed loop that asserts an invariant, and names its seed on a failure (D-66) |
-| bot sweep | the bot policy runs of the night, at five thousand seeds |
-| seed sweep | the reachability sweep of the night, at one hundred thousand seeds |
+| bot sweep | the bot policy runs of the night, at five thousand fixed seeds and a slice |
+| seed sweep | the reachability sweep of the night, at one hundred thousand fixed seeds and a slice |
+| slice | the seeds past the fixed set that the UTC date of a night selects (D-564, D-566) |
+| carried seed | a failed seed that the record of `main` names, which each later night runs again (D-567) |
 | smoke session | the headless Game session that the `smoke` job runs on three platforms (D-114) |
 | night record | `night.json` on the branch `night-results`, which the `night-gate` job reads (D-273) |
 | branch night | a night by hand on a PR branch. It writes `night.json` to the branch `night-branch/<branch>` (D-538) |

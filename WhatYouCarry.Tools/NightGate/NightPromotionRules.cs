@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json.Nodes;
 using WhatYouCarry.Tools.BotRunner;
@@ -12,8 +13,8 @@ public sealed record NightPromotionResult(bool Promotes, string Case, string Mes
 /// The rules of the promotion of a branch night to the record of main (D-555 to D-558). A success record of the
 /// night on the head branch of a merged PR becomes the record of main at the merge commit when four things hold. The
 /// night ended inside the window of D-115. The trees of the night commit and the merge commit differ only in the skip
-/// set of D-475. The record of main is absent or names a strict ancestor of the merge commit. The promoted record
-/// keeps the end time of the branch night.
+/// set of D-475. The record of main is absent or names a strict ancestor of the merge commit. The branch night ran
+/// each failed seed of the record of main (D-569). The promoted record keeps the end time of the branch night.
 /// </summary>
 public static class NightPromotionRules
 {
@@ -32,6 +33,7 @@ public static class NightPromotionRules
     public const string CodeChangedCase = "code-changed";
     public const string MainMalformedCase = "main-malformed";
     public const string MainKeptCase = "main-kept";
+    public const string CarryMissingCase = "carry-missing";
     public const string PromoteCase = "promote";
 
     /// <summary>
@@ -95,7 +97,48 @@ public static class NightPromotionRules
             return Keep(MainKeptCase, $"{tested} The record of main ({mainIdentity}) is not at a strict ancestor of the merge commit, so it stays (D-558).");
         }
 
+        List<string> missing;
+        try
+        {
+            missing = MissingCarriedSeeds(main, branch);
+        }
+        catch (FormatException exception)
+        {
+            return Keep(MainMalformedCase, $"{tested} The seed fields of a record are malformed: {exception.Message}");
+        }
+
+        if (missing.Count > 0)
+        {
+            return Keep(CarryMissingCase, $"{tested} The record of main ({mainIdentity}) names failed seeds that the branch night did not run: {string.Join(", ", missing)}. The next night on main runs them (D-569).");
+        }
+
         return new NightPromotionResult(true, PromoteCase, $"{tested} The record of main ({mainIdentity}) is at an older commit, so the promoted record replaces it (D-558).");
+    }
+
+    /// <summary>
+    /// Each failed seed of the record of main that the branch night did not run, in the form <c>sweep seed</c> (D-569).
+    /// The branch night ran the fixed range, the slice of its record, and the carried seeds of its record. A record of
+    /// main of a night before PR-84 names no failed seed.
+    /// </summary>
+    /// <exception cref="FormatException">A seed field of either record is malformed.</exception>
+    private static List<string> MissingCarriedSeeds(NightRecordRead main, NightRecordRead branch)
+    {
+        Dictionary<string, List<ulong>> failed = NightSeeds.ReadRecordSeeds(main.Text!, NightSeeds.FailedSeedsName, $"the branch {main.Branch}");
+        Dictionary<string, List<ulong>> carried = NightSeeds.ReadRecordSeeds(branch.Text!, NightSeeds.CarriedSeedsName, $"the branch {branch.Branch}");
+        Dictionary<string, SeedRange> slices = NightSeeds.ReadSlices(branch.Text!, $"the branch {branch.Branch}");
+        List<string> missing = [];
+        foreach (string sweep in NightSeeds.Sweeps)
+        {
+            foreach (ulong seed in NightSeeds.SeedsOf(failed, sweep))
+            {
+                if (!NightSeeds.Ran(sweep, seed, slices, carried))
+                {
+                    missing.Add($"{sweep} {seed.ToString(CultureInfo.InvariantCulture)}");
+                }
+            }
+        }
+
+        return missing;
     }
 
     /// <summary>

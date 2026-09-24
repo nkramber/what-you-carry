@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Tools;
 using WhatYouCarry.Tools.BotRunner;
 using WhatYouCarry.Tools.NightGate;
@@ -12,7 +13,8 @@ namespace WhatYouCarry.Tests;
 /// <summary>
 /// PR-58 exit tests 1 to 6 and 8: the night gate rules over fixture records, the commit check and the remote
 /// read over real repositories, and the exit codes of the command (D-115, D-177, D-274, D-275). PR-83: the promotion
-/// of a branch night to the record of main, and the order check of a night on main (D-555 to D-558, D-562).
+/// of a branch night to the record of main, and the order check of a night on main (D-555 to D-558, D-562). PR-84:
+/// the promotion needs the carried seeds of the record of main (D-569).
 /// </summary>
 [Collection(ConsoleCollection.Name)]
 public sealed class NightGateTests
@@ -446,6 +448,65 @@ public sealed class NightGateTests
         NightPromotionResult first = NightPromotionRules.Evaluate(PromotionFacts(night, mainBeforeMerge: null, mainText: null));
         Assert.True(first.Promotes, first.Message);
         Assert.Contains("record of main is absent", first.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// PR-84 exit test 9. A failed record of main that names a slice seed stays until a branch night that ran the seed
+    /// promotes. A branch night of another date, or of a night before PR-84, did not run it. A seed of the fixed range
+    /// or of the slice of the branch night needs no carry (D-569).
+    /// </summary>
+    [Fact]
+    public void ABranchNightPromotesOnlyWhenItRanEachFailedSeedOfMain()
+    {
+        DateOnly date = NightSeeds.DayZero.AddDays(1);
+        Dictionary<string, List<ulong>> noCarry = new(StringComparer.Ordinal);
+        Dictionary<string, List<ulong>> mainFailures = Ended();
+        mainFailures[GreedyDescender.PolicyName] = [5600];
+        string mainText = NightRecordCommand.Build(Commit, Now.AddHours(-20).UtcDateTime, "failure", string.Empty, NightSeeds.RecordFields(date, "failure", mainFailures, noCarry));
+        Dictionary<string, List<ulong>> carry = NightSeeds.ReadRecordSeeds(mainText, NightSeeds.FailedSeedsName, "main");
+
+        string ranNoSeed = NightRecordCommand.Build(EffectiveHead, Now.AddHours(-2).UtcDateTime, "success", string.Empty, NightSeeds.RecordFields(date.AddDays(1), "success", Ended(), noCarry));
+        string olderForm = Record(Now.AddHours(-2), "success", EffectiveHead);
+        string ranTheSeed = NightRecordCommand.Build(EffectiveHead, Now.AddHours(-2).UtcDateTime, "success", string.Empty, NightSeeds.RecordFields(date.AddDays(1), "success", Ended(), carry));
+
+        foreach (string branch in new[] { ranNoSeed, olderForm })
+        {
+            NightPromotionResult kept = NightPromotionRules.Evaluate(PromotionFacts(branch, mainBeforeMerge: true, mainText: mainText));
+            Assert.False(kept.Promotes, kept.Message);
+            Assert.Equal(NightPromotionRules.CarryMissingCase, kept.Case);
+            Assert.Contains("greedy-descender 5600", kept.Message, StringComparison.Ordinal);
+        }
+
+        NightPromotionResult promoted = NightPromotionRules.Evaluate(PromotionFacts(ranTheSeed, mainBeforeMerge: true, mainText: mainText));
+        Assert.True(promoted.Promotes, promoted.Message);
+
+        // The branch night ran its fixed range and its slice too: a fixed seed, or a seed of the slice of its date, needs no carry.
+        Dictionary<string, List<ulong>> fixedFailure = Ended();
+        fixedFailure[GreedyDescender.PolicyName] = [2669];
+        string mainFixed = NightRecordCommand.Build(Commit, Now.AddHours(-20).UtcDateTime, "failure", string.Empty, NightSeeds.RecordFields(date, "failure", fixedFailure, noCarry));
+        string sameDate = NightRecordCommand.Build(EffectiveHead, Now.AddHours(-2).UtcDateTime, "success", string.Empty, NightSeeds.RecordFields(date, "success", Ended(), noCarry));
+        Assert.True(NightPromotionRules.Evaluate(PromotionFacts(olderForm, mainBeforeMerge: true, mainText: mainFixed)).Promotes);
+        Assert.True(NightPromotionRules.Evaluate(PromotionFacts(sameDate, mainBeforeMerge: true, mainText: mainText)).Promotes);
+
+        // A record of main of a night before PR-84 names no failed seed, so the rule of D-558 alone decides.
+        NightPromotionResult older = NightPromotionRules.Evaluate(PromotionFacts(olderForm, mainBeforeMerge: true));
+        Assert.True(older.Promotes, older.Message);
+
+        NightPromotionResult malformed = NightPromotionRules.Evaluate(PromotionFacts(ranTheSeed, mainBeforeMerge: true, mainText: "{\"commit\":\"" + Commit + "\",\"endedAt\":\"2026-09-11T00:00:00Z\",\"status\":\"failure\",\"failedSeeds\":[5600]}"));
+        Assert.False(malformed.Promotes);
+        Assert.Equal(NightPromotionRules.MainMalformedCase, malformed.Case);
+    }
+
+    /// <summary>A map of failure lines where every sweep ended with no failure.</summary>
+    private static Dictionary<string, List<ulong>> Ended()
+    {
+        Dictionary<string, List<ulong>> failures = new(StringComparer.Ordinal);
+        foreach (string sweep in NightSeeds.Sweeps)
+        {
+            failures[sweep] = [];
+        }
+
+        return failures;
     }
 
     /// <summary>The command exits 0 and writes the record on a promotion, 1 and writes nothing without one, and 2 on a wrong option.</summary>

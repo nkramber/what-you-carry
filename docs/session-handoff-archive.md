@@ -1,5 +1,162 @@
 # Session handoff archive
 
+## Session 234: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Ready for owner merge at effective head `4282206`.
+
+### What this session did, and why
+
+- Re-reviewed PR #97 after the sweep correction and after the branch night finished.
+- Found no defect. Updated the existing review record and preserved its earlier blocked verdict.
+- The remote code head is `4282206`. Later PR commits change documents only.
+
+### State of the build
+
+- The focused sweep regression test passed locally.
+- CI, smoke, bit identity, bots, asset QA, lint, STE, and doc-gate passed at code head `4282206`.
+- The branch night passed at `4282206`; the fresh `night-gate` passed at PR tip `87e4712`.
+- The prior review-gate run read the old blocked verdict. The metadata push must start a fresh review-gate run.
+
+### In flight
+
+- The fresh review-gate run after this metadata commit.
+
+### Traps and gotchas
+
+- Later commits after `4282206` change documents only, so the effective code head remains `4282206`.
+- The only gitar comment says it is working. D-550 says that notice needs no answer.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Check the fresh review-gate result after this metadata push.
+
+## Session 233: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Blocked at effective head `ba7f448`.
+
+### What this session did, and why
+
+- Reviewed PR #97 as the opposite provider and found no code defect.
+- Recorded that the required branch night and its `night-gate` result remain incomplete.
+- The remote PR head after publication is recorded by the review-gate check; the effective code head remains `ba7f448`.
+
+### State of the build
+
+- Build and 12 focused regression and gate tests passed locally.
+- CI, smoke, bit identity, bot, lint, asset QA, and document checks passed at effective head `ba7f448`.
+- Branch night run 35909827024 was in progress at hand-over. The current `night-gate` failed because its branch record did not yet exist.
+- The review record and this handoff entry were pushed together as one metadata commit. The remote PR head was checked with `gh pr view`.
+
+### In flight
+
+- Branch night run 35909827024 and its re-run of `night-gate`.
+- The fresh `review-gate` run after publication of the review record.
+
+### Traps and gotchas
+
+- The branch night tests the effective head `ba7f448`. Later document commits do not change the code it tested (D-534, D-547).
+- Gitar's only comment says it is working. The exported comments contain no feedback or review thread.
+
+### Open questions that block progress
+
+None. Required night evidence is incomplete.
+
+### Next concrete action
+
+Check run 35909827024 and the new `night-gate` result. Re-review the same PR after the branch night passes, or record any night failure.
+
+## Session 232: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-81, author. Branch `fix/pr-81-night-softlocks`. PR #97, pending merge. Base `582f346`.
+
+### What this session did, and why
+
+- Reproduced the 26 greedy-descender softlocks of the night at `e069e16`. They pass at `170f08c` and `ea84473`, and they softlock at `837902b`, so PR-72 made them (F-111).
+- Found two faults with a trace of each seed. The wedge count of `PathFollower` read a wedge on a detour of a diagonal path (24 seeds). `DiagonalMove` took a drop under an overhang as one diagonal drop (seeds 2669 and 2879).
+- The owner chose both fixes (D-545, D-546), the effective head for a branch night (D-547), and a re-run of the gate by the night (D-548).
+- Built the branch nights of D-538: the record on `night-branch/<branch>`, the gate read of it, and the re-run step.
+- The local night then crashed seed 4119 of the greedy descender (F-112). The sweep box and the body box ended one ulp apart, and the body box overlapped a block. The owner chose the exact fix: the sweep builds each box in the form of the caller (D-549).
+- The first review round at `ba7f448` found no code issue. It read `Blocked` for the branch night that had not ended.
+- The owner asked that a gitar notice, a comment with no specific item, get no answer and block no verdict (D-550). The skills and the agent files take the rule in PR-81. The PR template takes it in the next PR (D-551).
+
+### State of the build
+
+- Local: `det-lint` 0, `ste-check` 0. The suite at `ba7f448` passed 1582 of 1583, and the version pin of `SimulationTests` was the one failure.
+- The local night of `ba7f448`: no softlock in any policy, and one crash, seed 4119. The full clearer read no fault over 3863 seeds before the stop.
+- The branch night run 35909827024 at `ba7f448` was cancelled for the crash.
+
+### In flight
+
+- The sweep fix of D-549, its full suite, its CI, a new branch night, and review round 2.
+
+### Traps and gotchas
+
+- The self-hosted runner is this Mac. A local night slows the Mac CI legs, and a rebuild of the checkout during `bot-run --no-build` breaks the run. Run a local night from its own worktree.
+- `SweptAabb.Sweep` of a plain box and `SweptAabb.SweepFeet` of a body share one frame. A caller that builds its box in another form can meet F-112 again.
+- A trace of one seed needs the follower of the policy, which is private. A scratch test with reflection read it, and the scratch test is not in the PR.
+- The seeds of the greedy descender: 751 764 940 947 1087 1268 1456 1566 1597 1785 1986 2064 2091 2412 2523 2669 2879 3052 3298 3347 3589 3757 3881 3994 4014 4870.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+This session: wait on branch night run 35915259159 and its re-run of `night-gate`, then run review round 2.
+
+The next session, after PR #97 merges, makes one PR alone (D-551). The gitar line of the PR gate in `.github/pull_request_template.md` takes the rule of D-550: "every gitar comment with an item has its answer (D-550)". PR-81 changed the same line in `CLAUDE.md` and `AGENTS.md`. Ask the owner for its roadmap id.
+
+The session after it takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551).
+
+- The night runs seeds 1 to 5000 for each bot policy and seeds 1 to 100000 for the seed sweep, every night (D-115, D-116).
+- A fixed set gives a clean before and after, a replay of each failure, and a stable gate. The PR-81 bisect used all three.
+- A fixed set also never tests a floor past its range, and a fix can pass the known seeds alone.
+- The option to put to the owner: keep the fixed set as the gate, and add a rotating slice each night, such as a window from the date. The run log names the window, so each failure replays.
+- The owner decides whether a failure in the slice blocks the merge, or files a finding that adds the seed to the fixed set.
+
+First action of that session: file the next OQ-# in `docs/questions.md` with these options and a recommendation, and ask the owner. Ask the owner for the roadmap id of the PR too. Then record each answer as a D-#.
+
+## Session 231: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-80, reviewer. Branch `chore/pr-80-gitar-pause`. PR #96, pending merge. Base `25afe34`.
+
+### What this session did, and why
+
+- Reviewed PR #96 at effective head `f331068` under D-542 to D-544.
+- The review found no issue in the Gitar pause, the flag path, the thread check, or the supporting documents.
+- Added `docs/reviews/pr-96.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- `dotnet test WhatYouCarry.slnx` passed 1573 of 1573 tests at `f331068`.
+- The remote head of PR #96 was `f331068`. The required CI checks passed, except `night-gate`, which failed on `e069e16` under D-544. The review-gate failure came from the missing review record.
+- The review record and this handoff entry are published to `origin/chore/pr-80-gitar-pause`.
+
+### In flight
+
+- PR #96 awaits the owner merge process. The owner uses the merge summary of D-533 and the bypass of D-544 if `night-gate` remains red.
+
+### Traps and gotchas
+
+- `make -n codex-review PR=96 -- --skip-gitar-review` confirms that Make passes the flag after the required options.
+- Gitar posted a free-plan notice and no review feedback. The review export found no open review thread.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner checks the merge conditions for PR #96 and follows D-533.
+
 ## Session 230: 2026-09-23, Claude Code
 
 Author: Claude Code

@@ -9,6 +9,7 @@ using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Tools;
 using WhatYouCarry.Tools.BotRunner;
+using WhatYouCarry.Tools.NightGate;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
@@ -286,7 +287,19 @@ public sealed class BotTests
         {
             string commit = "0123456789abcdef0123456789abcdef01234567";
             DateTime before = DateTime.UtcNow.AddSeconds(-1);
-            Assert.Equal(0, Program.Main(["night-record", "--commit", commit, "--status", "success", "--output", file]));
+
+            // A night that succeeds ends each sweep with no failure, and the record of main carries no seed (D-567).
+            string failures = Path.Combine(output, "failures.txt");
+            string carry = Path.Combine(output, "main.json");
+            foreach (string sweep in NightSeeds.Sweeps)
+            {
+                File.AppendAllText(failures, NightSeeds.FailureLine(sweep, []));
+            }
+
+            File.WriteAllText(carry, NightRecordCommand.Build(commit, before, "success", string.Empty));
+            string[] seedOptions = ["--date", "2026-09-25", "--failures", failures, "--carry", carry];
+            Assert.Equal(2, Program.Main(["night-record", "--commit", commit, "--status", "success", "--output", file]));
+            Assert.Equal(0, Program.Main(["night-record", "--commit", commit, "--status", "success", "--output", file, .. seedOptions]));
 
             // The file starts with the object, not a byte-order mark, so a reader that takes bytes sees JSON from the first byte.
             Assert.Equal((byte)'{', File.ReadAllBytes(file)[0]);
@@ -296,8 +309,8 @@ public sealed class BotTests
             DateTime endedAt = DateTime.Parse(record.RootElement.GetProperty(NightRecordCommand.EndedAtName).GetString()!, null, System.Globalization.DateTimeStyles.AdjustToUniversal);
             Assert.InRange(endedAt, before, DateTime.UtcNow.AddSeconds(1));
 
-            Assert.Equal(2, Program.Main(["night-record", "--commit", "abc", "--status", "success", "--output", file]));
-            Assert.Equal(2, Program.Main(["night-record", "--commit", commit, "--status", "green", "--output", file]));
+            Assert.Equal(2, Program.Main(["night-record", "--commit", "abc", "--status", "success", "--output", file, .. seedOptions]));
+            Assert.Equal(2, Program.Main(["night-record", "--commit", commit, "--status", "green", "--output", file, .. seedOptions]));
             Assert.Equal("{\"commit\":\"" + commit + "\",\"endedAt\":\"2026-09-10T03:00:00Z\",\"status\":\"failure\",\"deaths\":{},\"deathCauses\":{},\"ascends\":{}}\n", NightRecordCommand.Build(commit, new DateTime(2026, 9, 10, 3, 0, 0, DateTimeKind.Utc), "failure", string.Empty));
 
             // The record carries the count of deaths of each policy, in the order of the summary lines (D-403).
