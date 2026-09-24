@@ -2,6 +2,55 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 243: 2026-09-24, Claude Code
+
+Author: Claude Code
+Session: PR-84, author, the answer to review round 1. Branch `feat/pr-84-night-fixed-seeds`. PR #100, pending merge. Base `55b6d3f`.
+
+### What this session did, and why
+
+- Review round 1 (session 242) read `Changes required` with P1-1. After a broken build, the failure record dropped the failed seeds of `main`, so the carry of D-567 could end with no fix. Full merit.
+- Added `.github/scripts/night-failure-record.sh`. It writes the failure record with `jq` and keeps the `failedSeeds` of the record of `main`. The publish step fetches that record itself. The answer is `docs/reviews/pr-100-response.md`.
+- Added `TheFailureRecordOfABrokenBuildKeepsTheCarriedSeeds`. It runs the script, and the next plan and the promotion check then read the kept seed.
+- Session 241 holds exit test 6 of PR-83 (pass), the owner answers D-564 to D-569, and the cloud move D-570 to D-573.
+
+### State of the build
+
+- Local after the fix: the full suite passed 1612 of 1612, Smoke included. `det-lint` and `ste-check` read 0.
+- The new test first sat in `NightGateTests`. That class holds the fixture literal `"docs/decisions.md"`, so the text rule of D-476 read a document read. The test moved to `NightSeedsTests`.
+- The effective head moves to the push of this entry, because the fix changes `.github/`.
+
+### In flight
+
+- CI of the fix push, then review round 2 through `make codex-review PR=100 -- --skip-gitar-review`.
+- Branch night run 36030984588 for exit test 10. It ran at `35da819`, before the fix. The fix changes the publish step of a broken build alone, so a night that builds runs the same steps.
+- The merge summary in Q/A form after an approved review (D-524, D-552).
+
+### Traps and gotchas
+
+- Day 0 of the slices is 2026-09-24. The first slice runs seeds that no night ran before, so it can fail on an old fault. A fix of such a seed is a PR of its own.
+- The failure record script needs `bash` and `jq`. The Mac runner has `/usr/bin/jq`, and the hosted Linux image has `jq`.
+- `night-record` needs `--date`, `--failures`, and `--carry`.
+- A documents push skips the heavy jobs only after the runs on the previous head end green (CI skip rule 2).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+This session: wait on CI and review round 2 of PR #100, then give the merge summary.
+
+After PR #100 merges, the next session makes PR-85 alone (D-570, D-571, D-572, D-573). It goes ahead of PR-75 in the Phase 2 order.
+
+- The night cron of `.github/workflows/night.yml` moves from `7 8 * * *` to `7 7 * * *`, 07:07 UTC. Update the time comment and `NightWorkflowRunsAtTwoCentralStandardTime`, and revise D-284, D-285, and D-288 in part.
+- The night moves to `ubuntu-latest` as parallel jobs, one for each sweep of `NightSeeds.Sweeps`. A hosted job stops at 6 hours. The full clearer took 84 minutes on the Mac Mini, and the hosted Linux test step ran about 2.3 times slower (F-109).
+- One job plans the seeds once, and each sweep job gets the date and the record of `main` from it. Each sweep job keeps its logs, its summary line, and its failure line as artifacts. One last job writes and publishes the record, and it re-runs the gates.
+- Keep the carry rules of D-567 and D-569, and the failure record script of a broken build.
+- Run a branch night of PR-85 on hosted Linux before the review.
+
+Then PR-86: the macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the hosted macOS arm64 runner. The Free plan runs 5 macOS jobs at once. PR-86 retires `docs/runbooks/macos-runner.md` and the Mac runner rules. It revises D-100, D-157, D-192, and D-358, and it updates the cost model and the agent files. PR-75 follows.
+
 ## Session 242: 2026-09-24, Codex
 
 Author: Codex
@@ -341,39 +390,3 @@ None.
 ### Next concrete action
 
 Check the fresh review-gate result after this metadata push.
-
-## Session 233: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Blocked at effective head `ba7f448`.
-
-### What this session did, and why
-
-- Reviewed PR #97 as the opposite provider and found no code defect.
-- Recorded that the required branch night and its `night-gate` result remain incomplete.
-- The remote PR head after publication is recorded by the review-gate check; the effective code head remains `ba7f448`.
-
-### State of the build
-
-- Build and 12 focused regression and gate tests passed locally.
-- CI, smoke, bit identity, bot, lint, asset QA, and document checks passed at effective head `ba7f448`.
-- Branch night run 35909827024 was in progress at hand-over. The current `night-gate` failed because its branch record did not yet exist.
-- The review record and this handoff entry were pushed together as one metadata commit. The remote PR head was checked with `gh pr view`.
-
-### In flight
-
-- Branch night run 35909827024 and its re-run of `night-gate`.
-- The fresh `review-gate` run after publication of the review record.
-
-### Traps and gotchas
-
-- The branch night tests the effective head `ba7f448`. Later document commits do not change the code it tested (D-534, D-547).
-- Gitar's only comment says it is working. The exported comments contain no feedback or review thread.
-
-### Open questions that block progress
-
-None. Required night evidence is incomplete.
-
-### Next concrete action
-
-Check run 35909827024 and the new `night-gate` result. Re-review the same PR after the branch night passes, or record any night failure.

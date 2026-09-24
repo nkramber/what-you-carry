@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 233: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Blocked at effective head `ba7f448`.
+
+### What this session did, and why
+
+- Reviewed PR #97 as the opposite provider and found no code defect.
+- Recorded that the required branch night and its `night-gate` result remain incomplete.
+- The remote PR head after publication is recorded by the review-gate check; the effective code head remains `ba7f448`.
+
+### State of the build
+
+- Build and 12 focused regression and gate tests passed locally.
+- CI, smoke, bit identity, bot, lint, asset QA, and document checks passed at effective head `ba7f448`.
+- Branch night run 35909827024 was in progress at hand-over. The current `night-gate` failed because its branch record did not yet exist.
+- The review record and this handoff entry were pushed together as one metadata commit. The remote PR head was checked with `gh pr view`.
+
+### In flight
+
+- Branch night run 35909827024 and its re-run of `night-gate`.
+- The fresh `review-gate` run after publication of the review record.
+
+### Traps and gotchas
+
+- The branch night tests the effective head `ba7f448`. Later document commits do not change the code it tested (D-534, D-547).
+- Gitar's only comment says it is working. The exported comments contain no feedback or review thread.
+
+### Open questions that block progress
+
+None. Required night evidence is incomplete.
+
+### Next concrete action
+
+Check run 35909827024 and the new `night-gate` result. Re-review the same PR after the branch night passes, or record any night failure.
+
 ## Session 232: 2026-09-23, Claude Code
 
 Author: Claude Code
