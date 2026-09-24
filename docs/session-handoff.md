@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 240: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-83, reviewer. Branch `feat/pr-83-night-record-promotion`. PR #99, pending merge. Base `811c1c9`.
+
+### What this session did, and why
+
+- Reviewed PR #99 at effective head `2b872f9`, the green branch night promotion change.
+- The author is Claude Code, as session 239 records. This Codex review meets the cross-provider rule (T-4, D-101).
+- Reviewed all changed paths, the PR-83 exit tests, decisions D-555 to D-563, the PR comments, the workflows, and the record rules.
+- Added `docs/reviews/pr-99.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- The focused promotion, publication, and workflow tests passed 11 of 11.
+- GitHub checks at `3236111` passed for builds, sweeps, asset QA, bit identity, bots, det-lint, documents, doc-gate, night-gate, smoke, and ste-check.
+- `evaluate` and `review-gate` failed because the review record did not exist at that head. They must rerun after this metadata push.
+- The first metadata push `d7f90c5` matched the PR head in `gh pr view`. This entry records that publication check before its final evidence update.
+
+### In flight
+
+- The review record and this handoff entry share one amended metadata commit on `feat/pr-83-night-record-promotion`.
+- The review verdict applies to effective head `2b872f9`.
+
+### Traps and gotchas
+
+- The current PR tip `3236111` changes only skipped documentation paths after effective head `2b872f9`.
+- The only PR comment is the gitar notice “Gitar is working”. D-550 says that notice needs no answer.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The final amended metadata commit is pushed, and its hash matches the PR head.
+
 ## Session 239: 2026-09-24, Claude Code
 
 Author: Claude Code
@@ -340,40 +377,3 @@ None.
 ### Next concrete action
 
 The owner checks the merge conditions for PR #96 and follows D-533.
-
-## Session 230: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-80, author. Branch `chore/pr-80-gitar-pause`. PR #96, pending merge. Base `25afe34`.
-
-### What this session did, and why
-
-- The owner paused the gitar requirement until a later PR of the owner (D-542). The author answers each gitar comment that comes in. A gitar review with feedback stops the session, and the session alerts the owner.
-- Added the flag `--skip-gitar-review` to `codex-review`, through `make codex-review PR=<n> -- --skip-gitar-review` (D-543). The flag drops the Gitar check run and the Gitar dashboard checks. The thread check stays (D-522). The flag stays after the pause.
-- Each text of the pause outside the registers names D-542, so `grep -rn 'D-542'` finds each one for the PR that ends the pause.
-- `AGENTS.md` was 19 bytes under its ceiling. The Game argument rules and the generated file rules moved to `docs/runbooks/commands.md` (D-382).
-- The owner put this PR before the night fix of D-538, with a bypass merge when `night-gate` stays red (D-544).
-
-### State of the build
-
-- The full suite passed 1573 of 1573 locally. `ste-check` gave no finding.
-- The remote head of `main` is `25afe34`. The newest night failed at `e069e16` (D-538), so `night-gate` stays red.
-
-### In flight
-
-- `make codex-review PR=96 -- --skip-gitar-review` approved the effective head `f331068` with no finding (session 231).
-- Exit test 4 of PR-79 and of PR-80: the runbook commit after the approval is a documents commit. `review-gate` must stay green on it.
-- The Gitar dashboard gave "Gitar is working" at 18:26 UTC, with no thread. Read the PR comments again before the merge summary.
-
-### Traps and gotchas
-
-- Make reads each word after `--` as a goal. The `--%` rule of the `Makefile` keeps make from a stop, and the target passes each such goal to the command.
-- `AGENTS.md` holds 14842 bytes of 15000. Move detail to a runbook before a new rule.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Confirm `review-gate` on the new head, read the PR comments, and give the owner the merge summary of D-533.
