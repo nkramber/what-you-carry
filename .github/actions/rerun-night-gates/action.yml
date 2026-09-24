@@ -1,0 +1,40 @@
+# The re-run of the night gate of each open PR after a new record of main (D-559; PR-83). The night-gate check of a
+# PR runs on a pull_request event and reads the record of main at that time. A night on main and a promotion of a
+# branch night both write a new record later, so each one re-runs the newest night-gate run of each open PR on main.
+# The gate runs on ubuntu-latest, so a re-run puts no job in the queue of the Mac runner.
+#
+# The caller needs the permissions actions: write and pull-requests: read. Each branch name reaches gh through a
+# shell variable, and never through the script text.
+name: Re-run the night gates
+description: Re-runs the newest night-gate run of each open PR on main, so each PR check reads the new record of main.
+
+runs:
+  using: composite
+  steps:
+    - name: Re-run the night gate of each open PR
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPOSITORY: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+        branches=$(gh pr list --repo "$REPOSITORY" --state open --base main --limit 100 --json headRefName --jq '.[].headRefName')
+        if [ -z "$branches" ]; then
+          echo "No PR on main is open, so no night-gate check reads the new record yet."
+          exit 0
+        fi
+        while IFS= read -r branch; do
+          run=$(gh run list --repo "$REPOSITORY" --workflow night-gate.yml --branch "$branch" --event pull_request --limit 1 --json databaseId,status --jq '.[] | "\(.databaseId) \(.status)"')
+          if [ -z "$run" ]; then
+            echo "The branch ${branch} has no night-gate run, so its first run reads the new record."
+            continue
+          fi
+          id="${run%% *}"
+          state="${run#* }"
+          if [ "$state" != "completed" ]; then
+            echo "The night-gate run ${id} of ${branch} is ${state}, so it reads the new record when it runs."
+            continue
+          fi
+          gh run rerun "$id" --repo "$REPOSITORY"
+          echo "The night-gate run ${id} of ${branch} runs again, and it reads the new record of main."
+        done <<< "$branches"

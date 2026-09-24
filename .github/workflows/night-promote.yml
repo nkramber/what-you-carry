@@ -1,0 +1,97 @@
+# The promotion of a branch night to the record of main (D-555 to D-559; PR-83). A push to main makes a merge
+# commit. When the night on the head branch of the merged PR passed, ended inside 48 hours, and tested a tree that
+# differs from the merge commit only in the skip set of D-475, that night stands for the merge commit. The job then
+# writes a success record at the merge commit to night-results, with the end time of the branch night and a field
+# that names the branch and the commit of the night. A record of main at the merge commit or at a later commit stays.
+# The rules live in WhatYouCarry.Tools, command night-promote. This file only gathers the inputs and publishes.
+# Besides a night on main, this job alone writes night-results (D-557). After a promotion, the night gate of each
+# open PR runs again (D-559).
+name: Night promotion
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  actions: write
+  pull-requests: read
+
+# Each promotion reads the record of main and then replaces it, so two promotions never run at once. A newer push
+# replaces a promotion that waits, and the newest merge commit is the one that the open PRs build on.
+concurrency:
+  group: night-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Find the merged PR
+        id: pr
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MERGE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/commits/$MERGE_SHA/pulls" > "$RUNNER_TEMP/pulls.json"
+          pr=$(jq -r --arg sha "$MERGE_SHA" '[.[] | select(.merge_commit_sha == $sha)] | if length == 1 then "\(.[0].number) \(.[0].head.ref)" else "" end' "$RUNNER_TEMP/pulls.json")
+          if [ -z "$pr" ]; then
+            echo "The commit $MERGE_SHA is not the merge commit of one PR, so no branch night stands for it."
+            echo "number=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "The commit $MERGE_SHA is the merge commit of PR #${pr%% *}, head branch ${pr#* }."
+          echo "number=${pr%% *}" >> "$GITHUB_OUTPUT"
+          echo "branch=${pr#* }" >> "$GITHUB_OUTPUT"
+      - name: Promote the branch night
+        id: promote
+        if: steps.pr.outputs.number != ''
+        shell: bash
+        # The head branch reaches the tool through the environment, never through the shell text, so no branch name
+        # runs as a command.
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          HEAD_BRANCH: ${{ steps.pr.outputs.branch }}
+          MERGE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # The head branch of a merged PR can be gone, and the PR ref still holds the commit of its night.
+          git fetch --quiet origin "refs/pull/${PR_NUMBER}/head"
+          # The lease: the record of main as this job reads it. A night on main that writes in between fails the push.
+          lease=$(git ls-remote origin refs/heads/night-results | cut -f1)
+          set +e
+          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- night-promote --root "$GITHUB_WORKSPACE" --remote origin --merge "$MERGE_SHA" --head-branch "$HEAD_BRANCH" --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --output "${RUNNER_TEMP}/night.json"
+          rc=$?
+          set -e
+          if [ "$rc" -eq 1 ]; then
+            echo "promoted=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$rc" -ne 0 ]; then
+            echo "The night-promote command exited ${rc}."
+            exit "$rc"
+          fi
+          work="${RUNNER_TEMP}/night-results"
+          rm -rf "$work"
+          git worktree add --detach "$work" HEAD
+          cd "$work"
+          git checkout --orphan night-results
+          git rm -rfq .
+          cp "${RUNNER_TEMP}/night.json" night.json
+          git config user.name "night job"
+          git config user.email "night-job@users.noreply.github.com"
+          git add night.json
+          git commit -qm "night: ${MERGE_SHA} success, promoted from the branch night of ${HEAD_BRANCH} (run ${GITHUB_RUN_ID})"
+          git push --force-with-lease="refs/heads/night-results:${lease}" origin "HEAD:refs/heads/night-results"
+          echo "promoted=true" >> "$GITHUB_OUTPUT"
+      - name: Re-run the night gate of each open PR
+        if: steps.promote.outputs.promoted == 'true'
+        uses: ./.github/actions/rerun-night-gates

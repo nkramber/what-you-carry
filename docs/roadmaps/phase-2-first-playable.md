@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-82, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-83, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -992,7 +992,7 @@ Scope:
 - `.github/pull_request_template.md`: the gitar line of the PR gate takes the rule of D-550. It reads as the gitar line of the PR gate in the agent files (D-551, D-553).
 - `WhatYouCarry.Tests/RepositoryShapeTests.cs`: `PullRequestTemplateGitarLineMatchesThePrGate` (D-554).
 
-Out of scope: the fixed seeds of the night, which the next PR holds (D-551). The end of the gitar pause stays with a later PR of the owner (D-542).
+Out of scope: the fixed seeds of the night, which the PR after PR-83 holds (D-551, D-560). The end of the gitar pause stays with a later PR of the owner (D-542).
 
 Exit tests:
 
@@ -1007,6 +1007,38 @@ Check clause: none.
 Gate: exit tests 1 to 3 pass.
 
 > *In plain English:* the agent files let a gitar comment with no specific item go without an answer. The checklist of each new PR still asked for an answer to every gitar comment. Now both say the same thing, and a test keeps them equal.
+
+### PR-83: Night record promotion
+
+✅ Done in PR #99.
+
+Scope:
+
+- `WhatYouCarry.Tools/NightGate/`: the command `night-promote` reads the record of `main` and the branch record of the merged PR. It compares the trees of the night commit and the merge commit, and it writes the promoted record (D-555, D-556, D-558, D-563). The command `night-publish-check` keeps a record of `main` at a later commit (D-562).
+- `.github/workflows/night-promote.yml`: a job on each push to `main` finds the merged PR and runs `night-promote`. It writes `night-results` with a lease on the record that it read (D-557).
+- `.github/workflows/night.yml`: a night on `main` runs `night-publish-check` before it writes, and pushes with a lease (D-562). It then re-runs the gate of each open PR (D-559).
+- `.github/actions/rerun-night-gates/`: the re-run of the newest `night-gate` run of each open PR on `main` (D-559).
+- `WhatYouCarry.Tests/`: `NightGateTests` and `RepositoryShapeTests`.
+
+Out of scope: a promotion of the PR-81 night (D-561), and the fixed seeds of the night, which the next PR holds (D-560).
+
+Exit tests:
+
+1. `BranchNightOfTheMergedPrPromotesAndTheNextPrReadsGreen` passes. It holds the PR-81 case, and the gate of the next PR then reads `main` green (D-555, D-556, D-558).
+2. `BranchNightDoesNotPromoteOverACodeChangeOfAnotherPr`, `BranchNightOlderThanTheWindowDoesNotPromote`, and `BranchNightNeverReplacesANewerNightOfMain` pass.
+3. `NightOnMainKeepsARecordAtALaterCommit` and `NightPublishDecisionNamesEachCase` pass (D-562).
+4. `APushToMainPromotesTheBranchNightOfItsPr`, `ANightOnMainKeepsALaterRecordAndReRunsEveryGate`, and `TheGateReRunActionReRunsTheNewestGateOfEachOpenPr` pass (D-557, D-559).
+5. The `night-gate` job of this PR reads green, from a green record of `main` inside 48 hours or from a night on this branch (D-275, D-538, D-547).
+6. After the merge, the run of `night-promote.yml` at the merge commit of this PR ends green and names its case. The first merge with a green branch night then promotes it and re-runs the gate of each open PR. The session after each merge reads the run and states the result in its handoff entry (D-375).
+7. `make codex-review PR=<this PR> -- --skip-gitar-review` reviews this PR (D-543). The merge request gives the merge summary as questions and answers (D-552).
+
+Review focus: the tree test against the skip set, the ancestry order in both directions, and the lease of each write of `night-results`.
+
+Check clause: none.
+
+Gate: exit tests 1 to 5 and 7 pass. Exit test 6 runs on `main` after the merge.
+
+> *In plain English:* a PR that proved itself with its own night run still left the main branch red after the merge. The next PR then waited a day. Now a merge that changes only documents after that night carries the green result to the main branch.
 
 ### PR-75: Sword art
 
@@ -1119,13 +1151,14 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544.
 38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.
 39. PR-82. ✅ Done in PR #98. ✅ The owner answers of 2026-09-23: D-553 and D-554.
-40. PR-75.
-41. PR-76.
-42. Owner: answer OQ-181.
-43. PR-77.
-44. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-45. Tier 4 pass on the screenshot fixture (D-133).
-46. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+40. PR-83. ✅ Done in PR #99. ✅ The owner answers of 2026-09-23: D-555 to D-563.
+41. PR-75.
+42. PR-76.
+43. Owner: answer OQ-181.
+44. PR-77.
+45. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+46. Tier 4 pass on the screenshot fixture (D-133).
+47. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

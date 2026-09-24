@@ -1,5 +1,80 @@
 # Session handoff archive
 
+## Session 230: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-80, author. Branch `chore/pr-80-gitar-pause`. PR #96, pending merge. Base `25afe34`.
+
+### What this session did, and why
+
+- The owner paused the gitar requirement until a later PR of the owner (D-542). The author answers each gitar comment that comes in. A gitar review with feedback stops the session, and the session alerts the owner.
+- Added the flag `--skip-gitar-review` to `codex-review`, through `make codex-review PR=<n> -- --skip-gitar-review` (D-543). The flag drops the Gitar check run and the Gitar dashboard checks. The thread check stays (D-522). The flag stays after the pause.
+- Each text of the pause outside the registers names D-542, so `grep -rn 'D-542'` finds each one for the PR that ends the pause.
+- `AGENTS.md` was 19 bytes under its ceiling. The Game argument rules and the generated file rules moved to `docs/runbooks/commands.md` (D-382).
+- The owner put this PR before the night fix of D-538, with a bypass merge when `night-gate` stays red (D-544).
+
+### State of the build
+
+- The full suite passed 1573 of 1573 locally. `ste-check` gave no finding.
+- The remote head of `main` is `25afe34`. The newest night failed at `e069e16` (D-538), so `night-gate` stays red.
+
+### In flight
+
+- `make codex-review PR=96 -- --skip-gitar-review` approved the effective head `f331068` with no finding (session 231).
+- Exit test 4 of PR-79 and of PR-80: the runbook commit after the approval is a documents commit. `review-gate` must stay green on it.
+- The Gitar dashboard gave "Gitar is working" at 18:26 UTC, with no thread. Read the PR comments again before the merge summary.
+
+### Traps and gotchas
+
+- Make reads each word after `--` as a goal. The `--%` rule of the `Makefile` keeps make from a stop, and the target passes each such goal to the command.
+- `AGENTS.md` holds 14842 bytes of 15000. Move detail to a runbook before a new rule.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Confirm `review-gate` on the new head, read the PR comments, and give the owner the merge summary of D-533.
+
+## Session 229: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Re-reviewed PR #95 at effective head `25ad21e`.
+- Verified that P2-1 is fixed: the override label and effective-head logic now use the same document path set. No new code finding remains.
+- Updated the existing review record with the finding history and current verdict.
+
+### State of the build
+
+- The focused review tests passed 119 of 119 at `25ad21e`.
+- The Documents category passed 140 of 140 after the review record and handoff edits.
+- `ste-check` passed with no findings, and `doc-gate` passed with 0 problems over 25 paths.
+- Asset QA, lint, document, STE, bot, the Linux and macOS CI platform results, Smoke, and bit-identity passed at `25ad21e`.
+- The Windows CI job later passed at 17:42 UTC. The metadata-only run skipped heavy jobs under D-474 rule 2 after the previous code-head CI run passed.
+- The night gate failed on the D-538 record. The review gate and evaluator fail on the published `Blocked` verdict.
+
+### In flight
+
+- The review record and this handoff entry are published on `origin/chore/pr-79-review-process`.
+- PR #95 remains blocked by the D-538 night-gate failure. The review gate and evaluator fail on the `Blocked` verdict; metadata-only jobs pass or skip under D-474 rule 2.
+
+### Traps and gotchas
+
+- The code head is `25ad21e`; later review and handoff commits are documents-only and do not move the effective head (D-534).
+- The current night failure belongs to D-538, which is out of scope for PR-79. D-537 keeps the ruleset bypass for the manual merge of that work.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Resolve the D-538 night-gate failure. Then re-review the same effective head and update the existing review record.
+
 ## Session 228: 2026-09-23, Claude Code
 
 Author: Claude Code

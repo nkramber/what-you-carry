@@ -77,14 +77,14 @@ public sealed class NightGateFacts
     public static NightGateFacts Gather(string root, string remote, string baseRef, string headBranch, string head, DateTimeOffset now)
     {
         var git = new GitRepository(root);
-        NightRecordRead main = Read(git, remote, RecordBranch);
+        NightRecordRead main = ReadRecord(git, remote, RecordBranch);
         bool? commitOnBase = null;
         if (main.Record is not null)
         {
             commitOnBase = git.HasCommit(main.Record.Commit) && git.IsAncestor(main.Record.Commit, baseRef);
         }
 
-        NightRecordRead branch = Read(git, remote, BranchRecordPrefix + headBranch);
+        NightRecordRead branch = ReadRecord(git, remote, BranchRecordPrefix + headBranch);
         string mergeBase = git.MergeBase(baseRef, head);
         string? effectiveHead = git.NewestCommitOutside(mergeBase, head, ReviewGateRules.SkipPaths)?.Sha;
         bool? branchAtEffectiveHead = null;
@@ -107,8 +107,8 @@ public sealed class NightGateFacts
         };
     }
 
-    /// <summary>Fetches one record branch of the remote and reads its record from git, never from the working tree.</summary>
-    private static NightRecordRead Read(GitRepository git, string remote, string branch)
+    /// <summary>Fetches one record branch of the remote and reads its record from git, never from the working tree. The gate and the promotion both read records this way.</summary>
+    public static NightRecordRead ReadRecord(GitRepository git, string remote, string branch)
     {
         if (!git.HasRemoteBranch(remote, branch))
         {
