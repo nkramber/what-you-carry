@@ -608,7 +608,7 @@ A job on each push to `main` finds the merged PR and reads its branch night (D-5
 Gate: the promotion tests pass, and the `night-gate` job of this PR reads green.
 > *In plain English:* a PR that proved itself with its own night run still left the main branch red after the merge. Now that green result carries over, when the merge changes only documents after the night.
 
-**PR-84: Night fixed seeds.**
+**PR-84: Night fixed seeds.** ✅ Done in PR #100.
 The fixed seeds of each night stay the gate, and each night also runs a slice of one tenth past them (D-564, D-566). The UTC date of the night start selects the window, and the run log and the record name it. A slice failure fails the night (D-565). Each later night runs a failed seed again until a night passes it (D-567). The fix PR adds the seed to the extra fixed seeds. A promotion needs a branch night that ran each carried seed (D-569).
 Gate: the seed tests pass, and a branch night of this PR names the slice of its date.
 > *In plain English:* each night tested the same seeds, so a fault past them stayed hidden. Now each night also tests a new batch that the date picks, and a failure blocks merges until a fix.

@@ -1042,6 +1042,8 @@ Gate: exit tests 1 to 5 and 7 pass. Exit test 6 runs on `main` after the merge.
 
 ### PR-84: Night fixed seeds
 
+✅ Done in PR #100.
+
 Scope:
 
 - `WhatYouCarry.Tools/NightGate/NightSeeds.cs`: the seed rules of each night. The fixed set stays the gate, and the UTC date selects a slice of one tenth past it (D-564, D-566). The list also holds the extra fixed seeds and the carried seeds (D-567).
@@ -1189,7 +1191,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.
 39. PR-82. ✅ Done in PR #98. ✅ The owner answers of 2026-09-23: D-553 and D-554.
 40. PR-83. ✅ Done in PR #99. ✅ The owner answers of 2026-09-23: D-555 to D-563.
-41. PR-84. ✅ The owner answers of 2026-09-24: D-564 to D-569.
+41. PR-84. ✅ Done in PR #100. ✅ The owner answers of 2026-09-24: D-564 to D-569.
 42. PR-75.
 43. PR-76.
 44. Owner: answer OQ-181.

@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 241: 2026-09-24, Claude Code
 
 Author: Claude Code
-Session: PR-84, author. Branch `feat/pr-84-night-fixed-seeds`. PR pending. Base `55b6d3f`.
+Session: PR-84, author. Branch `feat/pr-84-night-fixed-seeds`. PR #100, pending merge. Base `55b6d3f`.
 
 ### What this session did, and why
 
@@ -36,7 +36,7 @@ None.
 
 ### Next concrete action
 
-Open the PR, mark PR-84 done in the design doc and the roadmap, and wait on CI. Read run 36005945062 for exit test 6 of PR-83, and state its publish result in this entry. Then dispatch a branch night of this PR, and run `make codex-review PR=<n> -- --skip-gitar-review`.
+Wait on the CI of PR #100. Read run 36005945062 for exit test 6 of PR-83, and state its publish result in this entry. Then dispatch a branch night of this PR, and run `make codex-review PR=<n> -- --skip-gitar-review`.
 
 ## Session 240: 2026-09-24, Codex
 
