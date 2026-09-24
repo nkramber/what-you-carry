@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 238: 2026-09-24, Claude Code
+
+Author: Claude Code
+Session: PR-82, author. Branch `chore/pr-82-template-gitar-notice`. PR #98, pending merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Ran a night by hand on `main`, run 35944586534 at `2071cb6`. It passed and ended at 05:06 UTC. The record of `main` is now a success at `2071cb6`, and it replaced the red night of `e069e16`.
+- A night on `main` does not re-run the `night-gate` of an open PR. The re-run step of `night.yml` skips `main` (D-548). The session re-ran the `night-gate` run of this PR by hand, and it passed.
+- Review round 1 read `Blocked` with no finding: `night-gate` was red, and CI was pending. Review round 2 approves the effective head `bc51dde`.
+- The owner asked for a prompt of a parallel PR. A green branch night then counts for `main` after the merge, when the merge commit differs from the tested commit in skip-set paths alone. The prompt went to the owner in chat. That PR has no D-# or OQ-# yet.
+
+### State of the build
+
+- All required checks are green at the PR tip, `night-gate` and smoke on three platforms included.
+- Code head: `bc51dde`. Later commits of this PR change documents only.
+
+### In flight
+
+- The owner merge confirmation, then the auto-merge.
+
+### Traps and gotchas
+
+- The Linux smoke failure in the round 1 record came from a run in progress. The final run passed.
+- After each red night on `main`, each open PR needs a re-run of its `night-gate` by hand, until a PR changes that rule.
+- The parallel PR can collide with this PR on D-# ids and session numbers. This PR holds D-553, D-554, and sessions 235 to 238.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge: the fixed seeds of the night (D-551), or the parallel PR of the night record promotion, as the owner orders them. Follow the next concrete action of Session 232 for the fixed seeds.
+
 ## Session 237: 2026-09-24, Codex
 
 Author: Codex
@@ -339,36 +374,3 @@ None.
 ### Next concrete action
 
 Resolve the D-538 night-gate failure. Then re-review the same effective head and update the existing review record.
-
-## Session 228: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-79, author. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
-
-### What this session did, and why
-
-- Answered round 1 of the Codex review (`Changes required` at `d13f73c`). P2-1 has full merit: a PR of the root `README.md` or `LICENSE` alone passed neither by review nor by label.
-- Recorded the owner instruction as D-541: the `review-override` label covers each path of the skip set of D-475. `review-gate` now reads the one list of the CI skip for the label. D-190 carries a partial revision mark.
-- Wrote `docs/reviews/pr-95-response.md`. It also shows that the Smoke jobs ran and passed at `d13f73c`.
-
-### State of the build
-
-- `dotnet build` passed with no warning. The full suite result and the new code head are in the response file and the PR.
-- Four new tests fail on the old `ReviewGateRules.cs` and pass with the correction.
-
-### In flight
-
-- Round 2 of the Codex review on the new code head, then the merge summary and the owner confirmation.
-
-### Traps and gotchas
-
-- `review-gate` runs the tool of `main`, so round 2 must record the new code head. The correction commit holds code, so the old rule and the new rule give one head.
-- The night gate stays red on the record of D-538. D-537 keeps the bypass for the merge.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read round 2 of the Codex review of PR #95. On approval, write the merge summary of D-533 and ask the owner to confirm the merge.

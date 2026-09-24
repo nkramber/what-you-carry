@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 228: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-79, author. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
+
+### What this session did, and why
+
+- Answered round 1 of the Codex review (`Changes required` at `d13f73c`). P2-1 has full merit: a PR of the root `README.md` or `LICENSE` alone passed neither by review nor by label.
+- Recorded the owner instruction as D-541: the `review-override` label covers each path of the skip set of D-475. `review-gate` now reads the one list of the CI skip for the label. D-190 carries a partial revision mark.
+- Wrote `docs/reviews/pr-95-response.md`. It also shows that the Smoke jobs ran and passed at `d13f73c`.
+
+### State of the build
+
+- `dotnet build` passed with no warning. The full suite result and the new code head are in the response file and the PR.
+- Four new tests fail on the old `ReviewGateRules.cs` and pass with the correction.
+
+### In flight
+
+- Round 2 of the Codex review on the new code head, then the merge summary and the owner confirmation.
+
+### Traps and gotchas
+
+- `review-gate` runs the tool of `main`, so round 2 must record the new code head. The correction commit holds code, so the old rule and the new rule give one head.
+- The night gate stays red on the record of D-538. D-537 keeps the bypass for the merge.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read round 2 of the Codex review of PR #95. On approval, write the merge summary of D-533 and ask the owner to confirm the merge.
+
 ## Session 227: 2026-09-23, Codex
 
 Author: Codex
