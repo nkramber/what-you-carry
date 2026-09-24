@@ -166,6 +166,12 @@ public sealed class RepositoryShapeTests
         Assert.Contains("fetch-depth: 0", workflow, StringComparison.Ordinal);
         Assert.Contains("night-gate --root \"$GITHUB_WORKSPACE\" --remote origin", workflow, StringComparison.Ordinal);
         Assert.Contains("--base \"origin/${{ github.base_ref }}\"", workflow, StringComparison.Ordinal);
+
+        // D-538, D-547: the head branch and the head commit reach the tool through the environment alone.
+        Assert.Contains("HEAD_BRANCH: ${{ github.head_ref }}", workflow, StringComparison.Ordinal);
+        Assert.Contains("HEAD_SHA: ${{ github.event.pull_request.head.sha }}", workflow, StringComparison.Ordinal);
+        Assert.Contains("--head-branch \"$HEAD_BRANCH\" --head \"$HEAD_SHA\"", workflow, StringComparison.Ordinal);
+        Assert.Equal(2, workflow.Split("${{ github.head_ref }}").Length);
         Assert.DoesNotContain("night.json", workflow.Replace("night.json in the checkout", string.Empty), StringComparison.Ordinal);
         Assert.DoesNotContain("git fetch", workflow, StringComparison.Ordinal);
     }
@@ -224,16 +230,28 @@ public sealed class RepositoryShapeTests
     }
 
     [Fact]
-    public void TheNightRecordStepsRunOnMainAlone()
+    public void ABranchNightWritesARecordOfItsOwnAndReRunsTheGate()
     {
-        // D-373: the record of main is the state that the night-gate job reads (D-275). Both record steps take the
-        // ref condition beside always(), so a night on another ref runs in full and writes no record.
+        // D-373: the record of main is the state that the night-gate job reads (D-275), and main alone writes it.
+        // D-538: a night on another branch writes its record to night-branch/<branch>, and a night on a tag writes
+        // none. D-548: a branch night then re-runs the newest night-gate run of its branch, with the actions permission.
         string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
-        const string guard = "if: always() && github.ref == 'refs/heads/main'";
+        const string guard = "if: always() && startsWith(github.ref, 'refs/heads/')";
         Assert.Contains(guard, StepText(workflow, "Write the night record"), StringComparison.Ordinal);
-        Assert.Contains(guard, StepText(workflow, "Publish the night record"), StringComparison.Ordinal);
+        string publish = StepText(workflow, "Publish the night record");
+        Assert.Contains(guard, publish, StringComparison.Ordinal);
+        Assert.Contains("if [ \"${GITHUB_REF}\" = \"refs/heads/main\" ]; then\n            target=\"night-results\"\n          else\n            target=\"night-branch/${GITHUB_REF_NAME}\"", publish, StringComparison.Ordinal);
+        Assert.Contains("git push --force origin \"HEAD:refs/heads/${target}\"", publish, StringComparison.Ordinal);
+        Assert.DoesNotContain("origin night-results", workflow, StringComparison.Ordinal);
+        string rerun = StepText(workflow, "Re-run the night gate of the branch");
+        Assert.Contains("if: always() && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main'", rerun, StringComparison.Ordinal);
+        Assert.Contains("--workflow night-gate.yml --branch \"$GITHUB_REF_NAME\" --event pull_request", rerun, StringComparison.Ordinal);
+        Assert.Contains("gh run rerun \"$id\"", rerun, StringComparison.Ordinal);
+        Assert.Contains("\n  actions: write\n", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("if: always()\n", workflow, StringComparison.Ordinal);
         Assert.Contains("(D-373)", workflow, StringComparison.Ordinal);
+        Assert.Contains("(D-538", workflow, StringComparison.Ordinal);
+        Assert.Contains("(D-548)", workflow, StringComparison.Ordinal);
     }
 
     /// <summary>The concurrency block that every workflow on a pull request carries (D-356).</summary>

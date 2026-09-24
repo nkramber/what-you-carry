@@ -1,9 +1,11 @@
 # The night gate (D-115, D-177, D-274, D-275; PR-58). The command fetches the branch night-results of the remote
 # and reads the one record that the night job publishes there (D-273), from git and never from the working tree,
 # so a pull request cannot carry its own record (PR #40 review P1-1). It fails the PR on an absent, malformed,
-# stale, foreign, cancelled, or failed record. The rules live in WhatYouCarry.Tools, command night-gate. This
-# file only gathers the inputs. The checkout holds the full history, so the tool can ask git whether the record
-# commit is on the base branch.
+# stale, foreign, cancelled, or failed record. When that record fails, a success record of a night on the head
+# branch, on the branch night-branch/<head branch>, passes the PR at its effective head (D-538, D-547; PR-81).
+# The rules live in WhatYouCarry.Tools, command night-gate. This file only gathers the inputs. The checkout holds
+# the full history, so the tool can ask git whether the record commit is on the base branch, and which commit is
+# the effective head of the PR. A night on the head branch re-runs this workflow when it ends (D-548).
 name: Night gate
 
 on:
@@ -29,4 +31,9 @@ jobs:
         with:
           global-json-file: global.json
       - name: Fetch and evaluate the night record
-        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- night-gate --root "$GITHUB_WORKSPACE" --remote origin --base "origin/${{ github.base_ref }}" --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        # The head branch reaches the tool through the environment, never through the shell text, so no branch name
+        # runs as a command.
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- night-gate --root "$GITHUB_WORKSPACE" --remote origin --base "origin/${{ github.base_ref }}" --head-branch "$HEAD_BRANCH" --head "$HEAD_SHA" --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"

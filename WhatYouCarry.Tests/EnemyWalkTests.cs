@@ -245,6 +245,75 @@ public sealed class EnemyWalkTests
     }
 
     /// <summary>
+    /// PR-81, F-111, D-545. A diagonal drop falls straight down the corner column from the height of the start. An
+    /// overhang in the corner column holds the body on its top, so the drop to the floor under it is no diagonal
+    /// move, although each order of two side moves reaches that floor. Seed 947 of the greedy descender repeats it.
+    /// </summary>
+    [Fact]
+    public void ADiagonalDropNeedsAnOpenFallInTheCornerColumn()
+    {
+        VoxelGrid grid = TestWorld.FlatFloor(8, 8);
+        for (int row = 1; row <= 3; row++)
+        {
+            grid.Set(4, row, 4, BlockId.RawStone);
+        }
+
+        grid.Set(5, 3, 5, BlockId.RawStone);
+
+        // Each order of side moves drops to the floor, then walks under the overhang to the corner column.
+        Assert.Equal(0, GridMoves.Move(grid, 4, 3, 4, 5, 4));
+        Assert.Equal(0, GridMoves.Move(grid, 5, 0, 4, 5, 5));
+        Assert.Equal(0, GridMoves.Move(grid, 4, 3, 4, 4, 5));
+        Assert.Equal(0, GridMoves.Move(grid, 4, 0, 5, 5, 5));
+        Assert.Equal(GridMoves.NoMove, GridMoves.DiagonalMove(grid, 4, 3, 4, 1, 1, true));
+        Assert.Equal(GridMoves.NoMove, GridMoves.DiagonalMove(grid, 4, 3, 4, 1, 1, false));
+
+        // With the overhang gone, the same drop is a diagonal move in both orders.
+        grid.Set(5, 3, 5, BlockId.Air);
+        Assert.Equal(0, GridMoves.DiagonalMove(grid, 4, 3, 4, 1, 1, true));
+        Assert.Equal(0, GridMoves.DiagonalMove(grid, 4, 3, 4, 1, 1, false));
+    }
+
+    /// <summary>
+    /// PR-81, F-111, D-546. A path around a wall leads away from its goal for longer than
+    /// <see cref="PathFollower.WedgedTicks"/>, and a body that arrives at each waypoint on the way reads no wedge.
+    /// The count of ticks with no gain on the goal alone read a wedge there, and the greedy descender then jumped
+    /// at each step of a detour.
+    /// </summary>
+    [Fact]
+    public void ADetourAwayFromTheGoalReadsNoWedge()
+    {
+        VoxelGrid grid = TestWorld.FlatFloor(40, 6);
+        for (int x = 0; x < 38; x++)
+        {
+            Pillar(grid, x, 2);
+        }
+
+        GridPathfinder finder = new(grid);
+        PathFollower follower = new();
+        Cell goal = new(2, 0, 3);
+        Vector3 feet = PathWalk.CenterOf(new Cell(2, 0, 1));
+        float metresPerTick = PlayerBody.WalkSpeed * PlayerBody.TickSeconds;
+        int ticks = 0;
+        int awayTicks = 0;
+        Cell here = PathWalk.FloorCellOf(feet);
+        while (follower.TryNext(grid, finder, feet, true, goal, out Cell next))
+        {
+            Assert.False(follower.IsWedged, $"Tick {ticks}: the body at {feet} walks a clear path to {next}, and the follower reads a wedge.");
+            Vector3 toward = PathWalk.Toward(feet, PathWalk.CenterOf(next), metresPerTick);
+            feet = new Vector3(feet.X + (toward.X * metresPerTick), feet.Y, feet.Z + (toward.Z * metresPerTick));
+            Cell after = PathWalk.FloorCellOf(feet);
+            awayTicks += GridPathfinder.Estimate(after, goal) >= GridPathfinder.Estimate(here, goal) ? 1 : 0;
+            here = after;
+            ticks++;
+            Assert.True(ticks < 5000, $"The body at {feet} did not reach {goal} in 5000 ticks.");
+        }
+
+        Assert.Equal(goal, PathWalk.FloorCellOf(feet));
+        Assert.True(awayTicks > PathFollower.WedgedTicks, $"The walk spent {awayTicks} ticks with no gain on the goal, and the case needs more than {PathFollower.WedgedTicks}.");
+    }
+
+    /// <summary>
     /// PR-72 exit test 4. A diagonal step up passes no solid corner, because a slide during the jump lands the body
     /// short (D-489). A drop still passes one solid corner (D-486).
     /// </summary>

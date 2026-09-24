@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-80, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-81, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. PR-81 applies D-538 and D-545 to D-552. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -944,6 +944,45 @@ Gate: exit tests 1 to 4 pass. When `night-gate` stays red, the owner merges with
 
 > *In plain English:* each PR waited for an automated review before the second review. The owner pauses that wait. A review that still comes in gets an answer, and the owner hears about it at once.
 
+### PR-81: Night fix and branch nights
+
+✅ Done in PR #97.
+
+Scope:
+
+- By owner instruction, the PR holds the fixes of F-111 and F-112, the branch nights, and the gitar notice rule (G-10 exception, D-538, D-549, D-550).
+- `WhatYouCarry.Core/Pathfinding/GridMoves.cs`: a diagonal drop needs an open fall in the corner column, from the landing up to the start (D-545).
+- `WhatYouCarry.Core/Pathfinding/PathFollower.cs`: an arrival at a waypoint starts the wedge count again, so a detour away from the goal reads no wedge (D-546).
+- `WhatYouCarry.Core/Physics/SweptAabb.cs` and `WhatYouCarry.Core/Entities/PlayerBody.cs`: the sweep builds each box again from the start and the whole displacement so far, in the form of the caller. `SweepFeet` builds the box of a body as `PlayerBody.Box` does (F-112, D-549).
+- `WhatYouCarry.Core/Simulation/SimulationVersion.cs`: the version rises to 16, and the bit-identity answer moves (G-20).
+- `.github/workflows/night.yml`: a night on a branch writes its record to `night-branch/<branch>`, and `main` alone writes `night-results` (D-373, D-538). A branch night then re-runs the newest `night-gate` run of its branch (D-548).
+- `WhatYouCarry.Tools/NightGate/` and `.github/workflows/night-gate.yml`: the gate reads the record of the head branch when the record of `main` fails. That record passes at the effective head of the PR, or at a later commit of the PR (D-547).
+- `WhatYouCarry.Tests/`: `EnemyWalkTests`, `PlayerBodyTests`, `BotTests`, `NightGateTests`, `RepositoryShapeTests`, `SimulationTests`, and `BitIdentityTests`.
+- `docs/design.md`: F-111 and F-112.
+- `CLAUDE.md` and `AGENTS.md`, and the skills `pr-review`, `review-response`, `gitar-review`, `one-pr-one-session`, and `ste-writing`: a gitar notice needs no answer, and it never blocks a verdict (D-550).
+
+Out of scope: the removal of old `night-branch/` branches, and a change of the bot policies. The rule of `Reachability` stays (D-488). The gitar line of the PR template takes D-550 in the next PR (D-551).
+
+Exit tests:
+
+1. `ADiagonalDropNeedsAnOpenFallInTheCornerColumn` passes. It fails on the old rule (D-545).
+2. `ADetourAwayFromTheGoalReadsNoWedge` passes. It fails on the old follower (D-546).
+3. `GreedyDescenderLeavesTheFloorsOfTheNight` passes on seeds 940, 947, 1268, 2669, 2879, and 4119.
+4. `AMoveLeavesTheBoxThatTheSweepRead` passes over four thousand start points. It fails on the old sweep at the start x of seed 4119 (D-549).
+5. The simulation version is 16, and `BitIdentityKnownAnswer` passes with `a2e1c2c6f72bc19e` on the three platforms (G-9, G-20).
+6. `NightGateTests` pass: a branch night passes at the effective head and at a later documents commit. It fails at an earlier code commit, and it leaves the record of `main` as it was (D-547).
+7. `ABranchNightWritesARecordOfItsOwnAndReRunsTheGate` and `NightGateWorkflowFetchesTheRecordWithFullHistory` pass (D-373, D-538, D-548).
+8. `grep -rn 'D-550' .claude CLAUDE.md AGENTS.md` lists the rule in each text of the scope.
+9. A night by hand on this branch passes, writes `night-branch/fix/pr-81-night-softlocks`, and re-runs the `night-gate` run of this PR, which then passes (D-538, D-548).
+
+Review focus: the open fall, the wedge count against F-105, the sweep frame against D-235, and the branch record read at the effective head.
+
+Check clause: none.
+
+Gate: exit tests 1 to 9 pass.
+
+> *In plain English:* the enemy walk fix of PR-72 left the test bot stuck on 26 of 5000 floors. The bot now walks those floors. A fix PR can also prove itself with a night run of its own, and that run never replaces the result of the main branch.
+
 ### PR-75: Sword art
 
 Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
@@ -1053,13 +1092,14 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 35. PR-74.
 36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, and D-539 to D-541.
 37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544.
-38. PR-75.
-39. PR-76.
-40. Owner: answer OQ-181.
-41. PR-77.
-42. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-43. Tier 4 pass on the screenshot fixture (D-133).
-44. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.
+39. PR-75.
+40. PR-76.
+41. Owner: answer OQ-181.
+42. PR-77.
+43. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+44. Tier 4 pass on the screenshot fixture (D-133).
+45. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

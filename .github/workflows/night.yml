@@ -7,10 +7,12 @@
 # two steps write night.json with the commit, the end time, the status, and the death and ascend counts of each bot policy,
 # to the orphan branch night-results, which holds that one file (D-273). When the build itself fails, the
 # publish step writes the failure record in shell, so the branch never keeps a stale success. PR-58 adds the
-# gate that reads it. The two record steps run on main alone (D-373). A night on another ref runs in full and
-# writes no record, so it cannot replace the record of main that the night-gate job reads. Such a night proves a
-# fix through its run log alone. A failed night keeps its bot logs as a run artifact, because the runner checkout
-# cleans them at its next job (D-280).
+# gate that reads it. Only a night on main writes night-results (D-373). A night on another branch writes its
+# record to the orphan branch night-branch/<branch>, so it cannot replace the record of main that the night-gate
+# job reads, and the gate of the PR of that branch reads it (D-538; PR-81). That night then re-runs the newest
+# night-gate run of its branch, so the check of the PR reads the new record (D-548). A night on a tag writes no
+# record. A failed night keeps its bot logs as a run artifact, because the runner checkout cleans them at its
+# next job (D-280).
 name: Night
 
 on:
@@ -20,6 +22,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   night:
@@ -61,13 +64,19 @@ jobs:
           path: bot-logs
           if-no-files-found: warn
       - name: Write the night record
-        if: always() && github.ref == 'refs/heads/main'
+        if: always() && startsWith(github.ref, 'refs/heads/')
         run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-record --commit "${GITHUB_SHA}" --status "${{ job.status }}" --output "${RUNNER_TEMP}/night.json" --summary "${RUNNER_TEMP}/bot-deaths.txt"
       - name: Publish the night record
-        if: always() && github.ref == 'refs/heads/main'
+        if: always() && startsWith(github.ref, 'refs/heads/')
         shell: bash
         run: |
           set -euo pipefail
+          # Only main writes the record that every PR reads (D-373). Another branch writes a record of its own (D-538).
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            target="night-results"
+          else
+            target="night-branch/${GITHUB_REF_NAME}"
+          fi
           # A broken build leaves no binary for night-record, so the shell writes the failure record itself.
           if [ ! -f "${RUNNER_TEMP}/night.json" ]; then
             printf '{"commit":"%s","endedAt":"%s","status":"failure"}\n' "${GITHUB_SHA}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${RUNNER_TEMP}/night.json"
@@ -76,11 +85,33 @@ jobs:
           rm -rf "$work"
           git worktree add --detach "$work" HEAD
           cd "$work"
-          git checkout --orphan night-results
+          git checkout --orphan "$target"
           git rm -rfq .
           cp "${RUNNER_TEMP}/night.json" night.json
           git config user.name "night job"
           git config user.email "night-job@users.noreply.github.com"
           git add night.json
           git commit -qm "night: ${GITHUB_SHA} ${{ job.status }}"
-          git push --force origin night-results
+          git push --force origin "HEAD:refs/heads/${target}"
+      - name: Re-run the night gate of the branch
+        # The night-gate check of a PR runs on a pull_request event, so a night that ends later re-runs its newest run
+        # (D-548). A run that has not ended reads the new record when it runs. A branch with no PR has no such run.
+        if: always() && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow night-gate.yml --branch "$GITHUB_REF_NAME" --event pull_request --limit 1 --json databaseId,status --jq '.[] | "\(.databaseId) \(.status)"')
+          if [ -z "$run" ]; then
+            echo "The branch ${GITHUB_REF_NAME} has no night-gate run, so no PR check reads this record yet."
+            exit 0
+          fi
+          id="${run%% *}"
+          state="${run#* }"
+          if [ "$state" != "completed" ]; then
+            echo "The night-gate run ${id} is ${state}, so it reads the new record when it runs."
+            exit 0
+          fi
+          gh run rerun "$id" --repo "$GITHUB_REPOSITORY"
+          echo "The night-gate run ${id} runs again, and it reads the record of this night."

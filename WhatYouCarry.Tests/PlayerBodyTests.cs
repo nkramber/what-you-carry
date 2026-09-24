@@ -596,4 +596,28 @@ public sealed class PlayerBodyTests
         Assert.Equal(new Vector3(2.7f, 2.0f, 4.7f), body.Box.Min);
         Assert.Equal(new Vector3(3.3f, 3.8f, 5.3f), body.Box.Max);
     }
+
+    /// <summary>
+    /// PR-81, F-112. A body slides away from a wall on X and along it on Z, past the corner of a block. The sweep
+    /// read a box moved one step at a time, and the body rebuilds its box from its feet. On seed 4119 of the greedy
+    /// descender, the two boxes ended one ulp apart: the sweep box touched x = 8 and left the block out of the Z move,
+    /// and the body box overlapped it. A property loop over four thousand start points one ulp apart asserts that
+    /// each move leaves the box out of rock.
+    /// </summary>
+    [Fact]
+    public void AMoveLeavesTheBoxThatTheSweepRead()
+    {
+        VoxelGrid grid = TestWorld.FlatFloor(30, 6);
+        grid.Set(8, 1, 25, BlockId.RawStone);
+        grid.Set(8, 2, 25, BlockId.RawStone);
+        Vector3 walk = new(-0.02228403f / PlayerBody.TickSeconds, 0.0f, 0.08f / PlayerBody.TickSeconds);
+        float x = 7.7222f;
+        for (int start = 0; start < 4000; start++)
+        {
+            x = MathF.BitIncrement(x);
+            PlayerBody body = new(grid, new Vector3(x, 1.0f, 24.699024f));
+            body.Move(walk, false, false, false);
+            Assert.False(SweptAabb.Overlaps(grid, body.Box), $"Start x {x:R}: the box {body.Box.Min} to {body.Box.Max} ends inside rock.");
+        }
+    }
 }

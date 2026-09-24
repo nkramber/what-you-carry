@@ -58,6 +58,7 @@ Use one term for one concept (rules 1.11 and 9.4). A session meets these terms i
 | documents matrix | the `## Documents` section of the PR description, one line for each category (D-376) |
 | cross-provider review | the review by the provider that did not write the PR (T-4) |
 | automated pass | the review of gitar on a PR head, and the answer of the author to it (D-250) |
+| gitar notice | a gitar comment with no specific item to address, which needs no answer (D-550) |
 | effective head | the newest commit that changes a path outside the skip set. The cross-provider review reads it (D-534) |
 | work head | the newest commit that changes a path outside the metadata set. The automated pass and the override label read it (D-184, D-539) |
 | metadata set | `docs/reviews/`, `docs/session-handoff.md`, and `docs/session-handoff-archive.md` (D-184) |
@@ -67,6 +68,7 @@ Use one term for one concept (rules 1.11 and 9.4). A session meets these terms i
 | seed sweep | the reachability sweep of the night, at one hundred thousand seeds |
 | smoke session | the headless Game session that the `smoke` job runs on three platforms (D-114) |
 | night record | `night.json` on the branch `night-results`, which the `night-gate` job reads (D-273) |
+| branch night | a night by hand on a PR branch. It writes `night.json` to the branch `night-branch/<branch>` (D-538) |
 | foundation gate | the gate that a phase passes before the next phase starts |
 | exit test | one numbered test of a roadmap entry, which the gate of that entry names |
 

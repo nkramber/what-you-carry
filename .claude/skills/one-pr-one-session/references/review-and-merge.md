@@ -2,7 +2,7 @@
 
 The `one-pr-one-session` skill names this file at the end of the gitar pass. It holds the author loop of the cross-provider review, the three-strike stop, the auto-merge, and the merge summary (D-511 to D-517, D-524, D-533). The `review-response` skill holds the answer to each finding.
 
-**Pause (D-542).** During the gitar pause, step 2 of the author loop and step 3 of the auto-merge change. Export the PR comments, answer each gitar comment, and do no push wait. Step 3 of the author loop runs `make codex-review PR=<n> -- --skip-gitar-review` (D-543). When a gitar review holds feedback, stop at once and alert the owner.
+**Pause (D-542).** During the gitar pause, step 2 of the author loop and step 3 of the auto-merge change. Export the PR comments, answer each gitar comment with an item, and do no push wait. A gitar notice needs no answer (D-550). Step 3 of the author loop runs `make codex-review PR=<n> -- --skip-gitar-review` (D-543). When a gitar review holds feedback, stop at once and alert the owner.
 
 ## Procedure: the author loop
 
@@ -54,17 +54,19 @@ A P0, P1, or P2 finding that is open in three review rounds stops the fix loop (
 
 A documents-only PR with the `review-override` label merges the same way, the owner confirmation included. It needs no review record, and `review-gate` is green by the label (D-517). For a PR that the owner merges by hand, give the merge summary at the hand-over (D-524).
 
+When the night record of `main` fails, run a night on the PR branch with `gh workflow run night.yml --ref <branch>`. Dispatch it after the PR checks, because the night and the Mac legs share one runner. The night writes its record to `night-branch/<branch>` and re-runs the `night-gate` check of the PR (D-538, D-547, D-548).
+
 The night gate or a Mac leg can hold the merge for hours, and that is normal. When every check is green and the state stays `OPEN`, read `gh pr view <n> --json mergeStateStatus,autoMergeRequest`. An unresolved thread or a stale check blocks the merge.
 
 The ruleset of `main` is the machine gate (D-522). It requires the 20 checks of `.github/rulesets/main.json` and resolved conversations, and it allows squash merges alone. The top-level gitar comments are not review threads, so step 3 proves them.
 
 ## The merge summary
 
-Before the owner confirms a merge, write four sections of a few sentences each (D-533). Use these headings, in this order:
+Before the owner confirms a merge, write the summary as four questions, each with its answer of a few sentences (D-533, D-552). Use these questions, in this order:
 
-- **What**: the change, and the roadmap item that it closes.
-- **How**: the method, and the parts of the code or the documents that changed.
-- **CI**: green or not. Name each red check, and the cause when you know it.
-- **Codex review**: the verdict of the record, `Ready for owner merge`, `Blocked`, or `Changes required`, and the effective head that it names.
+- **Q: What does this PR change?** A: the change, and the roadmap item that it closes.
+- **Q: How does it do it?** A: the method, and the parts of the code or the documents that changed.
+- **Q: Is CI green?** A: green or not. Name each red check, and the cause when you know it.
+- **Q: What did the Codex review say?** A: the verdict of the record, `Ready for owner merge`, `Blocked`, or `Changes required`, and the effective head that it names.
 
-A PR with the `review-override` label has no review record. Its Codex review section names the label and the account that added it (D-190).
+Put each point that needs the owner as one more question at the end. A PR with the `review-override` label has no review record. Its Codex review answer names the label and the account that added it (D-190).

@@ -14,7 +14,7 @@ Each repo that uses Gitar keeps a copy of this file. A rule of the repo wins ove
 The owner paused the gitar requirement of this repo. This section wins over the procedure below until a later PR of the owner ends the pause.
 
 - Skip steps 2 to 16. Do no push wait, and post no `Gitar review` comment.
-- Before `make codex-review` and before the merge summary, run command F. Do steps 17 to 24 for each gitar comment.
+- Before `make codex-review` and before the merge summary, run command F. Do steps 17 to 24 for each gitar comment with an item. Leave a notice unanswered (D-550).
 - When a gitar review holds feedback, stop at once and alert the owner.
 
 ## Terms

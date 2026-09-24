@@ -104,6 +104,12 @@ public static class GridMoves
     /// move needs one side column open over that floor. A step up needs both side columns open, because a slide
     /// during the jump takes the body past the top of its arc, and it lands short (D-489).
     /// </para>
+    /// <para>
+    /// A drop crosses the corner point at the height of the start and falls straight down the corner column, so the
+    /// cells of that column between the landing and the start are open. The two side moves can reach a landing that
+    /// this line does not: a drop into a side column, then a walk under an overhang into the corner column (D-545,
+    /// F-111).
+    /// </para>
     /// </remarks>
     /// <param name="grid">The grid of the floor.</param>
     /// <param name="x">The X of the floor cell of the start.</param>
@@ -146,7 +152,11 @@ public static class GridMoves
         bool openAlongZ = IsOpenOver(grid, x, landing.Z, higher);
         bool stepUp = landingFloor > FloorHeightAt(grid, start, shareX, shareZ);
         bool openSides = stepUp ? openAlongX && openAlongZ : openAlongX || openAlongZ;
-        return openEnds && openSides ? cornerY : NoMove;
+
+        // A drop falls straight down the corner column from the height of the start. A side column can reach a floor
+        // under an overhang of the corner column, and the body then lands on top of that overhang (F-111).
+        bool openFall = IsOpenBetween(grid, landing.X, landing.Z, cornerY + 1, higher);
+        return openEnds && openSides && openFall ? cornerY : NoMove;
     }
 
     /// <summary>
@@ -319,6 +329,20 @@ public static class GridMoves
         }
 
         return (cell.Y * HeightUnits) + ((((slope.Place * 2) + halfAlong) * HeightUnits) / (2 * slope.Run));
+    }
+
+    /// <summary>Answers whether every cell of a column from one row to another, both included, holds no solid part. A range whose first row is over its last row reads true. A cell outside the grid is solid.</summary>
+    private static bool IsOpenBetween(VoxelGrid grid, int x, int z, int fromRow, int toRow)
+    {
+        for (int row = fromRow; row <= toRow; row++)
+        {
+            if (grid.IsSolid(x, row, z))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>Answers whether the two cells of a column over one floor row hold no solid part, so the box of D-165 passes there. A cell outside the grid is solid.</summary>

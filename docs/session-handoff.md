@@ -2,6 +2,129 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 234: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Ready for owner merge at effective head `4282206`.
+
+### What this session did, and why
+
+- Re-reviewed PR #97 after the sweep correction and after the branch night finished.
+- Found no defect. Updated the existing review record and preserved its earlier blocked verdict.
+- The remote code head is `4282206`. Later PR commits change documents only.
+
+### State of the build
+
+- The focused sweep regression test passed locally.
+- CI, smoke, bit identity, bots, asset QA, lint, STE, and doc-gate passed at code head `4282206`.
+- The branch night passed at `4282206`; the fresh `night-gate` passed at PR tip `87e4712`.
+- The prior review-gate run read the old blocked verdict. The metadata push must start a fresh review-gate run.
+
+### In flight
+
+- The fresh review-gate run after this metadata commit.
+
+### Traps and gotchas
+
+- Later commits after `4282206` change documents only, so the effective code head remains `4282206`.
+- The only gitar comment says it is working. D-550 says that notice needs no answer.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Check the fresh review-gate result after this metadata push.
+
+## Session 233: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Blocked at effective head `ba7f448`.
+
+### What this session did, and why
+
+- Reviewed PR #97 as the opposite provider and found no code defect.
+- Recorded that the required branch night and its `night-gate` result remain incomplete.
+- The remote PR head after publication is recorded by the review-gate check; the effective code head remains `ba7f448`.
+
+### State of the build
+
+- Build and 12 focused regression and gate tests passed locally.
+- CI, smoke, bit identity, bot, lint, asset QA, and document checks passed at effective head `ba7f448`.
+- Branch night run 35909827024 was in progress at hand-over. The current `night-gate` failed because its branch record did not yet exist.
+- The review record and this handoff entry were pushed together as one metadata commit. The remote PR head was checked with `gh pr view`.
+
+### In flight
+
+- Branch night run 35909827024 and its re-run of `night-gate`.
+- The fresh `review-gate` run after publication of the review record.
+
+### Traps and gotchas
+
+- The branch night tests the effective head `ba7f448`. Later document commits do not change the code it tested (D-534, D-547).
+- Gitar's only comment says it is working. The exported comments contain no feedback or review thread.
+
+### Open questions that block progress
+
+None. Required night evidence is incomplete.
+
+### Next concrete action
+
+Check run 35909827024 and the new `night-gate` result. Re-review the same PR after the branch night passes, or record any night failure.
+
+## Session 232: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-81, author. Branch `fix/pr-81-night-softlocks`. PR #97, pending merge. Base `582f346`.
+
+### What this session did, and why
+
+- Reproduced the 26 greedy-descender softlocks of the night at `e069e16`. They pass at `170f08c` and `ea84473`, and they softlock at `837902b`, so PR-72 made them (F-111).
+- Found two faults with a trace of each seed. The wedge count of `PathFollower` read a wedge on a detour of a diagonal path (24 seeds). `DiagonalMove` took a drop under an overhang as one diagonal drop (seeds 2669 and 2879).
+- The owner chose both fixes (D-545, D-546), the effective head for a branch night (D-547), and a re-run of the gate by the night (D-548).
+- Built the branch nights of D-538: the record on `night-branch/<branch>`, the gate read of it, and the re-run step.
+- The local night then crashed seed 4119 of the greedy descender (F-112). The sweep box and the body box ended one ulp apart, and the body box overlapped a block. The owner chose the exact fix: the sweep builds each box in the form of the caller (D-549).
+- The first review round at `ba7f448` found no code issue. It read `Blocked` for the branch night that had not ended.
+- The owner asked that a gitar notice, a comment with no specific item, get no answer and block no verdict (D-550). The skills and the agent files take the rule in PR-81. The PR template takes it in the next PR (D-551).
+
+### State of the build
+
+- Local: `det-lint` 0, `ste-check` 0. The suite at `ba7f448` passed 1582 of 1583, and the version pin of `SimulationTests` was the one failure.
+- The local night of `ba7f448`: no softlock in any policy, and one crash, seed 4119. The full clearer read no fault over 3863 seeds before the stop.
+- The branch night run 35909827024 at `ba7f448` was cancelled for the crash.
+
+### In flight
+
+- The sweep fix of D-549, its full suite, its CI, a new branch night, and review round 2.
+
+### Traps and gotchas
+
+- The self-hosted runner is this Mac. A local night slows the Mac CI legs, and a rebuild of the checkout during `bot-run --no-build` breaks the run. Run a local night from its own worktree.
+- `SweptAabb.Sweep` of a plain box and `SweptAabb.SweepFeet` of a body share one frame. A caller that builds its box in another form can meet F-112 again.
+- A trace of one seed needs the follower of the policy, which is private. A scratch test with reflection read it, and the scratch test is not in the PR.
+- The seeds of the greedy descender: 751 764 940 947 1087 1268 1456 1566 1597 1785 1986 2064 2091 2412 2523 2669 2879 3052 3298 3347 3589 3757 3881 3994 4014 4870.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+This session: wait on branch night run 35915259159 and its re-run of `night-gate`, then run review round 2.
+
+The next session, after PR #97 merges, makes one PR alone (D-551). The gitar line of the PR gate in `.github/pull_request_template.md` takes the rule of D-550: "every gitar comment with an item has its answer (D-550)". PR-81 changed the same line in `CLAUDE.md` and `AGENTS.md`. Ask the owner for its roadmap id.
+
+The session after it takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551).
+
+- The night runs seeds 1 to 5000 for each bot policy and seeds 1 to 100000 for the seed sweep, every night (D-115, D-116).
+- A fixed set gives a clean before and after, a replay of each failure, and a stable gate. The PR-81 bisect used all three.
+- A fixed set also never tests a floor past its range, and a fix can pass the known seeds alone.
+- The option to put to the owner: keep the fixed set as the gate, and add a rotating slice each night, such as a window from the date. The run log names the window, so each failure replays.
+- The owner decides whether a failure in the slice blocks the merge, or files a finding that adds the seed to the fixed set.
+
+First action of that session: file the next OQ-# in `docs/questions.md` with these options and a recommendation, and ask the owner. Ask the owner for the roadmap id of the PR too. Then record each answer as a D-#.
+
 ## Session 231: 2026-09-23, Codex
 
 Author: Codex
@@ -247,121 +370,3 @@ None. OQ-181 blocks PR-77 alone.
 ### Next concrete action
 
 Reassess PR #94 after the owner resolves the night-gate block of D-538 and a fresh three-platform Smoke run completes.
-
-## Session 224: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-74, author. Branch `feat/pr-74-body-art`. PR #94, pending merge. Base `6ee836d`.
-
-### What this session did, and why
-
-- PR-78 exit test 4, run by the PR-78 session after the merge of PR #93: `allow_auto_merge` is on, and the ruleset `main` (id 23883816) is active. The live ruleset matched `.github/rulesets/main.json` at `6ee836d`, plus two fields of the `pull_request` rule: `require_extra_approval_for_unattributed_changes: false` (owner choice, 2026-09-23) and `required_reviewers: []`.
-- Second concern, by owner approval with no decision: the file now declares both fields, and `RulesetTests` asserts each. The comparison of `docs/runbooks/main-ruleset.md` against the live ruleset gives an empty diff.
-- The body gains the brow, the nose, the beard, and the two toe boxes at the places of D-497, D-498, D-501, and D-502. The face layout and the trim come from owner answers (D-525, D-526).
-- The owner rejected the noise sheets of D-503 (0.12, 0.20, 0.30): "None of them match the level of detail that the 3D model screenshots have." D-527 supersedes D-503. The recipe system gains a `shade` field, a clustered `grain`, and a `gradient`, in whole numbers alone. The palette gains three fine shades between each pair of colors (D-528), and a ninth ramp, umber, for the dark browns (D-530). The body takes the measured shades of the unlit 3D reference (D-529, D-531).
-- The owner approved the sheet b2 as finished art (D-532, exit test 4). The owner kept D-525 where the brow hides the eye row from the camera of the sheet.
-- The owner asked to remove the bypass checkbox (D-535), and then called it a mistake. D-537 restores the bypass of D-520. The live ruleset (id 23883816) had no bypass from about 16:10 to 16:25 UTC, and it matches the file again. PR-74 carries no bypass change.
-- The night of 2026-09-23 on `main` failed: greedy-descender softlocked 26 of 5000 seeds at `e069e16`. `night-gate` is red on every PR. D-538 plans the fix and a night gate that counts a hand night on the PR branch.
-- The owner waived the gitar pass for this PR. Gitar never reviewed a head of PR #94, and the Codex review starts by hand with the invocation of `make codex-review` (D-536).
-- The owner asked for two process changes, recorded for the next PR: the merge summary of four sections (D-533), and a `review-gate` that stays green after a later documents commit (D-534). The gitar pass still reviews each push.
-- No roadmap item improves the player animation beyond the clips and the walk of PR-15 (D-331, D-333). The owner asked, and no item exists.
-
-### State of the build
-
-- The full suite passed 1525 of 1526 at the code commit before the last documents fix, and the one failure was the citation of D-503, now fixed. Smoke and Documents pass 138 of 138. `ste-check`, `asset-qa`, and `det-lint` give 0 findings.
-- Every block and the sword keep their exact pixels. The atlas palette grows from 32 to 117 entries.
-- The remote head and the PR number go into the next entry after the push.
-
-### In flight
-
-- PR #94 is open, and PR-74 is marked done in `docs/design.md` and the roadmap. Next: the gitar pass, then `make codex-review PR=94`, then the merge summary of D-524.
-
-### Traps and gotchas
-
-- Colors keep their flat indices 0 to 35 in a recipe. The atlas holds the 36 colors first and then the shades, so a block pixel keeps its index. Umber is 32 to 35.
-- Every `fill` and `rect` needs `shade`. The `noise` of `fill` and `rect`, `edge`, and `band` still move a whole color step (four fine steps).
-- The painter clamps once after the last layer. A texel that the noise moved down and a band moved up stays at the base.
-- The `leather` recipe is now the sword grip alone. The body reads `trousers`, `boot`, and `boot-toe`.
-- `SendUserFile` cannot deliver in this session type. The sheets and the comparisons are in the git-ignored folder `artifacts/reference/meshy-miner-2026-09-22/`, files 10 to 17.
-- A restore with `cp "$bk"/*.json` put `layout.json` into the recipe folder one time. Back up the recipes alone.
-- PR #93 dropped the title and the rule line at the top of this file. `doc-gate` finds the newest entry by `\n## Session `, so an entry at byte 0 reads as absent. This PR restores both lines.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Run the gitar pass of `gitar-review` on PR #94, then `make codex-review PR=94` in the background. PR-74 needs the owner merge with the bypass checkbox, because `night-gate` is red. After PR #94 merges, the next session opens one process PR for D-533 and D-534: a new roadmap item, the effective head in `ReviewGate` and `CodexReview` over the skip set of D-475, the tests, and the summary form in `one-pr-one-session`. The PR after it is the night fix of D-538: bisect the softlocks from `170f08c` to `e069e16` (PR-72 first), fix them, and let a hand night on the PR branch count for that PR.
-
-## Session 223: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-78, author, the hand-over. Branch `feat/pr-78-codex-review`. PR #93, pending merge. Base `e069e16`.
-
-### What this session did, and why
-
-- Round 3 of `make codex-review PR=93` approved effective head `e28ecd2` with exit 0 (Session 222). P1-1 and P2-1 are fixed, and no finding is open.
-- Exit test 3 holds: each of the 20 required checks reported on the code head `e28ecd2` and on the metadata tip `3c5b7fe`. The heavy jobs gave `skipped` on the tip, which GitHub counts as a pass.
-- The owner gets the summary of D-524 and merges this PR by hand (D-519).
-
-### State of the build
-
-- The full suite passed 1506 of 1506 at `e28ecd2`, and `ste-check` finds no issue. Gitar approved `e28ecd2` with every thread resolved.
-- The effective head is `e28ecd2`. This entry is a metadata commit.
-
-### In flight
-
-- The owner merge of PR #93. Then, on `Merged PR #93`, this session asks for the approval of the setup, and runs `docs/runbooks/main-ruleset.md`: auto-merge on, the ruleset from `main`, and the comparison of the live ruleset (D-519, exit test 4).
-
-### Traps and gotchas
-
-- The live ruleset does not exist before the setup. Until then, nothing on GitHub enforces the PR gate.
-- `smoke-linux-x64` aborted one time at the Godot shutdown (exit 134, a leaked ArrayMesh) with no Game change, and a re-run passed. A required check makes such a flake block auto-merge until a re-run.
-- The review record of round 3 lists `e28ecd2` in the `Open at:` line of P2-1, which is fixed. A fixed finding does not count, so the stop reads it correctly.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the owner merge, get the approval of the setup, apply it with `docs/runbooks/main-ruleset.md`, and write the transitional prompt.
-
-## Session 222: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-78, reviewer, round 3. Branch `feat/pr-78-codex-review`. PR #93, Ready for owner merge. Base `e069e16`.
-
-### What this session did, and why
-
-- Re-reviewed PR #93 at effective head `e28ecd2` after the author fixed P2-1 and the malformed-heading cases.
-- Confirmed that P1-1 and P2-1 pass their regression checks. The review record now preserves both earlier verdicts and gives the current verdict.
-- The latest automated pass approved the code fixes. Its review threads have replies and are resolved.
-
-### State of the build
-
-- The focused Codex review, ruleset, and review-gate tests passed: 70 passed, 0 failed, 0 skipped. The build succeeded as part of the test command.
-- Required code checks passed on `e28ecd2`. After metadata commit `a91b075`, `evaluate`, `review-gate`, and the document checks passed. Code-only jobs skipped on the metadata head under the documents-only rule.
-- The effective head is `e28ecd2`. The review record and this entry are metadata.
-
-### In flight
-
-- The author gives the owner the merge summary required by D-524 after the fresh results pass.
-
-### Traps and gotchas
-
-- Only P3 is nonblocking. The parser now faults on an unsupported severity or a malformed heading in the Findings section.
-- Exit test 4, the live ruleset setup, waits until after merge under D-519.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author checks the fresh publication results, then gives the owner the required merge summary.
-
-# Session handoff
-
-Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.

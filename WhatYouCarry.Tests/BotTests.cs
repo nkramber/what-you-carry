@@ -230,6 +230,28 @@ public sealed class BotTests
     }
 
     /// <summary>
+    /// The greedy descender leaves every floor of the night of 2026-09-23 (F-111, D-545, D-546). On 26 seeds that
+    /// night read a softlock at `e069e16`. Seeds 940 and 1268 wedged on a detour away from the stairwell, seed 947
+    /// also took a diagonal drop onto an overhang, and seeds 2669 and 2879 softlocked on that drop alone. Seed 4119
+    /// crashed in the local night of PR-81, when an enemy box ended one ulp inside a block (F-112, D-549). The runs
+    /// now end at the bottom or by a death.
+    /// </summary>
+    [Theory]
+    [InlineData(940UL)]
+    [InlineData(947UL)]
+    [InlineData(1268UL)]
+    [InlineData(2669UL)]
+    [InlineData(2879UL)]
+    [InlineData(4119UL)]
+    public void GreedyDescenderLeavesTheFloorsOfTheNight(ulong seed)
+    {
+        BotRunResult result = BotRun.Play(new GreedyDescender(TestWorld.Content), seed, TestWorld.Content);
+        Assert.True(
+            result.End == BotRunEnd.Bottom || result.End == BotRunEnd.Death,
+            $"Seed {seed}: the greedy descender ended as {result.End} on floor {result.FloorsReached} after {result.Ticks} ticks. {result.Error}");
+    }
+
+    /// <summary>
     /// The clearer stops the hunt when the timer left is no more than the walk to the stairwell, and it hunts while
     /// the time is long (D-439). A floor with a short timer makes it leave at once.
     /// </summary>

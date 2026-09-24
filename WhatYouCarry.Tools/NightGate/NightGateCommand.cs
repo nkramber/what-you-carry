@@ -4,21 +4,24 @@ using System.Globalization;
 namespace WhatYouCarry.Tools.NightGate;
 
 /// <summary>
-/// <c>night-gate --root &lt;checkout&gt; --remote &lt;name&gt; --base &lt;revision&gt; --now &lt;time&gt;</c>. Fetches the
-/// branch <c>night-results</c> of the remote, reads the record from git, asks git whether its commit is on the
-/// base branch, and applies the rules (D-177, D-274, D-275). Exit 0 means the gate passes, exit 1 means it
+/// <c>night-gate --root &lt;checkout&gt; --remote &lt;name&gt; --base &lt;revision&gt; --head-branch &lt;name&gt; --head &lt;commit&gt; --now &lt;time&gt;</c>.
+/// Fetches the branch <c>night-results</c> of the remote and the branch of the night on the head branch, reads each
+/// record from git, asks git whether the record of main is on the base branch and which commit is the effective head
+/// of the PR, and applies the rules (D-177, D-274, D-275, D-538, D-547). Exit 0 means the gate passes, exit 1 means it
 /// fails and the line names the case, and exit 2 means the command itself is wrong. A git failure other than an
 /// absent branch is an error that names the command (T-2).
 /// </summary>
 public static class NightGateCommand
 {
-    private const string Usage = "Usage: night-gate --root <checkout> --remote <name> --base <revision> --now <yyyy-MM-ddTHH:mm:ssZ>";
+    private const string Usage = "Usage: night-gate --root <checkout> --remote <name> --base <revision> --head-branch <name> --head <commit> --now <yyyy-MM-ddTHH:mm:ssZ>";
 
     public static int Run(string[] args)
     {
         string? root = null;
         string? remote = null;
         string? baseRef = null;
+        string? headBranch = null;
+        string? head = null;
         string? now = null;
         int i = 0;
         while (i < args.Length)
@@ -34,6 +37,8 @@ public static class NightGateCommand
                 case "--root": root = args[i + 1]; break;
                 case "--remote": remote = args[i + 1]; break;
                 case "--base": baseRef = args[i + 1]; break;
+                case "--head-branch": headBranch = args[i + 1]; break;
+                case "--head": head = args[i + 1]; break;
                 case "--now": now = args[i + 1]; break;
                 default:
                     Console.Error.WriteLine($"Unexpected argument '{args[i]}'. {Usage}");
@@ -43,7 +48,7 @@ public static class NightGateCommand
             i += 2;
         }
 
-        if (root is null || remote is null || baseRef is null || now is null)
+        if (root is null || remote is null || baseRef is null || headBranch is null || head is null || now is null)
         {
             Console.Error.WriteLine($"Every option is required. {Usage}");
             return 2;
@@ -55,7 +60,7 @@ public static class NightGateCommand
             return 2;
         }
 
-        NightGateFacts facts = NightGateFacts.Gather(root, remote, baseRef, time);
+        NightGateFacts facts = NightGateFacts.Gather(root, remote, baseRef, headBranch, head, time);
         NightGateResult result = NightGateRules.Evaluate(facts);
         Console.Out.WriteLine($"{NightGateRules.JobName}: {(result.Passes ? "pass" : "fail")} ({result.Case}). {result.Message}");
         return result.Passes ? 0 : 1;

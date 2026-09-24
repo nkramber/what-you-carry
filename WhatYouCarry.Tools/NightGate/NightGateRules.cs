@@ -7,9 +7,10 @@ namespace WhatYouCarry.Tools.NightGate;
 public sealed record NightGateResult(bool Passes, string Case, string Message);
 
 /// <summary>
-/// The rules of the night gate (D-115, D-177, D-274, D-275). The gate passes on a success record from a night
-/// that ended inside the window, at a commit on the base branch, whatever event ran the night. Every other
-/// record fails, and the message names the case.
+/// The rules of the night gate (D-115, D-177, D-274, D-275, D-538). The gate passes on a success record from a
+/// night that ended inside the window, at a commit on the base branch, whatever event ran the night. It also
+/// passes on a success record of a night on the head branch of the PR, inside the window, at the effective head of
+/// the PR or a later commit of the PR (D-538, D-547). Every other pair of records fails, and the message names the case of each record.
 /// </summary>
 public static class NightGateRules
 {
@@ -28,42 +29,72 @@ public static class NightGateRules
     public const string FailedCase = "failed";
     public const string PassCase = "pass";
 
+    /// <summary>The case of a pass on the record of a night on the head branch (D-538).</summary>
+    public const string BranchPassCase = "branch-pass";
+
+    /// <summary>
+    /// Reads the record of main first. When it fails, the record of the head branch can pass the gate. When both
+    /// fail, the case is the case of the record of main, and the message names the cases of both.
+    /// </summary>
     public static NightGateResult Evaluate(NightGateFacts facts)
     {
-        if (facts.RecordText is null)
+        NightGateResult main = Judge(facts.Main, facts.CommitOnBase == true, $"on {facts.BaseRef}", facts.Now);
+        if (main.Passes)
         {
-            return new NightGateResult(false, AbsentCase, $"The night record is absent: {facts.AbsentReason}. No night.json reached the gate from the branch night-results.");
+            return main;
         }
 
-        if (facts.Record is null)
+        string where = facts.EffectiveHead is null ? "the effective head of the PR, which has no commit outside the documents" : $"the effective head {facts.EffectiveHead} of the PR, or a later commit of the PR";
+        NightGateResult branch = Judge(facts.Branch, facts.BranchAtEffectiveHead == true, where, facts.Now);
+        if (branch.Passes)
         {
-            return new NightGateResult(false, MalformedCase, $"The night record is malformed: {facts.ParseError}.");
+            return new NightGateResult(true, BranchPassCase, branch.Message);
         }
 
-        NightRecord record = facts.Record;
+        return new NightGateResult(false, main.Case, $"{main.Message} {branch.Message}");
+    }
+
+    /// <summary>
+    /// Applies the rules to one record: absent, malformed, stale, at the wrong commit, cancelled, or failed, in that
+    /// order, and a pass after them. <paramref name="where"/> names the commit that the record must name.
+    /// </summary>
+    private static NightGateResult Judge(NightRecordRead read, bool atTheCommit, string where, DateTimeOffset nowTime)
+    {
+        string label = $"night record of the branch {read.Branch}";
+        if (read.Text is null)
+        {
+            return new NightGateResult(false, AbsentCase, $"The {label} is absent: {read.AbsentReason}. No {NightGateFacts.RecordFile} reached the gate from the branch {read.Branch}.");
+        }
+
+        if (read.Record is null)
+        {
+            return new NightGateResult(false, MalformedCase, $"The {label} is malformed: {read.ParseError}.");
+        }
+
+        NightRecord record = read.Record;
         string time = record.EndedAt.ToString(NightRecordParser.TimeFormat, CultureInfo.InvariantCulture);
-        string now = facts.Now.ToString(NightRecordParser.TimeFormat, CultureInfo.InvariantCulture);
+        string now = nowTime.ToString(NightRecordParser.TimeFormat, CultureInfo.InvariantCulture);
         string identity = $"commit {record.Commit}, ended at {time}";
-        if (facts.Now - record.EndedAt > StaleAfter)
+        if (nowTime - record.EndedAt > StaleAfter)
         {
-            return new NightGateResult(false, StaleCase, $"The night record is stale: {identity}, more than {StaleAfter.TotalHours} hours before {now}.");
+            return new NightGateResult(false, StaleCase, $"The {label} is stale: {identity}, more than {StaleAfter.TotalHours} hours before {now}.");
         }
 
-        if (facts.CommitOnBase != true)
+        if (!atTheCommit)
         {
-            return new NightGateResult(false, ForeignCase, $"The night record names a commit that is not on {facts.BaseRef}: {identity}.");
+            return new NightGateResult(false, ForeignCase, $"The {label} names a commit that is not {where}: {identity}.");
         }
 
         if (record.Status == "cancelled")
         {
-            return new NightGateResult(false, CancelledCase, $"The night was cancelled: {identity}.");
+            return new NightGateResult(false, CancelledCase, $"The {label} holds a cancelled night: {identity}.");
         }
 
         if (record.Status == "failure")
         {
-            return new NightGateResult(false, FailedCase, $"The night failed: {identity}.");
+            return new NightGateResult(false, FailedCase, $"The {label} holds a failed night: {identity}.");
         }
 
-        return new NightGateResult(true, PassCase, $"The night passed: {identity}, inside {StaleAfter.TotalHours} hours before {now}, at a commit on {facts.BaseRef}.");
+        return new NightGateResult(true, PassCase, $"The {label} holds a passed night: {identity}, inside {StaleAfter.TotalHours} hours before {now}, and the commit is {where}.");
     }
 }
