@@ -2,6 +2,147 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 238: 2026-09-24, Claude Code
+
+Author: Claude Code
+Session: PR-82, author. Branch `chore/pr-82-template-gitar-notice`. PR #98, pending merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Ran a night by hand on `main`, run 35944586534 at `2071cb6`. It passed and ended at 05:06 UTC. The record of `main` is now a success at `2071cb6`, and it replaced the red night of `e069e16`.
+- A night on `main` does not re-run the `night-gate` of an open PR. The re-run step of `night.yml` skips `main` (D-548). The session re-ran the `night-gate` run of this PR by hand, and it passed.
+- Review round 1 read `Blocked` with no finding: `night-gate` was red, and CI was pending. Review round 2 approves the effective head `bc51dde`.
+- The owner asked for a prompt of a parallel PR. A green branch night then counts for `main` after the merge, when the merge commit differs from the tested commit in skip-set paths alone. The prompt went to the owner in chat. That PR has no D-# or OQ-# yet.
+
+### State of the build
+
+- All required checks are green at the PR tip, `night-gate` and smoke on three platforms included.
+- Code head: `bc51dde`. Later commits of this PR change documents only.
+
+### In flight
+
+- The owner merge confirmation, then the auto-merge.
+
+### Traps and gotchas
+
+- The Linux smoke failure in the round 1 record came from a run in progress. The final run passed.
+- After each red night on `main`, each open PR needs a re-run of its `night-gate` by hand, until a PR changes that rule.
+- The parallel PR can collide with this PR on D-# ids and session numbers. This PR holds D-553, D-554, and sessions 235 to 238.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge: the fixed seeds of the night (D-551), or the parallel PR of the night record promotion, as the owner orders them. Follow the next concrete action of Session 232 for the fixed seeds.
+
+## Session 237: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, Ready for owner merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Re-reviewed PR #98 at effective head `bc51dde` after the night and required product checks passed.
+- Updated `docs/reviews/pr-98.md` and kept the earlier Blocked verdict in its history.
+- Found no in-scope defect in the template line or its equality test.
+
+### State of the build
+
+- The Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
+- GitHub at `804ec44` showed all product checks, including `night-gate`, bit identity, sweeps, and smoke, as passed.
+- `evaluate` and `review-gate` still read the prior Blocked record. The remote head at review start was `804ec44`.
+
+### In flight
+
+- PR #98 awaits the updated `review-gate` and `evaluate` results. They must read this review record.
+
+### Traps and gotchas
+
+- The Gitar comment says only “Gitar is working.” D-550 says that notice needs no answer.
+- D-542 pauses the Gitar wait. The review record and this entry form one metadata commit.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author gives the merge summary in questions and answers, then asks the owner to confirm the merge (D-552).
+
+## Session 236: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, blocked. Base `2071cb6`.
+
+### What this session did, and why
+
+- Reviewed PR #98 at effective head `bc51dde`. The template line and its equality test meet the D-550 contract.
+- Added `docs/reviews/pr-98.md` with the review evidence and verdict.
+- The review found no in-scope defect. Required CI evidence blocks approval.
+
+### State of the build
+
+- The focused template test passed, and the Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
+- GitHub at `d158af7` had a failed `night-gate`. The base night record failed, and the branch-night record was absent.
+- GitHub showed Linux smoke as failed, but its run was still in progress and its failure log was unavailable. Required platform jobs, sweeps, bots, and macOS smoke remained pending.
+- The remote head at hand-over is `d158af7`. Later PR commits change documents only, so the effective head remains `bc51dde`.
+
+### In flight
+
+- PR #98 remains blocked until the required night and CI evidence passes.
+
+### Traps and gotchas
+
+- The Gitar comment is a free-plan notice with no claim. D-550 says to ignore it.
+- The review record and this entry form one metadata commit. The commit does not change the effective head.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Resolve the night-gate and remaining CI results, then request a fresh review if the effective head changes.
+
+## Session 235: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-82, author. Branch `chore/pr-82-template-gitar-notice`. PR #98, pending merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Ran a night by hand on `main` at `2071cb6`, run 35944586534. The record of `main` was the red night of `e069e16`. The run was in progress at the hand-over. A green night there turns `night-gate` green for this PR.
+- The owner confirmed the roadmap id PR-82 (D-553) and a test of the template line (D-554).
+- The gitar line of the PR gate in `.github/pull_request_template.md` now reads as the line in the agent files: "every gitar comment with an item has its answer" (D-550, D-551).
+- `PullRequestTemplateGitarLineMatchesThePrGate` holds the two lines equal. It failed on the old template.
+- The Phase 2 roadmap and `docs/design.md` hold the PR-82 entry.
+
+### State of the build
+
+- Local: `ste-check` 0, `det-lint` 0. The full suite passed 1586 of 1586.
+- Code head: `bc51dde`. Later commits of this PR change documents only.
+
+### In flight
+
+- The PR checks, and `make codex-review PR=98 -- --skip-gitar-review` (D-543).
+
+### Traps and gotchas
+
+- The template lies outside the skip set of D-475, so this PR runs the full suite and needs a Codex review, and not the override label.
+- The handoff of Session 232 quoted the new line with "(D-550)" at the end. The agent files have no such citation, and the test asks for equal lines, so the template has none too.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+This session: the review round, then the merge request with the summary in questions and answers (D-552).
+
+The session after the merge takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551). Follow the next concrete action of Session 232. File the next OQ-# with the options and a recommendation, and ask the owner for the roadmap id.
+
 ## Session 234: 2026-09-23, Codex
 
 Author: Codex
@@ -233,140 +374,3 @@ None.
 ### Next concrete action
 
 Resolve the D-538 night-gate failure. Then re-review the same effective head and update the existing review record.
-
-## Session 228: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-79, author. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
-
-### What this session did, and why
-
-- Answered round 1 of the Codex review (`Changes required` at `d13f73c`). P2-1 has full merit: a PR of the root `README.md` or `LICENSE` alone passed neither by review nor by label.
-- Recorded the owner instruction as D-541: the `review-override` label covers each path of the skip set of D-475. `review-gate` now reads the one list of the CI skip for the label. D-190 carries a partial revision mark.
-- Wrote `docs/reviews/pr-95-response.md`. It also shows that the Smoke jobs ran and passed at `d13f73c`.
-
-### State of the build
-
-- `dotnet build` passed with no warning. The full suite result and the new code head are in the response file and the PR.
-- Four new tests fail on the old `ReviewGateRules.cs` and pass with the correction.
-
-### In flight
-
-- Round 2 of the Codex review on the new code head, then the merge summary and the owner confirmation.
-
-### Traps and gotchas
-
-- `review-gate` runs the tool of `main`, so round 2 must record the new code head. The correction commit holds code, so the old rule and the new rule give one head.
-- The night gate stays red on the record of D-538. D-537 keeps the bypass for the merge.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read round 2 of the Codex review of PR #95. On approval, write the merge summary of D-533 and ask the owner to confirm the merge.
-
-## Session 227: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-79, reviewer. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
-
-### What this session did, and why
-
-- Reviewed PR #95 at effective head `d13f73c`.
-- Found that a PR of only `README.md` or `LICENSE` cannot pass the review gate by review or by label. The review record names the correction and regression checks.
-
-### State of the build
-
-- The focused review tests passed 111 of 111. They built all projects.
-- At code head `d13f73c`, the CI platform, bot, content, document, bit-identity, lint, and STE checks passed. At metadata head `7781d3b`, the document checks passed, and the heavy jobs skipped.
-- The night gate failed on the known record in D-538. The Smoke jobs were skipped. The review gate failed because P2-1 remains open.
-
-### In flight
-
-- PR #95 needs a correction for P2-1 and a repeat review.
-- The night gate remains red until the work in D-538 lands.
-
-### Traps and gotchas
-
-- D-475 skips root `README.md` and `LICENSE` for review. D-190 does not allow the override label for either path.
-- The failed night record belongs to D-538, which is outside PR-79.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Correct P2-1 on PR #95 and request a repeat review. Handle the night failure in the next PR under D-538.
-
-## Session 226: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-79, author. Branch `chore/pr-79-review-process`. PR #95, pending merge. Base `2c4e6d5`.
-
-### What this session did, and why
-
-- Built D-534. `review-gate` and `make codex-review` read the effective head, the newest commit outside the skip set of D-475. A documents commit after an approving review keeps the gate green.
-- Kept the metadata set of D-184 for the gitar pass and for the override label, as the work head. The owner answered the two open points in session: D-539 (the label keeps D-190) and D-540 (a PR of documents alone needs the label).
-- Wrote the merge summary of D-533 (What, How, CI, Codex review) into `one-pr-one-session`, `review-and-merge.md`, the agent files, and the PR template.
-- Added the PR-79 entry to the Phase 2 roadmap and to the design doc, with `✅ Done in PR #95.`
-
-### State of the build
-
-- Code head `d13f73c`, and it is the effective head under the old rule and the new rule. `dotnet build` passed with no warning. `dotnet test` passed 1550 of 1550, Smoke included. `ste-check` gave 0 findings.
-- Six new tests fail when `SkipPaths` returns the metadata set, so they prove D-534.
-
-### In flight
-
-- The Codex review of `d13f73c`, then the merge summary and the owner confirmation.
-
-### Traps and gotchas
-
-- `review-gate` runs the tool of `main` (`pull_request_target`, D-197). This PR is judged by the old rule until it merges. Keep a code path in the last commit outside the metadata set before each review round, so the two rules give one head. A documents-only fix needs a new round, or a commit that also holds code.
-- Exit test 4 runs on the first PR after the merge: a documents commit after its approval must keep `review-gate` green.
-- Sequence item 35 of the Phase 2 roadmap still reads `PR-74.` with no done mark, although PR #94 merged.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the Codex review of PR #95, and answer each finding. Then write the merge summary and ask the owner to confirm the merge. The night fix of D-538 is the next PR, in a new session.
-
-## Session 225: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-74, reviewer. Branch `feat/pr-74-body-art`. PR #94, blocked. Base `6ee836d`.
-
-### What this session did, and why
-
-- Reviewed PR #94 at effective head `df900d5` under the Codex review request that Session 224 started by hand (D-536).
-- Verified the body geometry and paint recipes, fine shades, grain and gradient behavior, palette indexing, tests, documentation, and ruleset fields. No in-scope defect was found.
-- Published the review record with this handoff entry in one metadata commit (D-182).
-
-### State of the build
-
-- `dotnet build WhatYouCarry.slnx` passed with no warnings or errors. The focused texture, recipe, model, and ruleset tests passed 152 of 152.
-- The live ruleset matches `.github/rulesets/main.json`. `asset-qa`, `det-lint`, `doc-gate`, `documents`, `ste-check`, Linux smoke, and Linux bit identity passed.
-- After the metadata push, the three CI jobs, both sweep jobs, all bit-identity jobs, and the document and asset checks passed. The three Smoke jobs and bots skipped on metadata head `3d7f08b`. `night-gate` failed, and `evaluate` and `review-gate` failed because the verdict is `Blocked`. The effective head remains `df900d5`.
-
-### In flight
-
-- PR #94 remains blocked. The owner must resolve the night-gate block of D-538, and exit test 3 still needs fresh Smoke evidence.
-
-### Traps and gotchas
-
-- The owner waived Gitar for PR #94. Its in-progress dashboard has no review threads and makes no code claim.
-- The metadata commit does not change the effective head under D-184. The code head stays `df900d5`.
-- Local smoke sessions need the full Godot path in `AGENTS.md`. This checkout did not have a configured Godot binary.
-
-### Open questions that block progress
-
-None. OQ-181 blocks PR-77 alone.
-
-### Next concrete action
-
-Reassess PR #94 after the owner resolves the night-gate block of D-538 and a fresh three-platform Smoke run completes.

@@ -404,6 +404,26 @@ public sealed class RepositoryShapeTests
     }
 
     [Fact]
+    public void PullRequestTemplateGitarLineMatchesThePrGate()
+    {
+        // D-551, D-554: the gitar line of the template is the gitar line of the PR gate in the agent files, so a
+        // gitar notice needs no answer in both (D-550). AgentFilesAreIdentical covers CLAUDE.md.
+        string[] template = GitarGateLines(".github/pull_request_template.md");
+        string[] agents = GitarGateLines("AGENTS.md");
+        Assert.True(template.Length == 1, $"The PR template has {template.Length} gitar gate lines, and it needs one.");
+        Assert.True(agents.Length == 1, $"AGENTS.md has {agents.Length} gitar gate lines, and it needs one.");
+        Assert.Equal(agents[0], template[0]);
+    }
+
+    private static string[] GitarGateLines(string relativePath)
+    {
+        return RepositoryRoot.ReadFile(relativePath)
+            .Split('\n')
+            .Where(line => line.StartsWith("- [ ] The automated pass of gitar", StringComparison.Ordinal))
+            .ToArray();
+    }
+
+    [Fact]
     public void EverySkillHasValidFrontMatter()
     {
         // D-131, D-155: each project skill is .claude/skills/<name>/SKILL.md. Its front matter opens the file, names

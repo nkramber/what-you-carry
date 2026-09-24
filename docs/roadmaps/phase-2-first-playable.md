@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-81, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. PR-81 applies D-538 and D-545 to D-552. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-82, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -983,6 +983,31 @@ Gate: exit tests 1 to 9 pass.
 
 > *In plain English:* the enemy walk fix of PR-72 left the test bot stuck on 26 of 5000 floors. The bot now walks those floors. A fix PR can also prove itself with a night run of its own, and that run never replaces the result of the main branch.
 
+### PR-82: Template gitar line
+
+✅ Done in PR #98.
+
+Scope:
+
+- `.github/pull_request_template.md`: the gitar line of the PR gate takes the rule of D-550. It reads as the gitar line of the PR gate in the agent files (D-551, D-553).
+- `WhatYouCarry.Tests/RepositoryShapeTests.cs`: `PullRequestTemplateGitarLineMatchesThePrGate` (D-554).
+
+Out of scope: the fixed seeds of the night, which the next PR holds (D-551). The end of the gitar pause stays with a later PR of the owner (D-542).
+
+Exit tests:
+
+1. `PullRequestTemplateGitarLineMatchesThePrGate` passes. It fails on the old template (D-554).
+2. `make codex-review PR=<this PR> -- --skip-gitar-review` reviews this PR. The author answers each finding until the verdict approves or the three-strike stop fires (D-543).
+3. The merge request of this PR gives the merge summary as questions and answers (D-552).
+
+Review focus: the template line against the PR gate of the agent files, and the test against D-550.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* the agent files let a gitar comment with no specific item go without an answer. The checklist of each new PR still asked for an answer to every gitar comment. Now both say the same thing, and a test keeps them equal.
+
 ### PR-75: Sword art
 
 Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
@@ -1093,13 +1118,14 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, and D-539 to D-541.
 37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544.
 38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.
-39. PR-75.
-40. PR-76.
-41. Owner: answer OQ-181.
-42. PR-77.
-43. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-44. Tier 4 pass on the screenshot fixture (D-133).
-45. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+39. PR-82. ✅ Done in PR #98. ✅ The owner answers of 2026-09-23: D-553 and D-554.
+40. PR-75.
+41. PR-76.
+42. Owner: answer OQ-181.
+43. PR-77.
+44. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+45. Tier 4 pass on the screenshot fixture (D-133).
+46. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
