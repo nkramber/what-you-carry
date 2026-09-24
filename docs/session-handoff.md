@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 242: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-84, reviewer. Branch `feat/pr-84-night-fixed-seeds`. PR #100, pending merge. Base `55b6d3f`.
+
+### What this session did, and why
+
+- Reviewed PR #100 at effective head `198a0c9` under D-564 to D-569.
+- Found that the shell failure record drops carried seeds when the night does not write `night.json`. This can let a later night clear a failure without rerunning its seeds.
+- Added `docs/reviews/pr-100.md` with one P1 finding and the verdict `Changes required`.
+
+### State of the build
+
+- Local at `35da819`: build passed, and the full suite passed 1611 of 1611 tests, Smoke included. `ste-check`, `det-lint`, and `asset-qa` reported 0 findings.
+- CI, bit identity, and Smoke passed at `2135f46`. The latest document checks passed at `35da819`; the code jobs skipped under D-475.
+- The branch night run 36030984588 at `35da819` is still in progress. The pre-review remote head was `35da819`.
+- The review record and this entry are published to the PR branch, and `gh pr view` confirms the remote head.
+
+### In flight
+
+- PR #100 needs the author to fix P1-1 and run its regression check.
+- The branch night for exit test 10 still needs to finish.
+
+### Traps and gotchas
+
+- A shell-written failure record has no seed fields when the build or plan step fails. Keep the failed seeds from `night-results` in that record (D-567, D-569).
+- A later metadata push does not change the reviewed code head, but a new code or workflow commit needs review.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author loads `review-response`, fixes P1-1, adds the regression test, and reruns the branch night. Then the review checks the fix at its new effective head.
+
 ## Session 241: 2026-09-24, Claude Code
 
 Author: Claude Code
@@ -341,55 +377,3 @@ None. Required night evidence is incomplete.
 ### Next concrete action
 
 Check run 35909827024 and the new `night-gate` result. Re-review the same PR after the branch night passes, or record any night failure.
-
-## Session 232: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-81, author. Branch `fix/pr-81-night-softlocks`. PR #97, pending merge. Base `582f346`.
-
-### What this session did, and why
-
-- Reproduced the 26 greedy-descender softlocks of the night at `e069e16`. They pass at `170f08c` and `ea84473`, and they softlock at `837902b`, so PR-72 made them (F-111).
-- Found two faults with a trace of each seed. The wedge count of `PathFollower` read a wedge on a detour of a diagonal path (24 seeds). `DiagonalMove` took a drop under an overhang as one diagonal drop (seeds 2669 and 2879).
-- The owner chose both fixes (D-545, D-546), the effective head for a branch night (D-547), and a re-run of the gate by the night (D-548).
-- Built the branch nights of D-538: the record on `night-branch/<branch>`, the gate read of it, and the re-run step.
-- The local night then crashed seed 4119 of the greedy descender (F-112). The sweep box and the body box ended one ulp apart, and the body box overlapped a block. The owner chose the exact fix: the sweep builds each box in the form of the caller (D-549).
-- The first review round at `ba7f448` found no code issue. It read `Blocked` for the branch night that had not ended.
-- The owner asked that a gitar notice, a comment with no specific item, get no answer and block no verdict (D-550). The skills and the agent files take the rule in PR-81. The PR template takes it in the next PR (D-551).
-
-### State of the build
-
-- Local: `det-lint` 0, `ste-check` 0. The suite at `ba7f448` passed 1582 of 1583, and the version pin of `SimulationTests` was the one failure.
-- The local night of `ba7f448`: no softlock in any policy, and one crash, seed 4119. The full clearer read no fault over 3863 seeds before the stop.
-- The branch night run 35909827024 at `ba7f448` was cancelled for the crash.
-
-### In flight
-
-- The sweep fix of D-549, its full suite, its CI, a new branch night, and review round 2.
-
-### Traps and gotchas
-
-- The self-hosted runner is this Mac. A local night slows the Mac CI legs, and a rebuild of the checkout during `bot-run --no-build` breaks the run. Run a local night from its own worktree.
-- `SweptAabb.Sweep` of a plain box and `SweptAabb.SweepFeet` of a body share one frame. A caller that builds its box in another form can meet F-112 again.
-- A trace of one seed needs the follower of the policy, which is private. A scratch test with reflection read it, and the scratch test is not in the PR.
-- The seeds of the greedy descender: 751 764 940 947 1087 1268 1456 1566 1597 1785 1986 2064 2091 2412 2523 2669 2879 3052 3298 3347 3589 3757 3881 3994 4014 4870.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-This session: wait on branch night run 35915259159 and its re-run of `night-gate`, then run review round 2.
-
-The next session, after PR #97 merges, makes one PR alone (D-551). The gitar line of the PR gate in `.github/pull_request_template.md` takes the rule of D-550: "every gitar comment with an item has its answer (D-550)". PR-81 changed the same line in `CLAUDE.md` and `AGENTS.md`. Ask the owner for its roadmap id.
-
-The session after it takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551).
-
-- The night runs seeds 1 to 5000 for each bot policy and seeds 1 to 100000 for the seed sweep, every night (D-115, D-116).
-- A fixed set gives a clean before and after, a replay of each failure, and a stable gate. The PR-81 bisect used all three.
-- A fixed set also never tests a floor past its range, and a fix can pass the known seeds alone.
-- The option to put to the owner: keep the fixed set as the gate, and add a rotating slice each night, such as a window from the date. The run log names the window, so each failure replays.
-- The owner decides whether a failure in the slice blocks the merge, or files a finding that adds the seed to the fixed set.
-
-First action of that session: file the next OQ-# in `docs/questions.md` with these options and a recommendation, and ask the owner. Ask the owner for the roadmap id of the PR too. Then record each answer as a D-#.
