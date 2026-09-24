@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 245: 2026-09-24, Claude Code
 
 Author: Claude Code
-Session: PR-85, author. Branch `feat/pr-85-night-hosted-linux`. PR not open yet, pending merge. Base `a68348b`.
+Session: PR-85, author. Branch `feat/pr-85-night-hosted-linux`. PR #102, pending merge. Base `a68348b`.
 
 ### What this session did, and why
 

@@ -1082,6 +1082,8 @@ Gate: exit tests 1 to 10 and 12 pass. Exit test 11 runs on `main` after the merg
 
 ### PR-85: Night on hosted Linux
 
+✅ Done in PR #102.
+
 Scope:
 
 - `.github/workflows/night.yml`: the cron moves to `7 7 * * *`, 07:07 UTC (D-571). The night leaves the Mac runner for `ubuntu-latest`, in three kinds of job (D-572, D-573):
@@ -1228,7 +1230,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 39. PR-82. ✅ Done in PR #98. ✅ The owner answers of 2026-09-23: D-553 and D-554.
 40. PR-83. ✅ Done in PR #99. ✅ The owner answers of 2026-09-23: D-555 to D-563.
 41. PR-84. ✅ Done in PR #100. ✅ The owner answers of 2026-09-24: D-564 to D-569.
-42. PR-85. The night on hosted Linux at 07:07 UTC (D-571 to D-573).
+42. PR-85. ✅ Done in PR #102. The night on hosted Linux at 07:07 UTC (D-571 to D-573).
 43. PR-86. The macOS legs on hosted runners (D-572, D-573).
 44. PR-75.
 45. PR-76.

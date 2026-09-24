@@ -614,7 +614,7 @@ The fixed seeds of each night stay the gate, and each night also runs a slice of
 Gate: the seed tests pass, and a branch night of this PR names the slice of its date.
 > *In plain English:* each night tested the same seeds, so a fault past them stayed hidden. Now each night also tests a new batch that the date picks, and a failure blocks merges until a fix.
 
-**PR-85: Night on hosted Linux.** 🔧
+**PR-85: Night on hosted Linux.** ✅ Done in PR #102.
 The night cron moves to 07:07 UTC (D-571). The night moves to hosted Linux as parallel jobs (D-572, D-573). One job takes the date and the record of `main`, one job runs each sweep, and one last job writes the record. The carry rules of D-567 and D-569 stand.
 Gate: a branch night on hosted Linux ends and names the slice, and the shape tests read the new cron and jobs.
 > *In plain English:* the night ran on the Mac of the owner and blocked the checks of every PR for hours. Now it runs on free cloud machines, in parallel.
