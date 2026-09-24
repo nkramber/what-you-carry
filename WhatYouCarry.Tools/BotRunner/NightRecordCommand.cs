@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using WhatYouCarry.Tools.NightGate;
 
 namespace WhatYouCarry.Tools.BotRunner;
 
 /// <summary>
-/// <c>night-record --commit &lt;sha&gt; --status &lt;success|failure|cancelled&gt; --output &lt;file&gt; [--summary
-/// &lt;file&gt;]</c>. Writes the record of one night, scheduled or by hand: the commit it tested, the end time, the
-/// status, the count of deaths of each bot policy, and the count of ascends of each policy (D-177, D-273, D-274,
-/// D-403, D-430). The night job commits the file
+/// <c>night-record --commit &lt;sha&gt; --status &lt;success|failure|cancelled&gt; --output &lt;file&gt; --date
+/// &lt;yyyy-MM-dd&gt; --failures &lt;file&gt; --carry &lt;night.json&gt; [--summary &lt;file&gt;]</c>. Writes the record of
+/// one night, scheduled or by hand: the commit it tested, the end time, the status, the count of deaths of each bot
+/// policy, and the count of ascends of each policy (D-177, D-273, D-274, D-403, D-430). The seed fields name the slice
+/// of the date, the carried seeds that ran, and the failed seeds (D-564, D-567, D-569). The night job commits the file
 /// to the branch <c>night-results</c>, and the <c>night-gate</c> command reads it.
 /// </summary>
 /// <remarks>
@@ -41,7 +43,7 @@ public static class NightRecordCommand
     /// <summary>The statuses that a night can end with. The gate passes on success alone (D-177).</summary>
     public static readonly string[] Statuses = ["success", "failure", "cancelled"];
 
-    private const string Usage = "Usage: night-record --commit <sha> --status <success|failure|cancelled> --output <file> [--summary <file>]";
+    private const string Usage = "Usage: night-record --commit <sha> --status <success|failure|cancelled> --output <file> --date <yyyy-MM-dd> --failures <file> --carry <night.json> [--summary <file>]";
 
     public static int Run(string[] args)
     {
@@ -49,6 +51,9 @@ public static class NightRecordCommand
         string? status = null;
         string? output = null;
         string? summary = null;
+        string? dateText = null;
+        string? failures = null;
+        string? carry = null;
         int i = 0;
         while (i < args.Length)
         {
@@ -64,6 +69,9 @@ public static class NightRecordCommand
                 case "--status": status = args[i + 1]; break;
                 case "--output": output = args[i + 1]; break;
                 case "--summary": summary = args[i + 1]; break;
+                case "--date": dateText = args[i + 1]; break;
+                case "--failures": failures = args[i + 1]; break;
+                case "--carry": carry = args[i + 1]; break;
                 default:
                     Console.Error.WriteLine($"Unexpected argument '{args[i]}'. {Usage}");
                     return 2;
@@ -72,7 +80,7 @@ public static class NightRecordCommand
             i += 2;
         }
 
-        if (commit is null || status is null || output is null)
+        if (commit is null || status is null || output is null || dateText is null || failures is null || carry is null)
         {
             Console.Error.WriteLine($"Every option is required. {Usage}");
             return 2;
@@ -90,10 +98,29 @@ public static class NightRecordCommand
             return 2;
         }
 
+        if (!DateOnly.TryParseExact(dateText, NightSeeds.DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) || date < NightSeeds.DayZero)
+        {
+            Console.Error.WriteLine($"The date '{dateText}' is not in the form {NightSeeds.DateFormat}, on or after day 0 of the slices, {NightSeeds.Text(NightSeeds.DayZero)} (D-566). {Usage}");
+            return 2;
+        }
+
         string deaths = summary is not null && File.Exists(summary) ? File.ReadAllText(summary) : string.Empty;
+        string seedFields;
+        try
+        {
+            // The night creates the failures file before its first sweep, so an absent file is an error (T-2).
+            Dictionary<string, List<ulong>> failed = NightSeeds.ReadFailures(File.ReadAllText(failures), failures);
+            Dictionary<string, List<ulong>> carried = NightSeeds.ReadRecordSeeds(File.ReadAllText(carry), NightSeeds.FailedSeedsName, carry);
+            seedFields = NightSeeds.RecordFields(date, status, failed, carried);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or FormatException)
+        {
+            Console.Error.WriteLine($"night-record: the record of commit {commit} has no seed fields: {exception.Message}");
+            return 2;
+        }
 
         // UTF-8 without the byte-order mark: Encoding.UTF8 writes one, and the record is one JSON object from its first byte.
-        File.WriteAllText(output, Build(commit, DateTime.UtcNow, status, deaths), new UTF8Encoding(false));
+        File.WriteAllText(output, Build(commit, DateTime.UtcNow, status, deaths, seedFields), new UTF8Encoding(false));
         Console.Out.WriteLine($"night-record: {output} holds commit {commit} with status {status}.");
         return 0;
     }
@@ -108,6 +135,18 @@ public static class NightRecordCommand
     {
         string time = endedAt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
         return $"{{\"{CommitName}\":\"{commit}\",\"{EndedAtName}\":\"{time}\",\"{StatusName}\":\"{status}\",\"{DeathsName}\":{DeathsObject(summary)},\"{DeathCausesName}\":{CausesObject(summary)},\"{AscendsName}\":{AscendsObject(summary)}}}\n";
+    }
+
+    /// <summary>
+    /// The record of <see cref="Build(string, DateTime, string, string)"/> with the seed fields of
+    /// <see cref="NightSeeds.RecordFields"/> after the counts (D-564, D-567, D-569).
+    /// </summary>
+    /// <exception cref="FormatException">A summary line is not one name, one equals sign, and one whole number (T-2).</exception>
+    public static string Build(string commit, DateTime endedAt, string status, string summary, string seedFields)
+    {
+        string record = Build(commit, endedAt, status, summary);
+        string withoutEnd = record.Substring(0, record.Length - "}\n".Length);
+        return withoutEnd + "," + seedFields + "}\n";
     }
 
     /// <summary>The death counts of the summary text as one JSON object, in the order of the lines.</summary>

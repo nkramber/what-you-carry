@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Entities;
@@ -8,6 +10,7 @@ using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.World;
+using WhatYouCarry.Tools.NightGate;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
@@ -18,6 +21,12 @@ public sealed class ProcgenTests
 {
     /// <summary>The environment variable that the night job sets to run the night seed counts (D-116).</summary>
     public const string NightVariable = "WYC_NIGHT_SWEEP";
+
+    /// <summary>The environment variable that holds the seed list of the night reachability sweep, from <c>night-seeds</c> (D-564).</summary>
+    public const string NightSeedsVariable = "WYC_NIGHT_SEEDS";
+
+    /// <summary>The environment variable that names the failures file of the night, which takes the failure line of the sweep (D-567).</summary>
+    public const string NightFailuresVariable = "WYC_NIGHT_FAILURES";
 
     /// <summary>The seeds of the reachability sweep on main (PR-9 exit test 1, D-277). A pull request runs one fifth (D-480).</summary>
     public const int ReachabilitySeeds = 5000;
@@ -32,6 +41,44 @@ public sealed class ProcgenTests
     internal static int SweepSeeds(int onMain, int perNight)
     {
         return Environment.GetEnvironmentVariable(NightVariable) == "1" ? perNight : SweepScope.Seeds(onMain);
+    }
+
+    /// <summary>
+    /// The seeds of the reachability sweep. Off the night, the count of <see cref="SweepSeeds"/> from seed 1. On the
+    /// night, the seed list of <see cref="NightSeedsVariable"/>: the fixed range, the slice, and the extra and carried
+    /// seeds (D-564). A night variable with no list gives the fixed range alone, for a night sweep by hand.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The list is malformed, or it holds a seed past the largest int.</exception>
+    internal static List<int> ReachabilitySeedList(string? night, string? list)
+    {
+        List<int> seeds = [];
+        if (night != "1" || list is null)
+        {
+            int count = night == "1" ? ReachabilitySeedsPerNight : SweepScope.Seeds(ReachabilitySeeds);
+            for (int seed = 1; seed <= count; seed++)
+            {
+                seeds.Add(seed);
+            }
+
+            return seeds;
+        }
+
+        List<SeedRange> ranges = NightSeeds.TryParseList(list, out string error)
+            ?? throw new InvalidOperationException($"The variable {NightSeedsVariable} is wrong: {error}.");
+        foreach (SeedRange range in ranges)
+        {
+            if (range.To >= int.MaxValue)
+            {
+                throw new InvalidOperationException($"The variable {NightSeedsVariable} holds the range {range}, past the largest seed of the sweep, {int.MaxValue}.");
+            }
+
+            for (int seed = (int)range.From; seed <= (int)range.To; seed++)
+            {
+                seeds.Add(seed);
+            }
+        }
+
+        return seeds;
     }
 
     /// <summary>The floor of a sweep seed: one to fifteen in turn, so every band takes one third of the seeds.</summary>
@@ -97,9 +144,10 @@ public sealed class ProcgenTests
     }
 
     /// <summary>
-    /// The one sweep of five thousand seeds per PR and one hundred thousand each night that PR-9 exit test 1
-    /// and PR-59 exit test 1 both read (D-116). It digs each floor once and keeps one failure list per test, so
-    /// the two tests cost one dig per seed. The seeds cover every band in turn.
+    /// The one sweep of five thousand seeds per PR, and one hundred thousand and a slice each night, that PR-9 exit
+    /// test 1 and PR-59 exit test 1 both read (D-116, D-564). It digs each floor once and keeps one failure list per
+    /// test, so the two tests cost one dig per seed. The seeds cover every band in turn. On the night, it writes the
+    /// failure line of the sweep to the failures file, with each seed of a chamber or detail failure (D-567).
     /// </summary>
     private static readonly Lazy<SweepReport> ReachabilitySweep = new(RunReachabilitySweep);
 
@@ -133,7 +181,8 @@ public sealed class ProcgenTests
 
     private static SweepReport RunReachabilitySweep()
     {
-        int seeds = SweepSeeds(ReachabilitySeeds, ReachabilitySeedsPerNight);
+        List<int> seeds = ReachabilitySeedList(Environment.GetEnvironmentVariable(NightVariable), Environment.GetEnvironmentVariable(NightSeedsVariable));
+        List<ulong> failedSeeds = [];
         List<string> chamberFailures = [];
         List<string> detailFailures = [];
         List<string> rampFailures = [];
@@ -149,8 +198,9 @@ public sealed class ProcgenTests
         int shaftCount = 0;
         int floorsWithAShaft = 0;
         int floorsWithATier = 0;
-        for (int seed = 1; seed <= seeds; seed++)
+        foreach (int seed in seeds)
         {
+            int failuresBefore = chamberFailures.Count + detailFailures.Count;
             FloorPlan plan = Plan(seed);
             string context = $"Seed {seed}, floor {plan.Floor}";
             PlayerBody body = new(plan.Grid, plan.Spawn);
@@ -257,9 +307,20 @@ public sealed class ProcgenTests
                     detailFailures.Add($"{context}: the collapse cell {rubble} is not rubble.");
                 }
             }
+
+            if (chamberFailures.Count + detailFailures.Count > failuresBefore)
+            {
+                failedSeeds.Add((ulong)seed);
+            }
         }
 
-        return new SweepReport(chamberFailures, detailFailures, rampFailures, tierFailures, pillars, pools, collapses, rampRuns, tierShapes, tiersByKind, seeds, floorsWithATier, rampWidths, shaftCount, floorsWithAShaft, shaftFailures);
+        string? failuresFile = Environment.GetEnvironmentVariable(NightFailuresVariable);
+        if (failuresFile is not null)
+        {
+            File.AppendAllText(failuresFile, NightSeeds.FailureLine(NightSeeds.ReachabilitySweep, failedSeeds), new UTF8Encoding(false));
+        }
+
+        return new SweepReport(chamberFailures, detailFailures, rampFailures, tierFailures, pillars, pools, collapses, rampRuns, tierShapes, tiersByKind, seeds.Count, floorsWithATier, rampWidths, shaftCount, floorsWithAShaft, shaftFailures);
     }
 
     /// <summary>

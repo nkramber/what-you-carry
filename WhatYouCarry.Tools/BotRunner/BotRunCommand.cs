@@ -7,19 +7,22 @@ using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Tools.NightGate;
 
 namespace WhatYouCarry.Tools.BotRunner;
 
 /// <summary>
-/// <c>bot-run --policy &lt;name&gt; --seeds &lt;from&gt;-&lt;to&gt; --output &lt;directory&gt; --root &lt;checkout&gt; [--summary &lt;file&gt;]</c>.
-/// Plays one headless run per seed with the policy over the content of the checkout, and writes one JSONL run
-/// log per run to the output directory (D-115, D-127). Exit 0 means no crash, and no softlock on a policy that
-/// promises progress.
+/// <c>bot-run --policy &lt;name&gt; --seeds &lt;list&gt; --output &lt;directory&gt; --root &lt;checkout&gt; [--summary &lt;file&gt;]
+/// [--failures &lt;file&gt;]</c>. Plays one headless run per seed with the policy over the content of the checkout, and
+/// writes one JSONL run log per run to the output directory (D-115, D-127). The list holds ranges <c>from-to</c> and
+/// single seeds, with a comma between them (D-564). Exit 0 means no crash, and no softlock on a policy that promises
+/// progress.
 /// </summary>
 /// <remarks>
-/// The PR job runs one hundred seeds per policy, and the night job five thousand (D-115). The command prints one
+/// The PR job runs one hundred seeds per policy, and the night job five thousand and a slice (D-115, D-564). The command prints one
 /// summary line per end state on standard output, and the log of each run holds the policy, the seed, the end
-/// state, the deepest floor, the ticks, and the text of a crash.
+/// state, the deepest floor, the ticks, and the text of a crash. The failures file takes one line with each failed
+/// seed, which the night record reads (D-567).
 /// </remarks>
 public static class BotRunCommand
 {
@@ -36,10 +39,10 @@ public static class BotRunCommand
     public const string WaveName = "wave";
     public const string CountName = "count";
 
-    /// <summary>The largest count of seeds in one command. The night runs five thousand, and a range past this is a typo.</summary>
+    /// <summary>The largest count of seeds in one command. The night runs about five thousand five hundred, and a list past this is a typo.</summary>
     public const ulong LargestSpan = 1000000;
 
-    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer|timer-tester|coward> --seeds <from>-<to> --output <directory> --root <checkout> [--summary <file>]";
+    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer|timer-tester|coward> --seeds <from>-<to>[,<seed>|,<from>-<to>]... --output <directory> --root <checkout> [--summary <file>] [--failures <file>]";
 
     public static int Run(string[] args)
     {
@@ -48,6 +51,7 @@ public static class BotRunCommand
         string? output = null;
         string? root = null;
         string? summary = null;
+        string? failures = null;
         int i = 0;
         while (i < args.Length)
         {
@@ -64,6 +68,7 @@ public static class BotRunCommand
                 case "--output": output = args[i + 1]; break;
                 case "--root": root = args[i + 1]; break;
                 case "--summary": summary = args[i + 1]; break;
+                case "--failures": failures = args[i + 1]; break;
                 default:
                     Console.Error.WriteLine($"Unexpected argument '{args[i]}'. {Usage}");
                     return 2;
@@ -78,15 +83,26 @@ public static class BotRunCommand
             return 2;
         }
 
-        if (!TryParseSeeds(seeds, out ulong from, out ulong to))
+        List<SeedRange>? list = NightSeeds.TryParseList(seeds, out string listError);
+        if (list is null)
         {
-            Console.Error.WriteLine($"The seed range '{seeds}' is not <from>-<to> with from at or below to. {Usage}");
+            Console.Error.WriteLine($"The seeds are wrong: {listError}. {Usage}");
             return 2;
         }
 
-        if (to - from >= LargestSpan)
+        // Each range holds at most the largest count, so the sum of a sane list cannot wrap.
+        foreach (SeedRange range in list)
         {
-            Console.Error.WriteLine($"The seed range '{seeds}' holds more than {LargestSpan} seeds. {Usage}");
+            if (range.To - range.From >= LargestSpan)
+            {
+                Console.Error.WriteLine($"The seed range '{range}' holds more than {LargestSpan} seeds. {Usage}");
+                return 2;
+            }
+        }
+
+        if (NightSeeds.Count(list) > LargestSpan)
+        {
+            Console.Error.WriteLine($"The seed list '{seeds}' holds more than {LargestSpan} seeds. {Usage}");
             return 2;
         }
 
@@ -96,36 +112,62 @@ public static class BotRunCommand
         int[] counts = new int[6];
         SortedDictionary<string, int> causes = new(StringComparer.Ordinal);
         bool promises = false;
-        // The count and not the seed drives the loop, so a range that ends at the largest seed cannot wrap.
-        ulong span = to - from + 1;
-        for (ulong offset = 0; offset < span; offset++)
+        List<ulong> failed = [];
+        foreach (SeedRange range in list)
         {
-            ulong seed = from + offset;
-            IBotPolicy bot = CreatePolicy(policy, seed, content);
-            promises = bot.PromisesProgress;
-            BotRunResult result = BotRun.Play(bot, seed, content);
-            counts[(int)result.End]++;
-            if (result.End == BotRunEnd.Death)
+            // The count and not the seed drives the loop, so a range that ends at the largest seed cannot wrap.
+            ulong span = range.To - range.From + 1;
+            for (ulong offset = 0; offset < span; offset++)
             {
-                causes[result.Cause] = causes.TryGetValue(result.Cause, out int earlier) ? earlier + 1 : 1;
-            }
+                ulong seed = range.From + offset;
+                IBotPolicy bot = CreatePolicy(policy, seed, content);
+                promises = bot.PromisesProgress;
+                BotRunResult result = BotRun.Play(bot, seed, content);
+                counts[(int)result.End]++;
+                if (result.End == BotRunEnd.Death)
+                {
+                    causes[result.Cause] = causes.TryGetValue(result.Cause, out int earlier) ? earlier + 1 : 1;
+                }
 
-            string path = Path.Combine(output, $"{policy}-{seed.ToString(CultureInfo.InvariantCulture)}.jsonl");
-            using FileLogSink sink = new(path);
-            WriteLog(result, new JsonlLogger(sink));
+                if (IsFailure(result.End, promises))
+                {
+                    failed.Add(seed);
+                }
+
+                string path = Path.Combine(output, $"{policy}-{seed.ToString(CultureInfo.InvariantCulture)}.jsonl");
+                using FileLogSink sink = new(path);
+                WriteLog(result, new JsonlLogger(sink));
+            }
         }
 
-        Console.Out.WriteLine($"bot-run: policy {policy}, seeds {from}-{to}, bottom {counts[(int)BotRunEnd.Bottom]}, ascend {counts[(int)BotRunEnd.Ascend]}, budget {counts[(int)BotRunEnd.Budget]}, softlock {counts[(int)BotRunEnd.Softlock]}, death {counts[(int)BotRunEnd.Death]}, crash {counts[(int)BotRunEnd.Crash]}.");
+        Console.Out.WriteLine($"bot-run: policy {policy}, seeds {seeds}, bottom {counts[(int)BotRunEnd.Bottom]}, ascend {counts[(int)BotRunEnd.Ascend]}, budget {counts[(int)BotRunEnd.Budget]}, softlock {counts[(int)BotRunEnd.Softlock]}, death {counts[(int)BotRunEnd.Death]}, crash {counts[(int)BotRunEnd.Crash]}.");
         if (summary is not null)
         {
             // One line for each policy, appended, so the night gathers every policy into its record (D-403).
             File.AppendAllText(summary, DeathLine(policy, counts[(int)BotRunEnd.Death], counts[(int)BotRunEnd.Ascend], causes), new UTF8Encoding(false));
         }
 
+        if (failures is not null)
+        {
+            // One line for each policy, appended, so the night record names each failed seed (D-567).
+            File.AppendAllText(failures, NightSeeds.FailureLine(policy, failed), new UTF8Encoding(false));
+        }
 
-        // A death is a real outcome of a fight, and never a fault of the code, so it fails no gate (D-403).
-        bool failed = counts[(int)BotRunEnd.Crash] > 0 || (promises && counts[(int)BotRunEnd.Softlock] > 0);
-        return failed ? 1 : 0;
+        if (failed.Count > 0)
+        {
+            Console.Out.WriteLine($"bot-run: policy {policy}, the failed seeds: {string.Join(' ', failed)}.");
+        }
+
+        return failed.Count > 0 ? 1 : 0;
+    }
+
+    /// <summary>
+    /// True when an end state fails the gate: a crash, or a softlock of a policy that promises progress. A death is a
+    /// real outcome of a fight, and never a fault of the code, so it fails no gate (D-403).
+    /// </summary>
+    public static bool IsFailure(BotRunEnd end, bool promisesProgress)
+    {
+        return end == BotRunEnd.Crash || (promisesProgress && end == BotRunEnd.Softlock);
     }
 
     /// <summary>The policy of a name for one run seed.</summary>
@@ -258,21 +300,6 @@ public static class BotRunCommand
             case BotRunEnd.Ascend: return "ascend";
             default: throw new ArgumentOutOfRangeException(nameof(end), $"The end state {(int)end} has no name.");
         }
-    }
-
-    private static bool TryParseSeeds(string text, out ulong from, out ulong to)
-    {
-        from = 0;
-        to = 0;
-        int dash = text.IndexOf('-', StringComparison.Ordinal);
-        if (dash <= 0)
-        {
-            return false;
-        }
-
-        return ulong.TryParse(text[..dash], NumberStyles.Integer, CultureInfo.InvariantCulture, out from)
-            && ulong.TryParse(text[(dash + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out to)
-            && from <= to;
     }
 }
 

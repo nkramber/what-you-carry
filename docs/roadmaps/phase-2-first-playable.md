@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-83, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-84, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -1040,6 +1040,43 @@ Gate: exit tests 1 to 5 and 7 pass. Exit test 6 runs on `main` after the merge.
 
 > *In plain English:* a PR that proved itself with its own night run still left the main branch red after the merge. The next PR then waited a day. Now a merge that changes only documents after that night carries the green result to the main branch.
 
+### PR-84: Night fixed seeds
+
+Scope:
+
+- `WhatYouCarry.Tools/NightGate/NightSeeds.cs`: the seed rules of each night. The fixed set stays the gate, and the UTC date selects a slice of one tenth past it (D-564, D-566). The list also holds the extra fixed seeds and the carried seeds (D-567).
+- `WhatYouCarry.Tools/NightGate/extra-seeds.json`: the extra fixed seeds of each sweep. A fix PR of a slice failure adds its seed here (D-567).
+- `WhatYouCarry.Tools/NightGate/NightSeedsCommand.cs`: the command `night-seeds` prints the seed list of one sweep, and it names the window in the run log (D-564).
+- `WhatYouCarry.Tools/BotRunner/`: `bot-run` takes a seed list and writes the failure line of its policy. `night-record` writes the slice, the carried seeds that ran, and the failed seeds (D-567, D-569).
+- `WhatYouCarry.Tools/NightGate/NightPromotionRules.cs`: the case `carry-missing` (D-569).
+- `.github/workflows/night.yml`: a step plans the seeds, and each sweep step runs its list. A slice failure fails the night (D-565).
+- `WhatYouCarry.Tests/`: `NightSeedsTests`, `NightGateTests`, `RepositoryShapeTests`, `BotTests`, and the seed list of the reachability sweep in `ProcgenTests`.
+
+Out of scope: the seed counts of a pull request (D-480), and the fix of a seed that a slice finds. A PR of its own holds that fix.
+
+Exit tests:
+
+1. `EachSliceFollowsTheLastPastTheFixedRange` passes (D-566).
+2. `ThePlanHoldsEachSeedOnce` and `ASeedListReadsRangesAndSingleSeeds` pass (D-564, D-567).
+3. `TheExtraSeedFileHoldsEachSweepPastItsFixedRange` passes (D-567).
+4. `TheRecordCarriesEachFailedSeedUntilANightPassesIt`, `ARecordNamesTheSeedsThatItsNightRan`, and `AnOlderRecordCarriesNoSeed` pass (D-567, D-569).
+5. `NightSeedsCommandPrintsTheListAndNamesTheWindow` passes (D-564).
+6. `NightRecordCommandWritesTheSeedFields` and `NightResultIsPublished` pass.
+7. `BotRunTakesASeedListAndWritesItsFailureLine` passes.
+8. `TheReachabilitySweepReadsTheSeedListOfTheNight` and `TheNightPlansTheSeedsOfEachSweep` pass.
+9. `ABranchNightPromotesOnlyWhenItRanEachFailedSeedOfMain` passes (D-569).
+10. A branch night of this PR ends, and its record names the slice of its date and the six failure lines (D-538, D-547).
+11. After the merge, the first night on `main` runs the slice of its date, and its record names it. The session after the merge reads the run and states the result in its handoff entry (D-375).
+12. `make codex-review PR=<this PR> -- --skip-gitar-review` reviews this PR (D-543). The merge request gives the merge summary as questions and answers (D-552).
+
+Review focus: the carry rule when a sweep does not end, the promotion check of D-569, and the seed list of each night step.
+
+Check clause: none.
+
+Gate: exit tests 1 to 10 and 12 pass. Exit test 11 runs on `main` after the merge.
+
+> *In plain English:* each night tested the same seeds, so a fault past them stayed hidden. Now each night also tests a new batch that the date picks. A failure stops merges until a fix, and the failed seed joins the fixed set.
+
 ### PR-75: Sword art
 
 Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
@@ -1152,13 +1189,14 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.
 39. PR-82. ✅ Done in PR #98. ✅ The owner answers of 2026-09-23: D-553 and D-554.
 40. PR-83. ✅ Done in PR #99. ✅ The owner answers of 2026-09-23: D-555 to D-563.
-41. PR-75.
-42. PR-76.
-43. Owner: answer OQ-181.
-44. PR-77.
-45. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-46. Tier 4 pass on the screenshot fixture (D-133).
-47. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+41. PR-84. ✅ The owner answers of 2026-09-24: D-564 to D-569.
+42. PR-75.
+43. PR-76.
+44. Owner: answer OQ-181.
+45. PR-77.
+46. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+47. Tier 4 pass on the screenshot fixture (D-133).
+48. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

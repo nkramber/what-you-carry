@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using WhatYouCarry.Tools.DocGate;
+using WhatYouCarry.Tools.NightGate;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
@@ -202,10 +203,10 @@ public sealed class RepositoryShapeTests
     {
         // PR #43 review P2-1: the upload step moved before the sweep, or before a bot step, fails the check by name.
         string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
-        string beforeSweep = MoveStepBefore(workflow, "Keep the bot logs of a failed night", "Reachability sweep, one hundred thousand seeds");
-        Assert.Equal("The upload step comes before the step 'Reachability sweep, one hundred thousand seeds'.", UploadStepDefect(beforeSweep));
-        string beforeWalker = MoveStepBefore(workflow, "Keep the bot logs of a failed night", "Random walker, five thousand seeds");
-        Assert.Equal("The upload step comes before the step 'Random walker, five thousand seeds'.", UploadStepDefect(beforeWalker));
+        string beforeSweep = MoveStepBefore(workflow, "Keep the bot logs of a failed night", "Reachability sweep, the fixed seeds and the slice");
+        Assert.Equal("The upload step comes before the step 'Reachability sweep, the fixed seeds and the slice'.", UploadStepDefect(beforeSweep));
+        string beforeWalker = MoveStepBefore(workflow, "Keep the bot logs of a failed night", "Random walker, the fixed seeds and the slice");
+        Assert.Equal("The upload step comes before the step 'Random walker, the fixed seeds and the slice'.", UploadStepDefect(beforeWalker));
         Assert.Equal("The night workflow has no upload-artifact step.", UploadStepDefect(workflow.Replace("actions/upload-artifact@v4", "actions/other@v4", StringComparison.Ordinal)));
     }
 
@@ -221,12 +222,51 @@ public sealed class RepositoryShapeTests
         string[] policies = ["random-walker", "greedy-descender", "full-clearer", "timer-tester"];
         foreach (string policy in policies)
         {
-            Assert.Contains($"--policy {policy} --seeds 1-5000 --output bot-logs --root . {summary}", night, StringComparison.Ordinal);
+            Assert.Contains($"--policy {policy} --seeds \"$seeds\" --output bot-logs --root . {summary}", night, StringComparison.Ordinal);
             Assert.Contains($"--policy {policy} --seeds 1-100 --output bot-logs --root .", bots, StringComparison.Ordinal);
         }
 
         Assert.Contains(summary, StepText(night, "Write the night record"), StringComparison.Ordinal);
         Assert.Contains("rm -f \"${RUNNER_TEMP}/bot-deaths.txt\"", StepText(night, "Start the bot summary"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheNightPlansTheSeedsOfEachSweep()
+    {
+        // D-564 to D-567: the plan step empties the failures file, takes the UTC date, and reads the record of main.
+        // Each sweep step runs the list of night-seeds and appends its failure line, and the record step reads the
+        // three. The plan step comes before the first sweep.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        string plan = StepText(workflow, "Plan the seeds");
+        Assert.Contains(": > \"${RUNNER_TEMP}/seed-failures.txt\"", plan, StringComparison.Ordinal);
+        Assert.Contains("echo \"NIGHT_DATE=$(date -u +%Y-%m-%d)\" >> \"$GITHUB_ENV\"", plan, StringComparison.Ordinal);
+        Assert.Contains("git fetch --quiet origin refs/heads/night-results", plan, StringComparison.Ordinal);
+        Assert.Contains("git show FETCH_HEAD:night.json > \"${RUNNER_TEMP}/main-night.json\"", plan, StringComparison.Ordinal);
+        Assert.True(workflow.IndexOf("- name: Plan the seeds", StringComparison.Ordinal) < workflow.IndexOf("- name: Random walker", StringComparison.Ordinal), "The plan step comes before the first sweep.");
+
+        const string seedOptions = "--date \"$NIGHT_DATE\" --root . --carry \"${RUNNER_TEMP}/main-night.json\"";
+        const string failures = "--failures \"${RUNNER_TEMP}/seed-failures.txt\"";
+        string[] names = ["Random walker", "Greedy descender", "Full clearer", "Timer tester", "Coward"];
+        for (int index = 0; index < names.Length; index++)
+        {
+            string policy = NightSeeds.Sweeps[index];
+            string step = StepText(workflow, $"{names[index]}, the fixed seeds and the slice");
+            Assert.Contains("set -euo pipefail", step, StringComparison.Ordinal);
+            Assert.Contains($"seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep {policy} {seedOptions})", step, StringComparison.Ordinal);
+            Assert.Contains($"bot-run --policy {policy} --seeds \"$seeds\"", step, StringComparison.Ordinal);
+            Assert.Contains(failures, step, StringComparison.Ordinal);
+        }
+
+        string sweep = StepText(workflow, "Reachability sweep, the fixed seeds and the slice");
+        Assert.Contains($"WYC_NIGHT_SEEDS=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep {NightSeeds.ReachabilitySweep} {seedOptions})", sweep, StringComparison.Ordinal);
+        Assert.Contains("export WYC_NIGHT_SEEDS", sweep, StringComparison.Ordinal);
+        Assert.Contains("WYC_NIGHT_FAILURES: ${{ runner.temp }}/seed-failures.txt", sweep, StringComparison.Ordinal);
+        Assert.Contains("WYC_NIGHT_SWEEP: \"1\"", sweep, StringComparison.Ordinal);
+
+        string record = StepText(workflow, "Write the night record");
+        Assert.Contains($"--date \"${{NIGHT_DATE}}\" {failures} --carry \"${{RUNNER_TEMP}}/main-night.json\"", record, StringComparison.Ordinal);
+        Assert.Contains("(D-565)", workflow, StringComparison.Ordinal);
+        Assert.Contains("(D-569)", workflow, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -393,7 +433,7 @@ public sealed class RepositoryShapeTests
             return "The upload step does not warn on a night without logs.";
         }
 
-        foreach (string bot in new[] { "Random walker, five thousand seeds", "Greedy descender, five thousand seeds", "Reachability sweep, one hundred thousand seeds" })
+        foreach (string bot in new[] { "Random walker, the fixed seeds and the slice", "Greedy descender, the fixed seeds and the slice", "Reachability sweep, the fixed seeds and the slice" })
         {
             if (workflow.IndexOf(bot, StringComparison.Ordinal) > upload)
             {

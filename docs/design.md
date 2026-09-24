@@ -169,6 +169,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 ### 3.13 Test tiers
 
 - Tier 1: property tests over seeds. The full count on `main`, one fifth of it on a pull request (D-480), and one hundred thousand each night (D-116).
+- The seeds of each night: the fixed set stays the gate, and the UTC date selects a slice of one tenth past it (D-564, D-566). A slice failure fails the night, and each later night runs the failed seed until a night passes it (D-565, D-567).
 - Tier 2: scripted bots. A few hundred runs per PR, ten thousand each night (D-115, D-127).
 - Tier 3: LLM play over a socket. Weekly on main, plus every economy PR (D-128).
 - Tier 3b: an LLM reads the outlier run logs.
@@ -607,6 +608,11 @@ A job on each push to `main` finds the merged PR and reads its branch night (D-5
 Gate: the promotion tests pass, and the `night-gate` job of this PR reads green.
 > *In plain English:* a PR that proved itself with its own night run still left the main branch red after the merge. Now that green result carries over, when the merge changes only documents after the night.
 
+**PR-84: Night fixed seeds.**
+The fixed seeds of each night stay the gate, and each night also runs a slice of one tenth past them (D-564, D-566). The UTC date of the night start selects the window, and the run log and the record name it. A slice failure fails the night (D-565). Each later night runs a failed seed again until a night passes it (D-567). The fix PR adds the seed to the extra fixed seeds. A promotion needs a branch night that ran each carried seed (D-569).
+Gate: the seed tests pass, and a branch night of this PR names the slice of its date.
+> *In plain English:* each night tested the same seeds, so a fault past them stayed hidden. Now each night also tests a new batch that the date picks, and a failure blocks merges until a fix.
+
 **PR-75: Sword art.** 🔧
 The sword of PR-15 gains the detail that the owner asks for, on the recipes of PR-62 (D-504).
 Gate: the clip check passes, and the owner approves a contact sheet of the sword.
@@ -791,7 +797,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81, PR-82, PR-83, PR-75, PR-76, PR-77.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81, PR-82, PR-83, PR-84, PR-75, PR-76, PR-77.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.
