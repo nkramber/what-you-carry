@@ -263,6 +263,12 @@ public sealed class RepositoryShapeTests
         Assert.Contains("WYC_NIGHT_FAILURES: ${{ runner.temp }}/seed-failures.txt", sweep, StringComparison.Ordinal);
         Assert.Contains("WYC_NIGHT_SWEEP: \"1\"", sweep, StringComparison.Ordinal);
 
+        // PR #100 review P1-1: a night with no binary writes its failure record with the script, from the record of main.
+        string publish = StepText(workflow, "Publish the night record");
+        Assert.Contains("bash .github/scripts/night-failure-record.sh \"${GITHUB_SHA}\" \"${RUNNER_TEMP}/main-night-now.json\" \"${RUNNER_TEMP}/night.json\"", publish, StringComparison.Ordinal);
+        Assert.Contains("git show FETCH_HEAD:night.json > \"${RUNNER_TEMP}/main-night-now.json\"", publish, StringComparison.Ordinal);
+        Assert.DoesNotContain("printf '{\"commit\"", publish, StringComparison.Ordinal);
+
         string record = StepText(workflow, "Write the night record");
         Assert.Contains($"--date \"${{NIGHT_DATE}}\" {failures} --carry \"${{RUNNER_TEMP}}/main-night.json\"", record, StringComparison.Ordinal);
         Assert.Contains("(D-565)", workflow, StringComparison.Ordinal);

@@ -126,9 +126,12 @@ jobs:
           else
             target="night-branch/${GITHUB_REF_NAME}"
           fi
-          # A broken build leaves no binary for night-record, so the shell writes the failure record itself.
+          # A broken build leaves no binary for night-record, and the plan step did not run. A script writes the failure
+          # record, and it keeps the failed seeds of the record of main, so the carry survives (D-567, PR #100 review P1-1).
           if [ ! -f "${RUNNER_TEMP}/night.json" ]; then
-            printf '{"commit":"%s","endedAt":"%s","status":"failure"}\n' "${GITHUB_SHA}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${RUNNER_TEMP}/night.json"
+            git fetch --quiet origin refs/heads/night-results
+            git show FETCH_HEAD:night.json > "${RUNNER_TEMP}/main-night-now.json"
+            bash .github/scripts/night-failure-record.sh "${GITHUB_SHA}" "${RUNNER_TEMP}/main-night-now.json" "${RUNNER_TEMP}/night.json"
           fi
           if [ "$target" = "night-results" ]; then
             # The lease: the record of main as this step reads it. A promotion that writes in between fails the push.

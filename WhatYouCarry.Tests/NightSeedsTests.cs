@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using WhatYouCarry.Core.Bots;
@@ -19,6 +20,7 @@ namespace WhatYouCarry.Tests;
 public sealed class NightSeedsTests
 {
     private const string Commit = "0123456789abcdef0123456789abcdef01234567";
+    private const string Head = "89abcdef0123456789abcdef0123456789abcdef";
 
     /// <summary>PR-84 exit test 1. Day 0 takes the first window past the fixed range, and each window follows the last, one tenth in size (D-566).</summary>
     [Fact]
@@ -321,6 +323,86 @@ public sealed class NightSeedsTests
         Assert.Equal(new[] { 1, 2, 3, 100007 }, ProcgenTests.ReachabilitySeedList("1", "1-3,100007"));
         Assert.Throws<InvalidOperationException>(() => ProcgenTests.ReachabilitySeedList("1", "x"));
         Assert.Throws<InvalidOperationException>(() => ProcgenTests.ReachabilitySeedList("1", "2147483647"));
+    }
+
+    /// <summary>
+    /// PR #100 review P1-1. A night with no binary, after a broken build, writes its failure record with the script of
+    /// the publish step. The record keeps the failed seeds of the record of main, so the next plan runs them and a
+    /// promotion still needs them (D-567, D-569). The script runs under bash and jq on the Linux and macOS legs. The
+    /// Windows leg has no such pair, so the behavior check runs on the two other legs of the same gate.
+    /// </summary>
+    [Fact]
+    public void TheFailureRecordOfABrokenBuildKeepsTheCarriedSeeds()
+    {
+        string script = Path.Combine(RepositoryRoot.Find(), ".github", "scripts", "night-failure-record.sh");
+        Assert.Contains("failedSeeds: (.failedSeeds // {})", File.ReadAllText(script), StringComparison.Ordinal);
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        DateOnly date = NightSeeds.DayZero.AddDays(1);
+        Dictionary<string, List<ulong>> mainFailures = Ended(NightSeeds.Sweeps);
+        mainFailures[GreedyDescender.PolicyName] = [5600];
+        string mainText = NightRecordCommand.Build(Commit, new DateTime(2026, 9, 25, 5, 0, 0, DateTimeKind.Utc), "failure", string.Empty, NightSeeds.RecordFields(date, "failure", mainFailures, new Dictionary<string, List<ulong>>()));
+        string directory = Path.Combine(Path.GetTempPath(), $"wyc-failure-record-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string main = Path.Combine(directory, "main.json");
+            string output = Path.Combine(directory, "night.json");
+            File.WriteAllText(main, mainText);
+            (int exit, string errors) = RunBash(script, Head, main, output);
+            Assert.True(exit == 0, errors);
+
+            string failure = File.ReadAllText(output);
+            NightRecord? record = NightRecordParser.TryParse(failure, out string error);
+            Assert.True(record is not null, error);
+            Assert.Equal(Head, record!.Commit);
+            Assert.Equal("failure", record.Status);
+            IReadOnlyList<ulong> carried = NightSeeds.SeedsOf(NightSeeds.ReadRecordSeeds(failure, NightSeeds.FailedSeedsName, output), GreedyDescender.PolicyName);
+            Assert.Equal(new ulong[] { 5600 }, carried);
+            Assert.Equal("1-5000,6001-6500,5600", NightSeeds.FormatList(NightSeeds.Plan(GreedyDescender.PolicyName, date.AddDays(1), [], carried)));
+
+            string ranNoSeed = NightRecordCommand.Build(Head, new DateTime(2026, 9, 26, 5, 0, 0, DateTimeKind.Utc), "success", string.Empty, NightSeeds.RecordFields(date.AddDays(1), "success", Ended(NightSeeds.Sweeps), new Dictionary<string, List<ulong>>()));
+            NightPromotionFacts facts = new()
+            {
+                Merge = "fedcba9876543210fedcba9876543210fedcba98",
+                HeadBranch = "feat/branch",
+                Main = new NightRecordRead(NightGateFacts.RecordBranch, failure, null, record, null),
+                MainBeforeMerge = true,
+                Branch = new NightRecordRead(NightGateFacts.BranchRecordPrefix + "feat/branch", ranNoSeed, null, NightRecordParser.TryParse(ranNoSeed, out _), null),
+                BranchCommitKnown = true,
+                CodePaths = [],
+                Now = new DateTimeOffset(2026, 9, 26, 12, 0, 0, TimeSpan.Zero),
+            };
+            Assert.Equal(NightPromotionRules.CarryMissingCase, NightPromotionRules.Evaluate(facts).Case);
+
+            // An unreadable record of main fails the script, and the publish step then writes no record (T-2).
+            Assert.NotEqual(0, RunBash(script, Head, Path.Combine(directory, "absent.json"), output).Exit);
+            Assert.NotEqual(0, RunBash(script, Head).Exit);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>Runs a script under bash with the arguments, and returns the exit code and standard error.</summary>
+    private static (int Exit, string Errors) RunBash(string script, params string[] arguments)
+    {
+        ProcessStartInfo start = new("bash") { RedirectStandardError = true, RedirectStandardOutput = true, UseShellExecute = false };
+        start.ArgumentList.Add(script);
+        foreach (string argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        using Process process = Process.Start(start) ?? throw new InvalidOperationException($"bash did not start for the script {script}.");
+        process.StandardOutput.ReadToEnd();
+        string errors = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return (process.ExitCode, errors);
     }
 
     /// <summary>A map of failure lines where each named sweep ended with no failure.</summary>

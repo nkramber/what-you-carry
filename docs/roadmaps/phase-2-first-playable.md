@@ -1052,6 +1052,7 @@ Scope:
 - `WhatYouCarry.Tools/BotRunner/`: `bot-run` takes a seed list and writes the failure line of its policy. `night-record` writes the slice, the carried seeds that ran, and the failed seeds (D-567, D-569).
 - `WhatYouCarry.Tools/NightGate/NightPromotionRules.cs`: the case `carry-missing` (D-569).
 - `.github/workflows/night.yml`: a step plans the seeds, and each sweep step runs its list. A slice failure fails the night (D-565).
+- `.github/scripts/night-failure-record.sh`: after a broken build, the failure record keeps the failed seeds of the record of `main` (D-567).
 - `WhatYouCarry.Tests/`: `NightSeedsTests`, `NightGateTests`, `RepositoryShapeTests`, `BotTests`, and the seed list of the reachability sweep in `ProcgenTests`.
 
 Out of scope: the seed counts of a pull request (D-480), and the fix of a seed that a slice finds. A PR of its own holds that fix.
@@ -1066,7 +1067,7 @@ Exit tests:
 6. `NightRecordCommandWritesTheSeedFields` and `NightResultIsPublished` pass.
 7. `BotRunTakesASeedListAndWritesItsFailureLine` passes.
 8. `TheReachabilitySweepReadsTheSeedListOfTheNight` and `TheNightPlansTheSeedsOfEachSweep` pass.
-9. `ABranchNightPromotesOnlyWhenItRanEachFailedSeedOfMain` passes (D-569).
+9. `ABranchNightPromotesOnlyWhenItRanEachFailedSeedOfMain` and `TheFailureRecordOfABrokenBuildKeepsTheCarriedSeeds` pass (D-567, D-569).
 10. A branch night of this PR ends, and its record names the slice of its date and the six failure lines (D-538, D-547).
 11. After the merge, the first night on `main` runs the slice of its date, and its record names it. The session after the merge reads the run and states the result in its handoff entry (D-375).
 12. `make codex-review PR=<this PR> -- --skip-gitar-review` reviews this PR (D-543). The merge request gives the merge summary as questions and answers (D-552).
