@@ -1010,6 +1010,8 @@ Gate: exit tests 1 to 3 pass.
 
 ### PR-83: Night record promotion
 
+✅ Done in PR #99.
+
 Scope:
 
 - `WhatYouCarry.Tools/NightGate/`: the command `night-promote` reads the record of `main` and the branch record of the merged PR. It compares the trees of the night commit and the merge commit, and it writes the promoted record (D-555, D-556, D-558, D-563). The command `night-publish-check` keeps a record of `main` at a later commit (D-562).
@@ -1149,7 +1151,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544.
 38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.
 39. PR-82. ✅ Done in PR #98. ✅ The owner answers of 2026-09-23: D-553 and D-554.
-40. PR-83. ✅ The owner answers of 2026-09-23: D-555 to D-563.
+40. PR-83. ✅ Done in PR #99. ✅ The owner answers of 2026-09-23: D-555 to D-563.
 41. PR-75.
 42. PR-76.
 43. Owner: answer OQ-181.

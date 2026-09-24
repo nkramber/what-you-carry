@@ -602,7 +602,7 @@ The gitar line of the PR template takes the rule of D-550, so a gitar notice nee
 Gate: the test passes, and it fails on the old template.
 > *In plain English:* the agent files let a gitar comment with no specific item go without an answer. The checklist of each new PR still asked for an answer to every gitar comment. Now both say the same thing.
 
-**PR-83: Night record promotion.**
+**PR-83: Night record promotion.** ✅ Done in PR #99.
 A job on each push to `main` finds the merged PR and reads its branch night (D-557). The night promotes to the record of `main` at the merge commit when three things hold. It passed inside 48 hours of its end (D-556). Its tree differs from the merge commit only in the skip set (D-555). The record of `main` names an older commit (D-558). A night on `main` keeps a record at a later commit (D-562). Each new record re-runs the gate of each open PR (D-559).
 Gate: the promotion tests pass, and the `night-gate` job of this PR reads green.
 > *In plain English:* a PR that proved itself with its own night run still left the main branch red after the merge. Now that green result carries over, when the merge changes only documents after the night.
