@@ -62,11 +62,11 @@ The ruleset of `main` is the machine gate (D-522). It requires the 20 checks of 
 
 ## The merge summary
 
-Before the owner confirms a merge, write four sections of a few sentences each (D-533). Use these headings, in this order:
+Before the owner confirms a merge, write the summary as four questions, each with its answer of a few sentences (D-533, D-552). Use these questions, in this order:
 
-- **What**: the change, and the roadmap item that it closes.
-- **How**: the method, and the parts of the code or the documents that changed.
-- **CI**: green or not. Name each red check, and the cause when you know it.
-- **Codex review**: the verdict of the record, `Ready for owner merge`, `Blocked`, or `Changes required`, and the effective head that it names.
+- **Q: What does this PR change?** A: the change, and the roadmap item that it closes.
+- **Q: How does it do it?** A: the method, and the parts of the code or the documents that changed.
+- **Q: Is CI green?** A: green or not. Name each red check, and the cause when you know it.
+- **Q: What did the Codex review say?** A: the verdict of the record, `Ready for owner merge`, `Blocked`, or `Changes required`, and the effective head that it names.
 
-A PR with the `review-override` label has no review record. Its Codex review section names the label and the account that added it (D-190).
+Put each point that needs the owner as one more question at the end. A PR with the `review-override` label has no review record. Its Codex review answer names the label and the account that added it (D-190).
