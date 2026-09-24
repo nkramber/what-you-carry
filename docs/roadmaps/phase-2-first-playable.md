@@ -985,6 +985,8 @@ Gate: exit tests 1 to 9 pass.
 
 ### PR-82: Template gitar line
 
+✅ Done in PR #98.
+
 Scope:
 
 - `.github/pull_request_template.md`: the gitar line of the PR gate takes the rule of D-550. It reads as the gitar line of the PR gate in the agent files (D-551, D-553).
@@ -1116,7 +1118,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, and D-539 to D-541.
 37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544.
 38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.
-39. PR-82. ✅ The owner answers of 2026-09-23: D-553 and D-554.
+39. PR-82. ✅ Done in PR #98. ✅ The owner answers of 2026-09-23: D-553 and D-554.
 40. PR-75.
 41. PR-76.
 42. Owner: answer OQ-181.

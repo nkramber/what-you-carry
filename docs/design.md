@@ -597,7 +597,7 @@ The fix of F-111 (D-538). A diagonal drop needs an open fall in the corner colum
 Gate: the night of this branch passes the bot sweep and the seed sweep. The `night-gate` job of this PR reads that record green.
 > *In plain English:* the enemy walk fix of PR-72 left the test bot stuck on 26 of 5000 floors, and every merge then waited for a manual override. The bot now walks those floors, and a fix PR can prove itself with its own night run.
 
-**PR-82: Template gitar line.**
+**PR-82: Template gitar line.** ✅ Done in PR #98.
 The gitar line of the PR template takes the rule of D-550, so a gitar notice needs no answer there too (D-551, D-553). A test holds the template line equal to the gitar line of the PR gate in the agent files (D-554).
 Gate: the test passes, and it fails on the old template.
 > *In plain English:* the agent files let a gitar comment with no specific item go without an answer. The checklist of each new PR still asked for an answer to every gitar comment. Now both say the same thing.
