@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 244: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-84, reviewer, round 2. Branch `feat/pr-84-night-fixed-seeds`. PR #100, pending owner merge. Base `55b6d3f`.
+
+### What this session did, and why
+
+- Reviewed the fix for P1-1. The failure record script keeps the failed seeds from the record of `main` when a build fails before `night-record` runs.
+- Updated `docs/reviews/pr-100.md`. P1-1 is fixed at `b07e6ed`. The review found no new defects.
+- Exported the PR comments. The only comment is a gitar notice, which needs no answer (D-550).
+
+### State of the build
+
+- The focused regression test passed: 1 test, 0 warnings, 0 errors.
+- The full suite passed 1612 of 1612 tests in 5 minutes 26 seconds. `ste-check` found 0 issues.
+- CI and the night gate passed after the fix at `ab566b0`. The current PR tip `9eee277` has green document, lint, asset, and night-gate checks. Heavy jobs skipped under the documents-only rule.
+- The current `evaluate` and `review-gate` runs failed before this review record approved the head. This session does no push wait under D-542.
+
+### In flight
+
+- The review record, archive rotation, and this handoff entry are in one metadata commit on the PR branch.
+- Post-push check results are not observed.
+
+### Traps and gotchas
+
+- The focused test runs the script with `bash` and `jq`. The Windows test leg checks the script text only.
+- The branch night passed at `35da819`, before the P1-1 fallback fix. The focused regression test covers the fallback path.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the review commit reaches the PR branch, the owner can read the merge summary and decide whether to merge PR #100.
+
 ## Session 243: 2026-09-24, Claude Code
 
 Author: Claude Code
@@ -355,38 +391,3 @@ None.
 This session: the review round, then the merge request with the summary in questions and answers (D-552).
 
 The session after the merge takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551). Follow the next concrete action of Session 232. File the next OQ-# with the options and a recommendation, and ask the owner for the roadmap id.
-
-## Session 234: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Ready for owner merge at effective head `4282206`.
-
-### What this session did, and why
-
-- Re-reviewed PR #97 after the sweep correction and after the branch night finished.
-- Found no defect. Updated the existing review record and preserved its earlier blocked verdict.
-- The remote code head is `4282206`. Later PR commits change documents only.
-
-### State of the build
-
-- The focused sweep regression test passed locally.
-- CI, smoke, bit identity, bots, asset QA, lint, STE, and doc-gate passed at code head `4282206`.
-- The branch night passed at `4282206`; the fresh `night-gate` passed at PR tip `87e4712`.
-- The prior review-gate run read the old blocked verdict. The metadata push must start a fresh review-gate run.
-
-### In flight
-
-- The fresh review-gate run after this metadata commit.
-
-### Traps and gotchas
-
-- Later commits after `4282206` change documents only, so the effective code head remains `4282206`.
-- The only gitar comment says it is working. D-550 says that notice needs no answer.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Check the fresh review-gate result after this metadata push.

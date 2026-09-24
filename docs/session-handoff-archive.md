@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 234: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-81, reviewer. Branch `fix/pr-81-night-softlocks`. PR #97, Ready for owner merge at effective head `4282206`.
+
+### What this session did, and why
+
+- Re-reviewed PR #97 after the sweep correction and after the branch night finished.
+- Found no defect. Updated the existing review record and preserved its earlier blocked verdict.
+- The remote code head is `4282206`. Later PR commits change documents only.
+
+### State of the build
+
+- The focused sweep regression test passed locally.
+- CI, smoke, bit identity, bots, asset QA, lint, STE, and doc-gate passed at code head `4282206`.
+- The branch night passed at `4282206`; the fresh `night-gate` passed at PR tip `87e4712`.
+- The prior review-gate run read the old blocked verdict. The metadata push must start a fresh review-gate run.
+
+### In flight
+
+- The fresh review-gate run after this metadata commit.
+
+### Traps and gotchas
+
+- Later commits after `4282206` change documents only, so the effective code head remains `4282206`.
+- The only gitar comment says it is working. D-550 says that notice needs no answer.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Check the fresh review-gate result after this metadata push.
+
 ## Session 233: 2026-09-23, Codex
 
 Author: Codex
