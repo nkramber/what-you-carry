@@ -1114,6 +1114,8 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-88: Repository review fixes
 
+✅ Done in PR #104.
+
 Scope:
 
 - `SimulationLoop.Step`: a run that ends in the tick takes no stairwell choice, so a death stays a death (D-322, F-113).
@@ -1270,7 +1272,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 41. PR-84. ✅ Done in PR #100. ✅ The owner answers of 2026-09-24: D-564 to D-569.
 42. PR-85. The night on hosted Linux at 07:07 UTC (D-571 to D-573).
 43. PR-87. ✅ Done in PR #103. ✅ The owner answers of 2026-09-24 and 2026-09-25: D-574 to D-577.
-44. PR-88. The fixes of the repository review (D-578). ✅ The owner answers of 2026-09-25: D-578 to D-580.
+44. PR-88. ✅ Done in PR #104. The fixes of the repository review (D-578). ✅ The owner answers of 2026-09-25: D-578 to D-580.
 45. PR-86. The macOS legs on hosted runners (D-572, D-573).
 46. PR-75.
 47. PR-76.

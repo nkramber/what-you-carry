@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 248: 2026-09-25, Claude Code
 
 Author: Claude Code
-Session: PR-88, author. Branch `fix/pr-88-review-fixes`. PR pending. Base `a3590ba`.
+Session: PR-88, author. Branch `fix/pr-88-review-fixes`. PR #104, pending merge. Base `a3590ba`.
 
 ### What this session did, and why
 
