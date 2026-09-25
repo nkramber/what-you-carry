@@ -14,10 +14,11 @@ Session: PR-88, correction author. Branch `fix/pr-88-review-fixes`. PR #104, pen
 - P1-2: only a fence of the same character and at least the same length closes a fenced block (F-116).
 - Each new test failed on the parsers of `4029e36`.
 - Gitar approved `35c389c` with one finding, the numbers of the sequence tail and the exit tests. Commit `35c389c` fixed it, and the thread is resolved.
+- Gitar approved `4c55f16` with a second finding: the fence parse took any indent, and Markdown takes three spaces at most. It had full merit. The fence now opens after no more than three spaces, and `ReviewGateReadsNoFenceAfterFourSpaces` fails on the parser of `f280b72`.
 
 ### State of the build
 
-- The correction commit `f280b72` is the new effective head.
+- The fence indent commit is the new effective head, after the correction commit `f280b72`.
 - The full suite passed 1749 of 1749, Smoke included. The review tests passed 176 of 176.
 - Smoke and Bit identity skip on a documents head. Their runs on the code came from a re-run on `7207164`, and each passed on the three platforms.
 
