@@ -147,7 +147,8 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
     /// The lines of a text that are outside a fenced block, in order. A run of three or more backticks or tildes, after
     /// no more than three spaces, opens a fence. Only a line of the same character, with a run at least as long and
     /// nothing after it, closes that fence, as in Markdown. So a line of tildes inside a backtick fence stays inside it
-    /// (PR #104 P1-2), and a line with four spaces or a tab first is no fence. The fence lines are skipped too.
+    /// (PR #104 P1-2), a line with four spaces or a tab first is no fence, and a backtick fence has no backtick after its
+    /// run. The fence lines are skipped too.
     /// </summary>
     private static System.Collections.Generic.List<string> LinesOutsideFences(string text)
     {
@@ -160,7 +161,9 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
             int run = FenceRun(start);
             if (fenceLength == 0)
             {
-                if (run > 0)
+                // A backtick fence has no backtick in its info string, as in Markdown, so such a line opens no fence
+                // (PR #104 P1-3).
+                if (run > 0 && !(start[0] == '`' && start[run..].Contains('`', StringComparison.Ordinal)))
                 {
                     fenceCharacter = start[0];
                     fenceLength = run;

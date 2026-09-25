@@ -227,6 +227,27 @@ public sealed class ReviewGateRulesTests
         Assert.Equal("Blocked", inside.Verdict);
     }
 
+    /// <summary>
+    /// PR #104 P1-3. A line of three backticks and an info string with a backtick opens no fence, as in Markdown. So the
+    /// real Verdict after it stays visible, and the next line of three backticks opens the fence that hides the fake
+    /// approval. The old parse opened the fence at the first line and read the fake approval. A backtick fence with a
+    /// plain info string still opens.
+    /// </summary>
+    [Fact]
+    public void ReviewGateOpensNoFenceOnABacktickInTheInfoString()
+    {
+        string fake = "## Verdict\n\n**Ready for owner merge.** This verdict applies to head `fedcba9`.\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Verdict\n", "```c`\n\n## Verdict\n", StringComparison.Ordinal) + "```\n" + fake + "```\n";
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+        Assert.True(record is not null, error);
+        Assert.Equal("Blocked", record!.Verdict);
+
+        string plain = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", "```csharp\n" + fake + "```\n\n## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? fenced = ReviewRecord.TryParse(plain, out string fencedError);
+        Assert.True(fenced is not null, fencedError);
+        Assert.Equal("Blocked", fenced!.Verdict);
+    }
+
     /// <summary>Every review record of the repository parses with one head and one verdict name, so a reviewer sees a second name locally before the push (D-269).</summary>
     [Fact]
     public void EveryRepositoryReviewRecordHoldsOneVerdict()

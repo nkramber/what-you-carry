@@ -185,4 +185,21 @@ public sealed class GameStringScanTests
     {
         return GameStringScan.ScanText(source, "WhatYouCarry.Game/Screen.cs");
     }
+
+    /// <summary>
+    /// PR #104 P2-1. A const string of one Game file that reaches a text member of another file is a finding, because
+    /// the scan joins the const names of every file first. The old scan read each file alone. A const of another file
+    /// that only names a string id stays allowed.
+    /// </summary>
+    [Fact]
+    public void AConstOfAnotherFileThatReachesATextIsAFinding()
+    {
+        GameSource texts = new("static class Texts { public const string Died = \"You died\"; public const string DiedId = \"run.died\"; }", "WhatYouCarry.Game/Texts.cs");
+        GameSource screen = new("class Screen { void Show(Label label, Strings strings) { label.Text = Texts.Died; label.TooltipText = strings.Get(Texts.DiedId); } }", "WhatYouCarry.Game/Screen.cs");
+
+        IReadOnlyList<LintFinding> findings = GameStringScan.ScanSources([texts, screen]);
+
+        LintFinding crossFile = Assert.Single(findings, finding => finding.Path == "WhatYouCarry.Game/Screen.cs");
+        Assert.Contains("Died", crossFile.ToString(), StringComparison.Ordinal);
+    }
 }

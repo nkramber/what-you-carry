@@ -128,11 +128,35 @@ public static class GameStringScan
     /// <summary>Every finding in the Game source of one checkout, in file order.</summary>
     public static IReadOnlyList<LintFinding> Run(string checkoutRoot)
     {
-        List<LintFinding> findings = [];
+        List<GameSource> sources = [];
         foreach (string file in SourceFiles(checkoutRoot))
         {
             string relativePath = Path.GetRelativePath(checkoutRoot, file).Replace('\\', '/');
-            findings.AddRange(ScanText(File.ReadAllText(file), relativePath));
+            sources.Add(new GameSource(File.ReadAllText(file), relativePath));
+        }
+
+        return ScanSources(sources);
+    }
+
+    /// <summary>
+    /// Every finding in a set of Game source texts, in the order of the set. The const strings of every text come first,
+    /// so a const of one file that reaches a text member of another file is a finding too (PR #104 P2-1).
+    /// </summary>
+    public static IReadOnlyList<LintFinding> ScanSources(IReadOnlyList<GameSource> sources)
+    {
+        List<SyntaxNode> roots = [];
+        HashSet<string> constStrings = [];
+        foreach (GameSource source in sources)
+        {
+            SyntaxNode root = CSharpSyntaxTree.ParseText(source.Text).GetRoot();
+            roots.Add(root);
+            constStrings.UnionWith(ConstStringNames(root));
+        }
+
+        List<LintFinding> findings = [];
+        for (int index = 0; index < sources.Count; index++)
+        {
+            findings.AddRange(ScanRoot(roots[index], sources[index].Path, constStrings));
         }
 
         return findings;
@@ -141,13 +165,17 @@ public static class GameStringScan
     /// <summary>Every finding in one Game source text.</summary>
     /// <remarks>
     /// Three forms put a text on the screen outside the string table: a string literal, an interpolated string,
-    /// and a const string of the file that a text member takes. The compiler lowers the last two to text that no
+    /// and a const string of the Game source that a text member takes. The compiler lowers the last two to text that no
     /// literal node shows, so each one has its own rule (F-132).
     /// </remarks>
     public static IReadOnlyList<LintFinding> ScanText(string sourceText, string path)
     {
-        SyntaxNode root = CSharpSyntaxTree.ParseText(sourceText).GetRoot();
-        IReadOnlySet<string> constStrings = ConstStringNames(root);
+        return ScanSources([new GameSource(sourceText, path)]);
+    }
+
+    /// <summary>Every finding in one parsed Game source, with the const string names of the whole set.</summary>
+    private static IReadOnlyList<LintFinding> ScanRoot(SyntaxNode root, string path, IReadOnlySet<string> constStrings)
+    {
         List<LintFinding> findings = [];
 
         foreach (SyntaxNode node in root.DescendantNodes())
@@ -184,8 +212,8 @@ public static class GameStringScan
     }
 
     /// <summary>
-    /// The names of the const string fields that one file declares. The scan reads the syntax alone, so a const
-    /// of another file is not in the set.
+    /// The names of the const string fields that one file declares. The scan joins the names of every file, so a
+    /// const of another file is in the set too.
     /// </summary>
     private static IReadOnlySet<string> ConstStringNames(SyntaxNode root)
     {
@@ -348,3 +376,6 @@ public static class GameStringScan
         return new LintFinding(path, span.StartLinePosition.Line + 1, span.StartLinePosition.Character + 1, "L-STRING", symbol, detail);
     }
 }
+
+/// <summary>One Game source text and its path relative to the checkout.</summary>
+public sealed record GameSource(string Text, string Path);
