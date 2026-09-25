@@ -13,14 +13,15 @@ Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Ready for ow
 ### State of the build
 
 - Required CI, Smoke, bit identity, bots, asset QA, det-lint, Documents, STE, doc-gate, and night-gate passed at PR head `5e43e89`.
-- The first metadata head `7d37b76` passed Gitar. `evaluate` and `review-gate` failed because the record named `d027fa8`, not expected effective head `5e43e89`.
-- The review record and this entry publish in one metadata commit (D-182).
-- The metadata push and current PR head are verified with `gh pr view`.
+- The first metadata head `7d37b76` had a stale review head. The corrected metadata head `597d41d` passed `evaluate`, `review-gate`, Gitar, doc-gate, Documents, STE, and all other applicable checks.
+- Heavy code checks skipped at `597d41d` under the documents-only rule. Required code checks passed at effective head `5e43e89` (D-357, D-475).
+- The review record and this handoff publish in one metadata commit (D-182).
+- The latest push and PR head were verified with `gh pr view`.
 
 ### In flight
 
 - The review is ready for owner merge at effective head `5e43e89`.
-- The corrected review record and this handoff need one metadata commit and a push.
+- No review correction remains in flight.
 
 ### Traps and gotchas
 
@@ -35,7 +36,7 @@ None for PR-88. OQ-195 to OQ-205 do not block this review.
 
 ### Next concrete action
 
-Push the corrected metadata, wait for the checks, then verify the review gate and give the owner the review verdict.
+Give the owner the review verdict and the merge evidence for PR #104.
 
 # Session handoff
 
