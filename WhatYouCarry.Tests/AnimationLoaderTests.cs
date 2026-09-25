@@ -63,6 +63,11 @@ public sealed class AnimationLoaderTests
         Assert.Equal(large, track.RotationAt(10));
         Assert.Equal(opposite, track.RotationAt(0));
         Assert.True(float.IsFinite(track.RotationAt(10).X), "The keyframe tick gave a rotation that is not finite.");
+
+        // Between the two keyframes, the blend stays finite too (PR #104, the gitar finding on the blend).
+        Vector3 middle = track.RotationAt(5);
+        Assert.True(float.IsFinite(middle.X) && float.IsFinite(middle.Y), $"The blend at tick 5 gave {middle.X}, {middle.Y}.");
+        Assert.Equal(0.0f, middle.X);
         BoneTrack small = new("arm", [new Keyframe(10, new Vector3(0.0f, 0.0f, 0.0f)), new Keyframe(20, new Vector3(-90.0f, 40.0f, 0.0f))]);
         Assert.Equal(new Vector3(-45.0f, 20.0f, 0.0f), small.RotationAt(15));
     }

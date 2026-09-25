@@ -76,7 +76,9 @@ public sealed record BoneTrack(string Bone, IReadOnlyList<Keyframe> Keyframes)
 
             Keyframe previous = this.Keyframes[index - 1];
             float fraction = (float)(tick - previous.Tick) / (next.Tick - previous.Tick);
-            return previous.RotationDegrees + ((next.RotationDegrees - previous.RotationDegrees) * fraction);
+            // Each keyframe takes its own weight, so no term leaves the float range. The difference of two rotations
+            // near the float limit overflows, and the blend then gave an infinity (F-131).
+            return (previous.RotationDegrees * (1.0f - fraction)) + (next.RotationDegrees * fraction);
         }
 
         return this.Keyframes[this.Keyframes.Count - 1].RotationDegrees;
