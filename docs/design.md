@@ -668,7 +668,7 @@ The macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the host
 Gate: the three macOS legs pass on the hosted runner, no workflow names the self-hosted label, and the repository has zero runners.
 > *In plain English:* the last checks leave the Mac of the owner. No code from a pull request runs on that Mac again.
 
-**PR-75: Sword art.** 🔧
+**PR-75: Sword art.** ✅ Done in PR #106.
 The sword of PR-15 becomes a worn steel arming sword of eight boxes, from a concept image, on the recipes of PR-62 (D-504, D-586 to D-590, D-594). The hand tilts it 45 degrees forward, so the longer blade stays over the floor (D-591). The palette gains ten ramps (D-592, D-593).
 Gate: the clip check passes, the sword stays over the floor, and the owner approves a contact sheet of the sword (D-597).
 > *In plain English:* the sword was three plain boxes. Now it is a worn steel sword with a pommel, a wrapped grip, and a cross guard. The palette gains colors for later art.

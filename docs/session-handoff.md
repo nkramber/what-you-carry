@@ -2,6 +2,44 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 264: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-75, author. Branch `feat/pr-75-sword-art`. PR #106, pending merge. Base `602708d`.
+
+### What this session did, and why
+
+- The sword of PR-15 is now a worn steel arming sword of eight boxes, from one concept image (D-586 to D-590). The owner skipped the 3D reference (D-590).
+- The concept is about 1 meter long, and a sword that hangs straight down reaches into the floor. The `weapon` locator tilts 45 degrees forward, and the loader and `ModelNodes` read the tilt (D-591). The F-131 test now checks that the loader reads the rotation.
+- The owner found the slate blade too blue. The owner chose ten new ramps from twelve candidates (D-592, D-593), and then the darkest of three steel settings (D-594). The owner approved the sheet (D-597).
+- Eleven ramps pass the 256 colors of an indexed PNG, so soot waits. PR-89, a truecolor atlas, and PR-90, a texture resolution, come next, before any more art (D-595). OQ-207 and OQ-208 block them.
+- The owner asked if the repository review of 2026-09-24 is complete. It is not: 13 findings stay open in full and 9 in part. PR-86 fixed RR-P1-1, and the report does not mark it. These findings follow PR-90 (D-596).
+- PR-85 exit test 8: the first night from the `7 7 * * *` cron starts at 07:07 UTC on 2026-09-26. At 22:27 UTC on 2026-09-25 it had not started. The newest night, run 36141884980 at 13:35 UTC, is the old night of one job at `a3590ba`.
+
+### State of the build
+
+- Remote head: see the branch tip. Local: 1822 of 1822 tests pass, Smoke included. `det-lint`, `asset-qa`, `ste-check`, the Godot build, and the smoke session pass.
+- Core does not change, so the known answer of the sweep stays `9c79047da9c82a0e`.
+
+### In flight
+
+- CI, the gitar pass, and `make codex-review PR=106`.
+- PR-85 exit test 8. A later session reads the start time, the wall time of each sweep job, the result, and the slice: 6001-6500 for each bot policy, and 120001-130000 for reachability. After a runner fault, re-run the failed jobs (D-585).
+
+### Traps and gotchas
+
+- A new ramp shifts the atlas index of every shade, and the colors stay the same. `GrainPaintsTheSameBytesOnEachPlatform` pins those indices.
+- The roll puts the held sword under the floor, as it did with the sword of PR-15 (OQ-206). `TheHeldSwordStaysOverTheFloor` leaves the roll out.
+- The reference images sit in `artifacts/reference/meshy-sword-2026-09-25/` of the main checkout, which git ignores.
+
+### Open questions that block progress
+
+None for PR-75. OQ-207 blocks PR-89, and OQ-208 blocks PR-90.
+
+### Next concrete action
+
+When the checks and the gitar pass are green, run `make codex-review PR=106`. Then give the owner the merge summary (D-533).
+
 ## Session 263: 2026-09-25, Claude Code
 
 Author: Claude Code
@@ -329,41 +367,3 @@ None for PR-88.
 ### Next concrete action
 
 After the gitar pass and green CI, run `make codex-review PR=104` for round 2.
-
-## Session 254: 2026-09-25, Codex
-
-Author: Codex
-Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Changes required. Base `a3590ba`.
-
-### What this session did, and why
-
-- Reviewed PR #104 at effective head `4029e36` to check the fixes of F-113 to F-127.
-- Added two P1 findings for review gates that accept malformed closed finding statuses or fake verdict sections inside valid code fences.
-- Read the PR comments. The Gitar thread about the roadmap order is resolved.
-
-### State of the build
-
-- The focused review-gate tests passed 129 of 129.
-- The Documents tests passed 181 of 181. `ste-check` found 0 issues, and the final `doc-gate` passed over 78 paths.
-- CI platform jobs, sweeps, documents, asset QA, determinism lint, STE, doc-gate, night-gate, and Gitar passed at `35c389c`.
-- The first review metadata push was `da8c2c6`. Its Gitar wait passed, and `gh pr view` confirmed that remote head.
-- The CI, Smoke, and Bit identity jobs skipped the metadata-only head. The previous code head had passing CI, Smoke, and Bit identity results. `review-gate` and `evaluate` fail because the verdict requires changes.
-- Smoke and bit-identity passed at `756d539`. Later commits changed paths in the skip set of D-475.
-- The PR tip at review start was `35c389c`. Its effective head remains `4029e36`.
-
-### In flight
-
-- The author must correct the two findings before this PR can pass the review gate.
-
-### Traps and gotchas
-
-- This checkout is detached. The review record and session handoff were pushed to `origin/fix/pr-88-review-fixes`.
-- Review the effective head `4029e36`, not the later document commits.
-
-### Open questions that block progress
-
-OQ-195 to OQ-205 remain open. D-581 records the accepted runner risk. These questions do not block this review.
-
-### Next concrete action
-
-The author corrects P1-1 and P1-2, then starts a fresh cross-provider review of the new effective head.

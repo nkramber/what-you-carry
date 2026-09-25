@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 254: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Changes required. Base `a3590ba`.
+
+### What this session did, and why
+
+- Reviewed PR #104 at effective head `4029e36` to check the fixes of F-113 to F-127.
+- Added two P1 findings for review gates that accept malformed closed finding statuses or fake verdict sections inside valid code fences.
+- Read the PR comments. The Gitar thread about the roadmap order is resolved.
+
+### State of the build
+
+- The focused review-gate tests passed 129 of 129.
+- The Documents tests passed 181 of 181. `ste-check` found 0 issues, and the final `doc-gate` passed over 78 paths.
+- CI platform jobs, sweeps, documents, asset QA, determinism lint, STE, doc-gate, night-gate, and Gitar passed at `35c389c`.
+- The first review metadata push was `da8c2c6`. Its Gitar wait passed, and `gh pr view` confirmed that remote head.
+- The CI, Smoke, and Bit identity jobs skipped the metadata-only head. The previous code head had passing CI, Smoke, and Bit identity results. `review-gate` and `evaluate` fail because the verdict requires changes.
+- Smoke and bit-identity passed at `756d539`. Later commits changed paths in the skip set of D-475.
+- The PR tip at review start was `35c389c`. Its effective head remains `4029e36`.
+
+### In flight
+
+- The author must correct the two findings before this PR can pass the review gate.
+
+### Traps and gotchas
+
+- This checkout is detached. The review record and session handoff were pushed to `origin/fix/pr-88-review-fixes`.
+- Review the effective head `4029e36`, not the later document commits.
+
+### Open questions that block progress
+
+OQ-195 to OQ-205 remain open. D-581 records the accepted runner risk. These questions do not block this review.
+
+### Next concrete action
+
+The author corrects P1-1 and P1-2, then starts a fresh cross-provider review of the new effective head.
+
 ## Session 253: 2026-09-25, Claude Code
 
 Author: Claude Code

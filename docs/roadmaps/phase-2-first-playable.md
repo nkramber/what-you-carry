@@ -1242,6 +1242,8 @@ Gate: exit tests 1 to 7 pass.
 
 ### PR-75: Sword art
 
+✅ Done in PR #106.
+
 Scope:
 
 - `content/models/sword-basic.bbmodel` and its paint file: the tier-0 sword becomes a worn arming sword of eight boxes, from the concept image alone (D-586, D-587, D-590). A pommel, a banded grip, a cross guard of a center box and two arms, a blade, and a tip of two steps.
@@ -1411,7 +1413,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 43. PR-87. ✅ Done in PR #103. ✅ The owner answers of 2026-09-24 and 2026-09-25: D-574 to D-577.
 44. PR-88. ✅ Done in PR #104. The fixes of the repository review (D-578). ✅ The owner answers of 2026-09-25: D-578 to D-580.
 45. PR-86. The macOS legs on hosted runners (D-572, D-573).
-46. PR-75. ✅ The owner answers of 2026-09-25: D-586 to D-597.
+46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
 47. Owner: answer OQ-207. PR-89, the truecolor atlas (D-595).
 48. Owner: answer OQ-208. PR-90, the texture resolution (D-595).
 49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596).
