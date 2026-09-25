@@ -96,13 +96,9 @@ The `csharp-conventions` skill holds the code rules. It covers the language, the
 
 An automated reviewer, gitar, comments on every PR after a push (D-250). The author answers every comment with an item before the hand-over to the other provider, or before the override request on a documentation PR.
 
-**Pause (D-542).** The owner paused the gitar requirement until a later PR of the owner. This paragraph and its list win over the rest of this section.
+The gitar pause ended, and the pass is a gate again (D-574).
 
-- Do no push wait, and post no `Gitar review` comment.
-- Before `make codex-review` and before the merge summary, export the PR comments. Answer each gitar comment with an item, and no gitar notice (D-550).
-- When a gitar review holds feedback, stop at once and alert the owner.
-- Run each review as `make codex-review PR=<n> -- --skip-gitar-review` (D-543).
-
+- Run `make gitar-wait PR=<n>` in the background at once after each push. It waits 60 seconds, then reads the gitar check run of the head every 30 seconds until it completes. With no check run at 6 minutes, it posts one `Gitar review` comment. At 15 minutes it stops: tell the owner (D-575).
 - Load the `gitar-review` skill after each push. It holds the author procedure, the proof that a review is current, and the commands (D-374).
 - When the pass ends, run `make codex-review PR=<n>` in the background, or ask for the override (D-511, D-517).
 - The reviewing provider reads the PR comments into its review and never addresses gitar (`pr-review`).
@@ -123,7 +119,8 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Sounds: `make sounds` renders them, and `make analyze SOUND=<name>` analyses one reference.
 - Bit identity: `tools bit-identity`
 - Review gate, local run: `tools review-gate --input request.json --output check-run.json`
-- Cross-provider review: `make codex-review PR=<n>`. Make prints its exit code as `Error <code>` (D-511). `-- --skip-gitar-review` drops the Gitar start checks (D-543).
+- Gitar wait: `make gitar-wait PR=<n>` (D-575).
+- Cross-provider review: `make codex-review PR=<n>`. Make prints its exit code as `Error <code>` (D-511). The author does not add `-- --skip-gitar-review` (D-543, D-574).
 - Godot build check: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --editor --path WhatYouCarry.Game --build-solutions --quit`
 - Smoke session, local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke`
 - Test exit session, a headless smoke session that presses Escape or Start at a tick: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke --press escape 100`. The other name is `start`.
@@ -151,7 +148,7 @@ A PR merges only when every line holds:
 - [ ] The `ste-check` job is green (G-14).
 - [ ] The `night-gate` job is green: a success record from a night inside 48 hours, at a commit on the base branch or at the effective head of the PR (D-115, D-177, D-274, D-275, D-547).
 - [ ] The `smoke` job is green on all three platforms: the headless smoke session of the Game layer, with the pinned Godot binary (D-114, D-149).
-- [ ] The automated pass of gitar approved the head, or every comment of the pass has its answer (D-250). Paused by D-542: every gitar comment with an item has its answer.
+- [ ] The automated pass of gitar approved the head, or every gitar comment with an item has its answer (D-250, D-550, D-574).
 - [ ] The other provider reviewed it through `make codex-review`, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185, D-534). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
 - [ ] The `review-gate` check run is green. Red means no review record, or a review that does not approve this head (D-179, D-181, D-185, D-521).
 - [ ] `docs/decisions.md` has every new decision.

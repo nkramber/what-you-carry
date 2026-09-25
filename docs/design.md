@@ -589,7 +589,7 @@ Gate: the review gate and the review command tests pass, and the merge confirmat
 > *In plain English:* a fix of one word in a document after the approval of a PR asked for a second full review. Now a change of documents alone keeps the approval, and gitar still reads each push.
 
 **PR-80: Gitar pause.** ✅ Done in PR #96.
-The owner pauses the gitar requirement until a later PR of the owner (D-542). The author answers each gitar comment that comes in. A gitar review with feedback stops the session, and the session alerts the owner. `make codex-review PR=<n> -- --skip-gitar-review` drops the Gitar start checks and keeps the thread check. The flag stays after the pause (D-543). This PR goes before the night fix of D-538 (D-544).
+The owner pauses the gitar requirement until a later PR of the owner (D-542). The author answers each gitar comment that comes in. A gitar review with feedback stops the session, and the session alerts the owner. `make codex-review PR=<n> -- --skip-gitar-review` drops the Gitar start checks and keeps the thread check. The flag stays after the pause (D-543). This PR goes before the night fix of D-538 (D-544). PR-87 ends the pause (D-574).
 Gate: the review command tests pass, and the review of this PR runs with the flag.
 > *In plain English:* each PR waited for an automated review before the second review. The owner pauses that wait. A review that still comes in gets an answer, and the owner hears about it at once.
 
@@ -617,6 +617,11 @@ Gate: the seed tests pass, and a branch night of this PR names the slice of its 
 The night cron moves to 07:07 UTC (D-571). The night moves to hosted Linux as parallel jobs, one for each sweep, and one last job writes the record (D-572, D-573). The carry rules of D-567 and D-569 stand.
 Gate: a branch night on hosted Linux ends and names the slice, and the shape tests read the new cron and jobs.
 > *In plain English:* the night ran on the Mac of the owner and blocked the checks of every PR for hours. Now it runs on free cloud machines, in parallel.
+
+**PR-87: Gitar pause ends.** 🔧
+The pause of D-542 ends, and the automated pass is a gate again (D-574). After each push, `make gitar-wait` waits 60 seconds, then reads the gitar check run of the head every 30 seconds. With no check run at 6 minutes it posts one `Gitar review` comment, and at 15 minutes it stops (D-575). This PR comes after PR-85 and before PR-86 (D-576).
+Gate: the wait tests pass, and the gitar pass and the review of this PR run with no flag.
+> *In plain English:* the owner paused the automated review of each PR while it did not work. It works again, so each PR waits for it again. A script watches for the review, and it asks for one when none starts.
 
 **PR-86: Hosted macOS legs.** 🔧
 The macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the hosted macOS arm64 runner, and the self-hosted runner retires (D-572, D-573).
@@ -807,7 +812,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81, PR-82, PR-83, PR-84, PR-85, PR-86, PR-75, PR-76, PR-77.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81, PR-82, PR-83, PR-84, PR-85, PR-87, PR-86, PR-75, PR-76, PR-77.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

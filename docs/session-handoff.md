@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 246: 2026-09-24, Claude Code
+
+Author: Claude Code
+Session: PR-87, author. Branch `chore/pr-87-gitar-reenable`. PR pending, pending merge. Base `a68348b`.
+
+### What this session did, and why
+
+- The owner ended the gitar pause of D-542: "It is time to re-enable and re-require gitar code reviews". The automated pass is a gate again (D-574). The alert rule ended too.
+- Added `make gitar-wait PR=<n>` and `.github/scripts/gitar-wait.sh` (D-575). The wait is 60 seconds, then a read of the Gitar check runs every 30 seconds. With no check run at 6 minutes it posts one `Gitar review` comment. At 15 minutes it exits 1.
+- Removed each pause text of D-542 from the agent files, the PR template, three skills, and the runbook. `NoInstructionTextHoldsTheGitarPause` holds that.
+- D-576: PR-87 goes after PR-85 and before PR-86. PR-85 is open as PR #102 in another session, which uses session number 245.
+
+### State of the build
+
+- Full suite: 1619 of 1620 passed in 5 minutes 55 seconds. The failure was the entry count before `handoff-rotate`. After the rotation, the 146 handoff and document tests passed.
+- `ste-check` found 0 issues.
+- A run of the script against PR #102 read its completed Gitar check run and exited 0.
+
+### In flight
+
+- The gitar pass of this PR with `make gitar-wait`, then `make codex-review` with no flag.
+
+### Traps and gotchas
+
+- PR #102 edits the same order list of the Phase 2 roadmap and section 7 of the design doc. The PR that merges second resolves the conflict.
+- The first read of the wait is at 60 seconds. The Gitar check of PR #102 ran 6 minutes 11 seconds, so a normal pass ends inside the limit of 15 minutes.
+- The old push wait of the skill cited D-160 of another repository. D-160 of this repository is the state hash.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Finish the gitar pass and the review of this PR. Then give the owner the merge summary (D-533, D-552).
+
 ## Session 244: 2026-09-24, Codex
 
 Author: Codex
@@ -354,40 +390,3 @@ None.
 ### Next concrete action
 
 Resolve the night-gate and remaining CI results, then request a fresh review if the effective head changes.
-
-## Session 235: 2026-09-23, Claude Code
-
-Author: Claude Code
-Session: PR-82, author. Branch `chore/pr-82-template-gitar-notice`. PR #98, pending merge. Base `2071cb6`.
-
-### What this session did, and why
-
-- Ran a night by hand on `main` at `2071cb6`, run 35944586534. The record of `main` was the red night of `e069e16`. The run was in progress at the hand-over. A green night there turns `night-gate` green for this PR.
-- The owner confirmed the roadmap id PR-82 (D-553) and a test of the template line (D-554).
-- The gitar line of the PR gate in `.github/pull_request_template.md` now reads as the line in the agent files: "every gitar comment with an item has its answer" (D-550, D-551).
-- `PullRequestTemplateGitarLineMatchesThePrGate` holds the two lines equal. It failed on the old template.
-- The Phase 2 roadmap and `docs/design.md` hold the PR-82 entry.
-
-### State of the build
-
-- Local: `ste-check` 0, `det-lint` 0. The full suite passed 1586 of 1586.
-- Code head: `bc51dde`. Later commits of this PR change documents only.
-
-### In flight
-
-- The PR checks, and `make codex-review PR=98 -- --skip-gitar-review` (D-543).
-
-### Traps and gotchas
-
-- The template lies outside the skip set of D-475, so this PR runs the full suite and needs a Codex review, and not the override label.
-- The handoff of Session 232 quoted the new line with "(D-550)" at the end. The agent files have no such citation, and the test asks for equal lines, so the template has none too.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-This session: the review round, then the merge request with the summary in questions and answers (D-552).
-
-The session after the merge takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551). Follow the next concrete action of Session 232. File the next OQ-# with the options and a recommendation, and ask the owner for the roadmap id.
