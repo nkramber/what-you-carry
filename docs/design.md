@@ -64,7 +64,7 @@ From the 2026-09-06 interview:
 | Items, affixes, loot | Core | item data, affix set | drops, enemy loadouts | High. The economy |
 | Points, timer, hunter, death payout | Core | run events | skill points | Total. The design risk |
 | Amulet and skill tree | Core | tree data, saves | abilities, unlocks | High |
-| Persistence | Core | three save files | three save files | High. Corruption risk |
+| Persistence | Core | one profile file and a run record (D-152) | one profile file and a run record (D-152) | High. Corruption risk |
 | Game layer | Game | Core state | screen, audio, intent | Medium. Cosmetic by design |
 | Model loader and mesher | Game | voxel grid, model JSON | meshes | Medium. Performance |
 | UI | Game | Core state, string table | screens | Medium. Controller and Deck |
@@ -140,7 +140,7 @@ Every floor is 64 by 20 by 64 blocks, with 5 to 9 chambers (D-343, D-344). A gal
 
 A ramp cell is one block id from 8 to 43, so the grid stays one byte per cell (D-164, D-367). On a ramp, the speed along the slope is the flat speed (D-362). A walk and a sprint stay on the slope on the way down, and a roll leaves it (D-363). A body does not slide on a ramp, and it jumps and rolls from a ramp as from flat ground (D-364 to D-366). The mesher draws every face of a ramp with the raw stone tile, so a ramp reads as the floor that it joins (D-368).
 
-Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of about 32 colors (D-85). The palette is nine ramps of four colors from dark to light, with three fine shades between each pair of colors (D-304, D-528, D-530). A tool generates the atlas of 512 from the palette and the recipes (D-305, D-505, D-506). A recipe is a list of paint layers, with clustered grain and fine shades (D-507, D-527). A file next to each model names the recipe of each face (D-508). Every face has 32 texels per meter, a body face too (D-308). Each asset starts as a Meshy look reference, and the agent rebuilds it as boxes (D-496, D-509). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
+Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of 117 colors (D-85, D-304, D-528, D-530). The palette is nine ramps of four colors from dark to light, with three fine shades between each pair of colors (D-304, D-528, D-530). A tool generates the atlas of 512 from the palette and the recipes (D-305, D-505, D-506). A recipe is a list of paint layers, with clustered grain and fine shades (D-507, D-527). A file next to each model names the recipe of each face (D-508). Every face has 32 texels per meter, a body face too (D-308). Each asset starts as a Meshy look reference, and the agent rebuilds it as boxes (D-496, D-509). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
 A C# synthesizer generates all audio from parameter files, music included (D-89, D-93). Music quality is a register risk (F-18).
 
@@ -170,7 +170,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 - Tier 1: property tests over seeds. The full count on `main`, one fifth of it on a pull request (D-480), and one hundred thousand each night (D-116).
 - The seeds of each night: the fixed set stays the gate, and the UTC date selects a slice of one tenth past it (D-564, D-566). A slice failure fails the night, and each later night runs the failed seed until a night passes it (D-565, D-567).
-- Tier 2: scripted bots. A few hundred runs per PR, ten thousand each night (D-115, D-127).
+- Tier 2: scripted bots. A few hundred runs per PR. Each night runs seeds 1 to 5000 and a slice of 500 for each of five policies (D-115, D-127, D-564, D-566).
 - Tier 3: LLM play over a socket. Weekly on main, plus every economy PR (D-128).
 - Tier 3b: an LLM reads the outlier run logs.
 - Tier 4: vision play from screenshots. Milestone only (D-133).
@@ -180,7 +180,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 
 ### 3.14 Process
 
-Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one role (D-121, D-375). The PR carries its code, tests, registers, design and roadmap state, review record, and handoff entry. No PR exists only to record an earlier PR (D-375). Each PR has its own handoff entry (D-146). The owner starts every session, and an author session starts the reviewer session with `make codex-review` (D-103, D-511). The owner owns every open question (D-124). A PR with the green light merges itself by GitHub auto-merge after the owner confirms a summary of one paragraph (D-102, D-516, D-524). The owner can still merge. A review uses the ChatGPT login alone, and never API pricing (D-523). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). A finding that is open in three review rounds stops the fix loop, and the owner decides (D-513, D-514). A ruleset on `main` requires each gate check and resolved conversations (D-522). An automated reviewer, gitar, comments on every PR after a push, and the author answers every comment before that review (D-250). The heavy CI jobs skip a PR head that changes documents alone, and a push to `main` runs every job (D-473, D-474). The tests that read a document run on each head (D-476).
+Two harnesses work the repo: Claude Code and Codex (D-137). One session is one harness invocation, one PR, and one role (D-121, D-375). The PR carries its code, tests, registers, design and roadmap state, review record, and handoff entry. No PR exists only to record an earlier PR (D-375). Each PR has its own handoff entry (D-146). The owner starts every session, and an author session starts the reviewer session with `make codex-review` (D-103, D-511). The owner owns every open question (D-124). A PR with the green light merges itself by GitHub auto-merge after the owner confirms the merge summary of four questions and answers (D-102, D-516, D-524, D-533, D-552). The owner can still merge. A review uses the ChatGPT login alone, and never API pricing (D-523). Scheduled tests can run at night. Scheduled agents cannot (D-117). The other provider reviews every PR, and the review file lives in `docs/reviews/` (D-101). A finding that is open in three review rounds stops the fix loop, and the owner decides (D-513, D-514). A ruleset on `main` requires each gate check and resolved conversations (D-522). An automated reviewer, gitar, reviews every PR after a push, and the author answers every comment before the cross-provider review. Its pass is a gate (D-250, D-574, D-575). The heavy CI jobs skip a PR head that changes documents alone, and a push to `main` runs every job (D-473, D-474). The tests that read a document run on each head (D-476).
 
 The document protocol (D-118, D-120, D-125, D-129, D-132):
 
@@ -361,12 +361,12 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 
 The tenets are the constitution. When a tenet conflicts with speed or convenience, the tenet wins. When two tenets conflict, the earlier one in this order wins (D-119): T-5, T-2, T-3, T-4, T-1. T-6 is absolute and never conflicts.
 
-- **T-1. Readable, simple, not wasteful.** Explicit over implicit. A fresh model must understand a function from the function and its helper signatures (D-110). Two concrete cases before any abstraction (D-111). No clever one-liners. Tune only on measurement (D-109).
-- **T-2. Zero silent failures.** No empty catch blocks. An absent value is an error, never a zero. Every error carries the seed, floor, tick, and entity ids inside a run, and the save versions, screen, action, and file paths outside one (D-113). Assertions stay on in shipped builds (D-112).
+- **T-1. Readable, simple, not wasteful.** Explicit over implicit. A fresh model must understand a function from the function and its helper signatures. Helpers go one level deep (D-110). Two concrete cases before any abstraction (D-111). No clever one-liners. Tune only on measurement (D-109).
+- **T-2. Zero silent failures.** No empty catch blocks. An absent value is an error, never a zero. Every error carries its context (D-113). Assertions stay on in shipped builds (D-112).
 - **T-3. Tests cover everything.** No merge without tests. A bug fix ships with a regression test that fails on the old code.
-- **T-4. Cross-provider review before merge.** The provider that wrote the code does not review it. The review file records the findings (D-101).
-- **T-5. Document everything.** Continuity is the first duty. Each session rewrites the handoff. The other documents update when intent, a decision, or a plan changes (D-118).
-- **T-6. No attribution.** No code, game text, commit, PR description, or GitHub comment names an agent, harness, or model as the source of work (D-137). Two places are exempt: the author field in the session handoff, and the review files.
+- **T-4. Cross-provider review before merge.** The provider that wrote the code does not review it. The review file in `docs/reviews/` records the findings (D-101). A PR that changes no code merges without a review when the owner adds the `review-override` label (D-188, D-190).
+- **T-5. Document everything.** Continuity is the first duty. Each session adds its entry at the top of `docs/session-handoff.md` (D-146). The other documents update when intent, a decision, or a plan changes (D-118).
+- **T-6. No attribution.** No code, game text, commit, PR description, or GitHub comment names an agent, harness, or model as the source of work (D-137). Two places are exempt: the author field in `docs/session-handoff.md`, and the files in `docs/reviews/`.
 
 ### 6.2 Guardrails
 
@@ -387,7 +387,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 15. **G-15.** The Steam Deck at 800p is the readability and performance floor for every UI and render change (D-15).
 16. **G-16.** Every dependency has a decision entry that justifies it.
 17. **G-17.** Every optimization has a profile before it and a measurement after it (D-109).
-18. **G-18.** Squash merge from a short branch, with a conventional commit subject (D-126). GitHub auto-merge merges a PR with the green light, and the owner can merge too (D-516).
+18. **G-18.** Squash merge from a short branch, with a conventional commit subject (D-126). GitHub auto-merge merges a PR with the green light after the owner confirms the merge summary, and the owner can merge too (D-516, D-524, D-552).
 19. **G-19.** A PR that creates a check passes that check. A PR names any check that does not exist yet, with the PR that creates it (D-148).
 20. **G-20.** Every Core behavior change bumps the simulation version constant, and the review confirms it (D-151).
 21. **G-21.** No `System.Random`, `DateTime`, `Stopwatch`, or `Environment.TickCount` in Core. The seed and the tick are the only sources of randomness and time (D-69, D-73).

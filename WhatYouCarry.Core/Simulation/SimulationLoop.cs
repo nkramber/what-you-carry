@@ -31,8 +31,8 @@ namespace WhatYouCarry.Core.Simulation;
 /// ray come from the state on demand, and they are not state (D-245).
 /// </para>
 /// <para>
-/// The attack bit swings the main weapon: the first weapon definition of the content set, until the loadout of
-/// PR-30 (D-320). No intent fires a projectile before PR-24, and the projectiles of a floor end with the floor.
+/// The attack bit swings the main weapon: the weapon with the id `sword-basic`, until the loadout of
+/// PR-30 (D-320, D-422). No intent fires a projectile before PR-24, and the projectiles of a floor end with the floor.
 /// The blade of the player takes the box of every living enemy as a target (D-325).
 /// </para>
 /// <para>
@@ -140,7 +140,7 @@ public sealed class SimulationLoop
     /// <summary>The seed of the run. Every random stream of the run derives from it (D-159).</summary>
     public ulong Seed { get; }
 
-    /// <summary>The main weapon of the run: the first weapon definition of the content set (D-320).</summary>
+    /// <summary>The main weapon of the run: the weapon with the id `sword-basic` (D-320, D-422).</summary>
     public WeaponDefinition Weapon { get; }
 
     /// <summary>The dug floor that the body stands in (D-253).</summary>

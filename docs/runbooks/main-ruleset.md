@@ -2,7 +2,7 @@
 
 Status: procedure, written 2026-09-23 (D-522). Written in ASD-STE100.
 
-The file `.github/rulesets/main.json` holds the ruleset of `main`. The live ruleset on GitHub matches the file. `RulesetTests` binds the file to the workflows. Each job that runs on each PR is a required check (except `ci-skip` and `evaluate`), and each required check is the name of one job.
+The file `.github/rulesets/main.json` holds the ruleset of `main`. The live ruleset on GitHub matches the file. `RulesetTests` binds the file to the workflows. Each job that runs on each PR is a required check (except `ci-skip` and `evaluate`). Each required check but `review-gate` is the name of one job. The `evaluate` job posts the `review-gate` check run (D-181).
 
 ## What the ruleset holds
 

@@ -147,7 +147,7 @@ A PR merges only when every line holds:
 - [ ] The `asset-qa` job is green: the clip check, the overlay check, and the file case check over every model, overlay, and animation (D-135, D-300, D-301, D-302).
 - [ ] The `ste-check` job is green (G-14).
 - [ ] The `night-gate` job is green: a success record from a night inside 48 hours, at a commit on the base branch or at the effective head of the PR (D-115, D-177, D-274, D-275, D-547).
-- [ ] The `smoke` job is green on all three platforms: the headless smoke session of the Game layer, with the pinned Godot binary (D-114, D-149).
+- [ ] The `smoke-*` jobs are green on all three platforms: the headless smoke session of the Game layer, with the pinned Godot binary (D-114, D-149).
 - [ ] The automated pass of gitar approved the head, or every gitar comment with an item has its answer (D-250, D-550, D-574).
 - [ ] The other provider reviewed it through `make codex-review`, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-179, D-181, D-185, D-534). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
 - [ ] The `review-gate` check run is green. Red means no review record, or a review that does not approve this head (D-179, D-181, D-185, D-521).

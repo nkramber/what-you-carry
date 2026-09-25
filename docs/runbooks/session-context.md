@@ -27,7 +27,7 @@ grep -n -E "\bD-($d)\b" docs/decisions.md | grep -E 'Revis|Supersed' | cut -c1-1
 grep -n -E "^[0-9]+\. \*\*OQ-($q)\." docs/questions.md
 ```
 
-The second line finds each revision of those ids (D-186). A `Superseded by D-N` mark replaces the whole answer. A `Revised in part by D-N` mark changes one part, and the rest of that decision stays current.
+The third line finds each revision of those ids (D-186). A `Superseded by D-N` mark replaces the whole answer. A `Revised in part by D-N` mark changes one part, and the rest of that decision stays current.
 
 Find a section of the design doc, and read that section alone.
 

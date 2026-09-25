@@ -53,7 +53,7 @@ The controls come from D-289:
 
 Attack swings the sword. Dodge rolls 3 meters, on the ground and out of water. The roll has a cooldown of 45 ticks, which is 0.75 seconds.
 
-This build has no enemies, no HUD, and no sound. Those arrive later in Phase 2 of `docs/roadmaps/phase-2-first-playable.md`.
+This build has the enemies, the Overseer, the HUD, and the sounds of Phase 2. The rest of Phase 2 is in `docs/roadmaps/phase-2-first-playable.md`.
 
 ### When the game does not start
 
