@@ -15,18 +15,22 @@ Session: PR-85, author. Branch `feat/pr-85-night-hosted-linux`. PR #102, pending
 - PR-85 moves the night to 07:07 UTC on hosted Linux (D-571 to D-573). `night.yml` holds a plan job, a matrix of six sweep jobs on `NightSeeds.Sweeps`, and a record job. The record job alone holds write permissions.
 - `.github/scripts/night-gather.sh` joins the sweep artifacts, and gives the status: success only when the plan, every sweep, and the record job read success.
 - D-284, D-285, and D-288 carry "Revised in part by D-571". The roadmap entry of PR-85 holds nine exit tests.
+- Branch night run 36062699698 at `9d5c36b` failed on infrastructure, not on a seed. The runner of the full clearer received a shutdown signal at 23:23:57 UTC, 1 h 45 min into `bot-run`. The five other sweeps passed: random walker 20 min, coward 23 min, timer tester 24 min, greedy descender 46 min, reachability 1 h 31 min. The record job wrote a failure record with no failure line of the full clearer, as the design asks.
+- A local run of 200 full clearer seeds held 169 MB and 4 KB of log for each seed, so memory and disk did not cause the shutdown.
+- The sweep uploads now take `overwrite: true`. Without it, a re-run of the failed jobs fails when the sweep of attempt 1 uploaded its result.
 
 ### State of the build
 
-- Local: the full suite passed 1614 of 1614, Smoke included. The new shape tests fail on the old `night.yml` (7 failures). `ste-check` reads 0.
+- Local: the full suite passed 1614 of 1614 at each code commit, Smoke included. The new shape tests fail on the old `night.yml` (7 failures). `ste-check` reads 0.
 
 ### In flight
 
-- The push, the PR, and a branch night on hosted Linux (exit test 7).
+- A new branch night on hosted Linux at the overwrite commit (exit test 7). The night of `9d5c36b` does not count for a later code commit (D-547).
 
 ### Traps and gotchas
 
 - `download-artifact` with a pattern puts each artifact in a directory of its own name. The gather script reads `<results>/*/`.
+- A shutdown signal on a hosted runner is an infrastructure fault. Re-run the failed jobs of the night: the plan keeps its date, and the record job runs again.
 - A sweep job creates its empty result files before the build, so a broken build still uploads a result, and the record reads "did not end".
 
 ### Open questions that block progress

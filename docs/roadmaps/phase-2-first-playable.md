@@ -1088,7 +1088,7 @@ Scope:
 
 - `.github/workflows/night.yml`: the cron moves to `7 7 * * *`, 07:07 UTC (D-571). The night leaves the Mac runner for `ubuntu-latest`, in three kinds of job (D-572, D-573):
   - One plan job takes the UTC date and the record of `main` one time, so each sweep reads the same pair.
-  - One sweep job for each sweep of `NightSeeds.Sweeps`, in a matrix. A failed sweep does not stop the others. Each sweep job keeps its summary line and its failure line as an artifact, and its bot logs after a failure (D-280).
+  - One sweep job for each sweep of `NightSeeds.Sweeps`, in a matrix. A failed sweep does not stop the others. Each sweep job keeps its summary line and its failure line as an artifact, and its bot logs after a failure (D-280). A re-run of the failed jobs replaces the artifacts of a sweep.
   - One record job gathers the results, writes and publishes the record, and re-runs the gates (D-548, D-559). It alone holds the write permissions.
 - `.github/scripts/night-gather.sh`: joins the sweep results into the two files of `night-record`, and gives the night status. A skipped job reads failure (T-2).
 - The carry rules of D-567 and D-569 and the failure record script of a broken build stay as they are.

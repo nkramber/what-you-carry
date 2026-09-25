@@ -294,6 +294,11 @@ public sealed class RepositoryShapeTests
         string result = StepText(workflow, "Keep the sweep result for the record");
         Assert.Contains("if: always()", result, StringComparison.Ordinal);
         Assert.Contains("name: night-sweep-${{ matrix.sweep }}", result, StringComparison.Ordinal);
+
+        // The run of 2026-09-24 lost the runner of one sweep. A re-run of the failed jobs replaces the artifacts of
+        // that sweep, and a second upload with the same name fails without overwrite.
+        Assert.Contains("overwrite: true", result, StringComparison.Ordinal);
+        Assert.Contains("overwrite: true", StepText(workflow, "Keep the bot logs of a failed night"), StringComparison.Ordinal);
         Assert.Contains("pattern: night-sweep-*", StepText(workflow, "Take the result of each sweep"), StringComparison.Ordinal);
         string gather = StepText(workflow, "Gather the sweep results");
         Assert.Contains("status=$(bash .github/scripts/night-gather.sh \"${RUNNER_TEMP}/sweeps\" \"${RUNNER_TEMP}\" \"$PLAN_RESULT\" \"$SWEEP_RESULT\" \"$RECORD_STATUS\")", gather, StringComparison.Ordinal);

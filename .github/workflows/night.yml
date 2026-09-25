@@ -123,13 +123,17 @@ jobs:
           name: bot-logs-${{ matrix.sweep }}
           path: bot-logs
           if-no-files-found: warn
+          overwrite: true
       - name: Keep the sweep result for the record
+        # A re-run of the failed jobs of a night runs this sweep again, and its result replaces the result of the
+        # earlier attempt, so the record reads the newest attempt.
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: night-sweep-${{ matrix.sweep }}
           path: ${{ runner.temp }}/sweep/
           if-no-files-found: error
+          overwrite: true
 
   record:
     needs: [plan, sweep]
