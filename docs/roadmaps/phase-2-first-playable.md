@@ -1207,6 +1207,8 @@ Gate: exit tests 1 to 8 pass.
 
 ### PR-86: Hosted macOS legs
 
+✅ Done in PR #105.
+
 Scope:
 
 - `.github/workflows/ci.yml`, `smoke.yml`, and `bit-identity.yml`: the `macos-arm64` job of each workflow moves from the self-hosted label to the hosted label `macos-latest` (D-572, D-573, D-583). Each job keeps its name, so the required checks of the ruleset of `main` stay as they are (D-522).

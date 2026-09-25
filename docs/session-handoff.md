@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 259: 2026-09-25, Claude Code
 
 Author: Claude Code
-Session: PR-86, author. Branch `feat/pr-86-hosted-macos`. PR pending, pending merge. Base `0d99e2c`.
+Session: PR-86, author. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge. Base `0d99e2c`.
 
 ### What this session did, and why
 
