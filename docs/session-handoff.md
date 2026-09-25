@@ -1,3 +1,37 @@
+## Session 258: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-88, author. Branch `fix/pr-88-review-fixes`. PR #104, pending merge. Base `4e9b59d`.
+
+### What this session did, and why
+
+- Round 2 gave `Changes required` with P1-3 and P2-1. Both had full merit: a backtick in a fence info string opens no fence, and the string scan joins the const names of every Game file. Commit `d027fa8` holds both, with tests that fail on the old code.
+- PR #102 merged into `main`, and the owner asked for a merge from `main`. Commit `5e43e89` merges it. The conflicts were the D-284 and D-285 rows, the handoff, and the archive.
+- Both branches used the session numbers 249 and 251. The entries of this branch took 253 to 256, and the archive holds the union of both sides.
+- Round 3 approved the effective head `5e43e89`. The first record named `d027fa8`, and the review itself corrected the head in `a066510` before the session stopped its process.
+- The repository review report marks each finding that this PR fixed, in full or in part, as complete in PR #104.
+
+### State of the build
+
+- Remote head `a066510`. Effective head `5e43e89`. Every check passes, `review-gate` included.
+- The full suite passed 1816 of 1816 on the merged tree, Smoke included. The known answer is `9c79047da9c82a0e`.
+
+### In flight
+
+- The owner merge decision after the merge summary (D-533, D-552).
+
+### Traps and gotchas
+
+- A review round can go quiet for minutes after its push and then push a last record commit. Read the record on the branch before a stop.
+
+### Open questions that block progress
+
+None for PR-88. OQ-195 to OQ-205 block other work.
+
+### Next concrete action
+
+When the owner confirms, run `gh pr merge 104 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge.
+
 ## Session 257: 2026-09-25, Codex
 
 Author: Codex
@@ -357,46 +391,3 @@ None.
 ### Next concrete action
 
 Give the owner the merge summary in questions and answers (D-533, D-552).
-
-## Session 246: 2026-09-24, Claude Code
-
-Author: Claude Code
-Session: PR-87, author. Branch `chore/pr-87-gitar-reenable`. PR #103, pending merge. Base `a68348b`.
-
-### What this session did, and why
-
-- The owner ended the gitar pause of D-542: "It is time to re-enable and re-require gitar code reviews". The automated pass is a gate again (D-574). The alert rule ended too.
-- Added `make gitar-wait PR=<n>` and `.github/scripts/gitar-wait.sh` (D-575). The wait is 60 seconds, then a read of the Gitar check runs every 30 seconds. With no check run at 6 minutes it posts one `Gitar review` comment. At 15 minutes it exits 1.
-- Removed each pause text of D-542 from the agent files, the PR template, three skills, and the runbook. `NoInstructionTextHoldsTheGitarPause` holds that.
-- The first live wait on PR #103 ended too early. The check run of the head `36e4d23` completed at 05:07:56 UTC, and the gitar dashboard came at 05:08:49 UTC. The wait now also needs a dashboard edit after the run started, as the start checks of `codex-review` do. `ACompletedCheckRunWithNoNewDashboardIsNoReview` fails on the first form.
-- Gitar approved `36e4d23` at 05:08:55 UTC with no finding. Its summary names PR-85 as the source of the pause, which was PR-80. A summary is no finding (D-550).
-- The session started `make codex-review` after the gitar pass while five CI jobs ran. The owner forbade that (D-577). The session stopped the round, removed its worktree, and confirmed that no record reached the branch.
-- D-576: PR-87 goes after PR-85 and before PR-86. PR-85 is open as PR #102 in another session, which uses session number 245.
-
-### State of the build
-
-- Full suite after the fix of the end condition: 1622 of 1622 passed in 8 minutes 22 seconds. The first run of the session failed only on the entry count before `handoff-rotate`.
-- `ste-check` found 0 issues.
-- A run of the script against PR #102 read its completed Gitar check run and exited 0.
-
-### In flight
-
-- Gitar approved `ef8536b` with no finding. `make gitar-wait` ended on its dashboard edit after 62 seconds.
-- CI run 36098578048 passed on `ef8536b`. Only the Review gate workflow was red before the record.
-- `make codex-review PR=103` approved the effective head `f6292c0` with no finding (`docs/reviews/pr-103.md`). The record commit is `64119bb`.
-- The owner decides the merge after the merge summary (D-524, D-552).
-
-### Traps and gotchas
-
-- PR #102 edits the same order list of the Phase 2 roadmap and section 7 of the design doc. The PR that merges second resolves the conflict.
-- The check run of `e6abe26`, the first commit of PR #103, still read "Working" after the approval. The wait reads the head alone for that reason.
-- The first read of the wait is at 60 seconds. The Gitar check of PR #102 ran 6 minutes 11 seconds, so a normal pass ends inside the limit of 15 minutes.
-- The old push wait of the skill cited D-160 of another repository. D-160 of this repository is the state hash.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-When the owner confirms, run `gh pr merge 103 --auto --squash`, and write the prompt of `merge-prompt.md` at the merge. PR-85 (PR #102) then carries the gitar wait and D-577 too. The next PR after both is PR-86.
