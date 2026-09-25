@@ -1146,8 +1146,8 @@ Exit tests:
 4. The new tests of `ReviewGateRulesTests` and `CodexReviewTests` pass, and they fail on the parse of `main`. Each review record of the repository still parses.
 5. `TheSweepNamesASeedWhoseDigThrows` passes, and it fails on the sweep of `main`.
 6. `RepeatedKeyTests` and the four new tests of `AssetQaTests` pass, and they fail on the gate of `main`.
-8. The new tests of F-120 to F-125 and F-127 pass, and each test that targets a defect fails on the code of `main`.
 7. The simulation version is 17, and `BitIdentityKnownAnswer` passes with `f1c35ddccb2cd0bb` on the three platforms (G-9, G-20).
+8. The new tests of F-120 to F-125 and F-127 pass, and each test that targets a defect fails on the code of `main`.
 
 Review focus: the end check before the stairwell choice in `Step`, the guard of each engine callback, and the verdict parse of each review record.
 
@@ -1279,8 +1279,8 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 48. Owner: answer OQ-181.
 49. PR-77.
 50. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-50. Tier 4 pass on the screenshot fixture (D-133).
-51. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+51. Tier 4 pass on the screenshot fixture (D-133).
+52. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
