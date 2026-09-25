@@ -1,5 +1,77 @@
 # Session handoff archive
 
+## Session 236: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, blocked. Base `2071cb6`.
+
+### What this session did, and why
+
+- Reviewed PR #98 at effective head `bc51dde`. The template line and its equality test meet the D-550 contract.
+- Added `docs/reviews/pr-98.md` with the review evidence and verdict.
+- The review found no in-scope defect. Required CI evidence blocks approval.
+
+### State of the build
+
+- The focused template test passed, and the Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
+- GitHub at `d158af7` had a failed `night-gate`. The base night record failed, and the branch-night record was absent.
+- GitHub showed Linux smoke as failed, but its run was still in progress and its failure log was unavailable. Required platform jobs, sweeps, bots, and macOS smoke remained pending.
+- The remote head at hand-over is `d158af7`. Later PR commits change documents only, so the effective head remains `bc51dde`.
+
+### In flight
+
+- PR #98 remains blocked until the required night and CI evidence passes.
+
+### Traps and gotchas
+
+- The Gitar comment is a free-plan notice with no claim. D-550 says to ignore it.
+- The review record and this entry form one metadata commit. The commit does not change the effective head.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Resolve the night-gate and remaining CI results, then request a fresh review if the effective head changes.
+
+## Session 235: 2026-09-23, Claude Code
+
+Author: Claude Code
+Session: PR-82, author. Branch `chore/pr-82-template-gitar-notice`. PR #98, pending merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Ran a night by hand on `main` at `2071cb6`, run 35944586534. The record of `main` was the red night of `e069e16`. The run was in progress at the hand-over. A green night there turns `night-gate` green for this PR.
+- The owner confirmed the roadmap id PR-82 (D-553) and a test of the template line (D-554).
+- The gitar line of the PR gate in `.github/pull_request_template.md` now reads as the line in the agent files: "every gitar comment with an item has its answer" (D-550, D-551).
+- `PullRequestTemplateGitarLineMatchesThePrGate` holds the two lines equal. It failed on the old template.
+- The Phase 2 roadmap and `docs/design.md` hold the PR-82 entry.
+
+### State of the build
+
+- Local: `ste-check` 0, `det-lint` 0. The full suite passed 1586 of 1586.
+- Code head: `bc51dde`. Later commits of this PR change documents only.
+
+### In flight
+
+- The PR checks, and `make codex-review PR=98 -- --skip-gitar-review` (D-543).
+
+### Traps and gotchas
+
+- The template lies outside the skip set of D-475, so this PR runs the full suite and needs a Codex review, and not the override label.
+- The handoff of Session 232 quoted the new line with "(D-550)" at the end. The agent files have no such citation, and the test asks for equal lines, so the template has none too.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+This session: the review round, then the merge request with the summary in questions and answers (D-552).
+
+The session after the merge takes the owner focus of 2026-09-23: the fixed seeds of the night (D-551). Follow the next concrete action of Session 232. File the next OQ-# with the options and a recommendation, and ask the owner for the roadmap id.
+
 ## Session 234: 2026-09-23, Codex
 
 Author: Codex

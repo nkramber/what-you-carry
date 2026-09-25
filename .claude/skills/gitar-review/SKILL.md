@@ -1,6 +1,6 @@
 ---
 name: gitar-review
-description: Get a Gitar review of the head of a pull request. Wait three minutes after each push, prove that the review is current, and answer every finding. Verify each finding as a claim, then fix and reply, or refute, reply, and resolve. Load after each push to a pull request, documents alone included.
+description: Get a Gitar review of the head of a pull request. Wait for the Gitar check run after each push, prove that the review is current, and answer every finding. Verify each finding as a claim, then fix and reply, or refute, reply, and resolve. Load after each push to a pull request, documents alone included.
 ---
 
 # Gitar review skill
@@ -8,14 +8,6 @@ description: Get a Gitar review of the head of a pull request. Wait three minute
 The GitHub app `gitar-bot` reviews pull requests. This skill gets a Gitar review of the head of a pull request, and then answers each finding. A pull request of documents alone waits for the review too.
 
 Each repo that uses Gitar keeps a copy of this file. A rule of the repo wins over this skill. For example, a repo can ask for a second review, or it can limit who replies to Gitar.
-
-## Pause of this repo (D-542)
-
-The owner paused the gitar requirement of this repo. This section wins over the procedure below until a later PR of the owner ends the pause.
-
-- Skip steps 2 to 16. Do no push wait, and post no `Gitar review` comment.
-- Before `make codex-review` and before the merge summary, run command F. Do steps 17 to 24 for each gitar comment with an item. Leave a notice unanswered (D-550).
-- When a gitar review holds feedback, stop at once and alert the owner.
 
 ## Terms
 
@@ -28,7 +20,7 @@ The owner paused the gitar requirement of this repo. This section wins over the 
 - **Manual review**: the review that a `Gitar review` comment starts.
 - **Current review**: a review of the head.
 - **Stale review**: a review of a commit older than the head.
-- **Push wait**: the minimum wait of three minutes after a push, before a `Gitar review` comment (D-160).
+- **Push wait**: the wait of `make gitar-wait` after a push. It waits 60 seconds, then reads the Gitar check run of the head every 30 seconds until it completes (D-575).
 
 ## Why a review goes stale
 
@@ -58,11 +50,11 @@ Do these steps after each push.
 1. Push all the commits of this round of changes. Push one time, not one time for each fix.
 2. Run command A. Continue only when the local head and the pull request head are the same commit.
 3. Record the work head and the push time from command A. A push of metadata alone ends here, because the pass stays current.
-4. Do the push wait with command E. Always do the full push wait, also when Gitar paused automatic reviews.
-5. Do not comment `Gitar review` before the push wait ends.
-6. After the push wait, run the Gitar check part of command E. Then run command B.
-7. Find if an automatic review started. Apply the rule in "Find an automatic review".
-8. When an automatic review runs, wait until its Gitar check completes. Do not comment `Gitar review`.
+4. Do the push wait with command E, in the background. Always do the full push wait, also when Gitar paused automatic reviews.
+5. Do not comment `Gitar review` while the push wait runs. The wait posts one request when no automatic review started.
+6. When the wait exits 1, stop, and tell the owner. The wait stops at 15 minutes after the push (D-575).
+7. When the wait exits 0, run command B.
+8. When the wait posted a request, read the Gitar reply with command B, and apply steps 12 to 14.
 9. Apply the rule in "Prove that a review is current".
 10. When the review is current, go to step 17.
 11. When the review is stale, or you cannot prove that it is current, comment `Gitar review` on the pull request.
@@ -84,16 +76,9 @@ Do these steps after each push.
 
 ## Find an automatic review
 
-The owner permits a `Gitar review` comment only after the push wait, and only when no automatic review started (D-160).
+The owner permits a `Gitar review` comment only when no automatic review started (D-575). An automatic review started when the head has a Gitar check run of `gitar-bot`. The wait of command E reads it every 30 seconds. With no check run 6 minutes after the push, no automatic review started, and the wait posts one `Gitar review` comment. After the wait, a stale review gets its request in step 11.
 
-An automatic review started when one of these conditions is true:
-
-- The Gitar check of `gitar-bot` on the head has the status `queued` or `in_progress`.
-- The review is current. Apply the rule in "Prove that a review is current".
-
-When neither condition is true after the push wait, no automatic review started. You can then comment `Gitar review`.
-
-On 2026-09-16, the Gitar check on the heads of #30, #31, and #32 started 8 to 31 seconds after the commit. Each check completed in 80 seconds or less. So the push wait of three minutes is longer than a normal automatic review.
+On 2026-09-16, the Gitar check on the heads of #30, #31, and #32 started 8 to 31 seconds after the commit. Each check completed in 80 seconds or less. On 2026-09-25, the Gitar check on the head of #102 started 4 seconds after the commit, and it completed after 6 minutes 11 seconds.
 
 ## Prove that a review is current
 
@@ -138,8 +123,6 @@ n=<number>
 git rev-parse HEAD
 gh pr view "$n" --json headRefOid --jq .headRefOid
 date -u +%Y-%m-%dT%H:%M:%SZ
-# The push time in seconds, for the push wait of command E.
-date +%s
 ```
 
 ### B. The freshness check
@@ -210,7 +193,7 @@ gh pr comment "$n" --body "Gitar review"
 
 ### E. The push wait and the Gitar check
 
-The runbook `docs/runbooks/session-context.md` holds both commands under "Wait for gitar". Do the full push wait of three minutes, and then read the Gitar check of the head.
+Run `make gitar-wait PR=<n>` at once after the push (D-575). The script `.github/scripts/gitar-wait.sh` prints the final state alone. It exits 0 when each Gitar check run of the head completes and the dashboard comment has an edit after the first of them started. It exits 1 at 15 minutes, or on a failed read. The runbook `docs/runbooks/session-context.md` holds the rules under "Wait for gitar".
 
 ### F. The comment export
 

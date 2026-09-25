@@ -522,6 +522,26 @@ public sealed class RepositoryShapeTests
         Assert.Equal(agents[0], template[0]);
     }
 
+    [Fact]
+    public void NoInstructionTextHoldsTheGitarPause()
+    {
+        // D-542 named each text of the pause, so a search for D-542 finds each one. D-574 ends the pause, so the
+        // agent files, the PR template, the skills, and the runbooks cite D-542 nowhere, and the gitar gate holds again.
+        string root = RepositoryRoot.Find();
+        List<string> files = ["AGENTS.md", "CLAUDE.md", ".github/pull_request_template.md"];
+        foreach (string directory in new[] { ".claude/skills", "docs/runbooks" })
+        {
+            files.AddRange(Directory.GetFiles(Path.Combine(root, directory), "*.md", SearchOption.AllDirectories)
+                .Select(path => Path.GetRelativePath(root, path).Replace('\\', '/')));
+        }
+
+        List<string> pauseTexts = files
+            .Where(file => RepositoryRoot.ReadFile(file).Contains("D-542", StringComparison.Ordinal))
+            .ToList();
+        Assert.True(pauseTexts.Count == 0, $"These files still cite the gitar pause of D-542: {string.Join(", ", pauseTexts)}.");
+        Assert.Equal(["- [ ] The automated pass of gitar approved the head, or every gitar comment with an item has its answer (D-250, D-550, D-574)."], GitarGateLines("AGENTS.md"));
+    }
+
     private static string[] GitarGateLines(string relativePath)
     {
         return RepositoryRoot.ReadFile(relativePath)
