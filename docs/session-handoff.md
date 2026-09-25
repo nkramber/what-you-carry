@@ -16,19 +16,20 @@ Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Changes requ
 ### State of the build
 
 - The focused review-gate tests passed 129 of 129.
-- The Documents tests passed 181 of 181. `ste-check` found 0 issues, and `doc-gate` passed over 77 paths.
+- The Documents tests passed 181 of 181. `ste-check` found 0 issues, and the final `doc-gate` passed over 78 paths.
 - CI platform jobs, sweeps, documents, asset QA, determinism lint, STE, doc-gate, night-gate, and Gitar passed at `35c389c`.
-- Smoke and bit-identity passed at `756d539`. Later commits changed paths in the skip set of D-475. The review-gate and evaluate checks wait for this record.
+- The first review metadata push was `da8c2c6`. Its Gitar wait passed, and `gh pr view` confirmed that remote head.
+- The CI, Smoke, and Bit identity jobs skipped the metadata-only head. The previous code head had passing CI, Smoke, and Bit identity results. `review-gate` and `evaluate` fail because the verdict requires changes.
+- Smoke and bit-identity passed at `756d539`. Later commits changed paths in the skip set of D-475.
 - The PR tip at review start was `35c389c`. Its effective head remains `4029e36`.
 
 ### In flight
 
 - The author must correct the two findings before this PR can pass the review gate.
-- The metadata commit and the Gitar wait follow this entry.
 
 ### Traps and gotchas
 
-- This checkout is detached. Push the metadata commit to `origin/fix/pr-88-review-fixes`.
+- This checkout is detached. The review record and session handoff were pushed to `origin/fix/pr-88-review-fixes`.
 - Review the effective head `4029e36`, not the later document commits.
 
 ### Open questions that block progress
