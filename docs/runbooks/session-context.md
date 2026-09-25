@@ -111,7 +111,7 @@ A PR carries two kinds of comment: the issue comments, which hold the dashboard 
 ```
 repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 owner=${repo%/*}; name=${repo#*/}; n=<number>
-out=/tmp/pr-$n-comments.md
+out=$(mktemp "${TMPDIR:-/tmp}/pr-$n-comments.XXXXXX")
 
 {
   echo "# Issue comments of PR $n"
@@ -143,7 +143,7 @@ out=/tmp/pr-$n-comments.md
 wc -l "$out"
 ```
 
-Read `$out` one time. The file names each thread id and each comment id, so a reply needs no second query. The author replies with the commands of `gitar-review`. A reviewer writes no comment, and it records each thread under `## PR comments` in the review record (D-250).
+Read `$out` one time. The file names each thread id and each comment id, so a reply needs no second query. The file name is new for each export, because the author session and the review that it starts run on one machine (F-126). The author replies with the commands of `gitar-review`. A reviewer writes no comment, and it records each thread under `## PR comments` in the review record (D-250).
 
 ## The staged read of a diff
 
