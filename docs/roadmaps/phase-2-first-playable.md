@@ -1238,7 +1238,7 @@ Check clause: none.
 
 Gate: exit tests 1 to 7 pass.
 
-> *In plain English:* three checks of each pull request still run on the Mac of the owner, so code from any pull request runs there. This change moves them to free cloud Macs, and it removes the runner from the Mac of the owner.
+> *In plain English:* before this change, three checks of each pull request ran on the Mac of the owner, so code from any pull request ran there. Now free cloud Macs run those checks. The runner leaves the Mac of the owner, so no code from a pull request runs on it.
 
 ### PR-75: Sword art
 

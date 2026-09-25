@@ -2,6 +2,37 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 261: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-86, author, the answer to round 1. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge. Base `0d99e2c`. Session 259 holds the earlier work of this session.
+
+### What this session did, and why
+
+- Round 1 gave `Changes required` with P2-1. It had full merit: the plain-English paragraph of the PR-86 entry said that three checks still run on the Mac of the owner. The paragraph now puts that state before the change. `docs/reviews/pr-105-response.md` records the answer.
+- The owner asked why the review waits for the night of PR-85 exit test 8, and then started the review. That night is a record for PR-85, and no part of PR-86 depends on it.
+
+### State of the build
+
+- Effective head `1678ef5`. The correction changes documents alone (D-475, D-534). The gitar pass approved `d063bae` with no finding.
+
+### In flight
+
+- Round 2 of the cross-provider review, and the owner merge decision (D-533, D-552).
+- PR-85 exit test 8: the night of 2026-09-26 from the 07:07 UTC cron has not started. A later session reads its start time, the wall time of each sweep job, its result, and its slice (6001-6500 for each bot policy, 120001-130000 for reachability).
+
+### Traps and gotchas
+
+- Session 259 lists the traps of this PR.
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+Complete the gitar pass of the new head, then run `make codex-review PR=105`.
+
 ## Session 260: 2026-09-25, Codex
 
 Author: Codex
@@ -365,37 +396,3 @@ None.
 ### Next concrete action
 
 After the owner confirms, run `gh pr merge 102 --auto --squash`. After the merge, the next session reads PR-85 exit test 8: the first scheduled night on `main` from the 07:07 UTC cron on hosted Linux. It states the start time and the result in its handoff entry. PR-86 follows (D-576).
-
-## Session 251: 2026-09-25, Codex
-
-Author: Codex
-Session: PR-85, reviewer. Branch `feat/pr-85-night-hosted-linux`. PR #102, Ready for owner merge. Base `a3590ba`.
-
-### What this session did, and why
-
-- Re-reviewed PR #102 after the author answered P2-1.
-- Confirmed the unrelated audit prompt is absent from the PR tip. Updated the existing review record to approve effective head `69f5308`.
-- The review record and this entry form one metadata commit (D-182).
-
-### State of the build
-
-- Documents tests passed 147 of 147. `ste-check` found 0 issues. `doc-gate` passed with 0 problems.
-- At review start, remote code head was `69f5308`, and remote PR tip was `784583a`. Code, smoke, and bit-identity checks passed at the effective head. Document checks and Gitar passed at the PR tip.
-- `evaluate` and `review-gate` were red while the review record was absent. The code, smoke, and bit-identity jobs skipped at the PR tip because later changes were documents only.
-
-### In flight
-
-- No review work remains. The author must give the merge summary and get the owner's confirmation.
-
-### Traps and gotchas
-
-- The prior finding concerned an unrelated file under `docs/reviews/`. Check the PR tip, because the effective code head predates its deletion.
-- Gitar approved code head `69f5308` and reported no code finding.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author gives the What, How, CI, and review summary. The owner confirms the merge.

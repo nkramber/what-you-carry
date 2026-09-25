@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 251: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-85, reviewer. Branch `feat/pr-85-night-hosted-linux`. PR #102, Ready for owner merge. Base `a3590ba`.
+
+### What this session did, and why
+
+- Re-reviewed PR #102 after the author answered P2-1.
+- Confirmed the unrelated audit prompt is absent from the PR tip. Updated the existing review record to approve effective head `69f5308`.
+- The review record and this entry form one metadata commit (D-182).
+
+### State of the build
+
+- Documents tests passed 147 of 147. `ste-check` found 0 issues. `doc-gate` passed with 0 problems.
+- At review start, remote code head was `69f5308`, and remote PR tip was `784583a`. Code, smoke, and bit-identity checks passed at the effective head. Document checks and Gitar passed at the PR tip.
+- `evaluate` and `review-gate` were red while the review record was absent. The code, smoke, and bit-identity jobs skipped at the PR tip because later changes were documents only.
+
+### In flight
+
+- No review work remains. The author must give the merge summary and get the owner's confirmation.
+
+### Traps and gotchas
+
+- The prior finding concerned an unrelated file under `docs/reviews/`. Check the PR tip, because the effective code head predates its deletion.
+- Gitar approved code head `69f5308` and reported no code finding.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author gives the What, How, CI, and review summary. The owner confirms the merge.
+
 ## Session 249: 2026-09-25, Codex
 
 Author: Codex
