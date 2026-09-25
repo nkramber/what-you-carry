@@ -30,6 +30,7 @@ Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Changes requ
 
 ### Traps and gotchas
 
+- The Codex process of round 2 pushed its record and then stayed open with no output. Read the branch for the record after ten quiet minutes, and stop the process.
 - The filtered local test command exited 0 but gave no runner summary. It does not count as test evidence.
 - The code head has green required CI. The two findings still block approval.
 - Gitar has no open code finding. Its dashboard reports the expected review-gate failure, and the author has no answer in this round.
@@ -67,7 +68,8 @@ Session: PR-88, correction author. Branch `fix/pr-88-review-fixes`. PR #104, pen
 
 ### In flight
 
-- The gitar pass and CI of the new head, then round 2 of `make codex-review`.
+- Round 2 gave `Changes required` at `d9c6413` with P1-3 and P2-1, and closed P1-1 and P1-2. Both new findings had full merit, and the response file holds the evidence.
+- The gitar pass and CI of the new head, then round 3 of `make codex-review`.
 
 ### Traps and gotchas
 

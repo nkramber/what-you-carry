@@ -40,3 +40,31 @@ None. The corrections restore the contracts of F-116 and F-125.
 ## Final head
 
 The correction commit is the new effective head. The handoff entry of this round names it.
+
+## Round 2
+
+Review: round 2 at `d9c6413`, verdict `Changes required`. Round 2 closed P1-1 and P1-2.
+
+### P1-3: A backtick in a fence info string can expose a fake approval
+
+Disposition: full merit.
+
+Evidence: at `d9c6413`, `ReviewRecord.LinesOutsideFences` opened a fence on each run of three backticks. Markdown opens no backtick fence whose info string holds a backtick, so a line such as three backticks, `c`, and a backtick opened a fence in the gate and none in the view. The next line of three backticks then closed the fence in the gate, and the gate read a fake approval that the view hid.
+
+Correction: `WhatYouCarry.Tools/ReviewGate/ReviewRecord.cs` opens no backtick fence when a backtick follows the run on the same line (F-116).
+
+Regression check: `ReviewGateRulesTests.ReviewGateOpensNoFenceOnABacktickInTheInfoString` gives the visible `Blocked` verdict for the trigger of the finding, and a fence with a plain info string still opens. On the parser of `d9c6413`, the test failed. The review gate and review command tests pass 180 of 180.
+
+### P2-1: A const text in another file can bypass the string lint
+
+Disposition: full merit.
+
+Evidence: at `d9c6413`, `GameStringScan.ScanText` read the const string names of one file alone, so `label.Text = Texts.Died` with the const in another file gave no finding.
+
+Correction: `WhatYouCarry.Tools/DetLint/GameStringScan.cs` joins the const string names of every Game file before the scan of each file. `ScanSources` holds the rule, and `ScanText` reads one text through it (G-8, D-98, F-132).
+
+Regression check: `GameStringScanTests.AConstOfAnotherFileThatReachesATextIsAFinding` gives one finding for the const of another file that reaches a text member, and none for the const id that `strings.Get` reads. With the names of each file alone, the test failed. `det-lint --root .` still reports 0 findings.
+
+### The round end
+
+The review pushed its record at 18:10 UTC, and its process stayed open with no output for ten minutes. The session stopped the process. The record on the branch is complete.
