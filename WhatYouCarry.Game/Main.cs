@@ -579,7 +579,11 @@ public partial class Main : Node3D
         }
     }
 
-    /// <summary>The body of one input event: the look motion and the device of the last input (D-447).</summary>
+    /// <summary>
+    /// The body of one input event: the look motion, the press edge of each button, and the device of the last input
+    /// (D-447). The reader latches each press, so a press and a release inside one frame still reach a tick (F-135).
+    /// A key repeat of a held key is no new press.
+    /// </summary>
     private void ReadInputEvent(InputEvent @event)
     {
         if (@event is InputEventMouseMotion motion)
@@ -590,14 +594,26 @@ public partial class Main : Node3D
         else if (@event is InputEventJoypadMotion stick)
         {
             this.reader.AddLookStickMotion(stick.Device, stick.Axis, stick.AxisValue);
+            this.reader.LatchTriggerMotion(stick.Device, stick.Axis, stick.AxisValue);
             this.reader.NoteControllerMotion(stick.AxisValue);
         }
-        else if (@event is (InputEventKey or InputEventMouseButton) && @event.IsPressed())
+        else if (@event is InputEventKey key && key.IsPressed())
         {
+            if (!key.IsEcho())
+            {
+                this.reader.LatchKeyPress(key.Keycode);
+            }
+
             this.reader.NoteKeyboardOrMouse();
         }
-        else if (@event is InputEventJoypadButton && @event.IsPressed())
+        else if (@event is InputEventMouseButton mouseButton && mouseButton.IsPressed())
         {
+            this.reader.LatchMouseButtonPress(mouseButton.ButtonIndex);
+            this.reader.NoteKeyboardOrMouse();
+        }
+        else if (@event is InputEventJoypadButton joyButton && joyButton.IsPressed())
+        {
+            this.reader.LatchJoyButtonPress(joyButton.Device, joyButton.ButtonIndex);
             this.reader.NoteControllerButton();
         }
     }

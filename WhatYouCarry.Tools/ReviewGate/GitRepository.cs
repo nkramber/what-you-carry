@@ -12,6 +12,9 @@ public sealed record CommitStamp(string Sha, DateTimeOffset CommitTime);
 /// <summary>A commit and its subject line.</summary>
 public sealed record CommitSubject(string Sha, string Subject);
 
+/// <summary>A commit and its full message: the subject, the body, and the trailers.</summary>
+public sealed record CommitMessage(string Sha, string Message);
+
 /// <summary>Runs git in one checkout. Every failure carries the command, the exit code, and stderr (T-2).</summary>
 public sealed class GitRepository
 {
@@ -136,6 +139,29 @@ public sealed class GitRepository
         string sha = space < 0 ? line : line[..space];
         string subject = space < 0 ? string.Empty : line[(space + 1)..];
         return new CommitSubject(sha, subject);
+    }
+
+    /// <summary>
+    /// The full message of each commit that the head reaches and the base does not, newest first. git ends each
+    /// record with a NUL byte, and a record is the sha, a line end, and the message.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">A record has no line end after the sha.</exception>
+    public IReadOnlyList<CommitMessage> CommitMessages(string baseRevision, string head)
+    {
+        string output = Run(["log", "-z", "--format=%H%n%B", $"{baseRevision}..{head}"]);
+        var messages = new List<CommitMessage>();
+        foreach (string record in output.Split('\0', StringSplitOptions.RemoveEmptyEntries))
+        {
+            int lineEnd = record.IndexOf('\n');
+            if (lineEnd < 0)
+            {
+                throw new InvalidOperationException($"'git log {baseRevision}..{head}' returned the record '{record}', and the expected form is the sha, a line end, and the message.");
+            }
+
+            messages.Add(new CommitMessage(record[..lineEnd], record[(lineEnd + 1)..]));
+        }
+
+        return messages;
     }
 
     /// <summary>

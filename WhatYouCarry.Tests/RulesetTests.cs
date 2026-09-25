@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using WhatYouCarry.Tools.ReviewGate;
 using Xunit;
 
@@ -25,6 +26,12 @@ public sealed class RulesetTests
     /// trusts in silence (D-477), and the evaluate job, which posts the required review-gate check run (D-181).
     /// </summary>
     private static readonly string[] NotRequired = ["ci-skip", "evaluate"];
+
+    /// <summary>The one workflow that posts the review-gate check run, from the base branch (D-197).</summary>
+    private const string ReviewGateWorkflow = "review-gate.yml";
+
+    /// <summary>A permission line that lets the token write check runs: <c>checks: write</c>, or <c>write-all</c>.</summary>
+    private static readonly Regex ChecksWrite = new(@"\bchecks\s*:\s*write\b|\bwrite-all\b");
 
     [Fact]
     public void TheRulesetRequiresEachCheckOnceFromGitHubActions()
@@ -68,6 +75,58 @@ public sealed class RulesetTests
         string workflow = RepositoryRoot.ReadFile(".github/workflows/review-gate.yml");
         Assert.Contains("\"repos/${GITHUB_REPOSITORY}/check-runs\"", workflow, StringComparison.Ordinal);
         Assert.Equal("review-gate", ReviewGateRules.CheckName);
+    }
+
+    [Fact]
+    public void NoOtherWorkflowHasAJobNamedReviewGate()
+    {
+        // F-134: the ruleset pins the review-gate check by its name and the app alone. A job of that name in another
+        // workflow reports the required check from the code of the PR, and the later check run decides.
+        foreach ((string file, string workflow) in Workflows())
+        {
+            if (file == ReviewGateWorkflow)
+            {
+                continue;
+            }
+
+            Assert.False(WorkflowText.CheckNameByJob(workflow).ContainsValue(ReviewGateRules.CheckName), $"The workflow '{file}' has a job with the check name '{ReviewGateRules.CheckName}', and only {ReviewGateWorkflow} reports that check (D-197).");
+        }
+    }
+
+    [Fact]
+    public void OnlyTheReviewGateWorkflowCanWriteCheckRuns()
+    {
+        // F-134: a token that can write check runs can post a check run named review-gate. Only the evaluate job of
+        // review-gate.yml, which runs from the base branch, has that permission (D-197).
+        Dictionary<string, string> workflows = Workflows();
+        Assert.True(workflows.ContainsKey(ReviewGateWorkflow), $"The directory .github/workflows has no {ReviewGateWorkflow}.");
+        Assert.Equal("checks: write", ChecksWriteRequest(workflows[ReviewGateWorkflow]));
+        foreach ((string file, string workflow) in workflows)
+        {
+            if (file == ReviewGateWorkflow)
+            {
+                continue;
+            }
+
+            string? request = ChecksWriteRequest(workflow);
+            Assert.True(request is null, $"The workflow '{file}' can write check runs: '{request}'. Only {ReviewGateWorkflow} can (D-197).");
+        }
+    }
+
+    [Fact]
+    public void TheChecksWriteReadFindsEachForm()
+    {
+        // F-134: the boundary of the read above. A job-level block, the flow form, write-all, and a workflow with no
+        // top-level block each count. A read permission and a comment do not.
+        const string contentsRead = "permissions:\n  contents: read\n";
+        Assert.Equal("checks: write", ChecksWriteRequest("permissions:\n  checks: write\n"));
+        Assert.Equal("checks:  write", ChecksWriteRequest(contentsRead + "jobs:\n  x:\n    permissions:\n      checks:  write\n"));
+        Assert.Equal("permissions: { checks: write }", ChecksWriteRequest(contentsRead + "jobs:\n  x:\n    permissions: { checks: write }\n"));
+        Assert.Equal("permissions: write-all", ChecksWriteRequest("permissions: write-all\n"));
+        Assert.NotNull(ChecksWriteRequest("on:\n  pull_request:\njobs:\n  x:\n    runs-on: ubuntu-latest\n"));
+
+        Assert.Null(ChecksWriteRequest("permissions:\n  checks: read\n  contents: write\n"));
+        Assert.Null(ChecksWriteRequest(contentsRead + "# The job never asks for checks: write.\n"));
     }
 
     [Fact]
@@ -153,6 +212,44 @@ public sealed class RulesetTests
         }
 
         throw new InvalidOperationException($"'{RulesetPath}' has no rule of the type '{type}'.");
+    }
+
+    /// <summary>The text of each workflow file, <c>.yml</c> or <c>.yaml</c>, by its file name.</summary>
+    private static Dictionary<string, string> Workflows()
+    {
+        var workflows = new Dictionary<string, string>(StringComparer.Ordinal);
+        string directory = Path.Combine(RepositoryRoot.Find(), ".github", "workflows");
+        foreach (string path in Directory.GetFiles(directory).Where(path => path.EndsWith(".yml", StringComparison.Ordinal) || path.EndsWith(".yaml", StringComparison.Ordinal)))
+        {
+            workflows[Path.GetFileName(path)] = File.ReadAllText(path).Replace("\r\n", "\n", StringComparison.Ordinal);
+        }
+
+        return workflows;
+    }
+
+    /// <summary>
+    /// The first line of a workflow that lets the token write check runs, or null when no line does. A workflow with no
+    /// top-level <c>permissions:</c> block takes the default token of the repository, so that absence counts too. A
+    /// comment line never counts.
+    /// </summary>
+    private static string? ChecksWriteRequest(string workflow)
+    {
+        string[] lines = workflow.Split('\n');
+        if (!lines.Any(line => line.StartsWith("permissions:", StringComparison.Ordinal)))
+        {
+            return "no top-level 'permissions:' block, so the jobs take the default token";
+        }
+
+        foreach (string line in lines)
+        {
+            string trimmed = line.Trim();
+            if (!trimmed.StartsWith('#') && ChecksWrite.IsMatch(trimmed))
+            {
+                return trimmed;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>The check name of each job of each workflow that runs on a PR, with the count of jobs that carry it.</summary>

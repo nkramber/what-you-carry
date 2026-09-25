@@ -15,11 +15,13 @@ Session: PR-88, correction author. Branch `fix/pr-88-review-fixes`. PR #104, pen
 - Each new test failed on the parsers of `4029e36`.
 - Gitar approved `35c389c` with one finding, the numbers of the sequence tail and the exit tests. Commit `35c389c` fixed it, and the thread is resolved.
 - The owner added five small concerns while the Mac runner ran the night: F-129, the ramp march test, and F-131, the band at load, a rotated locator, an empty string, and the pose at a keyframe. Each new test failed on the old code or on a mutant of the march.
+- The owner then added nine findings of the review while the night held the Mac runner: F-132 to F-140, with F-141 to F-146 for the six merges past a failed gate. The owner revised D-208 in D-582: a Core method entry names its parameter types.
+- Gitar raised a fourth finding at `d4b8d01`: the blend between two keyframes near the float limit overflowed. Commit `9dcd440` weights each keyframe.
 - Gitar approved `4c55f16` with a second finding: the fence parse took any indent, and Markdown takes three spaces at most. It had full merit. The fence now opens after no more than three spaces, and `ReviewGateReadsNoFenceAfterFourSpaces` fails on the parser of `f280b72`.
 
 ### State of the build
 
-- The fence indent commit is the new effective head, after the correction commit `f280b72`.
+- The known answer is `9c79047da9c82a0e`: the sweep now folds one real floor and two recorded runs. It moves with the content numbers too.
 - The full suite passed 1749 of 1749, Smoke included. The review tests passed 176 of 176.
 - Smoke and Bit identity skip on a documents head. Their runs on the code came from a re-run on `7207164`, and each passed on the three platforms.
 
@@ -29,6 +31,8 @@ Session: PR-88, correction author. Branch `fix/pr-88-review-fixes`. PR #104, pen
 
 ### Traps and gotchas
 
+- PR #102 and this PR both add a marker to the D-284 row and an entry before `### PR-75`. The PR that merges second joins them by hand.
+- OQ-67 still rests on the Mac as the CI runner, which D-572 ends.
 - A push of documents right after a code push cancels the Smoke and Bit identity runs of the code (D-356), and the later heads skip them. Re-run the cancelled runs before the review.
 
 ### Open questions that block progress

@@ -6,6 +6,10 @@
 # The rules live in WhatYouCarry.Tools, command night-gate. This file only gathers the inputs. The checkout holds
 # the full history, so the tool can ask git whether the record commit is on the base branch, and which commit is
 # the effective head of the PR. A night on the head branch re-runs this workflow when it ends (D-548).
+#
+# The event is pull_request, so the tool comes from the PR head, as in the skip job of each heavy workflow. A PR
+# can change the rules that judge it, and the cross-provider review of WhatYouCarry.Tools and .github/ covers that
+# change (T-4, D-190, F-134).
 name: Night gate
 
 on:
@@ -31,9 +35,10 @@ jobs:
         with:
           global-json-file: global.json
       - name: Fetch and evaluate the night record
-        # The head branch reaches the tool through the environment, never through the shell text, so no branch name
-        # runs as a command.
+        # The base branch and the head branch reach the tool through the environment, never through the shell text,
+        # so no branch name runs as a command (F-134).
         env:
+          BASE_REF: ${{ github.base_ref }}
           HEAD_BRANCH: ${{ github.head_ref }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- night-gate --root "$GITHUB_WORKSPACE" --remote origin --base "origin/${{ github.base_ref }}" --head-branch "$HEAD_BRANCH" --head "$HEAD_SHA" --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- night-gate --root "$GITHUB_WORKSPACE" --remote origin --base "origin/$BASE_REF" --head-branch "$HEAD_BRANCH" --head "$HEAD_SHA" --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"

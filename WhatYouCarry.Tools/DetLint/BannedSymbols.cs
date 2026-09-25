@@ -170,9 +170,12 @@ public static class BannedSymbols
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A method entry ends with a slash and the count of its parameters, because two overloads of one name do
-    /// not share one behavior. `UInt64.ToString/2` takes a format provider and gives the same text on every
-    /// machine, and `ToString/0` reads the current culture. A property and a field carry no count.
+    /// A method entry names the full type of each parameter in order, because two overloads of one name do not
+    /// share one behavior, and two overloads can take the same count (F-132). `Int64.ToString(IFormatProvider)`
+    /// gives the same text on every machine, and `Int64.ToString(String)` takes a format such as "N0" and reads
+    /// the current culture. An `out`, `ref`, or `in` parameter carries its word. A type parameter keeps its own
+    /// name, as in `List.Add(T)`. An indexer names its parameters in brackets. A property and a field carry no
+    /// parameter list.
     /// </para>
     /// <para>
     /// A constructor uses the member name `new`. A member of a type of this project needs no entry.
@@ -180,47 +183,47 @@ public static class BannedSymbols
     /// </remarks>
     public static readonly IReadOnlySet<string> AllowedMembers = new HashSet<string>
     {
-        "System.ArgumentOutOfRangeException.new/2",
-        "System.BitConverter.SingleToUInt32Bits/1",
+        "System.ArgumentOutOfRangeException.new(System.String, System.String)",
+        "System.BitConverter.SingleToUInt32Bits(System.Single)",
         "System.Globalization.CultureInfo.InvariantCulture",
         "System.Int32.MinValue",
-        "System.InvalidOperationException.new/1",
-        "System.Single.IsFinite/1",
-        "System.Single.IsNegative/1",
-        "System.UInt64.ToString/2",
-        "System.Exception.new/1",
-        "System.Exception.new/2",
+        "System.InvalidOperationException.new(System.String)",
+        "System.Single.IsFinite(System.Single)",
+        "System.Single.IsNegative(System.Single)",
+        "System.UInt64.ToString(System.String, System.IFormatProvider)",
+        "System.Exception.new(System.String)",
+        "System.Exception.new(System.String, System.Exception)",
         "System.Exception.Message",
-        "System.Int64.ToString/1",
-        "System.Single.ToString/2",
+        "System.Int64.ToString(System.IFormatProvider)",
+        "System.Single.ToString(System.String, System.IFormatProvider)",
         "System.String.Length",
-        "System.String.this[]",
-        "System.Text.StringBuilder.new/0",
-        "System.Text.StringBuilder.Append/1",
-        "System.Text.StringBuilder.ToString/0",
-        "System.Collections.Generic.List.Add/1",
+        "System.String.this[System.Int32]",
+        "System.Text.StringBuilder.new()",
+        "System.Text.StringBuilder.Append(System.Char)",
+        "System.Text.StringBuilder.Append(System.String)",
+        "System.Text.StringBuilder.ToString()",
+        "System.Collections.Generic.List.Add(T)",
         "System.Collections.Generic.List.Count",
-        "System.Collections.Generic.List.this[]",
-        "System.Collections.Generic.IReadOnlyList.this[]",
+        "System.Collections.Generic.List.this[System.Int32]",
+        "System.Collections.Generic.IReadOnlyList.this[System.Int32]",
         "System.Collections.Generic.IReadOnlyCollection.Count",
-        "System.Runtime.CompilerServices.CallerFilePathAttribute.new/0",
-        "System.Runtime.CompilerServices.CallerLineNumberAttribute.new/0",
-        "System.Runtime.CompilerServices.CallerMemberNameAttribute.new/0",
+        "System.Runtime.CompilerServices.CallerFilePathAttribute.new()",
+        "System.Runtime.CompilerServices.CallerLineNumberAttribute.new()",
+        "System.Runtime.CompilerServices.CallerMemberNameAttribute.new()",
         "System.String.Empty",
-        "System.String.CompareOrdinal/2",
-        "System.Collections.Generic.List.Sort/1",
-        "System.Collections.Generic.List.ToArray/0",
+        "System.String.CompareOrdinal(System.String, System.String)",
+        "System.Collections.Generic.List.Sort(System.Comparison<T>)",
+        "System.Collections.Generic.List.ToArray()",
         "System.Text.Encoding.UTF8",
-        "System.Text.Encoding.GetBytes/1",
-        "System.Text.Encoding.GetString/1",
-        "System.Security.Cryptography.SHA256.HashData/1",
-        "System.Text.Json.Utf8JsonReader.new/2",
-        "System.Text.Json.Utf8JsonReader.Read/0",
+        "System.Text.Encoding.GetBytes(System.String)",
+        "System.Text.Encoding.GetString(System.ReadOnlySpan<System.Byte>)",
+        "System.Security.Cryptography.SHA256.HashData(System.Byte[])",
+        "System.Text.Json.Utf8JsonReader.new(System.ReadOnlySpan<System.Byte>, System.Text.Json.JsonReaderOptions)",
+        "System.Text.Json.Utf8JsonReader.Read()",
         "System.Text.Json.Utf8JsonReader.TokenType",
         "System.Text.Json.Utf8JsonReader.ValueSpan",
-        "System.Text.Json.Utf8JsonReader.GetString/0",
-        "System.Text.Json.Utf8JsonReader.GetInt64/0",
-        "System.Text.Json.JsonReaderOptions.new/0",
+        "System.Text.Json.Utf8JsonReader.GetString()",
+        "System.Text.Json.JsonReaderOptions.new()",
         "System.Text.Json.JsonReaderOptions.CommentHandling",
         "System.Text.Json.JsonCommentHandling.Disallow",
         "System.Text.Json.JsonTokenType.StartObject",
@@ -234,11 +237,11 @@ public static class BannedSymbols
         "System.Globalization.NumberStyles.Integer",
         "System.StringComparison.Ordinal",
         "System.Array.Length",
-        "System.Int64.TryParse/4",
-        "System.String.StartsWith/2",
+        "System.Int64.TryParse(System.String, System.Globalization.NumberStyles, System.IFormatProvider, out System.Int64)",
+        "System.String.StartsWith(System.String, System.StringComparison)",
         "System.UInt32.MaxValue",
-        "System.UInt64.TryParse/4",
-        "System.UInt64.ToString/1",
+        "System.UInt64.TryParse(System.String, System.Globalization.NumberStyles, System.IFormatProvider, out System.UInt64)",
+        "System.UInt64.ToString(System.IFormatProvider)",
         "System.Text.Json.JsonTokenType.StartArray",
         "System.Text.Json.JsonTokenType.EndArray",
         "System.Text.Json.JsonTokenType.Null",
@@ -246,6 +249,30 @@ public static class BannedSymbols
 
     /// <summary>The reason that the scan gives for a member outside <see cref="AllowedMembers"/>.</summary>
     public const string MemberDetail = "Core approves each member it uses outside this project, because an approved type holds members that read the user, the process, or the machine (G-21, G-16, D-208).";
+
+    /// <summary>
+    /// The reason that the scan gives for a GetHashCode call. The rule reads the members of this project too,
+    /// because a record's generated hash folds the hash of each field, a string field included (F-132).
+    /// </summary>
+    public const string HashCallDetail = "A hash code can read the address of an object or the string seed of the process, so it changes between runs. Fold the fields into StateHash (G-21).";
+
+    /// <summary>The reason that the scan gives for a call to the ToString that the compiler writes for a record (F-132).</summary>
+    public const string RecordTextDetail = "The ToString of a record formats each field with the current culture, so the text changes between machines. Write the text with InvariantCulture (G-21).";
+
+    /// <summary>
+    /// The reason that the scan gives for an interpolation hole or a string <c>+</c> operand that is not a string.
+    /// The compiler lowers each one to a <c>ToString()</c> call that reads the current culture (F-132).
+    /// </summary>
+    public const string LoweredTextDetail = "The compiler turns this value into text with the current culture, so the text changes between machines. Call ToString with InvariantCulture, or put the text in an error message (G-21).";
+
+    /// <summary>The reason that the scan gives for the keyword or a literal of <c>double</c> or <c>decimal</c> (F-132).</summary>
+    public const string WideNumberDetail = "Core computes in float, and DetMath gives its exact operations. A double or a decimal is a second number system that no bit-identity check reads (D-70, G-2).";
+
+    /// <summary>The Core type whose <see cref="AddContextMethod"/> takes error text (F-132).</summary>
+    public const string ContextExceptionType = "ContextException";
+
+    /// <summary>The method of <see cref="ContextExceptionType"/> that adds a field to an error. Its arguments are error text (F-132).</summary>
+    public const string AddContextMethod = "AddContext";
 
     /// <summary>The reason that the scan gives for a type outside <see cref="AllowedTypes"/>.</summary>
     public const string TypeDetail = "Core approves each type it uses outside this project, because a namespace holds machine-dependent types beside the ones Core needs (G-2, G-21, G-16, D-207).";

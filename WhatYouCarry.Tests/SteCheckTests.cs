@@ -259,6 +259,110 @@ public sealed class SteCheckTests
         Assert.Contains(SteChecker.Check("fixture.md", file), finding => finding.Rule == SteRules.RulePassive);
     }
 
+    [Fact]
+    public void EnumerateReadsEachMarkdownExtensionInAnyCase()
+    {
+        // F-140: the old match read "*.md" alone, case-sensitive on the Linux CI job, and never read ".markdown".
+        string root = TemporaryRoot(["docs/a.md", "docs/B.MD", "docs/c.markdown", "docs/D.Markdown", "docs/e.txt", "docs/f.mdx", "docs/g.md.bak"]);
+        try
+        {
+            Assert.Equal(["docs/B.MD", "docs/D.Markdown", "docs/a.md", "docs/c.markdown"], DocumentSet.Enumerate(root));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void EnumerateSkipsTheWorktreesAtTheRootAndTheBuildDirectoriesAtAnyDepth()
+    {
+        // F-140: a worktree under .claude/worktrees/ is a copy of the checkout, and the old walk read each of its files.
+        // The path skip holds at the root alone. A build directory name holds at any depth, as the skill states.
+        string root = TemporaryRoot(
+        [
+            ".claude/worktrees/agent-1/docs/design.md", ".claude/skills/s/SKILL.md", "docs/worktrees/notes.md",
+            "docs/.claude/worktrees/notes.md", "WhatYouCarry.Core/bin/Debug/readme.md", "WhatYouCarry.Core/obj/x.md",
+            "WhatYouCarry.Game/.godot/y.md", "docs/bin/z.md",
+        ]);
+        try
+        {
+            Assert.Equal([".claude/skills/s/SKILL.md", "docs/.claude/worktrees/notes.md", "docs/worktrees/notes.md"], DocumentSet.Enumerate(root));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TheSkillNamesTheFilesThatTheCheckerReads()
+    {
+        // F-140: the skill claimed every hand-written .md file, and the code skips four directory names at any depth.
+        // The skill now names each extension and each skipped directory of the code.
+        string checker = SkillSection("## The checker");
+        foreach (string name in DocumentSet.MarkdownExtensions.Concat(DocumentSet.SkippedDirectoryNames))
+        {
+            Assert.Contains($"`{name}`", checker, StringComparison.Ordinal);
+        }
+
+        foreach (string path in DocumentSet.SkippedDirectoryPaths)
+        {
+            Assert.Contains($"`{path}/`", checker, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void TheSkillTableNamesEachWordThatTheRulesRead()
+    {
+        // F-140: the row of rule 3.4 named "is or are", and the code reads every auxiliary. The row of rule 4.2 named a
+        // pronoun, and the code reads a wider list. The D-386 front matter rule had no row. SteRulesTests pins the words.
+        string checker = SkillSection("## The checker");
+        string helperRow = TableRow(checker, "STE 3.4");
+        foreach (string auxiliary in SteRulesTests.Auxiliaries)
+        {
+            Assert.Matches($@"\b{auxiliary}\b[^.]*-ing form", helperRow);
+        }
+
+        string contractionRow = TableRow(checker, "STE 4.2");
+        foreach (string word in SteRulesTests.ContractionWords)
+        {
+            Assert.Contains($"`{word}`", contractionRow, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("rule 6.3 alone", TableRow(checker, "D-386"), StringComparison.Ordinal);
+    }
+
+    /// <summary>A new directory under the temp directory that holds an empty file at each relative path.</summary>
+    private static string TemporaryRoot(string[] relativePaths)
+    {
+        string root = Path.Combine(Path.GetTempPath(), "wyc-ste-check-" + Guid.NewGuid().ToString("N"));
+        foreach (string relativePath in relativePaths)
+        {
+            string path = Path.Combine(root, relativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(path) ?? throw new InvalidOperationException($"'{path}' has no directory."));
+            File.WriteAllText(path, "The tool runs.\n");
+        }
+
+        return root;
+    }
+
+    /// <summary>The text of the ste-writing skill from the heading to the next second-level heading.</summary>
+    private static string SkillSection(string heading)
+    {
+        string skill = RepositoryRoot.ReadFile(".claude/skills/ste-writing/SKILL.md").Replace("\r\n", "\n", StringComparison.Ordinal);
+        int start = skill.IndexOf($"\n{heading}\n", StringComparison.Ordinal);
+        Assert.True(start >= 0, $"The ste-writing skill has no '{heading}' section.");
+        int end = skill.IndexOf("\n## ", start + 1, StringComparison.Ordinal);
+        return end < 0 ? skill[start..] : skill[start..end];
+    }
+
+    /// <summary>The one table row whose first cell is the rule id.</summary>
+    private static string TableRow(string text, string ruleId)
+    {
+        return Assert.Single(text.Split('\n'), line => line.StartsWith($"| {ruleId} |", StringComparison.Ordinal));
+    }
+
     private static string Report(List<Finding> findings)
     {
         return $"{findings.Count} finding(s):\n{string.Join('\n', findings)}";

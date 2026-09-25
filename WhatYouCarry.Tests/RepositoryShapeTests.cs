@@ -166,7 +166,11 @@ public sealed class RepositoryShapeTests
         Assert.Contains("\n  pull_request:\n", workflow, StringComparison.Ordinal);
         Assert.Contains("fetch-depth: 0", workflow, StringComparison.Ordinal);
         Assert.Contains("night-gate --root \"$GITHUB_WORKSPACE\" --remote origin", workflow, StringComparison.Ordinal);
-        Assert.Contains("--base \"origin/${{ github.base_ref }}\"", workflow, StringComparison.Ordinal);
+        // F-134: the base branch reaches the tool through the environment too. Its one expression is the env line,
+        // so no run line holds it.
+        Assert.Contains("BASE_REF: ${{ github.base_ref }}", workflow, StringComparison.Ordinal);
+        Assert.Contains("--base \"origin/$BASE_REF\"", workflow, StringComparison.Ordinal);
+        Assert.Equal(2, workflow.Split("${{ github.base_ref }}").Length);
 
         // D-538, D-547: the head branch and the head commit reach the tool through the environment alone.
         Assert.Contains("HEAD_BRANCH: ${{ github.head_ref }}", workflow, StringComparison.Ordinal);

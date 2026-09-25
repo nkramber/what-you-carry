@@ -14,4 +14,10 @@
     <!-- The bit-identity command runs the Core determinism types (D-201). Core references nothing back (G-1). -->
     <ProjectReference Include="../WhatYouCarry.Core/WhatYouCarry.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- The bit-identity sweep folds runs on the content of the checkout (F-133). The build puts every JSON file that
+         Core reads into the tool, so the sweep takes no option and opens no file. The models, the textures, and the
+         audio stay out, because Core never reads them (D-298, D-305, D-453). -->
+    <EmbeddedResource Include="../content/**/*.json" Exclude="../content/models/**;../content/textures/**;../content/audio/**" LogicalName="content/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>

@@ -1139,6 +1139,13 @@ Scope:
 - `FloorTimer` and `GridMoves`: each table is a read-only list (F-127).
 - `FloorTemplate`, `BlockbenchLoader`, `Strings`, and `AnimationClip`: an unknown band, a rotated locator, and an empty string fail at load, and a keyframe tick gives the keyframe (G-7, T-2, F-131).
 - `RampRayTests`: the ramp march test asserts the hit and both bounds of its distance (F-129).
+- `det-lint`: a lowered construct is a finding outside error text, and each method entry names its parameter types (G-2, G-8, D-582, F-132).
+- The bit-identity sweep: one real floor and two recorded runs that descend, die, and ascend, and a Release check in each platform job (G-9, F-133).
+- `night-gate.yml` and `RulesetTests`: the base branch comes through the environment, and one workflow alone writes check runs (F-134).
+- `InputReader` and `Navigation`: a press edge reaches the next intent, and the tab order follows the focus map (D-77, D-446, F-135).
+- The design doc, the agent guidance, the registers, and the roadmaps match their decisions (D-122, D-186, F-136, F-137, F-139).
+- `doc-gate`: a co-author trailer, a generation line, or the robot line fails the check (T-6, D-176, F-138).
+- `ste-check` and its skill agree on the files and the rules (F-140).
 
 Out of scope: the other findings of the repository review of 2026-09-24. The self-hosted runner goes in PR-86 (D-572). The night publish waits for PR-85 and an owner answer. The trust boundary of the reviewer waits for an owner answer. This PR holds more than one concern (D-580).
 
@@ -1150,8 +1157,8 @@ Exit tests:
 4. The new tests of `ReviewGateRulesTests` and `CodexReviewTests` pass, and they fail on the parse of `main`. Each review record of the repository still parses.
 5. `TheSweepNamesASeedWhoseDigThrows` passes, and it fails on the sweep of `main`.
 6. `RepeatedKeyTests` and the four new tests of `AssetQaTests` pass, and they fail on the gate of `main`.
-7. The simulation version is 17, and `BitIdentityKnownAnswer` passes with `f1c35ddccb2cd0bb` on the three platforms (G-9, G-20).
-8. The new tests of F-120 to F-125, F-127, F-129, and F-131 pass, and each test that targets a defect fails on the code of `main`.
+7. The simulation version is 17, and `BitIdentityKnownAnswer` passes with `9c79047da9c82a0e` on the three platforms (G-9, G-20).
+8. The new tests of F-120 to F-125, F-127, F-129, and F-131 to F-140 pass. Each test that targets a defect fails on the code of `main`.
 
 Review focus: the end check before the stairwell choice in `Step`, the guard of each engine callback, and the verdict parse of each review record.
 

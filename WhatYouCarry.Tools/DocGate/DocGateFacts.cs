@@ -30,7 +30,10 @@ public sealed class DocGateFacts
     /// <summary>The first session entry of the handoff at the head, or null when the file or the entry is absent.</summary>
     public required string? NewestHandoffEntry { get; init; }
 
-    /// <summary>Reads the changed paths and the handoff from git, and the description from its file.</summary>
+    /// <summary>The full message of each commit from the base to the head, newest first. The attribution rule reads them (F-138).</summary>
+    public required IReadOnlyList<CommitMessage> CommitMessages { get; init; }
+
+    /// <summary>Reads the changed paths, the handoff, and the commit messages from git, and the description from its file.</summary>
     /// <exception cref="System.InvalidOperationException">A git command failed. The message names the command and stderr.</exception>
     /// <exception cref="FileNotFoundException">The description file is absent. The message names the path.</exception>
     public static DocGateFacts Gather(string root, string baseRef, string head, string bodyPath, string title, string branch)
@@ -50,6 +53,7 @@ public sealed class DocGateFacts
             Body = File.ReadAllText(bodyPath),
             ChangedPaths = git.ChangedPaths(mergeBase, head),
             NewestHandoffEntry = handoff is null ? null : DocGateRules.NewestHandoffEntry(handoff),
+            CommitMessages = git.CommitMessages(baseRef, head),
         };
     }
 }

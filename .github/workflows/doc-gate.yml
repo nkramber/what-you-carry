@@ -1,7 +1,9 @@
 # The documentation gate (D-375, D-376). Each PR carries its own handoff entry and a documents matrix in its
 # description, and no PR records the merge of an earlier PR. The rules live in WhatYouCarry.Tools, command doc-gate.
 # This file only gathers the inputs. The description and the title reach the tool through the environment and a
-# file, never through the shell text, so no text of a PR runs as a command.
+# file, never through the shell text, so no text of a PR runs as a command. The tool reads the commit messages of the
+# PR from the full history, and it fails on a co-author trailer or a generation line there, in the title, or in the
+# description (T-6, F-138).
 #
 # The event is pull_request, so the tool comes from the PR head. A PR can change the rules that judge it, and the
 # cross-provider review of WhatYouCarry.Tools and .github/ covers that change (T-4, D-190). The edited type runs

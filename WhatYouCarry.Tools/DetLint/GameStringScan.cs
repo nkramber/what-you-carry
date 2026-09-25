@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -57,7 +58,6 @@ public static class GameStringScan
         "GetNode",
         "GetNodeOrNull",
         "FindChild",
-        "Load",
         "Connect",
         "EmitSignal",
         "HasMeta",
@@ -65,6 +65,37 @@ public static class GameStringScan
         "SetMeta",
         "nameof",
     };
+
+    /// <summary>
+    /// The call that loads a resource by its path. Any type can hold a <c>Load</c> method, and <c>h.Load("You
+    /// died")</c> can put a text on a node, so the call takes a path only when its receiver is one of
+    /// <see cref="ResourceLoaders"/> (F-132).
+    /// </summary>
+    public const string LoadMethod = "Load";
+
+    /// <summary>The receiver names of the engine calls that load a resource by its path (F-132).</summary>
+    public static readonly IReadOnlySet<string> ResourceLoaders = new HashSet<string>
+    {
+        "GD",
+        "ResourceLoader",
+    };
+
+    /// <summary>
+    /// The members that put a text on the screen. A const that the file declares, assigned to one of these,
+    /// is a text that a player reads, and the string table must hold it (F-132).
+    /// </summary>
+    public static readonly IReadOnlySet<string> VisibleTextMembers = new HashSet<string>
+    {
+        "Text",
+        "TooltipText",
+        "PlaceholderText",
+    };
+
+    private const string LiteralDetail = $"A string that a player sees needs an id in the string table, and {StringsType}.{StringsGet} reads it (G-8, D-98).";
+
+    private const string InterpolationDetail = $"An interpolated string builds a text outside the string table. Give the text an id in the table, and put the values in it through {StringsType}.{StringsGet} (G-8, D-98, F-132).";
+
+    private const string ConstTextDetail = $"A const string that a text member takes is a text that a player sees, and the string table must hold it. Read it through {StringsType}.{StringsGet} (G-8, D-98, F-132).";
 
     /// <summary>Every Game source file under the checkout, sorted, with the build output left out.</summary>
     /// <exception cref="DirectoryNotFoundException">The checkout holds no Game directory.</exception>
@@ -108,42 +139,163 @@ public static class GameStringScan
     }
 
     /// <summary>Every finding in one Game source text.</summary>
+    /// <remarks>
+    /// Three forms put a text on the screen outside the string table: a string literal, an interpolated string,
+    /// and a const string of the file that a text member takes. The compiler lowers the last two to text that no
+    /// literal node shows, so each one has its own rule (F-132).
+    /// </remarks>
     public static IReadOnlyList<LintFinding> ScanText(string sourceText, string path)
     {
         SyntaxNode root = CSharpSyntaxTree.ParseText(sourceText).GetRoot();
+        IReadOnlySet<string> constStrings = ConstStringNames(root);
         List<LintFinding> findings = [];
 
         foreach (SyntaxNode node in root.DescendantNodes())
         {
-            if (node is not LiteralExpressionSyntax literal || !literal.IsKind(SyntaxKind.StringLiteralExpression))
+            if (node is LiteralExpressionSyntax literal && literal.IsKind(SyntaxKind.StringLiteralExpression))
             {
+                // An empty string names nothing that a player reads.
+                if (literal.Token.ValueText.Length > 0 && !StandsInAnAllowedPosition(literal))
+                {
+                    findings.Add(Create(literal, path, literal.Token.ValueText, LiteralDetail));
+                }
+
                 continue;
             }
 
-            // An empty string names nothing that a player reads.
-            if (literal.Token.ValueText.Length == 0)
+            // Error text never reaches the screen, so an exception constructor may build it by interpolation.
+            if (node is InterpolatedStringExpressionSyntax interpolated)
             {
+                if (!StandsInAnAllowedPosition(interpolated) && !IsExceptionText(interpolated))
+                {
+                    findings.Add(Create(interpolated, path, interpolated.ToString(), InterpolationDetail));
+                }
+
                 continue;
             }
 
-            if (StandsInAnAllowedPosition(literal))
+            if (node is AssignmentExpressionSyntax assignment && IsVisibleText(assignment.Left))
             {
-                continue;
+                AddConstTextFindings(findings, assignment.Right, constStrings, path);
             }
-
-            findings.Add(Create(literal, path, "L-STRING", literal.Token.ValueText, $"A string that a player sees needs an id in the string table, and {StringsType}.{StringsGet} reads it (G-8, D-98)."));
         }
 
         return findings;
     }
 
     /// <summary>
-    /// Answers whether a literal stands where the engine needs a name, and not where a player reads text.
-    /// The rule reads the call that holds the literal, and a constant declaration.
+    /// The names of the const string fields that one file declares. The scan reads the syntax alone, so a const
+    /// of another file is not in the set.
     /// </summary>
-    private static bool StandsInAnAllowedPosition(LiteralExpressionSyntax literal)
+    private static IReadOnlySet<string> ConstStringNames(SyntaxNode root)
     {
-        // A const string is a name that the code declares once, such as a scene path or a table id.
+        HashSet<string> names = [];
+        foreach (FieldDeclarationSyntax field in root.DescendantNodes().OfType<FieldDeclarationSyntax>())
+        {
+            if (!field.Modifiers.Any(SyntaxKind.ConstKeyword)
+                || field.Declaration.Type is not PredefinedTypeSyntax { Keyword.RawKind: (int)SyntaxKind.StringKeyword })
+            {
+                continue;
+            }
+
+            foreach (VariableDeclaratorSyntax variable in field.Declaration.Variables)
+            {
+                names.Add(variable.Identifier.ValueText);
+            }
+        }
+
+        return names;
+    }
+
+    /// <summary>Answers whether the target of an assignment is a member that puts a text on the screen, such as <c>label.Text</c>.</summary>
+    private static bool IsVisibleText(ExpressionSyntax target)
+    {
+        return target switch
+        {
+            MemberAccessExpressionSyntax access => VisibleTextMembers.Contains(access.Name.Identifier.ValueText),
+            IdentifierNameSyntax name => VisibleTextMembers.Contains(name.Identifier.ValueText),
+            _ => false,
+        };
+    }
+
+    /// <summary>
+    /// Adds a finding for each const string of the file that reaches a text member: the value itself, or a
+    /// branch of a <c>?:</c>, a <c>??</c>, or a <c>+</c> in it. A const inside a call, such as the id in
+    /// <c>Strings.Get(Id)</c>, does not reach the text as it is.
+    /// </summary>
+    private static void AddConstTextFindings(List<LintFinding> findings, ExpressionSyntax value, IReadOnlySet<string> constStrings, string path)
+    {
+        switch (value)
+        {
+            case ParenthesizedExpressionSyntax parenthesized:
+                AddConstTextFindings(findings, parenthesized.Expression, constStrings, path);
+                break;
+            case ConditionalExpressionSyntax conditional:
+                AddConstTextFindings(findings, conditional.WhenTrue, constStrings, path);
+                AddConstTextFindings(findings, conditional.WhenFalse, constStrings, path);
+                break;
+            case BinaryExpressionSyntax binary when binary.IsKind(SyntaxKind.AddExpression) || binary.IsKind(SyntaxKind.CoalesceExpression):
+                AddConstTextFindings(findings, binary.Left, constStrings, path);
+                AddConstTextFindings(findings, binary.Right, constStrings, path);
+                break;
+            case IdentifierNameSyntax name when constStrings.Contains(name.Identifier.ValueText):
+                findings.Add(Create(name, path, name.Identifier.ValueText, ConstTextDetail));
+                break;
+            case MemberAccessExpressionSyntax access when constStrings.Contains(access.Name.Identifier.ValueText):
+                findings.Add(Create(access, path, access.Name.Identifier.ValueText, ConstTextDetail));
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Answers whether an expression is an argument of an exception constructor: <c>new XException(...)</c>, or
+    /// a target-typed <c>new(...)</c> whose declaration names an exception type. The walk stops at the statement.
+    /// </summary>
+    private static bool IsExceptionText(ExpressionSyntax expression)
+    {
+        for (SyntaxNode? above = expression.Parent; above is not null; above = above.Parent)
+        {
+            if (above is StatementSyntax or MemberDeclarationSyntax)
+            {
+                return false;
+            }
+
+            if (above is not ArgumentSyntax { Parent: ArgumentListSyntax { Parent: SyntaxNode creation } })
+            {
+                continue;
+            }
+
+            TypeSyntax? created = creation switch
+            {
+                ObjectCreationExpressionSyntax explicitNew => explicitNew.Type,
+                ImplicitObjectCreationExpressionSyntax { Parent: EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax declaration } } } => declaration.Type,
+                _ => null,
+            };
+
+            string typeName = created switch
+            {
+                QualifiedNameSyntax qualified => qualified.Right.Identifier.ValueText,
+                SimpleNameSyntax simple => simple.Identifier.ValueText,
+                _ => string.Empty,
+            };
+
+            if (typeName.EndsWith("Exception", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Answers whether a literal or an interpolated string stands where the engine needs a name, and not where
+    /// a player reads text. The rule reads the call that holds the text, and a constant declaration.
+    /// </summary>
+    private static bool StandsInAnAllowedPosition(ExpressionSyntax literal)
+    {
+        // A const string is a name that the code declares once, such as a scene path or a table id. A use of the
+        // const at a text member is a finding of its own (F-132).
         for (SyntaxNode? above = literal.Parent; above is not null; above = above.Parent)
         {
             if (above is FieldDeclarationSyntax field && field.Modifiers.ToString().Contains("const", StringComparison.Ordinal))
@@ -171,6 +323,12 @@ public static class GameStringScan
                         || access.Expression is MemberAccessExpressionSyntax inner && StringTableReceivers.Contains(inner.Name.Identifier.ValueText);
                 }
 
+                // A `Load` call takes a path only when its receiver is an engine loader (F-132).
+                if (access.Name.Identifier.ValueText == LoadMethod)
+                {
+                    return access.Expression is SimpleNameSyntax loader && ResourceLoaders.Contains(loader.Identifier.ValueText);
+                }
+
                 return AllowedStringPositions.Contains(access.Name.Identifier.ValueText);
             }
 
@@ -183,10 +341,10 @@ public static class GameStringScan
         return false;
     }
 
-    /// <summary>One finding at the position of a node. The line and the column both count from one.</summary>
-    private static LintFinding Create(SyntaxNode node, string path, string rule, string symbol, string detail)
+    /// <summary>One L-STRING finding at the position of a node. The line and the column both count from one.</summary>
+    private static LintFinding Create(SyntaxNode node, string path, string symbol, string detail)
     {
         FileLinePositionSpan span = node.SyntaxTree.GetLineSpan(node.Span);
-        return new LintFinding(path, span.StartLinePosition.Line + 1, span.StartLinePosition.Character + 1, rule, symbol, detail);
+        return new LintFinding(path, span.StartLinePosition.Line + 1, span.StartLinePosition.Character + 1, "L-STRING", symbol, detail);
     }
 }

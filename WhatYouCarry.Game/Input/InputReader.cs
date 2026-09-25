@@ -29,6 +29,12 @@ namespace WhatYouCarry.Game.Input;
 /// The engine reports the two shift keys as one key and the two control keys as one key. D-289 names the left
 /// key of each pair, and the right one works too.
 /// </para>
+/// <para>
+/// The poll reads each button at the moment of the tick, so a press and a release inside one long frame would
+/// never reach a tick. The reader therefore latches the press edge of each binding from the input events, and the
+/// next read sets the bit of each latched press with the bits of the poll (F-135). The tick after it reads the poll
+/// alone, so Core sees the press and then the release.
+/// </para>
 /// </remarks>
 public sealed class InputReader
 {
@@ -97,6 +103,7 @@ public sealed class InputReader
     private float mouseY;
     private bool controllerLook;
     private bool controllerLast;
+    private ushort latched;
 
     /// <summary>A reader over one poll.</summary>
     public InputReader(IInputPoll poll)
@@ -158,7 +165,72 @@ public sealed class InputReader
         }
     }
 
-    /// <summary>The raw input of this tick. The mouse sum starts again after it.</summary>
+    /// <summary>Takes one press edge of a key. A key of a binding with a bit latches that bit until the next read (F-135).</summary>
+    public void LatchKeyPress(Key key)
+    {
+        if (key == JumpKey)
+        {
+            this.latched |= CoreButton.Jump;
+        }
+        else if (key == SprintKey)
+        {
+            this.latched |= CoreButton.Sprint;
+        }
+        else if (key == DodgeKey)
+        {
+            this.latched |= CoreButton.Dodge;
+        }
+        else if (key == InteractKey)
+        {
+            this.latched |= CoreButton.Interact;
+        }
+    }
+
+    /// <summary>Takes one press edge of a mouse button. The attack button latches the attack bit until the next read (F-135).</summary>
+    public void LatchMouseButtonPress(MouseButton button)
+    {
+        if (button == AttackButton)
+        {
+            this.latched |= CoreButton.Attack;
+        }
+    }
+
+    /// <summary>Takes one press edge of a controller button. A button of the first controller with a bit latches that bit until the next read (F-135).</summary>
+    public void LatchJoyButtonPress(int device, JoyButton button)
+    {
+        if (device != FirstController)
+        {
+            return;
+        }
+
+        if (button == JumpButton)
+        {
+            this.latched |= CoreButton.Jump;
+        }
+        else if (button == SprintButton)
+        {
+            this.latched |= CoreButton.Sprint;
+        }
+        else if (button == DodgeButton)
+        {
+            this.latched |= CoreButton.Dodge;
+        }
+        else if (button == InteractButton)
+        {
+            this.latched |= CoreButton.Interact;
+        }
+    }
+
+    /// <summary>Takes one axis motion of a controller. The attack trigger of the first controller at the press point or past it latches the attack bit until the next read (F-135).</summary>
+    public void LatchTriggerMotion(int device, JoyAxis axis, float value)
+    {
+        if (device == FirstController && axis == AttackAxis && value >= TriggerPressed)
+        {
+            this.latched |= CoreButton.Attack;
+        }
+    }
+
+    /// <summary>The raw input of this tick: the bits of the poll and of the presses latched since the last read. The mouse sum and the latch start again after it.</summary>
     public RawInput Read()
     {
         float stickLookX = this.poll.GetJoyAxis(FirstController, LookAxisX);
@@ -192,9 +264,13 @@ public sealed class InputReader
             buttons |= CoreButton.Interact;
         }
 
+        // A press that ended before this tick still reaches it through the latch (F-135).
+        buttons |= this.latched;
+
         RawInput raw = new(this.mouseX, this.mouseY, stickLookX, stickLookY, strafe, forward, buttons, this.controllerLook);
         this.mouseX = 0.0f;
         this.mouseY = 0.0f;
+        this.latched = 0;
         return raw;
     }
 

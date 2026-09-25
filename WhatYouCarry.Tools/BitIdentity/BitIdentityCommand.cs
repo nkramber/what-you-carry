@@ -21,7 +21,7 @@ public static class BitIdentityCommand
         StateHash hash = BitIdentitySweep.Run();
 
         // The context goes to standard error, so standard output holds the hash alone and the job can compare it.
-        Console.Error.WriteLine($"bit-identity: run seed {BitIdentitySweep.RunSeed:x16}, {BitIdentitySweep.DrawsPerStream} draws per stream, {BitIdentitySweep.AngleSamples} angle samples.");
+        Console.Error.WriteLine($"bit-identity: run seed {BitIdentitySweep.RunSeed:x16}, {BitIdentitySweep.DrawsPerStream} draws per stream, {BitIdentitySweep.AngleSamples} angle samples, stairwell seeds {BitIdentitySweep.DescendSeed} and {BitIdentitySweep.AscendSeed} on the content of the checkout.");
         Console.Out.WriteLine(hash.ToString());
         return 0;
     }

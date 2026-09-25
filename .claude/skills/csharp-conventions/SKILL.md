@@ -43,7 +43,7 @@ dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --
 
 ## The Core allowlist
 
-Core approves each type and member that it uses outside this project, by name and overload arity (D-207, D-208). A new entry needs a decision.
+Core approves each type and member that it uses outside this project, by name, and a method by the types of its parameters (D-207, D-208, D-582). A new entry needs a decision.
 
 Verify each new entry before the PR opens:
 
