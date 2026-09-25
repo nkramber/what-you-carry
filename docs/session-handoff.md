@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 250: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-88, correction author. Branch `fix/pr-88-review-fixes`. PR #104, pending merge. Base `a3590ba`.
+
+### What this session did, and why
+
+- Round 1 of the cross-provider review gave `Changes required` at `4029e36` with P1-1 and P1-2. Both had full merit, and `docs/reviews/pr-104-response.md` holds the evidence.
+- P1-1: a finding status now reads its complete form, so `fixed.` with no revision is a fault (F-125, D-514).
+- P1-2: only a fence of the same character and at least the same length closes a fenced block (F-116).
+- Each new test failed on the parsers of `4029e36`.
+- Gitar approved `35c389c` with one finding, the numbers of the sequence tail and the exit tests. Commit `35c389c` fixed it, and the thread is resolved.
+
+### State of the build
+
+- The correction commit `f280b72` is the new effective head.
+- The full suite passed 1749 of 1749, Smoke included. The review tests passed 176 of 176.
+- Smoke and Bit identity skip on a documents head. Their runs on the code came from a re-run on `7207164`, and each passed on the three platforms.
+
+### In flight
+
+- The gitar pass and CI of the new head, then round 2 of `make codex-review`.
+
+### Traps and gotchas
+
+- A push of documents right after a code push cancels the Smoke and Bit identity runs of the code (D-356), and the later heads skip them. Re-run the cancelled runs before the review.
+
+### Open questions that block progress
+
+None for PR-88.
+
+### Next concrete action
+
+After the gitar pass and green CI, run `make codex-review PR=104` for round 2.
+
 ## Session 249: 2026-09-25, Codex
 
 Author: Codex
@@ -364,46 +399,3 @@ None.
 ### Next concrete action
 
 The final amended metadata commit is pushed, and its hash matches the PR head.
-
-## Session 239: 2026-09-24, Claude Code
-
-Author: Claude Code
-Session: PR-83, author. Branch `feat/pr-83-night-record-promotion`. PR #99, pending merge. Base `811c1c9`.
-
-### What this session did, and why
-
-- The owner asked that a green branch night count for `main` after the merge of its PR. PR #97 merged with a green branch night at `4282206`, and PR #98 still read the red night of `e069e16`.
-- The owner answered OQ-183 to OQ-189, and each recommendation stood: D-555 to D-563. The PR takes the id PR-83, before the fixed seeds (D-560). The PR-81 night gets no promotion (D-561).
-- Added the tool `night-promote` and the workflow `night-promote.yml`. A push to `main` promotes the branch night of the merged PR when the trees differ only in the skip set (D-555 to D-558).
-- Added `night-publish-check` to `night.yml`. A night on `main` keeps a record at a later commit (D-562). Each write of `night-results` takes a lease.
-- Added the action `rerun-night-gates`. A promotion and a night on `main` re-run the gate of each open PR (D-559).
-- PR #98 merged first as `811c1c9`. This branch rebased onto it. The PR-82 line on the fixed seeds now names the PR after PR-83 (D-560), and this entry took session 239 (D-187).
-
-### State of the build
-
-- Local before the rebase: the full suite passed 1596 of 1596, Smoke included. `det-lint` and `ste-check` read 0. `doc-gate` passed.
-- CI before the rebase, at `af39f08`: every build, test, smoke, bit-identity, bots, lint, and document job passed on the three platforms.
-- The night on `main` at `2071cb6` passed and ended at 2026-09-24T05:06:18Z (run 35944586534). A re-run of the `night-gate` job of this PR read it green. That record stays inside 48 hours until 2026-09-26T05:06Z, so this PR needs no branch night.
-- A read-only dry run of `night-promote` at `2071cb6` gave `promote`. It wrote nothing (D-561).
-- CI at `3236111`, after the rebase: every build, test, smoke, bit-identity, bots, lint, document, and `night-gate` job passed on the three platforms.
-- The review through `make codex-review PR=99 -- --skip-gitar-review` approved the effective head `2b872f9` with no finding (`docs/reviews/pr-99.md`).
-- The remote head: the push of this entry. `origin/main` is `811c1c9`.
-
-### In flight
-
-- The merge confirmation of the owner, after the merge summary in Q/A form (D-524, D-552).
-- A first review run started at `af39f08` and stopped on the owner request before it wrote anything. The owner asked for the rebase first, then the review after CI.
-
-### Traps and gotchas
-
-- `night-promote.yml` runs first on the merge commit of this PR. This PR has no branch night, so that run ends with `branch-absent` and writes nothing. Its first promotion comes with a later PR. Exit test 6 reads both runs.
-- The night checkout now takes the full history (`fetch-depth: 0`) for the order check of D-562.
-- The only gitar comment is a plan notice with no item (D-550).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, read the run of `night-promote.yml` at the merge commit for exit test 6. It names `branch-absent` and writes nothing, because this PR had no branch night. The next PR is the fixed seeds of the night (D-560).
