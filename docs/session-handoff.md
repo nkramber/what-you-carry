@@ -5,26 +5,26 @@ Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Ready for ow
 
 ### What this session did, and why
 
-- Round 3 reviewed PR #104 at effective head `d027fa8` and checked P1-3 and P2-1.
+- Round 3 reviewed PR #104 at effective head `5e43e89` and checked P1-3 and P2-1.
 - Both findings are fixed in `d027fa8`. The review record now approves this head.
 - The targeted review tests passed 73 cases, and det-lint found zero issues.
 - STE passed with zero findings. The Documents category passed 192 tests after handoff rotation. Doc-gate found zero problems.
 
 ### State of the build
 
-- Required CI, Smoke, bit identity, bots, asset QA, det-lint, Documents, STE, doc-gate, night-gate, and Gitar passed at PR head `5e43e89`.
-- `evaluate` and `review-gate` failed because the prior record still required changes. The metadata checks must run again after the push.
+- Required CI, Smoke, bit identity, bots, asset QA, det-lint, Documents, STE, doc-gate, and night-gate passed at PR head `5e43e89`.
+- The first metadata head `7d37b76` passed Gitar. `evaluate` and `review-gate` failed because the record named `d027fa8`, not expected effective head `5e43e89`.
 - The review record and this entry publish in one metadata commit (D-182).
 - The metadata push and current PR head are verified with `gh pr view`.
 
 ### In flight
 
-- The review is ready for owner merge at effective head `d027fa8`.
-- The post-push check wait remains to run.
+- The review is ready for owner merge at effective head `5e43e89`.
+- The corrected review record and this handoff need one metadata commit and a push.
 
 ### Traps and gotchas
 
-- PR head `5e43e89` merges the updated base `4e9b59d` and carries effective head `d027fa8`.
+- PR head `5e43e89` merges the updated base `4e9b59d`. Its effective-head diff from the base is the already reviewed F-134 test in `RepositoryShapeTests`.
 - The local regression run used the Debug configuration and passed all 73 selected tests.
 - The first Documents run found the handoff archive out of rotation. `handoff-rotate` moved Session 244, then all 192 Documents tests passed.
 - The earlier Gitar claims remain resolved. Its current dashboard reported only the stale review-gate verdict.
@@ -35,7 +35,7 @@ None for PR-88. OQ-195 to OQ-205 do not block this review.
 
 ### Next concrete action
 
-Push the metadata commit, wait for the checks, and give the owner the review verdict.
+Push the corrected metadata, wait for the checks, then verify the review gate and give the owner the review verdict.
 
 # Session handoff
 
