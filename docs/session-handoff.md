@@ -2,6 +2,48 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 248: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-88, author. Branch `fix/pr-88-review-fixes`. PR pending. Base `a3590ba`.
+
+### What this session did, and why
+
+- The owner asked for the fixes of the repository review of 2026-09-24, with more than one concern in one PR (D-580). The id and the order are PR-88, before PR-86 (D-578).
+- Each finding was reproduced or traced at `a3590ba` before a change. Seven fixes, each with a test that fails on the old code:
+  - F-113: a lethal hit on the tick of a stairwell press stays a death. The descend threw, and the ascend ended a dead run as an ascend.
+  - F-114: a descend on the deepest floor does nothing, and the HUD hides the line (D-579).
+  - F-115: each engine callback of `Main.cs` catches every exception and quits with exit code 1.
+  - F-116: `review-gate` reads the verdict from the first line of its section, and it skips fenced blocks.
+  - F-117: the seed sweep names a seed whose dig throws.
+  - F-118: the asset parse rejects a repeated JSON key, and a loader fault is a finding on its file.
+  - F-119: `asset-qa` reads each depth of the model directory.
+- The simulation version is 17. The known answer is `241070d5189efb3c`. The version alone moved it, because the sweep masks the stairwell bits.
+- OQ-195 to OQ-205 hold the owner choices of the review that no register settles.
+
+### State of the build
+
+- The local checks and their results are in the PR description. The PR head and the remote head come from `gh pr view`.
+
+### In flight
+
+- CI, the gitar pass, and the cross-provider review of PR-88.
+
+### Traps and gotchas
+
+- Each fix was reverted in place, and its new test failed. The old `Main.cs` text failed the shape test with no build, because the test reads the file.
+- A smoke session with a throw in the draw frame from tick 300 quit with exit code 1 and one error line. The repository review saw exit code 0 and 3070 engine errors for the same fault.
+- PR #102 (PR-85) edits the same registers, section 7 of the design doc, and the Phase 2 order list. The PR that merges second resolves the conflict.
+- A review record now needs `**<verdict>.**` at the start of the first line of its Verdict section. Each record of the repository has that form.
+
+### Open questions that block progress
+
+None for PR-88. OQ-195 to OQ-205 block other work.
+
+### Next concrete action
+
+Wait for CI and the gitar pass, then run `make codex-review` for this PR. The other findings of the review and their dispositions are in the PR description.
+
 ## Session 247: 2026-09-25, Codex
 
 Author: Codex
@@ -362,37 +404,3 @@ None.
 ### Next concrete action
 
 After the merge: the fixed seeds of the night (D-551), or the parallel PR of the night record promotion, as the owner orders them. Follow the next concrete action of Session 232 for the fixed seeds.
-
-## Session 237: 2026-09-24, Codex
-
-Author: Codex
-Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, Ready for owner merge. Base `2071cb6`.
-
-### What this session did, and why
-
-- Re-reviewed PR #98 at effective head `bc51dde` after the night and required product checks passed.
-- Updated `docs/reviews/pr-98.md` and kept the earlier Blocked verdict in its history.
-- Found no in-scope defect in the template line or its equality test.
-
-### State of the build
-
-- The Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
-- GitHub at `804ec44` showed all product checks, including `night-gate`, bit identity, sweeps, and smoke, as passed.
-- `evaluate` and `review-gate` still read the prior Blocked record. The remote head at review start was `804ec44`.
-
-### In flight
-
-- PR #98 awaits the updated `review-gate` and `evaluate` results. They must read this review record.
-
-### Traps and gotchas
-
-- The Gitar comment says only “Gitar is working.” D-550 says that notice needs no answer.
-- D-542 pauses the Gitar wait. The review record and this entry form one metadata commit.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author gives the merge summary in questions and answers, then asks the owner to confirm the merge (D-552).

@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 237: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, Ready for owner merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Re-reviewed PR #98 at effective head `bc51dde` after the night and required product checks passed.
+- Updated `docs/reviews/pr-98.md` and kept the earlier Blocked verdict in its history.
+- Found no in-scope defect in the template line or its equality test.
+
+### State of the build
+
+- The Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
+- GitHub at `804ec44` showed all product checks, including `night-gate`, bit identity, sweeps, and smoke, as passed.
+- `evaluate` and `review-gate` still read the prior Blocked record. The remote head at review start was `804ec44`.
+
+### In flight
+
+- PR #98 awaits the updated `review-gate` and `evaluate` results. They must read this review record.
+
+### Traps and gotchas
+
+- The Gitar comment says only “Gitar is working.” D-550 says that notice needs no answer.
+- D-542 pauses the Gitar wait. The review record and this entry form one metadata commit.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author gives the merge summary in questions and answers, then asks the owner to confirm the merge (D-552).
+
 ## Session 236: 2026-09-23, Codex
 
 Author: Codex
