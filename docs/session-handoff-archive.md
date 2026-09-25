@@ -1,5 +1,47 @@
 # Session handoff archive
 
+## Session 255: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-88, correction author. Branch `fix/pr-88-review-fixes`. PR #104, pending merge. Base `a3590ba`.
+
+### What this session did, and why
+
+- Round 1 of the cross-provider review gave `Changes required` at `4029e36` with P1-1 and P1-2. Both had full merit, and `docs/reviews/pr-104-response.md` holds the evidence.
+- P1-1: a finding status now reads its complete form, so `fixed.` with no revision is a fault (F-125, D-514).
+- P1-2: only a fence of the same character and at least the same length closes a fenced block (F-116).
+- Each new test failed on the parsers of `4029e36`.
+- Gitar approved `35c389c` with one finding, the numbers of the sequence tail and the exit tests. Commit `35c389c` fixed it, and the thread is resolved.
+- The owner added five small concerns while the Mac runner ran the night: F-129, the ramp march test, and F-131, the band at load, a rotated locator, an empty string, and the pose at a keyframe. Each new test failed on the old code or on a mutant of the march.
+- The owner then added nine findings of the review while the night held the Mac runner: F-132 to F-140, with F-141 to F-146 for the six merges past a failed gate. The owner revised D-208 in D-582: a Core method entry names its parameter types.
+- Gitar raised a fourth finding at `d4b8d01`: the blend between two keyframes near the float limit overflowed. Commit `9dcd440` weights each keyframe.
+- Gitar approved `4c55f16` with a second finding: the fence parse took any indent, and Markdown takes three spaces at most. It had full merit. The fence now opens after no more than three spaces, and `ReviewGateReadsNoFenceAfterFourSpaces` fails on the parser of `f280b72`.
+
+### State of the build
+
+- The known answer is `9c79047da9c82a0e`: the sweep now folds one real floor and two recorded runs. It moves with the content numbers too.
+- The full suite passed 1749 of 1749, Smoke included. The review tests passed 176 of 176.
+- Smoke and Bit identity skip on a documents head. Their runs on the code came from a re-run on `7207164`, and each passed on the three platforms.
+
+### In flight
+
+- Round 2 gave `Changes required` at `d9c6413` with P1-3 and P2-1, and closed P1-1 and P1-2. Both new findings had full merit, and the response file holds the evidence.
+- The gitar pass and CI of the new head, then round 3 of `make codex-review`.
+
+### Traps and gotchas
+
+- PR #102 and this PR both add a marker to the D-284 row and an entry before `### PR-75`. The PR that merges second joins them by hand.
+- OQ-67 still rests on the Mac as the CI runner, which D-572 ends.
+- A push of documents right after a code push cancels the Smoke and Bit identity runs of the code (D-356), and the later heads skip them. Re-run the cancelled runs before the review.
+
+### Open questions that block progress
+
+None for PR-88.
+
+### Next concrete action
+
+After the gitar pass and green CI, run `make codex-review PR=104` for round 2.
+
 ## Session 254: 2026-09-25, Codex
 
 Author: Codex
