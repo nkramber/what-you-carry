@@ -78,7 +78,7 @@ From the 2026-09-06 interview:
 
 A run starts at floor 1 in a small hub (D-3, D-9). The player selects a loadout from the bank. Gear that enters the dungeon is at risk (D-2). The loadout screen always offers a basic kit: a tier-0 sword with no affixes, at no cost, never lost (D-153). Each floor ends at a stairwell. Floors 5, 10, and 15 end at a boss (D-6). Floor 15 is the end of v1 (D-5).
 
-At each stairwell the player ascends or descends (D-50). Ascension costs nothing. The run ends, and the next run starts at floor 1. The restart is the cost. The timer pauses at the stairwell (D-140). A full run to floor 15 takes 30 to 45 minutes (D-4).
+At each stairwell the player ascends or descends (D-50). The stairwell of floor 15, the deepest floor, offers the ascend alone (D-579). Ascension costs nothing. The run ends, and the next run starts at floor 1. The restart is the cost. The timer pauses at the stairwell (D-140). A full run to floor 15 takes 30 to 45 minutes (D-4).
 
 ### 3.3 Player
 
@@ -335,6 +335,13 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-110 | The CI, Smoke, and Bit identity workflows each named three jobs `linux-x64`, `windows-x64`, and `macos-arm64`, as the check runs of PR #92 at `d96ae19` show. A ruleset requires a check by its name, so one required name matched three jobs, and a pass of one hid a failure of another | 2026-09-23 | ✅ PR #93 (PR-78): each platform job has a check name with the prefix of its workflow, and `RulesetTests` fails on a name that two jobs carry (D-522) |
 | F-111 | The night of 2026-09-23 at `e069e16` read a softlock of the greedy descender on 26 of 5000 seeds. The night of `170f08c` passed. The 26 seeds pass at `ea84473` and softlock at `837902b`, so PR-72 made them. Two faults. `PathFollower` read a wedge after four seconds with no gain on the goal, also on a detour of a diagonal path, and the bot then jumped at each step. A jump under a low ceiling or on a ramp held the bot in a loop (24 seeds). `GridMoves.DiagonalMove` took a drop into a side column and a walk under an overhang as one diagonal drop, and the body landed on the overhang (seeds 2669 and 2879) | 2026-09-23 | ✅ PR #97 (PR-81): an arrival at a waypoint starts the wedge count again, and a diagonal drop needs an open fall (D-545, D-546) |
 | F-112 | The local night of PR-81 crashed seed 4119 of the greedy descender on floor 3: "The box overlaps a solid cell before the move." An enemy slid away from a wall on X and along it on Z. `SweptAabb.Sweep` moved its box one step at a time, to max x = (7.722285 + 0.3) - 0.022284 = 8.0, a contact, so the Z move left the block at x = 8 out. `PlayerBody` built its box from the feet, (7.722285 - 0.022284) + 0.3 = 8.000001, which overlapped that block. Float addition does not associate. The fault is as old as D-235, and the walk of PR-81 reached it | 2026-09-23 | ✅ PR #97 (PR-81): the sweep builds each box in the form of the caller (D-549) |
+| F-113 | A repository review read the loop at `e5e164f`: a hit that took the last health on the tick of a stairwell press did not end the tick. The interact bit then descended with a dead player, and `new Player` threw on health 0, so the Game quit and a bot run read a crash. The ascend bit ended the dead run as an ascend. Seeds 2, 4, and 11 reproduce it at the stairwell of floor 1 | 2026-09-24 | ✅ PR-88: a run that ends in the tick takes no stairwell choice, and a test presses each bit on the lethal tick (D-322, G-20) |
+| F-114 | A descend press at the stairwell of floor 15 dug floor 16, which no template covers, and the loop threw after the tick moved on. The HUD showed the descend line on every floor. No bot takes that path, so no night can find it | 2026-09-24 | ✅ PR-88: the press does nothing on the deepest floor, and the HUD hides the line (D-579) |
+| F-115 | An exception outside the four guarded blocks of `Main.cs` left the engine callback. The engine glue printed it and called the callbacks again, so a session went on half updated and quit with exit code 0 and no JSONL error line. A throw on each draw gave 3070 engine errors and exit code 0 | 2026-09-24 | ✅ PR-88: each engine callback catches every exception, writes one error line, and quits with exit code 1 (T-2, D-114) |
+| F-116 | `review-gate` found a verdict name anywhere in the Verdict section. It approved "Not Ready for owner merge", "Changes Required" with a later approving name, and a fenced example of an approving section above the real one. `codex-review` read the same parse as an approval | 2026-09-24 | ✅ PR-88: the first line of the section starts with the bold name, and the parse skips each fenced block (D-179, D-269) |
+| F-117 | The reachability sweep let an exception of the dig leave the sweep. It wrote no failure line, so the night record lost the seed, and the carry of D-567 could not run it again | 2026-09-24 | ✅ PR-88: a dig that throws fails its seed, and the sweep goes on to the next seed (D-565, D-567) |
+| F-118 | The asset loaders kept the last value of a repeated JSON key. A repeated bone track crashed `asset-qa` with exit code 134 and no file named, and it failed the pose in the Game | 2026-09-24 | ✅ PR-88: the five parse sites reject a repeated key, and a loader fault of one file is a finding on that file (D-92, T-2) |
+| F-119 | `asset-qa` read the top of `content/models/` alone, and the content loader accepts a model in a subdirectory. An animation whose model value had no `.bbmodel` extension, or named no body, loaded and was never posed | 2026-09-24 | ✅ PR-88: the gate reads each depth, the model value ends in `.bbmodel`, and an animation of no body is a finding (D-135) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -623,6 +630,11 @@ The pause of D-542 ends, and the automated pass is a gate again (D-574). After e
 Gate: the wait tests pass, and the gitar pass and the review of this PR run with no flag.
 > *In plain English:* the owner paused the automated review of each PR while it did not work. It works again, so each PR waits for it again. A script watches for the review, and it asks for one when none starts.
 
+**PR-88: Repository review fixes.** 🔧
+Fix the verified findings F-113 to F-119 of the repository review of 2026-09-24 (D-578). A run that ends in a tick takes no stairwell choice, and the deepest floor offers the ascend alone (D-322, D-579). Each engine callback of the Game catches every exception and quits with exit code 1. The review gate reads the verdict from the first line of its section. The seed sweep names a seed whose dig throws. The asset gate rejects a repeated key and reads each depth of the model directory. This PR holds more than one concern (D-580). The simulation version rises (G-20).
+Gate: a regression test for each finding fails on the old code, and the suite, the smoke session, and the bit-identity sweep pass.
+> *In plain English:* a review of the whole repository found faults. A death at the stairwell crashed the game, and some checks passed a fault that they must catch. This PR fixes each one, with a test.
+
 **PR-86: Hosted macOS legs.** 🔧
 The macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the hosted macOS arm64 runner, and the self-hosted runner retires (D-572, D-573).
 Gate: the three macOS legs pass on the hosted runner, and no workflow names the self-hosted label.
@@ -812,7 +824,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81, PR-82, PR-83, PR-84, PR-85, PR-87, PR-86, PR-75, PR-76, PR-77.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-76, PR-77.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

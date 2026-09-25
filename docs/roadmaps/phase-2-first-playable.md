@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-84, PR-87, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-87 applies D-574 to D-577. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-84, PR-87, PR-88, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -1112,6 +1112,40 @@ Gate: exit tests 1 to 6 pass.
 
 > *In plain English:* the owner paused the automated review of each PR while it did not work. It works again, so each PR waits for it again. A script watches for the review, and it asks for one when none starts.
 
+### PR-88: Repository review fixes
+
+Scope:
+
+- `SimulationLoop.Step`: a run that ends in the tick takes no stairwell choice, so a death stays a death (D-322, F-113).
+- `SimulationLoop` and `StairwellPrompt`: the deepest floor that the content covers offers the ascend alone, and a descend press there does nothing (D-579, F-114).
+- `HudState` and `Hud`: the prompt hides the descend line on the deepest floor (D-579).
+- `SimulationVersion`: 17, and the bit-identity sweep takes a new known answer (G-20).
+- `Main.cs`: each engine callback catches every exception, writes one error line with the run fields, and quits with exit code 1 (T-2, D-114, F-115).
+- `ReviewRecord`: the first line of the Verdict section starts with the verdict name in bold and a period, and the parse skips each fenced block (D-179, D-269, F-116).
+- `ProcgenTests`: a dig that throws fails its seed, and the seed sweep goes on and writes the seed to its failure line (D-565, D-567, F-117).
+- The asset loaders, `TextureJson`, and `FileCaseCheck`: a repeated JSON key is a parse error, and a loader fault of one file is a finding on that file (D-92, T-2, F-118).
+- `AssetSet`, `ClipCheck`, and `AnimationLoader`: the gate reads each depth of the model directory (D-135, D-300, F-119). The model value of an animation ends in `.bbmodel`, and an animation of no body is a finding.
+
+Out of scope: the other findings of the repository review of 2026-09-24. The self-hosted runner goes in PR-86 (D-572). The night publish waits for PR-85 and an owner answer. The trust boundary of the reviewer waits for an owner answer. This PR holds more than one concern (D-580).
+
+Exit tests:
+
+1. `ALethalHitOnTheTickOfAStairwellPressIsADeath` passes for the interact bit and the ascend bit, and it fails on the loop of `main` before this PR.
+2. `ADescendOnTheDeepestFloorDoesNothing` passes, and it fails on the loop of `main`. `AFloorAboveTheDeepestOffersTheDescend` passes.
+3. `EveryEngineCallbackCatchesEveryException` passes, and it fails on the `Main.cs` of `main`. A smoke session with a throw in the draw frame quits with exit code 1 and one error line.
+4. The new tests of `ReviewGateRulesTests` and `CodexReviewTests` pass, and they fail on the parse of `main`. Each review record of the repository still parses.
+5. `TheSweepNamesASeedWhoseDigThrows` passes, and it fails on the sweep of `main`.
+6. `RepeatedKeyTests` and the four new tests of `AssetQaTests` pass, and they fail on the gate of `main`.
+7. The simulation version is 17, and `BitIdentityKnownAnswer` passes with `241070d5189efb3c` on the three platforms (G-9, G-20).
+
+Review focus: the end check before the stairwell choice in `Step`, the guard of each engine callback, and the verdict parse of each review record.
+
+Check clause: none.
+
+Gate: exit tests 1 to 7 pass.
+
+> *In plain English:* a review of the whole repository found faults. A death at the stairwell crashed the game, and some checks passed a fault that they must catch. This PR fixes each one, with a test.
+
 ### PR-75: Sword art
 
 Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
@@ -1227,12 +1261,13 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 41. PR-84. ✅ Done in PR #100. ✅ The owner answers of 2026-09-24: D-564 to D-569.
 42. PR-85. The night on hosted Linux at 07:07 UTC (D-571 to D-573).
 43. PR-87. ✅ Done in PR #103. ✅ The owner answers of 2026-09-24 and 2026-09-25: D-574 to D-577.
-44. PR-86. The macOS legs on hosted runners (D-572, D-573).
-45. PR-75.
-46. PR-76.
-47. Owner: answer OQ-181.
-48. PR-77.
-49. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+44. PR-88. The fixes of the repository review (D-578). ✅ The owner answers of 2026-09-25: D-578 to D-580.
+45. PR-86. The macOS legs on hosted runners (D-572, D-573).
+46. PR-75.
+47. PR-76.
+48. Owner: answer OQ-181.
+49. PR-77.
+50. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
 50. Tier 4 pass on the screenshot fixture (D-133).
 51. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 

@@ -15,7 +15,7 @@ The `review-gate` job reads the review record (D-179, D-181, D-185). Three parts
 |---|---|---|
 | The file name | `docs/reviews/pr-<number>.md` | The number is the GitHub PR number, not the roadmap id. |
 | The head field | `- Head: ` and the hash in backticks, in the Identity list | The hash is the effective head. A short hash is permitted. |
-| The verdict | One of the three verdict names, in the `## Verdict` section | Write the name exactly. Do not reword it. |
+| The verdict | One of the three verdict names, in the `## Verdict` section | Start the first line of the section with the name in bold and a period, as the skeleton shows. The gate reads that line alone, outside each fenced block. Do not reword the name. |
 
 The effective head is the newest commit that changes a path outside the skip set of D-475 (D-534).
 The skip set is `docs/`, `.claude/skills/`, `CLAUDE.md`, `AGENTS.md`, `README.md`, and `LICENSE`.
