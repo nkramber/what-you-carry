@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-84, PR-87, PR-88, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-88, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -450,6 +450,8 @@ Gate: exit tests 1 to 3 pass.
 > *In plain English:* a night on a side branch can wipe the record that tells every pull request the main line is healthy. This change lets a side branch run the night, and that record stays as it was.
 
 ### PR-70: The skill port
+
+✅ Done in PR #81.
 
 Scope:
 
@@ -1159,6 +1161,34 @@ Gate: exit tests 1 to 8 pass.
 
 > *In plain English:* a review of the whole repository found faults. A death at the stairwell crashed the game, and some checks passed a fault that they must catch. This PR fixes each one, with a test.
 
+### PR-86: Hosted macOS legs
+
+Scope:
+
+- `.github/workflows/ci.yml`, `smoke.yml`, and `bit-identity.yml`: the `macos-arm64` job of each workflow moves from the self-hosted label to the standard hosted macOS arm64 runner (D-572, D-573). Each job keeps its name, so the required checks of the ruleset of `main` stay as they are (D-522).
+- `WhatYouCarry.Tests/`: `CiWorkflowHasOneJobPerPlatform` and `BitIdentityWorkflowHasOneJobPerPlatformAndACompareJob` in `RepositoryShapeTests`, and `SmokeWorkflowHasOneJobPerPlatform` in `GameShapeTests`, read the hosted label. A new shape test fails on a workflow that names the self-hosted label.
+- The documents retire the self-hosted runner (D-573): `docs/runbooks/macos-runner.md`, the rule of a lost self-hosted leg in `CLAUDE.md` and `AGENTS.md`, and the system map and the cost model of `docs/design.md`.
+- `docs/decisions.md`: D-100, D-157, D-192, and D-358 take their revision markers in the Effect column (D-186, D-572, D-573).
+
+Out of scope: the night, which PR-85 moves to hosted Linux (D-573). The removal of the runner service from the Mac Mini and of its registration from the repository settings, which no decision holds yet.
+
+Exit tests:
+
+1. `CiWorkflowHasOneJobPerPlatform`, `BitIdentityWorkflowHasOneJobPerPlatformAndACompareJob`, and `SmokeWorkflowHasOneJobPerPlatform` pass, and each reads the hosted macOS arm64 label (D-572).
+2. The new shape test passes, and it fails on the workflows of `main` before this PR.
+3. The three macOS legs of this PR, `ci-macos-arm64`, `smoke-macos-arm64`, and `bit-identity-macos-arm64`, pass on the hosted runner.
+4. The `bit-identity-compare` job of this PR passes, so the hosted macOS hash equals the Linux hash and the Windows hash (G-9).
+5. The `RulesetTests` pass, and the required check names of the ruleset of `main` do not change (D-522).
+6. `make gitar-wait PR=<this PR>` ends with exit 0 after each push, and `make codex-review PR=<this PR>` reviews this PR. The merge request gives the merge summary as questions and answers (D-552).
+
+Review focus: each `runs-on` value against D-572, the job names against the ruleset of D-522, and each retired runner text against D-573.
+
+Check clause: none.
+
+Gate: exit tests 1 to 6 pass.
+
+> *In plain English:* three checks of each pull request still run on the Mac of the owner, so code from any pull request runs there. This change moves them to free cloud Macs. The Mac of the owner then runs no code from a pull request.
+
 ### PR-75: Sword art
 
 Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
@@ -1249,15 +1279,15 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 16. ✅ PR-65 merged 2026-09-15 as PR #73.
 17. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ OQ-174 answered 2026-09-15: D-370.
 18. PR-69. ✅ Done in PR #80. ✅ OQ-176 answered 2026-09-16: D-373.
-19. PR-70. ✅ OQ-177 and OQ-178 answered 2026-09-18: D-386 and D-387.
+19. PR-70. ✅ Done in PR #81. ✅ OQ-177 and OQ-178 answered 2026-09-18: D-386 and D-387.
 20. PR-66. ✅ Done in PR #82. ✅ OQ-179 and OQ-180 answered 2026-09-19 and 2026-09-20: D-388 to D-394.
 21. ✅ OQ-9 answered 2026-09-20: D-395 and D-396.
-22. PR-16.
+22. PR-16. ✅ Done in PR #83.
 23. ✅ OQ-4 and OQ-6 answered 2026-09-20: D-407 to D-409. The escalation, the exit tests, and the rules of the hunt: D-410 to D-421.
 24. PR-17. ✅ Done in PR #84.
 25. Owner: answer OQ-44. ✅ Answered 2026-09-21: D-427. The PR-18 answers: D-428 to D-437.
 26. PR-18. ✅ Done in PR #85.
-27. PR-19.
+27. PR-19. ✅ Done in PR #86.
 28. Owner: answer OQ-48 and OQ-182. ✅ Answered 2026-09-21 and 2026-09-22. The answers of PR-20 run from D-450, which D-462 supersedes, to D-470.
 29. PR-20. ✅ Done in PR #87.
 30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
@@ -1265,7 +1295,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 32. PR-73. ✅ Done in PR #91. ✅ The owner answers of 2026-09-22: D-490 to D-495.
 33. PR-62. ✅ Done in PR #92. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-509.
 34. PR-78. ✅ Done in PR #93. ✅ The owner answers of 2026-09-23: D-511 to D-524.
-35. PR-74.
+35. PR-74. ✅ Done in PR #94.
 36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, and D-539 to D-541.
 37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544. D-574 supersedes D-542.
 38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.

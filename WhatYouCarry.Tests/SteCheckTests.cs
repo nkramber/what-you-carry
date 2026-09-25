@@ -121,6 +121,20 @@ public sealed class SteCheckTests
     }
 
     [Fact]
+    public void ReferenceCheckReadsARevisionWordInItsOwnSentenceOnly()
+    {
+        // A paragraph is one line. A revision word in one sentence does not exempt a stale citation in another sentence.
+        Dictionary<string, string> superseded = ReferenceCheck.SupersededDecisions(DecisionsFixture);
+        Finding finding = Assert.Single(ReferenceCheck.Check("docs/x.md", "D-2 revises the count. The cap holds (D-1).\n", superseded));
+        Assert.Equal(1, finding.Line);
+        Assert.Contains("cites D-1, which D-3 supersedes", finding.Detail, StringComparison.Ordinal);
+
+        // A revision word in the sentence of the citation, a parenthesis included, still exempts it.
+        Assert.Empty(ReferenceCheck.Check("docs/x.md", "The cap holds. The old cap (D-1) was revised.\n", superseded));
+        Assert.Empty(ReferenceCheck.Check("docs/x.md", "The cap holds (D-1, revised. The rest stands).\n", superseded));
+    }
+
+    [Fact]
     public void ReferenceCheckAllowsAPartialRevision()
     {
         // D-186: a decision marked "Revised in part by" stays citable.

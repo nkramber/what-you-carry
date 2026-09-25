@@ -262,7 +262,7 @@ One person owns the program. Items run one at a time in this order. Gate 3 must 
 2. PR-33.
 3. PR-34.
 4. PR-35.
-5. Owner: answer OQ-9 in full and OQ-61.
+5. Owner: answer OQ-61. ✅ OQ-9 answered 2026-09-20: D-395 and D-396.
 6. PR-36 to PR-42, one at a time.
 7. Owner: answer OQ-10 in full.
 8. PR-43 to PR-46, one at a time.
@@ -284,7 +284,6 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 4. Each 
 
 Open:
 
-- OQ-9: the enemy families in full. Blocks PR-36 to PR-42.
 - OQ-10: the weapon list in full. Blocks PR-43 to PR-46.
 - OQ-11: the boss concepts. Blocks PR-33 to PR-35.
 - OQ-20: the friend playtest protocol. Blocks Gate 4.
@@ -295,3 +294,7 @@ Open:
 - OQ-63: the music direction and track list. Blocks PR-50.
 - OQ-64: the prop set. Blocks PR-48.
 - OQ-65: the polygon budget, pivot rule, and UV rule. Blocks PR-49.
+
+Resolved 2026-09-20:
+
+- OQ-9 (D-395, D-396): the enemy families in full. PR-16 and PR-36 to PR-42.
