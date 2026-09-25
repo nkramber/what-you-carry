@@ -144,28 +144,56 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
     }
 
     /// <summary>
-    /// The lines of a text that are outside a fenced block, in order. A line that starts with three backticks or
-    /// three tildes opens a fence, and the next such line closes it. The fence lines are skipped too.
+    /// The lines of a text that are outside a fenced block, in order. A run of three or more backticks or tildes at the
+    /// start of a line opens a fence. Only a line of the same character, with a run at least as long and nothing after
+    /// it, closes that fence, as in Markdown. So a line of tildes inside a backtick fence stays inside it (PR #104 P1-2).
+    /// The fence lines are skipped too.
     /// </summary>
     private static System.Collections.Generic.List<string> LinesOutsideFences(string text)
     {
         System.Collections.Generic.List<string> lines = [];
-        bool inFence = false;
+        char fenceCharacter = '\0';
+        int fenceLength = 0;
         foreach (string line in text.Split('\n'))
         {
             string start = line.TrimStart();
-            if (start.StartsWith("```", StringComparison.Ordinal) || start.StartsWith("~~~", StringComparison.Ordinal))
+            int run = FenceRun(start);
+            if (fenceLength == 0)
             {
-                inFence = !inFence;
+                if (run > 0)
+                {
+                    fenceCharacter = start[0];
+                    fenceLength = run;
+                    continue;
+                }
+
+                lines.Add(line);
                 continue;
             }
 
-            if (!inFence)
+            if (run >= fenceLength && start[0] == fenceCharacter && start[run..].Trim().Length == 0)
             {
-                lines.Add(line);
+                fenceLength = 0;
             }
         }
 
         return lines;
+    }
+
+    /// <summary>The length of the run of backticks or tildes at the start of a line, when it is three or more, or zero.</summary>
+    private static int FenceRun(string start)
+    {
+        if (start.Length == 0 || (start[0] != '`' && start[0] != '~'))
+        {
+            return 0;
+        }
+
+        int run = 0;
+        while (run < start.Length && start[run] == start[0])
+        {
+            run++;
+        }
+
+        return run >= 3 ? run : 0;
     }
 }

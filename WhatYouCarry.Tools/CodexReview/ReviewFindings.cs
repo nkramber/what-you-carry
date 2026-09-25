@@ -24,8 +24,15 @@ public static partial class ReviewFindings
     public const string OpenAtPrefix = "Open at:";
     public const string OpenStatus = "open";
 
-    /// <summary>The statuses of <c>findings.md</c>. A status line starts with one of them, in this case (F-125).</summary>
+    /// <summary>The statuses of <c>findings.md</c>, in the words of each form (F-125).</summary>
     public static readonly string[] KnownStatuses = [OpenStatus, "fixed", "accepted risk", "withdrawn"];
+
+    /// <summary>
+    /// The complete forms of a status in <c>findings.md</c>: <c>open.</c>, <c>fixed in `&lt;sha&gt;`.</c>,
+    /// <c>accepted risk, D-&lt;n&gt;.</c>, and <c>withdrawn.</c>. A closed status names its revision or its decision, so
+    /// a status such as <c>fixed.</c> never closes a finding with no evidence (F-125, D-514).
+    /// </summary>
+    public const string StatusForms = "open. | fixed in `<sha>`. | accepted risk, D-<n>. | withdrawn.";
 
     /// <summary>The severities of <c>findings.md</c>: P0 to P3.</summary>
     public const int HighestSeverity = 3;
@@ -111,7 +118,7 @@ public static partial class ReviewFindings
         // An unknown status is an error, because a closed default lets a finding such as "Open" block nothing (F-125).
         if (!IsKnownStatus(status))
         {
-            throw new FormatException($"The finding {id} has the status '{status}', and a status starts with one of: {string.Join(", ", KnownStatuses)}.");
+            throw new FormatException($"The finding {id} has the status '{status}', and a status is one of the forms: {StatusForms}");
         }
 
         findings.Add(new ReviewFinding(id, severity, status, openAt));
@@ -119,15 +126,7 @@ public static partial class ReviewFindings
 
     private static bool IsKnownStatus(string status)
     {
-        foreach (string known in KnownStatuses)
-        {
-            if (status.StartsWith(known, StringComparison.Ordinal))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return StatusForm().IsMatch(status);
     }
 
     /// <summary>Each text in backticks on the line, in order.</summary>
@@ -147,4 +146,7 @@ public static partial class ReviewFindings
 
     [GeneratedRegex("`(?<text>[^`]+)`")]
     private static partial Regex BacktickText();
+
+    [GeneratedRegex(@"^(open|fixed in `[0-9a-f]{7,40}`|accepted risk, D-[0-9]+|withdrawn)\.$")]
+    private static partial Regex StatusForm();
 }

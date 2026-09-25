@@ -281,9 +281,16 @@ public sealed class CodexReviewTests
     [InlineData("closed")]
     [InlineData("Fixed in `2222222`.")]
     [InlineData("")]
+    [InlineData("fixed")]
+    [InlineData("fixed without evidence")]
+    [InlineData("fixed in 2222222")]
+    [InlineData("fixed in `2222222` and more")]
+    [InlineData("accepted risk")]
+    [InlineData("withdrawn for now")]
     public void AFindingWithAnUnknownStatusIsAFault(string status)
     {
-        // F-125: a status outside findings.md once read as closed, so "Open" passed under an approval.
+        // F-125: a status outside the complete forms of findings.md once read as closed, so "Open" passed under an
+        // approval, and "fixed." closed a finding with no fixing revision (PR #104 P1-1).
         ReviewOutcome outcome = Judge(Record(Head, Approve, Finding("P1-1", status, Head)));
 
         Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
@@ -296,6 +303,8 @@ public sealed class CodexReviewTests
     [InlineData("fixed in `2222222`", false)]
     [InlineData("accepted risk, D-524", false)]
     [InlineData("withdrawn", false)]
+    [InlineData("fixed in `0123456789abcdef0123456789abcdef01234567`", false)]
+    [InlineData("accepted risk, D-1", false)]
     public void EveryKnownStatusParses(string status, bool open)
     {
         // F-125: the four statuses of findings.md stay valid, and "open" alone is open.

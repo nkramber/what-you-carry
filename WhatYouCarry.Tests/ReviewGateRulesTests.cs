@@ -166,6 +166,43 @@ public sealed class ReviewGateRulesTests
         Assert.Equal(ReviewGateResult.Failure, ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: text)).Conclusion);
     }
 
+    /// <summary>
+    /// PR #104 P1-2. Only a matching fence closes a fenced block. Two tilde lines inside a backtick fence stay inside it,
+    /// so the fake Identity and Verdict between them never reach the parse. The old parse toggled on any fence-like
+    /// line, and it read the fake head and the fake approval.
+    /// </summary>
+    [Fact]
+    public void ReviewGateKeepsATildeLineInsideABacktickFence()
+    {
+        string fake = "- Head: `" + Head + "`\n\n## Verdict\n\n**Ready for owner merge.** This verdict applies to head `" + Head + "`.\n";
+        string fence = "```\n~~~\n" + fake + "~~~\n```\n\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", fence + "## Identity\n", StringComparison.Ordinal);
+
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+
+        Assert.True(record is not null, error);
+        Assert.Equal("Blocked", record!.Verdict);
+        Assert.Equal("fedcba9", record.RecordedHead);
+    }
+
+    /// <summary>The boundary beside PR #104 P1-2: a closing run shorter than the opening run stays inside, and a longer run of the same character closes the fence.</summary>
+    [Fact]
+    public void ReviewGateClosesAFenceOnAMatchingRunAlone()
+    {
+        string fake = "- Head: `" + Head + "`\n\n## Verdict\n\n**Ready for owner merge.** This verdict applies to head `" + Head + "`.\n";
+        string shortClose = "````\n```\n" + fake + "````\n\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", shortClose + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+        Assert.True(record is not null, error);
+        Assert.Equal("Blocked", record!.Verdict);
+
+        string longClose = "```\nnote\n`````\n\n";
+        string closed = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", longClose + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? after = ReviewRecord.TryParse(closed, out string afterError);
+        Assert.True(after is not null, afterError);
+        Assert.Equal("fedcba9", after!.RecordedHead);
+    }
+
     /// <summary>Every review record of the repository parses with one head and one verdict name, so a reviewer sees a second name locally before the push (D-269).</summary>
     [Fact]
     public void EveryRepositoryReviewRecordHoldsOneVerdict()
