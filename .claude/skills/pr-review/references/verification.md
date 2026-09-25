@@ -21,7 +21,7 @@ Use the current build commands in `AGENTS.md`. Do not invent a successful comman
 - The heavy jobs of `ci.yml`, `smoke.yml`, `bit-identity.yml`, and `bots.yml` skip a head that changes documents alone (D-474, D-477). The log of the `ci-skip` job names the rule. A skip by rule 2 counts as evidence for the head, because the previous head passed with the same code. The `documents` job runs on each head (D-476).
 - A review of a PR of documents alone runs no full suite. Run `ste-check`, `doc-gate`, and the `Documents` category (D-491, D-492).
 - A repeat review runs no full suite when each path after the reviewed head lies in the skip set of D-475. The commit of the review record runs none (D-491).
-- A self-hosted job that ends with the annotation "not acquired" gives no result for the code. The author re-runs the failed jobs of that run, and the re-run counts as CI for that head (D-358).
+- A job that ends with a runner infrastructure annotation, such as "not acquired" or a shutdown signal, gives no result for the code. The author re-runs the failed jobs of that run, and the re-run counts as CI for that head (D-358, D-585).
 - Check the three-platform bit-identity result and required smoke and content tests (D-71, D-114).
 - Check the applicable bot, seed, economy, asset, and human gates in the current roadmap.
 - Confirm that a known night failure does not bypass the next merge gate (D-115).

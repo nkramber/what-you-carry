@@ -1,5 +1,200 @@
 # Session handoff archive
 
+## Session 253: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-88, author. Branch `fix/pr-88-review-fixes`. PR #104, pending merge. Base `a3590ba`.
+
+### What this session did, and why
+
+- The owner asked for the fixes of the repository review of 2026-09-24, with more than one concern in one PR (D-580). The id and the order are PR-88, before PR-86 (D-578).
+- Each finding was reproduced or traced at `a3590ba` before a change. Each fix has a test that fails on the old code:
+  - F-113 and F-114: a death at the stairwell stays a death, and a descend on the deepest floor does nothing (D-322, D-579).
+  - F-115: each engine callback catches every exception and quits with exit code 1.
+  - F-116: `review-gate` reads the verdict from the first line of its section.
+  - F-117 to F-119: the seed sweep, the repeated JSON key, and the depth of the asset gate.
+  - F-120 to F-127: content bounds, the error context of a run, the session end, the follower hash, the test claims, the gate tool edge cases, the runbook temporary files, and the Core tables.
+- The owner skipped the interim fork approval change of the review (D-581).
+- OQ-195 to OQ-205 hold the owner choices of the review that no register settles.
+- F-128 to F-130 record three defects that this work found and did not fix.
+
+### State of the build
+
+- The simulation version is 17. The known answer is `f1c35ddccb2cd0bb`. The version moved it first, and the hash of each follower moved it again.
+- The local checks and their results are in the PR description. The PR head and the remote head come from `gh pr view`.
+
+### In flight
+
+- CI, the gitar pass, and the cross-provider review of PR-88.
+
+### Traps and gotchas
+
+- Worker sessions in `.claude/worktrees/` did part of the work. `ste-check` reads a worktree under the checkout, so remove each one before the check.
+- A file that a backup restores keeps its old time, and an incremental build then skips it. Build with `--no-incremental` after such a restore.
+- PR #102 (PR-85) edits the same registers, section 7 of the design doc, and the Phase 2 order list. The PR that merges second resolves the conflict.
+- A review record needs `**<verdict>.**` at the start of the first line of its Verdict section.
+
+### Open questions that block progress
+
+None for PR-88. OQ-195 to OQ-205 block other work.
+
+### Next concrete action
+
+Wait for CI and the gitar pass, then run `make codex-review` for this PR. The PR description holds the disposition of each finding of the review.
+
+## Session 252: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-85, author. Branch `feat/pr-85-night-hosted-linux`. PR #102, pending merge. Base `a68348b`.
+
+### What this session did, and why
+
+- Read the two runs on `main` for PR-84:
+  - `night-promote.yml` run 36059305679 at `a68348b` ended green with the case `code-changed`. The branch night ran at `35da819`, and the merge differs in four paths outside the skip set, `.github/` included. The gate re-run step skipped, and `night-results` still holds `4ac067b` (`55b6d3f`, success), so the run wrote nothing.
+  - PR-84 exit test 11 passes. Scheduled night run 36141884980 on `main` at `a3590ba` (PR-87 merged after `a68348b`) started at 13:35 UTC, 5 h 28 min after its cron, and ended green at 17:27 UTC on the Mac. Its record names the slice of 2026-09-25: 5501-6000 for each bot policy, 110001-120000 for reachability. It wrote `night-results` and re-ran the gate of each open PR.
+  - The owner chose to hold the review until that night ended (2026-09-25).
+- PR-85 moves the night to 07:07 UTC on hosted Linux (D-571 to D-573). `night.yml` holds a plan job, a matrix of six sweep jobs on `NightSeeds.Sweeps`, and a record job. The record job alone holds write permissions.
+- `.github/scripts/night-gather.sh` joins the sweep artifacts, and gives the status: success only when the plan, every sweep, and the record job read success.
+- D-284, D-285, and D-288 carry "Revised in part by D-571". The roadmap entry of PR-85 holds nine exit tests.
+- Branch night run 36062699698 at `9d5c36b` failed on infrastructure, not on a seed. The runner of the full clearer received a shutdown signal at 23:23:57 UTC, 1 h 45 min into `bot-run`. The five other sweeps passed: random walker 20 min, coward 23 min, timer tester 24 min, greedy descender 46 min, reachability 1 h 31 min. The record job wrote a failure record with no failure line of the full clearer, as the design asks.
+- A local run of 200 full clearer seeds held 169 MB and 4 KB of log for each seed, so memory and disk did not cause the shutdown.
+- The sweep uploads now take `overwrite: true`. Without it, a re-run of the failed jobs fails when the sweep of attempt 1 uploaded its result.
+- Exit test 7 passes. Branch night run 36077051456 at `e5e164f` ended green at 04:12:22 UTC on 2026-09-25, in 3 h 52 min. Sweep jobs: random walker 20 min, coward 22 min, timer tester 31 min, greedy descender 1 h 17 min, reachability 2 h 31 min, full clearer 3 h 51 min. The record job took 29 s. The record names the slice of 2026-09-25 (5501-6000, and 110001-120000 for reachability), the deaths of all five policies, and no carried or failed seed.
+- The night on `main` at `a3590ba` (Mac) and the branch night at `e5e164f` (hosted Linux) wrote the same deaths, causes, and ascends for each policy. The move keeps the results bit for bit (G-9).
+- Review round 1 (Codex) read `Changes required` with P2-1: the PR held `docs/reviews/repository-review-prompts.md`, a repository audit prompt outside PR-85. Full merit. Commit `e5e164f` staged it with `git add -A` from the shared checkout, where another session had left it untracked. The file leaves the PR. The answer is `docs/reviews/pr-102-response.md`.
+- The main checkout lost that file when it left this branch. Its text stays at `e5e164f:docs/reviews/repository-review-prompts.md`. The owner decides where it goes.
+- Review round 2 (Codex, session 251) reads `Ready for owner merge` for effective head `69f5308`, with P2-1 fixed in `784583a`.
+- The gitar pass of `69f5308` approved with no finding. Its one CI item, the missing review record, has a reply that cites D-251.
+- Merged `main` at `a3590ba` into the branch. PR-87 ended the gitar pause (D-574), so exit test 9 now reads `make codex-review PR=102` with no flag, after a green gitar pass and green CI (D-575, D-577). The roadmap keeps the PR-85 entry and the PR-87 entry, in that order (D-576).
+
+### State of the build
+
+- CI of `69f5308` passed each check, and the metadata push `784583a` passed its checks (D-474). The remote head before this entry is `873bdb4`, the round 2 record.
+- Local: the full suite passed 1614 of 1614 at each code commit, and 1624 of 1624 after the merge of `main`, Smoke included. The new shape tests fail on the old `night.yml` (7 failures). `ste-check` reads 0.
+
+### In flight
+
+- The merge summary in Q/A form, and the confirmation of the owner (D-524, D-552). Then `gh pr merge 102 --auto --squash` (D-516).
+- CI of the tip `873bdb4` and later metadata commits: documents alone, so the heavy jobs skip after the green head (D-474).
+
+### Traps and gotchas
+
+- `download-artifact` with a pattern puts each artifact in a directory of its own name. The gather script reads `<results>/*/`.
+- A shutdown signal on a hosted runner is an infrastructure fault. Re-run the failed jobs of the night: the plan keeps its date, and the record job runs again.
+- Stage named paths alone. `git add -A` in a checkout that another session shares takes its untracked files into this PR (P2-1).
+- Another session switched the main checkout to `fix/pr-88-review-fixes`. This session works in the worktree `/Volumes/SSD-1TB/wyc-pr85`.
+- A sweep job creates its empty result files before the build, so a broken build still uploads a result, and the record reads "did not end".
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the owner confirms, run `gh pr merge 102 --auto --squash`. After the merge, the next session reads PR-85 exit test 8: the first scheduled night on `main` from the 07:07 UTC cron on hosted Linux. It states the start time and the result in its handoff entry. PR-86 follows (D-576).
+
+## Session 251: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-85, reviewer. Branch `feat/pr-85-night-hosted-linux`. PR #102, Ready for owner merge. Base `a3590ba`.
+
+### What this session did, and why
+
+- Re-reviewed PR #102 after the author answered P2-1.
+- Confirmed the unrelated audit prompt is absent from the PR tip. Updated the existing review record to approve effective head `69f5308`.
+- The review record and this entry form one metadata commit (D-182).
+
+### State of the build
+
+- Documents tests passed 147 of 147. `ste-check` found 0 issues. `doc-gate` passed with 0 problems.
+- At review start, remote code head was `69f5308`, and remote PR tip was `784583a`. Code, smoke, and bit-identity checks passed at the effective head. Document checks and Gitar passed at the PR tip.
+- `evaluate` and `review-gate` were red while the review record was absent. The code, smoke, and bit-identity jobs skipped at the PR tip because later changes were documents only.
+
+### In flight
+
+- No review work remains. The author must give the merge summary and get the owner's confirmation.
+
+### Traps and gotchas
+
+- The prior finding concerned an unrelated file under `docs/reviews/`. Check the PR tip, because the effective code head predates its deletion.
+- Gitar approved code head `69f5308` and reported no code finding.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author gives the What, How, CI, and review summary. The owner confirms the merge.
+
+## Session 249: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-85, reviewer. Branch `feat/pr-85-night-hosted-linux`. PR #102, Changes required. Base `a3590ba`.
+
+### What this session did, and why
+
+- Reviewed PR #102 at effective head `69f5308`.
+- Found one P2 finding: the PR adds repository-wide review prompts outside its night workflow scope.
+- The review record and this entry form one metadata commit (D-182).
+
+### State of the build
+
+- The Documents tests passed 147 of 147. `ste-check` found 0 issues. The gather script fixture checks and shell syntax check passed.
+- GitHub checks passed for CI, bit identity, smoke, asset QA, night gate, doc gate, STE, det-lint, and Gitar. `evaluate` and `review-gate` await the review record.
+- The remote PR head at review start was `69f5308`.
+
+### In flight
+
+- The author must remove the unrelated review prompt file or move it to a separate PR, then request a repeat review.
+
+### Traps and gotchas
+
+- Gitar approved head `69f5308` with no code finding. Its missing-record notice ends when this metadata commit reaches the PR.
+- The author must use `review-response` to answer the review finding (D-381).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author removes the unrelated file from PR #102 and requests a repeat review.
+
+## Session 247: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-87, reviewer. Branch `chore/pr-87-gitar-reenable`. PR #103, pending merge. Base `a68348b`.
+
+### What this session did, and why
+
+- Reviewed the full change and its exit tests for PR-87.
+- The cross-provider review found no actionable finding. The verdict is `Ready for owner merge` at effective head `f6292c0`.
+- Committed the review record with this handoff entry as one metadata commit (D-182).
+
+### State of the build
+
+- PR head: `ef8536b`. Effective head: `f6292c0`. CI, smoke, asset QA, STE, det-lint, night gate, doc gate, and Gitar passed. The review gate awaited the review record.
+- Focused local tests passed 11 of 11. The script syntax and diff checks passed.
+- The metadata commit was pushed to `origin/chore/pr-87-gitar-reenable` and verified with `gh pr view`.
+
+### In flight
+
+- The owner merge decision.
+
+### Traps and gotchas
+
+- Gitar approved the head and found no issue. Its other comment names only the missing review record, which this commit supplies.
+- The effective head skips later document changes under D-534.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Give the owner the merge summary in questions and answers (D-533, D-552).
+
 ## Session 246: 2026-09-24, Claude Code
 
 Author: Claude Code

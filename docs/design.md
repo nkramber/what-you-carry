@@ -201,11 +201,11 @@ What we pay:
 
 - Owner time: near full time (D-107).
 - Tokens: a generous budget on two harnesses (D-107). The amount per PR is unknown until M-4. The token audit of 2026-09-16 measured 10 sessions of each harness. The median input was 32.3 million tokens for a Claude Code session and 4.3 million for a Codex session, most of it from the cache. D-377 to D-382 act on the largest causes.
-- CI: GitHub-hosted Linux x64 and Windows x64 minutes on every PR (D-100). Wall time per PR is unknown until M-1. F-109 measured it again on 2026-09-22: 18 to 21 minutes on the hosted legs of a code head. A push of documents alone skips the heavy jobs after a green head (D-474). A session runs no full suite for such a change either (D-491).
+- CI: GitHub-hosted Linux x64, Windows x64, and macOS arm64 minutes on every PR (D-100, D-572). Wall time per PR is unknown until M-1. F-109 measured it again on 2026-09-22: 18 to 21 minutes on the hosted legs of a code head. A push of documents alone skips the heavy jobs after a green head (D-474). A session runs no full suite for such a change either (D-491).
 - The night: eight jobs on hosted Linux from PR-85, six of them for the sweeps. Standard hosted runners cost nothing for a public repository (D-572, billing page, read 2026-09-24).
-- The Mac Mini as a self-hosted macOS arm64 runner: power, and RAM shared with the editor and the harness (D-100, D-105). It runs the macOS legs of each PR until PR-86 (D-573).
+- The macOS legs: three jobs of each PR on the hosted label `macos-latest` from PR-86 (D-583). The runner-images README maps that label to macOS 26 arm64, and the Free plan runs 5 macOS jobs at once (read 2026-09-25 and 2026-09-24). The Mac Mini runs no CI job, and D-584 removes its runner (D-572).
 - Purchases that do not exist yet (D-142):
-  - an external SSD before PR-1. It arrived 2026-09-07, and the checkout is on it (D-145, D-192).
+  - an external SSD before PR-1. It arrived 2026-09-07, and the checkout is on it (D-145, and D-192, which D-584 supersedes).
   - an Apple Developer account at 99 USD per year before PR-51.
   - a Steam Direct fee of 100 USD before PR-52.
 - Music and sound: zero license cost (D-93). The quality cost is unknown (F-18).
@@ -248,7 +248,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-22 | The v1 build order put procgen before any render layer for weeks. D-57 wants a playable floor early | 2026-09-06 | 🔧 Phase 2 places the Game skeleton right after the Core foundations |
 | F-23 | The name "Descent" had a trademark risk. "What You Carry" (D-11) has no trademark search yet | 2026-09-06 | ❓ OQ-17 |
 | F-24 | Always-on numbers (D-36) and Deck 800p (D-15) strain Pillar 5 readability | 2026-09-06 | ⚠ Binds PR-19. Tier 4 checks it |
-| F-25 | The SSD, the Apple account, and the Steam account do not exist (D-142) | 2026-09-07 | ⚠ The SSD arrived 2026-09-07 (D-192). Accounts bind PR-51, PR-52 |
+| F-25 | The SSD, the Apple account, and the Steam account do not exist (D-142) | 2026-09-07 | ⚠ The SSD arrived 2026-09-07 (D-192, which D-584 supersedes). Accounts bind PR-51, PR-52 |
 | F-26 | v1 named `HANDOFF.md`, `DECISIONS.md`, and a five-file set in uppercase | 2026-09-07 | ✅ doc. D-129 lowercase, D-132 one design file |
 | F-27 | v1 listed the harness as one unnamed system. Two providers exist | 2026-09-07 | ✅ doc. D-137 names both. Binds the review file format in PR-1 |
 | F-28 | Audit R-1: the PR gate required the STE checker, the lint tool, and the bit-identity job before PR-2 and PR-3 created them | 2026-09-07 | ✅ D-148. PR-1 added the CI skeleton, and PR-2 added `ste-check`. The gate names an absent check with the PR that creates it. PR-3 added `det-lint` and the bit-identity job. Done in PR #12 (PR-3) |
@@ -262,7 +262,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-36 | Audit R-9: section 8 put the palette answer before PR-1, and OQ-1 said it blocks PR-14 | 2026-09-07 | ✅ doc. OQ-1 blocks PR-14 only. Section 8 corrected |
 | F-37 | HEAD pointed at the unborn branch `docs/repository-audit`. The first commit would have missed `main` (D-126) | 2026-09-07 | ✅ D-156. HEAD reset to `main` before the initial commit |
 | F-38 | PR-10's gate named the full weapon roster, which does not exist until Phase 3 | 2026-09-07 | 🔧 A test-only definitions file under D-149. Binds PR-10, PR-24, PR-43 to PR-46 |
-| F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | ✅ D-157. The owner registered the runner `mac-mini-m4` on 2026-09-07 (D-192) |
+| F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | ✅ D-157. The owner registered the runner `mac-mini-m4` on 2026-09-07 (D-192). PR-86 retired it: D-572 supersedes D-157, and D-584 supersedes D-192 |
 | F-40 | D-88's effect note put wall fade in the mesher as per-block visibility. A shader test needs no mesher change | 2026-09-07 | ✅ D-292: the shader test, with no mesher change. Done in PR #52 (PR-13) |
 | F-41 | No item said whether a Steam Deck unit exists for M-3, and D-15 makes the Deck the floor | 2026-09-07 | ✅ D-296: the owner owns a Steam Deck, and M-3 measures on it. Binds M-3 |
 | F-42 | D-49 shows a rarity color on an enemy, but no decision names the rarity tiers | 2026-09-07 | ❓ OQ-52. Binds PR-21, PR-26 |
@@ -663,9 +663,9 @@ Fix the verified findings F-113 to F-140 of the repository review of 2026-09-24 
 Gate: a regression test for each finding fails on the old code, and the suite, the smoke session, and the bit-identity sweep pass.
 > *In plain English:* a review of the whole repository found faults. A death at the stairwell crashed the game, and some checks passed a fault that they must catch. This PR fixes each one, with a test.
 
-**PR-86: Hosted macOS legs.** 🔧
-The macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the hosted macOS arm64 runner, and the self-hosted runner retires (D-572, D-573).
-Gate: the three macOS legs pass on the hosted runner, and no workflow names the self-hosted label.
+**PR-86: Hosted macOS legs.** ✅ Done in PR #105.
+The macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the hosted label `macos-latest`, and each one first checks for arm64 (D-572, D-573, D-583). The self-hosted runner retires: the session removes its service and its registration before the merge (D-584). The re-run rule of a lost leg covers each runner fault of a hosted job (D-585).
+Gate: the three macOS legs pass on the hosted runner, no workflow names the self-hosted label, and the repository has zero runners.
 > *In plain English:* the last checks leave the Mac of the owner. No code from a pull request runs on that Mac again.
 
 **PR-75: Sword art.** 🔧
@@ -842,8 +842,8 @@ Gate: a forced assertion produces a report a session can replay.
 One person owns the program. Items run one at a time in this order. The list changed on 2026-09-07 after the repository audit (D-147, D-149, D-150). The audit findings come first. PR-57 enters Phase 2. PR-58 enters Phase 1. PR-32 precedes PR-27. Gate 1 is a foundation gate.
 
 1. Address every audit finding (D-147). ✅ Done 2026-09-07: D-148 to D-154, F-28 to F-37.
-2. Owner: receive the external SSD and move the checkout to it (D-145). ✅ The SSD arrived 2026-09-07 (D-192), and the checkout is on it.
-3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170. ✅ The owner registered the runner on 2026-09-07 (D-192).
+2. Owner: receive the external SSD and move the checkout to it (D-145). ✅ The SSD arrived 2026-09-07 (D-192, which D-584 supersedes), and the checkout is on it.
+3. Owner: register the runner on 2026-09-08 (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. ✅ OQ-30: D-156. Protection deferred: D-170. ✅ The owner registered the runner on 2026-09-07 (D-192). PR-86 retired it: D-572 supersedes D-157, and D-584 supersedes D-192.
 4. PR-1, PR-2. ✅ PR-1 merged 2026-09-08 as PR #6. ✅ PR-2 merged 2026-09-08 as PR #10.
 5. PR-3, PR-4, PR-5. ✅ PR-3 merged 2026-09-08 as PR #12. ✅ PR-4 merged 2026-09-08 as PR #15. ✅ PR-5 merged 2026-09-08 as PR #17.
 6. PR-6, PR-7, PR-8. ✅ PR-6 merged 2026-09-09 as PR #19. ✅ PR-7 merged 2026-09-09 as PR #21. ✅ PR-8 merged 2026-09-09 as PR #23.
@@ -852,7 +852,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80. ✅ PR-70 done in PR #81. ✅ PR-66 done in PR #82. ✅ PR-16 done in PR #83. ✅ PR-17 done in PR #84. ✅ PR-18 done in PR #85.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-76, PR-77. ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-76, PR-77. ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

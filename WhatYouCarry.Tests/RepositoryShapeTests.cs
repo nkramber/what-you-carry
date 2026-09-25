@@ -77,11 +77,12 @@ public sealed class RepositoryShapeTests
     [Fact]
     public void CiWorkflowHasOneJobPerPlatform()
     {
-        // D-71, D-100, D-157: each platform runs the tests, and the macOS job selects the self-hosted runner label.
+        // D-71, D-572, D-583: each platform runs the tests on a GitHub-hosted runner, and the macOS job takes macos-latest.
         // The ci-skip job and the documents job run on Linux (D-474, D-476).
         string workflow = RepositoryRoot.ReadFile(".github/workflows/ci.yml");
         Dictionary<string, string> runsOnByJob = WorkflowText.RunsOnByJob(workflow);
-        // Each hosted leg runs its tests in two jobs (D-479).
+        // The Linux and Windows legs run their tests in two jobs (D-479). The macOS leg keeps one job and its check
+        // name (D-522).
         Assert.Equal(7, runsOnByJob.Count);
         Assert.Equal("ubuntu-latest", runsOnByJob["ci-skip"]);
         Assert.Equal("ubuntu-latest", runsOnByJob["documents"]);
@@ -89,8 +90,45 @@ public sealed class RepositoryShapeTests
         Assert.Equal("ubuntu-latest", runsOnByJob["linux-x64-sweeps"]);
         Assert.Equal("windows-latest", runsOnByJob["windows-x64"]);
         Assert.Equal("windows-latest", runsOnByJob["windows-x64-sweeps"]);
-        Assert.Contains("macos-arm64-self-hosted", runsOnByJob["macos-arm64"], StringComparison.Ordinal);
-        Assert.Contains("self-hosted", runsOnByJob["macos-arm64"], StringComparison.Ordinal);
+        Assert.Equal(WorkflowText.HostedMacosLabel, runsOnByJob["macos-arm64"]);
+    }
+
+    [Fact]
+    public void NoWorkflowNamesTheSelfHostedRunner()
+    {
+        // D-572, D-584: every job runs on a GitHub-hosted runner, so no code of a pull request runs on the Mac mini. A
+        // runs-on value or a label in any workflow or local action that names the retired runner fails here.
+        string root = RepositoryRoot.Find();
+        string[] files = Directory.GetFiles(Path.Combine(root, ".github"), "*.yml", SearchOption.AllDirectories)
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+        Assert.NotEmpty(files);
+        foreach (string path in files)
+        {
+            string text = File.ReadAllText(path);
+            string name = Path.GetRelativePath(root, path);
+            Assert.False(text.Contains("self-hosted", StringComparison.Ordinal), $"The file '{name}' names the self-hosted runner, which D-572 retires.");
+            Assert.False(text.Contains("macos-arm64-self-hosted", StringComparison.Ordinal), $"The file '{name}' names the label of the retired runner.");
+        }
+    }
+
+    [Theory]
+    [InlineData(".github/workflows/ci.yml")]
+    [InlineData(".github/workflows/smoke.yml")]
+    [InlineData(".github/workflows/bit-identity.yml")]
+    public void EachMacosLegChecksTheArm64ArchitectureFirst(string workflowPath)
+    {
+        // D-583: the label macos-latest names no architecture, so the first step of the job fails on any machine that
+        // is not arm64 (D-572, T-2). The check comes before the checkout, so no later step runs on the wrong machine.
+        string job = WorkflowText.JobText(RepositoryRoot.ReadFile(workflowPath), "macos-arm64");
+        int check = job.IndexOf("      - name: Check the architecture\n", StringComparison.Ordinal);
+        int checkout = job.IndexOf("      - uses: actions/checkout@v5\n", StringComparison.Ordinal);
+        Assert.True(check >= 0, $"The macOS leg of '{workflowPath}' has no architecture check.");
+        Assert.True(checkout > check, $"The architecture check of '{workflowPath}' does not come before the checkout.");
+        Assert.Equal(check, job.IndexOf("      - ", StringComparison.Ordinal));
+        Assert.Contains("arch=\"$(uname -m)\"", job, StringComparison.Ordinal);
+        Assert.Contains("if [ \"${arch}\" != \"arm64\" ]; then", job, StringComparison.Ordinal);
+        Assert.Contains("exit 1", job[check..checkout], StringComparison.Ordinal);
     }
 
     [Fact]
@@ -127,7 +165,7 @@ public sealed class RepositoryShapeTests
         Assert.Equal("ubuntu-latest", runsOnByJob["ci-skip"]);
         Assert.Equal("ubuntu-latest", runsOnByJob["linux-x64"]);
         Assert.Equal("windows-latest", runsOnByJob["windows-x64"]);
-        Assert.Contains("macos-arm64-self-hosted", runsOnByJob["macos-arm64"], StringComparison.Ordinal);
+        Assert.Equal(WorkflowText.HostedMacosLabel, runsOnByJob["macos-arm64"]);
         Assert.Equal("ubuntu-latest", runsOnByJob["compare"]);
 
         // The compare job must wait for all three, or it would compare an absent hash. It skips with them (D-474).
@@ -421,8 +459,8 @@ public sealed class RepositoryShapeTests
     [Fact]
     public void EveryPullRequestWorkflowCancelsItsOlderRuns()
     {
-        // D-356, F-99: a newer event on a PR cancels the older run of each workflow for that PR, so the one Mac runner
-        // serves the newest head. The group keys on the PR number, because the ref of pull_request_target is the base
+        // D-356, F-99: a newer event on a PR cancels the older run of each workflow for that PR, so each runner serves
+        // the newest head. The group keys on the PR number, because the ref of pull_request_target is the base
         // branch for every PR, and a push to main takes the group of its own commit.
         string directory = Path.Combine(RepositoryRoot.Find(), ".github", "workflows");
         List<string> pullRequestWorkflows = [];
@@ -692,6 +730,9 @@ public sealed class RepositoryShapeTests
 /// <summary>Reads the two workflow facts the tests need from the YAML text. It is not a YAML parser.</summary>
 internal static class WorkflowText
 {
+    /// <summary>The runner label of each macOS leg: the GitHub-hosted macOS arm64 image, floating (D-572, D-583).</summary>
+    public const string HostedMacosLabel = "macos-latest";
+
     /// <summary>Maps each job id under <c>jobs:</c> to the text of its <c>runs-on</c> line.</summary>
     public static Dictionary<string, string> RunsOnByJob(string workflow)
     {

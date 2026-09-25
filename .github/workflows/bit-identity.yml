@@ -17,8 +17,8 @@ on:
 permissions:
   contents: read
 
-# A newer event on a PR cancels the older run of this workflow for that PR, so the one Mac runner serves the newest
-# head (D-356, F-99). A push to main takes the group of its own commit, so every merge commit keeps its run.
+# A newer event on a PR cancels the older run of this workflow for that PR, so each runner serves the newest head
+# (D-356, F-99). A push to main takes the group of its own commit, so every merge commit keeps its run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
@@ -117,10 +117,20 @@ jobs:
     needs: ci-skip
     # A skipped job reports success to a required check. A fault in ci-skip gives no output, and the job runs (T-2).
     if: ${{ !cancelled() && needs.ci-skip.outputs.skip != 'true' }}
-    runs-on: [self-hosted, macos-arm64-self-hosted]
+    runs-on: macos-latest
     outputs:
       hash: ${{ steps.sweep.outputs.hash }}
     steps:
+      # The label macos-latest names no architecture, so the job proves the arm64 runner first (D-572, D-583, T-2).
+      - name: Check the architecture
+        shell: bash
+        run: |
+          arch="$(uname -m)"
+          if [ "${arch}" != "arm64" ]; then
+            echo "The macOS leg needs an arm64 runner, and macos-latest gave ${arch} (D-572, D-583)."
+            exit 1
+          fi
+          echo "The macOS leg runs on ${arch}."
       - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:

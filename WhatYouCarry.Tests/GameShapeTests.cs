@@ -301,7 +301,7 @@ public sealed class GameShapeTests
         Assert.Equal("ubuntu-latest", runsOnByJob["ci-skip"]);
         Assert.Equal("ubuntu-latest", runsOnByJob["linux-x64"]);
         Assert.Equal("windows-latest", runsOnByJob["windows-x64"]);
-        Assert.Contains("macos-arm64-self-hosted", runsOnByJob["macos-arm64"], StringComparison.Ordinal);
+        Assert.Equal(WorkflowText.HostedMacosLabel, runsOnByJob["macos-arm64"]);
 
         Assert.Contains("GODOT_VERSION: 4.7.2-stable", workflow, StringComparison.Ordinal);
         Assert.Equal(3, Count(workflow, "uses: actions/cache@v4"));
