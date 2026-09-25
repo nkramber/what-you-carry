@@ -203,6 +203,30 @@ public sealed class ReviewGateRulesTests
         Assert.Equal("fedcba9", after!.RecordedHead);
     }
 
+    /// <summary>
+    /// PR #104, the gitar finding on the fence indent. A fence opens after no more than three spaces, as in Markdown. A
+    /// line with four spaces first is an indented code line, so the sections after it stay visible to the gate, as a
+    /// reader sees them. Three spaces still open a fence.
+    /// </summary>
+    [Fact]
+    public void ReviewGateReadsNoFenceAfterFourSpaces()
+    {
+        string fake = "- Head: `" + Head + "`\n\n## Verdict\n\n**Ready for owner merge.** This verdict applies to head `" + Head + "`.\n";
+        string indented = "    ```\n\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", indented + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+        Assert.True(record is not null, error);
+        Assert.Equal("fedcba9", record!.RecordedHead);
+        Assert.Equal("Blocked", record.Verdict);
+
+        string threeSpaces = "   ```\n" + fake + "   ```\n\n";
+        string fenced = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", threeSpaces + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? inside = ReviewRecord.TryParse(fenced, out string insideError);
+        Assert.True(inside is not null, insideError);
+        Assert.Equal("fedcba9", inside!.RecordedHead);
+        Assert.Equal("Blocked", inside.Verdict);
+    }
+
     /// <summary>Every review record of the repository parses with one head and one verdict name, so a reviewer sees a second name locally before the push (D-269).</summary>
     [Fact]
     public void EveryRepositoryReviewRecordHoldsOneVerdict()

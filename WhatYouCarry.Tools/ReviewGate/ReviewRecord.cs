@@ -144,10 +144,10 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
     }
 
     /// <summary>
-    /// The lines of a text that are outside a fenced block, in order. A run of three or more backticks or tildes at the
-    /// start of a line opens a fence. Only a line of the same character, with a run at least as long and nothing after
-    /// it, closes that fence, as in Markdown. So a line of tildes inside a backtick fence stays inside it (PR #104 P1-2).
-    /// The fence lines are skipped too.
+    /// The lines of a text that are outside a fenced block, in order. A run of three or more backticks or tildes, after
+    /// no more than three spaces, opens a fence. Only a line of the same character, with a run at least as long and
+    /// nothing after it, closes that fence, as in Markdown. So a line of tildes inside a backtick fence stays inside it
+    /// (PR #104 P1-2), and a line with four spaces or a tab first is no fence. The fence lines are skipped too.
     /// </summary>
     private static System.Collections.Generic.List<string> LinesOutsideFences(string text)
     {
@@ -156,7 +156,7 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
         int fenceLength = 0;
         foreach (string line in text.Split('\n'))
         {
-            string start = line.TrimStart();
+            string start = FenceStart(line);
             int run = FenceRun(start);
             if (fenceLength == 0)
             {
@@ -178,6 +178,26 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
         }
 
         return lines;
+    }
+
+    /// <summary>
+    /// The line after up to three spaces, where a fence can start. A line with four spaces or a tab first is an indented
+    /// code line in Markdown, so it gives the empty text, which holds no fence.
+    /// </summary>
+    private static string FenceStart(string line)
+    {
+        int spaces = 0;
+        while (spaces < line.Length && spaces <= 3 && line[spaces] == ' ')
+        {
+            spaces++;
+        }
+
+        if (spaces > 3 || (spaces < line.Length && line[spaces] == '\t'))
+        {
+            return string.Empty;
+        }
+
+        return line[spaces..];
     }
 
     /// <summary>The length of the run of backticks or tildes at the start of a line, when it is three or more, or zero.</summary>
