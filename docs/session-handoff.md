@@ -13,19 +13,24 @@ Session: PR-86, author. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge
 - The owner chose the floating label `macos-latest` (D-583), and the removal of the runner in this PR (D-584). The re-run rule of D-358 now covers each runner fault of any job (D-585).
 - The three macOS legs run on `macos-latest`. Each one first fails on a machine that is not arm64. Two new shape tests fail on the workflows of `main`.
 - The runbook, the design doc, the roadmap, and the registers retire the runner. D-572 supersedes D-157, and D-584 supersedes D-192.
+- After the hosted legs passed, the session stopped and uninstalled the launch agent, and removed the registration. The repository has 0 runners, and `launchctl list` holds no runner agent (exit test 6).
 
 ### State of the build
 
-- Remote head: not pushed yet.
+- Effective head `6dfe7f8`. Every check passes but `evaluate` and `review-gate`, which wait for the review record (D-251).
+- The hosted macOS legs ran on the image `macos-26-arm64` 20260907.0351, and each log shows "runs on arm64". Wall times: `ci-macos-arm64` 11 min 29 s, `smoke-macos-arm64` 42 s, `bit-identity-macos-arm64` 25 s. The three platforms agree on `9c79047da9c82a0e`.
+- The local suite passed 1820 of 1820, Smoke included. The gitar pass approved `6dfe7f8` with no finding.
 
 ### In flight
 
-- The first push, CI on the hosted macOS legs, and the gitar pass.
+- The cross-provider review, and the owner merge decision (D-533, D-552).
 
 ### Traps and gotchas
 
 - A citation of D-157 or D-192 now needs its superseder on the same line (D-178).
 - The merge of PR #104 dropped the title line and the rule line of this file. `doc-gate` reads the first entry after a line break, so it read session 257 as the newest. This PR puts both lines back.
+- The macOS shell has no `timeout` command, so a wait wrapped in it ends at once.
+- The Full Disk Access grant of `/bin/bash` and of the runner `node` stays on the Mac Mini until the owner removes it in System Settings.
 
 ### Open questions that block progress
 
@@ -33,7 +38,7 @@ None for PR-86.
 
 ### Next concrete action
 
-Push, wait on CI, and remove the runner (D-584).
+Read the night of 2026-09-26 for PR-85 exit test 8, then run `make codex-review PR=105`.
 
 ## Session 258: 2026-09-25, Claude Code
 
