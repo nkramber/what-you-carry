@@ -1,3 +1,42 @@
+## Session 257: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Ready for owner merge. Base `4e9b59d`.
+
+### What this session did, and why
+
+- Round 3 reviewed PR #104 at effective head `d027fa8` and checked P1-3 and P2-1.
+- Both findings are fixed in `d027fa8`. The review record now approves this head.
+- The targeted review tests passed 73 cases, and det-lint found zero issues.
+- STE passed with zero findings. The Documents category passed 192 tests after handoff rotation. Doc-gate found zero problems.
+
+### State of the build
+
+- Required CI, Smoke, bit identity, bots, asset QA, det-lint, Documents, STE, doc-gate, night-gate, and Gitar passed at PR head `5e43e89`.
+- `evaluate` and `review-gate` failed because the prior record still required changes. The metadata checks must run again after the push.
+- The review record and this entry publish in one metadata commit (D-182).
+- The metadata push and current PR head are verified with `gh pr view`.
+
+### In flight
+
+- The review is ready for owner merge at effective head `d027fa8`.
+- The post-push check wait remains to run.
+
+### Traps and gotchas
+
+- PR head `5e43e89` merges the updated base `4e9b59d` and carries effective head `d027fa8`.
+- The local regression run used the Debug configuration and passed all 73 selected tests.
+- The first Documents run found the handoff archive out of rotation. `handoff-rotate` moved Session 244, then all 192 Documents tests passed.
+- The earlier Gitar claims remain resolved. Its current dashboard reported only the stale review-gate verdict.
+
+### Open questions that block progress
+
+None for PR-88. OQ-195 to OQ-205 do not block this review.
+
+### Next concrete action
+
+Push the metadata commit, wait for the checks, and give the owner the review verdict.
+
 # Session handoff
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
@@ -360,39 +399,3 @@ None.
 ### Next concrete action
 
 When the owner confirms, run `gh pr merge 103 --auto --squash`, and write the prompt of `merge-prompt.md` at the merge. PR-85 (PR #102) then carries the gitar wait and D-577 too. The next PR after both is PR-86.
-
-## Session 244: 2026-09-24, Codex
-
-Author: Codex
-Session: PR-84, reviewer, round 2. Branch `feat/pr-84-night-fixed-seeds`. PR #100, pending owner merge. Base `55b6d3f`.
-
-### What this session did, and why
-
-- Reviewed the fix for P1-1. The failure record script keeps the failed seeds from the record of `main` when a build fails before `night-record` runs.
-- Updated `docs/reviews/pr-100.md`. P1-1 is fixed at `b07e6ed`. The review found no new defects.
-- Exported the PR comments. The only comment is a gitar notice, which needs no answer (D-550).
-
-### State of the build
-
-- The focused regression test passed: 1 test, 0 warnings, 0 errors.
-- The full suite passed 1612 of 1612 tests in 5 minutes 26 seconds. `ste-check` found 0 issues.
-- CI and the night gate passed after the fix at `ab566b0`. The current PR tip `9eee277` has green document, lint, asset, and night-gate checks. Heavy jobs skipped under the documents-only rule.
-- The current `evaluate` and `review-gate` runs failed before this review record approved the head. This session does no push wait under D-542.
-
-### In flight
-
-- The review record, archive rotation, and this handoff entry are in one metadata commit on the PR branch.
-- Post-push check results are not observed.
-
-### Traps and gotchas
-
-- The focused test runs the script with `bash` and `jq`. The Windows test leg checks the script text only.
-- The branch night passed at `35da819`, before the P1-1 fallback fix. The focused regression test covers the fallback path.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the review commit reaches the PR branch, the owner can read the merge summary and decide whether to merge PR #100.

@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 244: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-84, reviewer, round 2. Branch `feat/pr-84-night-fixed-seeds`. PR #100, pending owner merge. Base `55b6d3f`.
+
+### What this session did, and why
+
+- Reviewed the fix for P1-1. The failure record script keeps the failed seeds from the record of `main` when a build fails before `night-record` runs.
+- Updated `docs/reviews/pr-100.md`. P1-1 is fixed at `b07e6ed`. The review found no new defects.
+- Exported the PR comments. The only comment is a gitar notice, which needs no answer (D-550).
+
+### State of the build
+
+- The focused regression test passed: 1 test, 0 warnings, 0 errors.
+- The full suite passed 1612 of 1612 tests in 5 minutes 26 seconds. `ste-check` found 0 issues.
+- CI and the night gate passed after the fix at `ab566b0`. The current PR tip `9eee277` has green document, lint, asset, and night-gate checks. Heavy jobs skipped under the documents-only rule.
+- The current `evaluate` and `review-gate` runs failed before this review record approved the head. This session does no push wait under D-542.
+
+### In flight
+
+- The review record, archive rotation, and this handoff entry are in one metadata commit on the PR branch.
+- Post-push check results are not observed.
+
+### Traps and gotchas
+
+- The focused test runs the script with `bash` and `jq`. The Windows test leg checks the script text only.
+- The branch night passed at `35da819`, before the P1-1 fallback fix. The focused regression test covers the fallback path.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the review commit reaches the PR branch, the owner can read the merge summary and decide whether to merge PR #100.
+
 ## Session 243: 2026-09-24, Claude Code
 
 Author: Claude Code
