@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-84, PR-87, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-87 applies D-574 to D-576. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-84, PR-87, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-87 applies D-574 to D-577. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -1090,6 +1090,7 @@ Scope:
 - `.github/scripts/gitar-wait.sh`: the wait after a push. It reads the Gitar check runs of the head every 30 seconds after a wait of 60 seconds. It ends when they complete and the dashboard has a later edit (D-575).
 - `.github/scripts/gitar-wait.sh`: with no check run at 6 minutes, it posts one `Gitar review` comment. At 15 minutes it stops with exit 1 (D-575).
 - `Makefile`: the target `gitar-wait` runs the script (D-575).
+- The agent files, `review-and-merge.md`, `review-response`, and the runbook: a review round starts only when each check but the Review gate workflow is green (D-577).
 - `WhatYouCarry.Tests/`: `GitarWaitTests`, and `NoInstructionTextHoldsTheGitarPause` in `RepositoryShapeTests`.
 
 Out of scope: the flag `--skip-gitar-review`, which stays in `codex-review` (D-543). The night move of PR-85 and the macOS move of PR-86.
@@ -1225,7 +1226,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 40. PR-83. ✅ Done in PR #99. ✅ The owner answers of 2026-09-23: D-555 to D-563.
 41. PR-84. ✅ Done in PR #100. ✅ The owner answers of 2026-09-24: D-564 to D-569.
 42. PR-85. The night on hosted Linux at 07:07 UTC (D-571 to D-573).
-43. PR-87. ✅ Done in PR #103. ✅ The owner answers of 2026-09-24: D-574 to D-576.
+43. PR-87. ✅ Done in PR #103. ✅ The owner answers of 2026-09-24 and 2026-09-25: D-574 to D-577.
 44. PR-86. The macOS legs on hosted runners (D-572, D-573).
 45. PR-75.
 46. PR-76.

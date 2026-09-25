@@ -27,7 +27,7 @@ Use this skill when you answer a review of your own PR. The reviewing provider u
 6. Correct every finding that has merit. Use the smallest change that restores the contract.
 7. Record each disposition in `docs/reviews/pr-<number>-response.md`.
 8. Commit the response, the corrections, and the handoff entry, then run the session end gate (D-182, D-183, D-199).
-9. Do the gitar pass of the new head, then start the next round with `make codex-review PR=<n>` (D-511).
+9. Do the gitar pass of the new head. When each check but the Review gate workflow is green, start the next round with `make codex-review PR=<n>` (D-511, D-577).
 
 A correction of documents alone runs `ste-check`, `doc-gate`, and the `Documents` category, and no full suite (D-491, D-492). A correction that changes code runs the full suite (D-493).
 
@@ -80,6 +80,6 @@ Load `.claude/skills/gitar-review/SKILL.md` after each push, and follow its proc
 - Do not answer a gitar notice: a comment with no specific item, such as "Gitar is working" or a plan notice (D-550).
 - A reply names no provider, harness, or model as the source of the work (T-6, D-176).
 - Resolve each thread after its reply, also after a fix. The ruleset of `main` needs each thread resolved (D-522).
-- When the pass ends, run `make codex-review PR=<n>`, or apply the override label (D-511, D-517). The file `references/review-and-merge.md` of `one-pr-one-session` holds the loop and the auto-merge.
+- When the pass ends and CI is green, run `make codex-review PR=<n>`, or apply the override label (D-511, D-517, D-577). The file `references/review-and-merge.md` of `one-pr-one-session` holds the loop and the auto-merge.
 - Record the pass in the handoff entry. Give the count of findings, the count with merit, and the commit that answered each one.
 - Record each `Gitar review` comment in the handoff entry too (D-303).

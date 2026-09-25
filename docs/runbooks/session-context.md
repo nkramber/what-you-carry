@@ -79,7 +79,7 @@ Run no other status command while the wait runs. Read the result one time, when 
 
 ## The review round
 
-The author starts the cross-provider review with one command after the gitar pass (D-511). The author does not add `-- --skip-gitar-review` (D-543, D-574). A round takes longer than the ten-minute limit of a tool call, so run it in the background and wait for the completion notice.
+The author starts the cross-provider review with one command after the gitar pass, when each check of the head is green (D-511). The Review gate workflow alone can be red (D-577). The author does not add `-- --skip-gitar-review` (D-543, D-574). A round takes longer than the ten-minute limit of a tool call, so run it in the background and wait for the completion notice.
 
 ```
 make codex-review PR=<number>

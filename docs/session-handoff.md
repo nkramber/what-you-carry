@@ -14,6 +14,7 @@ Session: PR-87, author. Branch `chore/pr-87-gitar-reenable`. PR #103, pending me
 - Removed each pause text of D-542 from the agent files, the PR template, three skills, and the runbook. `NoInstructionTextHoldsTheGitarPause` holds that.
 - The first live wait on PR #103 ended too early. The check run of the head `36e4d23` completed at 05:07:56 UTC, and the gitar dashboard came at 05:08:49 UTC. The wait now also needs a dashboard edit after the run started, as the start checks of `codex-review` do. `ACompletedCheckRunWithNoNewDashboardIsNoReview` fails on the first form.
 - Gitar approved `36e4d23` at 05:08:55 UTC with no finding. Its summary names PR-85 as the source of the pause, which was PR-80. A summary is no finding (D-550).
+- The session started `make codex-review` after the gitar pass while five CI jobs ran. The owner forbade that (D-577). The session stopped the round, removed its worktree, and confirmed that no record reached the branch.
 - D-576: PR-87 goes after PR-85 and before PR-86. PR-85 is open as PR #102 in another session, which uses session number 245.
 
 ### State of the build

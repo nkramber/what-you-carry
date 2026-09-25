@@ -6,9 +6,10 @@ The `one-pr-one-session` skill names this file at the end of the gitar pass. It 
 
 1. Push the round of changes.
 2. Complete the gitar pass with `make gitar-wait PR=<n>` and the `gitar-review` skill (D-574, D-575). Resolve each thread after its reply (D-522).
-3. Run `make codex-review PR=<n>` in the background, and wait for the completion notice (D-511).
-4. Read the outcome line of the command and its exit code.
-5. Do the step that the table below gives for that exit code.
+3. Wait until each check of the head is green. The Review gate workflow alone can be red (D-577).
+4. Run `make codex-review PR=<n>` in the background, and wait for the completion notice (D-511).
+5. Read the outcome line of the command and its exit code.
+6. Do the step that the table below gives for that exit code.
 
 No round uses API pricing. The command removes each API credential variable from the Codex processes, and it refuses a login that is not ChatGPT (D-523). A review round takes longer than the ten-minute limit of a tool call. Do not poll the round. The command starts Codex in a detached worktree at the PR head, so the author checkout does not change. Codex pushes the review record and its own handoff entry as one metadata commit (D-182, D-518).
 
@@ -17,8 +18,8 @@ No round uses API pricing. The command removes each API credential variable from
 | 0 | The review approves the effective head (D-534) | Do the auto-merge below |
 | 10 | `Changes required` or `Blocked` | Answer the findings with `review-response`, then go to step 1 |
 | 11 | The three-strike stop | Do the three-strike stop below |
-| 3 | A start condition failed | Correct each condition that the output names, then go to step 3 |
-| 1 | A fault: no record, a stale head, no pushed commit, a moved work head, or a Codex error | Read the transcript, correct the cause, then go to step 3 |
+| 3 | A start condition failed | Correct each condition that the output names, then go to step 4 |
+| 1 | A fault: no record, a stale head, no pushed commit, a moved work head, or a Codex error | Read the transcript, correct the cause, then go to step 4 |
 
 Make exits 2 for each failed target, and it prints the exit code of the command as `Error <code>`. The first line of the command output names the outcome.
 
