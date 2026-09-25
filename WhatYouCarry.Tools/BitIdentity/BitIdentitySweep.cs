@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Camera;
 using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
@@ -17,16 +18,19 @@ namespace WhatYouCarry.Tools.BitIdentity;
 
 /// <summary>
 /// A fixed run of the RNG, of DetMath, of the floor generator, of one recorded run through the replay, of the
-/// camera over that run, of a projectile run, of the sword arc, and of a body, the rays, and the search on ramp
-/// courses, folded into one state hash (D-69, D-71). Two platforms that give the same hash agree on every bit of
-/// all eight.
+/// camera over that run, of a projectile run, of the sword arc, of a body, the rays, and the search on ramp
+/// courses, and of two stairwell records on the content of the checkout, folded into one state hash (D-69, D-71).
+/// Two platforms that give the same hash agree on every bit of all nine.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Every number here is a constant of this file, so the sweep takes no input and reads no content file. The
-/// content set of the sweep is a floor template and two chamber kinds that this file declares. The hash changes
-/// only when this file changes or when Core changes its numbers. The `bit-identity` CI job runs it on Linux
-/// x64, Windows x64, and macOS arm64 and compares the three results.
+/// The sweep takes no input and opens no file. The first eight parts run on a content set that this file declares,
+/// with floors of 32 by 12 by 32 and enemy weapons of one damage, so the first record never leaves floor 1 and never
+/// dies. The stairwell records run on the content of the checkout, which the build puts into the tool (F-133): the
+/// floors of 64 by 20 by 64, a descent that takes the floor that the worker offers, the enemies of the next floor, a
+/// death, and in a second record an ascend. The hash therefore changes when this file changes, when Core changes
+/// its numbers, when a bot policy changes its walk, or when the content of the checkout changes. The `bit-identity`
+/// CI job runs it on Linux x64, Windows x64, and macOS arm64, in Debug and in Release, and compares the results.
 /// </para>
 /// <para>
 /// A change to the hash is a change to the simulation. A deliberate one updates
@@ -67,6 +71,18 @@ public static class BitIdentitySweep
 
     /// <summary>The count of boxes on the ring around the feet that the sword arc is tested against (D-325).</summary>
     public const int ArcBoxes = 24;
+
+    /// <summary>
+    /// The seed of the descend record on the content of the checkout (F-133). On it the greedy descender takes the
+    /// descent at the stairwell of floor 1 and dies on floor 2. The seed has no meaning beyond that.
+    /// </summary>
+    public const ulong DescendSeed = 37;
+
+    /// <summary>The seed of the ascend record on the content of the checkout (F-133). On it the coward ascends at the stairwell of floor 1.</summary>
+    public const ulong AscendSeed = 8;
+
+    /// <summary>The most ticks of one stairwell record. A record that runs past it no longer reaches its end, and the sweep stops (T-2).</summary>
+    public const uint StairwellTickLimit = 3000;
 
     /// <summary>The floors that the sweep digs and folds, one per band of the sweep content (PR-9 exit test 7, PR-59 exit test 4).</summary>
     private static readonly int[] SweptFloors = [1, 2, 3];
@@ -111,7 +127,85 @@ public static class BitIdentitySweep
             }
         }
 
+        // F-133: one floor of the content of the checkout, and the two stairwell records on that content.
+        ContentSet repository = RepositoryContent();
+        AddFloor(ref hash, FloorGenerator.Generate(DescendSeed, SimulationLoop.FirstFloor, repository));
+        AddStairwellRecord(ref hash, RecordStairwellRun(new GreedyDescender(repository), DescendSeed, repository), repository, RunEnd.Death, SimulationLoop.FirstFloor + 1);
+        AddStairwellRecord(ref hash, RecordStairwellRun(new Coward(), AscendSeed, repository), repository, RunEnd.Ascend, SimulationLoop.FirstFloor);
         return hash;
+    }
+
+    /// <summary>The content set of the checkout, from the JSON files that the build put into the tool (F-133).</summary>
+    /// <exception cref="ContextException">A content file fails its schema.</exception>
+    public static ContentSet RepositoryContent()
+    {
+        return new ContentLoader(new EmbeddedContentSource()).Load();
+    }
+
+    /// <summary>
+    /// Plays one bot policy on a live loop from the seed and records each intent, until the run ends (F-133). Before
+    /// the first tick of each floor, the loop takes the next floor from the worker, as the Game layer gives it
+    /// (D-429). The replay offers no floor and digs each one at the descent, so a replay that ends on the hash of the
+    /// live loop shows that both paths give one state. The states of this loop never enter the hash of the sweep.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The run does not end inside <see cref="StairwellTickLimit"/> ticks (T-2).</exception>
+    public static StairwellRecord RecordStairwellRun(IBotPolicy policy, ulong seed, ContentSet content)
+    {
+        MemorySink sink = new();
+        RunRecorder recorder = new(sink, RunRecord.NewHeader(content.Hash, seed));
+        SimulationLoop live = new(seed, content);
+        NextFloorWorker worker = new(content);
+        int offeredOn = 0;
+        int offers = 0;
+        while (!live.Ended)
+        {
+            if (live.Tick >= StairwellTickLimit)
+            {
+                throw new InvalidOperationException($"The {policy.Name} record of seed {seed} did not end in {StairwellTickLimit} ticks. It is on floor {live.Floor} (F-133).");
+            }
+
+            if (offeredOn != live.Floor && worker.Covers(live.Floor + 1))
+            {
+                live.OfferNextFloor(worker.Generate(seed, live.Floor + 1));
+                offeredOn = live.Floor;
+                offers++;
+            }
+
+            Intent intent = policy.Next(live);
+            recorder.Record(intent);
+            live.Step(intent);
+        }
+
+        return new StairwellRecord(sink.Bytes, live, offers);
+    }
+
+    /// <summary>
+    /// Replays one stairwell record, and folds the camera and the aim ray of every replayed tick, the end state, the
+    /// count of frames, the end, and the floor (F-133). The record must end as the caller expects, and the replay
+    /// must end on the hash of the live loop, or the sweep stops. A sweep that no longer descends, dies, or ascends
+    /// would pass on three platforms and compare less (T-2). The checksum of the record is not folded, because the
+    /// header holds the content hash, and a change to a string alone would then move the hash.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The record ends another way, or the replay does not give the live state (T-2).</exception>
+    private static void AddStairwellRecord(ref StateHash hash, StairwellRecord record, ContentSet content, RunEnd end, int floor)
+    {
+        if (record.Live.End != end || record.Live.Floor != floor)
+        {
+            throw new InvalidOperationException($"The stairwell record of seed {record.Live.Seed} ended as {RunEnds.TextOf(record.Live.End)} on floor {record.Live.Floor} at tick {record.Live.Tick}, and the sweep needs {RunEnds.TextOf(end)} on floor {floor} (F-133).");
+        }
+
+        CameraFold cameras = new();
+        ReplayResult result = RunReplayer.Replay(record.Bytes, content, new JsonlLogger(new RejectingLogSink()), cameras);
+        if (!result.Loop.Hash().Equals(record.Live.Hash()))
+        {
+            throw new InvalidOperationException($"The replay of the stairwell record of seed {record.Live.Seed} ended on {result.Loop.Hash()}, and the live loop on {record.Live.Hash()} (F-133).");
+        }
+
+        hash.Add(cameras.Hash.Value);
+        hash.Add(result.Loop.Hash().Value);
+        hash.Add(result.FrameCount);
+        hash.Add((byte)result.Loop.End);
+        hash.Add(result.Loop.Floor);
     }
 
     /// <summary>
@@ -325,36 +419,41 @@ public static class BitIdentitySweep
     {
         foreach (int floor in SweptFloors)
         {
-            FloorPlan plan = FloorGenerator.Generate(RunSeed, floor, content);
-            hash.Add(plan.Floor);
-            for (int y = 0; y < plan.Grid.SizeY; y++)
+            AddFloor(ref hash, FloorGenerator.Generate(RunSeed, floor, content));
+        }
+    }
+
+    /// <summary>Folds one dug floor: the floor number, every block, the spawn, the stairwell, the counts, and every enemy spawn.</summary>
+    private static void AddFloor(ref StateHash hash, FloorPlan plan)
+    {
+        hash.Add(plan.Floor);
+        for (int y = 0; y < plan.Grid.SizeY; y++)
+        {
+            for (int z = 0; z < plan.Grid.SizeZ; z++)
             {
-                for (int z = 0; z < plan.Grid.SizeZ; z++)
+                for (int x = 0; x < plan.Grid.SizeX; x++)
                 {
-                    for (int x = 0; x < plan.Grid.SizeX; x++)
-                    {
-                        hash.Add((byte)plan.Grid.Get(x, y, z));
-                    }
+                    hash.Add((byte)plan.Grid.Get(x, y, z));
                 }
             }
+        }
 
-            hash.Add(plan.Spawn.X);
-            hash.Add(plan.Spawn.Y);
-            hash.Add(plan.Spawn.Z);
-            hash.Add(plan.Stairwell.X);
-            hash.Add(plan.Stairwell.Y);
-            hash.Add(plan.Stairwell.Z);
-            hash.Add(plan.Chambers.Count);
-            hash.Add(plan.Shafts.Count);
-            hash.Add(plan.Ramps.Count);
-            hash.Add(plan.EnemySpawns.Count);
-            foreach (EnemySpawn spawn in plan.EnemySpawns)
-            {
-                hash.Add(spawn.Cell.X);
-                hash.Add(spawn.Cell.Y);
-                hash.Add(spawn.Cell.Z);
-                hash.Add(spawn.ChamberIndex);
-            }
+        hash.Add(plan.Spawn.X);
+        hash.Add(plan.Spawn.Y);
+        hash.Add(plan.Spawn.Z);
+        hash.Add(plan.Stairwell.X);
+        hash.Add(plan.Stairwell.Y);
+        hash.Add(plan.Stairwell.Z);
+        hash.Add(plan.Chambers.Count);
+        hash.Add(plan.Shafts.Count);
+        hash.Add(plan.Ramps.Count);
+        hash.Add(plan.EnemySpawns.Count);
+        foreach (EnemySpawn spawn in plan.EnemySpawns)
+        {
+            hash.Add(spawn.Cell.X);
+            hash.Add(spawn.Cell.Y);
+            hash.Add(spawn.Cell.Z);
+            hash.Add(spawn.ChamberIndex);
         }
     }
 
@@ -456,7 +555,8 @@ public static class BitIdentitySweep
 
             // The buttons keep the assigned bits alone, because a set reserved bit is an error (D-232, D-243).
             // The stairwell bits stay clear, so the sweep run stays on floor 1 (D-257). The enemies of the sweep
-            // deal one damage each, so the run never ends by death either (D-322).
+            // deal one damage each, so the run never ends by death either (D-322). The stairwell records on the
+            // content of the checkout cover the descent, the death, and the ascend (F-133).
             ushort buttons = (ushort)((rest >> 16) & Button.AssignedMask & ~(Button.Interact | Button.Ascend));
             intents.Add(new Intent(tick, (short)look, (short)(look >> 16), (sbyte)rest, (sbyte)(rest >> 8), buttons));
         }
@@ -545,3 +645,9 @@ public static class BitIdentitySweep
         }
     }
 }
+
+/// <summary>
+/// One stairwell record of the sweep (F-133): the bytes of the record, the live loop at the end of the run, and the
+/// count of floors that the worker offered to the live loop.
+/// </summary>
+public sealed record StairwellRecord(IReadOnlyList<byte> Bytes, SimulationLoop Live, int Offers);

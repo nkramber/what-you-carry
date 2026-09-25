@@ -108,14 +108,15 @@ public sealed class RampRayTests
                 }
             }
 
+            // The march hits exactly when the walk finds a solid part (F-129).
+            Assert.True(hit.Hit == (firstSolid >= 0.0f), $"Seed {seed}: the march hit is {hit.Hit}, and the walk found a solid part at {firstSolid}.");
             if (hit.Hit)
             {
-                Assert.True(firstSolid < 0.0f || hit.Distance <= firstSolid + 1e-3f, $"Seed {seed}: the march hit at {hit.Distance}, and the walk found a solid part at {firstSolid}.");
-                Assert.True(firstSolid < 0.0f || firstSolid >= hit.Distance - 1e-3f, $"Seed {seed}: the walk found a solid part at {firstSolid}, before the march hit at {hit.Distance}.");
-            }
-            else
-            {
-                Assert.True(firstSolid < 0.0f, $"Seed {seed}: the march found no solid part, and the walk found one at {firstSolid}.");
+                // The walk samples each millimeter, so its first solid sample sits about one step past the face that the
+                // march hits. The lower bound takes two steps for the float sum of the steps. Both bounds hold, so a
+                // march that hits early fails as one that hits late (F-129).
+                Assert.True(hit.Distance <= firstSolid + 1e-3f, $"Seed {seed}: the march hit at {hit.Distance}, after the walk found a solid part at {firstSolid}.");
+                Assert.True(hit.Distance >= firstSolid - 2e-3f, $"Seed {seed}: the march hit at {hit.Distance}, and the walk found no solid part before {firstSolid}.");
             }
         }
     }

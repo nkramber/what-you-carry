@@ -37,6 +37,12 @@ public sealed class Strings
                 throw ContentError.Make(path, member.Name, "holds a value that is not text, and every string is text");
             }
 
+            // An empty value shows the player nothing, and the table holds no string that is meant to be empty (D-98, T-2).
+            if (member.Value.Length == 0)
+            {
+                throw ContentError.Make(path, member.Name, "holds an empty text, and every string shows the player some text");
+            }
+
             entries.Add(member);
         }
 

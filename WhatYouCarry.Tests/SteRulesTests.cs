@@ -9,6 +9,12 @@ namespace WhatYouCarry.Tests;
 /// <summary>One test per STE rule, each with a sentence that passes and a sentence that fails (PR-2 exit test 1).</summary>
 public sealed class SteRulesTests
 {
+    /// <summary>Each auxiliary that rule 3.4 reads before an -ing form. The skill row names each one (F-140).</summary>
+    public static readonly string[] Auxiliaries = ["is", "are", "was", "were", "be", "been", "being"];
+
+    /// <summary>Each word that rule 4.2 reads before a contraction ending. The skill row names each one (F-140).</summary>
+    public static readonly string[] ContractionWords = ["I", "you", "we", "they", "he", "she", "it", "who", "what", "that", "there", "here", "let", "how", "where", "when", "why"];
+
     [Fact]
     public void DescriptiveSentenceLimitIs25Words()
     {
@@ -84,6 +90,36 @@ public sealed class SteRulesTests
         Assert.Equal(SteRules.RuleHelperVerb, Assert.Single(Rules("The owner may merge the PR.")).Rule);
         Assert.Equal(SteRules.RuleHelperVerb, Assert.Single(Rules("The tool has merged the PR.")).Rule);
         Assert.Equal(SteRules.RuleHelperVerb, Assert.Single(Rules("The tool is merging the PR.")).Rule);
+    }
+
+    [Fact]
+    public void EachAuxiliaryBeforeAnIngFormIsAHelperVerb()
+    {
+        // F-140: the code reads every auxiliary, and not "is or are" alone, as the skill row now states.
+        foreach (string auxiliary in Auxiliaries)
+        {
+            Finding finding = Assert.Single(Rules($"The tool {auxiliary} merging the PR."));
+            Assert.Equal(SteRules.RuleHelperVerb, finding.Rule);
+            Assert.Contains($"'{auxiliary} merging'", finding.Detail, StringComparison.Ordinal);
+        }
+
+        // A noun that ends in "ing" after an auxiliary is not a complex tense.
+        Assert.Empty(Rules("The value was a string. The result is nothing. The note is a warning."));
+    }
+
+    [Fact]
+    public void EachContractionWordIsAFinding()
+    {
+        // F-140: the code reads a pronoun, a question word, that, there, here, and let, as the skill row now states.
+        foreach (string word in ContractionWords)
+        {
+            Finding finding = Assert.Single(Rules($"The note says {word}'ll run."));
+            Assert.Equal(SteRules.RuleContraction, finding.Rule);
+            Assert.Contains($"'{word.ToLowerInvariant()}'ll'", finding.Detail, StringComparison.Ordinal);
+        }
+
+        // A possessive is not a contraction.
+        Assert.Empty(Rules("The owner's account holds the token. The tool's output is short."));
     }
 
     [Fact]

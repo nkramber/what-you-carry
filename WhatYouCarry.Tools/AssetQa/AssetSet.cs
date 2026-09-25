@@ -10,9 +10,9 @@ namespace WhatYouCarry.Tools.AssetQa;
 /// Every model, overlay, and animation under the content directory, read once for the three checks (D-135).
 /// A file that does not load is a finding and not a stop, so one run reports every file at fault (T-2).
 /// </summary>
-/// <param name="Bodies">The models at the top of the model directory, in path order.</param>
-/// <param name="Overlays">The armor overlays under the armor directory, in path order (D-300).</param>
-/// <param name="Animations">The animation files next to the models, in path order (D-298). A paint file of D-508 is not an animation.</param>
+/// <param name="Bodies">The models under the model directory at any depth, outside the armor directory, in path order. The content loader accepts a model in a subdirectory, so the gate reads it too (D-135, F-119).</param>
+/// <param name="Overlays">The armor overlays under the armor directory at any depth, in path order (D-300).</param>
+/// <param name="Animations">The animation files under the model directory at any depth, in path order (D-298). A paint file of D-508 is not an animation.</param>
 /// <param name="LoadFindings">One finding per file that did not load, with the loader message.</param>
 public sealed record AssetSet(IReadOnlyList<LoadedModel> Bodies, IReadOnlyList<LoadedModel> Overlays, IReadOnlyList<LoadedAnimation> Animations, IReadOnlyList<AssetFinding> LoadFindings)
 {
@@ -43,6 +43,12 @@ public sealed record AssetSet(IReadOnlyList<LoadedModel> Bodies, IReadOnlyList<L
 
         foreach (string file in SortedFiles(modelDirectory, ModelPattern))
         {
+            // The armor directory holds the overlays, which the loop below reads (D-300).
+            if (ContentPath(contentRoot, file).StartsWith(AssetPaths.ArmorDirectory, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             ReadModel(contentRoot, file, bodies, findings);
         }
 
@@ -69,6 +75,28 @@ public sealed record AssetSet(IReadOnlyList<LoadedModel> Bodies, IReadOnlyList<L
         return new AssetSet(bodies, overlays, animations, findings);
     }
 
+    /// <summary>Answers whether a model path is a body of the set, or a body file that did not load and has its own load finding.</summary>
+    public bool ReadsBody(string modelPath)
+    {
+        foreach (LoadedModel body in this.Bodies)
+        {
+            if (body.Path == modelPath)
+            {
+                return true;
+            }
+        }
+
+        foreach (AssetFinding finding in this.LoadFindings)
+        {
+            if (finding.Path == modelPath)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>The animations of one model, in path order.</summary>
     public IReadOnlyList<LoadedAnimation> AnimationsOf(LoadedModel model)
     {
@@ -84,10 +112,10 @@ public sealed record AssetSet(IReadOnlyList<LoadedModel> Bodies, IReadOnlyList<L
         return result;
     }
 
-    /// <summary>The files of one directory with a pattern, not its subdirectories, in ordinal path order.</summary>
+    /// <summary>The files of one directory and its subdirectories with a pattern, in ordinal path order.</summary>
     private static string[] SortedFiles(string directory, string pattern)
     {
-        string[] files = Directory.GetFiles(directory, pattern, SearchOption.TopDirectoryOnly);
+        string[] files = Directory.GetFiles(directory, pattern, SearchOption.AllDirectories);
         Array.Sort(files, StringComparer.Ordinal);
         return files;
     }
@@ -103,6 +131,10 @@ public sealed record AssetSet(IReadOnlyList<LoadedModel> Bodies, IReadOnlyList<L
         {
             findings.Add(new AssetFinding(path, error.Message));
         }
+        catch (Exception error)
+        {
+            findings.Add(LoaderFault(path, error));
+        }
     }
 
     private static void ReadAnimation(string contentRoot, string file, List<LoadedAnimation> animations, List<AssetFinding> findings)
@@ -116,6 +148,19 @@ public sealed record AssetSet(IReadOnlyList<LoadedModel> Bodies, IReadOnlyList<L
         {
             findings.Add(new AssetFinding(path, error.Message));
         }
+        catch (Exception error)
+        {
+            findings.Add(LoaderFault(path, error));
+        }
+    }
+
+    /// <summary>
+    /// A finding for a loader fault that is not a content error. The run still names the file and reads every other
+    /// file, where the fault once ended the command with no file named (T-2, F-118).
+    /// </summary>
+    private static AssetFinding LoaderFault(string path, Exception error)
+    {
+        return new AssetFinding(path, $"the loader failed with {error.GetType().Name}: {error.Message}");
     }
 
     /// <summary>The path of a file relative to the content directory, with forward slashes.</summary>

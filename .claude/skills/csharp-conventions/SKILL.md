@@ -43,7 +43,7 @@ dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- det-lint --
 
 ## The Core allowlist
 
-Core approves each type and member that it uses outside this project, by name and overload arity (D-207, D-208). A new entry needs a decision.
+Core approves each type and member that it uses outside this project, by name, and a method by the types of its parameters (D-207, D-208, D-582). A new entry needs a decision.
 
 Verify each new entry before the PR opens:
 
@@ -94,7 +94,7 @@ dotnet build WhatYouCarry.slnx
 dotnet test WhatYouCarry.slnx --no-build
 ```
 
-A local `dotnet test` needs the Godot build for the Smoke category, at the path of `AGENTS.md` or at the path that `WYC_GODOT` names. The three CI jobs run the suite with `--filter "Category!=Smoke"`, and the `smoke` workflow runs that category with the pinned binary on each platform.
+A local `dotnet test` needs the Godot build for the Smoke category, at the path of `AGENTS.md` or at the path that `WYC_GODOT` names. The `ci.yml` workflow runs the suite outside `Smoke` in five jobs: on Linux and on Windows, one job for the category `Sweep` and one for the rest, and one job on the Mac (D-479). The `smoke` workflow runs the `Smoke` category with the pinned binary on each platform.
 
 A push of documents alone, in the skip set of D-475, runs no full suite (D-491, D-492). It runs `ste-check`, `doc-gate`, and this command:
 

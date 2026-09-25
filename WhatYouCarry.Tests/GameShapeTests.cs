@@ -64,6 +64,116 @@ public sealed class GameShapeTests
         Assert.Null(EnginePhysicsDefect("public partial class Main : Node3D { }", "Main.cs"));
     }
 
+    /// <summary>
+    /// F-115. The body of each engine callback in the Game layer is one try statement whose last catch takes every
+    /// exception with no filter and ends the session. The engine glue prints an exception that leaves a callback and
+    /// calls the callbacks again, so a session went on half updated and quit with exit code 0 (T-2, D-114).
+    /// </summary>
+    [Fact]
+    public void EveryEngineCallbackCatchesEveryException()
+    {
+        string root = RepositoryRoot.Find();
+        List<string> callbacks = [];
+        foreach (string file in GameStringScan.SourceFiles(root))
+        {
+            foreach (string defect in EngineCallbackDefects(File.ReadAllText(file), Path.GetFileName(file), callbacks))
+            {
+                Assert.Fail(defect);
+            }
+        }
+
+        Assert.Contains("Main.cs _PhysicsProcess", callbacks);
+        Assert.Contains("Main.cs _Process", callbacks);
+        Assert.Contains("Main.cs _UnhandledInput", callbacks);
+        Assert.Contains("Main.cs _Ready", callbacks);
+    }
+
+    /// <summary>The check names the file and the callback of a body with no catch-all, and passes a guarded body.</summary>
+    [Fact]
+    public void EngineCallbackCheckFindsAnUnguardedBody()
+    {
+        const string Unguarded = "class Main { public override void _Process(double delta) { this.Draw(); } }";
+        const string Filtered = "class Main { public override void _Process(double delta) { try { this.Draw(); } catch (Exception error) when (error is IOException) { this.Fail(error); } } }";
+        const string Guarded = "class Main { public override void _Process(double delta) { try { this.Draw(); } catch (Exception error) { this.Fail(error); } } }";
+        List<string> callbacks = [];
+
+        Assert.Equal(["Main.cs: the engine callback _Process is not one try statement with a catch of every exception (T-2, F-115)."], EngineCallbackDefects(Unguarded, "Main.cs", callbacks));
+        Assert.Single(EngineCallbackDefects(Filtered, "Main.cs", callbacks));
+        Assert.Empty(EngineCallbackDefects(Guarded, "Main.cs", callbacks));
+    }
+
+    /// <summary>
+    /// F-122. The quit of the session reaches the quit of the engine in every case. The engine call sits in the finally
+    /// block of a try statement that holds the rest of the body, and the write of the frame log catches every exception
+    /// with no filter. A write error of another kind left the old method before the engine call, and the session never
+    /// ended.
+    /// </summary>
+    [Fact]
+    public void TheQuitAlwaysReachesTheEngine()
+    {
+        const string EngineQuit = "GetTree().Quit(";
+        Microsoft.CodeAnalysis.SyntaxNode tree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(RepositoryRoot.ReadFile("WhatYouCarry.Game/Main.cs")).GetRoot();
+        Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax quit = Assert.Single(tree.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>(), method => method.Identifier.Text == "Quit");
+        Assert.NotNull(quit.Body);
+
+        Microsoft.CodeAnalysis.CSharp.Syntax.TryStatementSyntax outer = Assert.IsType<Microsoft.CodeAnalysis.CSharp.Syntax.TryStatementSyntax>(quit.Body.Statements[^1]);
+        Assert.NotNull(outer.Finally);
+        Assert.Contains(EngineQuit, outer.Finally.Block.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain(EngineQuit, outer.Block.ToString(), StringComparison.Ordinal);
+
+        Microsoft.CodeAnalysis.CSharp.Syntax.TryStatementSyntax write = Assert.Single(
+            outer.Block.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.TryStatementSyntax>(),
+            attempt => attempt.Block.ToString().Contains("File.WriteAllText(", StringComparison.Ordinal));
+        Assert.Contains(write.Catches, clause => clause.Filter is null && clause.Declaration?.Type.ToString() == "Exception");
+    }
+
+    /// <summary>
+    /// F-122. The relative outputs of the Game commands land in the project directory that the path flag of the engine
+    /// sets, so the ignore file covers each one there, and not in every directory.
+    /// </summary>
+    [Fact]
+    public void TheRelativeOutputsOfTheGameCommandsAreIgnored()
+    {
+        string[] lines = RepositoryRoot.ReadFile(".gitignore").Split('\n');
+        foreach (string output in new[] { "frames.txt", "sheet.png", "hud.png" })
+        {
+            Assert.Contains(lines, line => line.Trim() == "/WhatYouCarry.Game/" + output);
+            Assert.DoesNotContain(lines, line => line.Trim() == output);
+        }
+    }
+
+    /// <summary>
+    /// One defect for each override whose name starts with an underscore, the engine callbacks of Godot, and whose
+    /// body is not one try statement with a catch of <c>Exception</c> and no filter. It adds the name of each
+    /// callback that it reads to the list.
+    /// </summary>
+    private static List<string> EngineCallbackDefects(string source, string fileName, List<string> callbacks)
+    {
+        List<string> defects = [];
+        Microsoft.CodeAnalysis.SyntaxNode tree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(source).GetRoot();
+        foreach (Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax method in tree.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>())
+        {
+            string name = method.Identifier.Text;
+            bool isOverride = method.Modifiers.Any(modifier => modifier.Text == "override");
+            if (!isOverride || !name.StartsWith('_'))
+            {
+                continue;
+            }
+
+            callbacks.Add($"{fileName} {name}");
+            bool guarded = method.Body is not null
+                && method.Body.Statements.Count == 1
+                && method.Body.Statements[0] is Microsoft.CodeAnalysis.CSharp.Syntax.TryStatementSyntax attempt
+                && attempt.Catches.Any(clause => clause.Filter is null && clause.Declaration?.Type.ToString() == "Exception");
+            if (!guarded)
+            {
+                defects.Add($"{fileName}: the engine callback {name} is not one try statement with a catch of every exception (T-2, F-115).");
+            }
+        }
+
+        return defects;
+    }
+
     /// <summary>The project runs the root scene, and the fixed step of the engine is 60 Hz (D-63, D-73).</summary>
     [Fact]
     public void ProjectRunsTheMainSceneAtSixtyTicks()

@@ -97,7 +97,7 @@ When a file reaches its ceiling, move the detail to a reference file or to a reg
 
 ## The checker
 
-The C# tool `WhatYouCarry.Tools.SteCheck` runs on every hand-written `.md` file in the PR gate (D-130). The `ste-check` CI job runs it on every PR. Run it before you commit:
+The C# tool `WhatYouCarry.Tools.SteCheck` runs on every hand-written Markdown file in the PR gate (D-130). A Markdown file ends in `.md` or `.markdown`, in any letter case. The `ste-check` CI job runs it on every PR. Run it before you commit:
 
 ```
 dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- ste-check --root .
@@ -110,14 +110,17 @@ The command prints one line per finding: the file, the line, the rule id, what t
 | STE 5.1 | More than 20 words in a numbered item under a heading that holds "Sequence" or "Procedure" |
 | STE 6.3 | More than 25 words in any other sentence |
 | STE 8.1 | A semicolon |
-| STE 4.2 | A contraction: `n't`, or a pronoun with `'s`, `'re`, `'ve`, `'ll`, `'d`, or `'m`. A possessive passes |
+| STE 4.2 | A contraction: `n't`, or `'s`, `'re`, `'ve`, `'ll`, `'d`, or `'m` after `I`, `you`, `we`, `they`, `he`, `she`, `it`, `who`, `what`, `that`, `there`, `here`, `let`, `how`, `where`, `when`, or `why`. A possessive passes |
 | STE 3.6 | Passive voice: is, are, was, were, be, been, or being, then a past participle. One adverb can stand between them |
-| STE 3.4 | A helper verb: should, would, could, might, may, shall, ought. Also has, have, or had before a participle, and is or are before an -ing form |
+| STE 3.4 | A helper verb: should, would, could, might, may, shall, ought. Also has, have, or had before a participle, and is, are, was, were, be, been, or being before an -ing form |
 | STE 3.5 | An -ing form as the first word of a sentence, or after a preposition |
-| D-178 | A citation of a decision that the register marks `Superseded by D-N`, on a line with no revision word and without D-N |
+| D-386 | In the front matter, from an opening `---` line to the next `---` line, rule 6.3 alone. An opening `---` with no close is a thematic break |
+| D-178 | A citation of a decision that the register marks `Superseded by D-N`, in a sentence with no revision word, on a line without D-N |
 | D-187 | Two `## Session <number>` headings with the same number in `docs/session-handoff.md` |
 
 Dated records are exempt by path: `docs/reviews/`, `docs/session-handoff.md`, `docs/session-handoff-archive.md`, and `docs/archive/`. The reference check also skips them, because a dated record is history, and a rewrite to name the reviser falsifies it.
+
+The checker skips build output and tool caches: each directory named `bin`, `obj`, `.godot`, or `.git`, at any depth. It also skips `.claude/worktrees/`, because each worktree there is a copy of the checkout.
 
 The passive and participle rules are heuristics. A past participle is an irregular form from a list, or a word that ends in "ed". "is closed" is a finding, and so is "is required". Rewrite the sentence with the actor as the subject: "the build needs the SDK". "must", "can", and "will" pass, because the standard approves them.
 

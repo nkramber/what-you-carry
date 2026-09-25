@@ -157,14 +157,18 @@ public sealed class GridRayTests
                 }
             }
 
+            // The march hits exactly when the walk finds rock (F-124).
+            Assert.True(hit.Hit == (firstRock >= 0.0f), $"Seed {seed}: the march hit is {hit.Hit}, and the walk found rock at {firstRock}.");
             if (hit.Hit)
             {
-                Assert.True(firstRock < 0.0f || hit.Distance <= firstRock + 1e-3f, $"Seed {seed}: the march hit at {hit.Distance}, and the walk found rock at {firstRock}.");
-                Assert.True(firstRock < 0.0f || firstRock >= hit.Distance - 1e-3f, $"Seed {seed}: the walk found rock at {firstRock}, before the march hit at {hit.Distance}.");
+                // The walk samples each millimeter, so its first sample in rock sits about one step past the face that
+                // the march hits. The lower bound takes two steps for the float sum of the steps. Both bounds hold, so a
+                // march that hits early fails as one that hits late.
+                Assert.True(hit.Distance <= firstRock + 1e-3f, $"Seed {seed}: the march hit at {hit.Distance}, after the walk found rock at {firstRock}.");
+                Assert.True(hit.Distance >= firstRock - 2e-3f, $"Seed {seed}: the march hit at {hit.Distance}, and the walk found no rock before {firstRock}.");
             }
             else
             {
-                Assert.True(firstRock < 0.0f, $"Seed {seed}: the march found no rock, and the walk found rock at {firstRock}.");
                 Assert.True(hit.Distance == length, $"Seed {seed}: a miss carries the length {length}, and the march gave {hit.Distance}.");
             }
         }

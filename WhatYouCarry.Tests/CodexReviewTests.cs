@@ -104,6 +104,18 @@ public sealed class CodexReviewTests
         Assert.Empty(outcome.OpenFindingIds);
     }
 
+    /// <summary>F-116. A verdict that holds the approving name inside other words is a fault, and never an approval that starts the auto-merge (D-179, D-516).</summary>
+    [Theory]
+    [InlineData("Not Ready for owner merge")]
+    [InlineData("Changes Required. Ready for owner merge after P1-1")]
+    public void AVerdictThatDoesNotStartWithTheNameIsAFault(string verdict)
+    {
+        ReviewOutcome outcome = Judge(Record(Head, verdict));
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains("## Verdict", outcome.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void AFindingOpenInRoundsOneAndTwoDoesNotStop()
     {
@@ -263,6 +275,44 @@ public sealed class CodexReviewTests
         Assert.Contains("Status:", outcome.Message, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("Open")]
+    [InlineData("OPEN.")]
+    [InlineData("closed")]
+    [InlineData("Fixed in `2222222`.")]
+    [InlineData("")]
+    [InlineData("fixed")]
+    [InlineData("fixed without evidence")]
+    [InlineData("fixed in 2222222")]
+    [InlineData("fixed in `2222222` and more")]
+    [InlineData("accepted risk")]
+    [InlineData("withdrawn for now")]
+    public void AFindingWithAnUnknownStatusIsAFault(string status)
+    {
+        // F-125: a status outside the complete forms of findings.md once read as closed, so "Open" passed under an
+        // approval, and "fixed." closed a finding with no fixing revision (PR #104 P1-1).
+        ReviewOutcome outcome = Judge(Record(Head, Approve, Finding("P1-1", status, Head)));
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains("P1-1", outcome.Message, StringComparison.Ordinal);
+        Assert.Contains($"the status '{status}.'", outcome.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("open", true)]
+    [InlineData("fixed in `2222222`", false)]
+    [InlineData("accepted risk, D-524", false)]
+    [InlineData("withdrawn", false)]
+    [InlineData("fixed in `0123456789abcdef0123456789abcdef01234567`", false)]
+    [InlineData("accepted risk, D-1", false)]
+    public void EveryKnownStatusParses(string status, bool open)
+    {
+        // F-125: the four statuses of findings.md stay valid, and "open" alone is open.
+        ReviewFinding finding = Assert.Single(ReviewFindings.Parse(Record(Head, Changes, Finding("P1-1", status, Head))));
+
+        Assert.Equal(open, finding.IsOpen);
+    }
+
     [Fact]
     public void AFindingHeadingOutsideTheFindingsSectionDoesNotCount()
     {
@@ -305,7 +355,7 @@ public sealed class CodexReviewTests
     public void StartChecksRefuseEachFailedCondition(string change, string expected)
     {
         StartFacts good = GoodFacts();
-        DateTimeOffset started = good.GitarChecks[0].StartedAt;
+        DateTimeOffset started = GitarStart;
         StartFacts facts = change switch
         {
             "old-cli" => With(good, version: CodexVersion.Parse("codex-cli 0.155.0-alpha.9.2")),
@@ -419,7 +469,7 @@ public sealed class CodexReviewTests
         // stays current, so the later check does not refuse the round.
         StartFacts good = GoodFacts();
         DateTimeOffset dashboard = good.DashboardEditedAt!.Value;
-        StartFacts facts = With(good, gitarChecks: [good.GitarChecks[0], new GitarCheck("5555555555555555555555555555555555555555", "completed", dashboard.AddMinutes(5))]);
+        StartFacts facts = With(good, gitarChecks: [new GitarCheck(Head, "completed", GitarStart), new GitarCheck("5555555555555555555555555555555555555555", "completed", dashboard.AddMinutes(5))]);
 
         Assert.Empty(StartChecks.Problems(facts, skipGitarReview: false));
     }
@@ -433,7 +483,7 @@ public sealed class CodexReviewTests
     {
         // D-543: with --skip-gitar-review, no Gitar check run and no Gitar dashboard refuses the round.
         StartFacts good = GoodFacts();
-        DateTimeOffset started = good.GitarChecks[0].StartedAt;
+        DateTimeOffset started = GitarStart;
         StartFacts facts = change switch
         {
             "no-gitar-check" => With(good, gitarChecks: []),
@@ -445,6 +495,53 @@ public sealed class CodexReviewTests
 
         Assert.NotEmpty(StartChecks.Problems(facts, skipGitarReview: false));
         Assert.Empty(StartChecks.Problems(facts, skipGitarReview: true));
+    }
+
+    [Fact]
+    public void AGitarCheckRunWithNoStartTimeReadsAsNotStarted()
+    {
+        // F-125: GitHub gives no start time before a check run starts, and jq writes it as null. That once faulted the run.
+        List<GitarCheck> checks = CodexReviewCommand.ParseGitarChecks(Head, "queued null\ncompleted 2026-09-23T10:00:00Z\n");
+
+        Assert.Equal(2, checks.Count);
+        Assert.Equal(new GitarCheck(Head, "queued", null), checks[0]);
+        Assert.Equal(new GitarCheck(Head, "completed", GitarStart), checks[1]);
+    }
+
+    [Theory]
+    [InlineData("completed yesterday", "is not a start time")]
+    [InlineData("completed", "the expected form")]
+    public void AGitarCheckRunLineOfAnotherFormIsAnError(string line, string expected)
+    {
+        FormatException error = Assert.Throws<FormatException>(() => CodexReviewCommand.ParseGitarChecks(Head, line));
+
+        Assert.Contains(Head, error.Message, StringComparison.Ordinal);
+        Assert.Contains(expected, error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void StartChecksRefuseACheckRunThatHasNotStarted()
+    {
+        // F-125: a check run with no start time has not started, so the round waits, and the started run still
+        // judges the dashboard.
+        StartFacts facts = With(GoodFacts(), gitarChecks: [new GitarCheck(Head, "completed", GitarStart), new GitarCheck("5555555555555555555555555555555555555555", "completed", null)]);
+
+        string problem = Assert.Single(StartChecks.Problems(facts, skipGitarReview: false));
+
+        Assert.Contains("5555555555555555555555555555555555555555 has no start time", problem, StringComparison.Ordinal);
+        Assert.Empty(StartChecks.Problems(facts, skipGitarReview: true));
+    }
+
+    [Fact]
+    public void TheSkipFlagNeedsNoGitarFacts()
+    {
+        // F-125: with --skip-gitar-review the command reads no Gitar fact. Facts without them judge a skip run, and a
+        // run without the flag stops with an error, never with an empty list that reads as no check run.
+        StartFacts facts = With(GoodFacts(), clearGitarChecks: true, clearDashboard: true);
+
+        Assert.Empty(StartChecks.Problems(facts, skipGitarReview: true));
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => StartChecks.Problems(facts, skipGitarReview: false));
+        Assert.Contains("PR #93", error.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -530,9 +627,12 @@ public sealed class CodexReviewTests
         return text.ToString();
     }
 
+    /// <summary>The start time of the Gitar check run of <see cref="GoodFacts"/>.</summary>
+    private static readonly DateTimeOffset GitarStart = DateTimeOffset.Parse("2026-09-23T10:00:00Z", CultureInfo.InvariantCulture);
+
     private static StartFacts GoodFacts()
     {
-        DateTimeOffset started = DateTimeOffset.Parse("2026-09-23T10:00:00Z", CultureInfo.InvariantCulture);
+        DateTimeOffset started = GitarStart;
         return new StartFacts
         {
             PullRequestNumber = 93,
@@ -568,7 +668,8 @@ public sealed class CodexReviewTests
         int? unresolved = null,
         string? workHead = null,
         bool clearEffectiveHead = false,
-        bool clearWorkHead = false)
+        bool clearWorkHead = false,
+        bool clearGitarChecks = false)
     {
         return new StartFacts
         {
@@ -584,7 +685,7 @@ public sealed class CodexReviewTests
             WorkingTreeStatus = status ?? facts.WorkingTreeStatus,
             EffectiveHead = clearEffectiveHead ? null : facts.EffectiveHead,
             WorkHead = clearWorkHead ? null : workHead ?? facts.WorkHead,
-            GitarChecks = gitarChecks ?? facts.GitarChecks,
+            GitarChecks = clearGitarChecks ? null : gitarChecks ?? facts.GitarChecks,
             DashboardEditedAt = clearDashboard ? null : dashboard ?? facts.DashboardEditedAt,
             UnresolvedThreadCount = unresolved ?? facts.UnresolvedThreadCount,
         };

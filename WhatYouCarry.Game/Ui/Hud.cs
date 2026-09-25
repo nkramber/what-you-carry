@@ -221,7 +221,8 @@ public sealed class Hud
         Place(this.bossBack, layout.BossBar);
         PlaceFill(this.bossFill, layout.BossBar, this.bossFraction);
 
-        this.descend.Visible = state.PromptOpen;
+        // The deepest floor offers the ascend alone, because no floor lies under it (D-579).
+        this.descend.Visible = state.PromptOpen && state.DescendOffered;
         this.ascend.Visible = state.PromptOpen;
         this.descend.Text = HudText.Descend(this.strings, state.Controller);
         this.ascend.Text = HudText.Ascend(this.strings, state.Controller);

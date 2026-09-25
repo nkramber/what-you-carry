@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using WhatYouCarry.Tools.ReviewGate;
 
 namespace WhatYouCarry.Tools.DocGate;
 
@@ -14,7 +15,8 @@ public sealed record DocumentCategory(string Label, IReadOnlyList<string> Paths)
 /// <summary>
 /// The rules of the documentation gate (D-375, D-376). A PR carries its own handoff entry, a documents matrix that
 /// accounts for every required category and agrees with the diff, and no promise of documents in later work. A PR
-/// that only records the merge of an earlier PR fails. The rules read text and paths alone, and they do no I/O.
+/// that only records the merge of an earlier PR fails. No title, description, or commit message attributes the work to
+/// an agent, a harness, or a model (T-6, F-138). The rules read text and paths alone, and they do no I/O.
 /// </summary>
 public static class DocGateRules
 {
@@ -62,6 +64,20 @@ public static class DocGateRules
     /// <summary>A title or a branch of a PR that records the merge of an earlier PR.</summary>
     private static readonly Regex MergeRecordPattern = new(@"merge[- ]record|\brecord the (PR-\d+ )?merge\b", RegexOptions.IgnoreCase);
 
+    /// <summary>
+    /// The attribution forms of G-13, read as D-176 reads T-6 and D-137: text that names an agent, a harness, or a
+    /// model as the source of the work. A co-author trailer, a generation line that names such a tool, and the robot
+    /// line that some tools add each fail. A bare name passes, because the review command, the review record, the
+    /// merge summary, and the handoff author field name the providers for another reason (F-138). The lookahead
+    /// keeps the command name codex-review out of the generation line. The robot is U+1F916, as a UTF-16 pair.
+    /// </summary>
+    private static readonly (string Form, Regex Pattern)[] AttributionPatterns =
+    [
+        ("a co-author trailer", new(@"^\s*co-authored-by:", RegexOptions.IgnoreCase)),
+        ("a generation line", new(@"\bgenerated\s+(with|by)\s+[\[`*_]*(Claude|Codex|ChatGPT|GPT|OpenAI|Anthropic|Copilot|Gemini|Cursor|Aider|Devin)\b(?!-review)", RegexOptions.IgnoreCase)),
+        ("a robot line", new(@"^\s*\uD83E\uDD16")),
+    ];
+
     private static readonly Regex HtmlComment = new(@"<!--.*?-->", RegexOptions.Singleline);
 
     private static readonly string[] GenericReasons = ["no documentation impact", "no docs impact"];
@@ -81,6 +97,14 @@ public static class DocGateRules
         if (facts.NewestHandoffEntry is not null)
         {
             CheckDeferral("the newest handoff entry", facts.NewestHandoffEntry, problems);
+        }
+
+        // F-138: the attribution rule reads the raw description, because a hidden comment is still text of the PR.
+        CheckAttribution("The PR title", facts.Title, problems);
+        CheckAttribution("The PR description", facts.Body, problems);
+        foreach (CommitMessage commit in facts.CommitMessages)
+        {
+            CheckAttribution($"The message of commit {commit.Sha}", commit.Message, problems);
         }
 
         return new DocGateResult(problems.Count == 0, problems);
@@ -211,6 +235,23 @@ public static class DocGateRules
         }
 
         return false;
+    }
+
+    /// <summary>Adds one problem for each line of the text that holds an attribution form, with the source and the line number.</summary>
+    private static void CheckAttribution(string source, string text, List<string> problems)
+    {
+        string[] lines = text.Split('\n');
+        for (int index = 0; index < lines.Length; index++)
+        {
+            string line = lines[index].TrimEnd('\r');
+            foreach ((string form, Regex pattern) in AttributionPatterns)
+            {
+                if (pattern.IsMatch(line))
+                {
+                    problems.Add($"{source}, line {index + 1}, holds {form}: '{line.Trim()}'. No title, description, or commit names an agent, a harness, or a model as the source of the work (T-6, D-137, D-176, G-13).");
+                }
+            }
+        }
     }
 
     private static void CheckDeferral(string source, string text, List<string> problems)

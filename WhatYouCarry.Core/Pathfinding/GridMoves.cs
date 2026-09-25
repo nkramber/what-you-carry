@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using WhatYouCarry.Core.World;
 
 namespace WhatYouCarry.Core.Pathfinding;
@@ -38,11 +39,11 @@ public static class GridMoves
     /// <summary>The count of neighbor columns of a move: the four sides.</summary>
     public const int Directions = 4;
 
-    /// <summary>The X step of each direction, in the order that every search reads them.</summary>
-    public static readonly int[] StepX = [1, -1, 0, 0];
+    /// <summary>The X step of each direction, in the order that every search reads them. No caller can write it (F-127).</summary>
+    public static readonly IReadOnlyList<int> StepX = [1, -1, 0, 0];
 
-    /// <summary>The Z step of each direction, in the order that every search reads them.</summary>
-    public static readonly int[] StepZ = [0, 0, 1, -1];
+    /// <summary>The Z step of each direction, in the order that every search reads them. No caller can write it (F-127).</summary>
+    public static readonly IReadOnlyList<int> StepZ = [0, 0, 1, -1];
 
     /// <summary>
     /// The units of one block in a floor height. The middle and the edges of every place of every run of D-346 meet
@@ -53,11 +54,11 @@ public static class GridMoves
     /// <summary>The count of corner columns of a diagonal move (D-486).</summary>
     public const int Corners = 4;
 
-    /// <summary>The X step of each corner, in the order that the path search reads them.</summary>
-    public static readonly int[] CornerStepX = [1, 1, -1, -1];
+    /// <summary>The X step of each corner, in the order that the path search reads them. No caller can write it (F-127).</summary>
+    public static readonly IReadOnlyList<int> CornerStepX = [1, 1, -1, -1];
 
-    /// <summary>The Z step of each corner, in the order that the path search reads them.</summary>
-    public static readonly int[] CornerStepZ = [1, -1, 1, -1];
+    /// <summary>The Z step of each corner, in the order that the path search reads them. No caller can write it (F-127).</summary>
+    public static readonly IReadOnlyList<int> CornerStepZ = [1, -1, 1, -1];
 
     /// <summary>Answers whether a body stands on the cell: a block or a ramp, with two open cells above it. A cell outside the grid is no floor.</summary>
     public static bool IsFloor(VoxelGrid grid, Cell cell)

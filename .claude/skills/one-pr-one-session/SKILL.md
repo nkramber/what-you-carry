@@ -48,7 +48,7 @@ The `## Documents` section of the PR description holds exactly one line for each
 - `Reviewed; no change needed: <reason>`
 - `Not applicable: <reason>`
 
-The reason names the part of the document and the cause, for example "section 3.14 already states the rule that this fix keeps". The categories are `docs/design.md`, `docs/decisions.md`, `docs/questions.md`, `docs/roadmaps/`, `docs/runbooks/`, `docs/session-handoff.md`, `CLAUDE.md` and `AGENTS.md`, and `.claude/skills/`. The `review-gate` job reads `docs/reviews/`.
+The reason names the part of the document and the cause, for example "section 3.14 already states the rule that this fix keeps". The categories are `docs/design.md`, `docs/decisions.md`, `docs/questions.md`, `docs/roadmaps/`, `docs/runbooks/`, `docs/session-handoff.md`, `CLAUDE.md` and `AGENTS.md`, and `.claude/skills/`. The `review-gate` check reads `docs/reviews/`.
 
 Reject each of these:
 

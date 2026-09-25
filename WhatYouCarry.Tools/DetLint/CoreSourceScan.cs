@@ -30,6 +30,11 @@ public static class CoreSourceScan
     // The C# version of Directory.Build.props. A source that the lint cannot parse is a finding, never a pass.
     private static readonly CSharpParseOptions ParseOptions = new(LanguageVersion.Latest);
 
+    // The form of a parameter type in a member key: the full name, with the type arguments, and with no keyword.
+    private static readonly SymbolDisplayFormat ParameterTypeFormat = new(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters);
+
     private static IReadOnlyList<MetadataReference>? cachedReferences;
 
     /// <summary>Every Core source file under the checkout, sorted, with the build output left out.</summary>
@@ -163,6 +168,21 @@ public static class CoreSourceScan
                 if (node is SimpleNameSyntax name && !IsAccessTarget(name))
                 {
                     AddNameFinding(findings, model, name, path, isDetMath);
+                    continue;
+                }
+
+                // The compiler lowers an interpolation and a `+` of a string to a ToString call that no name in
+                // the source shows, and that call reads the current culture (F-132).
+                if (node is InterpolationSyntax or BinaryExpressionSyntax or AssignmentExpressionSyntax)
+                {
+                    AddLoweredTextFinding(findings, model, node, path);
+                    continue;
+                }
+
+                // The keyword `double` names no symbol that the name pass reads, and a literal names none (F-132).
+                if (node is PredefinedTypeSyntax or LiteralExpressionSyntax)
+                {
+                    AddWideNumberFinding(findings, node, path);
                 }
             }
         }
@@ -234,6 +254,24 @@ public static class CoreSourceScan
         if (symbol.Kind == SymbolKind.DynamicType)
         {
             findings.Add(Create(name, path, "L-DYNAMIC", "dynamic", "Dynamic dispatch hides the call that runs. Core is explicit (G-2, T-1)."));
+            return;
+        }
+
+        // A hash of a Core type reads the machine too: a record's generated hash folds the hash of each field,
+        // and the string hash takes a new seed in each process. The rule reads every GetHashCode call, the
+        // members of this project included, because the owner rules below exempt a Core type (F-132).
+        if (symbol is IMethodSymbol { Name: "GetHashCode", IsStatic: false, Parameters.Length: 0 })
+        {
+            findings.Add(Create(name, path, "L-IDENTITY", $"{symbol.ContainingType.Name}.GetHashCode", BannedSymbols.HashCallDetail));
+            return;
+        }
+
+        // The ToString that the compiler writes for a record formats each field with the current culture. Error
+        // text is exempt, as it is for an interpolation (F-132).
+        if (symbol is IMethodSymbol { Name: "ToString", IsImplicitlyDeclared: true, ContainingType.IsRecord: true }
+            && !IsErrorText(model, name))
+        {
+            findings.Add(Create(name, path, "L-FORMAT", $"{symbol.ContainingType.Name}.ToString", BannedSymbols.RecordTextDetail));
             return;
         }
 
@@ -361,18 +399,165 @@ public static class CoreSourceScan
     }
 
     /// <summary>
-    /// The allowlist key of a member. A method carries the count of its parameters, because two overloads of
-    /// one name do not share one behavior. A constructor uses the name <c>new</c>.
+    /// The allowlist key of a member. A method and an indexer carry the types of their parameters, because two
+    /// overloads of one name do not share one behavior, and two overloads can take the same count (F-132).
+    /// <c>Int64.ToString(IFormatProvider)</c> gives the same text on every machine, and <c>ToString(String)</c>
+    /// reads the current culture. A constructor uses the name <c>new</c>.
     /// </summary>
     private static string MemberKey(INamedTypeSymbol owner, ISymbol symbol)
     {
         if (symbol is IMethodSymbol method)
         {
             string name = method.MethodKind == MethodKind.Constructor ? "new" : method.Name;
-            return $"{FullName(owner)}.{name}/{method.Parameters.Length}";
+            return $"{FullName(owner)}.{name}({ParameterList(method.OriginalDefinition.Parameters)})";
+        }
+
+        if (symbol is IPropertySymbol { IsIndexer: true } indexer)
+        {
+            return $"{FullName(owner)}.this[{ParameterList(indexer.OriginalDefinition.Parameters)}]";
         }
 
         return $"{FullName(owner)}.{symbol.Name}";
+    }
+
+    /// <summary>
+    /// The parameter types of a member, by full name and in order, such as <c>System.String, out System.Int64</c>.
+    /// A type parameter keeps its own name, so <c>List&lt;T&gt;.Add</c> gives <c>T</c>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">A parameter has a ref kind that the key does not name.</exception>
+    private static string ParameterList(IReadOnlyList<IParameterSymbol> parameters)
+    {
+        List<string> types = [];
+        foreach (IParameterSymbol parameter in parameters)
+        {
+            string prefix = parameter.RefKind switch
+            {
+                RefKind.None => string.Empty,
+                RefKind.Ref => "ref ",
+                RefKind.Out => "out ",
+                RefKind.In => "in ",
+                RefKind.RefReadOnlyParameter => "ref readonly ",
+                _ => throw new InvalidOperationException(
+                    $"The parameter '{parameter.Name}' of '{parameter.ContainingSymbol}' has the ref kind {parameter.RefKind}, and the member key names no such kind."),
+            };
+            types.Add(prefix + parameter.Type.ToDisplayString(ParameterTypeFormat));
+        }
+
+        return string.Join(", ", types);
+    }
+
+    /// <summary>
+    /// Adds a finding when the compiler turns a value that is not a string into text: an interpolation hole, or
+    /// one operand of a string <c>+</c> or <c>+=</c>. The lowered call is <c>ToString()</c>, which reads the
+    /// current culture, so the text changes between machines (F-132).
+    /// </summary>
+    /// <remarks>
+    /// Error text is exempt, because no run record and no hash reads it: an argument of an exception
+    /// constructor, of a method that gives back an exception, or of <c>ContextException.AddContext</c>.
+    /// </remarks>
+    private static void AddLoweredTextFinding(List<LintFinding> findings, SemanticModel model, SyntaxNode node, string path)
+    {
+        List<ExpressionSyntax> operands = [];
+        if (node is InterpolationSyntax hole)
+        {
+            operands.Add(hole.Expression);
+        }
+        else if (node is BinaryExpressionSyntax binary && binary.IsKind(SyntaxKind.AddExpression) && IsStringConcatenation(model, binary))
+        {
+            operands.Add(binary.Left);
+            operands.Add(binary.Right);
+        }
+        else if (node is AssignmentExpressionSyntax assignment && assignment.IsKind(SyntaxKind.AddAssignmentExpression) && IsStringConcatenation(model, assignment))
+        {
+            operands.Add(assignment.Right);
+        }
+
+        foreach (ExpressionSyntax operand in operands)
+        {
+            ITypeSymbol? type = model.GetTypeInfo(operand).Type;
+            if (type?.SpecialType == SpecialType.System_String || IsErrorText(model, operand))
+            {
+                continue;
+            }
+
+            string typeName = type is null ? "a value with no type" : type.ToDisplayString(ParameterTypeFormat);
+            findings.Add(Create(operand, path, "L-FORMAT", typeName, BannedSymbols.LoweredTextDetail));
+        }
+    }
+
+    /// <summary>Answers whether a <c>+</c> or a <c>+=</c> is the string concatenation operator.</summary>
+    private static bool IsStringConcatenation(SemanticModel model, ExpressionSyntax operation)
+    {
+        return model.GetSymbolInfo(operation).Symbol is IMethodSymbol { MethodKind: MethodKind.BuiltinOperator } method
+            && method.ContainingType?.SpecialType == SpecialType.System_String;
+    }
+
+    /// <summary>
+    /// Answers whether an expression stands in an argument of a call that makes error text: an exception
+    /// constructor, a method that gives back an exception, or <c>ContextException.AddContext</c>. The walk
+    /// stops at the statement that holds the expression.
+    /// </summary>
+    private static bool IsErrorText(SemanticModel model, ExpressionSyntax expression)
+    {
+        for (SyntaxNode? above = expression.Parent; above is not null; above = above.Parent)
+        {
+            if (above is StatementSyntax or MemberDeclarationSyntax)
+            {
+                return false;
+            }
+
+            if (above is not ArgumentSyntax { Parent: ArgumentListSyntax { Parent: SyntaxNode call } }
+                || model.GetSymbolInfo(call).Symbol is not IMethodSymbol method)
+            {
+                continue;
+            }
+
+            bool makesAnException = method.MethodKind == MethodKind.Constructor
+                ? IsException(method.ContainingType)
+                : IsException(method.ReturnType);
+            bool addsContext = method.Name == BannedSymbols.AddContextMethod
+                && method.ContainingType.Name == BannedSymbols.ContextExceptionType
+                && IsProjectType(method.ContainingType);
+            if (makesAnException || addsContext)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>Answers whether a type is System.Exception or derives from it.</summary>
+    private static bool IsException(ITypeSymbol type)
+    {
+        for (ITypeSymbol? current = type; current is not null; current = current.BaseType)
+        {
+            if (current is INamedTypeSymbol named && FullName(named).Equals("System.Exception", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Adds a finding for the keyword <c>double</c> or <c>decimal</c>, and for a literal of either type. A value
+    /// of those types enters Core through one of the two, or through a member that the allowlist names (D-70, F-132).
+    /// </summary>
+    private static void AddWideNumberFinding(List<LintFinding> findings, SyntaxNode node, string path)
+    {
+        if (node is PredefinedTypeSyntax keyword
+            && (keyword.Keyword.IsKind(SyntaxKind.DoubleKeyword) || keyword.Keyword.IsKind(SyntaxKind.DecimalKeyword)))
+        {
+            findings.Add(Create(keyword, path, "L-DOUBLE", keyword.Keyword.ValueText, BannedSymbols.WideNumberDetail));
+            return;
+        }
+
+        if (node is LiteralExpressionSyntax literal && literal.Token.Value is double or decimal)
+        {
+            findings.Add(Create(literal, path, "L-DOUBLE", literal.Token.Text, BannedSymbols.WideNumberDetail));
+        }
     }
 
     /// <summary>Answers whether a type belongs to this project. Core needs no entry for its own members.</summary>

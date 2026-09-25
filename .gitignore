@@ -23,3 +23,8 @@ Thumbs.db
 logs/
 artifacts/
 *.log
+
+# The relative outputs of the Game commands land in the project directory that --path sets (F-122)
+/WhatYouCarry.Game/frames.txt
+/WhatYouCarry.Game/sheet.png
+/WhatYouCarry.Game/hud.png

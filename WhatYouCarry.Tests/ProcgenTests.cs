@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Entities;
@@ -182,6 +184,15 @@ public sealed class ProcgenTests
     private static SweepReport RunReachabilitySweep()
     {
         List<int> seeds = ReachabilitySeedList(Environment.GetEnvironmentVariable(NightVariable), Environment.GetEnvironmentVariable(NightSeedsVariable));
+        return Sweep(seeds, TestWorld.Content, Environment.GetEnvironmentVariable(NightFailuresVariable));
+    }
+
+    /// <summary>
+    /// Digs one floor for each seed with one content set, and reads every check of the sweep. With a failures file,
+    /// it appends the failure line of the sweep to the file (D-567).
+    /// </summary>
+    private static SweepReport Sweep(IReadOnlyList<int> seeds, ContentSet content, string? failuresFile)
+    {
         List<ulong> failedSeeds = [];
         List<string> chamberFailures = [];
         List<string> detailFailures = [];
@@ -201,7 +212,20 @@ public sealed class ProcgenTests
         foreach (int seed in seeds)
         {
             int failuresBefore = chamberFailures.Count + detailFailures.Count;
-            FloorPlan plan = Plan(seed);
+            FloorPlan plan;
+            try
+            {
+                plan = FloorGenerator.Generate((ulong)seed, FloorOf(seed), content);
+            }
+            catch (ContextException error)
+            {
+                // A dig that throws fails its seed. The sweep names the seed and reads the next one, so the failure line
+                // and the night record carry the seed (D-565, D-567, F-117).
+                chamberFailures.Add($"Seed {seed}, floor {FloorOf(seed)}: the dig threw. {error.Message}");
+                failedSeeds.Add((ulong)seed);
+                continue;
+            }
+
             string context = $"Seed {seed}, floor {plan.Floor}";
             PlayerBody body = new(plan.Grid, plan.Spawn);
             if (!body.IsOnGround())
@@ -314,7 +338,6 @@ public sealed class ProcgenTests
             }
         }
 
-        string? failuresFile = Environment.GetEnvironmentVariable(NightFailuresVariable);
         if (failuresFile is not null)
         {
             File.AppendAllText(failuresFile, NightSeeds.FailureLine(NightSeeds.ReachabilitySweep, failedSeeds), new UTF8Encoding(false));
@@ -457,6 +480,41 @@ public sealed class ProcgenTests
         }
 
         return built > 0;
+    }
+
+    /// <summary>
+    /// F-117. A seed whose dig throws is a failure of the sweep: the report names it, the sweep reads every later
+    /// seed, and the failure line carries it. The old sweep let the exception leave, so it wrote no failure line, and
+    /// the night record lost the seed. Here the deep template stops at floor 14, so each seed of floor 15 throws.
+    /// </summary>
+    [Fact]
+    public void TheSweepNamesASeedWhoseDigThrows()
+    {
+        List<FloorTemplate> floors = [];
+        foreach (FloorTemplate template in TestWorld.Content.Floors)
+        {
+            floors.Add(template.MaxDepth == 15 ? template with { MaxDepth = 14 } : template);
+        }
+
+        ContentSet shallow = TestWorld.Content with { Floors = floors };
+        List<int> seeds = [.. Enumerable.Range(100001, 20)];
+        List<ulong> deepest = [.. seeds.Where(seed => FloorOf(seed) == 15).Select(seed => (ulong)seed)];
+        Assert.Equal([100004UL, 100019UL], deepest);
+
+        string failures = Path.Combine(Path.GetTempPath(), "wyc-sweep-failures-" + Guid.NewGuid().ToString("N") + ".txt");
+        try
+        {
+            SweepReport report = Sweep(seeds, shallow, failures);
+
+            Assert.Equal(seeds.Count, report.Floors);
+            Assert.Equal(NightSeeds.FailureLine(NightSeeds.ReachabilitySweep, deepest), File.ReadAllText(failures));
+            Assert.Equal(2, report.ChamberFailures.Count(failure => failure.Contains("the dig threw", StringComparison.Ordinal)));
+            Assert.Contains(report.ChamberFailures, failure => failure.StartsWith("Seed 100019, floor 15: the dig threw.", StringComparison.Ordinal));
+        }
+        finally
+        {
+            File.Delete(failures);
+        }
     }
 
     /// <summary>
@@ -1089,6 +1147,152 @@ public sealed class ProcgenTests
                     }
                 }
             }
+        }
+    }
+
+    /// <summary>The trap sweep, a class of its own, so it runs beside the other sweeps (D-478). xUnit runs the tests of one class in sequence, and each nested class is a class of its own.</summary>
+    [Trait("Category", SweepScope.SweepCategory)]
+    public sealed class TrapSweep
+    {
+        /// <summary>The seeds of the first sweep floors, with a shaft or not, that the trap sweep reads (F-124).</summary>
+        private const int TrapSeeds = 15;
+
+        /// <summary>
+        /// The seeds of the sweep floors that hold a shaft, from the first 500 seeds, over floors 2 to 14 and every band.
+        /// A shaft stands on about 1 floor in 50, so a sweep by seed count alone would dig for minutes to find as many.
+        /// </summary>
+        private static readonly int[] ShaftSeeds = [37, 66, 151, 192, 212, 215, 277, 288, 343, 409, 445, 476];
+
+        /// <summary>
+        /// F-124, the contract of the shaft routes of <see cref="DigPlan"/> (D-253). On the first sweep floors and on
+        /// twelve floors with a shaft, every cell that the spawn reaches reaches the stairwell too. A shaft drop is a
+        /// one-way move, so a landing that leads nowhere would hold a body that took the drop, and the reachability of
+        /// the stairwell from the spawn alone does not see it.
+        /// </summary>
+        [Fact]
+        public void NoCellThatTheSpawnReachesIsATrap()
+        {
+            List<int> seeds = [.. Enumerable.Range(1, TrapSeeds), .. ShaftSeeds];
+            ConcurrentBag<string> failures = [];
+            Parallel.ForEach(seeds, seed =>
+            {
+                FloorPlan plan = Plan(seed);
+                if (Array.IndexOf(ShaftSeeds, seed) >= 0 && plan.Shafts.Count == 0)
+                {
+                    failures.Add($"Seed {seed}, floor {plan.Floor}: the floor holds no shaft now, so the list of shaft seeds needs a new seed.");
+                }
+
+                Reachability reach = Reachability.From(plan.Grid, SpawnCell(plan));
+                List<Cell> traps = Traps(plan.Grid, reach, plan.Stairwell);
+                if (traps.Count > 0)
+                {
+                    failures.Add($"Seed {seed}, floor {plan.Floor}: {traps.Count} cells that the spawn {reach.Start} reaches lead to no path to the stairwell {plan.Stairwell}, the first at {traps[0]}.");
+                }
+            });
+
+            Assert.True(failures.IsEmpty, string.Join("\n", failures.Take(10)));
+        }
+
+        /// <summary>
+        /// The trap search finds a trap: a pit two blocks deep, which a body drops into and cannot climb out of, holds the
+        /// one cell that reaches no goal outside it. A sweep with no trap then reads a search that can fail (F-124).
+        /// </summary>
+        [Fact]
+        public void TheTrapSearchFindsAPitWithNoWayOut()
+        {
+            VoxelGrid grid = TestWorld.FlatFloor(8, 6);
+            for (int x = 0; x < 8; x++)
+            {
+                for (int z = 0; z < 8; z++)
+                {
+                    if (x != 4 || z != 4)
+                    {
+                        grid.Set(x, 1, z, BlockId.RawStone);
+                        grid.Set(x, 2, z, BlockId.RawStone);
+                    }
+                }
+            }
+
+            Reachability reach = Reachability.From(grid, new Cell(6, 2, 6));
+            Cell pit = new(4, 0, 4);
+            Assert.True(reach.IsReachable(pit), "The spawn reaches no floor of the pit, so the case holds no trap.");
+            Assert.Equal([pit], Traps(grid, reach, new Cell(1, 2, 1)));
+            Assert.Empty(Traps(grid, reach, pit));
+        }
+
+        /// <summary>
+        /// The cells that the search reached and that reach no goal, in scan order. The walk runs from the goal over the
+        /// side moves of <see cref="GridMoves.Move"/> backward, the moves that the search itself reads.
+        /// </summary>
+        private static List<Cell> Traps(VoxelGrid grid, Reachability reach, Cell goal)
+        {
+            int cellCount = grid.SizeX * grid.SizeY * grid.SizeZ;
+            List<int>[] cameFrom = new List<int>[cellCount];
+            List<Cell> reached = [];
+            for (int y = 0; y < grid.SizeY; y++)
+            {
+                for (int z = 0; z < grid.SizeZ; z++)
+                {
+                    for (int x = 0; x < grid.SizeX; x++)
+                    {
+                        Cell cell = new(x, y, z);
+                        if (!reach.IsReachable(cell))
+                        {
+                            continue;
+                        }
+
+                        reached.Add(cell);
+                        for (int direction = 0; direction < GridMoves.Directions; direction++)
+                        {
+                            int toX = x + GridMoves.StepX[direction];
+                            int toZ = z + GridMoves.StepZ[direction];
+                            int row = GridMoves.Move(grid, x, y, z, toX, toZ);
+                            if (row == GridMoves.NoMove)
+                            {
+                                continue;
+                            }
+
+                            int to = IndexOf(grid, new Cell(toX, row, toZ));
+                            cameFrom[to] ??= [];
+                            cameFrom[to].Add(IndexOf(grid, cell));
+                        }
+                    }
+                }
+            }
+
+            bool[] leadsToGoal = new bool[cellCount];
+            Queue<int> queue = new();
+            leadsToGoal[IndexOf(grid, goal)] = true;
+            queue.Enqueue(IndexOf(grid, goal));
+            while (queue.Count > 0)
+            {
+                List<int>? sources = cameFrom[queue.Dequeue()];
+                foreach (int source in sources ?? [])
+                {
+                    if (!leadsToGoal[source])
+                    {
+                        leadsToGoal[source] = true;
+                        queue.Enqueue(source);
+                    }
+                }
+            }
+
+            List<Cell> traps = [];
+            foreach (Cell cell in reached)
+            {
+                if (!leadsToGoal[IndexOf(grid, cell)])
+                {
+                    traps.Add(cell);
+                }
+            }
+
+            return traps;
+        }
+
+        /// <summary>The place of one cell in a flat array over the grid, in the order of the reachability search.</summary>
+        private static int IndexOf(VoxelGrid grid, Cell cell)
+        {
+            return cell.X + (grid.SizeX * (cell.Z + (grid.SizeZ * cell.Y)));
         }
     }
 

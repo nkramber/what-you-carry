@@ -48,6 +48,30 @@ public sealed class AnimationLoaderTests
         Assert.Equal(new Vector3(-90.0f, 40.0f, 0.0f), track.RotationAt(25));
     }
 
+    /// <summary>
+    /// F-131. The pose at a keyframe tick is the keyframe, also for a rotation near the float limit, which the loader
+    /// accepts. The old blend computed previous plus the difference times one, and the difference overflowed to an
+    /// infinity. A tick between two keyframes still blends.
+    /// </summary>
+    [Fact]
+    public void AKeyframeTickGivesTheKeyframeItself()
+    {
+        Vector3 large = new(3.0e38f, -3.0e38f, 0.0f);
+        Vector3 opposite = new(-3.0e38f, 3.0e38f, 0.0f);
+        BoneTrack track = new("arm", [new Keyframe(0, opposite), new Keyframe(10, large)]);
+
+        Assert.Equal(large, track.RotationAt(10));
+        Assert.Equal(opposite, track.RotationAt(0));
+        Assert.True(float.IsFinite(track.RotationAt(10).X), "The keyframe tick gave a rotation that is not finite.");
+
+        // Between the two keyframes, the blend stays finite too (PR #104, the gitar finding on the blend).
+        Vector3 middle = track.RotationAt(5);
+        Assert.True(float.IsFinite(middle.X) && float.IsFinite(middle.Y), $"The blend at tick 5 gave {middle.X}, {middle.Y}.");
+        Assert.Equal(0.0f, middle.X);
+        BoneTrack small = new("arm", [new Keyframe(10, new Vector3(0.0f, 0.0f, 0.0f)), new Keyframe(20, new Vector3(-90.0f, 40.0f, 0.0f))]);
+        Assert.Equal(new Vector3(-45.0f, 20.0f, 0.0f), small.RotationAt(15));
+    }
+
     /// <summary>The rotations at one tick hold every bone with a track, and no other bone.</summary>
     [Fact]
     public void RotationsAtHoldEveryTrack()

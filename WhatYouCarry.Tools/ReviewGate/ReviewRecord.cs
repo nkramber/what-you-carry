@@ -4,9 +4,17 @@ namespace WhatYouCarry.Tools.ReviewGate;
 
 /// <summary>The two machine-read parts of a review file: the head in the Identity list and the verdict (D-179, D-269).</summary>
 /// <remarks>
+/// <para>
 /// The Verdict section starts at the line that is exactly the Verdict heading and ends at the next heading. It
 /// holds one verdict name. A heading that starts with the same words, such as a history of earlier verdicts, is
 /// another section, and a section with two names is an error that names both, never the first one (F-89).
+/// </para>
+/// <para>
+/// The first line of the section with text starts with the verdict name in bold and a period, as the skeleton of
+/// <c>review-record.md</c> writes it. A name inside other words, such as "Not Ready for owner merge", or a name in
+/// another case, is an error, so the gate never reads a verdict that does not approve as an approval (D-179). The
+/// parse skips each fenced block, so an example of a record inside a fence is not the record (F-116).
+/// </para>
 /// </remarks>
 public sealed record ReviewRecord(string RecordedHead, string Verdict)
 {
@@ -35,7 +43,7 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
 
     private static string? FindHead(string text)
     {
-        foreach (string rawLine in text.Split('\n'))
+        foreach (string rawLine in LinesOutsideFences(text))
         {
             string line = rawLine.Trim();
             if (!line.StartsWith(HeadPrefix, StringComparison.Ordinal))
@@ -63,9 +71,9 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
     /// </summary>
     private static string? FindVerdict(string text, out string error)
     {
-        string[] lines = text.Split('\n');
+        System.Collections.Generic.List<string> lines = LinesOutsideFences(text);
         int headingLine = -1;
-        for (int index = 0; index < lines.Length; index++)
+        for (int index = 0; index < lines.Count; index++)
         {
             if (lines[index].TrimEnd() == VerdictHeading)
             {
@@ -81,10 +89,15 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
         }
 
         System.Text.StringBuilder section = new();
-        for (int index = headingLine + 1; index < lines.Length && !lines[index].StartsWith("## ", StringComparison.Ordinal); index++)
+        string? firstLine = null;
+        for (int index = headingLine + 1; index < lines.Count && !lines[index].StartsWith("## ", StringComparison.Ordinal); index++)
         {
             section.Append(lines[index]);
             section.Append('\n');
+            if (firstLine is null && lines[index].Trim().Length > 0)
+            {
+                firstLine = lines[index].Trim();
+            }
         }
 
         string body = section.ToString();
@@ -119,7 +132,91 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
             return null;
         }
 
+        string bold = $"**{found[0]}.**";
+        if (firstLine is null || !firstLine.StartsWith(bold, StringComparison.Ordinal))
+        {
+            error = $"The first line of the '{VerdictHeading}' section must start with the verdict name in bold and a period, as in '**{ReviewGateRules.ApprovedVerdict}.**'. The section names '{found[0]}', and its first line is '{firstLine}'. Write the name exactly (D-179, D-269).";
+            return null;
+        }
+
         error = string.Empty;
         return found[0];
+    }
+
+    /// <summary>
+    /// The lines of a text that are outside a fenced block, in order. A run of three or more backticks or tildes, after
+    /// no more than three spaces, opens a fence. Only a line of the same character, with a run at least as long and
+    /// nothing after it, closes that fence, as in Markdown. So a line of tildes inside a backtick fence stays inside it
+    /// (PR #104 P1-2), a line with four spaces or a tab first is no fence, and a backtick fence has no backtick after its
+    /// run. The fence lines are skipped too.
+    /// </summary>
+    private static System.Collections.Generic.List<string> LinesOutsideFences(string text)
+    {
+        System.Collections.Generic.List<string> lines = [];
+        char fenceCharacter = '\0';
+        int fenceLength = 0;
+        foreach (string line in text.Split('\n'))
+        {
+            string start = FenceStart(line);
+            int run = FenceRun(start);
+            if (fenceLength == 0)
+            {
+                // A backtick fence has no backtick in its info string, as in Markdown, so such a line opens no fence
+                // (PR #104 P1-3).
+                if (run > 0 && !(start[0] == '`' && start[run..].Contains('`', StringComparison.Ordinal)))
+                {
+                    fenceCharacter = start[0];
+                    fenceLength = run;
+                    continue;
+                }
+
+                lines.Add(line);
+                continue;
+            }
+
+            if (run >= fenceLength && start[0] == fenceCharacter && start[run..].Trim().Length == 0)
+            {
+                fenceLength = 0;
+            }
+        }
+
+        return lines;
+    }
+
+    /// <summary>
+    /// The line after up to three spaces, where a fence can start. A line with four spaces or a tab first is an indented
+    /// code line in Markdown, so it gives the empty text, which holds no fence.
+    /// </summary>
+    private static string FenceStart(string line)
+    {
+        int spaces = 0;
+        while (spaces < line.Length && spaces <= 3 && line[spaces] == ' ')
+        {
+            spaces++;
+        }
+
+        if (spaces > 3 || (spaces < line.Length && line[spaces] == '\t'))
+        {
+            return string.Empty;
+        }
+
+        return line[spaces..];
+    }
+
+    /// <summary>The length of the run of backticks or tildes at the start of a line, when it is three or more, or zero.</summary>
+    private static int FenceRun(string start)
+    {
+        if (start.Length == 0 || (start[0] != '`' && start[0] != '~'))
+        {
+            return 0;
+        }
+
+        int run = 0;
+        while (run < start.Length && start[run] == start[0])
+        {
+            run++;
+        }
+
+        return run >= 3 ? run : 0;
     }
 }

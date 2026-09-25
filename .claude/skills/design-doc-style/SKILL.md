@@ -5,7 +5,7 @@ description: Section template and rules for docs/design.md, modeled on the conne
 
 # Design-doc style skill
 
-The owner wants the design doc in the style of `/Users/nate/Repos/connector-syncer-docs/docs/document-summary-roadmap.md` (D-132). This skill gives the template. Write in ASD-STE100. Load `ste-writing` first.
+The owner wants the design doc in the style of the document summary roadmap of the connector-syncer project (D-132). That file is not in this repository, so this skill gives the template. Write in ASD-STE100. Load `ste-writing` first.
 
 The design doc is one file: `docs/design.md`. Its roadmap section is the high-level roadmap. Focused roadmaps are separate files in `docs/roadmaps/`. The roadmap section links to them.
 

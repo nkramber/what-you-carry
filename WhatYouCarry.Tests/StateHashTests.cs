@@ -1,5 +1,8 @@
 using System;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Pathfinding;
+using WhatYouCarry.Core.Physics;
+using WhatYouCarry.Core.World;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
@@ -38,6 +41,69 @@ public sealed class StateHashTests
 
         Assert.Equal(declared.Value, repeated.Value);
         Assert.Equal(declared, repeated);
+    }
+
+    /// <summary>
+    /// F-123. Two path followers that differ only in the stored path give two hashes. Each walks from one cell to
+    /// one goal and holds the same waypoint and the same ticks since the search, but a wall on the second grid
+    /// takes its path around. The hash folded the waypoint and the ticks alone, so a divergence of the path showed
+    /// only when it moved a body (D-160).
+    /// </summary>
+    [Fact]
+    public void TheStoredPathOfAFollowerIsPartOfTheHash()
+    {
+        VoxelGrid open = TestWorld.FlatFloor(8, 6);
+        VoxelGrid walled = TestWorld.FlatFloor(8, 6);
+        for (int z = 0; z < 3; z++)
+        {
+            walled.Set(3, 1, z, BlockId.RawStone);
+            walled.Set(3, 2, z, BlockId.RawStone);
+        }
+
+        Cell goal = new(5, 0, 1);
+        Vector3 feet = PathWalk.CenterOf(new Cell(1, 0, 1));
+        PathFollower straight = new();
+        PathFollower around = new();
+        Assert.True(straight.TryNext(open, new GridPathfinder(open), feet, true, goal, out _), "The open grid gave no path to the goal.");
+        Assert.True(around.TryNext(walled, new GridPathfinder(walled), feet, true, goal, out _), "The walled grid gave no path to the goal.");
+
+        // The case holds only when the two followers differ in the path alone.
+        Assert.Equal(straight.Waypoint, around.Waypoint);
+        Assert.Equal(goal, straight.Path[straight.Path.Count - 1]);
+        Assert.Equal(goal, around.Path[around.Path.Count - 1]);
+        Assert.NotEqual(straight.Path, around.Path);
+
+        StateHash straightHash = StateHash.Start();
+        straight.AddTo(ref straightHash);
+        StateHash aroundHash = StateHash.Start();
+        around.AddTo(ref aroundHash);
+        Assert.NotEqual(straightHash.Value, aroundHash.Value);
+    }
+
+    /// <summary>
+    /// F-123. Each field of the wedge count of a follower is part of the hash (D-160): the goal of the best estimate,
+    /// the best estimate, the ticks with no gain, and the result of the last search. The test sets one field of a new
+    /// follower at a time, so the two followers differ in that field alone. The old hash read none of them.
+    /// </summary>
+    [Theory]
+    [InlineData("goalOfBest")]
+    [InlineData("best")]
+    [InlineData("stillTicks")]
+    [InlineData("<LastSearchFailed>k__BackingField")]
+    public void EachWedgeFieldOfAFollowerIsPartOfTheHash(string field)
+    {
+        PathFollower plain = new();
+        PathFollower changed = new();
+        System.Reflection.FieldInfo? info = typeof(PathFollower).GetField(field, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        Assert.True(info is not null, $"PathFollower has no field '{field}'.");
+        object value = info.FieldType == typeof(bool) ? true : info.FieldType == typeof(Cell) ? new Cell(1, 2, 3) : (object)7;
+        info.SetValue(changed, value);
+
+        StateHash plainHash = StateHash.Start();
+        plain.AddTo(ref plainHash);
+        StateHash changedHash = StateHash.Start();
+        changed.AddTo(ref changedHash);
+        Assert.NotEqual(plainHash.Value, changedHash.Value);
     }
 
     /// <summary>

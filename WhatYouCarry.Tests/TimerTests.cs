@@ -79,6 +79,31 @@ public sealed class TimerTests(ITestOutputHelper output)
         Assert.Throws<ContextException>(() => new FloorTimer(0));
     }
 
+    /// <summary>
+    /// F-127. The boss floors and the timer marks keep their values and their order, and no caller can write them.
+    /// They were public arrays, so one write changed the timer of every run in the process.
+    /// </summary>
+    [Fact]
+    public void TheTimerTablesCannotBeWritten()
+    {
+        Assert.Equal(new[] { 5, 10, 15 }, FloorTimer.BossFloors);
+        Assert.Equal(new[] { 60, 30, 10, 8, 6, 5, 4, 3, 2, 1 }, FloorTimer.MarkSeconds);
+
+        (string Name, IReadOnlyList<int> Table)[] tables =
+        [
+            (nameof(FloorTimer.BossFloors), FloorTimer.BossFloors),
+            (nameof(FloorTimer.MarkSeconds), FloorTimer.MarkSeconds),
+        ];
+        foreach ((string name, IReadOnlyList<int> table) in tables)
+        {
+            // The array check comes first, so an old array fails the test before the write below can change it.
+            Assert.False(table is int[], $"FloorTimer.{name} is an array, and any caller can write it.");
+            IList<int> view = Assert.IsAssignableFrom<IList<int>>(table);
+            Assert.True(view.IsReadOnly, $"FloorTimer.{name} reports that it can be written.");
+            Assert.Throws<NotSupportedException>(() => view[0] = view[0] + 1);
+        }
+    }
+
     /// <summary>The countdown pauses at the stairwell, and the ticks after expiry count on there (D-140, D-417).</summary>
     [Fact]
     public void TimerCountsAfterExpiryAtTheStairwell()

@@ -6,7 +6,7 @@ The design doc holds the system map (section 3), the cost model (section 4), and
 
 External facts: the Steam Deck verification requirements and the Apple notarization steps are external. Each PR that depends on one fetches it and records the date and the source (OQ-66, OQ-67).
 
-Correction passes: 2026-09-07, the PR #1 review. Sequence step 11 is new. It makes the repository public, changes the mode file to `enforced`, and promotes `review-gate` to a required status check (D-170, D-180, D-185).
+Correction passes: 2026-09-07, the PR #1 review. Sequence step 11 is new. It makes the repository public, changes the mode file to `enforced`, and promotes `review-gate` to a required status check (D-170, D-180, D-185). 2026-09-25, F-137: the PR-51 scope put the notarization on the Mac Mini, and D-572 takes that runner out of CI. The machine waits for OQ-67.
 
 ## 1. Thesis
 
@@ -42,7 +42,7 @@ Scope:
 
 - `export_presets.cfg`: Windows x64, Linux x64, and a macOS universal binary, from the pinned Godot version (D-61). Credentials stay out of the repository (`.gitignore`).
 - A CI job `export` that builds all three on a tag and uploads them as artifacts.
-- Signature and notarization of the macOS build with the tool from OQ-67, run on the Mac Mini (D-142).
+- Signature and notarization of the macOS build with the tool and the machine that OQ-67 names (D-142). No CI job runs on the Mac Mini (D-572).
 - Shader pre-warm at load: every material draws once behind a black frame before the hub appears.
 - A clean-install test script per platform that installs the artifact on a fresh user account and runs the smoke session.
 

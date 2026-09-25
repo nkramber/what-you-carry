@@ -128,7 +128,7 @@ public static class CodexReviewCommand
         }
 
         string loginStatus = CodexReviewSettings.LoginStatusText(ExternalProcess.Run(codex, CodexReviewSettings.LoginStatusArguments, root, CodexReviewSettings.ApiCredentialVariables));
-        StartFacts facts = GatherStartFacts(root, git, pullRequest, view, version, loginStatus);
+        StartFacts facts = GatherStartFacts(root, git, pullRequest, view, version, loginStatus, skipGitarReview);
         var problems = new List<string>(StartChecks.Problems(facts, skipGitarReview));
         if (problems.Count == 0)
         {
@@ -236,20 +236,31 @@ public static class CodexReviewCommand
             RequiredString(pr, "baseRefName", pullRequest));
     }
 
-    private static StartFacts GatherStartFacts(string root, GitRepository git, int pullRequest, PullRequestView view, CodexVersion version, string loginStatus)
+    /// <summary>
+    /// Reads the start facts once. <paramref name="skipGitarReview"/> leaves the Gitar check runs and the dashboard
+    /// unread, because the start checks then do not judge them (D-543, F-125).
+    /// </summary>
+    private static StartFacts GatherStartFacts(string root, GitRepository git, int pullRequest, PullRequestView view, CodexVersion version, string loginStatus, bool skipGitarReview)
     {
         FetchBranch(git, view.Branch);
         FetchBranch(git, view.BaseBranch);
         string repository = ExternalProcess.Run("gh", ["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], root).RequireSuccess().Trim();
         string originHead = git.Run(["rev-parse", $"refs/remotes/origin/{view.Branch}"]).Trim();
         string? workHead = WorkHead(git, view, originHead);
-        var gitarChecks = new List<GitarCheck>();
-        if (workHead is not null)
+        List<GitarCheck>? gitarChecks = null;
+        DateTimeOffset? dashboardEditedAt = null;
+        if (!skipGitarReview)
         {
-            foreach (string sha in CommitsFrom(git, workHead, originHead))
+            gitarChecks = [];
+            if (workHead is not null)
             {
-                gitarChecks.AddRange(ReadGitarChecks(root, repository, sha));
+                foreach (string sha in CommitsFrom(git, workHead, originHead))
+                {
+                    gitarChecks.AddRange(ReadGitarChecks(root, repository, sha));
+                }
             }
+
+            dashboardEditedAt = ReadDashboardEditTime(root, repository, pullRequest);
         }
 
         return new StartFacts
@@ -267,7 +278,7 @@ public static class CodexReviewCommand
             EffectiveHead = EffectiveHead(git, view, originHead),
             WorkHead = workHead,
             GitarChecks = gitarChecks,
-            DashboardEditedAt = ReadDashboardEditTime(root, repository, pullRequest),
+            DashboardEditedAt = dashboardEditedAt,
             UnresolvedThreadCount = CountUnresolvedThreads(root, repository, pullRequest),
         };
     }
@@ -287,6 +298,16 @@ public static class CodexReviewCommand
             "gh",
             ["api", "--paginate", $"repos/{repository}/commits/{sha}/check-runs?per_page=100", "--jq", $".check_runs[] | select(.app.slug == \"{GitarApp}\") | \"\\(.status) \\(.started_at)\""],
             root).RequireSuccess();
+        return ParseGitarChecks(sha, lines);
+    }
+
+    /// <summary>
+    /// Reads the lines <c>&lt;status&gt; &lt;start time&gt;</c> of the Gitar check runs on the commit. The jq text of
+    /// a start time that GitHub does not give is <c>null</c>, and the check run then has no start time (F-125).
+    /// </summary>
+    /// <exception cref="FormatException">A line has another form, or a start time that is not a time. The message names the commit and the line.</exception>
+    public static List<GitarCheck> ParseGitarChecks(string sha, string lines)
+    {
         var checks = new List<GitarCheck>();
         foreach (string line in lines.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
@@ -296,7 +317,18 @@ public static class CodexReviewCommand
                 throw new FormatException($"A Gitar check run on {sha} gave '{line}', and the expected form is '<status> <start time>'.");
             }
 
-            checks.Add(new GitarCheck(sha, parts[0], DateTimeOffset.Parse(parts[1], CultureInfo.InvariantCulture)));
+            if (parts[1] == "null")
+            {
+                checks.Add(new GitarCheck(sha, parts[0], null));
+                continue;
+            }
+
+            if (!DateTimeOffset.TryParse(parts[1], CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTimeOffset startedAt))
+            {
+                throw new FormatException($"A Gitar check run on {sha} gave '{line}', and '{parts[1]}' is not a start time.");
+            }
+
+            checks.Add(new GitarCheck(sha, parts[0], startedAt));
         }
 
         return checks;

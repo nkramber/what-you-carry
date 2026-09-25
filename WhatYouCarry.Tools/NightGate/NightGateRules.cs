@@ -23,6 +23,7 @@ public static class NightGateRules
     /// <summary>The case names, in the order the rules read them.</summary>
     public const string AbsentCase = "absent";
     public const string MalformedCase = "malformed";
+    public const string FutureCase = "future";
     public const string StaleCase = "stale";
     public const string ForeignCase = "foreign";
     public const string CancelledCase = "cancelled";
@@ -55,8 +56,9 @@ public static class NightGateRules
     }
 
     /// <summary>
-    /// Applies the rules to one record: absent, malformed, stale, at the wrong commit, cancelled, or failed, in that
-    /// order, and a pass after them. <paramref name="where"/> names the commit that the record must name.
+    /// Applies the rules to one record: absent, malformed, ended after the time of the evaluation, stale, at the wrong
+    /// commit, cancelled, or failed, in that order, and a pass after them. <paramref name="where"/> names the commit
+    /// that the record must name.
     /// </summary>
     private static NightGateResult Judge(NightRecordRead read, bool atTheCommit, string where, DateTimeOffset nowTime)
     {
@@ -75,6 +77,13 @@ public static class NightGateRules
         string time = record.EndedAt.ToString(NightRecordParser.TimeFormat, CultureInfo.InvariantCulture);
         string now = nowTime.ToString(NightRecordParser.TimeFormat, CultureInfo.InvariantCulture);
         string identity = $"commit {record.Commit}, ended at {time}";
+        // A night cannot end after the evaluation. A record that says so would stay inside the window until 48 hours
+        // after its false end time (F-125).
+        if (record.EndedAt > nowTime)
+        {
+            return new NightGateResult(false, FutureCase, $"The {label} ends in the future: {identity}, which is later than {now}.");
+        }
+
         if (nowTime - record.EndedAt > StaleAfter)
         {
             return new NightGateResult(false, StaleCase, $"The {label} is stale: {identity}, more than {StaleAfter.TotalHours} hours before {now}.");

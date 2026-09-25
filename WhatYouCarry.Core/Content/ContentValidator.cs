@@ -143,6 +143,19 @@ public static class ContentValidator
     /// <summary>The largest whole number that a list value takes. No field of a list needs a larger one.</summary>
     public const long LargestListNumber = 9999;
 
+    /// <summary>
+    /// The largest value of an int: 2^31 - 1. A field that the simulation holds in an int is no larger, so no cast wraps
+    /// it (F-120). The member allowlist of D-208 holds no <c>int.MaxValue</c>, so the number stands here, and a test
+    /// matches it to that member.
+    /// </summary>
+    public const long LargestInt = 2147483647;
+
+    /// <summary>
+    /// The largest value of a long: 2^63 - 1. A count of seconds times the ticks per second is a long, so the count is
+    /// no larger than this value over the ticks per second (F-120). A test matches it to <c>long.MaxValue</c>.
+    /// </summary>
+    public const long LargestLong = 9223372036854775807;
+
     /// <summary>The name of one kind in a message. The switch is explicit, so no reflection reads the enum (G-2).</summary>
     private static string KindName(JsonMemberKind kind)
     {

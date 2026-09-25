@@ -7,7 +7,8 @@ namespace WhatYouCarry.Tools.SteCheck;
 /// <summary>
 /// The reference check (D-178, D-186). It reads the Effect column of the decision register for every
 /// <c>Superseded by D-N</c> marker. A line in another file that cites a superseded decision is a finding, unless the
-/// line holds a revision word or names the superseding decision. A decision marked <c>Revised in part by</c> stays citable.
+/// sentence of the citation holds a revision word or the line names the superseding decision. A decision marked
+/// <c>Revised in part by</c> stays citable.
 /// </summary>
 public static class ReferenceCheck
 {
@@ -58,23 +59,42 @@ public static class ReferenceCheck
         for (int index = 0; index < lines.Length; index++)
         {
             string line = lines[index].TrimEnd('\r');
-            if (RevisionWord.IsMatch(line))
+            foreach (string sentence in SentencesOf(line))
             {
-                continue;
-            }
-
-            foreach (Match match in DecisionId.Matches(line))
-            {
-                if (!superseded.TryGetValue(match.Value, out string? superseder) || NamesDecision(line, superseder))
+                if (RevisionWord.IsMatch(sentence))
                 {
                     continue;
                 }
 
-                findings.Add(new Finding(relativePath, index + 1, Rule, $"cites {match.Value}, which {superseder} supersedes", line.Trim()));
+                foreach (Match match in DecisionId.Matches(sentence))
+                {
+                    if (!superseded.TryGetValue(match.Value, out string? superseder) || NamesDecision(line, superseder))
+                    {
+                        continue;
+                    }
+
+                    findings.Add(new Finding(relativePath, index + 1, Rule, $"cites {match.Value}, which {superseder} supersedes", line.Trim()));
+                }
             }
         }
 
         return findings;
+    }
+
+    /// <summary>
+    /// The sentences of one line, as <see cref="SentenceText"/> splits them for the STE rules. A paragraph is one line,
+    /// so a revision word exempts only the citations of its own sentence. A parenthesis stays whole inside its sentence.
+    /// </summary>
+    private static List<string> SentencesOf(string line)
+    {
+        var result = new List<string>();
+        var textLine = new TextLine(0, line, IsHeading: false, IsNumberedItem: false, InProceduralSection: false);
+        foreach (Sentence sentence in SentenceText.Split(textLine))
+        {
+            result.Add(sentence.Text);
+        }
+
+        return result;
     }
 
     private static bool NamesDecision(string line, string id)

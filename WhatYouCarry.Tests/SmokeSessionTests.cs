@@ -10,6 +10,7 @@ using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Game;
 using WhatYouCarry.Game.Input;
 using WhatYouCarry.Game.Logging;
+using WhatYouCarry.Game.Measure;
 using WhatYouCarry.Game.Smoke;
 using Xunit;
 using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
@@ -96,6 +97,22 @@ public sealed class SmokeSessionTests
         Assert.Throws<ArgumentOutOfRangeException>(() => SmokeSession.IntentAt(SmokeSession.Ticks));
     }
 
+    /// <summary>
+    /// F-121. A loop tick before the descent is an error that says so, and never the text of a tick past the end of the
+    /// script. A tick past the end still gives its own text.
+    /// </summary>
+    [Fact]
+    public void ScriptRejectsATickBeforeTheDescentWithItsOwnText()
+    {
+        ArgumentOutOfRangeException before = Assert.Throws<ArgumentOutOfRangeException>(() => SmokeSession.ScriptIntent(99, 100));
+        Assert.StartsWith(SmokeSession.BeforeScriptMessage, before.Message, StringComparison.Ordinal);
+        Assert.Equal(99U, before.ActualValue);
+
+        ArgumentOutOfRangeException past = Assert.Throws<ArgumentOutOfRangeException>(() => SmokeSession.ScriptIntent(100 + SmokeSession.Ticks, 100));
+        Assert.DoesNotContain(SmokeSession.BeforeScriptMessage, past.Message, StringComparison.Ordinal);
+        Assert.Contains("past the end", past.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>The script runs on the loop of the first seed with no error, the body moves from its spawn, and the player swings and rolls (D-149).</summary>
     [Fact]
     public void ScriptRunsOnTheLoopAndMovesTheBody()
@@ -172,7 +189,8 @@ public sealed class SmokeSessionTests
 
     /// <summary>
     /// PR-18 exit test 7. The engine boots headless, the walk opens the stairwell prompt on floor 1 and descends, the
-    /// chunk swap shows floor 2, and the session quits with exit code 0 and no error line (D-431, D-436).
+    /// chunk swap shows floor 2, and the session quits with exit code 0, no error line, and no engine error (D-431,
+    /// D-436, F-115).
     /// </summary>
     [Fact]
     [Trait("Category", SmokeCategory)]
@@ -183,6 +201,7 @@ public sealed class SmokeSessionTests
 
         Assert.True(run.ExitCode == Main.ExitSuccess, $"The smoke session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
         Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.PromptOpenMessage}\"", StringComparison.Ordinal) && line.Contains("\"floor\":1,", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.SwapMessage}\"", StringComparison.Ordinal) && line.Contains("\"floor\":2,", StringComparison.Ordinal) && line.Contains($"\"{Main.FromWorkerField}\":true", StringComparison.Ordinal));
         AssertCleanEnd(lines, run.Output);
@@ -255,6 +274,73 @@ public sealed class SmokeSessionTests
             && line.Contains("unexpected", StringComparison.Ordinal));
         Assert.DoesNotContain(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal));
         Assert.DoesNotContain(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// F-122. An empty frame log path stops the boot with exit code 1 and an error line that names the flag, before the
+    /// run starts. The old boot took the empty word, the write at the end of the session threw an error that no catch
+    /// took, and the process never quit.
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task AnEmptyFrameLogPathEndsTheBoot()
+    {
+        EngineRun run = await RunEngine("empty frame log path session", ["--headless", "--fixed-fps", "60"], [SmokeSession.Flag, FrameLog.Flag, string.Empty]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitFailure, $"The empty frame log path session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        Assert.Contains(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal)
+            && line.Contains(Main.BootFailedMessage, StringComparison.Ordinal)
+            && line.Contains(UserArguments.EmptyWordMessage, StringComparison.Ordinal)
+            && line.Contains(FrameLog.Flag, StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// F-121 and F-122. A frame log that the session cannot write is an error line and exit code 1. The line carries the
+    /// run fields of the loop, so its tick is the tick of the end line, and not the tick zero of the boot, and it names
+    /// the type of the error. The directory of the path does not exist.
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task AFrameLogWriteFailureNamesTheTickOfTheEnd()
+    {
+        string path = Path.Combine(Path.GetTempPath(), "wyc-no-directory-" + Guid.NewGuid().ToString("N"), "frames.txt");
+
+        EngineRun run = await RunEngine(
+            "frame log write failure session",
+            ["--headless", "--fixed-fps", "60"],
+            [SmokeSession.Flag, TestExit.PressFlag, TestExit.EscapeName, PressTick.ToString(CultureInfo.InvariantCulture), FrameLog.Flag, path]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitFailure, $"The frame log write failure session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        string endLine = Assert.Single(lines, line => line.Contains($"\"message\":\"{Main.TestExitMessage}\"", StringComparison.Ordinal));
+        string failureLine = Assert.Single(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal) && line.Contains(Main.FrameLogFailedMessage, StringComparison.Ordinal));
+        Assert.InRange(EndTick(endLine), PressTick + 1, SmokeSession.Ticks - 1);
+        Assert.True(EndTick(failureLine) == EndTick(endLine), $"The failure line names tick {EndTick(failureLine)}, and the end line names tick {EndTick(endLine)}.{Environment.NewLine}{failureLine}");
+        Assert.Contains($"\"{FailureFields.ErrorTypeField}\":\"System.IO.DirectoryNotFoundException\"", failureLine, StringComparison.Ordinal);
+        Assert.False(File.Exists(path), $"The session wrote '{path}'.");
+    }
+
+    /// <summary>
+    /// F-122. A boot that fails after it read the frame log flag writes no frame log, and never an empty one. A
+    /// transitions count of zero stops the boot after the content loads.
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task ABootFailureWritesNoFrameLog()
+    {
+        string path = Path.Combine(Path.GetTempPath(), "wyc-boot-frames-" + Guid.NewGuid().ToString("N") + ".txt");
+
+        EngineRun run = await RunEngine(
+            "boot failure session with a frame log",
+            ["--headless", "--fixed-fps", "60"],
+            [BotSession.Flag, FrameLog.Flag, path, BotSession.TransitionsFlag, "0"]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitFailure, $"The boot failure session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        Assert.Contains(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal) && line.Contains(Main.BootFailedMessage, StringComparison.Ordinal));
+        Assert.False(File.Exists(path), $"The boot failure wrote the frame log '{path}'.");
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using System;
+using WhatYouCarry.Tools.CodexReview;
 using WhatYouCarry.Tools.ReviewGate;
 using Xunit;
 
@@ -121,6 +122,132 @@ public sealed class ReviewGateRulesTests
         Assert.Contains("names 2 verdicts", ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: reversed)).Summary, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// F-116. A Verdict section whose first line does not start with the exact verdict name in bold fails, also
+    /// when the one name that the section holds is the approving name. The old parse found the name inside other
+    /// words and approved each of these texts (D-179, D-269).
+    /// </summary>
+    [Theory]
+    [InlineData("**Not Ready for owner merge.** This verdict applies to head `{0}`.")]
+    [InlineData("**Changes Required.** Ready for owner merge after P1-1.")]
+    [InlineData("**ready for owner merge.** This verdict applies to head `{0}`.")]
+    [InlineData("The verdict is **Ready for owner merge.** for head `{0}`.")]
+    public void ReviewGateFailsOnAVerdictLineThatDoesNotStartWithTheName(string verdictLine)
+    {
+        string text = ReviewFixture.Text(Head, "Ready for owner merge")
+            .Replace($"**Ready for owner merge.** This verdict applies to head `{Head}`.", string.Format(System.Globalization.CultureInfo.InvariantCulture, verdictLine, Head), StringComparison.Ordinal);
+        ReviewGateResult result = ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: text));
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains("## Verdict", result.Summary, StringComparison.Ordinal);
+    }
+
+    /// <summary>The boundary beside F-116: an exact bold name with more text after it on the same line approves.</summary>
+    [Fact]
+    public void ReviewGatePassesOnTheExactNameWithAReasonOnTheSameLine()
+    {
+        string text = ReviewFixture.Text(Head, "Ready for owner merge")
+            .Replace("This verdict applies to head", "The fixes hold. This verdict applies to head", StringComparison.Ordinal);
+        Assert.Equal(ReviewGateResult.Success, ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: text)).Conclusion);
+    }
+
+    /// <summary>
+    /// F-116. A fenced example of an approving record above the real sections is not the record. The gate reads
+    /// the head and the verdict outside each fence, so the real verdict decides.
+    /// </summary>
+    [Fact]
+    public void ReviewGateSkipsAFencedExampleOfARecord()
+    {
+        string fence = "```\n- Head: `" + Head + "`\n\n## Verdict\n\n**Ready for owner merge.** This verdict applies to head `" + Head + "`.\n```\n\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", fence + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+        Assert.True(record is not null, error);
+        Assert.Equal("Blocked", record!.Verdict);
+        Assert.Equal("fedcba9", record.RecordedHead);
+        Assert.Equal(ReviewGateResult.Failure, ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: text)).Conclusion);
+    }
+
+    /// <summary>
+    /// PR #104 P1-2. Only a matching fence closes a fenced block. Two tilde lines inside a backtick fence stay inside it,
+    /// so the fake Identity and Verdict between them never reach the parse. The old parse toggled on any fence-like
+    /// line, and it read the fake head and the fake approval.
+    /// </summary>
+    [Fact]
+    public void ReviewGateKeepsATildeLineInsideABacktickFence()
+    {
+        string fake = "- Head: `" + Head + "`\n\n## Verdict\n\n**Ready for owner merge.** This verdict applies to head `" + Head + "`.\n";
+        string fence = "```\n~~~\n" + fake + "~~~\n```\n\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", fence + "## Identity\n", StringComparison.Ordinal);
+
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+
+        Assert.True(record is not null, error);
+        Assert.Equal("Blocked", record!.Verdict);
+        Assert.Equal("fedcba9", record.RecordedHead);
+    }
+
+    /// <summary>The boundary beside PR #104 P1-2: a closing run shorter than the opening run stays inside, and a longer run of the same character closes the fence.</summary>
+    [Fact]
+    public void ReviewGateClosesAFenceOnAMatchingRunAlone()
+    {
+        string fake = "- Head: `" + Head + "`\n\n## Verdict\n\n**Ready for owner merge.** This verdict applies to head `" + Head + "`.\n";
+        string shortClose = "````\n```\n" + fake + "````\n\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", shortClose + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+        Assert.True(record is not null, error);
+        Assert.Equal("Blocked", record!.Verdict);
+
+        string longClose = "```\nnote\n`````\n\n";
+        string closed = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", longClose + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? after = ReviewRecord.TryParse(closed, out string afterError);
+        Assert.True(after is not null, afterError);
+        Assert.Equal("fedcba9", after!.RecordedHead);
+    }
+
+    /// <summary>
+    /// PR #104, the gitar finding on the fence indent. A fence opens after no more than three spaces, as in Markdown. A
+    /// line with four spaces first is an indented code line, so the sections after it stay visible to the gate, as a
+    /// reader sees them. Three spaces still open a fence.
+    /// </summary>
+    [Fact]
+    public void ReviewGateReadsNoFenceAfterFourSpaces()
+    {
+        string fake = "- Head: `" + Head + "`\n\n## Verdict\n\n**Ready for owner merge.** This verdict applies to head `" + Head + "`.\n";
+        string indented = "    ```\n\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", indented + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+        Assert.True(record is not null, error);
+        Assert.Equal("fedcba9", record!.RecordedHead);
+        Assert.Equal("Blocked", record.Verdict);
+
+        string threeSpaces = "   ```\n" + fake + "   ```\n\n";
+        string fenced = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", threeSpaces + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? inside = ReviewRecord.TryParse(fenced, out string insideError);
+        Assert.True(inside is not null, insideError);
+        Assert.Equal("fedcba9", inside!.RecordedHead);
+        Assert.Equal("Blocked", inside.Verdict);
+    }
+
+    /// <summary>
+    /// PR #104 P1-3. A line of three backticks and an info string with a backtick opens no fence, as in Markdown. So the
+    /// real Verdict after it stays visible, and the next line of three backticks opens the fence that hides the fake
+    /// approval. The old parse opened the fence at the first line and read the fake approval. A backtick fence with a
+    /// plain info string still opens.
+    /// </summary>
+    [Fact]
+    public void ReviewGateOpensNoFenceOnABacktickInTheInfoString()
+    {
+        string fake = "## Verdict\n\n**Ready for owner merge.** This verdict applies to head `fedcba9`.\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Verdict\n", "```c`\n\n## Verdict\n", StringComparison.Ordinal) + "```\n" + fake + "```\n";
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+        Assert.True(record is not null, error);
+        Assert.Equal("Blocked", record!.Verdict);
+
+        string plain = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", "```csharp\n" + fake + "```\n\n## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? fenced = ReviewRecord.TryParse(plain, out string fencedError);
+        Assert.True(fenced is not null, fencedError);
+        Assert.Equal("Blocked", fenced!.Verdict);
+    }
+
     /// <summary>Every review record of the repository parses with one head and one verdict name, so a reviewer sees a second name locally before the push (D-269).</summary>
     [Fact]
     public void EveryRepositoryReviewRecordHoldsOneVerdict()
@@ -141,6 +268,56 @@ public sealed class ReviewGateRulesTests
         }
 
         Assert.True(records >= 10, $"The repository holds {records} review records.");
+    }
+
+    /// <summary>
+    /// The records of these PRs predate the format of <c>findings.md</c> that the findings parser reads (D-514), so
+    /// their findings sections do not parse. <c>codex-review</c> judges the record of the PR under review alone, so the
+    /// parser never reads them again.
+    /// </summary>
+    private static readonly string[] RecordsBeforeTheFindingsFormat = ["pr-10.md", "pr-40.md", "pr-43.md", "pr-84.md"];
+
+    /// <summary>
+    /// F-125: every review record of the repository with a findings section parses under the status rule. A record of
+    /// <see cref="RecordsBeforeTheFindingsFormat"/> fails for a heading or a missing status line, and never for a status.
+    /// </summary>
+    [Fact]
+    public void EveryRepositoryFindingsSectionParses()
+    {
+        string root = System.IO.Path.Combine(RepositoryRoot.Find(), "docs", "reviews");
+        int sections = 0;
+        var failures = new System.Collections.Generic.List<string>();
+        foreach (string file in System.IO.Directory.EnumerateFiles(root, "pr-*.md"))
+        {
+            string name = System.IO.Path.GetFileName(file);
+            string text = System.IO.File.ReadAllText(file);
+            string[] lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+            if (name.EndsWith("-response.md", StringComparison.Ordinal) || !Array.Exists(lines, static line => line.TrimEnd() == ReviewFindings.SectionHeading))
+            {
+                continue;
+            }
+
+            sections++;
+            bool olderFormat = Array.IndexOf(RecordsBeforeTheFindingsFormat, name) >= 0;
+            try
+            {
+                ReviewFindings.Parse(text);
+                if (olderFormat)
+                {
+                    failures.Add($"{name} parses now, so it leaves the list of records before the findings format.");
+                }
+            }
+            catch (FormatException exception)
+            {
+                if (!olderFormat || exception.Message.Contains("has the status", StringComparison.Ordinal))
+                {
+                    failures.Add($"{name}: {exception.Message}");
+                }
+            }
+        }
+
+        Assert.True(failures.Count == 0, string.Join("\n", failures));
+        Assert.True(sections >= 10, $"The repository holds {sections} review records with a '{ReviewFindings.SectionHeading}' section.");
     }
 
     [Theory]

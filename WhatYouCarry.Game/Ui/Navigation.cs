@@ -39,6 +39,11 @@ public readonly record struct FocusControl(Rect2 Box, bool TakesSideways);
 /// column before it jumps across. A direction with no such control has no neighbor, and the focus stays.
 /// </para>
 /// <para>
+/// Tab and Shift+Tab follow the tab order, which is the order of the focus map, and they go around from the last
+/// control to the first. They never follow a direction, because a direction with no neighbor keeps the focus, and
+/// Tab then stopped at the last control of each row (F-135).
+/// </para>
+/// <para>
 /// The engine moves the focus on its input actions for the directions and activates the control with the focus on
 /// its accept action. The accept action of Godot 4.7 has no controller input, so <see cref="BindAccept"/> adds the A
 /// button to it (D-449). <see cref="RequireControllerActions"/> stops a screen whose input map gives one of those
@@ -125,6 +130,36 @@ public static class Navigation
         return best;
     }
 
+    /// <summary>
+    /// The index of the control after one control in the tab order: the order of the focus map. The last control
+    /// goes to the first, so Tab reaches every control of a screen from every control (F-135).
+    /// </summary>
+    /// <exception cref="ContextException">The screen holds no control.</exception>
+    public static int TabNext(IReadOnlyList<FocusControl> controls, int from)
+    {
+        if (controls.Count == 0)
+        {
+            throw new ContextException(NoControlsMessage);
+        }
+
+        return (from + 1) % controls.Count;
+    }
+
+    /// <summary>
+    /// The index of the control before one control in the tab order: the order of the focus map. The first control
+    /// goes to the last, so Shift+Tab reaches every control of a screen from every control (F-135).
+    /// </summary>
+    /// <exception cref="ContextException">The screen holds no control.</exception>
+    public static int TabPrevious(IReadOnlyList<FocusControl> controls, int from)
+    {
+        if (controls.Count == 0)
+        {
+            throw new ContextException(NoControlsMessage);
+        }
+
+        return (from + controls.Count - 1) % controls.Count;
+    }
+
     /// <summary>The indexes of every control that the directions reach from one control, sorted.</summary>
     /// <exception cref="ContextException">The screen holds no control.</exception>
     public static IReadOnlyList<int> Reachable(IReadOnlyList<FocusControl> controls, int start)
@@ -192,9 +227,9 @@ public static class Navigation
             node.FocusNeighborLeft = PathTo(controls, nodes, index, FocusDirection.Left);
             node.FocusNeighborRight = PathTo(controls, nodes, index, FocusDirection.Right);
 
-            // The engine walks the tab order on its own, so the next and the previous stay on the map too.
-            node.FocusNext = PathTo(controls, nodes, index, FocusDirection.Right);
-            node.FocusPrevious = PathTo(controls, nodes, index, FocusDirection.Left);
+            // Tab and Shift+Tab walk the tab order of the focus map, and never stop at the end of a row (F-135).
+            node.FocusNext = node.GetPathTo(nodes[TabNext(controls, index)]);
+            node.FocusPrevious = node.GetPathTo(nodes[TabPrevious(controls, index)]);
         }
     }
 

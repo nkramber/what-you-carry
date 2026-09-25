@@ -17,4 +17,10 @@ public static class StairwellPrompt
     {
         return !loop.Ended && StairwellTransition.IsAtStairwell(loop.Body, loop.Plan.Stairwell);
     }
+
+    /// <summary>Answers whether the open prompt offers the descend. The deepest floor offers the ascend alone (D-579).</summary>
+    public static bool OffersDescend(SimulationLoop loop)
+    {
+        return IsOpen(loop) && loop.Floor < loop.DeepestFloor;
+    }
 }

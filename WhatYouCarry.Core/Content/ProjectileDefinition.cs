@@ -31,7 +31,7 @@ public sealed record ProjectileDefinition(string Id, long SpeedCentimetres, long
     public static readonly IReadOnlyList<string> Optional = ["areaCentimetres"];
 
     /// <summary>One definition from one validated object.</summary>
-    /// <exception cref="Logging.ContextException">A field is absent, unknown, or of another kind.</exception>
+    /// <exception cref="Logging.ContextException">A field is absent, unknown, of another kind, or outside its bounds.</exception>
     public static ProjectileDefinition FromMembers(string path, IReadOnlyList<JsonMember> members)
     {
         ContentValidator.Check(path, members, Required, Optional);
@@ -60,12 +60,23 @@ public sealed record ProjectileDefinition(string Id, long SpeedCentimetres, long
             throw ContentError.Make(path, "spreadHundredths", $"is {spread}, and the spread half angle is from 0 to {LargestSpread} hundredths of a degree (D-266)");
         }
 
+        long damage = Number(path, members, "damage");
+        if (damage < 1)
+        {
+            throw ContentError.Make(path, "damage", $"is {damage}, and a hit deals damage");
+        }
+
+        // An absent area stays zero. A present one is zero or more centimeters (F-120).
         long area = 0;
         foreach (JsonMember member in members)
         {
             if (member.Name == "areaCentimetres")
             {
                 area = Number(path, members, "areaCentimetres");
+                if (area < 0)
+                {
+                    throw ContentError.Make(path, "areaCentimetres", $"is {area}, and an area is zero or more centimeters");
+                }
             }
         }
 
@@ -74,7 +85,7 @@ public sealed record ProjectileDefinition(string Id, long SpeedCentimetres, long
             speed,
             gravityScale,
             lifetime,
-            Number(path, members, "damage"),
+            damage,
             area,
             (int)spread);
     }

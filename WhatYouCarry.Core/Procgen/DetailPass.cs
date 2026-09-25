@@ -37,13 +37,13 @@ namespace WhatYouCarry.Core.Procgen;
 public static class DetailPass
 {
     /// <summary>The band of floors 1 to 5 (D-210).</summary>
-    public const string WorkingMine = "working-mine";
+    public const string WorkingMine = FloorTemplate.WorkingMineBand;
 
     /// <summary>The band of floors 6 to 10 (D-210).</summary>
-    public const string OlderWorkings = "older-workings";
+    public const string OlderWorkings = FloorTemplate.OlderWorkingsBand;
 
     /// <summary>The band of floors 11 to 15 (D-210).</summary>
-    public const string Deep = "what-the-miners-reached";
+    public const string Deep = FloorTemplate.DeepBand;
 
     /// <summary>The spacing of the timber posts of the working mine, in cells along a wall.</summary>
     public const int PostSpacing = 6;

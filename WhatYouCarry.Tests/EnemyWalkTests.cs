@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -31,6 +32,12 @@ public sealed class EnemyWalkTests
 
     /// <summary>The most ticks that one diagonal move may take. The slowest move of the sweep takes under 80.</summary>
     private const int DiagonalTicks = 120;
+
+    /// <summary>The seeds of the side move sweep, a count that runs in seconds (F-124). The 30 floors hold about 115000 side moves.</summary>
+    private const int SideSeeds = 30;
+
+    /// <summary>The most ticks that one side move may take. The slowest move of the sweep takes 52.</summary>
+    private const int SideTicks = 120;
 
     /// <summary>Every rise with every run of D-346.</summary>
     public static TheoryData<RampRise, int> Courses => RampCourse.EveryRiseAndRun();
@@ -314,6 +321,35 @@ public sealed class EnemyWalkTests
     }
 
     /// <summary>
+    /// F-127. The steps of the side moves and of the corner moves keep their values and their order, and no caller
+    /// can write them. They were public arrays, so one write changed the moves of every run in the process.
+    /// </summary>
+    [Fact]
+    public void TheMoveTablesCannotBeWritten()
+    {
+        Assert.Equal(new[] { 1, -1, 0, 0 }, GridMoves.StepX);
+        Assert.Equal(new[] { 0, 0, 1, -1 }, GridMoves.StepZ);
+        Assert.Equal(new[] { 1, 1, -1, -1 }, GridMoves.CornerStepX);
+        Assert.Equal(new[] { 1, -1, 1, -1 }, GridMoves.CornerStepZ);
+
+        (string Name, IReadOnlyList<int> Table)[] tables =
+        [
+            (nameof(GridMoves.StepX), GridMoves.StepX),
+            (nameof(GridMoves.StepZ), GridMoves.StepZ),
+            (nameof(GridMoves.CornerStepX), GridMoves.CornerStepX),
+            (nameof(GridMoves.CornerStepZ), GridMoves.CornerStepZ),
+        ];
+        foreach ((string name, IReadOnlyList<int> table) in tables)
+        {
+            // The array check comes first, so an old array fails the test before the write below can change it.
+            Assert.False(table is int[], $"GridMoves.{name} is an array, and any caller can write it.");
+            IList<int> view = Assert.IsAssignableFrom<IList<int>>(table);
+            Assert.True(view.IsReadOnly, $"GridMoves.{name} reports that it can be written.");
+            Assert.Throws<NotSupportedException>(() => view[0] = view[0] + 1);
+        }
+    }
+
+    /// <summary>
     /// PR-72 exit test 4. A diagonal step up passes no solid corner, because a slide during the jump lands the body
     /// short (D-489). A drop still passes one solid corner (D-486).
     /// </summary>
@@ -416,6 +452,43 @@ public sealed class EnemyWalkTests
         }
     }
 
+    /// <summary>
+    /// F-124, a class of its own in the sweep category, so it runs beside the other sweeps (D-478). The reachability of
+    /// the generator reads the side moves of <see cref="GridMoves.Move"/> alone, so a side move that no body makes
+    /// would pass a floor that no body can cross.
+    /// </summary>
+    [Trait("Category", SweepScope.SweepCategory)]
+    public sealed class SideSweep
+    {
+        /// <summary>
+        /// On the side sweep seeds over every floor, a body that walks by the shared rules of <see cref="PathFollower"/>
+        /// and <see cref="PathWalk"/> crosses every side move that the rule names from every floor cell, with one jump at
+        /// most (D-165, D-345). The sweep holds each kind of side move, so no kind passes with no case.
+        /// </summary>
+        [Fact]
+        public void ABodyWalksEverySideMove()
+        {
+            int deepest = FloorGenerator.DeepestFloor(TestWorld.Content);
+            ConcurrentBag<string> failures = [];
+            int[] counts = new int[CountKinds];
+            Parallel.For(1, SideSeeds + 1, index =>
+            {
+                int floor = 1 + (index % deepest);
+                int[] floorCounts = SweepSideMoves((ulong)index, floor, failures);
+                for (int kind = 0; kind < CountKinds; kind++)
+                {
+                    Interlocked.Add(ref counts[kind], floorCounts[kind]);
+                }
+            });
+
+            Assert.True(failures.IsEmpty, string.Join("\n", failures));
+            Assert.True(counts[MoveCount] > 100000, $"The sweep read {counts[MoveCount]} side moves, and it needs more than 100000.");
+            Assert.True(counts[RiseCount] > 0, "The sweep found no side step up.");
+            Assert.True(counts[DropCount] > 0, "The sweep found no side drop.");
+            Assert.True(counts[RampCount] > 0, "The sweep found no side move on a ramp.");
+        }
+    }
+
     /// <summary>The count of kinds that <see cref="SweepOneFloor"/> counts.</summary>
     private const int CountKinds = 5;
 
@@ -467,7 +540,7 @@ public sealed class EnemyWalkTests
                 foreach (int row in rows)
                 {
                     Cell to = new(from.X + stepX, row, from.Z + stepZ);
-                    (int ticks, int jumps) = WalkOneMove(grid, finder, scavenger, weapon, from, to);
+                    (int ticks, int jumps) = WalkOneMove(grid, finder, scavenger, weapon, from, to, DiagonalTicks);
                     if (ticks > DiagonalTicks || jumps > 1)
                     {
                         failures.Add($"Seed {seed}, floor {floor}: the diagonal move from {from} to {to} took {ticks} ticks and {jumps} jumps, and the limits are {DiagonalTicks} ticks and one jump (D-165).");
@@ -490,19 +563,60 @@ public sealed class EnemyWalkTests
     }
 
     /// <summary>
+    /// Walks every side move of one floor, adds a line to the failures for each move that a body does not cross in
+    /// <see cref="SideTicks"/> ticks with one jump at most, and gives the counts of the kinds of move. The corner count
+    /// stays zero, because a side move passes no corner.
+    /// </summary>
+    private static int[] SweepSideMoves(ulong seed, int floor, ConcurrentBag<string> failures)
+    {
+        EnemyDefinition scavenger = Family("scavenger");
+        WeaponDefinition weapon = Weapon(scavenger.Weapon);
+        VoxelGrid grid = FloorGenerator.Generate(seed, floor, TestWorld.Content).Grid;
+        GridPathfinder finder = new(grid);
+        int[] counts = new int[CountKinds];
+        foreach (Cell from in FloorCells(grid))
+        {
+            for (int direction = 0; direction < GridMoves.Directions; direction++)
+            {
+                int toX = from.X + GridMoves.StepX[direction];
+                int toZ = from.Z + GridMoves.StepZ[direction];
+                int row = GridMoves.Move(grid, from.X, from.Y, from.Z, toX, toZ);
+                if (row == GridMoves.NoMove)
+                {
+                    continue;
+                }
+
+                Cell to = new(toX, row, toZ);
+                (int ticks, int jumps) = WalkOneMove(grid, finder, scavenger, weapon, from, to, SideTicks);
+                if (ticks > SideTicks || jumps > 1)
+                {
+                    failures.Add($"Seed {seed}, floor {floor}: the side move from {from} to {to} took {ticks} ticks and {jumps} jumps, and the limits are {SideTicks} ticks and one jump (D-165).");
+                }
+
+                bool onRamp = grid.TryGetRamp(from.X, from.Y, from.Z, out _) || grid.TryGetRamp(to.X, to.Y, to.Z, out _);
+                counts[MoveCount]++;
+                counts[RiseCount] += row > from.Y ? 1 : 0;
+                counts[DropCount] += row < from.Y ? 1 : 0;
+                counts[RampCount] += onRamp ? 1 : 0;
+            }
+        }
+
+        return counts;
+    }
+
+    /// <summary>
     /// Walks a body from the middle of one floor cell to the middle of another by the rules of the humanoid brain:
     /// a jump in place when the next cell needs one, and a walk at the next cell otherwise (D-165). Gives the ticks
-    /// to the arrival, or one more than <see cref="DiagonalTicks"/> when the body never arrives, and the count of
-    /// jumps from the ground.
+    /// to the arrival, or one more than the limit when the body never arrives, and the count of jumps from the ground.
     /// </summary>
-    private static (int Ticks, int Jumps) WalkOneMove(VoxelGrid grid, GridPathfinder finder, EnemyDefinition family, WeaponDefinition weapon, Cell from, Cell to)
+    private static (int Ticks, int Jumps) WalkOneMove(VoxelGrid grid, GridPathfinder finder, EnemyDefinition family, WeaponDefinition weapon, Cell from, Cell to, int limit)
     {
         Enemy enemy = new(grid, PathWalk.CenterOf(from), family, weapon, TestOwner);
         PathFollower follower = new();
         float speed = family.SpeedMetresPerSecond;
         Vector3 still = new(0.0f, 0.0f, 0.0f);
         int jumps = 0;
-        for (int tick = 0; tick <= DiagonalTicks; tick++)
+        for (int tick = 0; tick <= limit; tick++)
         {
             Vector3 feet = enemy.Body.Position;
             bool onGround = enemy.Body.IsOnGround();
@@ -526,7 +640,7 @@ public sealed class EnemyWalkTests
             }
         }
 
-        return (DiagonalTicks + 1, jumps);
+        return (limit + 1, jumps);
     }
 
     /// <summary>Every floor cell of a grid, in scan order.</summary>

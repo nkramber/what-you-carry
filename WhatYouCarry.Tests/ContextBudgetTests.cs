@@ -26,6 +26,27 @@ public sealed class ContextBudgetTests
 
     private const int HandoffFileByteCeiling = 60000;
 
+    /// <summary>
+    /// The agent files quote the six tenets in full (D-122), and section 6 of the design doc holds the same six lines word
+    /// for word. The two copies drifted apart in four tenets before this test, and a session read the older text first
+    /// (F-136).
+    /// </summary>
+    [Fact]
+    public void TheDesignDocHoldsTheTenetsOfTheAgentFiles()
+    {
+        string[] agentTenets = TenetLines(RepositoryRoot.ReadFile("AGENTS.md"));
+        string[] designTenets = TenetLines(RepositoryRoot.ReadFile("docs/design.md"));
+
+        Assert.Equal(6, agentTenets.Length);
+        Assert.Equal(agentTenets, designTenets);
+    }
+
+    /// <summary>Each line of a text that starts a tenet, in order.</summary>
+    private static string[] TenetLines(string text)
+    {
+        return Array.FindAll(text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n'), static line => line.StartsWith("- **T-", StringComparison.Ordinal));
+    }
+
     [Fact]
     public void AgentFilesStayUnderTheCeiling()
     {

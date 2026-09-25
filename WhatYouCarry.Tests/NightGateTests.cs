@@ -17,6 +17,7 @@ namespace WhatYouCarry.Tests;
 /// the promotion needs the carried seeds of the record of main (D-569).
 /// </summary>
 [Collection(ConsoleCollection.Name)]
+[Trait("Category", DocumentsCategoryTests.DocumentsCategory)]
 public sealed class NightGateTests
 {
     private const string Commit = "0123456789abcdef0123456789abcdef01234567";
@@ -58,6 +59,25 @@ public sealed class NightGateTests
         Assert.False(stale.Passes);
         Assert.Equal(NightGateRules.StaleCase, stale.Case);
         Assert.True(fresh.Passes);
+    }
+
+    /// <summary>
+    /// F-125. A record that ends after the time of the evaluation fails the gate, and the message names both times. A
+    /// record that ends at the time of the evaluation passes.
+    /// </summary>
+    [Fact]
+    public void NightGateFailsOnARecordThatEndsInTheFuture()
+    {
+        NightGateResult future = NightGateRules.Evaluate(Facts(Record(Now.AddSeconds(1), "success"), commitOnBase: true));
+        NightGateResult yearAhead = NightGateRules.Evaluate(Facts(Record(Now.AddYears(1), "success"), commitOnBase: true));
+        NightGateResult present = NightGateRules.Evaluate(Facts(Record(Now, "success"), commitOnBase: true));
+
+        Assert.False(future.Passes);
+        Assert.Equal(NightGateRules.FutureCase, future.Case);
+        Assert.Contains("ended at 2026-09-11T12:00:01Z", future.Message, StringComparison.Ordinal);
+        Assert.Contains("later than 2026-09-11T12:00:00Z", future.Message, StringComparison.Ordinal);
+        Assert.Equal(NightGateRules.FutureCase, yearAhead.Case);
+        Assert.True(present.Passes, present.Message);
     }
 
     /// <summary>PR-58 exit test 4. A cancelled record fails the gate.</summary>
@@ -191,6 +211,32 @@ public sealed class NightGateTests
         InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => NightGateFacts.Gather(local.Path, "nowhere", BaseRef, HeadBranch, "origin/main", Now));
         Assert.Contains("nowhere", error.Message, StringComparison.Ordinal);
         Assert.Contains("ls-remote", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// F-125. The gate fetches the branch night-results by its full ref. A tag of the same name on the remote once took
+    /// the place of the branch, because git reads a short name as a tag first. A tag alone, or a branch whose last
+    /// part is the name, is an absent record and not an error.
+    /// </summary>
+    [Fact]
+    public void NightGateReadsTheBranchAndNotATagOfTheSameName()
+    {
+        using var remote = new TemporaryGitRepository();
+        string onMain = remote.Commit("feat: on main", Files(("a.txt", "a")));
+        remote.Git(["tag", NightGateFacts.RecordBranch, onMain]);
+        remote.CreateBranch("archive/" + NightGateFacts.RecordBranch);
+        remote.Git(["checkout", "-q", "main"]);
+        using TemporaryGitRepository local = CloneOf(remote);
+
+        NightGateResult absent = NightGateRules.Evaluate(NightGateFacts.Gather(local.Path, "origin", BaseRef, HeadBranch, "origin/main", Now));
+        Assert.Equal(NightGateRules.AbsentCase, absent.Case);
+        Assert.Contains("has no branch night-results", absent.Message, StringComparison.Ordinal);
+
+        PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", onMain)));
+        NightGateResult green = NightGateRules.Evaluate(NightGateFacts.Gather(local.Path, "origin", BaseRef, HeadBranch, "origin/main", Now));
+
+        Assert.True(green.Passes, green.Message);
+        Assert.Equal(NightGateRules.PassCase, green.Case);
     }
 
     /// <summary>
@@ -388,6 +434,40 @@ public sealed class NightGateTests
         Assert.Equal(NightPromotionRules.BranchStaleCase, stale.Case);
         Assert.Contains(EffectiveHead, stale.Message, StringComparison.Ordinal);
         Assert.True(fresh.Promotes, fresh.Message);
+    }
+
+    /// <summary>F-125. A branch night that ends after the time of the evaluation does not promote, and one that ends at that time does.</summary>
+    [Fact]
+    public void BranchNightThatEndsInTheFutureDoesNotPromote()
+    {
+        NightPromotionResult future = NightPromotionRules.Evaluate(PromotionFacts(Record(Now.AddYears(1), "success", EffectiveHead), mainBeforeMerge: true));
+        NightPromotionResult present = NightPromotionRules.Evaluate(PromotionFacts(Record(Now, "success", EffectiveHead), mainBeforeMerge: true));
+
+        Assert.False(future.Promotes);
+        Assert.Equal(NightPromotionRules.BranchFutureCase, future.Case);
+        Assert.Contains("ended at 2027-09-11T12:00:00Z", future.Message, StringComparison.Ordinal);
+        Assert.Contains("later than 2026-09-11T12:00:00Z", future.Message, StringComparison.Ordinal);
+        Assert.True(present.Promotes, present.Message);
+    }
+
+    /// <summary>
+    /// F-125. The night-promote step maps exit 1 to no promotion, so the tools build in a step of their own, and the
+    /// step runs the built tool. A restore or compile failure then fails the job and never reads as no promotion.
+    /// </summary>
+    [Fact]
+    public void NightPromoteWorkflowBuildsTheToolsBeforeItRuns()
+    {
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night-promote.yml");
+        int build = workflow.IndexOf("- name: Build the tools", StringComparison.Ordinal);
+        int promote = workflow.IndexOf("- name: Promote the branch night", StringComparison.Ordinal);
+        Assert.True(build >= 0, "The workflow has no step 'Build the tools'.");
+        Assert.True(promote > build, "The step 'Build the tools' does not come before the step 'Promote the branch night'.");
+
+        string buildStep = workflow[build..promote];
+        Assert.Contains("if: steps.pr.outputs.number != ''", buildStep, StringComparison.Ordinal);
+        Assert.Contains("run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj\n", buildStep, StringComparison.Ordinal);
+        Assert.Contains("dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-promote", workflow[promote..], StringComparison.Ordinal);
+        Assert.Equal(1, workflow.Split("dotnet run").Length - 1);
     }
 
     /// <summary>

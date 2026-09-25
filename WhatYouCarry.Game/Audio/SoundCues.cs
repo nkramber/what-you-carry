@@ -62,7 +62,7 @@ public static class SoundCues
     /// <summary>The alarm at 60 and 30 seconds left, and the tick at each other mark (D-456).</summary>
     private static SoundCue MarkCue(long seconds)
     {
-        if (System.Array.IndexOf(FloorTimer.MarkSeconds, (int)seconds) < 0)
+        if (!IsTimerMark(seconds))
         {
             ContextException error = new(UnknownMark);
             error.AddContext(SecondsField, seconds.ToString(CultureInfo.InvariantCulture));
@@ -70,5 +70,19 @@ public static class SoundCues
         }
 
         return System.Array.IndexOf(AlarmSeconds, (int)seconds) >= 0 ? SoundCue.TimerAlarm : SoundCue.TimerTick;
+    }
+
+    /// <summary>Answers whether a count of seconds left is one of the marks of <see cref="FloorTimer.MarkSeconds"/> (D-456).</summary>
+    private static bool IsTimerMark(long seconds)
+    {
+        foreach (int mark in FloorTimer.MarkSeconds)
+        {
+            if (mark == seconds)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

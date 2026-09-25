@@ -28,6 +28,7 @@ public static class NightPromotionRules
     public const string BranchAbsentCase = "branch-absent";
     public const string BranchMalformedCase = "branch-malformed";
     public const string BranchNotSuccessCase = "branch-not-success";
+    public const string BranchFutureCase = "branch-future";
     public const string BranchStaleCase = "branch-stale";
     public const string BranchCommitUnknownCase = "branch-commit-unknown";
     public const string CodeChangedCase = "code-changed";
@@ -61,6 +62,12 @@ public static class NightPromotionRules
         if (night.Status != "success")
         {
             return Keep(BranchNotSuccessCase, $"The {label} holds a night with the status {night.Status}: {identity}.");
+        }
+
+        // A night cannot end after the evaluation, so a later end time is false, and the window cannot judge it (F-125).
+        if (night.EndedAt > facts.Now)
+        {
+            return Keep(BranchFutureCase, $"The {label} ends in the future: {identity}, which is later than {now}.");
         }
 
         if (facts.Now - night.EndedAt > NightGateRules.StaleAfter)

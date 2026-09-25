@@ -27,10 +27,19 @@ public static class ClipCheck
     private const string RestPose = "the rest pose";
     private const string NotABone = "is not a bone of the model, and every track of an animation names one";
 
-    /// <summary>Every clip finding of the set, in the order of the models, then the poses, then the pairs.</summary>
+    /// <summary>Every clip finding of the set: first each animation of no body model, then the order of the models, the poses, and the pairs.</summary>
     public static IReadOnlyList<AssetFinding> Run(AssetSet set)
     {
         List<AssetFinding> findings = [];
+        foreach (LoadedAnimation animation in set.Animations)
+        {
+            // An animation of no body model is never posed, so the check would pass it with no word (D-135, F-119).
+            if (!set.ReadsBody(animation.Clip.Model))
+            {
+                findings.Add(new AssetFinding(animation.Path, $"names the model '{animation.Clip.Model}', and the set has no body model at that path, so no pose reads the animation (D-135)"));
+            }
+        }
+
         foreach (LoadedModel body in set.Bodies)
         {
             List<LoadedAnimation> animations = [];

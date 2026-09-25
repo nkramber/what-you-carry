@@ -27,7 +27,7 @@ grep -n -E "\bD-($d)\b" docs/decisions.md | grep -E 'Revis|Supersed' | cut -c1-1
 grep -n -E "^[0-9]+\. \*\*OQ-($q)\." docs/questions.md
 ```
 
-The second line finds each revision of those ids (D-186). A `Superseded by D-N` mark replaces the whole answer. A `Revised in part by D-N` mark changes one part, and the rest of that decision stays current.
+The third line finds each revision of those ids (D-186). A `Superseded by D-N` mark replaces the whole answer. A `Revised in part by D-N` mark changes one part, and the rest of that decision stays current.
 
 Find a section of the design doc, and read that section alone.
 
@@ -111,7 +111,7 @@ A PR carries two kinds of comment: the issue comments, which hold the dashboard 
 ```
 repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 owner=${repo%/*}; name=${repo#*/}; n=<number>
-out=/tmp/pr-$n-comments.md
+out=$(mktemp "${TMPDIR:-/tmp}/pr-$n-comments.XXXXXX")
 
 {
   echo "# Issue comments of PR $n"
@@ -143,7 +143,7 @@ out=/tmp/pr-$n-comments.md
 wc -l "$out"
 ```
 
-Read `$out` one time. The file names each thread id and each comment id, so a reply needs no second query. The author replies with the commands of `gitar-review`. A reviewer writes no comment, and it records each thread under `## PR comments` in the review record (D-250).
+Read `$out` one time. The file names each thread id and each comment id, so a reply needs no second query. The file name is new for each export, because the author session and the review that it starts run on one machine (F-126). The author replies with the commands of `gitar-review`. A reviewer writes no comment, and it records each thread under `## PR comments` in the review record (D-250).
 
 ## The staged read of a diff
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Game.Logging;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
@@ -425,6 +426,23 @@ public sealed class LoggingTests
         Assert.Throws<ContextException>(() => error.AddContext("seed", "2"));
     }
 
+    /// <summary>
+    /// F-121. The add of an absent field keeps a field that a lower level already added, adds a field that is absent,
+    /// and never throws for the repeat. An empty name stays an error.
+    /// </summary>
+    [Fact]
+    public void AnAbsentFieldAddKeepsThePresentField()
+    {
+        ContextException error = new("the dig failed");
+        error.AddContext("floor", "2");
+        error.AddContextIfAbsent("floor", "1");
+        error.AddContextIfAbsent("tick", "40");
+
+        Assert.Equal([new LogField("floor", "2", true), new LogField("tick", "40", true)], error.Context);
+        Assert.Equal("the dig failed [floor=2 tick=40]", error.Message);
+        Assert.Throws<ContextException>(() => error.AddContextIfAbsent(string.Empty, "x"));
+    }
+
     /// <summary>An error with no context reads as its plain message.</summary>
     [Fact]
     public void AnErrorWithNoContextReadsPlainly()
@@ -481,6 +499,37 @@ public sealed class LoggingTests
 
         Assert.NotEqual(JsonlLogger.BuildLine(LogLevel.Info, "m", first), JsonlLogger.BuildLine(LogLevel.Info, "m", second));
         Assert.Equal("{\"level\":\"info\",\"message\":\"m\",\"a\":1,\"b\":2}", JsonlLogger.BuildLine(LogLevel.Info, "m", first));
+    }
+
+    /// <summary>
+    /// F-121. The error line of a failure names the text and the type of the exception, and then the type and the text
+    /// of each inner exception from the outer one in, and it stays one valid JSON object. The old line held the text of
+    /// the outer exception alone.
+    /// </summary>
+    [Fact]
+    public void AFailureLineNamesTheTypeAndTheInnerChain()
+    {
+        NullReferenceException innermost = new("the innermost text");
+        InvalidOperationException middle = new("the middle text", innermost);
+        ContextException error = new("the outer text", middle);
+        error.AddContext("seed", "7");
+        LogFields fields = RunFields();
+        FailureFields.Add(fields, error);
+
+        System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(JsonlLogger.BuildLine(LogLevel.Error, "a tick failed", fields));
+        System.Text.Json.JsonElement root = document.RootElement;
+        Assert.Equal("the outer text [seed=7]", root.GetProperty(FailureFields.ErrorField).GetString());
+        Assert.Equal("WhatYouCarry.Core.Logging.ContextException", root.GetProperty(FailureFields.ErrorTypeField).GetString());
+        Assert.Equal("System.InvalidOperationException", root.GetProperty(FailureFields.InnerErrorTypeField + "1").GetString());
+        Assert.Equal("the middle text", root.GetProperty(FailureFields.InnerErrorField + "1").GetString());
+        Assert.Equal("System.NullReferenceException", root.GetProperty(FailureFields.InnerErrorTypeField + "2").GetString());
+        Assert.Equal("the innermost text", root.GetProperty(FailureFields.InnerErrorField + "2").GetString());
+        Assert.False(root.TryGetProperty(FailureFields.InnerErrorField + "3", out _));
+
+        // An exception with no inner exception adds its text and its type alone.
+        LogFields plain = new();
+        FailureFields.Add(plain, new ArgumentException("a bad path"));
+        Assert.Equal("{\"level\":\"error\",\"message\":\"m\",\"error\":\"a bad path\",\"errorType\":\"System.ArgumentException\"}", JsonlLogger.BuildLine(LogLevel.Error, "m", plain));
     }
 
     private static LogFields RunFields()

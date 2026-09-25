@@ -41,7 +41,7 @@ public static class FileCaseCheck
             JsonDocument document;
             try
             {
-                document = JsonDocument.Parse(File.ReadAllBytes(file));
+                document = JsonDocument.Parse(File.ReadAllBytes(file), JsonShape.ParseOptions);
             }
             catch (JsonException error)
             {
@@ -52,7 +52,17 @@ public static class FileCaseCheck
             using (document)
             {
                 List<string> references = [];
-                CollectReferences(document.RootElement, references);
+                try
+                {
+                    CollectReferences(document.RootElement, references);
+                }
+                catch (InvalidOperationException error)
+                {
+                    // A string with invalid UTF-8 parses, and its read throws. The file is a finding, and the check reads the next file (T-2).
+                    findings.Add(new AssetFinding(path, $"a string value is not valid UTF-8. {error.Message}"));
+                    continue;
+                }
+
                 foreach (string reference in references)
                 {
                     string? problem = Resolve(contentRoot, reference);

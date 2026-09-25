@@ -79,10 +79,25 @@ public sealed record HunterDefinition(
             ContentValidator.Value(path, members, "id", JsonMemberKind.Text),
             ContentValidator.Value(path, members, "weapon", JsonMemberKind.Text),
             AtLeastOne(path, members, "attackRangeCentimetres"),
-            AtLeastOne(path, members, "attackCooldownTicks"),
+            CooldownTicks(path, members),
             AtLeastOne(path, members, "startSpeedCentimetresPerSecond"),
             gain,
             AtLeastOne(path, members, "speedGainTicks"));
+    }
+
+    /// <summary>
+    /// The cooldown after a swing: one tick or more, and no more than the int that the hunter counts it in. A cast of a
+    /// larger value wraps it, to a cooldown of no tick or one that never ends (F-120).
+    /// </summary>
+    private static long CooldownTicks(string path, IReadOnlyList<JsonMember> members)
+    {
+        long value = Number(path, members, "attackCooldownTicks");
+        if (value < 1 || value > ContentValidator.LargestInt)
+        {
+            throw ContentError.Make(path, "attackCooldownTicks", $"is {value}, and the cooldown is from one tick to the {ContentValidator.LargestInt} ticks that an int holds");
+        }
+
+        return value;
     }
 
     /// <summary>One whole-number field of one or more. Each field here names a distance, a delay, or a speed, and none of the three is zero.</summary>

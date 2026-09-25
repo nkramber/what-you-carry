@@ -40,8 +40,9 @@ namespace WhatYouCarry.Game;
 /// The world material takes the fade segment from the camera to the player on every frame (D-292).
 /// </para>
 /// <para>
-/// A boot failure, a step failure, and a pose failure each write an error line and quit with exit code 1 (T-2). The
-/// smoke session quits with exit code 0 only when the log holds no error line (D-114). The bot session of M-3 drives
+/// A boot failure, a step failure, a pose failure, and a failure anywhere else in an engine callback each write an
+/// error line and quit with exit code 1 (T-2). The smoke session quits with exit code 0 only when the log holds no
+/// error line (D-114). The bot session of M-3 drives
 /// the loop with the greedy descender over one floor, and the frame log flag writes every frame time to a file
 /// at the end of any session (D-295, D-296). The content, the models, the clips, and the atlas come from the directory
 /// next to the project directory, which is the content directory of the checkout (D-219, D-305).
@@ -117,6 +118,12 @@ public partial class Main : Node3D
 
     /// <summary>The message of the error line of a tick failure.</summary>
     public const string StepFailedMessage = "A tick failed, and the game quits.";
+
+    /// <summary>The message of the error line of an engine callback that failed outside a narrower guard (T-2).</summary>
+    public const string CallbackFailedMessage = "An engine callback failed, and the game quits.";
+
+    /// <summary>The name of the field of the callback line that names the engine callback.</summary>
+    public const string CallbackField = "callback";
 
     /// <summary>The message of the error line of a frame whose pose of the player failed.</summary>
     public const string PoseFailedMessage = "The pose of the player failed, and the game quits.";
@@ -225,7 +232,6 @@ public partial class Main : Node3D
     private const string TickField = "tick";
     private const string SubsystemField = "subsystem";
     private const string EntitiesField = "entities";
-    private const string ErrorField = "error";
     private const string FileField = "file";
     private const string ShotField = "shot";
     private const string HeadlessDisplay = "headless";
@@ -295,14 +301,29 @@ public partial class Main : Node3D
         }
         catch (Exception error)
         {
-            // The boot has no loop yet, so the line carries the first seed, the first floor, and tick zero.
+            // The boot has no loop yet, so the line carries the first seed, the first floor, and tick zero. The boot
+            // measured no frame, so the session writes no frame log, and never an empty one (F-122).
             this.LogFailure(BootFailedMessage, RunFields(FirstSeed, SimulationLoop.FirstFloor, 0), error);
+            this.frames = null;
             this.Quit(ExitFailure);
         }
     }
 
     /// <inheritdoc/>
     public override void _PhysicsProcess(double delta)
+    {
+        try
+        {
+            this.PhysicsFrame();
+        }
+        catch (Exception error)
+        {
+            this.FailCallback(nameof(_PhysicsProcess), error);
+        }
+    }
+
+    /// <summary>The body of one physics frame: one tick of the session, and its time.</summary>
+    private void PhysicsFrame()
     {
         if (this.loop is null || this.ended || this.shotState is not null)
         {
@@ -476,6 +497,19 @@ public partial class Main : Node3D
     /// <inheritdoc/>
     public override void _Process(double delta)
     {
+        try
+        {
+            this.DrawFrame(delta);
+        }
+        catch (Exception error)
+        {
+            this.FailCallback(nameof(_Process), error);
+        }
+    }
+
+    /// <summary>The body of one render frame: the frame time, the uploads, the pose, the camera, and the HUD.</summary>
+    private void DrawFrame(double delta)
+    {
         if (this.loop is null || this.playerNodes is null || this.playerModel is null || this.clips is null || this.camera is null || this.worldMaterial is null || this.ended)
         {
             return;
@@ -535,6 +569,23 @@ public partial class Main : Node3D
     /// <inheritdoc/>
     public override void _UnhandledInput(InputEvent @event)
     {
+        try
+        {
+            this.ReadInputEvent(@event);
+        }
+        catch (Exception error)
+        {
+            this.FailCallback(nameof(_UnhandledInput), error);
+        }
+    }
+
+    /// <summary>
+    /// The body of one input event: the look motion, the press edge of each button, and the device of the last input
+    /// (D-447). The reader latches each press, so a press and a release inside one frame still reach a tick (F-135).
+    /// A key repeat of a held key is no new press.
+    /// </summary>
+    private void ReadInputEvent(InputEvent @event)
+    {
         if (@event is InputEventMouseMotion motion)
         {
             this.reader.AddMouseMotion(motion.Relative.X, motion.Relative.Y);
@@ -543,14 +594,26 @@ public partial class Main : Node3D
         else if (@event is InputEventJoypadMotion stick)
         {
             this.reader.AddLookStickMotion(stick.Device, stick.Axis, stick.AxisValue);
+            this.reader.LatchTriggerMotion(stick.Device, stick.Axis, stick.AxisValue);
             this.reader.NoteControllerMotion(stick.AxisValue);
         }
-        else if (@event is (InputEventKey or InputEventMouseButton) && @event.IsPressed())
+        else if (@event is InputEventKey key && key.IsPressed())
         {
+            if (!key.IsEcho())
+            {
+                this.reader.LatchKeyPress(key.Keycode);
+            }
+
             this.reader.NoteKeyboardOrMouse();
         }
-        else if (@event is InputEventJoypadButton && @event.IsPressed())
+        else if (@event is InputEventMouseButton mouseButton && mouseButton.IsPressed())
         {
+            this.reader.LatchMouseButtonPress(mouseButton.ButtonIndex);
+            this.reader.NoteKeyboardOrMouse();
+        }
+        else if (@event is InputEventJoypadButton joyButton && joyButton.IsPressed())
+        {
+            this.reader.LatchJoyButtonPress(joyButton.Device, joyButton.ButtonIndex);
             this.reader.NoteControllerButton();
         }
     }
@@ -884,7 +947,7 @@ public partial class Main : Node3D
             viewport.AddChild(shotCamera);
             Hud shotHud = Hud.Build(strings, viewport);
             shotHud.ShowBoss(shotHud.BossPlaceholderName(), HudShot.BossHealth, HudShot.BossMost);
-            this.shotState = new HudState(HudShot.Health, Player.MaxHealth, loop.Timer.Remaining, loop.Timer.Expired, true, false);
+            this.shotState = new HudState(HudShot.Health, Player.MaxHealth, loop.Timer.Remaining, loop.Timer.Expired, true, true, false);
             this.hud = shotHud;
             this.hudCamera = shotCamera;
 
@@ -921,38 +984,67 @@ public partial class Main : Node3D
         }
     }
 
-    /// <summary>Writes the error line of a failure, with the text of the exception after the run fields.</summary>
+    /// <summary>
+    /// Writes the error line of an engine callback that failed, and quits with exit code 1. The engine glue would print
+    /// the exception and call the callbacks again, so a session went on half updated and ended with exit code 0 (T-2,
+    /// F-115). The line carries the run fields of the loop, or of the boot when no loop exists yet.
+    /// </summary>
+    private void FailCallback(string callback, Exception error)
+    {
+        LogFields fields = this.SessionFields();
+        fields.Add(CallbackField, callback);
+        this.LogFailure(CallbackFailedMessage, fields, error);
+        this.Quit(ExitFailure);
+    }
+
+    /// <summary>The run fields of the loop, or of the boot when no loop exists yet: the first seed, the first floor, and tick zero.</summary>
+    private LogFields SessionFields()
+    {
+        return this.loop is null
+            ? RunFields(FirstSeed, SimulationLoop.FirstFloor, 0)
+            : RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+    }
+
+    /// <summary>Writes the error line of a failure, with the text and the type of the exception and of each inner exception after the run fields (F-121).</summary>
     private void LogFailure(string message, LogFields fields, Exception error)
     {
-        fields.Add(ErrorField, error.Message);
+        FailureFields.Add(fields, error);
         this.logger.Write(LogContextKind.Run, LogLevel.Error, message, fields);
     }
 
     /// <summary>
-    /// Ends the session. The frame log, when one runs, goes to its file first, and a write failure of either
-    /// kind, a disk error or a path the user cannot write, turns the exit code to failure. The sound bank releases
-    /// its streams. The engine quits at the end of the frame, and no later tick runs.
+    /// Ends the session. The frame log, when one runs, goes to its file first, and any write failure, such as a disk
+    /// error, a path the user cannot write, or a path the system rejects, is an error line with the run fields of the
+    /// loop and turns the exit code to failure. The sound bank releases its streams. The engine quits at the end of the
+    /// frame in every case, and no later tick runs.
     /// </summary>
     private void Quit(int exitCode)
     {
         this.ended = true;
-        this.sounds?.Release();
-        if (this.frames is not null)
+        try
         {
-            try
+            this.sounds?.Release();
+            if (this.frames is not null)
             {
-                File.WriteAllText(this.frameLogPath, this.frames.Text());
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-            {
-                // A path that the user cannot write raises the second kind, and it is not an IOException.
-                LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
-                fields.Add(FileField, this.frameLogPath);
-                this.LogFailure(FrameLogFailedMessage, fields, error);
-                exitCode = ExitFailure;
+                try
+                {
+                    File.WriteAllText(this.frameLogPath, this.frames.Text());
+                }
+                catch (Exception error)
+                {
+                    LogFields fields = this.SessionFields();
+                    fields.Add(FileField, this.frameLogPath);
+                    this.LogFailure(FrameLogFailedMessage, fields, error);
+                    exitCode = ExitFailure;
+                }
             }
         }
-
-        this.GetTree().Quit(exitCode);
+        finally
+        {
+            // A failure that left this method before the quit left the session running with no tick, and the
+            // process never ended (F-122). An error that leaves here reaches the guard of the caller, which writes
+            // its error line and quits with exit code 1.
+            this.GetTree().Quit(exitCode);
+        }
     }
 }

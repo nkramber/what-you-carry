@@ -157,6 +157,60 @@ public sealed class InputReaderTests
         Assert.Equal(0, new InputReader(poll).Read().Buttons);
     }
 
+    /// <summary>
+    /// F-135. A press and a release inside one long frame leave the poll clear at the tick, and the latched press
+    /// still sets the bit of each binding on the next tick. The tick after it reads the poll alone, so Core sees the
+    /// release too.
+    /// </summary>
+    [Fact]
+    public void PressAndReleaseInsideOneFrameReachTheNextTick()
+    {
+        // The poll stays clear: every button went down and up again before the tick.
+        InputReader keyboard = new(new FakePoll());
+        keyboard.LatchKeyPress(InputReader.JumpKey);
+        keyboard.LatchKeyPress(InputReader.SprintKey);
+        keyboard.LatchKeyPress(InputReader.DodgeKey);
+        keyboard.LatchKeyPress(InputReader.InteractKey);
+        keyboard.LatchMouseButtonPress(InputReader.AttackButton);
+        Assert.Equal(CoreButton.Jump | CoreButton.Sprint | CoreButton.Dodge | CoreButton.Attack | CoreButton.Interact, keyboard.Read().Buttons);
+        Assert.Equal(0, keyboard.Read().Buttons);
+
+        InputReader controller = new(new FakePoll());
+        controller.LatchJoyButtonPress(InputReader.FirstController, InputReader.JumpButton);
+        controller.LatchJoyButtonPress(InputReader.FirstController, InputReader.SprintButton);
+        controller.LatchJoyButtonPress(InputReader.FirstController, InputReader.DodgeButton);
+        controller.LatchJoyButtonPress(InputReader.FirstController, InputReader.InteractButton);
+        controller.LatchTriggerMotion(InputReader.FirstController, InputReader.AttackAxis, InputReader.TriggerPressed);
+        Assert.Equal(CoreButton.Jump | CoreButton.Sprint | CoreButton.Dodge | CoreButton.Attack | CoreButton.Interact, controller.Read().Buttons);
+        Assert.Equal(0, controller.Read().Buttons);
+    }
+
+    /// <summary>
+    /// F-135, the boundary. A key with no bit, another controller, a trigger under the press point, and another axis
+    /// latch nothing. A held button keeps its bit from the poll after the latch clears.
+    /// </summary>
+    [Fact]
+    public void OnlyABindingOfTheFirstControllerLatches()
+    {
+        InputReader reader = new(new FakePoll());
+        reader.LatchKeyPress(InputReader.ForwardKey);
+        reader.LatchKeyPress(Key.Escape);
+        reader.LatchMouseButtonPress(MouseButton.Right);
+        reader.LatchJoyButtonPress(InputReader.FirstController + 1, InputReader.JumpButton);
+        reader.LatchJoyButtonPress(InputReader.FirstController, JoyButton.Start);
+        reader.LatchTriggerMotion(InputReader.FirstController, InputReader.AttackAxis, 0.4f);
+        reader.LatchTriggerMotion(InputReader.FirstController + 1, InputReader.AttackAxis, 1.0f);
+        reader.LatchTriggerMotion(InputReader.FirstController, InputReader.MoveAxisX, 1.0f);
+        Assert.Equal(0, reader.Read().Buttons);
+
+        FakePoll held = new();
+        held.Keys.Add(InputReader.JumpKey);
+        InputReader holding = new(held);
+        holding.LatchKeyPress(InputReader.JumpKey);
+        Assert.Equal(CoreButton.Jump, holding.Read().Buttons);
+        Assert.Equal(CoreButton.Jump, holding.Read().Buttons);
+    }
+
     /// <summary>The mouse motion sums between two ticks, and the sum starts again after each read.</summary>
     [Fact]
     public void MouseMotionSumsBetweenTicksAndThenStartsAgain()

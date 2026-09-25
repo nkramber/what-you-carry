@@ -203,13 +203,61 @@ public sealed class HudTests
         Assert.Equal(3, Navigation.Neighbor(controls, 0, FocusDirection.Down));
         Assert.Equal(slider, Navigation.Neighbor(controls, 4, FocusDirection.Down));
         Assert.Equal(4, Navigation.Neighbor(controls, slider, FocusDirection.Up));
+        // A direction with no neighbor keeps the focus. Tab and Shift+Tab never read a direction, so they go on (F-135).
         Assert.Null(Navigation.Neighbor(controls, slider, FocusDirection.Left));
         Assert.Null(Navigation.Neighbor(controls, slider, FocusDirection.Right));
         Assert.Null(Navigation.Neighbor(controls, 0, FocusDirection.Up));
         Assert.Null(Navigation.Neighbor(controls, 2, FocusDirection.Right));
+        Assert.Equal(3, Navigation.TabNext(controls, 2));
+        Assert.Equal(2, Navigation.TabPrevious(controls, 3));
+        Assert.Equal(0, Navigation.TabNext(controls, slider));
+        Assert.Equal(slider, Navigation.TabPrevious(controls, 0));
 
         Rect2 screen = new(Vector2.Zero, UiScale.Base);
         Assert.All(controls, control => Assert.True(screen.Encloses(control.Box), $"The fixture control {control.Box} is not inside the Deck screen."));
+    }
+
+    /// <summary>
+    /// F-135. Tab walks the focus map in its order and goes around from the last control to the first, and Shift+Tab
+    /// walks it back, so each one visits every control of the fixture from every control. The end of a row, where the
+    /// right neighbor is absent, is no stop.
+    /// </summary>
+    [Fact]
+    public void TabWalksTheFocusMapAround()
+    {
+        IReadOnlyList<FocusControl> controls = NavigationFixture.Controls();
+        for (int start = 0; start < controls.Count; start++)
+        {
+            int next = start;
+            int previous = start;
+            HashSet<int> forward = [];
+            HashSet<int> backward = [];
+            for (int step = 0; step < controls.Count; step++)
+            {
+                next = Navigation.TabNext(controls, next);
+                previous = Navigation.TabPrevious(controls, previous);
+                forward.Add(next);
+                backward.Add(previous);
+                Assert.Equal((start + step + 1) % controls.Count, next);
+            }
+
+            Assert.Equal(controls.Count, forward.Count);
+            Assert.Equal(controls.Count, backward.Count);
+            Assert.Equal(start, next);
+            Assert.Equal(start, previous);
+        }
+    }
+
+    /// <summary>F-135, the boundary. One control is its own next and previous, so the focus stays, and a screen of no controls is an error (T-2).</summary>
+    [Fact]
+    public void TabOnOneControlStaysAndOnNoControlFails()
+    {
+        FocusControl only = new(new Rect2(0.0f, 0.0f, 100.0f, 50.0f), false);
+        Assert.Equal(0, Navigation.TabNext([only], 0));
+        Assert.Equal(0, Navigation.TabPrevious([only], 0));
+        ContextException none = Assert.Throws<ContextException>(() => Navigation.TabNext([], 0));
+        Assert.Contains(Navigation.NoControlsMessage, none.Message, StringComparison.Ordinal);
+        Assert.Throws<ContextException>(() => Navigation.TabPrevious([], 0));
     }
 
     /// <summary>A control that no direction reaches is not in the reached list, so the check of exit test 4 finds it.</summary>
@@ -254,9 +302,9 @@ public sealed class HudTests
     [Fact]
     public void HudStatePausesAtTheOpenPrompt()
     {
-        Assert.True(new HudState(100, 100, 600, false, true, false).Paused);
-        Assert.False(new HudState(100, 100, 600, false, false, false).Paused);
-        Assert.False(new HudState(100, 100, 0, true, true, false).Paused);
+        Assert.True(new HudState(100, 100, 600, false, true, true, false).Paused);
+        Assert.False(new HudState(100, 100, 600, false, false, false, false).Paused);
+        Assert.False(new HudState(100, 100, 0, true, true, true, false).Paused);
     }
 
     /// <summary>Every source file under the Ui directory of the Game project, parsed, sorted by path.</summary>

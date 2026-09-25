@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-84, PR-87, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-87 applies D-574 to D-577. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-88, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -450,6 +450,8 @@ Gate: exit tests 1 to 3 pass.
 > *In plain English:* a night on a side branch can wipe the record that tells every pull request the main line is healthy. This change lets a side branch run the night, and that record stays as it was.
 
 ### PR-70: The skill port
+
+✅ Done in PR #81.
 
 Scope:
 
@@ -967,7 +969,7 @@ Exit tests:
 
 1. `ADiagonalDropNeedsAnOpenFallInTheCornerColumn` passes. It fails on the old rule (D-545).
 2. `ADetourAwayFromTheGoalReadsNoWedge` passes. It fails on the old follower (D-546).
-3. `GreedyDescenderLeavesTheFloorsOfTheNight` passes on seeds 940, 947, 1268, 2669, 2879, and 4119.
+3. `GreedyDescenderLeavesTheFloorsOfTheNight` passes on seeds 940, 947, 1268, 2669, 2879, and 4119. PR-88 split the test: seeds 947, 1268, 2669, and 2879 reach the bottom with no enemy, and `GreedyDescenderEndsTheEnemyRunsOfTheNight` holds seeds 940 and 4119 (F-124).
 4. `AMoveLeavesTheBoxThatTheSweepRead` passes over four thousand start points. It fails on the old sweep at the start x of seed 4119 (D-549).
 5. The simulation version is 16, and `BitIdentityKnownAnswer` passes with `a2e1c2c6f72bc19e` on the three platforms (G-9, G-20).
 6. `NightGateTests` pass: a branch night passes at the effective head and at a later documents commit. It fails at an earlier code commit, and it leaves the record of `main` as it was (D-547).
@@ -1149,6 +1151,88 @@ Gate: exit tests 1 to 6 pass.
 
 > *In plain English:* the owner paused the automated review of each PR while it did not work. It works again, so each PR waits for it again. A script watches for the review, and it asks for one when none starts.
 
+### PR-88: Repository review fixes
+
+✅ Done in PR #104.
+
+Scope:
+
+- `SimulationLoop.Step`: a run that ends in the tick takes no stairwell choice, so a death stays a death (D-322, F-113).
+- `SimulationLoop` and `StairwellPrompt`: the deepest floor that the content covers offers the ascend alone, and a descend press there does nothing (D-579, F-114).
+- `HudState` and `Hud`: the prompt hides the descend line on the deepest floor (D-579).
+- `SimulationVersion`: 17, and the bit-identity sweep takes a new known answer (G-20).
+- `Main.cs`: each engine callback catches every exception, writes one error line with the run fields, and quits with exit code 1 (T-2, D-114, F-115).
+- `ReviewRecord`: the first line of the Verdict section starts with the verdict name in bold and a period, and the parse skips each fenced block (D-179, D-269, F-116).
+- `ProcgenTests`: a dig that throws fails its seed, and the seed sweep goes on and writes the seed to its failure line (D-565, D-567, F-117).
+- The asset loaders, `TextureJson`, and `FileCaseCheck`: a repeated JSON key is a parse error, and a loader fault of one file is a finding on that file (D-92, T-2, F-118).
+- `AssetSet`, `ClipCheck`, and `AnimationLoader`: the gate reads each depth of the model directory (D-135, D-300, F-119). The model value of an animation ends in `.bbmodel`, and an animation of no body is a finding.
+- The content validators: each numeric field fits the type that holds it, and a projectile damage is one or more (D-92, G-7, F-120).
+- `SimulationLoop`, `RunReplayer`, `Main.cs`, and `ChunkSwap`: each error of a run names the seed, the floor, and the tick (T-2, D-113, F-121). A failed descent leaves the old floor whole, and the log line names the error type and the inner chain.
+- `UserArguments` and `Main.Quit`: an empty word stops the boot, and the quit always reaches the engine (T-2, F-122).
+- `PathFollower.AddTo`: the hash reads the path and the wedge count of each follower (D-160, F-123).
+- The tests of F-124: the determinism test, the worker test, the ray test, the F-111 seeds, and three reachability properties.
+- The gate tools: exact file exclusion, known finding states, no future night record, and the full branch ref (T-2, F-125). A build step comes before a promotion, and git reads both streams at once.
+- The ruleset runbook and the comment export: each temporary file comes from `mktemp` (F-126).
+- `FloorTimer` and `GridMoves`: each table is a read-only list (F-127).
+- `FloorTemplate`, `BlockbenchLoader`, `Strings`, and `AnimationClip`: an unknown band, a rotated locator, and an empty string fail at load, and a keyframe tick gives the keyframe (G-7, T-2, F-131).
+- `RampRayTests`: the ramp march test asserts the hit and both bounds of its distance (F-129).
+- `det-lint`: a lowered construct is a finding outside error text, and each method entry names its parameter types (G-2, G-8, D-582, F-132).
+- The bit-identity sweep: one real floor and two recorded runs that descend, die, and ascend, and a Release check in each platform job (G-9, F-133).
+- `night-gate.yml` and `RulesetTests`: the base branch comes through the environment, and one workflow alone writes check runs (F-134).
+- `InputReader` and `Navigation`: a press edge reaches the next intent, and the tab order follows the focus map (D-77, D-446, F-135).
+- The design doc, the agent guidance, the registers, and the roadmaps match their decisions (D-122, D-186, F-136, F-137, F-139).
+- `doc-gate`: a co-author trailer, a generation line, or the robot line fails the check (T-6, D-176, F-138).
+- `ste-check` and its skill agree on the files and the rules (F-140).
+
+Out of scope: the other findings of the repository review of 2026-09-24. The self-hosted runner goes in PR-86 (D-572). The night publish waits for PR-85 and an owner answer. The trust boundary of the reviewer waits for an owner answer. This PR holds more than one concern (D-580).
+
+Exit tests:
+
+1. `ALethalHitOnTheTickOfAStairwellPressIsADeath` passes for the interact bit and the ascend bit, and it fails on the loop of `main` before this PR.
+2. `ADescendOnTheDeepestFloorDoesNothing` passes, and it fails on the loop of `main`. `AFloorAboveTheDeepestOffersTheDescend` passes.
+3. `EveryEngineCallbackCatchesEveryException` passes, and it fails on the `Main.cs` of `main`. A smoke session with a throw in the draw frame quits with exit code 1 and one error line.
+4. The new tests of `ReviewGateRulesTests` and `CodexReviewTests` pass, and they fail on the parse of `main`. Each review record of the repository still parses.
+5. `TheSweepNamesASeedWhoseDigThrows` passes, and it fails on the sweep of `main`.
+6. `RepeatedKeyTests` and the four new tests of `AssetQaTests` pass, and they fail on the gate of `main`.
+7. The simulation version is 17, and `BitIdentityKnownAnswer` passes with `9c79047da9c82a0e` on the three platforms (G-9, G-20).
+8. The new tests of F-120 to F-125, F-127, F-129, and F-131 to F-140 pass. Each test that targets a defect fails on the code of `main`.
+
+Review focus: the end check before the stairwell choice in `Step`, the guard of each engine callback, and the verdict parse of each review record.
+
+Check clause: none.
+
+Gate: exit tests 1 to 8 pass.
+
+> *In plain English:* a review of the whole repository found faults. A death at the stairwell crashed the game, and some checks passed a fault that they must catch. This PR fixes each one, with a test.
+
+### PR-86: Hosted macOS legs
+
+Scope:
+
+- `.github/workflows/ci.yml`, `smoke.yml`, and `bit-identity.yml`: the `macos-arm64` job of each workflow moves from the self-hosted label to the standard hosted macOS arm64 runner (D-572, D-573). Each job keeps its name, so the required checks of the ruleset of `main` stay as they are (D-522).
+- `WhatYouCarry.Tests/`: `CiWorkflowHasOneJobPerPlatform` and `BitIdentityWorkflowHasOneJobPerPlatformAndACompareJob` in `RepositoryShapeTests`, and `SmokeWorkflowHasOneJobPerPlatform` in `GameShapeTests`, read the hosted label. A new shape test fails on a workflow that names the self-hosted label.
+- The documents retire the self-hosted runner (D-573): `docs/runbooks/macos-runner.md`, the rule of a lost self-hosted leg in `CLAUDE.md` and `AGENTS.md`, and the system map and the cost model of `docs/design.md`.
+- `docs/decisions.md`: D-100, D-157, D-192, and D-358 take their revision markers in the Effect column (D-186, D-572, D-573).
+
+Out of scope: the night, which PR-85 moves to hosted Linux (D-573). The removal of the runner service from the Mac Mini and of its registration from the repository settings, which no decision holds yet.
+
+Exit tests:
+
+1. `CiWorkflowHasOneJobPerPlatform`, `BitIdentityWorkflowHasOneJobPerPlatformAndACompareJob`, and `SmokeWorkflowHasOneJobPerPlatform` pass, and each reads the hosted macOS arm64 label (D-572).
+2. The new shape test passes, and it fails on the workflows of `main` before this PR.
+3. The three macOS legs of this PR, `ci-macos-arm64`, `smoke-macos-arm64`, and `bit-identity-macos-arm64`, pass on the hosted runner.
+4. The `bit-identity-compare` job of this PR passes, so the hosted macOS hash equals the Linux hash and the Windows hash (G-9).
+5. The `RulesetTests` pass, and the required check names of the ruleset of `main` do not change (D-522).
+6. `make gitar-wait PR=<this PR>` ends with exit 0 after each push, and `make codex-review PR=<this PR>` reviews this PR. The merge request gives the merge summary as questions and answers (D-552).
+
+Review focus: each `runs-on` value against D-572, the job names against the ruleset of D-522, and each retired runner text against D-573.
+
+Check clause: none.
+
+Gate: exit tests 1 to 6 pass.
+
+> *In plain English:* three checks of each pull request still run on the Mac of the owner, so code from any pull request runs there. This change moves them to free cloud Macs. The Mac of the owner then runs no code from a pull request.
+
 ### PR-75: Sword art
 
 Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
@@ -1239,15 +1323,15 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 16. ✅ PR-65 merged 2026-09-15 as PR #73.
 17. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ OQ-174 answered 2026-09-15: D-370.
 18. PR-69. ✅ Done in PR #80. ✅ OQ-176 answered 2026-09-16: D-373.
-19. PR-70. ✅ OQ-177 and OQ-178 answered 2026-09-18: D-386 and D-387.
+19. PR-70. ✅ Done in PR #81. ✅ OQ-177 and OQ-178 answered 2026-09-18: D-386 and D-387.
 20. PR-66. ✅ Done in PR #82. ✅ OQ-179 and OQ-180 answered 2026-09-19 and 2026-09-20: D-388 to D-394.
 21. ✅ OQ-9 answered 2026-09-20: D-395 and D-396.
-22. PR-16.
+22. PR-16. ✅ Done in PR #83.
 23. ✅ OQ-4 and OQ-6 answered 2026-09-20: D-407 to D-409. The escalation, the exit tests, and the rules of the hunt: D-410 to D-421.
 24. PR-17. ✅ Done in PR #84.
 25. Owner: answer OQ-44. ✅ Answered 2026-09-21: D-427. The PR-18 answers: D-428 to D-437.
 26. PR-18. ✅ Done in PR #85.
-27. PR-19.
+27. PR-19. ✅ Done in PR #86.
 28. Owner: answer OQ-48 and OQ-182. ✅ Answered 2026-09-21 and 2026-09-22. The answers of PR-20 run from D-450, which D-462 supersedes, to D-470.
 29. PR-20. ✅ Done in PR #87.
 30. PR-71. ✅ Done in PR #89. ✅ The owner answers of 2026-09-22: D-471 to D-482.
@@ -1255,7 +1339,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 32. PR-73. ✅ Done in PR #91. ✅ The owner answers of 2026-09-22: D-490 to D-495.
 33. PR-62. ✅ Done in PR #92. ✅ OQ-171 answered 2026-09-13: D-339. ✅ The owner answers of 2026-09-22: D-496 to D-509.
 34. PR-78. ✅ Done in PR #93. ✅ The owner answers of 2026-09-23: D-511 to D-524.
-35. PR-74.
+35. PR-74. ✅ Done in PR #94.
 36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, and D-539 to D-541.
 37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544. D-574 supersedes D-542.
 38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.
@@ -1264,14 +1348,15 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 41. PR-84. ✅ Done in PR #100. ✅ The owner answers of 2026-09-24: D-564 to D-569.
 42. PR-85. ✅ Done in PR #102. The night on hosted Linux at 07:07 UTC (D-571 to D-573).
 43. PR-87. ✅ Done in PR #103. ✅ The owner answers of 2026-09-24 and 2026-09-25: D-574 to D-577.
-44. PR-86. The macOS legs on hosted runners (D-572, D-573).
-45. PR-75.
-46. PR-76.
-47. Owner: answer OQ-181.
-48. PR-77.
-49. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-50. Tier 4 pass on the screenshot fixture (D-133).
-51. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+44. PR-88. ✅ Done in PR #104. The fixes of the repository review (D-578). ✅ The owner answers of 2026-09-25: D-578 to D-580.
+45. PR-86. The macOS legs on hosted runners (D-572, D-573).
+46. PR-75.
+47. PR-76.
+48. Owner: answer OQ-181.
+49. PR-77.
+50. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+51. Tier 4 pass on the screenshot fixture (D-133).
+52. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

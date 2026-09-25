@@ -140,11 +140,30 @@ public sealed class PathFollower
         return true;
     }
 
-    /// <summary>Folds the follower into the hash, in the declared order (D-160): the waypoint and the ticks since the last search.</summary>
+    /// <summary>
+    /// Folds the follower into the hash, in the declared order (D-160): the waypoint, the ticks since the last
+    /// search, the path after its count, each cell in walk order, then the goal of the best estimate, the best
+    /// estimate, the ticks with no gain, and the result of the last search. The path drives every move, and the
+    /// wedge count drives the jump of a bot, so a hash without them shows a divergence only when it moves a body (F-123).
+    /// </summary>
     public void AddTo(ref StateHash hash)
     {
         hash.Add(this.waypoint);
         hash.Add(this.sincePath);
+        hash.Add(this.path.Count);
+        foreach (Cell cell in this.path)
+        {
+            hash.Add(cell.X);
+            hash.Add(cell.Y);
+            hash.Add(cell.Z);
+        }
+
+        hash.Add(this.goalOfBest.X);
+        hash.Add(this.goalOfBest.Y);
+        hash.Add(this.goalOfBest.Z);
+        hash.Add(this.best);
+        hash.Add(this.stillTicks);
+        hash.Add(this.LastSearchFailed);
     }
 
     /// <summary>

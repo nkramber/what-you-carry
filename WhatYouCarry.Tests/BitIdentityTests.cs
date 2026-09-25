@@ -1,6 +1,13 @@
 using System;
 using System.IO;
+using WhatYouCarry.Core.Bots;
+using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Procgen;
+using WhatYouCarry.Core.Replay;
+using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Core.World;
 using WhatYouCarry.Tools;
 using WhatYouCarry.Tools.BitIdentity;
 using Xunit;
@@ -49,9 +56,18 @@ public sealed class BitIdentityTests
     /// moved the hash as well as the version. PR-81 moved it from `dc4258105649a548` when the simulation version rose
     /// to 16, a diagonal drop needed an open fall in the corner column, a waypoint arrival started the wedge count
     /// again, and the sweep read the box of the caller (D-545, D-546, D-549, F-111, F-112, G-20). The new rules with
-    /// the version at 15 gave `dc4258105649a548`, so the version alone moved the hash.
+    /// the version at 15 gave `dc4258105649a548`, so the version alone moved the hash. PR-88 moved it from
+    /// `a2e1c2c6f72bc19e` when the simulation version rose to 17, a death on the tick of a stairwell press stayed a
+    /// death, and a descend on the deepest floor did nothing (D-322, D-579, G-20). The sweep masks the stairwell bits,
+    /// and the new rules with the version at 16 gave `a2e1c2c6f72bc19e`, so the version alone moved the hash. The
+    /// same PR then moved it from `241070d5189efb3c` when the state gained the stored path and the wedge count of
+    /// each path follower (D-160, F-123). The path alone gave `d8eb1260bd5aa55e`. The same PR then moved it from
+    /// `f1c35ddccb2cd0bb` when the sweep gained one floor of the content of the checkout and two stairwell records
+    /// on it: a descent to the offered floor 2 and a death there, and an ascend at floor 1 (F-133). The simulation
+    /// version stayed at 17, because no Core number changed. The earlier parts of the sweep fold first and are the
+    /// same, and the Debug and the Release builds give the new answer.
     /// </remarks>
-    private const string ExpectedHash = "a2e1c2c6f72bc19e";
+    private const string ExpectedHash = "9c79047da9c82a0e";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -141,10 +157,14 @@ public sealed class BitIdentityTests
         Assert.Contains("Crc32.Of(", sweep, StringComparison.Ordinal);
 
         // PR-8 exit test 5: the sweep folds in the camera pose and the aim ray of every replayed tick, through
-        // the replay observer, and it builds no live loop of its own beside the replay (PR #23 review P2-1).
+        // the replay observer (PR #23 review P2-1). The one live loop plays a bot policy to write the intents of a
+        // stairwell record, and the sweep folds the replay of that record and never the live states (F-133).
         Assert.Contains("loop.Camera()", sweep, StringComparison.Ordinal);
         Assert.Contains("loop.Aim(", sweep, StringComparison.Ordinal);
         Assert.Contains(": IReplayObserver", sweep, StringComparison.Ordinal);
+        int liveLoops = sweep.Split("new(seed, content)").Length - 1;
+        Assert.Equal(1, liveLoops);
+        Assert.Contains("SimulationLoop live = new(seed, content);", sweep, StringComparison.Ordinal);
         Assert.DoesNotContain("new SimulationLoop(", sweep, StringComparison.Ordinal);
 
         // PR-9 exit test 7: the sweep digs floors and folds every block, so the three platforms compare the generator.
@@ -171,5 +191,105 @@ public sealed class BitIdentityTests
         // PR-64 exit test 6: no dug floor holds a ramp before PR-66, so the sweep builds ramp courses and walks, rolls, and marches over them.
         Assert.Contains("AddRampRun(", sweep, StringComparison.Ordinal);
         Assert.Contains("new Ramp(", sweep, StringComparison.Ordinal);
+
+        // F-133: one floor of the content of the checkout, a descend record with a death, and an ascend record, on
+        // that content, with the next floor from the worker.
+        Assert.Contains("AddFloor(ref hash, FloorGenerator.Generate(DescendSeed, SimulationLoop.FirstFloor, repository));", sweep, StringComparison.Ordinal);
+        Assert.Contains("RecordStairwellRun(new GreedyDescender(repository), DescendSeed, repository), repository, RunEnd.Death,", sweep, StringComparison.Ordinal);
+        Assert.Contains("RecordStairwellRun(new Coward(), AscendSeed, repository), repository, RunEnd.Ascend,", sweep, StringComparison.Ordinal);
+        Assert.Contains("live.OfferNextFloor(", sweep, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// F-133. On the content of the checkout, the descend record takes the offered floor 2 at the stairwell of floor 1
+    /// and dies there, and the ascend record ends as an ascend at the stairwell of floor 1. Each replay gives the
+    /// end state of its live loop, which took the worker floor, so the dig at the descent and the offered floor meet.
+    /// </summary>
+    [Fact]
+    public void TheStairwellRecordsDescendDieAndAscend()
+    {
+        ContentSet content = BitIdentitySweep.RepositoryContent();
+        VoxelGrid folded = FloorGenerator.Generate(BitIdentitySweep.DescendSeed, SimulationLoop.FirstFloor, content).Grid;
+        Assert.Equal(64, folded.SizeX);
+        Assert.Equal(20, folded.SizeY);
+        Assert.Equal(64, folded.SizeZ);
+
+        StairwellRecord descend = BitIdentitySweep.RecordStairwellRun(new GreedyDescender(content), BitIdentitySweep.DescendSeed, content);
+        Assert.Equal(RunEnd.Death, descend.Live.End);
+        Assert.Equal(SimulationLoop.FirstFloor + 1, descend.Live.Floor);
+        Assert.Equal(2, descend.Offers);
+        Assert.NotEqual(string.Empty, descend.Live.DeathCause);
+        Assert.True(descend.Live.Enemies.Count > 0, "The descent placed no enemy on floor 2.");
+        ReplayResult descendReplay = RunReplayer.Replay(descend.Bytes, content, new JsonlLogger(new ThrowingSink()));
+        Assert.Equal(descend.Live.Hash(), descendReplay.Loop.Hash());
+        Assert.Equal(RunEnd.Death, descendReplay.Loop.End);
+
+        StairwellRecord ascend = BitIdentitySweep.RecordStairwellRun(new Coward(), BitIdentitySweep.AscendSeed, content);
+        Assert.Equal(RunEnd.Ascend, ascend.Live.End);
+        Assert.Equal(SimulationLoop.FirstFloor, ascend.Live.Floor);
+        Assert.Equal(1, ascend.Offers);
+        ReplayResult ascendReplay = RunReplayer.Replay(ascend.Bytes, content, new JsonlLogger(new ThrowingSink()));
+        Assert.Equal(ascend.Live.Hash(), ascendReplay.Loop.Hash());
+        Assert.Equal(RunEnd.Ascend, ascendReplay.Loop.End);
+    }
+
+    /// <summary>
+    /// F-133, the boundary. A policy whose run does not end inside the tick limit stops the record with an error that
+    /// names the policy and the seed, and never gives a short record that the sweep folds in silence (T-2).
+    /// </summary>
+    [Fact]
+    public void ARecordThatDoesNotEndStopsTheSweep()
+    {
+        // On this seed no enemy reaches the spawn inside the tick limit, so a player that stands there lives on.
+        const ulong QuietSeed = 1;
+        ContentSet content = BitIdentitySweep.RepositoryContent();
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => BitIdentitySweep.RecordStairwellRun(new StandStill(), QuietSeed, content));
+        Assert.Contains(StandStill.PolicyName, error.Message, StringComparison.Ordinal);
+        Assert.Contains($"seed {QuietSeed}", error.Message, StringComparison.Ordinal);
+        Assert.Contains($"{BitIdentitySweep.StairwellTickLimit} ticks", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// F-133. Each platform job of the workflow builds and runs the sweep in Release too, and fails when the Release
+    /// hash is not the Debug hash, before it passes its hash up to the compare job.
+    /// </summary>
+    [Fact]
+    public void EachPlatformJobChecksTheReleaseSweep()
+    {
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/bit-identity.yml");
+        foreach (string job in new[] { "linux-x64", "windows-x64", "macos-arm64" })
+        {
+            string text = WorkflowText.JobText(workflow, job);
+            Assert.Contains("run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -c Release\n", text, StringComparison.Ordinal);
+            Assert.Contains("release_hash=\"$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -c Release --no-build -- bit-identity)\"", text, StringComparison.Ordinal);
+            int check = text.IndexOf("[ \"${hash}\" != \"${release_hash}\" ]", StringComparison.Ordinal);
+            int output = text.IndexOf("echo \"hash=${hash}\" >> \"$GITHUB_OUTPUT\"", StringComparison.Ordinal);
+            Assert.True(check > 0, $"The job '{job}' does not compare the Release hash with the Debug hash.");
+            Assert.True(output > check, $"The job '{job}' passes its hash up before the Release check.");
+        }
+    }
+
+    /// <summary>A policy that stands at the spawn and presses nothing. Its run does not end inside the tick limit of a record.</summary>
+    private sealed class StandStill : IBotPolicy
+    {
+        public const string PolicyName = "stand-still";
+
+        public string Name => PolicyName;
+
+        public bool PromisesProgress => false;
+
+        public Intent Next(SimulationLoop loop)
+        {
+            return new Intent(loop.Tick, 0, 0, 0, 0, 0);
+        }
+    }
+
+    /// <summary>A replay of a whole record writes no line, so a line here fails the test (T-2).</summary>
+    private sealed class ThrowingSink : ILogSink
+    {
+        public void Write(string line)
+        {
+            throw new InvalidOperationException($"The replay of a whole record wrote a line: {line}");
+        }
     }
 }

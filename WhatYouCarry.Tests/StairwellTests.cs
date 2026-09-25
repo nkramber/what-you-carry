@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using WhatYouCarry.Core.Bots;
+using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Procgen;
+using WhatYouCarry.Core.Projectiles;
 using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Core.World;
@@ -171,6 +174,233 @@ public sealed class StairwellTests
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// The intents of a run with the enemies of the repository content: the greedy descender walks to the stairwell of
+    /// floor 1, and the body then waits on the cell until a hit takes the last health. The last intent is the one of
+    /// the lethal tick. Null when the run ends or leaves the cell before that, or the walk passes its ticks.
+    /// </summary>
+    private static List<Intent>? DeathOnTheStairwell(ulong seed)
+    {
+        SimulationLoop loop = new(seed, TestWorld.Content);
+        GreedyDescender policy = new(TestWorld.Content);
+        List<Intent> intents = [];
+        while (true)
+        {
+            if (loop.Ended || loop.Tick >= MaxWalkTicks)
+            {
+                return null;
+            }
+
+            Intent intent = policy.Next(loop);
+            if ((intent.Buttons & (Button.Interact | Button.Ascend)) != 0)
+            {
+                break;
+            }
+
+            intents.Add(intent);
+            loop.Step(intent);
+        }
+
+        while (!loop.Ended)
+        {
+            if (!StairwellPrompt.IsOpen(loop) || loop.Tick >= MaxWalkTicks)
+            {
+                return null;
+            }
+
+            Intent idle = Press(loop, 0);
+            intents.Add(idle);
+            loop.Step(idle);
+        }
+
+        return loop.End == RunEnd.Death ? intents : null;
+    }
+
+    /// <summary>A loop that replays every intent of a list but the last ones, which the caller steps itself.</summary>
+    private static SimulationLoop ReplayAllBut(ulong seed, List<Intent> intents, int leftOut)
+    {
+        SimulationLoop loop = new(seed, TestWorld.Content);
+        for (int index = 0; index < intents.Count - leftOut; index++)
+        {
+            loop.Step(intents[index]);
+        }
+
+        return loop;
+    }
+
+    /// <summary>
+    /// F-113. A hit that takes the last health on the tick of a stairwell press ends the run as a death, and the
+    /// press does nothing (D-322, D-403). The old loop took the press after the hit: the descend built a player with
+    /// no health and threw, and the ascend ended a dead run as an ascend. The same press one tick earlier, while the
+    /// player lives, still descends or ascends.
+    /// </summary>
+    [Theory]
+    [InlineData(Button.Interact)]
+    [InlineData(Button.Ascend)]
+    public void ALethalHitOnTheTickOfAStairwellPressIsADeath(ushort press)
+    {
+        int deaths = 0;
+        for (ulong seed = 1; seed <= 12; seed++)
+        {
+            List<Intent>? intents = DeathOnTheStairwell(seed);
+            if (intents is null)
+            {
+                continue;
+            }
+
+            deaths++;
+            SimulationLoop lethal = ReplayAllBut(seed, intents, 1);
+            Assert.True(StairwellPrompt.IsOpen(lethal), $"Seed {seed}: the prompt is not open before the lethal tick {lethal.Tick}.");
+            lethal.Step(intents[^1] with { Buttons = press });
+            Assert.True(lethal.End == RunEnd.Death, $"Seed {seed}: the press {press} on the lethal tick ended the run as {lethal.End}.");
+            Assert.True(lethal.Player.IsDead, $"Seed {seed}: the player lives after the lethal tick.");
+            Assert.NotEqual(string.Empty, lethal.DeathCause);
+            Assert.Equal(SimulationLoop.FirstFloor, lethal.Floor);
+            Assert.Equal(SimulationLoop.FirstFloor, lethal.Plan.Floor);
+
+            SimulationLoop earlier = ReplayAllBut(seed, intents, 2);
+            earlier.Step(intents[^2] with { Buttons = press });
+            if (press == Button.Ascend)
+            {
+                Assert.True(earlier.End == RunEnd.Ascend, $"Seed {seed}: the ascend one tick before the lethal tick ended the run as {earlier.End}.");
+            }
+            else
+            {
+                Assert.False(earlier.Ended, $"Seed {seed}: the descend one tick before the lethal tick ended the run as {earlier.End}.");
+                Assert.Equal(SimulationLoop.FirstFloor + 1, earlier.Floor);
+            }
+        }
+
+        Assert.True(deaths > 0, "No seed from 1 to 12 gave a death on the stairwell of floor 1, so the test read no lethal tick.");
+    }
+
+    /// <summary>The repository content with no enemy family and one floor template, cut to floor 1, so floor 1 is the deepest floor.</summary>
+    private static ContentSet OneFloorContent()
+    {
+        FloorTemplate? first = null;
+        foreach (FloorTemplate template in TestWorld.PeacefulContent.Floors)
+        {
+            if (template.MinDepth == SimulationLoop.FirstFloor)
+            {
+                first = template;
+            }
+        }
+
+        Assert.NotNull(first);
+        return TestWorld.PeacefulContent with { Floors = [first with { MaxDepth = SimulationLoop.FirstFloor }] };
+    }
+
+    /// <summary>Steps the loop with the greedy descender until the policy asks for the stairwell choice.</summary>
+    private static void WalkToTheChoice(SimulationLoop loop, ContentSet content)
+    {
+        GreedyDescender policy = new(content);
+        while (true)
+        {
+            Assert.True(!loop.Ended && loop.Tick < MaxWalkTicks, $"Seed {loop.Seed}: the walk to the stairwell ended or passed its ticks at tick {loop.Tick}.");
+            Intent intent = policy.Next(loop);
+            if ((intent.Buttons & (Button.Interact | Button.Ascend)) != 0)
+            {
+                return;
+            }
+
+            loop.Step(intent);
+        }
+    }
+
+    /// <summary>
+    /// F-114. The stairwell of the deepest floor offers the ascend alone. A descend press there does nothing: the
+    /// run goes on, on the same floor, and the old loop threw because no template covers the floor under it
+    /// (D-5, D-579). The HUD hides the descend line, and the ascend still ends the run.
+    /// </summary>
+    [Fact]
+    public void ADescendOnTheDeepestFloorDoesNothing()
+    {
+        ContentSet oneFloor = OneFloorContent();
+        SimulationLoop loop = new(3UL, oneFloor);
+        Assert.Equal(SimulationLoop.FirstFloor, loop.DeepestFloor);
+        WalkToTheChoice(loop, oneFloor);
+        Assert.True(StairwellPrompt.IsOpen(loop));
+        Assert.False(StairwellPrompt.OffersDescend(loop));
+        Assert.False(WhatYouCarry.Game.Ui.HudState.Of(loop, false).DescendOffered);
+
+        loop.Step(Press(loop, Button.Interact));
+        Assert.False(loop.Ended);
+        Assert.Equal(SimulationLoop.FirstFloor, loop.Floor);
+        Assert.Equal(SimulationLoop.FirstFloor, loop.Plan.Floor);
+        Assert.True(StairwellPrompt.IsOpen(loop));
+
+        loop.Step(Press(loop, Button.Ascend));
+        Assert.Equal(RunEnd.Ascend, loop.End);
+    }
+
+    /// <summary>The boundary beside the deepest floor: a floor above it offers the descend, and the HUD shows the line (D-50, D-579).</summary>
+    [Fact]
+    public void AFloorAboveTheDeepestOffersTheDescend()
+    {
+        SimulationLoop loop = TestWorld.NewLoop(3UL);
+        Assert.Equal(15, loop.DeepestFloor);
+        WalkToTheChoice(loop, TestWorld.PeacefulContent);
+        Assert.True(StairwellPrompt.OffersDescend(loop));
+        Assert.True(WhatYouCarry.Game.Ui.HudState.Of(loop, false).DescendOffered);
+    }
+
+    /// <summary>
+    /// F-121. A descent that fails leaves the floor before it whole: the plan, the floor number, the player, the
+    /// projectiles, the timer, the waves, and the enemies. The offered plan of floor 2 puts its spawn outside the grid,
+    /// so the player of floor 2 fails, and the old loop had already taken the plan of floor 2 on floor 1. The error
+    /// names the seed, the floor, and the tick of the descent.
+    /// </summary>
+    [Fact]
+    public void AFailedDescentLeavesTheFloorBeforeItWhole()
+    {
+        SimulationLoop loop = TestWorld.NewLoop(3UL);
+        WalkToTheChoice(loop, TestWorld.PeacefulContent);
+        FloorPlan plan = loop.Plan;
+        Player player = loop.Player;
+        ProjectileSimulation projectiles = loop.Projectiles;
+        FloorTimer timer = loop.Timer;
+        Escalation escalation = loop.Escalation;
+        IReadOnlyList<Enemy> enemies = loop.Enemies;
+        uint descendTick = loop.Tick;
+        loop.OfferNextFloor(FloorGenerator.Generate(3UL, 2, TestWorld.PeacefulContent) with { Spawn = new Vector3(-1.0f, 0.0f, -1.0f) });
+
+        ContextException error = Assert.Throws<ContextException>(() => loop.Step(Press(loop, Button.Interact)));
+        Assert.Contains("spawn", error.Message, StringComparison.Ordinal);
+        Assert.Equal(SimulationLoop.FirstFloor, loop.Floor);
+        Assert.Same(plan, loop.Plan);
+        Assert.Same(player, loop.Player);
+        Assert.Same(projectiles, loop.Projectiles);
+        Assert.Same(timer, loop.Timer);
+        Assert.Same(escalation, loop.Escalation);
+        Assert.Same(enemies, loop.Enemies);
+        SimulationTests.AssertContextField(error, "seed", "3");
+        SimulationTests.AssertContextField(error, "floor", "1");
+        SimulationTests.AssertContextField(error, "tick", descendTick.ToString(CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>
+    /// F-121. A field that a lower level already named stays, and the step adds the fields that are absent with no
+    /// error for the repeat. Two templates cover floor 2, so the dig of the descent fails and names floor 2 and the
+    /// seed, and the step adds the tick of the descent.
+    /// </summary>
+    [Fact]
+    public void AFailedDigKeepsItsFloorAndTakesTheTick()
+    {
+        FloorTemplate first = Assert.Single(TestWorld.PeacefulContent.Floors, template => template.MinDepth == SimulationLoop.FirstFloor);
+        FloorTemplate second = first with { MinDepth = 2, MaxDepth = 2 };
+        ContentSet content = TestWorld.PeacefulContent with { Floors = [first with { MaxDepth = SimulationLoop.FirstFloor }, second, second] };
+        SimulationLoop loop = new(3UL, content);
+        WalkToTheChoice(loop, content);
+        uint descendTick = loop.Tick;
+
+        ContextException error = Assert.Throws<ContextException>(() => loop.Step(Press(loop, Button.Interact)));
+        Assert.Contains("2 floor templates that cover floor 2", error.Message, StringComparison.Ordinal);
+        SimulationTests.AssertContextField(error, "seed", "3");
+        SimulationTests.AssertContextField(error, "floor", "2");
+        SimulationTests.AssertContextField(error, "tick", descendTick.ToString(CultureInfo.InvariantCulture));
+        Assert.Equal(SimulationLoop.FirstFloor, loop.Floor);
     }
 
     /// <summary>A body is at the stairwell when it stands on the ground on that cell, and not one cell over, and not in the air.</summary>

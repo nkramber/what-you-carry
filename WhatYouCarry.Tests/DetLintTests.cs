@@ -17,7 +17,8 @@ public sealed class DetLintTests
     [Fact]
     public void LintFailsSystemMath()
     {
-        LintFinding finding = Assert.Single(Scan("public static class A { public static double B(double c) => System.Math.Sin(c); }"));
+        // The fragment writes no `double`, because the keyword is a finding of its own (F-132).
+        LintFinding finding = Assert.Single(Scan("public static class A { public static float B(float c) => (float)System.Math.Sin(c); }"));
         Assert.Equal("L-MATH", finding.Rule);
         Assert.Equal("Math.Sin", finding.Symbol);
         Assert.Equal(1, finding.Line);
@@ -476,15 +477,16 @@ public sealed class DetLintTests
     }
 
     /// <summary>
-    /// The entry carries the overload arity, because two overloads of one name do not share one behavior.
-    /// `ToString/2` takes a format provider, and `ToString/0` reads the current culture (D-208, F-69).
+    /// The entry carries the parameter types, because two overloads of one name do not share one behavior.
+    /// `ToString(String, IFormatProvider)` takes a format provider, and `ToString()` reads the current culture
+    /// (D-208, F-69, F-132).
     /// </summary>
     [Fact]
-    public void TheOverloadArityIsPartOfTheEntry()
+    public void TheParameterTypesArePartOfTheEntry()
     {
         LintFinding finding = Assert.Single(Scan("public static class A { public static string B(ulong v) => v.ToString(); }"));
         Assert.Equal("L-MEMBER", finding.Rule);
-        Assert.Equal("System.UInt64.ToString/0", finding.Symbol);
+        Assert.Equal("System.UInt64.ToString()", finding.Symbol);
 
         // The overload that Core uses names its provider, and it stays clean.
         Assert.Empty(Scan("public static class A { public static string B(ulong v) => v.ToString(\"x16\", System.Globalization.CultureInfo.InvariantCulture); }"));
@@ -537,17 +539,17 @@ public sealed class DetLintTests
     {
         LintFinding finding = Assert.Single(Scan($"public static class A {{ {member} }}"));
         Assert.Equal("L-MEMBER", finding.Rule);
-        Assert.StartsWith("System.Globalization.CultureInfo.new/", finding.Symbol, StringComparison.Ordinal);
+        Assert.StartsWith("System.Globalization.CultureInfo.new(System.String", finding.Symbol, StringComparison.Ordinal);
     }
 
     /// <summary>A base constructor initializer names a member of the base type, and the rule reads it (F-71).</summary>
     [Fact]
     public void ABaseConstructorInitializerIsAFinding()
     {
-        // The allowlist holds System.Exception.new/1 and new/2, and not the form with no argument.
+        // The allowlist holds the two forms that take a message, and not the form with no argument.
         Assert.Contains(
             Scan("public sealed class A : System.Exception { public A() : base() { } }"),
-            finding => finding.Rule == "L-MEMBER" && finding.Symbol == "System.Exception.new/0");
+            finding => finding.Rule == "L-MEMBER" && finding.Symbol == "System.Exception.new()");
 
         // The two forms that Core uses stay clean.
         Assert.Empty(Scan("public sealed class A : System.Exception { public A(string m) : base(m) { } }"));
@@ -574,8 +576,9 @@ public sealed class DetLintTests
                         builder.Append('[');
                         builder.Append(values[0].ToString(System.Globalization.CultureInfo.InvariantCulture));
                         builder.Append(other.ToString("G9", System.Globalization.CultureInfo.InvariantCulture));
-                        builder.Append(text.Length);
-                        builder.Append(this.items.Count);
+                        builder.Append(text);
+                        builder.Append(((long)text.Length).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        builder.Append(((long)this.items.Count).ToString(System.Globalization.CultureInfo.InvariantCulture));
                         this.items.Add(this.items[0]);
                         return builder.ToString();
                     }
@@ -685,6 +688,110 @@ public sealed class DetLintTests
         {
             Assert.Contains($"MathF.{member}(", detMath, StringComparison.Ordinal);
         }
+    }
+
+    /// <summary>
+    /// A construct that the compiler lowers to a call that no name in the source shows is a finding (F-132). The
+    /// old scan read the names alone, and it gave no finding for any row. An interpolation hole and a string `+`
+    /// operand become a ToString call that reads the current culture. `Append(Single)` and `ToString(String)`
+    /// share a count with an approved overload. A record's generated hash and text read the machine and the
+    /// culture. A `double` and a `decimal` are a second number system beside the float of D-70.
+    /// </summary>
+    [Theory]
+    [InlineData("public static string B(float f) => $\"{f}\";", "L-FORMAT", "System.Single")]
+    [InlineData("public static string B(float f) => \"x\" + f;", "L-FORMAT", "System.Single")]
+    [InlineData("public static string B(string s, float f) { s += f; return s; }", "L-FORMAT", "System.Single")]
+    [InlineData("public static string B(Probe p) => $\"{p}\";", "L-FORMAT", "Probe")]
+    [InlineData("public static void B(System.Text.StringBuilder sb, float f) => sb.Append(f);", "L-MEMBER", "System.Text.StringBuilder.Append(System.Single)")]
+    [InlineData("public static string B(long v) => v.ToString(\"N0\");", "L-MEMBER", "System.Int64.ToString(System.String)")]
+    [InlineData("public static int B(Cell c) => c.GetHashCode();", "L-IDENTITY", "Cell.GetHashCode")]
+    [InlineData("public static string B(Cell c) => c.ToString();", "L-FORMAT", "Cell.ToString")]
+    [InlineData("public static float B(float f) => (float)(f * 0.5);", "L-DOUBLE", "0.5")]
+    [InlineData("public static float B(float f) { double d = f; return (float)d; }", "L-DOUBLE", "double")]
+    [InlineData("public static int B(int a) => (int)(a * 1.5m);", "L-DOUBLE", "1.5m")]
+    public void ALoweredConstructIsAFinding(string member, string rule, string symbol)
+    {
+        LintFinding finding = Assert.Single(Scan($"public enum Probe {{ A = 1 }}\npublic readonly record struct Cell(int X);\npublic static class A {{ {member} }}"));
+        Assert.Equal(rule, finding.Rule);
+        Assert.Equal(symbol, finding.Symbol);
+    }
+
+    /// <summary>
+    /// Error text is exempt from the text rule, because no run record and no hash reads it (F-132). The text is an
+    /// argument of an exception constructor, of a method that gives back an exception, or of
+    /// `ContextException.AddContext`. A string operand needs no culture, so it is never a finding.
+    /// </summary>
+    [Theory]
+    [InlineData("public static void B(float f) => throw new System.InvalidOperationException($\"The value is {f}.\");")]
+    [InlineData("public static void B(float f) => throw new System.InvalidOperationException(\"The value is \" + f);")]
+    [InlineData("public static void B(Cell c) => throw new System.InvalidOperationException($\"The cell is {c}.\");")]
+    [InlineData("public static void B(float f) => throw Make($\"The value is {f}.\");")]
+    [InlineData("public static void B(float f, Cell c) { WhatYouCarry.Core.Logging.ContextException e = new(\"x\"); e.AddContext(\"value\", $\"{f}\"); e.AddContext(\"cell\", c.ToString()); throw e; }")]
+    [InlineData("public static string B(string s) => $\"[{s}]\" + s;")]
+    public void ErrorTextIsNotAFinding(string member)
+    {
+        Assert.Empty(Scan($$"""
+            namespace WhatYouCarry.Core.Logging
+            {
+                public sealed class ContextException : System.Exception
+                {
+                    public ContextException(string message) : base(message) { }
+
+                    public void AddContext(string name, string value) { }
+                }
+            }
+
+            public readonly record struct Cell(int X);
+
+            public static class A
+            {
+                public static System.Exception Make(string message) => new System.InvalidOperationException(message);
+
+                {{member}}
+            }
+            """));
+    }
+
+    /// <summary>
+    /// The exemption reads the argument, and not the value that a local carries into it. Text that a statement
+    /// builds before the throw can reach a record or a hash as well, so it is a finding (F-132).
+    /// </summary>
+    [Fact]
+    public void TextBuiltBeforeTheThrowIsAFinding()
+    {
+        LintFinding finding = Assert.Single(Scan("public static class A { public static void B(float f) { string m = $\"The value is {f}.\"; throw new System.InvalidOperationException(m); } }"));
+        Assert.Equal("L-FORMAT", finding.Rule);
+    }
+
+    /// <summary>
+    /// A GetHashCode call is a finding on any type, a Core type included, and a declaration of one is not. A Core
+    /// struct declares its own hash for the IEquatable contract, as StateHash does (F-132).
+    /// </summary>
+    [Fact]
+    public void AGetHashCodeCallIsAFindingAndADeclarationIsNot()
+    {
+        Assert.Empty(Scan("public readonly struct H : System.IEquatable<H> { public bool Equals(H other) => true; public override bool Equals(object? o) => o is H; public override int GetHashCode() => 1; }"));
+        Assert.Contains(
+            Scan("public sealed class K { public override int GetHashCode() => 1; }\npublic static class A { public static int B(K k) => k.GetHashCode(); }"),
+            finding => finding.Rule == "L-IDENTITY" && finding.Symbol == "K.GetHashCode");
+    }
+
+    /// <summary>
+    /// A method entry names the types of its parameters, and never a count alone (F-132). The one JSON member that
+    /// no Core code calls is out of the list.
+    /// </summary>
+    [Fact]
+    public void EveryMethodEntryNamesItsParameterTypes()
+    {
+        foreach (string entry in BannedSymbols.AllowedMembers)
+        {
+            Assert.DoesNotContain("/", entry, StringComparison.Ordinal);
+            bool isMethodOrIndexer = entry.Contains('(', StringComparison.Ordinal) || entry.Contains('[', StringComparison.Ordinal);
+            Assert.True(!isMethodOrIndexer || entry.EndsWith(')') || entry.EndsWith(']'), $"The entry '{entry}' opens a parameter list and does not close it.");
+        }
+
+        Assert.DoesNotContain(BannedSymbols.AllowedMembers, entry => entry.StartsWith("System.Text.Json.Utf8JsonReader.GetInt64", StringComparison.Ordinal));
+        Assert.Contains("System.Int64.ToString(System.IFormatProvider)", BannedSymbols.AllowedMembers);
     }
 
     private static IReadOnlyList<LintFinding> Scan(string source, string path = "WhatYouCarry.Core/Test.cs")

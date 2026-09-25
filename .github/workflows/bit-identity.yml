@@ -4,6 +4,9 @@
 #
 # The three platform jobs pass their hash up as a job output, and the compare job reads all three. A job output
 # needs no artifact action, so this workflow adds no dependency (G-16).
+#
+# Each platform job also builds and runs the sweep in Release, and it fails when the Release hash is not the Debug
+# hash, so no result depends on the optimized code (F-133). The job passes up the Debug hash after that check.
 name: Bit identity
 
 on:
@@ -55,12 +58,23 @@ jobs:
           global-json-file: global.json
       - name: Build
         run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
+      - name: Build Release
+        run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -c Release
       - name: Run the sweep
         id: sweep
         shell: bash
         run: |
           hash="$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bit-identity)"
-          echo "linux-x64: ${hash}"
+          release_hash="$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -c Release --no-build -- bit-identity)"
+          echo "linux-x64 Debug:   ${hash}"
+          echo "linux-x64 Release: ${release_hash}"
+
+          # The optimized build must give the Debug hash, or the result depends on the code generation (F-133).
+          if [ -z "${hash}" ] || [ "${hash}" != "${release_hash}" ]; then
+            echo "The Release sweep does not give the Debug hash on linux-x64."
+            exit 1
+          fi
+
           echo "hash=${hash}" >> "$GITHUB_OUTPUT"
 
   windows-x64:
@@ -78,13 +92,24 @@ jobs:
           global-json-file: global.json
       - name: Build
         run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
+      - name: Build Release
+        run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -c Release
       - name: Run the sweep
         id: sweep
         # bash on the Windows runner too, so the three jobs use one syntax for the job output.
         shell: bash
         run: |
           hash="$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bit-identity)"
-          echo "windows-x64: ${hash}"
+          release_hash="$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -c Release --no-build -- bit-identity)"
+          echo "windows-x64 Debug:   ${hash}"
+          echo "windows-x64 Release: ${release_hash}"
+
+          # The optimized build must give the Debug hash, or the result depends on the code generation (F-133).
+          if [ -z "${hash}" ] || [ "${hash}" != "${release_hash}" ]; then
+            echo "The Release sweep does not give the Debug hash on windows-x64."
+            exit 1
+          fi
+
           echo "hash=${hash}" >> "$GITHUB_OUTPUT"
 
   macos-arm64:
@@ -102,12 +127,23 @@ jobs:
           global-json-file: global.json
       - name: Build
         run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
+      - name: Build Release
+        run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -c Release
       - name: Run the sweep
         id: sweep
         shell: bash
         run: |
           hash="$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bit-identity)"
-          echo "macos-arm64: ${hash}"
+          release_hash="$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -c Release --no-build -- bit-identity)"
+          echo "macos-arm64 Debug:   ${hash}"
+          echo "macos-arm64 Release: ${release_hash}"
+
+          # The optimized build must give the Debug hash, or the result depends on the code generation (F-133).
+          if [ -z "${hash}" ] || [ "${hash}" != "${release_hash}" ]; then
+            echo "The Release sweep does not give the Debug hash on macos-arm64."
+            exit 1
+          fi
+
           echo "hash=${hash}" >> "$GITHUB_OUTPUT"
 
   compare:

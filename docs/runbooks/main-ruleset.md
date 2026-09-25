@@ -2,7 +2,7 @@
 
 Status: procedure, written 2026-09-23 (D-522). Written in ASD-STE100.
 
-The file `.github/rulesets/main.json` holds the ruleset of `main`. The live ruleset on GitHub matches the file. `RulesetTests` binds the file to the workflows. Each job that runs on each PR is a required check (except `ci-skip` and `evaluate`), and each required check is the name of one job.
+The file `.github/rulesets/main.json` holds the ruleset of `main`. The live ruleset on GitHub matches the file. `RulesetTests` binds the file to the workflows. Each job that runs on each PR is a required check (except `ci-skip` and `evaluate`). Each required check but `review-gate` is the name of one job. The `evaluate` job posts the `review-gate` check run (D-181).
 
 ## What the ruleset holds
 
@@ -29,9 +29,12 @@ Do these steps once, after the owner approves the setup (D-519). Each command ch
 repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh api --method PATCH "repos/$repo" -F allow_auto_merge=true --jq .allow_auto_merge
 git fetch origin main
-git show origin/main:.github/rulesets/main.json > /tmp/main-ruleset.json
-gh api --method POST "repos/$repo/rulesets" --input /tmp/main-ruleset.json --jq '{id, name, enforcement}'
+ruleset=$(mktemp "${TMPDIR:-/tmp}/main-ruleset.XXXXXX")
+git show origin/main:.github/rulesets/main.json > "$ruleset"
+gh api --method POST "repos/$repo/rulesets" --input "$ruleset" --jq '{id, name, enforcement}'
 ```
+
+Each procedure sets its own variables and writes its own temporary files with `mktemp`. A fixed path such as `/tmp/main-ruleset.json` can hold a file of another session, and the upload then sends that file (F-126).
 
 ## Procedure: a change of the ruleset
 
@@ -42,8 +45,12 @@ gh api --method POST "repos/$repo/rulesets" --input /tmp/main-ruleset.json --jq 
 5. Compare the live ruleset with the file.
 
 ```
+repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+git fetch origin main
+ruleset=$(mktemp "${TMPDIR:-/tmp}/main-ruleset.XXXXXX")
+git show origin/main:.github/rulesets/main.json > "$ruleset"
 id=$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main") | .id')
-gh api --method PUT "repos/$repo/rulesets/$id" --input /tmp/main-ruleset.json --jq '{id, name, enforcement}'
+gh api --method PUT "repos/$repo/rulesets/$id" --input "$ruleset" --jq '{id, name, enforcement}'
 ```
 
 ## Compare the live ruleset with the file
@@ -51,10 +58,15 @@ gh api --method PUT "repos/$repo/rulesets/$id" --input /tmp/main-ruleset.json --
 The API adds fields that the file does not hold, such as the id and the dates. Compare the parts that the file holds.
 
 ```
+repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+git fetch origin main
+work=$(mktemp -d "${TMPDIR:-/tmp}/main-ruleset.XXXXXX")
+git show origin/main:.github/rulesets/main.json > "$work/main-ruleset.json"
+id=$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main") | .id')
 keys='{name, target, enforcement, conditions, bypass_actors, rules: (.rules | sort_by(.type))}'
-gh api "repos/$repo/rulesets/$id" | jq -S "$keys" > /tmp/live.json
-jq -S "$keys" /tmp/main-ruleset.json > /tmp/file.json
-diff /tmp/file.json /tmp/live.json && echo "The live ruleset matches the file."
+gh api "repos/$repo/rulesets/$id" | jq -S "$keys" > "$work/live.json"
+jq -S "$keys" "$work/main-ruleset.json" > "$work/file.json"
+diff "$work/file.json" "$work/live.json" && echo "The live ruleset matches the file."
 ```
 
 An empty diff proves the match. A field that GitHub adds with a default value shows in the diff. Put that field and its value in the file, so the next comparison is empty.

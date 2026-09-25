@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using WhatYouCarry.Core.Content;
@@ -76,16 +77,24 @@ public static class RunReplayer
         SimulationLoop loop = new(header.Seed, content);
         for (int frame = 0; frame < frameCount; frame++)
         {
+            uint tick = loop.Tick;
             try
             {
                 loop.Step(Intent.Decode(record, bodyStart + (frame * Intent.FrameSize)));
             }
             catch (ContextException error)
             {
-                // The decode names the tick and the loop names both ticks. The frame index is what a reader
-                // needs to find the bytes, and only this loop knows it (D-113).
-                error.AddContext("frame", ((long)frame).ToString(CultureInfo.InvariantCulture));
+                // The loop names the seed, the floor, and the tick of an error inside the tick, and a failed decode
+                // or a failed check before the tick names none of them. The frame index is what a reader needs to
+                // find the bytes, and only this loop knows it (D-113, F-121).
+                AddFrameContext(error, header.Seed, loop.Floor, tick, frame);
                 throw;
+            }
+            catch (Exception error)
+            {
+                ContextException wrapped = new($"Frame {frame} of the run record failed: {error.Message}", error);
+                AddFrameContext(wrapped, header.Seed, loop.Floor, tick, frame);
+                throw wrapped;
             }
 
             observer.AfterTick(loop);
@@ -105,6 +114,15 @@ public static class RunReplayer
         }
 
         return new ReplayResult(header, loop, frameCount, tornBytes);
+    }
+
+    /// <summary>Adds the seed, the floor, the tick, and the frame index to an error of one frame, and keeps a field that the loop already added (design 6.1, F-121).</summary>
+    private static void AddFrameContext(ContextException error, ulong seed, int floor, uint tick, int frame)
+    {
+        error.AddContextIfAbsent("seed", seed.ToString(CultureInfo.InvariantCulture));
+        error.AddContextIfAbsent("floor", ((long)floor).ToString(CultureInfo.InvariantCulture));
+        error.AddContextIfAbsent("tick", ((long)tick).ToString(CultureInfo.InvariantCulture));
+        error.AddContext("frame", ((long)frame).ToString(CultureInfo.InvariantCulture));
     }
 }
 

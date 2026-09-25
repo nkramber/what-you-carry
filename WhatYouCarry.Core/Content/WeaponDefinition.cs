@@ -6,7 +6,7 @@ namespace WhatYouCarry.Core.Content;
 /// <summary>
 /// One weapon definition (D-87, D-168, D-334): the tier, the handedness, the three phases of a swing in ticks, the
 /// damage, the arc of the blade, and the paths of the weapon model and of its swing clip. Until the loadout of PR-30,
-/// the loop swings the first weapon definition of the content set (D-320).
+/// the loop swings the weapon with the id `sword-basic` (D-320, D-422).
 /// </summary>
 /// <remarks>
 /// <para>

@@ -6,7 +6,7 @@ The design doc holds the system map (section 3), the cost model (section 4), and
 
 External facts: none new.
 
-Correction passes: none yet.
+Correction passes: 2026-09-25, F-137. Section 3 labeled the economy gate G-19, which is the check rule of D-148. The item now cites D-154 alone.
 
 ## 1. Thesis
 
@@ -39,7 +39,7 @@ All guardrails in `docs/design.md` section 6.2 apply. These five matter most in 
 1. **G-5.** Every run records its seed and intent stream from the first tick. The profile and the record are the only saves.
 2. **G-7.** Every content file validates against its validator. Items, affixes, enemies, and tree nodes are content.
 3. **G-11.** No unowned decision. The balance numbers in this phase are decisions (D-123).
-4. **G-19.** The economy gate is the M-5 pass condition, not a smaller payout (D-154).
+4. **D-154.** The economy gate is the M-5 pass condition, not a smaller payout. No guardrail of `docs/design.md` holds this rule.
 5. **G-20.** Every Core behavior change bumps the simulation version constant. Every PR in this phase changes Core behavior.
 
 ## 4. Roadmap
