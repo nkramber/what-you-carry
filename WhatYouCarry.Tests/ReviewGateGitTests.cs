@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 using WhatYouCarry.Tools.ReviewGate;
 using Xunit;
 
@@ -124,6 +125,96 @@ public sealed class ReviewGateGitTests
 
         Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
         Assert.Contains(ReviewGateRules.OverrideLabel, result.Summary, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("LICENSE")]
+    [InlineData("README.md")]
+    public void ReviewGateFailsOnADirectoryWithTheNameOfARootDocument(string path)
+    {
+        // F-125: the skip set names the root file alone. A change of the file keeps the approval, and a directory of
+        // the same name holds code, so a commit into it moves the effective head.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string reviewed = repo.Commit("feat: first", Files(("WhatYouCarry.Core/A.cs", "// a"), (path, "text")));
+        repo.Commit("docs: review", Files((ReviewFile, ReviewFixture.Text(reviewed, "Ready for owner merge"))));
+        string document = repo.Commit("docs: the root document", Files((path, "new text")));
+        Assert.Equal(ReviewGateResult.Success, Evaluate(repo, document).Conclusion);
+
+        repo.Git(["rm", "-q", path]);
+        string directory = repo.Commit("chore: a directory in place of the root document", Files((path + "/Evil.cs", "// code")));
+        ReviewGateResult result = Evaluate(repo, directory);
+
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(directory, result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheWorkHeadMovesOnADirectoryWithTheNameOfAMetadataFile()
+    {
+        // F-125: the metadata set names docs/session-handoff.md as a file. A path under a directory of that name is
+        // outside the set, and a change of the file alone is inside it.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string mergeBase = repo.Git(["rev-parse", "HEAD"]).Trim();
+        string code = repo.Commit("feat: first", Files(("WhatYouCarry.Core/A.cs", "// a"), ("docs/session-handoff.md", "entry")));
+        string handoff = repo.Commit("docs: handoff", Files(("docs/session-handoff.md", "next entry")));
+        var git = new GitRepository(repo.Path);
+        Assert.Equal(code, git.NewestCommitOutside(mergeBase, handoff, ReviewGateRules.MetadataPaths)?.Sha);
+
+        repo.Git(["rm", "-q", "docs/session-handoff.md"]);
+        string directory = repo.Commit("docs: a directory in place of the handoff", Files(("docs/session-handoff.md/entry.md", "entry")));
+
+        Assert.Equal(directory, git.NewestCommitOutside(mergeBase, directory, ReviewGateRules.MetadataPaths)?.Sha);
+    }
+
+    [Fact]
+    public void TheEffectiveHeadRefusesTwoLinesThatItCannotOrder()
+    {
+        // F-125: a merge joins a line with code and a line with a directory of the name of a root document. Neither
+        // candidate is an ancestor of the other, so the gate stops with both commits and never picks one in silence.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string mergeBase = repo.Git(["rev-parse", "HEAD"]).Trim();
+        repo.Commit("feat: first", Files(("WhatYouCarry.Core/A.cs", "// a")));
+        repo.CreateBranch("side");
+        string side = repo.Commit("chore: a directory of a root document name", Files(("LICENSE/Evil.cs", "// code")));
+        repo.Git(["checkout", "-q", "feature"]);
+        string code = repo.Commit("feat: second", Files(("WhatYouCarry.Core/B.cs", "// b")));
+        repo.Git(["merge", "-q", "--no-ff", "-m", "merge side", "side"]);
+        string head = repo.Git(["rev-parse", "HEAD"]).Trim();
+        var git = new GitRepository(repo.Path);
+
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => git.NewestCommitOutside(mergeBase, head, ReviewGateRules.SkipPaths));
+
+        Assert.Contains(side, error.Message, StringComparison.Ordinal);
+        Assert.Contains(code, error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GitReadsALargeStandardErrorWithoutADeadlock()
+    {
+        // F-125: git blocks when its stderr pipe is full. A read of stdout to its end before stderr then never
+        // ends. Each pathspec that matches no file gives one error line, so 5000 of them fill the pipe many times.
+        using var repo = new TemporaryGitRepository();
+        repo.Commit("chore: root", Files(("README.md", "root")));
+        var names = new List<string>();
+        for (int index = 0; index < 5000; index++)
+        {
+            names.Add($"absent/path-number-{index:D5}.txt");
+        }
+
+        string pathspecFile = Path.Combine(repo.Path, "pathspecs.txt");
+        File.WriteAllLines(pathspecFile, names);
+        var git = new GitRepository(repo.Path);
+
+        Task<string> run = Task.Run(() => Assert.Throws<InvalidOperationException>(() => git.Run(["checkout", $"--pathspec-from-file={pathspecFile}"])).Message);
+
+        Task finished = await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(60)));
+        Assert.True(finished == run, "git did not end inside 60 s, so the read of its two streams is in a deadlock.");
+        string message = await run;
+        Assert.Contains("absent/path-number-00000.txt", message, StringComparison.Ordinal);
+        Assert.Contains("absent/path-number-04999.txt", message, StringComparison.Ordinal);
     }
 
     [Fact]

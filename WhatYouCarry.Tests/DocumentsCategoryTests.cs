@@ -47,7 +47,7 @@ public sealed class DocumentsCategoryTests
         // The classes of 2026-09-22. A new class joins the list. A class that leaves it needs a reason.
         string[] expected =
         [
-            "CiSkipTests.cs", "ContextBudgetTests.cs", "DocumentsCategoryTests.cs", "HandoffRotateTests.cs", "RegisterLookupTests.cs",
+            "CiSkipTests.cs", "ContextBudgetTests.cs", "DocumentsCategoryTests.cs", "HandoffRotateTests.cs", "NightGateTests.cs", "RegisterLookupTests.cs",
             "RepositoryShapeTests.cs", "ReviewGateRulesTests.cs", "SteCheckTests.cs", "UserArgumentsTests.cs",
         ];
         Assert.Equal(expected, tagged);

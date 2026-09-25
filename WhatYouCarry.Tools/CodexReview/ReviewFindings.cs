@@ -8,11 +8,12 @@ namespace WhatYouCarry.Tools.CodexReview;
 /// <summary>
 /// One finding of a review record: the id, the severity, the text of its status line, and each effective head at
 /// which a review round found it open (D-514). The status line starts with <c>open</c>, <c>fixed</c>,
-/// <c>accepted risk</c>, or <c>withdrawn</c> (the <c>findings.md</c> reference of <c>pr-review</c>).
+/// <c>accepted risk</c>, or <c>withdrawn</c> (the <c>findings.md</c> reference of <c>pr-review</c>), and the parser
+/// refuses any other status.
 /// </summary>
 public sealed record ReviewFinding(string Id, int Severity, string Status, IReadOnlyList<string> OpenAt)
 {
-    public bool IsOpen => Status.StartsWith("open", StringComparison.Ordinal);
+    public bool IsOpen => Status.StartsWith(ReviewFindings.OpenStatus, StringComparison.Ordinal);
 }
 
 /// <summary>Reads the findings from the <c>## Findings</c> section of a review record.</summary>
@@ -21,6 +22,10 @@ public static partial class ReviewFindings
     public const string SectionHeading = "## Findings";
     public const string StatusPrefix = "Status:";
     public const string OpenAtPrefix = "Open at:";
+    public const string OpenStatus = "open";
+
+    /// <summary>The statuses of <c>findings.md</c>. A status line starts with one of them, in this case (F-125).</summary>
+    public static readonly string[] KnownStatuses = [OpenStatus, "fixed", "accepted risk", "withdrawn"];
 
     /// <summary>The severities of <c>findings.md</c>: P0 to P3.</summary>
     public const int HighestSeverity = 3;
@@ -29,7 +34,8 @@ public static partial class ReviewFindings
     /// Every finding under the section heading, in the order of the file. A finding heading is
     /// <c>### P&lt;severity&gt;-&lt;index&gt;: &lt;title&gt;</c>, with a severity from P0 to P3. Any other line that starts with three
     /// or more hashes in the section is an error that names it, because a skipped finding blocks nothing in silence (T-2, PR #93 P2-1).
-    /// A finding with no status line is an error that names it too. A finding with no <c>Open at:</c> line has an
+    /// A finding with no status line, or with a status outside <see cref="KnownStatuses"/>, is an error that names it too
+    /// (F-125). A finding with no <c>Open at:</c> line has an
     /// empty list, and the outcome rule judges that.
     /// </summary>
     public static IReadOnlyList<ReviewFinding> Parse(string recordText)
@@ -102,7 +108,26 @@ public static partial class ReviewFindings
             throw new FormatException($"The finding {id} in the '{SectionHeading}' section has no '{StatusPrefix}' line.");
         }
 
+        // An unknown status is an error, because a closed default lets a finding such as "Open" block nothing (F-125).
+        if (!IsKnownStatus(status))
+        {
+            throw new FormatException($"The finding {id} has the status '{status}', and a status starts with one of: {string.Join(", ", KnownStatuses)}.");
+        }
+
         findings.Add(new ReviewFinding(id, severity, status, openAt));
+    }
+
+    private static bool IsKnownStatus(string status)
+    {
+        foreach (string known in KnownStatuses)
+        {
+            if (status.StartsWith(known, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Each text in backticks on the line, in order.</summary>

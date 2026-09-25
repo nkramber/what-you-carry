@@ -4,8 +4,11 @@ using WhatYouCarry.Tools.ReviewGate;
 
 namespace WhatYouCarry.Tools.CodexReview;
 
-/// <summary>One check run of the Gitar app, and the commit that it reads.</summary>
-public sealed record GitarCheck(string Sha, string Status, DateTimeOffset StartedAt);
+/// <summary>
+/// One check run of the Gitar app, and the commit that it reads. <see cref="StartedAt"/> is null when the check run
+/// has not started, because GitHub then gives no start time (F-125).
+/// </summary>
+public sealed record GitarCheck(string Sha, string Status, DateTimeOffset? StartedAt);
 
 /// <summary>Everything the start checks read, gathered once from the CLI, git, and GitHub. The rules do no I/O.</summary>
 public sealed class StartFacts
@@ -44,11 +47,12 @@ public sealed class StartFacts
 
     /// <summary>
     /// Every Gitar check run on the commits from the work head to the PR head. A metadata commit keeps the pass of
-    /// the work head current (D-184, D-534), so a check on a later commit is not required.
+    /// the work head current (D-184, D-534), so a check on a later commit is not required. Null when the run skips
+    /// the Gitar checks, because the command then does not read them (D-543, F-125).
     /// </summary>
-    public required IReadOnlyList<GitarCheck> GitarChecks { get; init; }
+    public required IReadOnlyList<GitarCheck>? GitarChecks { get; init; }
 
-    /// <summary>The last edit time of the newest Gitar dashboard comment, or null when the PR has none.</summary>
+    /// <summary>The last edit time of the newest Gitar dashboard comment, or null when the PR has none or the run skips the Gitar checks.</summary>
     public required DateTimeOffset? DashboardEditedAt { get; init; }
 
     public required int UnresolvedThreadCount { get; init; }
@@ -137,6 +141,7 @@ public static class StartChecks
     /// The facts of a current and answered Gitar pass that a machine can read (D-250, D-374). The
     /// <c>gitar-review</c> skill holds the full proof, and the author runs it before this command.
     /// </summary>
+    /// <exception cref="InvalidOperationException">The facts hold no Gitar check runs, because the command gathered them for a run that skips the Gitar checks.</exception>
     private static void AddGitarProblems(StartFacts facts, List<string> problems)
     {
         if (facts.WorkHead is null)
@@ -145,21 +150,32 @@ public static class StartChecks
             return;
         }
 
+        IReadOnlyList<GitarCheck> gitarChecks = facts.GitarChecks
+            ?? throw new InvalidOperationException($"The start facts of PR #{facts.PullRequestNumber} hold no Gitar check runs, and the run does not skip the Gitar checks.");
         GitarCheck? earliest = null;
-        foreach (GitarCheck check in facts.GitarChecks)
+        DateTimeOffset earliestStart = DateTimeOffset.MaxValue;
+        foreach (GitarCheck check in gitarChecks)
         {
             if (check.Status != GitarCompleted)
             {
                 problems.Add($"The Gitar check run on {check.Sha} is '{check.Status}'. Wait until it completes.");
             }
 
-            if (earliest is null || check.StartedAt < earliest.StartedAt)
+            if (check.StartedAt is null)
+            {
+                // GitHub gives no start time before the check run starts (F-125).
+                problems.Add($"The Gitar check run on {check.Sha} has no start time, so it has not started. Wait until it completes.");
+                continue;
+            }
+
+            if (earliest is null || check.StartedAt.Value < earliestStart)
             {
                 earliest = check;
+                earliestStart = check.StartedAt.Value;
             }
         }
 
-        if (earliest is null)
+        if (gitarChecks.Count == 0)
         {
             problems.Add($"No commit from the work head {facts.WorkHead} to the PR head {facts.PullRequestHead} has a Gitar check run. Follow the gitar-review skill.");
         }
@@ -168,9 +184,9 @@ public static class StartChecks
         {
             problems.Add($"PR #{facts.PullRequestNumber} has no Gitar dashboard comment.");
         }
-        else if (earliest is not null && facts.DashboardEditedAt <= earliest.StartedAt)
+        else if (earliest is not null && facts.DashboardEditedAt <= earliestStart)
         {
-            problems.Add($"The Gitar dashboard comment has its last edit at {facts.DashboardEditedAt:O}, not after the Gitar check run on {earliest.Sha} started at {earliest.StartedAt:O}. The review of the work head is not current. Follow the gitar-review skill.");
+            problems.Add($"The Gitar dashboard comment has its last edit at {facts.DashboardEditedAt:O}, not after the Gitar check run on {earliest.Sha} started at {earliestStart:O}. The review of the work head is not current. Follow the gitar-review skill.");
         }
     }
 }

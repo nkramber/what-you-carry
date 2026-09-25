@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace WhatYouCarry.Tools.ReviewGate;
 
@@ -39,15 +40,48 @@ public sealed class GitRepository
         return Run(["merge-base", first, second]).Trim();
     }
 
-    /// <summary>The newest commit in the range that changes a path outside the excluded paths, or null when no commit does.</summary>
+    /// <summary>
+    /// The newest commit in the range that changes a path outside the excluded paths, or null when no commit does. An
+    /// entry that ends in a slash excludes each path under it, and any other entry excludes the one file of that name,
+    /// as <c>CiSkipRules.IsDocument</c> reads the entries (F-125).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The two candidate commits lie on separate lines of the history, so neither is the newer one.</exception>
     public CommitStamp? NewestCommitOutside(string mergeBase, string head, IReadOnlyList<string> excludedPaths)
     {
-        var args = new List<string> { "log", "-1", "--format=%H %cI", $"{mergeBase}..{head}", "--", "." };
+        // A git pathspec of a file name also matches a directory of that name, so ':(exclude)LICENSE' hides the path
+        // 'LICENSE/evil.cs' too. A second walk finds the paths under a directory that has the name of an excluded file.
+        var outsidePathspecs = new List<string> { "." };
+        var fileNamedDirectoryPathspecs = new List<string>();
+        var directoryExclusions = new List<string>();
         foreach (string excluded in excludedPaths)
         {
-            args.Add($":(exclude){excluded}");
+            outsidePathspecs.Add($":(exclude){excluded}");
+            if (excluded.EndsWith('/'))
+            {
+                directoryExclusions.Add($":(exclude){excluded}");
+            }
+            else
+            {
+                fileNamedDirectoryPathspecs.Add(excluded + "/");
+            }
         }
 
+        CommitStamp? outside = NewestCommitIn(mergeBase, head, outsidePathspecs);
+        if (fileNamedDirectoryPathspecs.Count == 0)
+        {
+            return outside;
+        }
+
+        fileNamedDirectoryPathspecs.AddRange(directoryExclusions);
+        CommitStamp? underFileNamedDirectory = NewestCommitIn(mergeBase, head, fileNamedDirectoryPathspecs);
+        return Newer(outside, underFileNamedDirectory, mergeBase, head);
+    }
+
+    /// <summary>The newest commit in the range that changes a path of the pathspecs, or null when no commit does.</summary>
+    private CommitStamp? NewestCommitIn(string mergeBase, string head, IReadOnlyList<string> pathspecs)
+    {
+        var args = new List<string> { "log", "-1", "--format=%H %cI", $"{mergeBase}..{head}", "--" };
+        args.AddRange(pathspecs);
         string line = Run(args).Trim();
         if (line.Length == 0)
         {
@@ -62,6 +96,31 @@ public sealed class GitRepository
 
         DateTimeOffset time = DateTimeOffset.Parse(parts[1], CultureInfo.InvariantCulture);
         return new CommitStamp(parts[0], time);
+    }
+
+    /// <summary>
+    /// The later of two commits of the range by ancestry, or the one that is not null. The commit time does not decide,
+    /// because a rebase can keep the time of an older commit.
+    /// </summary>
+    private CommitStamp? Newer(CommitStamp? first, CommitStamp? second, string mergeBase, string head)
+    {
+        if (first is null || second is null)
+        {
+            return first ?? second;
+        }
+
+        if (IsAncestor(first.Sha, second.Sha))
+        {
+            return second;
+        }
+
+        if (IsAncestor(second.Sha, first.Sha))
+        {
+            return first;
+        }
+
+        throw new InvalidOperationException(
+            $"The commits {first.Sha} and {second.Sha} lie on separate lines of the history from {mergeBase} to {head}, so neither is the newest commit outside the excluded paths.");
     }
 
     /// <summary>The newest commit up to the head that changes the path, with its subject, or null when no commit does.</summary>
@@ -97,18 +156,25 @@ public sealed class GitRepository
         return result.ExitCode == 0;
     }
 
-    /// <summary>True when the remote has the branch. git exits 2 when no ref matches, and any other failure is an error (T-2).</summary>
+    /// <summary>
+    /// True when the remote has the branch. git exits 2 when no ref matches, and any other failure is an error (T-2).
+    /// The full ref name keeps a branch such as <c>archive/night-results</c> from a match on its last part (F-125).
+    /// </summary>
     public bool HasRemoteBranch(string remote, string branch)
     {
-        GitResult result = Execute(["ls-remote", "--exit-code", "--heads", remote, branch]);
+        GitResult result = Execute(["ls-remote", "--exit-code", "--heads", remote, $"refs/heads/{branch}"]);
         result.ThrowUnless(0, 2);
         return result.ExitCode == 0;
     }
 
-    /// <summary>Fetches one branch of a remote into FETCH_HEAD. Any failure is an error with the command and stderr (T-2).</summary>
+    /// <summary>
+    /// Fetches one branch of a remote into FETCH_HEAD. Any failure is an error with the command and stderr (T-2). The
+    /// full ref name fetches the branch, because git reads a short name as a tag first, and a tag of the same name
+    /// would take the place of the branch (F-125).
+    /// </summary>
     public void Fetch(string remote, string branch)
     {
-        Run(["fetch", "--quiet", remote, branch]);
+        Run(["fetch", "--quiet", remote, $"refs/heads/{branch}"]);
     }
 
     /// <summary>True when the commit is the revision or an ancestor of it. git exits 1 when it is not.</summary>
@@ -143,10 +209,12 @@ public sealed class GitRepository
 
         using Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"git did not start in '{path}'.");
+        // The two streams are read at the same time. git blocks on a full stderr pipe, so a read of stdout to its end
+        // first never ends (F-125).
+        Task<string> standardError = process.StandardError.ReadToEndAsync();
         string standardOutput = process.StandardOutput.ReadToEnd();
-        string standardError = process.StandardError.ReadToEnd();
         process.WaitForExit();
-        return new GitResult(path, string.Join(' ', args), process.ExitCode, standardOutput, standardError);
+        return new GitResult(path, string.Join(' ', args), process.ExitCode, standardOutput, standardError.Result);
     }
 
     private sealed record GitResult(string Path, string Command, int ExitCode, string StandardOutput, string StandardError)

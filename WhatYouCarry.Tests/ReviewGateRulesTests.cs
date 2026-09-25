@@ -1,4 +1,5 @@
 using System;
+using WhatYouCarry.Tools.CodexReview;
 using WhatYouCarry.Tools.ReviewGate;
 using Xunit;
 
@@ -185,6 +186,56 @@ public sealed class ReviewGateRulesTests
         }
 
         Assert.True(records >= 10, $"The repository holds {records} review records.");
+    }
+
+    /// <summary>
+    /// The records of these PRs predate the format of <c>findings.md</c> that the findings parser reads (D-514), so
+    /// their findings sections do not parse. <c>codex-review</c> judges the record of the PR under review alone, so the
+    /// parser never reads them again.
+    /// </summary>
+    private static readonly string[] RecordsBeforeTheFindingsFormat = ["pr-10.md", "pr-40.md", "pr-43.md", "pr-84.md"];
+
+    /// <summary>
+    /// F-125: every review record of the repository with a findings section parses under the status rule. A record of
+    /// <see cref="RecordsBeforeTheFindingsFormat"/> fails for a heading or a missing status line, and never for a status.
+    /// </summary>
+    [Fact]
+    public void EveryRepositoryFindingsSectionParses()
+    {
+        string root = System.IO.Path.Combine(RepositoryRoot.Find(), "docs", "reviews");
+        int sections = 0;
+        var failures = new System.Collections.Generic.List<string>();
+        foreach (string file in System.IO.Directory.EnumerateFiles(root, "pr-*.md"))
+        {
+            string name = System.IO.Path.GetFileName(file);
+            string text = System.IO.File.ReadAllText(file);
+            string[] lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+            if (name.EndsWith("-response.md", StringComparison.Ordinal) || !Array.Exists(lines, static line => line.TrimEnd() == ReviewFindings.SectionHeading))
+            {
+                continue;
+            }
+
+            sections++;
+            bool olderFormat = Array.IndexOf(RecordsBeforeTheFindingsFormat, name) >= 0;
+            try
+            {
+                ReviewFindings.Parse(text);
+                if (olderFormat)
+                {
+                    failures.Add($"{name} parses now, so it leaves the list of records before the findings format.");
+                }
+            }
+            catch (FormatException exception)
+            {
+                if (!olderFormat || exception.Message.Contains("has the status", StringComparison.Ordinal))
+                {
+                    failures.Add($"{name}: {exception.Message}");
+                }
+            }
+        }
+
+        Assert.True(failures.Count == 0, string.Join("\n", failures));
+        Assert.True(sections >= 10, $"The repository holds {sections} review records with a '{ReviewFindings.SectionHeading}' section.");
     }
 
     [Theory]
