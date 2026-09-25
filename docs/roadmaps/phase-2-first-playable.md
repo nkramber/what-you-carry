@@ -1082,6 +1082,8 @@ Gate: exit tests 1 to 10 and 12 pass. Exit test 11 runs on `main` after the merg
 
 ### PR-87: Gitar pause ends
 
+✅ Done in PR #103.
+
 Scope:
 
 - `CLAUDE.md` and `AGENTS.md`, the PR template, the skills `gitar-review`, `review-response`, and `one-pr-one-session`, and `docs/runbooks/session-context.md`: each pause note of D-542 leaves, and the automated pass is a gate again (D-574).
@@ -1222,7 +1224,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 40. PR-83. ✅ Done in PR #99. ✅ The owner answers of 2026-09-23: D-555 to D-563.
 41. PR-84. ✅ Done in PR #100. ✅ The owner answers of 2026-09-24: D-564 to D-569.
 42. PR-85. The night on hosted Linux at 07:07 UTC (D-571 to D-573).
-43. PR-87. The end of the gitar pause, and the gitar wait (D-574 to D-576).
+43. PR-87. ✅ Done in PR #103. ✅ The owner answers of 2026-09-24: D-574 to D-576.
 44. PR-86. The macOS legs on hosted runners (D-572, D-573).
 45. PR-75.
 46. PR-76.

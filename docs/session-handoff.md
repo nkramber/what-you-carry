@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 246: 2026-09-24, Claude Code
 
 Author: Claude Code
-Session: PR-87, author. Branch `chore/pr-87-gitar-reenable`. PR pending, pending merge. Base `a68348b`.
+Session: PR-87, author. Branch `chore/pr-87-gitar-reenable`. PR #103, pending merge. Base `a68348b`.
 
 ### What this session did, and why
 
