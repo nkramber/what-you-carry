@@ -3,6 +3,7 @@
 The `gitar-review` skill holds the procedure. This file holds the cases that cost a session a wrong answer. Read it before the first review of a pull request, and again when a wait does not end.
 
 - A green Gitar check does not prove that no finding is open. Read the threads.
+- A completed Gitar check on the head does not prove the end of the review. On PR #103 the dashboard came 53 seconds after the check completed. The check of an older commit still read "Working" after the approval.
 - A green Gitar check on the head does not prove that the review is current. A paused Gitar attaches a check with the pause note.
 - A manual review can edit the dashboard comment and attach no Gitar check to the new head. Apply the rule in "Prove that a review is current".
 - The pause note can come beside a full review. Open the collapsed `Code Review` block before you comment `Gitar review`.

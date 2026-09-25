@@ -11,7 +11,7 @@ CODEX ?= $(shell npm prefix -g)/bin/codex
 CODEX_REVIEW_FLAGS := $(filter --%,$(MAKECMDGOALS))
 
 .DEFAULT_GOAL := help
-.PHONY: help play windowed build build-game test test-fast smoke bot sounds analyze lint codex-review
+.PHONY: help play windowed build build-game test test-fast smoke bot sounds analyze lint gitar-wait codex-review
 
 help: ## Print this list
 	@grep -hE '^[a-z-]+:.*##' $(MAKEFILE_LIST) | sed -E 's/:.*## /\t/' | expand -t 14
@@ -50,6 +50,10 @@ lint: ## Run the STE check, the determinism lint, and the asset check
 	$(TOOLS) ste-check --root .
 	$(TOOLS) det-lint --root .
 	$(TOOLS) asset-qa --root .
+
+gitar-wait: ## Wait for the Gitar check run on the head of one PR, at once after a push: make gitar-wait PR=93 (D-575)
+	@test -n "$(PR)" || { echo "Name the PR: make gitar-wait PR=<number>" >&2; exit 2; }
+	bash .github/scripts/gitar-wait.sh $(PR)
 
 codex-review: ## Run the cross-provider review of one PR through the Codex CLI: make codex-review PR=93 [-- --skip-gitar-review] (D-511, D-543)
 	@test -n "$(PR)" || { echo "Name the PR: make codex-review PR=<number>" >&2; exit 2; }

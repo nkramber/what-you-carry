@@ -1,5 +1,74 @@
 # Session handoff archive
 
+## Session 237: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, Ready for owner merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Re-reviewed PR #98 at effective head `bc51dde` after the night and required product checks passed.
+- Updated `docs/reviews/pr-98.md` and kept the earlier Blocked verdict in its history.
+- Found no in-scope defect in the template line or its equality test.
+
+### State of the build
+
+- The Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
+- GitHub at `804ec44` showed all product checks, including `night-gate`, bit identity, sweeps, and smoke, as passed.
+- `evaluate` and `review-gate` still read the prior Blocked record. The remote head at review start was `804ec44`.
+
+### In flight
+
+- PR #98 awaits the updated `review-gate` and `evaluate` results. They must read this review record.
+
+### Traps and gotchas
+
+- The Gitar comment says only “Gitar is working.” D-550 says that notice needs no answer.
+- D-542 pauses the Gitar wait. The review record and this entry form one metadata commit.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author gives the merge summary in questions and answers, then asks the owner to confirm the merge (D-552).
+
+## Session 236: 2026-09-23, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, blocked. Base `2071cb6`.
+
+### What this session did, and why
+
+- Reviewed PR #98 at effective head `bc51dde`. The template line and its equality test meet the D-550 contract.
+- Added `docs/reviews/pr-98.md` with the review evidence and verdict.
+- The review found no in-scope defect. Required CI evidence blocks approval.
+
+### State of the build
+
+- The focused template test passed, and the Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
+- GitHub at `d158af7` had a failed `night-gate`. The base night record failed, and the branch-night record was absent.
+- GitHub showed Linux smoke as failed, but its run was still in progress and its failure log was unavailable. Required platform jobs, sweeps, bots, and macOS smoke remained pending.
+- The remote head at hand-over is `d158af7`. Later PR commits change documents only, so the effective head remains `bc51dde`.
+
+### In flight
+
+- PR #98 remains blocked until the required night and CI evidence passes.
+
+### Traps and gotchas
+
+- The Gitar comment is a free-plan notice with no claim. D-550 says to ignore it.
+- The review record and this entry form one metadata commit. The commit does not change the effective head.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Resolve the night-gate and remaining CI results, then request a fresh review if the effective head changes.
+
 ## Session 235: 2026-09-23, Claude Code
 
 Author: Claude Code

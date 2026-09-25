@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-84, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-84, PR-87, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-87 applies D-574 to D-577. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -924,7 +924,7 @@ Scope:
 - `WhatYouCarry.Tools/CodexReview/`: the flag `--skip-gitar-review` drops the Gitar check run and the Gitar dashboard from the start checks. The thread check stays (D-543).
 - `Makefile`: the `codex-review` target passes each word after `--` that starts with `--` to the command (D-543).
 - `WhatYouCarry.Tests/`: `CodexReviewTests` and `RulesetTests`.
-- `CLAUDE.md` and `AGENTS.md`, the PR template, the skills `gitar-review`, `review-response`, and `one-pr-one-session`, and `docs/runbooks/session-context.md`: a pause note that names D-542.
+- `CLAUDE.md` and `AGENTS.md`, the PR template, the skills `gitar-review`, `review-response`, and `one-pr-one-session`, and `docs/runbooks/session-context.md`: a pause note that names D-542. PR-87 removes each note (D-574).
 - `docs/runbooks/commands.md`: the rules of the Game arguments and of the generated files leave `AGENTS.md`, which stays under its byte ceiling (D-382).
 
 Out of scope: the end of the pause, which a later PR of the owner holds. The night fix of D-538 comes after this PR (D-544).
@@ -933,10 +933,10 @@ Exit tests:
 
 1. `CodexReviewTests` and `RulesetTests` pass. The flag drops each Gitar problem, and an open thread still refuses the round.
 2. `make codex-review PR=<this PR> -- --skip-gitar-review` reviews this PR with no Gitar check. The author answers each finding until the verdict approves or the three-strike stop fires.
-3. `grep -rn 'D-542'` outside `docs/decisions.md` lists each text of the pause.
+3. `grep -rn 'D-542'` outside `docs/decisions.md` lists each text of the pause. PR-87 removes each text (D-574).
 4. A documents commit after the approving review keeps `review-gate` green. This test is exit test 4 of PR-79.
 
-Review focus: the option parse and the Makefile pass of the flag, the start checks with and without the flag, and the pause texts against D-542.
+Review focus: the option parse and the Makefile pass of the flag, the start checks with and without the flag, and the pause texts against D-542. D-574 supersedes D-542.
 
 Check clause: none.
 
@@ -992,7 +992,7 @@ Scope:
 - `.github/pull_request_template.md`: the gitar line of the PR gate takes the rule of D-550. It reads as the gitar line of the PR gate in the agent files (D-551, D-553).
 - `WhatYouCarry.Tests/RepositoryShapeTests.cs`: `PullRequestTemplateGitarLineMatchesThePrGate` (D-554).
 
-Out of scope: the fixed seeds of the night, which the PR after PR-83 holds (D-551, D-560). The end of the gitar pause stays with a later PR of the owner (D-542).
+Out of scope: the fixed seeds of the night, which the PR after PR-83 holds (D-551, D-560). The end of the gitar pause stays with a later PR of the owner (D-542). PR-87 ends it (D-574).
 
 Exit tests:
 
@@ -1107,7 +1107,7 @@ Exit tests:
 6. `ABranchNightWritesARecordOfItsOwnAndReRunsTheGate` and `ANightOnMainKeepsALaterRecordAndReRunsEveryGate` pass (D-538, D-548, D-559, D-562).
 7. A branch night of this PR on hosted Linux ends green, and each sweep job ends inside the limit of 6 hours. Its record names the slice of its date and the six failure lines. The handoff entry states the wall time of each sweep job.
 8. After the merge, the first scheduled night on `main` starts from the cron of 07:07 UTC on hosted Linux. The session after the merge reads the run, and states its start time and its result in its handoff entry (D-375).
-9. `make codex-review PR=<this PR> -- --skip-gitar-review` reviews this PR (D-543). The merge request gives the merge summary as questions and answers (D-552).
+9. After a green gitar pass and green CI, `make codex-review PR=<this PR>` reviews this PR with no flag (D-574, D-577). The merge request gives the merge summary as questions and answers (D-552).
 
 Review focus: the night status after a failed, skipped, or stopped sweep, the carry of a sweep that did not end, and the record job permissions.
 
@@ -1116,6 +1116,38 @@ Check clause: none.
 Gate: exit tests 1 to 7 and 9 pass. Exit test 8 runs on `main` after the merge.
 
 > *In plain English:* the night ran on the Mac of the owner for more than three hours, and the checks of every PR waited for it. Now six free cloud machines run the six sweeps at the same time, and one more machine writes the result.
+
+### PR-87: Gitar pause ends
+
+✅ Done in PR #103.
+
+Scope:
+
+- `CLAUDE.md` and `AGENTS.md`, the PR template, the skills `gitar-review`, `review-response`, and `one-pr-one-session`, and `docs/runbooks/session-context.md`: each pause note of D-542 leaves, and the automated pass is a gate again (D-574).
+- `.github/scripts/gitar-wait.sh`: the wait after a push. It reads the Gitar check runs of the head every 30 seconds after a wait of 60 seconds. It ends when they complete and the dashboard has a later edit (D-575).
+- `.github/scripts/gitar-wait.sh`: with no check run at 6 minutes, it posts one `Gitar review` comment. At 15 minutes it stops with exit 1 (D-575).
+- `Makefile`: the target `gitar-wait` runs the script (D-575).
+- The agent files, `review-and-merge.md`, `review-response`, and the runbook: a review round starts only when each check but the Review gate workflow is green (D-577).
+- `WhatYouCarry.Tests/`: `GitarWaitTests`, and `NoInstructionTextHoldsTheGitarPause` in `RepositoryShapeTests`.
+
+Out of scope: the flag `--skip-gitar-review`, which stays in `codex-review` (D-543). The night move of PR-85 and the macOS move of PR-86.
+
+Exit tests:
+
+1. `GitarWaitTests` pass on Linux and macOS. A completed check run and a new dashboard end the wait. A missing check run gets one request and a stop at the limit.
+2. `NoInstructionTextHoldsTheGitarPause` passes, and it fails on the agent files of `main` before this PR.
+3. `PullRequestTemplateGitarLineMatchesThePrGate` passes.
+4. `ACompletedCheckRunWithNoNewDashboardIsNoReview` passes, and it fails on the first form of the script.
+5. `make gitar-wait PR=<this PR>` after each push of this PR ends with exit 0, and the gitar pass of this PR is complete (D-574, D-575).
+6. `make codex-review PR=<this PR>` reviews this PR with no flag. The merge request gives the merge summary as questions and answers (D-552).
+
+Review focus: the wait script against D-575, its exit codes and its request rule, and each removed pause text against D-574.
+
+Check clause: none.
+
+Gate: exit tests 1 to 6 pass.
+
+> *In plain English:* the owner paused the automated review of each PR while it did not work. It works again, so each PR waits for it again. A script watches for the review, and it asks for one when none starts.
 
 ### PR-75: Sword art
 
@@ -1225,20 +1257,21 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 34. PR-78. ✅ Done in PR #93. ✅ The owner answers of 2026-09-23: D-511 to D-524.
 35. PR-74.
 36. PR-79. ✅ Done in PR #95. ✅ The owner answers of 2026-09-23: D-533, D-534, and D-539 to D-541.
-37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544.
+37. PR-80. ✅ Done in PR #96. ✅ The owner answers of 2026-09-23: D-542 to D-544. D-574 supersedes D-542.
 38. PR-81. ✅ Done in PR #97. ✅ The owner answers of 2026-09-23: D-538 and D-545 to D-552.
 39. PR-82. ✅ Done in PR #98. ✅ The owner answers of 2026-09-23: D-553 and D-554.
 40. PR-83. ✅ Done in PR #99. ✅ The owner answers of 2026-09-23: D-555 to D-563.
 41. PR-84. ✅ Done in PR #100. ✅ The owner answers of 2026-09-24: D-564 to D-569.
 42. PR-85. ✅ Done in PR #102. The night on hosted Linux at 07:07 UTC (D-571 to D-573).
-43. PR-86. The macOS legs on hosted runners (D-572, D-573).
-44. PR-75.
-45. PR-76.
-46. Owner: answer OQ-181.
-47. PR-77.
-48. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-49. Tier 4 pass on the screenshot fixture (D-133).
-50. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+43. PR-87. ✅ Done in PR #103. ✅ The owner answers of 2026-09-24 and 2026-09-25: D-574 to D-577.
+44. PR-86. The macOS legs on hosted runners (D-572, D-573).
+45. PR-75.
+46. PR-76.
+47. Owner: answer OQ-181.
+48. PR-77.
+49. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+50. Tier 4 pass on the screenshot fixture (D-133).
+51. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
