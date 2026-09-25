@@ -967,7 +967,7 @@ Exit tests:
 
 1. `ADiagonalDropNeedsAnOpenFallInTheCornerColumn` passes. It fails on the old rule (D-545).
 2. `ADetourAwayFromTheGoalReadsNoWedge` passes. It fails on the old follower (D-546).
-3. `GreedyDescenderLeavesTheFloorsOfTheNight` passes on seeds 940, 947, 1268, 2669, 2879, and 4119.
+3. `GreedyDescenderLeavesTheFloorsOfTheNight` passes on seeds 940, 947, 1268, 2669, 2879, and 4119. PR-88 split the test: seeds 947, 1268, 2669, and 2879 reach the bottom with no enemy, and `GreedyDescenderEndsTheEnemyRunsOfTheNight` holds seeds 940 and 4119 (F-124).
 4. `AMoveLeavesTheBoxThatTheSweepRead` passes over four thousand start points. It fails on the old sweep at the start x of seed 4119 (D-549).
 5. The simulation version is 16, and `BitIdentityKnownAnswer` passes with `a2e1c2c6f72bc19e` on the three platforms (G-9, G-20).
 6. `NightGateTests` pass: a branch night passes at the effective head and at a later documents commit. It fails at an earlier code commit, and it leaves the record of `main` as it was (D-547).
@@ -1125,6 +1125,14 @@ Scope:
 - `ProcgenTests`: a dig that throws fails its seed, and the seed sweep goes on and writes the seed to its failure line (D-565, D-567, F-117).
 - The asset loaders, `TextureJson`, and `FileCaseCheck`: a repeated JSON key is a parse error, and a loader fault of one file is a finding on that file (D-92, T-2, F-118).
 - `AssetSet`, `ClipCheck`, and `AnimationLoader`: the gate reads each depth of the model directory (D-135, D-300, F-119). The model value of an animation ends in `.bbmodel`, and an animation of no body is a finding.
+- The content validators: each numeric field fits the type that holds it, and a projectile damage is one or more (D-92, G-7, F-120).
+- `SimulationLoop`, `RunReplayer`, `Main.cs`, and `ChunkSwap`: each error of a run names the seed, the floor, and the tick (T-2, D-113, F-121). A failed descent leaves the old floor whole, and the log line names the error type and the inner chain.
+- `UserArguments` and `Main.Quit`: an empty word stops the boot, and the quit always reaches the engine (T-2, F-122).
+- `PathFollower.AddTo`: the hash reads the path and the wedge count of each follower (D-160, F-123).
+- The tests of F-124: the determinism test, the worker test, the ray test, the F-111 seeds, and three reachability properties.
+- The gate tools: exact file exclusion, known finding states, no future night record, and the full branch ref (T-2, F-125). A build step comes before a promotion, and git reads both streams at once.
+- The ruleset runbook and the comment export: each temporary file comes from `mktemp` (F-126).
+- `FloorTimer` and `GridMoves`: each table is a read-only list (F-127).
 
 Out of scope: the other findings of the repository review of 2026-09-24. The self-hosted runner goes in PR-86 (D-572). The night publish waits for PR-85 and an owner answer. The trust boundary of the reviewer waits for an owner answer. This PR holds more than one concern (D-580).
 
@@ -1136,13 +1144,14 @@ Exit tests:
 4. The new tests of `ReviewGateRulesTests` and `CodexReviewTests` pass, and they fail on the parse of `main`. Each review record of the repository still parses.
 5. `TheSweepNamesASeedWhoseDigThrows` passes, and it fails on the sweep of `main`.
 6. `RepeatedKeyTests` and the four new tests of `AssetQaTests` pass, and they fail on the gate of `main`.
-7. The simulation version is 17, and `BitIdentityKnownAnswer` passes with `241070d5189efb3c` on the three platforms (G-9, G-20).
+8. The new tests of F-120 to F-125 and F-127 pass, and each test that targets a defect fails on the code of `main`.
+7. The simulation version is 17, and `BitIdentityKnownAnswer` passes with `f1c35ddccb2cd0bb` on the three platforms (G-9, G-20).
 
 Review focus: the end check before the stairwell choice in `Step`, the guard of each engine callback, and the verdict parse of each review record.
 
 Check clause: none.
 
-Gate: exit tests 1 to 7 pass.
+Gate: exit tests 1 to 8 pass.
 
 > *In plain English:* a review of the whole repository found faults. A death at the stairwell crashed the game, and some checks passed a fault that they must catch. This PR fixes each one, with a test.
 

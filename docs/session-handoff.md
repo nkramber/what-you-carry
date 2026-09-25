@@ -10,19 +10,19 @@ Session: PR-88, author. Branch `fix/pr-88-review-fixes`. PR pending. Base `a3590
 ### What this session did, and why
 
 - The owner asked for the fixes of the repository review of 2026-09-24, with more than one concern in one PR (D-580). The id and the order are PR-88, before PR-86 (D-578).
-- Each finding was reproduced or traced at `a3590ba` before a change. Seven fixes, each with a test that fails on the old code:
-  - F-113: a lethal hit on the tick of a stairwell press stays a death. The descend threw, and the ascend ended a dead run as an ascend.
-  - F-114: a descend on the deepest floor does nothing, and the HUD hides the line (D-579).
-  - F-115: each engine callback of `Main.cs` catches every exception and quits with exit code 1.
-  - F-116: `review-gate` reads the verdict from the first line of its section, and it skips fenced blocks.
-  - F-117: the seed sweep names a seed whose dig throws.
-  - F-118: the asset parse rejects a repeated JSON key, and a loader fault is a finding on its file.
-  - F-119: `asset-qa` reads each depth of the model directory.
-- The simulation version is 17. The known answer is `241070d5189efb3c`. The version alone moved it, because the sweep masks the stairwell bits.
+- Each finding was reproduced or traced at `a3590ba` before a change. Each fix has a test that fails on the old code:
+  - F-113 and F-114: a death at the stairwell stays a death, and a descend on the deepest floor does nothing (D-322, D-579).
+  - F-115: each engine callback catches every exception and quits with exit code 1.
+  - F-116: `review-gate` reads the verdict from the first line of its section.
+  - F-117 to F-119: the seed sweep, the repeated JSON key, and the depth of the asset gate.
+  - F-120 to F-127: content bounds, the error context of a run, the session end, the follower hash, the test claims, the gate tool edge cases, the runbook temporary files, and the Core tables.
+- The owner skipped the interim fork approval change of the review (D-581).
 - OQ-195 to OQ-205 hold the owner choices of the review that no register settles.
+- F-128 to F-130 record three defects that this work found and did not fix.
 
 ### State of the build
 
+- The simulation version is 17. The known answer is `f1c35ddccb2cd0bb`. The version moved it first, and the hash of each follower moved it again.
 - The local checks and their results are in the PR description. The PR head and the remote head come from `gh pr view`.
 
 ### In flight
@@ -31,10 +31,10 @@ Session: PR-88, author. Branch `fix/pr-88-review-fixes`. PR pending. Base `a3590
 
 ### Traps and gotchas
 
-- Each fix was reverted in place, and its new test failed. The old `Main.cs` text failed the shape test with no build, because the test reads the file.
-- A smoke session with a throw in the draw frame from tick 300 quit with exit code 1 and one error line. The repository review saw exit code 0 and 3070 engine errors for the same fault.
+- Worker sessions in `.claude/worktrees/` did part of the work. `ste-check` reads a worktree under the checkout, so remove each one before the check.
+- A file that a backup restores keeps its old time, and an incremental build then skips it. Build with `--no-incremental` after such a restore.
 - PR #102 (PR-85) edits the same registers, section 7 of the design doc, and the Phase 2 order list. The PR that merges second resolves the conflict.
-- A review record now needs `**<verdict>.**` at the start of the first line of its Verdict section. Each record of the repository has that form.
+- A review record needs `**<verdict>.**` at the start of the first line of its Verdict section.
 
 ### Open questions that block progress
 
@@ -42,7 +42,7 @@ None for PR-88. OQ-195 to OQ-205 block other work.
 
 ### Next concrete action
 
-Wait for CI and the gitar pass, then run `make codex-review` for this PR. The other findings of the review and their dispositions are in the PR description.
+Wait for CI and the gitar pass, then run `make codex-review` for this PR. The PR description holds the disposition of each finding of the review.
 
 ## Session 247: 2026-09-25, Codex
 
