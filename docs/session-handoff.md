@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 247: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-87, reviewer. Branch `chore/pr-87-gitar-reenable`. PR #103, pending merge. Base `a68348b`.
+
+### What this session did, and why
+
+- Reviewed the full change and its exit tests for PR-87.
+- The cross-provider review found no actionable finding. The verdict is `Ready for owner merge` at effective head `f6292c0`.
+- Committed the review record with this handoff entry as one metadata commit (D-182).
+
+### State of the build
+
+- PR head: `ef8536b`. Effective head: `f6292c0`. CI, smoke, asset QA, STE, det-lint, night gate, doc gate, and Gitar passed. The review gate awaited the review record.
+- Focused local tests passed 11 of 11. The script syntax and diff checks passed.
+- The metadata commit was pushed to `origin/chore/pr-87-gitar-reenable` and verified with `gh pr view`.
+
+### In flight
+
+- The owner merge decision.
+
+### Traps and gotchas
+
+- Gitar approved the head and found no issue. Its other comment names only the missing review record, which this commit supplies.
+- The effective head skips later document changes under D-534.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Give the owner the merge summary in questions and answers (D-533, D-552).
+
 ## Session 246: 2026-09-24, Claude Code
 
 Author: Claude Code
@@ -359,38 +393,3 @@ None.
 ### Next concrete action
 
 The author gives the merge summary in questions and answers, then asks the owner to confirm the merge (D-552).
-
-## Session 236: 2026-09-23, Codex
-
-Author: Codex
-Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, blocked. Base `2071cb6`.
-
-### What this session did, and why
-
-- Reviewed PR #98 at effective head `bc51dde`. The template line and its equality test meet the D-550 contract.
-- Added `docs/reviews/pr-98.md` with the review evidence and verdict.
-- The review found no in-scope defect. Required CI evidence blocks approval.
-
-### State of the build
-
-- The focused template test passed, and the Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
-- GitHub at `d158af7` had a failed `night-gate`. The base night record failed, and the branch-night record was absent.
-- GitHub showed Linux smoke as failed, but its run was still in progress and its failure log was unavailable. Required platform jobs, sweeps, bots, and macOS smoke remained pending.
-- The remote head at hand-over is `d158af7`. Later PR commits change documents only, so the effective head remains `bc51dde`.
-
-### In flight
-
-- PR #98 remains blocked until the required night and CI evidence passes.
-
-### Traps and gotchas
-
-- The Gitar comment is a free-plan notice with no claim. D-550 says to ignore it.
-- The review record and this entry form one metadata commit. The commit does not change the effective head.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Resolve the night-gate and remaining CI results, then request a fresh review if the effective head changes.
