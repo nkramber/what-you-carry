@@ -1,9 +1,13 @@
 {
   "model": "models/sword-basic.bbmodel",
   "boxes": {
-    "grip_box": {"recipe": "leather", "faces": {}},
-    "guard_box": {"recipe": "plank", "faces": {}},
-    "blade_box": {"recipe": "metal", "faces": {}},
+    "pommel_box": {"recipe": "iron", "faces": {}},
+    "grip_box": {"recipe": "grip-wrap", "faces": {"up": "leather", "down": "leather"}},
+    "guard_box": {"recipe": "iron", "faces": {"north": "guard-front", "south": "guard-front"}},
+    "guard_left_box": {"recipe": "iron", "faces": {}},
+    "guard_right_box": {"recipe": "iron", "faces": {}},
+    "blade_box": {"recipe": "metal", "faces": {"north": "blade", "south": "blade"}},
+    "tip_step_box": {"recipe": "metal", "faces": {}},
     "tip_box": {"recipe": "metal", "faces": {}}
   }
 }

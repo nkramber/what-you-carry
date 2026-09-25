@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-88, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-90, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -1242,22 +1242,76 @@ Gate: exit tests 1 to 7 pass.
 
 ### PR-75: Sword art
 
-Scope: the sword of PR-15 gains the detail that the owner asks for, on the recipe system of PR-62 (D-339, D-504).
+Scope:
 
-Out of scope: new weapons.
+- `content/models/sword-basic.bbmodel` and its paint file: the tier-0 sword becomes a worn arming sword of eight boxes, from the concept image alone (D-586, D-587, D-590). A pommel, a banded grip, a cross guard of a center box and two arms, a blade, and a tip of two steps.
+- `content/textures/recipes/`: the blade, the iron, the guard front, and the grip wrap. The blade reads steel with light edges and pits (D-588, D-589, D-594).
+- `content/textures/palette.json`: ten ramps after umber, 247 colors and shades in all (D-592, D-593).
+- `content/models/player.bbmodel`, `BlockbenchLoader`, and `ModelNodes`: the `weapon` locator tilts the sword 45 degrees forward. The loader reads the rotation of a locator, and the Game turns the held model by it (D-591).
+- `WhatYouCarry.Tests/`: the paint of the sword, the hold over the floor, the locator rotation, the palette, and the contact sheet cells.
+
+Out of scope: new weapons. The roll and the held sword (OQ-206). The truecolor atlas and the texture resolution, which PR-89 and PR-90 hold (D-595).
 
 Exit tests:
 
 1. `RepositoryModelsPass` passes on the sword and every clip.
-2. The owner approves a contact sheet of the sword, recorded as a decision.
+2. The owner approves a contact sheet of the sword, recorded as a decision. ✅ D-597.
+3. `SwordCanvasesHoldTheOwnerLayout` and `PaintFilesBindTheBodyArt` pass (D-588, D-594).
+4. `TheHeldSwordStaysOverTheFloor`, `LoaderReadsTheRotationOfALocator`, and `EverySubjectFitsItsCell` pass (D-591).
+5. `PaletteIsTheOwnerChoice` and `EachShadeLiesBetweenItsColorsInLinearLight` pass on 247 colors and shades (D-592).
 
-Review focus: presentation, test quality.
+Review focus: presentation, the locator rotation in the loader and the Game, test quality.
 
 Check clause: none.
 
-Gate: exit tests 1 and 2 pass.
+Gate: exit tests 1 to 5 pass.
 
-> *In plain English:* the sword is three plain boxes. This change gives it the detail of a finished weapon.
+> *In plain English:* the sword was three plain boxes. Now it is a worn steel sword with a pommel, a wrapped grip, and a cross guard. The hand holds it tilted forward, so the longer blade stays off the floor. The palette gains ten color ramps for later art.
+
+### PR-89: Truecolor atlas
+
+Scope:
+
+- The texture generator and the atlas: the atlas stores colors in place of palette indices, so the palette can hold more than 256 colors and shades (D-595). The answer to OQ-207 sets the rules of a recipe color.
+- The soot ramp of D-592 can then join the palette.
+
+Out of scope: the texture density, which PR-90 holds. New art.
+
+Exit tests:
+
+1. The generator writes a truecolor atlas, and the Game draws every block, the body, and the sword with the same colors as before the change.
+2. A palette of more than 256 colors and shades loads, and a test holds the new limit.
+3. The owner approves a contact sheet that matches the sheet before the change, recorded as a decision.
+
+Review focus: the atlas format, the unchanged look, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass. OQ-207 blocks the start.
+
+> *In plain English:* the texture image can hold 256 colors at most, and the palette is near that limit. This change lets the image hold any color of the palette, so later art has room.
+
+### PR-90: Texture resolution
+
+Scope:
+
+- The texel density of D-308 and the atlas side of D-506 rise, as the answer to OQ-208 sets (D-595). Each item then shows more detail, such as the sword of PR-75.
+
+Out of scope: the repaint of each asset at the new density, which each later art PR holds.
+
+Exit tests:
+
+1. The generator sizes each face at the new density, and the committed layout matches its output.
+2. A frame log on the Deck, or the answer to OQ-208, shows that the frame time holds D-295.
+3. The owner approves a contact sheet at the new density, recorded as a decision.
+
+Review focus: the frame time and the memory, presentation, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass. OQ-208 blocks the start.
+
+> *In plain English:* each face shows 32 pixels per meter, so a sword blade is 3 pixels wide. This change gives each item more pixels, so the art can show more detail.
 
 ### PR-76: Enemy models
 
@@ -1357,13 +1411,16 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 43. PR-87. ✅ Done in PR #103. ✅ The owner answers of 2026-09-24 and 2026-09-25: D-574 to D-577.
 44. PR-88. ✅ Done in PR #104. The fixes of the repository review (D-578). ✅ The owner answers of 2026-09-25: D-578 to D-580.
 45. PR-86. The macOS legs on hosted runners (D-572, D-573).
-46. PR-75.
-47. PR-76.
-48. Owner: answer OQ-181.
-49. PR-77.
-50. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-51. Tier 4 pass on the screenshot fixture (D-133).
-52. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+46. PR-75. ✅ The owner answers of 2026-09-25: D-586 to D-597.
+47. Owner: answer OQ-207. PR-89, the truecolor atlas (D-595).
+48. Owner: answer OQ-208. PR-90, the texture resolution (D-595).
+49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596).
+50. PR-76.
+51. Owner: answer OQ-181.
+52. PR-77.
+53. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+54. Tier 4 pass on the screenshot fixture (D-133).
+55. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 
@@ -1374,6 +1431,9 @@ Open:
 - OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-181: the antialiasing of the world. Blocks PR-77 (D-504).
+- OQ-206: the held sword in the roll. Blocks nothing.
+- OQ-207: the truecolor atlas. Blocks PR-89 (D-595).
+- OQ-208: the texture resolution. Blocks PR-90 (D-595).
 
 Resolved 2026-09-21:
 

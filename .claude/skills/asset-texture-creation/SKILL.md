@@ -25,7 +25,8 @@ The body of PR-74 is the first asset of this procedure. Its owner answers, D-496
 
 - Avoid the Minecraft tells (D-83). No eye whites, and no flat pixel face layout.
 - Keep the cuboid style and the shared proportion set (D-82). A body change needs an owner decision.
-- Use the palette alone: the ramps of D-304 and D-530, and the fine shades of D-528. A new color needs a decision.
+- Use the palette alone: the ramps of D-304, D-530, and D-592, and the fine shades of D-528. A new color needs a decision.
+- A held item hangs from a locator of the body. The locator can tilt it, as the right hand tilts the sword 45 degrees (D-591). Check the item against the floor in each pose.
 - Each face has 32 texels per meter (D-308). One unit is 2 texels, so an edge on a whole texel sits on a multiple of 0.5 units.
 - The game light and the vertex occlusion shade the boxes (D-81). A recipe paints no shade.
 - Every fix goes through the model JSON, a recipe, or a paint file (D-86). Blockbench is for review alone.

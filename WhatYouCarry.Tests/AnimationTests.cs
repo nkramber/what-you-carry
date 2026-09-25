@@ -138,8 +138,68 @@ public sealed class AnimationTests
         Assert.Equal("arm_right_lower", body.Bones[weapon.Bone].Name);
 
         BlockbenchModel sword = LoadModel(Sword.Model);
-        Assert.Equal(4, sword.Boxes.Count);
+        Assert.Equal(8, sword.Boxes.Count);
         Assert.Single(sword.Bones);
+    }
+
+    /// <summary>
+    /// D-591. The sword that the right hand tilts forward stays over the floor at rest, over one stride of the walk at
+    /// full amount, at each tick of the swing over the walk, and at each tick of the stagger. The Game stands the lowest
+    /// corner of the body on the floor, so each sword corner must lie at or over that corner. The roll is out of this
+    /// test: it turns the body upside down, and it sank the sword of PR-15 too (OQ-206). Straight down, the sword of
+    /// D-587 reaches 2.5 units under the floor at rest.
+    /// </summary>
+    [Fact]
+    public void TheHeldSwordStaysOverTheFloor()
+    {
+        BlockbenchModel body = LoadModel(AssetPaths.BodyModel);
+        BlockbenchModel sword = LoadModel(Sword.Model);
+        AttachmentPoint hand = Assert.Single(body.Attachments, point => point.Slot == EquipmentSlots.Weapon);
+        RotationMatrix hold = RotationMatrix.FromEulerDegrees(hand.RotationDegrees);
+        PlayerClips clips = Clips();
+        const int Phases = 32;
+
+        List<(string Name, IReadOnlyDictionary<string, Vector3> Rotations)> poses = [("the rest pose", BodyPose.RestRotations())];
+        for (int phase = 0; phase < Phases; phase++)
+        {
+            float walked = WalkCycle.StrideMeters * phase / Phases;
+            poses.Add(($"the walk at {walked} meters", WalkCycle.Rotations(walked, 1.0f)));
+            for (int tick = 0; tick <= clips.Swing.Length; tick++)
+            {
+                Dictionary<string, Vector3> swing = WalkCycle.Rotations(walked, 1.0f);
+                foreach (KeyValuePair<string, Vector3> track in clips.Swing.RotationsAt(tick))
+                {
+                    swing[track.Key] = track.Value;
+                }
+
+                poses.Add(($"tick {tick} of the swing at {walked} meters of the walk", swing));
+            }
+        }
+
+        for (int tick = 0; tick <= clips.Stagger.Length; tick++)
+        {
+            poses.Add(($"tick {tick} of the stagger", clips.Stagger.RotationsAt(tick)));
+        }
+
+        foreach ((string name, IReadOnlyDictionary<string, Vector3> rotations) in poses)
+        {
+            BoneTransform arm = ModelPose.BoneTransforms(body.Path, body, rotations)[hand.Bone];
+            float floor = ModelPose.LowestPoint(body.Path, body, rotations);
+            foreach (ModelBox box in sword.Boxes)
+            {
+                foreach (float x in new[] { box.From.X, box.To.X })
+                {
+                    foreach (float y in new[] { box.From.Y, box.To.Y })
+                    {
+                        foreach (float z in new[] { box.From.Z, box.To.Z })
+                        {
+                            Vector3 corner = arm.Apply(hand.Position + hold.Apply(new Vector3(x, y, z)));
+                            Assert.True(corner.Y >= floor, $"A corner of '{box.Name}' is {floor - corner.Y} meters under the floor at {name}.");
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>The walk swings the upper legs 30 degrees and the arms 20 degrees against them over one cycle per 1.2 meters, and its amount follows the speed (D-333).</summary>

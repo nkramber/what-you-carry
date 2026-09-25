@@ -24,10 +24,10 @@ public sealed class TextureGenTests
 {
     private const float UvTolerance = 0.0001f;
 
-    /// <summary>The ramp names of the palette of D-304 and the umber ramp of D-530, in file order.</summary>
-    private static readonly string[] OwnerRampNames = ["rock", "slate", "timber", "ochre", "rust", "water", "lichen", "bone", "umber"];
+    /// <summary>The ramp names of the palette of D-304, the umber ramp of D-530, and the ten ramps of D-592, in file order.</summary>
+    private static readonly string[] OwnerRampNames = ["rock", "slate", "timber", "ochre", "rust", "water", "lichen", "bone", "umber", "steel", "brass", "clay", "crimson", "cobalt", "violet", "linen", "moss", "ember", "ice"];
 
-    /// <summary>The 32 colors of the palette of D-304 and the 4 of D-530, ramp by ramp from dark to light.</summary>
+    /// <summary>The 32 colors of the palette of D-304, the 4 of D-530, and the 40 of D-592, ramp by ramp from dark to light.</summary>
     private static readonly string[] OwnerColors =
     [
         "#14161b", "#2a2e33", "#4e4a43", "#746e65",
@@ -39,6 +39,16 @@ public sealed class TextureGenTests
         "#111b10", "#28351e", "#46532e", "#6f7746",
         "#775d50", "#9f836f", "#c0aa92", "#e1d6c2",
         "#160e05", "#2b1f11", "#413221", "#5d4c39",
+        "#2b2e32", "#51565b", "#7b8187", "#acb2b7",
+        "#372c11", "#5f4e22", "#8c7438", "#bda15c",
+        "#472b1b", "#6e442c", "#946043", "#b88569",
+        "#320007", "#5d0014", "#8b0e28", "#b83646",
+        "#081431", "#182c60", "#2f4b91", "#5174c4",
+        "#1d0f27", "#3d234e", "#613e78", "#8b64a8",
+        "#4c473d", "#797161", "#a89d88", "#d7cdb8",
+        "#09200b", "#18421c", "#2c6a31", "#4e9a52",
+        "#6a2500", "#a74b00", "#df8700", "#ffca70",
+        "#2d4e54", "#497b83", "#6daab5", "#a4d8e2",
     ];
 
     /// <summary>
@@ -136,7 +146,7 @@ public sealed class TextureGenTests
     {
         Palette palette = RepositoryPalette();
 
-        Assert.Equal(117, palette.AtlasColors.Count);
+        Assert.Equal(247, palette.AtlasColors.Count);
         for (int ramp = 0; ramp < palette.Ramps.Count; ramp++)
         {
             PaletteRamp named = palette.Ramps[ramp];
@@ -204,7 +214,7 @@ public sealed class TextureGenTests
     /// </summary>
     [Theory]
     [InlineData("models/player.bbmodel", 15)]
-    [InlineData("models/sword-basic.bbmodel", 4)]
+    [InlineData("models/sword-basic.bbmodel", 8)]
     public void EveryFaceHasACanvasAtWorldDensity(string modelPath, int boxes)
     {
         BlockbenchModel model = BlockbenchLoader.Parse(modelPath, File.ReadAllBytes(Path.Combine(ContentRoot(), modelPath)));
@@ -259,9 +269,13 @@ public sealed class TextureGenTests
             [Player + "leg_right_upper_box"] = "trousers",
             [Player + "leg_right_lower_box"] = "boot",
             [Player + "toe_right_box"] = "boot-toe",
-            [Sword + "grip_box"] = "leather",
-            [Sword + "guard_box"] = "plank",
+            [Sword + "pommel_box"] = "iron",
+            [Sword + "grip_box"] = "grip-wrap",
+            [Sword + "guard_box"] = "iron",
+            [Sword + "guard_left_box"] = "iron",
+            [Sword + "guard_right_box"] = "iron",
             [Sword + "blade_box"] = "metal",
+            [Sword + "tip_step_box"] = "metal",
             [Sword + "tip_box"] = "metal",
         };
         Dictionary<string, string> faceRecipe = new()
@@ -281,6 +295,12 @@ public sealed class TextureGenTests
             [Player + "leg_left_lower_box:down"] = "boot-toe",
             [Player + "leg_right_lower_box:up"] = "boot-toe",
             [Player + "leg_right_lower_box:down"] = "boot-toe",
+            [Sword + "grip_box:up"] = "leather",
+            [Sword + "grip_box:down"] = "leather",
+            [Sword + "guard_box:north"] = "guard-front",
+            [Sword + "guard_box:south"] = "guard-front",
+            [Sword + "blade_box:north"] = "blade",
+            [Sword + "blade_box:south"] = "blade",
         };
 
         Assert.Equal(boxRecipe.Count * BoxFaces.Names.Count, RepositoryTextures.Layout.Faces.Count);
@@ -289,7 +309,7 @@ public sealed class TextureGenTests
             string box = place.Model + ":" + place.Box;
             string face = box + ":" + BoxFaces.Name(place.Side);
             string expected = faceRecipe.TryGetValue(face, out string? own) ? own : boxRecipe[box];
-            Assert.True(expected == place.Recipe, $"The face {face} reads the recipe '{place.Recipe}', and the paint of D-525 to D-531 gives '{expected}'.");
+            Assert.True(expected == place.Recipe, $"The face {face} reads the recipe '{place.Recipe}', and the paint of D-525 to D-531 and D-588 gives '{expected}'.");
         }
     }
 
@@ -305,7 +325,7 @@ public sealed class TextureGenTests
         Palette palette = RepositoryPalette();
 
         // The face: hair rows 0 to 2, the peak, the sideburns, the skin, the eyes, and the under-eye texels.
-        BodyCanvas face = new(atlas, palette, "head_box", BoxSide.North);
+        ModelCanvas face = new(atlas, palette, AssetPaths.BodyModel, "head_box", BoxSide.North);
         face.AssertRamp("umber", 0, 0, 16, 3);
         face.AssertRamp("umber", 7, 3, 2, 1);
         face.AssertRamp("umber", 0, 3, 1, 8);
@@ -320,7 +340,7 @@ public sealed class TextureGenTests
         face.AssertRamp("bone", 12, 8, 3, 3);
 
         // The mouth notch on the beard, in the skin of D-531: bone 2 minus 2 shades.
-        BodyCanvas beard = new(atlas, palette, "beard_box", BoxSide.North);
+        ModelCanvas beard = new(atlas, palette, AssetPaths.BodyModel, "beard_box", BoxSide.North);
         beard.AssertRamp("umber", 0, 0, 16, 1);
         beard.AssertShades("bone", 2, 2, 5, 1, 6, 1);
         beard.AssertShades("bone", 2, 2, 5, 2, 1, 1);
@@ -329,7 +349,7 @@ public sealed class TextureGenTests
         beard.AssertRamp("umber", 0, 3, 16, 2);
 
         // The collar in its hem, the belt, and the grime over the belt, at the front alone.
-        BodyCanvas front = new(atlas, palette, "torso_box", BoxSide.North);
+        ModelCanvas front = new(atlas, palette, AssetPaths.BodyModel, "torso_box", BoxSide.North);
         front.AssertRamp("bone", 5, 0, 10, 2);
         front.AssertRamp("bone", 8, 2, 4, 1);
         front.AssertShades("rust", 0, 3, 4, 0, 1, 2);
@@ -339,33 +359,86 @@ public sealed class TextureGenTests
         front.AssertShades("rust", 0, 3, 7, 3, 6, 1);
         front.AssertRamp("rust", 0, 4, 20, 16);
         front.AssertRamp("umber", 0, 20, 20, 2);
-        BodyCanvas back = new(atlas, palette, "torso_box", BoxSide.South);
+        ModelCanvas back = new(atlas, palette, AssetPaths.BodyModel, "torso_box", BoxSide.South);
         back.AssertRamp("rust", 0, 0, 20, 20);
         back.AssertRamp("umber", 0, 20, 20, 2);
         Assert.True(back.MeanFine(0, 17, 20, 3) + 1.0 < back.MeanFine(0, 4, 20, 10), "The grime gradient does not darken the rows over the belt (D-527).");
-        new BodyCanvas(atlas, palette, "torso_box", BoxSide.East).AssertRamp("umber", 0, 20, 10, 2);
+        new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "torso_box", BoxSide.East).AssertRamp("umber", 0, 20, 10, 2);
 
         foreach (BoxSide side in new[] { BoxSide.North, BoxSide.East, BoxSide.South, BoxSide.West })
         {
             // The sleeve, its hem, and the skin cuff.
-            BodyCanvas sleeve = new(atlas, palette, "arm_right_lower_box", side);
+            ModelCanvas sleeve = new(atlas, palette, AssetPaths.BodyModel, "arm_right_lower_box", side);
             sleeve.AssertRamp("rust", 0, 0, 6, 6);
             sleeve.AssertShades("rust", 0, 3, 0, 6, 6, 1);
             sleeve.AssertRamp("bone", 0, 7, 6, 4);
 
             // The boot band: the top two rows one step of a color lighter than the boot below.
-            BodyCanvas boot = new(atlas, palette, "leg_left_lower_box", side);
+            ModelCanvas boot = new(atlas, palette, AssetPaths.BodyModel, "leg_left_lower_box", side);
             boot.AssertRamp("umber", 0, 0, 8, 10);
             Assert.True(boot.MeanFine(0, 0, 8, 2) >= boot.MeanFine(0, 2, 8, 6) + 2.0, $"The boot band on the {side} face is not lighter than the boot (D-526).");
         }
 
         // The knee patch is lighter than the rest of the trousers front.
-        BodyCanvas knee = new(atlas, palette, "leg_right_upper_box", BoxSide.North);
+        ModelCanvas knee = new(atlas, palette, AssetPaths.BodyModel, "leg_right_upper_box", BoxSide.North);
         knee.AssertRamp("umber", 0, 0, 8, 10);
         Assert.True(knee.MeanFine(2, 5, 4, 4) > knee.MeanFine(0, 0, 8, 4) + 1.0, "The knee patch is not lighter than the trousers.");
 
-        new BodyCanvas(atlas, palette, "arm_left_lower_box", BoxSide.Down).AssertRamp("bone", 0, 0, 6, 6);
-        new BodyCanvas(atlas, palette, "toe_left_box", BoxSide.North).AssertRamp("umber", 0, 0, 8, 4);
+        new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "arm_left_lower_box", BoxSide.Down).AssertRamp("bone", 0, 0, 6, 6);
+        new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "toe_left_box", BoxSide.North).AssertRamp("umber", 0, 0, 8, 4);
+    }
+
+    /// <summary>
+    /// The committed atlas holds the paint of the sword (D-588, D-589, D-594). The flat of the blade has two edges of exact
+    /// steel 1 plus 3 shades over a grained center on steel 1, and three pits of steel 0 plus 1. The guard, its arms, and the pommel are grained iron
+    /// on rock 1, with a lighter panel on the front of the guard. The grip is grained umber leather with three dark bands.
+    /// A texel with no grain after it holds its exact shade, and a grain of amount 1 moves a texel by 2 fine steps at most.
+    /// </summary>
+    [Fact]
+    public void SwordCanvasesHoldTheOwnerLayout()
+    {
+        PngImage atlas = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
+        Palette palette = RepositoryPalette();
+        const string Sword = "models/sword-basic.bbmodel";
+
+        foreach (BoxSide side in new[] { BoxSide.North, BoxSide.South })
+        {
+            ModelCanvas flat = new(atlas, palette, Sword, "blade_box", side);
+            flat.AssertShades("steel", 7, 7, 0, 0, 1, 4);
+            flat.AssertShades("steel", 7, 7, 0, 5, 1, 12);
+            flat.AssertShades("steel", 7, 7, 2, 0, 1, 9);
+            flat.AssertShades("steel", 7, 7, 2, 10, 1, 7);
+            flat.AssertShades("steel", 2, 6, 1, 0, 1, 13);
+            flat.AssertShades("steel", 2, 6, 1, 14, 1, 3);
+            flat.AssertShades("steel", 1, 1, 0, 4, 1, 1);
+            flat.AssertShades("steel", 1, 1, 2, 9, 1, 1);
+            flat.AssertShades("steel", 1, 1, 1, 13, 1, 1);
+        }
+
+        new ModelCanvas(atlas, palette, Sword, "blade_box", BoxSide.East).AssertShades("steel", 5, 9, 0, 0, 1, 17);
+        new ModelCanvas(atlas, palette, Sword, "tip_step_box", BoxSide.North).AssertShades("steel", 5, 9, 0, 0, 2, 2);
+        new ModelCanvas(atlas, palette, Sword, "tip_box", BoxSide.North).AssertShades("steel", 5, 9, 0, 0, 1, 1);
+
+        ModelCanvas guard = new(atlas, palette, Sword, "guard_box", BoxSide.North);
+        guard.AssertShades("rock", 3, 7, 0, 0, 4, 1);
+        guard.AssertShades("rock", 7, 7, 1, 1, 2, 1);
+        guard.AssertShades("rock", 3, 7, 0, 2, 4, 1);
+        new ModelCanvas(atlas, palette, Sword, "guard_left_box", BoxSide.North).AssertShades("rock", 3, 7, 0, 0, 2, 2);
+        new ModelCanvas(atlas, palette, Sword, "pommel_box", BoxSide.North).AssertShades("rock", 3, 7, 0, 0, 3, 2);
+
+        foreach (BoxSide side in new[] { BoxSide.North, BoxSide.East, BoxSide.South, BoxSide.West })
+        {
+            ModelCanvas grip = new(atlas, palette, Sword, "grip_box", side);
+            foreach (int row in new[] { 0, 2, 4, 6 })
+            {
+                grip.AssertShades("umber", 6, 10, 0, row, 2, 1);
+            }
+
+            foreach (int row in new[] { 1, 3, 5 })
+            {
+                grip.AssertShades("umber", 4, 4, 0, row, 2, 1);
+            }
+        }
     }
 
     /// <summary>Every block id other than air has a canvas of 32 pixels in the committed layout, bound to the recipe of its material (D-259, D-505).</summary>
@@ -663,8 +736,8 @@ public sealed class TextureGenTests
         }
     }
 
-    /// <summary>One face canvas of the player in the committed atlas, read by texel from its top left as a ramp and a fine step.</summary>
-    private sealed class BodyCanvas
+    /// <summary>One face canvas of a model in the committed atlas, read by texel from its top left as a ramp and a fine step.</summary>
+    private sealed class ModelCanvas
     {
         private readonly PngImage atlas;
         private readonly Palette palette;
@@ -672,12 +745,12 @@ public sealed class TextureGenTests
         private readonly string name;
         private readonly Dictionary<int, (int Ramp, int FineStep)> shadeOfIndex = [];
 
-        public BodyCanvas(PngImage atlas, Palette palette, string box, BoxSide side)
+        public ModelCanvas(PngImage atlas, Palette palette, string model, string box, BoxSide side)
         {
             this.atlas = atlas;
             this.palette = palette;
-            this.at = RepositoryTextures.Layout.Face(AssetPaths.BodyModel, box, side);
-            this.name = TextureLayout.FaceName(AssetPaths.BodyModel, box, side);
+            this.at = RepositoryTextures.Layout.Face(model, box, side);
+            this.name = TextureLayout.FaceName(model, box, side);
             for (int ramp = 0; ramp < palette.Ramps.Count; ramp++)
             {
                 for (int fineStep = 0; fineStep <= palette.FineTop(ramp); fineStep++)

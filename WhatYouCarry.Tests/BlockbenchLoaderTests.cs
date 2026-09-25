@@ -111,7 +111,7 @@ public sealed class BlockbenchLoaderTests
         Assert.Contains("models/bad.bbmodel", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>The player model has one attachment point per slot of D-18, and the weapon point of D-330 in the right hand, each on the bone of its limb.</summary>
+    /// <summary>The player model has one attachment point per slot of D-18, and the weapon point of D-330 in the right hand at the tilt of D-591, each on the bone of its limb.</summary>
     [Fact]
     public void PlayerModelHasEveryAttachmentPoint()
     {
@@ -134,6 +134,13 @@ public sealed class BlockbenchLoaderTests
         AttachmentPoint weapon = Assert.Single(model.Attachments, point => point.Slot == EquipmentSlots.Weapon);
         Assert.Equal("arm_right_lower", model.Bones[weapon.Bone].Name);
         Assert.Equal(new CoreVector3(0.40625f, 0.65625f, 0.0f), weapon.Position);
+
+        // The right hand tilts the sword 45 degrees forward (D-591), and every other point holds its item at zero.
+        foreach (AttachmentPoint point in model.Attachments)
+        {
+            CoreVector3 expected = point.Slot == EquipmentSlots.Weapon ? new CoreVector3(45.0f, 0.0f, 0.0f) : new CoreVector3(0.0f, 0.0f, 0.0f);
+            Assert.Equal(expected, point.RotationDegrees);
+        }
     }
 
     /// <summary>Every bone comes after its parent, and the root bone is the body.</summary>
@@ -269,20 +276,21 @@ public sealed class BlockbenchLoaderTests
         Assert.Contains("one attachment point", twiceError.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>F-131. A locator with a rotation is an error that names it, as a box or a bone with one is, because the loader reads the rest pose alone. A zero rotation loads.</summary>
+    /// <summary>
+    /// F-131 and D-591. A locator keeps its rotation in degrees, because the point holds its item at that angle, and a
+    /// silent drop would show the item at a wrong angle. A locator with no rotation field holds its item at zero.
+    /// </summary>
     [Fact]
-    public void LoaderRejectsARotatedLocator()
+    public void LoaderReadsTheRotationOfALocator()
     {
         string rotated = ModelJson.Model(
-            elements: ModelJson.Cube("torso", "e1") + ", " + ModelJson.Locator("head", "e2").Replace("\"type\"", "\"rotation\": [0, 45, 0], \"type\"", StringComparison.Ordinal),
+            elements: ModelJson.Cube("torso", "e1") + ", " + ModelJson.Locator("head", "e2").Replace("\"type\"", "\"rotation\": [10, 45, -5], \"type\"", StringComparison.Ordinal),
             groups: ModelJson.Group("body", "g1"),
             outliner: "[{\"uuid\": \"g1\", \"children\": [\"e1\", \"e2\"]}]");
-        ContextException error = Assert.Throws<ContextException>(() => Parse(rotated));
-        Assert.Contains("head", error.Message, StringComparison.Ordinal);
-        Assert.Contains("rotation", error.Message, StringComparison.Ordinal);
+        Assert.Equal(new CoreVector3(10.0f, 45.0f, -5.0f), Assert.Single(Parse(rotated).Attachments).RotationDegrees);
 
-        string zero = rotated.Replace("[0, 45, 0]", "[0, 0, 0]", StringComparison.Ordinal);
-        Assert.Single(Parse(zero).Attachments);
+        string plain = rotated.Replace("\"rotation\": [10, 45, -5], ", string.Empty, StringComparison.Ordinal);
+        Assert.Equal(new CoreVector3(0.0f, 0.0f, 0.0f), Assert.Single(Parse(plain).Attachments).RotationDegrees);
     }
 
     /// <summary>Two boxes of one name are an error, because a keyframe and the asset QA name a box by it.</summary>

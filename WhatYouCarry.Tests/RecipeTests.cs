@@ -165,7 +165,7 @@ public sealed class RecipeTests
     [InlineData("{\"layers\": [{\"kind\": \"edge\", \"steps\": 1}]}", "kind", "the first layer is a 'fill'")]
     [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}]}", "kind", "no other layer is one")]
     [InlineData("{\"layers\": []}", "layers", "at least one layer")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 36, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}]}", "color", "names the color index 36")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 76, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}]}", "color", "names the color index 76")]
     [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 1.5, \"seed\": 3}]}", "noise", "from 0 to 1")]
     [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 0}]}", "seed", "never leaves zero")]
     [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1}]}", "seed", "is absent")]
@@ -250,7 +250,8 @@ public sealed class RecipeTests
 
     /// <summary>
     /// A grain uses whole numbers alone, so each platform paints the same bytes (D-527). The three CI platforms run
-    /// this test on one canvas of the trousers recipe: its first row and the count of each index.
+    /// this test on one canvas of the trousers recipe: its first row and the count of each index. The shades follow every
+    /// color in the atlas, so the 40 colors of D-592 moved each umber shade up by 40 indices.
     /// </summary>
     [Fact]
     public void GrainPaintsTheSameBytesOnEachPlatform()
@@ -260,8 +261,8 @@ public sealed class RecipeTests
 
         byte[] pixels = CanvasPainter.Paint(palette, recipes["trousers"], 8, 10, CanvasPainter.SaltOf("models/player.bbmodel:leg_left_upper_box:east"), "east");
 
-        Assert.Equal("108,110,113,33,108,33,33,33", string.Join(",", pixels.Take(8)));
-        Assert.Equal("32:1,33:16,34:3,108:4,109:6,110:11,111:18,112:8,113:12,114:1", string.Join(",", pixels.GroupBy(value => value).OrderBy(group => group.Key).Select(group => $"{group.Key}:{group.Count()}")));
+        Assert.Equal("148,150,153,33,148,33,33,33", string.Join(",", pixels.Take(8)));
+        Assert.Equal("32:1,33:16,34:3,148:4,149:6,150:11,151:18,152:8,153:12,154:1", string.Join(",", pixels.GroupBy(value => value).OrderBy(group => group.Key).Select(group => $"{group.Key}:{group.Count()}")));
     }
 
     /// <summary>A gradient shifts the full amount at its side and less toward its depth, rounded to whole fine steps, and nothing past the depth (D-527).</summary>

@@ -11,6 +11,7 @@ using WhatYouCarry.Game;
 using WhatYouCarry.Game.Render;
 using WhatYouCarry.Game.Review;
 using Xunit;
+using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 
 namespace WhatYouCarry.Tests;
 
@@ -21,7 +22,7 @@ namespace WhatYouCarry.Tests;
 /// </summary>
 public sealed class ContactSheetTests
 {
-    /// <summary>The radius of a sphere around a block or a body, in meters, for the neighbor test.</summary>
+    /// <summary>The radius of a sphere around a block, in meters, for the neighbor test.</summary>
     private const double NeighborRadius = 1.0;
 
     /// <summary>The flag starts the sheet, and nothing else does.</summary>
@@ -93,8 +94,9 @@ public sealed class ContactSheetTests
     }
 
     /// <summary>
-    /// A sphere around each block and body projects inside its cell, so no cell cuts its subject. The body sphere reads
-    /// the box corners of the player model. Each corner of the slope of a ramp projects inside its render.
+    /// A sphere around each block projects inside its cell, so no cell cuts its subject. Each box corner of the player
+    /// model and of the sword that its right hand tilts forward projects inside the cell of each body shot (D-336, D-591).
+    /// Each corner of the slope of a ramp projects inside its render.
     /// </summary>
     [Fact]
     public void EverySubjectFitsItsCell()
@@ -104,7 +106,17 @@ public sealed class ContactSheetTests
 
         double bodyRadius = BodyRadius();
         Assert.True(bodyRadius > 0.9, $"The body radius is {bodyRadius} meters, and the body is 1.8 meters tall.");
-        Assert.True(ProjectedDiameter(bodyRadius) < ContactSheet.CellPixels, $"The body spans {ProjectedDiameter(bodyRadius)} pixels, and a cell holds {ContactSheet.CellPixels}.");
+        float cellHalf = ContactSheet.CellPixels / (float)ContactSheet.RenderPixels;
+        foreach (SheetShot shot in ContactSheet.Shots().Where(shot => shot.IsBody))
+        {
+            // The scene stands the body at the origin of the shot and turns it about the up axis by the yaw of the shot.
+            Basis turn = new(Vector3.Up, Mathf.DegToRad(shot.BodyYawDegrees));
+            foreach (Vector3 corner in BodyCorners())
+            {
+                Vector2 place = ViewPlace(shot, shot.Origin + (turn * corner));
+                Assert.True(Math.Abs(place.X) <= cellHalf && Math.Abs(place.Y) <= cellHalf, $"The body corner {corner} of the shot {shot.Index} is at {place} on the render, outside its cell of {cellHalf}.");
+            }
+        }
 
         foreach (SheetShot shot in ContactSheet.Shots().Where(shot => Ramp.IsRamp(shot.Block)))
         {
@@ -207,9 +219,14 @@ public sealed class ContactSheetTests
         return new Vector2((float)(offset.Dot(right) / (depth * tangent)), (float)(offset.Dot(up) / (depth * tangent)));
     }
 
-    /// <summary>The radius of a sphere around the target of a shot that holds its subject: the farthest corner of the scene grid of a ramp, and one meter for a block or a body.</summary>
+    /// <summary>The radius of a sphere around the target of a shot that holds its subject: the farthest corner of the scene grid of a ramp, the farthest corner of the body and its sword, and one meter for a block.</summary>
     private static double SubjectRadius(SheetShot shot)
     {
+        if (shot.IsBody)
+        {
+            return BodyRadius();
+        }
+
         if (!Ramp.IsRamp(shot.Block))
         {
             return NeighborRadius;
@@ -232,21 +249,28 @@ public sealed class ContactSheetTests
         return radius;
     }
 
-    /// <summary>
-    /// The largest distance from the target of a body shot to a box corner of the player model, or of the sword at the
-    /// weapon point of its right hand, in meters (D-336).
-    /// </summary>
+    /// <summary>The largest distance from the target of a body shot to a box corner of the player model or of its held sword, in meters (D-336).</summary>
     private static double BodyRadius()
+    {
+        SheetShot shot = ContactSheet.Shots().First(candidate => candidate.IsBody);
+        Vector3 center = shot.Target - shot.Origin;
+        return BodyCorners().Max(corner => (double)corner.DistanceTo(center));
+    }
+
+    /// <summary>
+    /// Every box corner of the player model, and of the sword at the weapon point of its right hand, in meters in model
+    /// space. The sword hangs from the point at the tilt of the point, as the Game hangs it (D-330, D-591).
+    /// </summary>
+    private static List<Vector3> BodyCorners()
     {
         string content = Path.Combine(RepositoryRoot.Find(), "content");
         BlockbenchModel body = BlockbenchLoader.Parse(AssetPaths.BodyModel, File.ReadAllBytes(Path.Combine(content, AssetPaths.BodyModel)));
         string swordPath = SimulationLoop.MainWeapon(TestWorld.Content).Model;
         BlockbenchModel sword = BlockbenchLoader.Parse(swordPath, File.ReadAllBytes(Path.Combine(content, swordPath)));
         AttachmentPoint hand = body.Attachments.First(point => point.Slot == EquipmentSlots.Weapon);
-        SheetShot shot = ContactSheet.Shots().First(candidate => candidate.IsBody);
-        Vector3 center = shot.Target - shot.Origin;
-        double radius = 0.0;
-        foreach ((ModelBox box, Vector3 offset) in body.Boxes.Select(box => (box, Vector3.Zero)).Concat(sword.Boxes.Select(box => (box, new Vector3(hand.Position.X, hand.Position.Y, hand.Position.Z)))))
+        RotationMatrix hold = RotationMatrix.FromEulerDegrees(hand.RotationDegrees);
+        List<Vector3> corners = [];
+        foreach ((ModelBox box, bool held) in body.Boxes.Select(box => (box, false)).Concat(sword.Boxes.Select(box => (box, true))))
         {
             foreach (float x in new[] { box.From.X, box.To.X })
             {
@@ -254,12 +278,13 @@ public sealed class ContactSheetTests
                 {
                     foreach (float z in new[] { box.From.Z, box.To.Z })
                     {
-                        radius = Math.Max(radius, (new Vector3(x, y, z) + offset).DistanceTo(center));
+                        CoreVector3 corner = held ? hand.Position + hold.Apply(new CoreVector3(x, y, z)) : new CoreVector3(x, y, z);
+                        corners.Add(new Vector3(corner.X, corner.Y, corner.Z));
                     }
                 }
             }
         }
 
-        return radius;
+        return corners;
     }
 }

@@ -1,0 +1,11 @@
+{
+  "layers": [
+    {"kind": "fill", "color": 37, "shade": 0, "noise": 0, "seed": 1061},
+    {"kind": "grain", "cell": 2, "amount": 1, "seed": 1064},
+    {"kind": "rect", "x": 0, "y": 0, "width": 1, "height": 17, "color": 37, "shade": 3, "noise": 0, "seed": 1062},
+    {"kind": "rect", "x": 2, "y": 0, "width": 1, "height": 17, "color": 37, "shade": 3, "noise": 0, "seed": 1063},
+    {"kind": "rect", "x": 0, "y": 4, "width": 1, "height": 1, "color": 36, "shade": 1, "noise": 0, "seed": 1065},
+    {"kind": "rect", "x": 2, "y": 9, "width": 1, "height": 1, "color": 36, "shade": 1, "noise": 0, "seed": 1066},
+    {"kind": "rect", "x": 1, "y": 13, "width": 1, "height": 1, "color": 36, "shade": 1, "noise": 0, "seed": 1067}
+  ]
+}
