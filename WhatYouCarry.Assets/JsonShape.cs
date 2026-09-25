@@ -22,6 +22,12 @@ public static class JsonShape
     /// <summary>The count of components of a vector field.</summary>
     public const int VectorLength = 3;
 
+    /// <summary>
+    /// The parse options of every asset file. A member name that repeats in one object is a parse error, so the last
+    /// value never wins in silence, and the loader error names the file (D-92, T-2, F-118).
+    /// </summary>
+    public static readonly JsonDocumentOptions ParseOptions = new() { AllowDuplicateProperties = false };
+
     /// <summary>One member of an object. An absent member is an error that names the owner.</summary>
     /// <exception cref="ContextException">The value is not an object, or it has no such member.</exception>
     public static JsonElement Member(string path, JsonElement owner, string ownerName, string name)

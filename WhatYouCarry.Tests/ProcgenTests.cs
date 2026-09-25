@@ -182,6 +182,15 @@ public sealed class ProcgenTests
     private static SweepReport RunReachabilitySweep()
     {
         List<int> seeds = ReachabilitySeedList(Environment.GetEnvironmentVariable(NightVariable), Environment.GetEnvironmentVariable(NightSeedsVariable));
+        return Sweep(seeds, TestWorld.Content, Environment.GetEnvironmentVariable(NightFailuresVariable));
+    }
+
+    /// <summary>
+    /// Digs one floor for each seed with one content set, and reads every check of the sweep. With a failures file,
+    /// it appends the failure line of the sweep to the file (D-567).
+    /// </summary>
+    private static SweepReport Sweep(IReadOnlyList<int> seeds, ContentSet content, string? failuresFile)
+    {
         List<ulong> failedSeeds = [];
         List<string> chamberFailures = [];
         List<string> detailFailures = [];
@@ -201,7 +210,20 @@ public sealed class ProcgenTests
         foreach (int seed in seeds)
         {
             int failuresBefore = chamberFailures.Count + detailFailures.Count;
-            FloorPlan plan = Plan(seed);
+            FloorPlan plan;
+            try
+            {
+                plan = FloorGenerator.Generate((ulong)seed, FloorOf(seed), content);
+            }
+            catch (ContextException error)
+            {
+                // A dig that throws fails its seed. The sweep names the seed and reads the next one, so the failure line
+                // and the night record carry the seed (D-565, D-567, F-117).
+                chamberFailures.Add($"Seed {seed}, floor {FloorOf(seed)}: the dig threw. {error.Message}");
+                failedSeeds.Add((ulong)seed);
+                continue;
+            }
+
             string context = $"Seed {seed}, floor {plan.Floor}";
             PlayerBody body = new(plan.Grid, plan.Spawn);
             if (!body.IsOnGround())
@@ -314,7 +336,6 @@ public sealed class ProcgenTests
             }
         }
 
-        string? failuresFile = Environment.GetEnvironmentVariable(NightFailuresVariable);
         if (failuresFile is not null)
         {
             File.AppendAllText(failuresFile, NightSeeds.FailureLine(NightSeeds.ReachabilitySweep, failedSeeds), new UTF8Encoding(false));
@@ -457,6 +478,41 @@ public sealed class ProcgenTests
         }
 
         return built > 0;
+    }
+
+    /// <summary>
+    /// F-117. A seed whose dig throws is a failure of the sweep: the report names it, the sweep reads every later
+    /// seed, and the failure line carries it. The old sweep let the exception leave, so it wrote no failure line, and
+    /// the night record lost the seed. Here the deep template stops at floor 14, so each seed of floor 15 throws.
+    /// </summary>
+    [Fact]
+    public void TheSweepNamesASeedWhoseDigThrows()
+    {
+        List<FloorTemplate> floors = [];
+        foreach (FloorTemplate template in TestWorld.Content.Floors)
+        {
+            floors.Add(template.MaxDepth == 15 ? template with { MaxDepth = 14 } : template);
+        }
+
+        ContentSet shallow = TestWorld.Content with { Floors = floors };
+        List<int> seeds = [.. Enumerable.Range(100001, 20)];
+        List<ulong> deepest = [.. seeds.Where(seed => FloorOf(seed) == 15).Select(seed => (ulong)seed)];
+        Assert.Equal([100004UL, 100019UL], deepest);
+
+        string failures = Path.Combine(Path.GetTempPath(), "wyc-sweep-failures-" + Guid.NewGuid().ToString("N") + ".txt");
+        try
+        {
+            SweepReport report = Sweep(seeds, shallow, failures);
+
+            Assert.Equal(seeds.Count, report.Floors);
+            Assert.Equal(NightSeeds.FailureLine(NightSeeds.ReachabilitySweep, deepest), File.ReadAllText(failures));
+            Assert.Equal(2, report.ChamberFailures.Count(failure => failure.Contains("the dig threw", StringComparison.Ordinal)));
+            Assert.Contains(report.ChamberFailures, failure => failure.StartsWith("Seed 100019, floor 15: the dig threw.", StringComparison.Ordinal));
+        }
+        finally
+        {
+            File.Delete(failures);
+        }
     }
 
     /// <summary>

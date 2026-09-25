@@ -49,9 +49,12 @@ public sealed class BitIdentityTests
     /// moved the hash as well as the version. PR-81 moved it from `dc4258105649a548` when the simulation version rose
     /// to 16, a diagonal drop needed an open fall in the corner column, a waypoint arrival started the wedge count
     /// again, and the sweep read the box of the caller (D-545, D-546, D-549, F-111, F-112, G-20). The new rules with
-    /// the version at 15 gave `dc4258105649a548`, so the version alone moved the hash.
+    /// the version at 15 gave `dc4258105649a548`, so the version alone moved the hash. PR-88 moved it from
+    /// `a2e1c2c6f72bc19e` when the simulation version rose to 17, a death on the tick of a stairwell press stayed a
+    /// death, and a descend on the deepest floor did nothing (D-322, D-579, G-20). The sweep masks the stairwell bits,
+    /// and the new rules with the version at 16 gave `a2e1c2c6f72bc19e`, so the version alone moved the hash.
     /// </remarks>
-    private const string ExpectedHash = "a2e1c2c6f72bc19e";
+    private const string ExpectedHash = "241070d5189efb3c";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

@@ -40,8 +40,9 @@ namespace WhatYouCarry.Game;
 /// The world material takes the fade segment from the camera to the player on every frame (D-292).
 /// </para>
 /// <para>
-/// A boot failure, a step failure, and a pose failure each write an error line and quit with exit code 1 (T-2). The
-/// smoke session quits with exit code 0 only when the log holds no error line (D-114). The bot session of M-3 drives
+/// A boot failure, a step failure, a pose failure, and a failure anywhere else in an engine callback each write an
+/// error line and quit with exit code 1 (T-2). The smoke session quits with exit code 0 only when the log holds no
+/// error line (D-114). The bot session of M-3 drives
 /// the loop with the greedy descender over one floor, and the frame log flag writes every frame time to a file
 /// at the end of any session (D-295, D-296). The content, the models, the clips, and the atlas come from the directory
 /// next to the project directory, which is the content directory of the checkout (D-219, D-305).
@@ -117,6 +118,12 @@ public partial class Main : Node3D
 
     /// <summary>The message of the error line of a tick failure.</summary>
     public const string StepFailedMessage = "A tick failed, and the game quits.";
+
+    /// <summary>The message of the error line of an engine callback that failed outside a narrower guard (T-2).</summary>
+    public const string CallbackFailedMessage = "An engine callback failed, and the game quits.";
+
+    /// <summary>The name of the field of the callback line that names the engine callback.</summary>
+    public const string CallbackField = "callback";
 
     /// <summary>The message of the error line of a frame whose pose of the player failed.</summary>
     public const string PoseFailedMessage = "The pose of the player failed, and the game quits.";
@@ -304,6 +311,19 @@ public partial class Main : Node3D
     /// <inheritdoc/>
     public override void _PhysicsProcess(double delta)
     {
+        try
+        {
+            this.PhysicsFrame();
+        }
+        catch (Exception error)
+        {
+            this.FailCallback(nameof(_PhysicsProcess), error);
+        }
+    }
+
+    /// <summary>The body of one physics frame: one tick of the session, and its time.</summary>
+    private void PhysicsFrame()
+    {
         if (this.loop is null || this.ended || this.shotState is not null)
         {
             return;
@@ -476,6 +496,19 @@ public partial class Main : Node3D
     /// <inheritdoc/>
     public override void _Process(double delta)
     {
+        try
+        {
+            this.DrawFrame(delta);
+        }
+        catch (Exception error)
+        {
+            this.FailCallback(nameof(_Process), error);
+        }
+    }
+
+    /// <summary>The body of one render frame: the frame time, the uploads, the pose, the camera, and the HUD.</summary>
+    private void DrawFrame(double delta)
+    {
         if (this.loop is null || this.playerNodes is null || this.playerModel is null || this.clips is null || this.camera is null || this.worldMaterial is null || this.ended)
         {
             return;
@@ -534,6 +567,19 @@ public partial class Main : Node3D
 
     /// <inheritdoc/>
     public override void _UnhandledInput(InputEvent @event)
+    {
+        try
+        {
+            this.ReadInputEvent(@event);
+        }
+        catch (Exception error)
+        {
+            this.FailCallback(nameof(_UnhandledInput), error);
+        }
+    }
+
+    /// <summary>The body of one input event: the look motion and the device of the last input (D-447).</summary>
+    private void ReadInputEvent(InputEvent @event)
     {
         if (@event is InputEventMouseMotion motion)
         {
@@ -884,7 +930,7 @@ public partial class Main : Node3D
             viewport.AddChild(shotCamera);
             Hud shotHud = Hud.Build(strings, viewport);
             shotHud.ShowBoss(shotHud.BossPlaceholderName(), HudShot.BossHealth, HudShot.BossMost);
-            this.shotState = new HudState(HudShot.Health, Player.MaxHealth, loop.Timer.Remaining, loop.Timer.Expired, true, false);
+            this.shotState = new HudState(HudShot.Health, Player.MaxHealth, loop.Timer.Remaining, loop.Timer.Expired, true, true, false);
             this.hud = shotHud;
             this.hudCamera = shotCamera;
 
@@ -919,6 +965,21 @@ public partial class Main : Node3D
         {
             await this.ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
         }
+    }
+
+    /// <summary>
+    /// Writes the error line of an engine callback that failed, and quits with exit code 1. The engine glue would print
+    /// the exception and call the callbacks again, so a session went on half updated and ended with exit code 0 (T-2,
+    /// F-115). The line carries the run fields of the loop, or of the boot when no loop exists yet.
+    /// </summary>
+    private void FailCallback(string callback, Exception error)
+    {
+        LogFields fields = this.loop is null
+            ? RunFields(FirstSeed, SimulationLoop.FirstFloor, 0)
+            : RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+        fields.Add(CallbackField, callback);
+        this.LogFailure(CallbackFailedMessage, fields, error);
+        this.Quit(ExitFailure);
     }
 
     /// <summary>Writes the error line of a failure, with the text of the exception after the run fields.</summary>

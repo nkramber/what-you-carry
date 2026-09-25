@@ -172,7 +172,8 @@ public sealed class SmokeSessionTests
 
     /// <summary>
     /// PR-18 exit test 7. The engine boots headless, the walk opens the stairwell prompt on floor 1 and descends, the
-    /// chunk swap shows floor 2, and the session quits with exit code 0 and no error line (D-431, D-436).
+    /// chunk swap shows floor 2, and the session quits with exit code 0, no error line, and no engine error (D-431,
+    /// D-436, F-115).
     /// </summary>
     [Fact]
     [Trait("Category", SmokeCategory)]
@@ -183,6 +184,7 @@ public sealed class SmokeSessionTests
 
         Assert.True(run.ExitCode == Main.ExitSuccess, $"The smoke session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
         Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.PromptOpenMessage}\"", StringComparison.Ordinal) && line.Contains("\"floor\":1,", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.SwapMessage}\"", StringComparison.Ordinal) && line.Contains("\"floor\":2,", StringComparison.Ordinal) && line.Contains($"\"{Main.FromWorkerField}\":true", StringComparison.Ordinal));
         AssertCleanEnd(lines, run.Output);

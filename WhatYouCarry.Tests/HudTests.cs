@@ -254,9 +254,9 @@ public sealed class HudTests
     [Fact]
     public void HudStatePausesAtTheOpenPrompt()
     {
-        Assert.True(new HudState(100, 100, 600, false, true, false).Paused);
-        Assert.False(new HudState(100, 100, 600, false, false, false).Paused);
-        Assert.False(new HudState(100, 100, 0, true, true, false).Paused);
+        Assert.True(new HudState(100, 100, 600, false, true, true, false).Paused);
+        Assert.False(new HudState(100, 100, 600, false, false, false, false).Paused);
+        Assert.False(new HudState(100, 100, 0, true, true, true, false).Paused);
     }
 
     /// <summary>Every source file under the Ui directory of the Game project, parsed, sorted by path.</summary>

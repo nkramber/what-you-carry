@@ -62,7 +62,7 @@ public static class AnimationLoader
         JsonDocument document;
         try
         {
-            document = JsonDocument.Parse(bytes);
+            document = JsonDocument.Parse(bytes, JsonShape.ParseOptions);
         }
         catch (JsonException error)
         {
@@ -95,6 +95,12 @@ public static class AnimationLoader
     /// <summary>The animation name from the file name, which must be the model stem, a dot, the name, and the extension.</summary>
     private static string AnimationName(string path, string model)
     {
+        // A model value with no extension passes the name rule, and the file case check never reads it (F-119).
+        if (!model.EndsWith(AssetPaths.ModelExtension, System.StringComparison.Ordinal))
+        {
+            throw ContentError.Make(path, ModelKey, $"is '{model}', and the model of an animation is a '{AssetPaths.ModelExtension}' file (D-298)");
+        }
+
         string modelStem = AssetPaths.ModelStem(model);
         string prefix = modelStem + AssetPaths.AnimationSeparator;
         if (Directory(path) != Directory(model))

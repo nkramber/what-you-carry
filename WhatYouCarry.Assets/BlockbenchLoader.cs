@@ -75,7 +75,7 @@ public static class BlockbenchLoader
         JsonDocument document;
         try
         {
-            document = JsonDocument.Parse(bytes);
+            document = JsonDocument.Parse(bytes, JsonShape.ParseOptions);
         }
         catch (JsonException error)
         {

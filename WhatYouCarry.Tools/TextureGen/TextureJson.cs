@@ -17,7 +17,7 @@ public static class TextureJson
         JsonDocument document;
         try
         {
-            document = JsonDocument.Parse(bytes);
+            document = JsonDocument.Parse(bytes, WhatYouCarry.Assets.JsonShape.ParseOptions);
         }
         catch (JsonException error)
         {

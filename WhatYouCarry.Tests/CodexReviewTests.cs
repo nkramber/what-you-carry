@@ -104,6 +104,18 @@ public sealed class CodexReviewTests
         Assert.Empty(outcome.OpenFindingIds);
     }
 
+    /// <summary>F-116. A verdict that holds the approving name inside other words is a fault, and never an approval that starts the auto-merge (D-179, D-516).</summary>
+    [Theory]
+    [InlineData("Not Ready for owner merge")]
+    [InlineData("Changes Required. Ready for owner merge after P1-1")]
+    public void AVerdictThatDoesNotStartWithTheNameIsAFault(string verdict)
+    {
+        ReviewOutcome outcome = Judge(Record(Head, verdict));
+
+        Assert.Equal(CodexReviewExit.Fault, outcome.Exit);
+        Assert.Contains("## Verdict", outcome.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void AFindingOpenInRoundsOneAndTwoDoesNotStop()
     {

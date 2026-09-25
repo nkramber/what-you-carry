@@ -121,6 +121,50 @@ public sealed class ReviewGateRulesTests
         Assert.Contains("names 2 verdicts", ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: reversed)).Summary, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// F-116. A Verdict section whose first line does not start with the exact verdict name in bold fails, also
+    /// when the one name that the section holds is the approving name. The old parse found the name inside other
+    /// words and approved each of these texts (D-179, D-269).
+    /// </summary>
+    [Theory]
+    [InlineData("**Not Ready for owner merge.** This verdict applies to head `{0}`.")]
+    [InlineData("**Changes Required.** Ready for owner merge after P1-1.")]
+    [InlineData("**ready for owner merge.** This verdict applies to head `{0}`.")]
+    [InlineData("The verdict is **Ready for owner merge.** for head `{0}`.")]
+    public void ReviewGateFailsOnAVerdictLineThatDoesNotStartWithTheName(string verdictLine)
+    {
+        string text = ReviewFixture.Text(Head, "Ready for owner merge")
+            .Replace($"**Ready for owner merge.** This verdict applies to head `{Head}`.", string.Format(System.Globalization.CultureInfo.InvariantCulture, verdictLine, Head), StringComparison.Ordinal);
+        ReviewGateResult result = ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: text));
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains("## Verdict", result.Summary, StringComparison.Ordinal);
+    }
+
+    /// <summary>The boundary beside F-116: an exact bold name with more text after it on the same line approves.</summary>
+    [Fact]
+    public void ReviewGatePassesOnTheExactNameWithAReasonOnTheSameLine()
+    {
+        string text = ReviewFixture.Text(Head, "Ready for owner merge")
+            .Replace("This verdict applies to head", "The fixes hold. This verdict applies to head", StringComparison.Ordinal);
+        Assert.Equal(ReviewGateResult.Success, ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: text)).Conclusion);
+    }
+
+    /// <summary>
+    /// F-116. A fenced example of an approving record above the real sections is not the record. The gate reads
+    /// the head and the verdict outside each fence, so the real verdict decides.
+    /// </summary>
+    [Fact]
+    public void ReviewGateSkipsAFencedExampleOfARecord()
+    {
+        string fence = "```\n- Head: `" + Head + "`\n\n## Verdict\n\n**Ready for owner merge.** This verdict applies to head `" + Head + "`.\n```\n\n";
+        string text = ReviewFixture.Text("fedcba9", "Blocked").Replace("## Identity\n", fence + "## Identity\n", StringComparison.Ordinal);
+        ReviewRecord? record = ReviewRecord.TryParse(text, out string error);
+        Assert.True(record is not null, error);
+        Assert.Equal("Blocked", record!.Verdict);
+        Assert.Equal("fedcba9", record.RecordedHead);
+        Assert.Equal(ReviewGateResult.Failure, ReviewGateRules.Evaluate(Facts(mode: "enforced", reviewFile: text)).Conclusion);
+    }
+
     /// <summary>Every review record of the repository parses with one head and one verdict name, so a reviewer sees a second name locally before the push (D-269).</summary>
     [Fact]
     public void EveryRepositoryReviewRecordHoldsOneVerdict()

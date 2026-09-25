@@ -135,6 +135,71 @@ public sealed class AssetQaTests
         Assert.Contains(findings, finding => finding.Path == "models/rig.walk.json" && finding.Message.Contains("length", StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// F-119. A model and its animation in a subdirectory of the model directory are checked like a model at the top.
+    /// The content loader accepts such a model, and the old gate read the top directory alone, so it passed the clip.
+    /// </summary>
+    [Fact]
+    public void AModelInASubdirectoryIsChecked()
+    {
+        const string NestedRig = "models/weapons/rig.bbmodel";
+        using TemporaryContentDirectory content = new();
+        content.Write(NestedRig, ModelJson.SiblingRig());
+        content.Write("models/weapons/rig.attack.json", ModelJson.Animation(NestedRig, "arm_bone", 10, "[0, 0, -90]"));
+
+        AssetFinding finding = Assert.Single(Findings(content));
+        Assert.Equal(NestedRig, finding.Path);
+        Assert.Contains("tick 10 of 'models/weapons/rig.attack.json'", finding.Message, StringComparison.Ordinal);
+        Assert.Equal(1, AssetQaCommand.Run(["--root", content.Root]));
+    }
+
+    /// <summary>The boundary beside F-119: a model under the armor directory, at any depth, stays an overlay and never becomes a body (D-300).</summary>
+    [Fact]
+    public void AModelUnderTheArmorDirectoryStaysAnOverlay()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write("models/armor/heads/cap.bbmodel", ModelJson.SiblingRig());
+        content.Write(Rig, ModelJson.SiblingRig());
+
+        AssetSet set = AssetSet.Read(content.Content);
+
+        Assert.Equal(Rig, Assert.Single(set.Bodies).Path);
+        Assert.Equal("models/armor/heads/cap.bbmodel", Assert.Single(set.Overlays).Path);
+    }
+
+    /// <summary>
+    /// F-119. An animation whose model is no body of the set is a finding, because no pose reads it. Here the model
+    /// is an armor overlay, a file that exists, so the file case check gives no finding on it. The old gate gave none.
+    /// </summary>
+    [Fact]
+    public void AnAnimationOfNoBodyIsAFinding()
+    {
+        const string Cap = "models/armor/cap.bbmodel";
+        using TemporaryContentDirectory content = new();
+        content.Write(Cap, ModelJson.SiblingRig());
+        content.Write("models/armor/cap.attack.json", ModelJson.Animation(Cap, "arm_bone", 10, "[0, 0, -90]"));
+
+        IReadOnlyList<AssetFinding> findings = Findings(content);
+
+        // The overlay check gives its own finding too: the set has no body for the overlay to cover.
+        AssetFinding finding = Assert.Single(findings, finding => finding.Path == "models/armor/cap.attack.json");
+        Assert.Contains($"'{Cap}'", finding.Message, StringComparison.Ordinal);
+        Assert.Contains("no pose reads the animation", finding.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>F-119. The model value of an animation ends in the model extension. A value with no extension passed the name rule, and no check read the animation.</summary>
+    [Fact]
+    public void AModelValueWithoutTheExtensionIsAFinding()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write(Rig, ModelJson.SiblingRig());
+        content.Write(Attack, ModelJson.Animation("models/rig", "arm_bone", 10, "[0, 0, -90]"));
+
+        AssetFinding finding = Assert.Single(Findings(content));
+        Assert.Equal(Attack, finding.Path);
+        Assert.Contains("'.bbmodel' file", finding.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>PR-57 exit test 2. An overlay box smaller than the body box of its name is one finding that names the axis.</summary>
     [Fact]
     public void OverlayMustEnclose()

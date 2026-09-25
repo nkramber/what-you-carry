@@ -104,6 +104,7 @@ public sealed class SimulationLoop
         this.Seed = seed;
         this.content = content;
         this.Weapon = MainWeapon(content);
+        this.DeepestFloor = FloorGenerator.DeepestFloor(content);
         this.Plan = FloorGenerator.Generate(seed, FirstFloor, content);
         this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, this.Weapon, Player.MaxHealth);
         this.Projectiles = new ProjectileSimulation(this.Plan.Grid, content.Projectiles);
@@ -207,6 +208,9 @@ public sealed class SimulationLoop
     /// <summary>The floor number, from one (D-3). The state holds it, and the hash reads it after the body.</summary>
     public int Floor { get; private set; } = FirstFloor;
 
+    /// <summary>The deepest floor that the templates of the content cover. Its stairwell offers the ascend alone (D-5, D-579).</summary>
+    public int DeepestFloor { get; }
+
     /// <summary>How the run ended: an ascend at the stairwell (D-50), a death at zero health (D-322), or no end yet.</summary>
     public RunEnd End => this.ascended ? RunEnd.Ascend : (this.Player.IsDead ? RunEnd.Death : RunEnd.None);
 
@@ -295,13 +299,21 @@ public sealed class SimulationLoop
         this.StepTimer(intent.Tick);
         this.Tick++;
 
+        // A hit of this tick can take the last health. The run then ended as a death, and it takes no stairwell
+        // choice on the same tick (D-322).
+        if (this.Ended)
+        {
+            return;
+        }
+
         StairwellAction action = StairwellTransition.Choose(intent.Buttons, this.Body, this.Plan.Stairwell);
         if (action == StairwellAction.Ascend)
         {
             this.ascended = true;
         }
-        else if (action == StairwellAction.Descend)
+        else if (action == StairwellAction.Descend && this.Floor < this.DeepestFloor)
         {
+            // No floor lies under the deepest floor, so a descend there does nothing (D-579).
             this.Descend();
         }
     }

@@ -4,9 +4,17 @@ namespace WhatYouCarry.Tools.ReviewGate;
 
 /// <summary>The two machine-read parts of a review file: the head in the Identity list and the verdict (D-179, D-269).</summary>
 /// <remarks>
+/// <para>
 /// The Verdict section starts at the line that is exactly the Verdict heading and ends at the next heading. It
 /// holds one verdict name. A heading that starts with the same words, such as a history of earlier verdicts, is
 /// another section, and a section with two names is an error that names both, never the first one (F-89).
+/// </para>
+/// <para>
+/// The first line of the section with text starts with the verdict name in bold and a period, as the skeleton of
+/// <c>review-record.md</c> writes it. A name inside other words, such as "Not Ready for owner merge", or a name in
+/// another case, is an error, so the gate never reads a verdict that does not approve as an approval (D-179). The
+/// parse skips each fenced block, so an example of a record inside a fence is not the record (F-116).
+/// </para>
 /// </remarks>
 public sealed record ReviewRecord(string RecordedHead, string Verdict)
 {
@@ -35,7 +43,7 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
 
     private static string? FindHead(string text)
     {
-        foreach (string rawLine in text.Split('\n'))
+        foreach (string rawLine in LinesOutsideFences(text))
         {
             string line = rawLine.Trim();
             if (!line.StartsWith(HeadPrefix, StringComparison.Ordinal))
@@ -63,9 +71,9 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
     /// </summary>
     private static string? FindVerdict(string text, out string error)
     {
-        string[] lines = text.Split('\n');
+        System.Collections.Generic.List<string> lines = LinesOutsideFences(text);
         int headingLine = -1;
-        for (int index = 0; index < lines.Length; index++)
+        for (int index = 0; index < lines.Count; index++)
         {
             if (lines[index].TrimEnd() == VerdictHeading)
             {
@@ -81,10 +89,15 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
         }
 
         System.Text.StringBuilder section = new();
-        for (int index = headingLine + 1; index < lines.Length && !lines[index].StartsWith("## ", StringComparison.Ordinal); index++)
+        string? firstLine = null;
+        for (int index = headingLine + 1; index < lines.Count && !lines[index].StartsWith("## ", StringComparison.Ordinal); index++)
         {
             section.Append(lines[index]);
             section.Append('\n');
+            if (firstLine is null && lines[index].Trim().Length > 0)
+            {
+                firstLine = lines[index].Trim();
+            }
         }
 
         string body = section.ToString();
@@ -119,7 +132,40 @@ public sealed record ReviewRecord(string RecordedHead, string Verdict)
             return null;
         }
 
+        string bold = $"**{found[0]}.**";
+        if (firstLine is null || !firstLine.StartsWith(bold, StringComparison.Ordinal))
+        {
+            error = $"The first line of the '{VerdictHeading}' section must start with the verdict name in bold and a period, as in '**{ReviewGateRules.ApprovedVerdict}.**'. The section names '{found[0]}', and its first line is '{firstLine}'. Write the name exactly (D-179, D-269).";
+            return null;
+        }
+
         error = string.Empty;
         return found[0];
+    }
+
+    /// <summary>
+    /// The lines of a text that are outside a fenced block, in order. A line that starts with three backticks or
+    /// three tildes opens a fence, and the next such line closes it. The fence lines are skipped too.
+    /// </summary>
+    private static System.Collections.Generic.List<string> LinesOutsideFences(string text)
+    {
+        System.Collections.Generic.List<string> lines = [];
+        bool inFence = false;
+        foreach (string line in text.Split('\n'))
+        {
+            string start = line.TrimStart();
+            if (start.StartsWith("```", StringComparison.Ordinal) || start.StartsWith("~~~", StringComparison.Ordinal))
+            {
+                inFence = !inFence;
+                continue;
+            }
+
+            if (!inFence)
+            {
+                lines.Add(line);
+            }
+        }
+
+        return lines;
     }
 }
