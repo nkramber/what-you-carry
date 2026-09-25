@@ -59,7 +59,10 @@ Session: PR-87, author. Branch `chore/pr-87-gitar-reenable`. PR #103, pending me
 
 ### In flight
 
-- The gitar pass of the fix push with `make gitar-wait`, then `make codex-review` with no flag.
+- Gitar approved `ef8536b` with no finding. `make gitar-wait` ended on its dashboard edit after 62 seconds.
+- CI run 36098578048 passed on `ef8536b`. Only the Review gate workflow was red before the record.
+- `make codex-review PR=103` approved the effective head `f6292c0` with no finding (`docs/reviews/pr-103.md`). The record commit is `64119bb`.
+- The owner decides the merge after the merge summary (D-524, D-552).
 
 ### Traps and gotchas
 
@@ -74,7 +77,7 @@ None.
 
 ### Next concrete action
 
-Finish the gitar pass and the review of this PR. Then give the owner the merge summary (D-533, D-552).
+When the owner confirms, run `gh pr merge 103 --auto --squash`, and write the prompt of `merge-prompt.md` at the merge. PR-85 (PR #102) then carries the gitar wait and D-577 too. The next PR after both is PR-86.
 
 ## Session 244: 2026-09-24, Codex
 
