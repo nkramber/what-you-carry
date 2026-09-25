@@ -351,8 +351,9 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-126 | The ruleset runbook and the comment export used fixed paths under `/tmp`, so two sessions on one machine could read the file of the other | 2026-09-24 | ✅ PR #104 (PR-88): each procedure writes its files with `mktemp` and sets its own variables |
 | F-127 | Core published the boss floors, the timer marks, and the move tables as arrays that any caller could change for each run in the process | 2026-09-24 | ✅ PR #104 (PR-88): each table is a read-only list |
 | F-128 | The swing of `overseer-pick` is 30, 6, and 30 ticks, and it names the sword clip of 36 ticks with the phases 12, 6, and 18 (D-87). The Game poses the player alone, so no player sees it yet | 2026-09-25 | 🔧 found in PR-88. A test holds the gap until a clip for the pick exists |
-| F-129 | `RampRayTests.TheMarchAgreesWithAFineWalkOverRamps` asserts one condition two times, the fault of F-124 on the ramp march | 2026-09-25 | 🔧 found in PR-88 |
+| F-129 | `RampRayTests.TheMarchAgreesWithAFineWalkOverRamps` asserts one condition two times, the fault of F-124 on the ramp march | 2026-09-25 | ✅ PR #104 (PR-88): the test asserts the hit and both bounds of its distance (T-3) |
 | F-130 | `ChamberBudget.WindowTop` and the sums of chamber weights are long values that a very large `difficultyBudget` or chamber weight can overflow | 2026-09-25 | 🔧 found in PR-88 |
+| F-131 | The loaders passed four schema faults: a floor band that no detail pass knows, a locator rotation that the model loader dropped, an empty string in the string table, and a keyframe pose that overflowed near the float limit | 2026-09-24 | ✅ PR #104 (PR-88): each fault fails at load, and the pose at a keyframe tick is the keyframe (D-92, G-7, T-2) |
 
 ## 6. Guardrails (the safety contract for every PR)
 

@@ -1135,6 +1135,8 @@ Scope:
 - The gate tools: exact file exclusion, known finding states, no future night record, and the full branch ref (T-2, F-125). A build step comes before a promotion, and git reads both streams at once.
 - The ruleset runbook and the comment export: each temporary file comes from `mktemp` (F-126).
 - `FloorTimer` and `GridMoves`: each table is a read-only list (F-127).
+- `FloorTemplate`, `BlockbenchLoader`, `Strings`, and `AnimationClip`: an unknown band, a rotated locator, and an empty string fail at load, and a keyframe tick gives the keyframe (G-7, T-2, F-131).
+- `RampRayTests`: the ramp march test asserts the hit and both bounds of its distance (F-129).
 
 Out of scope: the other findings of the repository review of 2026-09-24. The self-hosted runner goes in PR-86 (D-572). The night publish waits for PR-85 and an owner answer. The trust boundary of the reviewer waits for an owner answer. This PR holds more than one concern (D-580).
 
@@ -1147,7 +1149,7 @@ Exit tests:
 5. `TheSweepNamesASeedWhoseDigThrows` passes, and it fails on the sweep of `main`.
 6. `RepeatedKeyTests` and the four new tests of `AssetQaTests` pass, and they fail on the gate of `main`.
 7. The simulation version is 17, and `BitIdentityKnownAnswer` passes with `f1c35ddccb2cd0bb` on the three platforms (G-9, G-20).
-8. The new tests of F-120 to F-125 and F-127 pass, and each test that targets a defect fails on the code of `main`.
+8. The new tests of F-120 to F-125, F-127, F-129, and F-131 pass, and each test that targets a defect fails on the code of `main`.
 
 Review focus: the end check before the stairwell choice in `Step`, the guard of each engine callback, and the verdict parse of each review record.
 

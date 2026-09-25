@@ -14,6 +14,7 @@ Session: PR-88, correction author. Branch `fix/pr-88-review-fixes`. PR #104, pen
 - P1-2: only a fence of the same character and at least the same length closes a fenced block (F-116).
 - Each new test failed on the parsers of `4029e36`.
 - Gitar approved `35c389c` with one finding, the numbers of the sequence tail and the exit tests. Commit `35c389c` fixed it, and the thread is resolved.
+- The owner added five small concerns while the Mac runner ran the night: F-129, the ramp march test, and F-131, the band at load, a rotated locator, an empty string, and the pose at a keyframe. Each new test failed on the old code or on a mutant of the march.
 - Gitar approved `4c55f16` with a second finding: the fence parse took any indent, and Markdown takes three spaces at most. It had full merit. The fence now opens after no more than three spaces, and `ReviewGateReadsNoFenceAfterFourSpaces` fails on the parser of `f280b72`.
 
 ### State of the build
