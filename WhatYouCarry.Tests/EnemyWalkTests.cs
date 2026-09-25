@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -311,6 +312,35 @@ public sealed class EnemyWalkTests
 
         Assert.Equal(goal, PathWalk.FloorCellOf(feet));
         Assert.True(awayTicks > PathFollower.WedgedTicks, $"The walk spent {awayTicks} ticks with no gain on the goal, and the case needs more than {PathFollower.WedgedTicks}.");
+    }
+
+    /// <summary>
+    /// F-127. The steps of the side moves and of the corner moves keep their values and their order, and no caller
+    /// can write them. They were public arrays, so one write changed the moves of every run in the process.
+    /// </summary>
+    [Fact]
+    public void TheMoveTablesCannotBeWritten()
+    {
+        Assert.Equal(new[] { 1, -1, 0, 0 }, GridMoves.StepX);
+        Assert.Equal(new[] { 0, 0, 1, -1 }, GridMoves.StepZ);
+        Assert.Equal(new[] { 1, 1, -1, -1 }, GridMoves.CornerStepX);
+        Assert.Equal(new[] { 1, -1, 1, -1 }, GridMoves.CornerStepZ);
+
+        (string Name, IReadOnlyList<int> Table)[] tables =
+        [
+            (nameof(GridMoves.StepX), GridMoves.StepX),
+            (nameof(GridMoves.StepZ), GridMoves.StepZ),
+            (nameof(GridMoves.CornerStepX), GridMoves.CornerStepX),
+            (nameof(GridMoves.CornerStepZ), GridMoves.CornerStepZ),
+        ];
+        foreach ((string name, IReadOnlyList<int> table) in tables)
+        {
+            // The array check comes first, so an old array fails the test before the write below can change it.
+            Assert.False(table is int[], $"GridMoves.{name} is an array, and any caller can write it.");
+            IList<int> view = Assert.IsAssignableFrom<IList<int>>(table);
+            Assert.True(view.IsReadOnly, $"GridMoves.{name} reports that it can be written.");
+            Assert.Throws<NotSupportedException>(() => view[0] = view[0] + 1);
+        }
     }
 
     /// <summary>

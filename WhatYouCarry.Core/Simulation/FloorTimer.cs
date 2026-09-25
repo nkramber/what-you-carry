@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
@@ -23,11 +24,11 @@ namespace WhatYouCarry.Core.Simulation;
 /// </remarks>
 public sealed class FloorTimer
 {
-    /// <summary>The floors that hold a boss (D-6). Each gets the extra seconds of its band (D-407).</summary>
-    public static readonly int[] BossFloors = [5, 10, 15];
+    /// <summary>The floors that hold a boss (D-6). Each gets the extra seconds of its band (D-407). No caller can write it (F-127).</summary>
+    public static readonly IReadOnlyList<int> BossFloors = [5, 10, 15];
 
-    /// <summary>The timer marks, in seconds left (D-456). The loop gives an action event when the running countdown reaches one.</summary>
-    public static readonly int[] MarkSeconds = [60, 30, 10, 8, 6, 5, 4, 3, 2, 1];
+    /// <summary>The timer marks, in seconds left (D-456). The loop gives an action event when the running countdown reaches one. No caller can write it (F-127).</summary>
+    public static readonly IReadOnlyList<int> MarkSeconds = [60, 30, 10, 8, 6, 5, 4, 3, 2, 1];
 
     /// <summary>A timer at its full length.</summary>
     /// <exception cref="ContextException">The length is below one tick.</exception>
