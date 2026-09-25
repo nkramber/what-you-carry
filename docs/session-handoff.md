@@ -1,3 +1,7 @@
+# Session handoff
+
+Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
+
 ## Session 259: 2026-09-25, Claude Code
 
 Author: Claude Code
@@ -21,6 +25,7 @@ Session: PR-86, author. Branch `feat/pr-86-hosted-macos`. PR pending, pending me
 ### Traps and gotchas
 
 - A citation of D-157 or D-192 now needs its superseder on the same line (D-178).
+- The merge of PR #104 dropped the title line and the rule line of this file. `doc-gate` reads the first entry after a line break, so it read session 257 as the newest. This PR puts both lines back.
 
 ### Open questions that block progress
 
