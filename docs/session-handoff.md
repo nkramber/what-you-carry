@@ -12,21 +12,24 @@ Session: PR-87, author. Branch `chore/pr-87-gitar-reenable`. PR #103, pending me
 - The owner ended the gitar pause of D-542: "It is time to re-enable and re-require gitar code reviews". The automated pass is a gate again (D-574). The alert rule ended too.
 - Added `make gitar-wait PR=<n>` and `.github/scripts/gitar-wait.sh` (D-575). The wait is 60 seconds, then a read of the Gitar check runs every 30 seconds. With no check run at 6 minutes it posts one `Gitar review` comment. At 15 minutes it exits 1.
 - Removed each pause text of D-542 from the agent files, the PR template, three skills, and the runbook. `NoInstructionTextHoldsTheGitarPause` holds that.
+- The first live wait on PR #103 ended too early. The check run of the head `36e4d23` completed at 05:07:56 UTC, and the gitar dashboard came at 05:08:49 UTC. The wait now also needs a dashboard edit after the run started, as the start checks of `codex-review` do. `ACompletedCheckRunWithNoNewDashboardIsNoReview` fails on the first form.
+- Gitar approved `36e4d23` at 05:08:55 UTC with no finding. Its summary names PR-85 as the source of the pause, which was PR-80. A summary is no finding (D-550).
 - D-576: PR-87 goes after PR-85 and before PR-86. PR-85 is open as PR #102 in another session, which uses session number 245.
 
 ### State of the build
 
-- Full suite: 1619 of 1620 passed in 5 minutes 55 seconds. The failure was the entry count before `handoff-rotate`. After the rotation, the 146 handoff and document tests passed.
+- Full suite after the fix of the end condition: 1622 of 1622 passed in 8 minutes 22 seconds. The first run of the session failed only on the entry count before `handoff-rotate`.
 - `ste-check` found 0 issues.
 - A run of the script against PR #102 read its completed Gitar check run and exited 0.
 
 ### In flight
 
-- The gitar pass of this PR with `make gitar-wait`, then `make codex-review` with no flag.
+- The gitar pass of the fix push with `make gitar-wait`, then `make codex-review` with no flag.
 
 ### Traps and gotchas
 
 - PR #102 edits the same order list of the Phase 2 roadmap and section 7 of the design doc. The PR that merges second resolves the conflict.
+- The check run of `e6abe26`, the first commit of PR #103, still read "Working" after the approval. The wait reads the head alone for that reason.
 - The first read of the wait is at 60 seconds. The Gitar check of PR #102 ran 6 minutes 11 seconds, so a normal pass ends inside the limit of 15 minutes.
 - The old push wait of the skill cited D-160 of another repository. D-160 of this repository is the state hash.
 

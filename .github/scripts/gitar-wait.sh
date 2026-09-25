@@ -3,7 +3,9 @@
 # Usage: gitar-wait.sh <pr number>
 # Run it at once after the push. It waits 60 seconds, then reads the Gitar check runs of the head every 30 seconds.
 # When no check run shows up by 360 seconds, it posts one "Gitar review" comment and reads on. It exits 0 when each
-# Gitar check run of the head completes. At 900 seconds it exits 1, and the session stops and tells the owner.
+# Gitar check run of the head completes and the Gitar dashboard comment has an edit after the first of them started.
+# A completed check run alone is no review: on PR #103 the check run completed 53 seconds before the dashboard came.
+# At 900 seconds it exits 1, and the session stops and tells the owner.
 # A failed read exits 1 with its context (T-2). The variables GITAR_WAIT_FIRST, GITAR_WAIT_POLL, GITAR_WAIT_REQUEST,
 # and GITAR_WAIT_LIMIT replace the four times, in seconds, for the tests alone.
 set -euo pipefail
@@ -36,12 +38,21 @@ while true; do
     echo "gitar-wait: the read of the check runs on ${head} of PR #${pr} failed." >&2
     exit 1
   }
+  # The last edit time of the newest Gitar dashboard comment, or nothing when the PR has none.
+  dashboard=$(gh api --paginate "repos/${repo}/issues/${pr}/comments?per_page=100" \
+    --jq '.[] | select(.user.login == "gitar-bot[bot]") | select(.body | contains("<b>Code Review</b>")) | .updated_at' | tail -n 1) || {
+    echo "gitar-wait: the read of the comments of PR #${pr} failed." >&2
+    exit 1
+  }
   elapsed=$(( $(date +%s) - start ))
 
   if [ -n "$runs" ] && ! grep -qv '^completed ' <<< "$runs"; then
-    echo "gitar-wait: each Gitar check run on ${head} of PR #${pr} completed after ${elapsed} s."
-    printf '%s\n' "$runs"
-    exit 0
+    started=$(awk '{ print $3 }' <<< "$runs" | sort | head -n 1)
+    if [[ "$dashboard" > "$started" ]]; then
+      echo "gitar-wait: each Gitar check run on ${head} of PR #${pr} completed, and the dashboard has its last edit at ${dashboard}, after ${elapsed} s."
+      printf '%s\n' "$runs"
+      exit 0
+    fi
   fi
 
   if [ -z "$runs" ] && [ "$requested" = no ] && [ "$elapsed" -ge "$request" ]; then
@@ -54,8 +65,8 @@ while true; do
   fi
 
   if [ "$elapsed" -ge "$limit" ]; then
-    echo "gitar-wait: no completed Gitar check run on ${head} of PR #${pr} after ${elapsed} s. Stop, and tell the owner (D-575)." >&2
-    printf '%s\n' "${runs:-no Gitar check run}" >&2
+    echo "gitar-wait: no finished Gitar review of ${head} on PR #${pr} after ${elapsed} s. Stop, and tell the owner (D-575)." >&2
+    printf '%s\n' "${runs:-no Gitar check run}" "dashboard: ${dashboard:-none}" >&2
     exit 1
   fi
   sleep "$poll"

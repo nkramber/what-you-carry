@@ -619,7 +619,7 @@ Gate: a branch night on hosted Linux ends and names the slice, and the shape tes
 > *In plain English:* the night ran on the Mac of the owner and blocked the checks of every PR for hours. Now it runs on free cloud machines, in parallel.
 
 **PR-87: Gitar pause ends.** ✅ Done in PR #103.
-The pause of D-542 ends, and the automated pass is a gate again (D-574). After each push, `make gitar-wait` waits 60 seconds, then reads the gitar check run of the head every 30 seconds. With no check run at 6 minutes it posts one `Gitar review` comment, and at 15 minutes it stops (D-575). This PR comes after PR-85 and before PR-86 (D-576).
+The pause of D-542 ends, and the automated pass is a gate again (D-574). After each push, `make gitar-wait` waits 60 seconds, then reads the gitar check run of the head every 30 seconds. It ends when that run completes and the dashboard shows the review. With no check run at 6 minutes it posts one `Gitar review` comment, and at 15 minutes it stops (D-575). This PR comes after PR-85 and before PR-86 (D-576).
 Gate: the wait tests pass, and the gitar pass and the review of this PR run with no flag.
 > *In plain English:* the owner paused the automated review of each PR while it did not work. It works again, so each PR waits for it again. A script watches for the review, and it asks for one when none starts.
 

@@ -8,7 +8,8 @@ namespace WhatYouCarry.Tests;
 
 /// <summary>
 /// The Gitar wait after a push (D-575): 60 seconds, then a read of the Gitar check runs every 30 seconds, one
-/// <c>Gitar review</c> comment when no check run shows up by 360 seconds, and a stop at 900 seconds. Each behavior test
+/// <c>Gitar review</c> comment when no check run shows up by 360 seconds, and a stop at 900 seconds. The wait ends
+/// when each Gitar check run of the head completed and the dashboard comment has an edit after the first one started. Each behavior test
 /// puts a fake <c>gh</c> first on the path and shortens the four times. The Windows leg has no such fake, so it checks
 /// the script text and the Makefile alone, and the two other legs of the same gate run the behavior.
 /// </summary>
@@ -17,9 +18,12 @@ public sealed class GitarWaitTests
     private const string Head = "0123456789abcdef0123456789abcdef01234567";
     private const string Completed = "completed success 2026-09-25T04:16:45Z 2026-09-25T04:22:56Z";
     private const string InProgress = "in_progress null 2026-09-25T04:16:45Z null";
+    private const string DashboardAfter = "2026-09-25T04:22:41Z";
+    private const string DashboardBefore = "2026-09-25T04:10:00Z";
 
     // The fake reads its state from files beside it. A file runs-<n>.txt holds the check runs of read n, and
-    // runs.txt holds them for each later read. No file means no Gitar check run.
+    // runs.txt holds them for each later read. No file means no Gitar check run. dashboard.txt holds the edit time
+    // of each dashboard comment, and no file means no dashboard.
     private const string FakeGh = """
         #!/usr/bin/env bash
         dir="$(dirname "$0")"
@@ -30,6 +34,7 @@ public sealed class GitarWaitTests
           "pr comment") echo "$*" >> "$dir/comments.log" ;;
           api*)
             if [ -f "$dir/api-fails" ]; then echo "HTTP 502" >&2; exit 1; fi
+            case "$*" in *"/issues/"*) if [ -f "$dir/dashboard.txt" ]; then cat "$dir/dashboard.txt"; fi; exit 0 ;; esac
             n=$(( $(cat "$dir/reads" 2>/dev/null || echo 0) + 1 ))
             echo "$n" > "$dir/reads"
             if [ -f "$dir/runs-$n.txt" ]; then cat "$dir/runs-$n.txt"; elif [ -f "$dir/runs.txt" ]; then cat "$dir/runs.txt"; fi ;;
@@ -49,12 +54,12 @@ public sealed class GitarWaitTests
     }
 
     [Fact]
-    public void ACompletedCheckRunEndsTheWaitWithNoRequest()
+    public void ACompletedCheckRunAndANewDashboardEndTheWaitWithNoRequest()
     {
-        RunCase(new Dictionary<string, string> { ["runs.txt"] = Completed }, (result, directory) =>
+        RunCase(new Dictionary<string, string> { ["runs.txt"] = Completed, ["dashboard.txt"] = DashboardAfter }, (result, directory) =>
         {
             Assert.True(result.Exit == 0, result.Errors);
-            Assert.Contains($"each Gitar check run on {Head} of PR #7 completed", result.Output, StringComparison.Ordinal);
+            Assert.Contains($"each Gitar check run on {Head} of PR #7 completed, and the dashboard has its last edit at {DashboardAfter}", result.Output, StringComparison.Ordinal);
             Assert.Contains(Completed, result.Output, StringComparison.Ordinal);
             Assert.Contains($"api --paginate repos/owner/name/commits/{Head}/check-runs?per_page=100", File.ReadAllText(Path.Combine(directory, "calls.log")), StringComparison.Ordinal);
             Assert.False(File.Exists(Path.Combine(directory, "comments.log")), "A completed check run needs no Gitar review comment.");
@@ -69,12 +74,35 @@ public sealed class GitarWaitTests
             ["runs-1.txt"] = InProgress,
             ["runs-2.txt"] = $"{Completed}\n{InProgress}",
             ["runs.txt"] = $"{Completed}\n{Completed}",
+            ["dashboard.txt"] = DashboardAfter,
         };
         RunCase(files, (result, directory) =>
         {
             Assert.True(result.Exit == 0, result.Errors);
             Assert.Equal("3", File.ReadAllText(Path.Combine(directory, "reads")).Trim());
             Assert.False(File.Exists(Path.Combine(directory, "comments.log")), "A running check run needs no Gitar review comment.");
+        });
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(DashboardBefore)]
+    public void ACompletedCheckRunWithNoNewDashboardIsNoReview(string? dashboard)
+    {
+        // PR #103: the Gitar check run of the head completed at 05:07:56, and the dashboard came at 05:08:49. The
+        // first wait ended on the check run alone, before the review. A dashboard older than the run is no review too.
+        Dictionary<string, string> files = new() { ["runs.txt"] = Completed };
+        if (dashboard is not null)
+        {
+            files["dashboard.txt"] = $"{DashboardBefore}\n{dashboard}";
+        }
+
+        RunCase(files, (result, directory) =>
+        {
+            Assert.Equal(1, result.Exit);
+            Assert.Contains("no finished Gitar review", result.Errors, StringComparison.Ordinal);
+            Assert.Contains($"dashboard: {dashboard ?? "none"}", result.Errors, StringComparison.Ordinal);
+            Assert.False(File.Exists(Path.Combine(directory, "comments.log")), "A completed check run needs no Gitar review comment.");
         });
     }
 

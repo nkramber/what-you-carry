@@ -1087,7 +1087,7 @@ Gate: exit tests 1 to 10 and 12 pass. Exit test 11 runs on `main` after the merg
 Scope:
 
 - `CLAUDE.md` and `AGENTS.md`, the PR template, the skills `gitar-review`, `review-response`, and `one-pr-one-session`, and `docs/runbooks/session-context.md`: each pause note of D-542 leaves, and the automated pass is a gate again (D-574).
-- `.github/scripts/gitar-wait.sh`: the wait after a push. It reads the Gitar check runs of the head every 30 seconds after a wait of 60 seconds (D-575).
+- `.github/scripts/gitar-wait.sh`: the wait after a push. It reads the Gitar check runs of the head every 30 seconds after a wait of 60 seconds. It ends when they complete and the dashboard has a later edit (D-575).
 - `.github/scripts/gitar-wait.sh`: with no check run at 6 minutes, it posts one `Gitar review` comment. At 15 minutes it stops with exit 1 (D-575).
 - `Makefile`: the target `gitar-wait` runs the script (D-575).
 - `WhatYouCarry.Tests/`: `GitarWaitTests`, and `NoInstructionTextHoldsTheGitarPause` in `RepositoryShapeTests`.
@@ -1096,17 +1096,18 @@ Out of scope: the flag `--skip-gitar-review`, which stays in `codex-review` (D-5
 
 Exit tests:
 
-1. `GitarWaitTests` pass on Linux and macOS. A completed check run ends the wait. A missing check run gets one request and a stop at the limit.
+1. `GitarWaitTests` pass on Linux and macOS. A completed check run and a new dashboard end the wait. A missing check run gets one request and a stop at the limit.
 2. `NoInstructionTextHoldsTheGitarPause` passes, and it fails on the agent files of `main` before this PR.
 3. `PullRequestTemplateGitarLineMatchesThePrGate` passes.
-4. `make gitar-wait PR=<this PR>` after each push of this PR ends with exit 0, and the gitar pass of this PR is complete (D-574, D-575).
-5. `make codex-review PR=<this PR>` reviews this PR with no flag. The merge request gives the merge summary as questions and answers (D-552).
+4. `ACompletedCheckRunWithNoNewDashboardIsNoReview` passes, and it fails on the first form of the script.
+5. `make gitar-wait PR=<this PR>` after each push of this PR ends with exit 0, and the gitar pass of this PR is complete (D-574, D-575).
+6. `make codex-review PR=<this PR>` reviews this PR with no flag. The merge request gives the merge summary as questions and answers (D-552).
 
 Review focus: the wait script against D-575, its exit codes and its request rule, and each removed pause text against D-574.
 
 Check clause: none.
 
-Gate: exit tests 1 to 5 pass.
+Gate: exit tests 1 to 6 pass.
 
 > *In plain English:* the owner paused the automated review of each PR while it did not work. It works again, so each PR waits for it again. A script watches for the review, and it asks for one when none starts.
 

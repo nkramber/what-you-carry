@@ -99,7 +99,7 @@ The script `.github/scripts/gitar-wait.sh` holds the one shell loop of the wait 
 
 - It waits 60 seconds, then reads the gitar check runs of the head every 30 seconds.
 - With no check run 6 minutes after the start, it posts one `Gitar review` comment and reads on.
-- It exits 0 when each gitar check run of the head completes, and prints each run.
+- It exits 0 when each gitar check run of the head completes, and the gitar dashboard has an edit after the first run started. It prints each run.
 - It exits 1 at 15 minutes, or on a failed read. Then stop, and tell the owner.
 
 Run the wait in the background, and run no status command while it runs. Put each later wait in one shell loop that prints the final state alone.

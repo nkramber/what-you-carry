@@ -193,7 +193,7 @@ gh pr comment "$n" --body "Gitar review"
 
 ### E. The push wait and the Gitar check
 
-Run `make gitar-wait PR=<n>` at once after the push (D-575). The script `.github/scripts/gitar-wait.sh` prints the final state alone. It exits 0 when each Gitar check run of the head completes. It exits 1 at 15 minutes, or on a failed read. The runbook `docs/runbooks/session-context.md` holds the rules under "Wait for gitar".
+Run `make gitar-wait PR=<n>` at once after the push (D-575). The script `.github/scripts/gitar-wait.sh` prints the final state alone. It exits 0 when each Gitar check run of the head completes and the dashboard comment has an edit after the first of them started. It exits 1 at 15 minutes, or on a failed read. The runbook `docs/runbooks/session-context.md` holds the rules under "Wait for gitar".
 
 ### F. The comment export
 

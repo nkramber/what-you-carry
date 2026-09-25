@@ -98,7 +98,7 @@ An automated reviewer, gitar, comments on every PR after a push (D-250). The aut
 
 The gitar pause ended, and the pass is a gate again (D-574).
 
-- Run `make gitar-wait PR=<n>` in the background at once after each push. It waits 60 seconds, then reads the gitar check run of the head every 30 seconds until it completes. With no check run at 6 minutes, it posts one `Gitar review` comment. At 15 minutes it stops: tell the owner (D-575).
+- Run `make gitar-wait PR=<n>` in the background at once after each push. It waits 60 seconds, then reads the gitar check run of the head every 30 seconds until it completes and the dashboard shows the review. With no check run at 6 minutes, it posts one `Gitar review` comment. At 15 minutes it stops: tell the owner (D-575).
 - Load the `gitar-review` skill after each push. It holds the author procedure, the proof that a review is current, and the commands (D-374).
 - When the pass ends, run `make codex-review PR=<n>` in the background, or ask for the override (D-511, D-517).
 - The reviewing provider reads the PR comments into its review and never addresses gitar (`pr-review`).
