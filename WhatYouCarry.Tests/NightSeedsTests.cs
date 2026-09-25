@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Tools;
@@ -352,7 +353,7 @@ public sealed class NightSeedsTests
             string main = Path.Combine(directory, "main.json");
             string output = Path.Combine(directory, "night.json");
             File.WriteAllText(main, mainText);
-            (int exit, string errors) = RunBash(script, Head, main, output);
+            (int exit, _, string errors) = RunBash(script, Head, main, output);
             Assert.True(exit == 0, errors);
 
             string failure = File.ReadAllText(output);
@@ -388,8 +389,86 @@ public sealed class NightSeedsTests
         }
     }
 
-    /// <summary>Runs a script under bash with the arguments, and returns the exit code and standard error.</summary>
-    private static (int Exit, string Errors) RunBash(string script, params string[] arguments)
+    [Fact]
+    public void TheRecordJobGathersEachSweepResultAndTheStatus()
+    {
+        // D-572: the record job joins the result of each sweep job. A sweep that did not end leaves an empty failure
+        // file, so the record keeps the failed seed of main for it (D-567). The status reads success only when each
+        // job result reads success, and a skipped job reads failure (T-2).
+        string script = Path.Combine(RepositoryRoot.Find(), ".github", "scripts", "night-gather.sh");
+        Assert.Contains("status=\"failure\"", File.ReadAllText(script), StringComparison.Ordinal);
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        DateOnly date = NightSeeds.DayZero.AddDays(1);
+        SortedDictionary<string, int> noCause = new(StringComparer.Ordinal);
+        string directory = Path.Combine(Path.GetTempPath(), $"wyc-night-gather-{Guid.NewGuid():N}");
+        try
+        {
+            string results = Path.Combine(directory, "sweeps");
+            string output = Path.Combine(directory, "record");
+            WriteSweepResult(results, Coward.PolicyName, BotRunCommand.DeathLine(Coward.PolicyName, 0, 5500, noCause), NightSeeds.FailureLine(Coward.PolicyName, []));
+            WriteSweepResult(results, GreedyDescender.PolicyName, BotRunCommand.DeathLine(GreedyDescender.PolicyName, 3, 0, new SortedDictionary<string, int>(StringComparer.Ordinal) { ["scavenger"] = 3 }), NightSeeds.FailureLine(GreedyDescender.PolicyName, [5600]));
+            WriteSweepResult(results, FullClearer.PolicyName, string.Empty, string.Empty);
+
+            (int exit, string status, string errors) = RunBash(script, results, output, "success", "failure", "success");
+            Assert.True(exit == 0, errors);
+            Assert.Equal("failure\n", status);
+            Assert.Contains("3 sweep results", errors, StringComparison.Ordinal);
+
+            Dictionary<string, List<ulong>> failures = NightSeeds.ReadFailures(File.ReadAllText(Path.Combine(output, "seed-failures.txt")), output);
+            Assert.Equal(new[] { Coward.PolicyName, GreedyDescender.PolicyName }, failures.Keys.Order(StringComparer.Ordinal));
+            Dictionary<string, List<ulong>> carry = new(StringComparer.Ordinal) { [FullClearer.PolicyName] = [5700] };
+            string fields = NightSeeds.RecordFields(date, "failure", failures, carry);
+            string record = NightRecordCommand.Build(Head, new DateTime(2026, 9, 25, 9, 0, 0, DateTimeKind.Utc), "failure", File.ReadAllText(Path.Combine(output, "bot-deaths.txt")), fields);
+            Dictionary<string, List<ulong>> failed = NightSeeds.ReadRecordSeeds(record, NightSeeds.FailedSeedsName, "the gathered record");
+            Assert.Equal(new ulong[] { 5700 }, NightSeeds.SeedsOf(failed, FullClearer.PolicyName));
+            Assert.Equal(new ulong[] { 5600 }, NightSeeds.SeedsOf(failed, GreedyDescender.PolicyName));
+            Assert.Contains("\"greedy-descender\":3", record, StringComparison.Ordinal);
+
+            // Six ended sweeps with no failure give a success record.
+            string allResults = Path.Combine(directory, "all");
+            foreach (string sweep in NightSeeds.Sweeps)
+            {
+                WriteSweepResult(allResults, sweep, string.Empty, NightSeeds.FailureLine(sweep, []));
+            }
+
+            (int allExit, string allStatus, string allErrors) = RunBash(script, allResults, output, "success", "success", "success");
+            Assert.True(allExit == 0, allErrors);
+            Assert.Equal("success\n", allStatus);
+            Dictionary<string, List<ulong>> none = NightSeeds.ReadFailures(File.ReadAllText(Path.Combine(output, "seed-failures.txt")), output);
+            Assert.Contains("\"failedSeeds\":{", NightSeeds.RecordFields(date, "success", none, carry), StringComparison.Ordinal);
+
+            Assert.Equal("cancelled\n", RunBash(script, allResults, output, "success", "failure", "cancelled").Output);
+            Assert.Equal("failure\n", RunBash(script, allResults, output, "success", "skipped", "success").Output);
+            Assert.Equal("failure\n", RunBash(script, allResults, output, "success", "success", string.Empty).Output);
+
+            // An absent results directory and a call with no job result fail the script (T-2).
+            Assert.NotEqual(0, RunBash(script, Path.Combine(directory, "absent"), output, "success").Exit);
+            Assert.NotEqual(0, RunBash(script, allResults, output).Exit);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    /// <summary>Writes the result of one sweep job, as the artifact of the sweep job holds it: the summary and the failure line.</summary>
+    private static void WriteSweepResult(string results, string sweep, string summary, string failureLine)
+    {
+        string sweepDirectory = Path.Combine(results, $"night-sweep-{sweep}");
+        Directory.CreateDirectory(sweepDirectory);
+        File.WriteAllText(Path.Combine(sweepDirectory, "bot-deaths.txt"), summary);
+        File.WriteAllText(Path.Combine(sweepDirectory, "seed-failures.txt"), failureLine);
+    }
+
+    /// <summary>Runs a script under bash with the arguments, and returns the exit code, standard output, and standard error.</summary>
+    private static (int Exit, string Output, string Errors) RunBash(string script, params string[] arguments)
     {
         ProcessStartInfo start = new("bash") { RedirectStandardError = true, RedirectStandardOutput = true, UseShellExecute = false };
         start.ArgumentList.Add(script);
@@ -399,10 +478,10 @@ public sealed class NightSeedsTests
         }
 
         using Process process = Process.Start(start) ?? throw new InvalidOperationException($"bash did not start for the script {script}.");
-        process.StandardOutput.ReadToEnd();
+        string output = process.StandardOutput.ReadToEnd();
         string errors = process.StandardError.ReadToEnd();
         process.WaitForExit();
-        return (process.ExitCode, errors);
+        return (process.ExitCode, output, errors);
     }
 
     /// <summary>A map of failure lines where each named sweep ended with no failure.</summary>

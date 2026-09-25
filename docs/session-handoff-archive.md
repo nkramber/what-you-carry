@@ -1,5 +1,117 @@
 # Session handoff archive
 
+## Session 239: 2026-09-24, Claude Code
+
+Author: Claude Code
+Session: PR-83, author. Branch `feat/pr-83-night-record-promotion`. PR #99, pending merge. Base `811c1c9`.
+
+### What this session did, and why
+
+- The owner asked that a green branch night count for `main` after the merge of its PR. PR #97 merged with a green branch night at `4282206`, and PR #98 still read the red night of `e069e16`.
+- The owner answered OQ-183 to OQ-189, and each recommendation stood: D-555 to D-563. The PR takes the id PR-83, before the fixed seeds (D-560). The PR-81 night gets no promotion (D-561).
+- Added the tool `night-promote` and the workflow `night-promote.yml`. A push to `main` promotes the branch night of the merged PR when the trees differ only in the skip set (D-555 to D-558).
+- Added `night-publish-check` to `night.yml`. A night on `main` keeps a record at a later commit (D-562). Each write of `night-results` takes a lease.
+- Added the action `rerun-night-gates`. A promotion and a night on `main` re-run the gate of each open PR (D-559).
+- PR #98 merged first as `811c1c9`. This branch rebased onto it. The PR-82 line on the fixed seeds now names the PR after PR-83 (D-560), and this entry took session 239 (D-187).
+
+### State of the build
+
+- Local before the rebase: the full suite passed 1596 of 1596, Smoke included. `det-lint` and `ste-check` read 0. `doc-gate` passed.
+- CI before the rebase, at `af39f08`: every build, test, smoke, bit-identity, bots, lint, and document job passed on the three platforms.
+- The night on `main` at `2071cb6` passed and ended at 2026-09-24T05:06:18Z (run 35944586534). A re-run of the `night-gate` job of this PR read it green. That record stays inside 48 hours until 2026-09-26T05:06Z, so this PR needs no branch night.
+- A read-only dry run of `night-promote` at `2071cb6` gave `promote`. It wrote nothing (D-561).
+- CI at `3236111`, after the rebase: every build, test, smoke, bit-identity, bots, lint, document, and `night-gate` job passed on the three platforms.
+- The review through `make codex-review PR=99 -- --skip-gitar-review` approved the effective head `2b872f9` with no finding (`docs/reviews/pr-99.md`).
+- The remote head: the push of this entry. `origin/main` is `811c1c9`.
+
+### In flight
+
+- The merge confirmation of the owner, after the merge summary in Q/A form (D-524, D-552).
+- A first review run started at `af39f08` and stopped on the owner request before it wrote anything. The owner asked for the rebase first, then the review after CI.
+
+### Traps and gotchas
+
+- `night-promote.yml` runs first on the merge commit of this PR. This PR has no branch night, so that run ends with `branch-absent` and writes nothing. Its first promotion comes with a later PR. Exit test 6 reads both runs.
+- The night checkout now takes the full history (`fetch-depth: 0`) for the order check of D-562.
+- The only gitar comment is a plan notice with no item (D-550).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the run of `night-promote.yml` at the merge commit for exit test 6. It names `branch-absent` and writes nothing, because this PR had no branch night. The next PR is the fixed seeds of the night (D-560).
+
+## Session 238: 2026-09-24, Claude Code
+
+Author: Claude Code
+Session: PR-82, author. Branch `chore/pr-82-template-gitar-notice`. PR #98, pending merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Ran a night by hand on `main`, run 35944586534 at `2071cb6`. It passed and ended at 05:06 UTC. The record of `main` is now a success at `2071cb6`, and it replaced the red night of `e069e16`.
+- A night on `main` does not re-run the `night-gate` of an open PR. The re-run step of `night.yml` skips `main` (D-548). The session re-ran the `night-gate` run of this PR by hand, and it passed.
+- Review round 1 read `Blocked` with no finding: `night-gate` was red, and CI was pending. Review round 2 approves the effective head `bc51dde`.
+- The owner asked for a prompt of a parallel PR. A green branch night then counts for `main` after the merge, when the merge commit differs from the tested commit in skip-set paths alone. The prompt went to the owner in chat. That PR has no D-# or OQ-# yet.
+
+### State of the build
+
+- All required checks are green at the PR tip, `night-gate` and smoke on three platforms included.
+- Code head: `bc51dde`. Later commits of this PR change documents only.
+
+### In flight
+
+- The owner merge confirmation, then the auto-merge.
+
+### Traps and gotchas
+
+- The Linux smoke failure in the round 1 record came from a run in progress. The final run passed.
+- After each red night on `main`, each open PR needs a re-run of its `night-gate` by hand, until a PR changes that rule.
+- The parallel PR can collide with this PR on D-# ids and session numbers. This PR holds D-553, D-554, and sessions 235 to 238.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge: the fixed seeds of the night (D-551), or the parallel PR of the night record promotion, as the owner orders them. Follow the next concrete action of Session 232 for the fixed seeds.
+
+## Session 237: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `chore/pr-82-template-gitar-notice`. PR #98, Ready for owner merge. Base `2071cb6`.
+
+### What this session did, and why
+
+- Re-reviewed PR #98 at effective head `bc51dde` after the night and required product checks passed.
+- Updated `docs/reviews/pr-98.md` and kept the earlier Blocked verdict in its history.
+- Found no in-scope defect in the template line or its equality test.
+
+### State of the build
+
+- The Documents tests passed 141 of 141. `ste-check` and local `doc-gate` passed.
+- GitHub at `804ec44` showed all product checks, including `night-gate`, bit identity, sweeps, and smoke, as passed.
+- `evaluate` and `review-gate` still read the prior Blocked record. The remote head at review start was `804ec44`.
+
+### In flight
+
+- PR #98 awaits the updated `review-gate` and `evaluate` results. They must read this review record.
+
+### Traps and gotchas
+
+- The Gitar comment says only “Gitar is working.” D-550 says that notice needs no answer.
+- D-542 pauses the Gitar wait. The review record and this entry form one metadata commit.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author gives the merge summary in questions and answers, then asks the owner to confirm the merge (D-552).
+
 ## Session 236: 2026-09-23, Codex
 
 Author: Codex

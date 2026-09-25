@@ -97,7 +97,7 @@ NOTE: A case-sensitive volume makes the macOS CI leg agree with the Linux leg on
 
 ## Keep the runner available
 
-The launch agent starts when the owner logs in. Two settings keep it available for the night jobs (D-115, D-117):
+The night runs on hosted Linux from PR-85 (D-572). The launch agent starts when the owner logs in. Two settings keep it available for the macOS legs of each PR (D-100):
 
 1. Open System Settings, then Users and Groups, and turn on automatic login for the owner account.
 2. Open System Settings, then Energy, and turn off sleep while the machine is on power.

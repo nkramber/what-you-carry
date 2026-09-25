@@ -202,7 +202,8 @@ What we pay:
 - Owner time: near full time (D-107).
 - Tokens: a generous budget on two harnesses (D-107). The amount per PR is unknown until M-4. The token audit of 2026-09-16 measured 10 sessions of each harness. The median input was 32.3 million tokens for a Claude Code session and 4.3 million for a Codex session, most of it from the cache. D-377 to D-382 act on the largest causes.
 - CI: GitHub-hosted Linux x64 and Windows x64 minutes on every PR (D-100). Wall time per PR is unknown until M-1. F-109 measured it again on 2026-09-22: 18 to 21 minutes on the hosted legs of a code head. A push of documents alone skips the heavy jobs after a green head (D-474). A session runs no full suite for such a change either (D-491).
-- The Mac Mini as a self-hosted macOS arm64 runner: power, and RAM shared with the editor and the harness (D-100, D-105).
+- The night: eight jobs on hosted Linux from PR-85, six of them for the sweeps. Standard hosted runners cost nothing for a public repository (D-572, billing page, read 2026-09-24).
+- The Mac Mini as a self-hosted macOS arm64 runner: power, and RAM shared with the editor and the harness (D-100, D-105). It runs the macOS legs of each PR until PR-86 (D-573).
 - Purchases that do not exist yet (D-142):
   - an external SSD before PR-1. Ordered, arrives 2026-09-08 (D-145).
   - an Apple Developer account at 99 USD per year before PR-51.
@@ -613,8 +614,8 @@ The fixed seeds of each night stay the gate, and each night also runs a slice of
 Gate: the seed tests pass, and a branch night of this PR names the slice of its date.
 > *In plain English:* each night tested the same seeds, so a fault past them stayed hidden. Now each night also tests a new batch that the date picks, and a failure blocks merges until a fix.
 
-**PR-85: Night on hosted Linux.** 🔧
-The night cron moves to 07:07 UTC (D-571). The night moves to hosted Linux as parallel jobs, one for each sweep, and one last job writes the record (D-572, D-573). The carry rules of D-567 and D-569 stand.
+**PR-85: Night on hosted Linux.** ✅ Done in PR #102.
+The night cron moves to 07:07 UTC (D-571). The night moves to hosted Linux as parallel jobs (D-572, D-573). One job takes the date and the record of `main`, one job runs each sweep, and one last job writes the record. The carry rules of D-567 and D-569 stand.
 Gate: a branch night on hosted Linux ends and names the slice, and the shape tests read the new cron and jobs.
 > *In plain English:* the night ran on the Mac of the owner and blocked the checks of every PR for hours. Now it runs on free cloud machines, in parallel.
 
