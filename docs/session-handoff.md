@@ -53,18 +53,20 @@ Session: PR-75, author. Branch `feat/pr-75-sword-art`. PR #106, pending merge. B
 
 ### State of the build
 
-- Remote head: see the branch tip. Local: 1822 of 1822 tests pass, Smoke included. `det-lint`, `asset-qa`, `ste-check`, the Godot build, and the smoke session pass.
+- Effective head `4aebdb9`. Round 1 gives `Ready for owner merge` with no finding (`eb09d5f`). The gitar pass approved `9ac2b19` with no finding.
+- Every check of `9ac2b19` passes but `evaluate` and `review-gate`, which waited for the record. Local: 1822 of 1822 tests pass, Smoke included.
 - Core does not change, so the known answer of the sweep stays `9c79047da9c82a0e`.
 
 ### In flight
 
-- CI, the gitar pass, and `make codex-review PR=106`.
+- The owner merge decision after the merge summary (D-533, D-552).
 - PR-85 exit test 8. A later session reads the start time, the wall time of each sweep job, the result, and the slice: 6001-6500 for each bot policy, and 120001-130000 for reachability. After a runner fault, re-run the failed jobs (D-585).
 
 ### Traps and gotchas
 
 - A new ramp shifts the atlas index of every shade, and the colors stay the same. `GrainPaintsTheSameBytesOnEachPlatform` pins those indices.
 - The roll puts the held sword under the floor, as it did with the sword of PR-15 (OQ-206). `TheHeldSwordStaysOverTheFloor` leaves the roll out.
+- The Codex CLI 0.157.0 gave `401 Incorrect API key` for about 50 minutes on 2026-09-25 while `codex login status` read ChatGPT. It passed at 23:44 UTC with no new login. A probe every 18 minutes found the end.
 - The reference images sit in `artifacts/reference/meshy-sword-2026-09-25/` of the main checkout, which git ignores.
 
 ### Open questions that block progress
@@ -73,7 +75,7 @@ None for PR-75. OQ-207 blocks PR-89, and OQ-208 blocks PR-90.
 
 ### Next concrete action
 
-When the checks and the gitar pass are green, run `make codex-review PR=106`. Then give the owner the merge summary (D-533).
+When the owner confirms, run `gh pr merge 106 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge. Then read PR-85 exit test 8.
 
 ## Session 263: 2026-09-25, Claude Code
 
