@@ -18,6 +18,7 @@ Session: PR-85, author. Branch `feat/pr-85-night-hosted-linux`. PR #102, pending
 - Branch night run 36062699698 at `9d5c36b` failed on infrastructure, not on a seed. The runner of the full clearer received a shutdown signal at 23:23:57 UTC, 1 h 45 min into `bot-run`. The five other sweeps passed: random walker 20 min, coward 23 min, timer tester 24 min, greedy descender 46 min, reachability 1 h 31 min. The record job wrote a failure record with no failure line of the full clearer, as the design asks.
 - A local run of 200 full clearer seeds held 169 MB and 4 KB of log for each seed, so memory and disk did not cause the shutdown.
 - The sweep uploads now take `overwrite: true`. Without it, a re-run of the failed jobs fails when the sweep of attempt 1 uploaded its result.
+- Exit test 7 passes. Branch night run 36077051456 at `e5e164f` ended green at 04:12:22 UTC on 2026-09-25, in 3 h 52 min. Sweep jobs: random walker 20 min, coward 22 min, timer tester 31 min, greedy descender 1 h 17 min, reachability 2 h 31 min, full clearer 3 h 51 min. The record job took 29 s. The record names the slice of 2026-09-25 (5501-6000, and 110001-120000 for reachability), the deaths of all five policies, and no carried or failed seed.
 
 ### State of the build
 
@@ -25,7 +26,8 @@ Session: PR-85, author. Branch `feat/pr-85-night-hosted-linux`. PR #102, pending
 
 ### In flight
 
-- A new branch night on hosted Linux at the overwrite commit (exit test 7). The night of `9d5c36b` does not count for a later code commit (D-547).
+- PR-84 exit test 11: the night on `main` from the 08:07 UTC cron. Read it before the review.
+- Then `make codex-review PR=102 -- --skip-gitar-review`, and the merge summary in Q/A form (D-552).
 
 ### Traps and gotchas
 
@@ -39,7 +41,7 @@ None.
 
 ### Next concrete action
 
-Push, open the PR, dispatch the branch night, and read exit test 11 of PR-84 before the review.
+Read the night on `main` of 2026-09-25 for PR-84 exit test 11, and state it here. Then export the PR comments (command F of `gitar-review`), and run `make codex-review PR=102 -- --skip-gitar-review`.
 
 ## Session 244: 2026-09-24, Codex
 
