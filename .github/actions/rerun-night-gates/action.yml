@@ -1,7 +1,7 @@
 # The re-run of the night gate of each open PR after a new record of main (D-559; PR-83). The night-gate check of a
 # PR runs on a pull_request event and reads the record of main at that time. A night on main and a promotion of a
 # branch night both write a new record later, so each one re-runs the newest night-gate run of each open PR on main.
-# The gate runs on ubuntu-latest, so a re-run puts no job in the queue of the Mac runner.
+# The gate runs on ubuntu-latest. Every job of this repository runs on a GitHub-hosted runner (D-572).
 #
 # The caller needs the permissions actions: write and pull-requests: read. Each branch name reaches gh through a
 # shell variable, and never through the script text.

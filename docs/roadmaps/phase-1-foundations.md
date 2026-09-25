@@ -1,6 +1,6 @@
 # Phase 1 roadmap: Foundations
 
-Status: **focused roadmap, complete.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, PR-59, M-1, and M-2. It applies D-148 to D-152, D-156, D-157, D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, D-200 to D-288, and D-290. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, complete.** This file expands Phase 1 of `docs/design.md` section 7: PR-1 to PR-11, PR-58, PR-59, M-1, and M-2. It applies D-148 to D-152, D-156, D-157 (which D-572 supersedes), D-159 to D-168, D-170, D-171, D-173, and D-175. It also applies D-176 to D-178, D-180, D-182 to D-185, D-189, D-190, D-194, D-196 to D-199, D-200 to D-288, and D-290. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). This file adds per-PR scope, exit tests, review focus, and the questions that each PR needs answered before it starts.
 
@@ -27,7 +27,7 @@ The design register in `docs/design.md` section 5 holds every finding. These row
 | F-29 | Four gates preceded their prerequisites | PR-7, PR-9, PR-11 |
 | F-30 | The run record omitted the initial state and versions | PR-6 |
 | F-38 | PR-10's gate named a weapon roster that does not exist until Phase 3 | PR-10 |
-| F-39 | The macOS CI leg needs a self-hosted runner that nobody has registered. D-157 names the setup | PR-1 |
+| F-39 | The macOS CI leg needs a self-hosted runner that nobody has registered. D-157 names the setup, and D-572 supersedes it | PR-1 |
 
 ## 3. Guardrails for this phase
 
@@ -493,7 +493,7 @@ Scope:
 - The budgets are Core constants (D-271): 18000 ticks per floor for the descender, and 36000 ticks per wander for the walker.
 - `Core/Bots/BotRun.cs` plays one run to its end state and opens no file. The runner in `Tools/BotRunner/` loads the content of the checkout, plays each seed, and writes the two lines of each run log. The greedy descender walks the path with the jump in place of PR-9 exit test 8. The stairwell test drives that policy instead of a walker of its own.
 - `night-record` writes the record of D-273. The night workflow publishes it whatever the outcome, so a failed night leaves a failed record for the gate of PR-58.
-- CI: the PR job runs one hundred seeds per policy. A scheduled night job on the self-hosted macOS runner (D-157) runs five thousand seeds per policy (D-115, D-117). It also runs the reachability sweep of PR-9 exit test 1 at its night count. The night job commits its result record, `night.json` with the commit, the end time, and the status, to the orphan branch `night-results` (D-273). PR-58 adds the gate that reads it (D-177).
+- CI: the PR job runs one hundred seeds per policy. A scheduled night job on the self-hosted macOS runner (D-157, which D-572 supersedes) runs five thousand seeds per policy (D-115, D-117). It also runs the reachability sweep of PR-9 exit test 1 at its night count. The night job commits its result record, `night.json` with the commit, the end time, and the status, to the orphan branch `night-results` (D-273). PR-58 adds the gate that reads it (D-177).
 
 Out of scope: the `night-gate` job (PR-58, D-177), the coward, full-clearer, and timer-tester policies (PR-16 to PR-18), Tier 3.
 
@@ -599,7 +599,7 @@ Status: table complete 2026-09-11, seven nights (D-283). The scheduled night ran
 One person owns the program. Items run one at a time in this order. Each PR opens only after the one before it merges.
 
 1. Owner: receive the SSD and move the checkout to it (D-145).
-2. Owner: register the runner on 2026-09-08 per `docs/runbooks/macos-runner.md` (D-157, D-171). ✅ OQ-2: D-173. ✅ OQ-16: D-175. Protection deferred: D-170.
+2. Owner: register the runner on 2026-09-08 per `docs/runbooks/macos-runner.md` (D-171, and D-157, which D-572 supersedes). ✅ OQ-2: D-173. ✅ OQ-16: D-175. Protection deferred: D-170.
 3. ✅ PR-1 merged 2026-09-08 as PR #6.
 4. ✅ PR-2 is PR #10.
 5. ✅ OQ-33 to OQ-35 answered 2026-09-07: D-159 to D-161.
@@ -634,7 +634,7 @@ Open:
 
 Resolved 2026-09-07:
 
-- OQ-31 (D-157, D-171): the self-hosted macOS runner. Registration on 2026-09-08 per the runbook.
+- OQ-31 (D-171, and D-157, which D-572 supersedes): the self-hosted macOS runner. Registration on 2026-09-08 per the runbook.
 - OQ-32: branch protection on `main`. D-170 revises D-158. Protection waits until launch, and it is a convention until then.
 - OQ-33 to OQ-35 (D-159 to D-161): the RNG, the state hash, and the DetMath target. PR-3.
 - OQ-36 and OQ-37 (D-162 and D-163): the intent and run record layouts. PR-5 and PR-6.

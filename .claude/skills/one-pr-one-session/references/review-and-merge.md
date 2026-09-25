@@ -48,7 +48,7 @@ A P0, P1, or P2 finding that is open in three review rounds stops the fix loop (
 8. Run `gh pr merge <n> --auto --squash` (D-516).
 9. Wait on the checks with the one command of `docs/runbooks/session-context.md` (D-380).
 10. Run `gh pr view <n> --json state,mergedAt,mergeCommit`.
-11. When a Mac job ends "not acquired", re-run the failed jobs (D-358), then go to step 9.
+11. When a job ends with a runner infrastructure annotation, re-run the failed jobs (D-585), then go to step 9.
 12. When the state is `MERGED`, load `merge-prompt.md` and write the prompt.
 
 A documents-only PR with the `review-override` label merges the same way, the owner confirmation included. It needs no review record, and `review-gate` is green by the label (D-517). For a PR that the owner merges by hand, give the merge summary at the hand-over (D-524).

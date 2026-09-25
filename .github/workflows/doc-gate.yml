@@ -17,8 +17,8 @@ on:
 permissions:
   contents: read
 
-# A newer event on a PR cancels the older run of this workflow for that PR, so the one Mac runner serves the newest
-# head (D-356, F-99). A push to main takes the group of its own commit, so every merge commit keeps its run.
+# A newer event on a PR cancels the older run of this workflow for that PR, so each runner serves the newest head
+# (D-356, F-99). A push to main takes the group of its own commit, so every merge commit keeps its run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}

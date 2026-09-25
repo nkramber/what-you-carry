@@ -1,10 +1,12 @@
 # Runbook: the macOS self-hosted runner
 
-Status: procedure, written 2026-09-07 for the registration on 2026-09-08 (D-157, D-171). Written in ASD-STE100.
+Status: **retired 2026-09-25 by PR-86.** Every CI job runs on a GitHub-hosted runner, and the three macOS legs of a PR run on `macos-latest` (D-572, D-583). D-572 supersedes D-157, and D-584 supersedes D-192. No workflow names the label `macos-arm64-self-hosted`, and a test holds that rule. The section "The retirement" gives the removal. The other sections are the record of the registration. Written in ASD-STE100.
+
+First written 2026-09-07 as the procedure for the registration on 2026-09-08 (D-171, and D-157, which D-572 supersedes).
 
 Revised 2026-09-07: this runbook records the tool versions and the path risk of the launch agent (D-189).
 
-Completed 2026-09-07: the SSD came one day early, and the registration ran on 2026-09-07 (D-192). The runner `mac-mini-m4` is online. A Full Disk Access grant was necessary (D-193, F-54). A smoke job passed on 2026-09-07. It proved the checkout, the external volume under a real job, `actions/setup-dotnet`, and a build and test cycle.
+Completed 2026-09-07: the SSD came one day early, and the registration ran on 2026-09-07 (D-192, which D-584 supersedes). The runner `mac-mini-m4` is online. A Full Disk Access grant was necessary (D-193, F-54). A smoke job passed on 2026-09-07. It proved the checkout, the external volume under a real job, `actions/setup-dotnet`, and a build and test cycle.
 
 This runbook registers the Mac Mini as a self-hosted GitHub Actions runner for the repository `nkramber/what-you-carry`. The runner has the label `macos-arm64-self-hosted`. It runs as a launch agent. Its work directory is on the external SSD.
 
@@ -93,24 +95,15 @@ NOTE: A case-sensitive volume makes the macOS CI leg agree with the Linux leg on
 
    The status must be `online`.
 
-9. Record the volume name and the runner name in `docs/decisions.md` as the effect of D-171. D-192 holds the record of 2026-09-07.
+9. Record the volume name and the runner name in `docs/decisions.md` as the effect of D-171. D-192 held the record of 2026-09-07, and D-584 supersedes it.
 
-## Keep the runner available
+## The runner after PR-85
 
-The night runs on hosted Linux from PR-85 (D-572). The launch agent starts when the owner logs in. Two settings keep it available for the macOS legs of each PR (D-100):
+The night moved to hosted Linux in PR-85 (D-572). From then until PR-86, the runner ran the macOS legs of each PR alone. The launch agent started at the login of the owner, with automatic login on and sleep off. The work directory on the SSD had to mount before a job started (D-191).
 
-1. Open System Settings, then Users and Groups, and turn on automatic login for the owner account.
-2. Open System Settings, then Energy, and turn off sleep while the machine is on power.
+## Tools on this machine
 
-### CAUTION: the volume must mount before a job starts
-
-The work directory is on the external SSD. An unencrypted volume mounts at login, and the launch agent starts at the same time (D-191). Check the runner status after each restart of the machine. A job that starts without the volume fails, and the message names the work directory.
-
-NOTE: A runner job runs with the owner's user permissions and shares the machine with the harness (D-105).
-
-## Tools that the jobs need
-
-PR-1 and PR-12 add jobs that need tools on this machine. This machine has both tools:
+PR-1 and PR-12 added jobs that needed tools on this machine. A local build and a local smoke session still use both tools:
 
 | Tool | Version | Location | Date | Decision |
 |---|---|---|---|---|
@@ -131,7 +124,9 @@ The workflow calls `actions/setup-dotnet` with the `global-json-file` input (D-1
 
 NOTE: The runner also reads a `.path` file in its directory. D-189 does not use that file, because a version in the repository is easier to audit than a version on one machine.
 
-## Remove or move the runner
+## The retirement
+
+D-584 puts the removal in the PR-86 session, after the hosted macOS legs of the PR pass, and before the merge. The steps:
 
 1. Stop and uninstall the launch agent:
 
@@ -148,4 +143,14 @@ NOTE: The runner also reads a `.path` file in its directory. D-189 does not use 
    ./config.sh remove --token "$TOKEN"
    ```
 
-3. Run the procedure again for a new location.
+3. Verify that the repository has zero runners:
+
+   ```sh
+   gh api repos/nkramber/what-you-carry/actions/runners -q .total_count
+   ```
+
+   The count must be `0`.
+
+The folders `/Volumes/SSD-1TB/actions-runner` and `/Volumes/SSD-1TB/actions-work` stay on the SSD. They run nothing without the launch agent and the registration.
+
+The Full Disk Access grant of `/bin/bash` and of the runner `node` stays until the owner removes it in System Settings. No job needs the grant after the retirement.

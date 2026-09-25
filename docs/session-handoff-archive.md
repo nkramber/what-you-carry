@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 247: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-87, reviewer. Branch `chore/pr-87-gitar-reenable`. PR #103, pending merge. Base `a68348b`.
+
+### What this session did, and why
+
+- Reviewed the full change and its exit tests for PR-87.
+- The cross-provider review found no actionable finding. The verdict is `Ready for owner merge` at effective head `f6292c0`.
+- Committed the review record with this handoff entry as one metadata commit (D-182).
+
+### State of the build
+
+- PR head: `ef8536b`. Effective head: `f6292c0`. CI, smoke, asset QA, STE, det-lint, night gate, doc gate, and Gitar passed. The review gate awaited the review record.
+- Focused local tests passed 11 of 11. The script syntax and diff checks passed.
+- The metadata commit was pushed to `origin/chore/pr-87-gitar-reenable` and verified with `gh pr view`.
+
+### In flight
+
+- The owner merge decision.
+
+### Traps and gotchas
+
+- Gitar approved the head and found no issue. Its other comment names only the missing review record, which this commit supplies.
+- The effective head skips later document changes under D-534.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Give the owner the merge summary in questions and answers (D-533, D-552).
+
 ## Session 246: 2026-09-24, Claude Code
 
 Author: Claude Code

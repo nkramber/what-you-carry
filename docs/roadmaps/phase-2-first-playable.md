@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-88, and M-3. It applies D-149, D-150, D-157, D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-88, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -1209,29 +1209,34 @@ Gate: exit tests 1 to 8 pass.
 
 Scope:
 
-- `.github/workflows/ci.yml`, `smoke.yml`, and `bit-identity.yml`: the `macos-arm64` job of each workflow moves from the self-hosted label to the standard hosted macOS arm64 runner (D-572, D-573). Each job keeps its name, so the required checks of the ruleset of `main` stay as they are (D-522).
-- `WhatYouCarry.Tests/`: `CiWorkflowHasOneJobPerPlatform` and `BitIdentityWorkflowHasOneJobPerPlatformAndACompareJob` in `RepositoryShapeTests`, and `SmokeWorkflowHasOneJobPerPlatform` in `GameShapeTests`, read the hosted label. A new shape test fails on a workflow that names the self-hosted label.
-- The documents retire the self-hosted runner (D-573): `docs/runbooks/macos-runner.md`, the rule of a lost self-hosted leg in `CLAUDE.md` and `AGENTS.md`, and the system map and the cost model of `docs/design.md`.
-- `docs/decisions.md`: D-100, D-157, D-192, and D-358 take their revision markers in the Effect column (D-186, D-572, D-573).
+- `.github/workflows/ci.yml`, `smoke.yml`, and `bit-identity.yml`: the `macos-arm64` job of each workflow moves from the self-hosted label to the hosted label `macos-latest` (D-572, D-573, D-583). Each job keeps its name, so the required checks of the ruleset of `main` stay as they are (D-522).
+- The same three jobs: the first step fails when `uname -m` does not give `arm64`, because the label names no architecture (D-583, T-2).
+- The other workflows and `rerun-night-gates`: the comments that name the one Mac runner name the hosted runners.
+- `WhatYouCarry.Tests/`: `CiWorkflowHasOneJobPerPlatform` and `BitIdentityWorkflowHasOneJobPerPlatformAndACompareJob` in `RepositoryShapeTests`, and `SmokeWorkflowHasOneJobPerPlatform` in `GameShapeTests`, read the hosted label. `NoWorkflowNamesTheSelfHostedRunner` and `EachMacosLegChecksTheArm64ArchitectureFirst` are new.
+- The Mac Mini: the session stops and uninstalls the launch agent of `mac-mini-m4`, and removes its registration, after the hosted legs pass and before the merge (D-584).
+- The documents retire the self-hosted runner (D-573): `docs/runbooks/macos-runner.md`, and the cost model and the entry of `docs/design.md`.
+- `CLAUDE.md`, `AGENTS.md`, the `pr-review` and `one-pr-one-session` skills, and `docs/runbooks/session-context.md`: the re-run rule of a lost leg covers each runner fault (D-585).
+- `docs/decisions.md`: D-100, D-157, D-192, and D-358 take their revision markers in the Effect column (D-186, D-572, D-584, D-585).
 
-Out of scope: the night, which PR-85 moves to hosted Linux (D-573). The removal of the runner service from the Mac Mini and of its registration from the repository settings, which no decision holds yet.
+Out of scope: the night, which PR-85 moves to hosted Linux (D-573). A split of the macOS leg into two jobs, which changes the required check names (D-522).
 
 Exit tests:
 
-1. `CiWorkflowHasOneJobPerPlatform`, `BitIdentityWorkflowHasOneJobPerPlatformAndACompareJob`, and `SmokeWorkflowHasOneJobPerPlatform` pass, and each reads the hosted macOS arm64 label (D-572).
-2. The new shape test passes, and it fails on the workflows of `main` before this PR.
-3. The three macOS legs of this PR, `ci-macos-arm64`, `smoke-macos-arm64`, and `bit-identity-macos-arm64`, pass on the hosted runner.
+1. `CiWorkflowHasOneJobPerPlatform`, `BitIdentityWorkflowHasOneJobPerPlatformAndACompareJob`, and `SmokeWorkflowHasOneJobPerPlatform` pass, and each reads the label `macos-latest` (D-572, D-583).
+2. `NoWorkflowNamesTheSelfHostedRunner` and `EachMacosLegChecksTheArm64ArchitectureFirst` pass, and both fail on the workflows of `main` before this PR.
+3. The three macOS legs of this PR, `ci-macos-arm64`, `smoke-macos-arm64`, and `bit-identity-macos-arm64`, pass on the hosted runner, and each log shows the arm64 check. The handoff entry states the wall time of each leg.
 4. The `bit-identity-compare` job of this PR passes, so the hosted macOS hash equals the Linux hash and the Windows hash (G-9).
 5. The `RulesetTests` pass, and the required check names of the ruleset of `main` do not change (D-522).
-6. `make gitar-wait PR=<this PR>` ends with exit 0 after each push, and `make codex-review PR=<this PR>` reviews this PR. The merge request gives the merge summary as questions and answers (D-552).
+6. After the removal, `gh api repos/nkramber/what-you-carry/actions/runners -q .total_count` gives `0`, and `launchctl list` holds no runner agent (D-584).
+7. `make gitar-wait PR=<this PR>` ends with exit 0 after each push, and `make codex-review PR=<this PR>` reviews this PR. The merge request gives the merge summary as questions and answers (D-552).
 
-Review focus: each `runs-on` value against D-572, the job names against the ruleset of D-522, and each retired runner text against D-573.
+Review focus: each `runs-on` value and the architecture check against D-583, the job names against D-522, and each retired runner text against D-573 and D-585.
 
 Check clause: none.
 
-Gate: exit tests 1 to 6 pass.
+Gate: exit tests 1 to 7 pass.
 
-> *In plain English:* three checks of each pull request still run on the Mac of the owner, so code from any pull request runs there. This change moves them to free cloud Macs. The Mac of the owner then runs no code from a pull request.
+> *In plain English:* three checks of each pull request still run on the Mac of the owner, so code from any pull request runs there. This change moves them to free cloud Macs, and it removes the runner from the Mac of the owner.
 
 ### PR-75: Sword art
 

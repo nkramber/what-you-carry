@@ -75,7 +75,7 @@ Run no other status command while the wait runs. Read the result one time, when 
 
 - Run the command in the background when the harness permits that.
 - A time limit of the harness can stop the wait. Start the same command again.
-- The result names each failed job. For a job that ends "not acquired", apply D-358, and then wait again with the same command.
+- The result names each failed job. For a job that ends with a runner infrastructure annotation, apply D-585, and then wait again with the same command.
 
 ## The review round
 

@@ -1,3 +1,35 @@
+## Session 259: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-86, author. Branch `feat/pr-86-hosted-macos`. PR pending, pending merge. Base `0d99e2c`.
+
+### What this session did, and why
+
+- PR-85 exit test 8: PR #102 merged at 18:25 UTC on 2026-09-25, after the 07:07 cron of that day. The first scheduled night from the `7 7 * * *` cron is 2026-09-26, and it has not started. The scheduled run 36141884980 at 13:35 UTC came from the old cron on `main`.
+- The owner chose the floating label `macos-latest` (D-583), and the removal of the runner in this PR (D-584). The re-run rule of D-358 now covers each runner fault of any job (D-585).
+- The three macOS legs run on `macos-latest`. Each one first fails on a machine that is not arm64. Two new shape tests fail on the workflows of `main`.
+- The runbook, the design doc, the roadmap, and the registers retire the runner. D-572 supersedes D-157, and D-584 supersedes D-192.
+
+### State of the build
+
+- Remote head: not pushed yet.
+
+### In flight
+
+- The first push, CI on the hosted macOS legs, and the gitar pass.
+
+### Traps and gotchas
+
+- A citation of D-157 or D-192 now needs its superseder on the same line (D-178).
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+Push, wait on CI, and remove the runner (D-584).
+
 ## Session 258: 2026-09-25, Claude Code
 
 Author: Claude Code
@@ -357,37 +389,3 @@ None.
 ### Next concrete action
 
 The author removes the unrelated file from PR #102 and requests a repeat review.
-
-## Session 247: 2026-09-25, Codex
-
-Author: Codex
-Session: PR-87, reviewer. Branch `chore/pr-87-gitar-reenable`. PR #103, pending merge. Base `a68348b`.
-
-### What this session did, and why
-
-- Reviewed the full change and its exit tests for PR-87.
-- The cross-provider review found no actionable finding. The verdict is `Ready for owner merge` at effective head `f6292c0`.
-- Committed the review record with this handoff entry as one metadata commit (D-182).
-
-### State of the build
-
-- PR head: `ef8536b`. Effective head: `f6292c0`. CI, smoke, asset QA, STE, det-lint, night gate, doc gate, and Gitar passed. The review gate awaited the review record.
-- Focused local tests passed 11 of 11. The script syntax and diff checks passed.
-- The metadata commit was pushed to `origin/chore/pr-87-gitar-reenable` and verified with `gh pr view`.
-
-### In flight
-
-- The owner merge decision.
-
-### Traps and gotchas
-
-- Gitar approved the head and found no issue. Its other comment names only the missing review record, which this commit supplies.
-- The effective head skips later document changes under D-534.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Give the owner the merge summary in questions and answers (D-533, D-552).

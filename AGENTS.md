@@ -90,7 +90,7 @@ The `csharp-conventions` skill holds the code rules. It covers the language, the
 - After a push, wait on the checks with the one command of the `one-pr-one-session` skill, and never poll (D-380).
 - One concern per PR (G-10).
 - A newer push to a PR cancels the older runs of each workflow for that PR (D-356). CI on the tip counts for the effective head when every later commit is a metadata commit (D-357).
-- When a self-hosted job of a PR run ends with the annotation "not acquired", re-run the failed jobs of that run. The re-run counts as CI for that head (D-358).
+- When a PR job ends with a runner fault, such as "not acquired" or a shutdown signal, re-run the failed jobs of that run. The re-run counts as CI for that head (D-358, D-585).
 
 ## Automated review pass
 
