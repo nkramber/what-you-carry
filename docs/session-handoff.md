@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 249: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Changes required. Base `a3590ba`.
+
+### What this session did, and why
+
+- Reviewed PR #104 at effective head `4029e36` to check the fixes of F-113 to F-127.
+- Added two P1 findings for review gates that accept malformed closed finding statuses or fake verdict sections inside valid code fences.
+- Read the PR comments. The Gitar thread about the roadmap order is resolved.
+
+### State of the build
+
+- The focused review-gate tests passed 129 of 129.
+- The Documents tests passed 181 of 181. `ste-check` found 0 issues, and `doc-gate` passed over 77 paths.
+- CI platform jobs, sweeps, documents, asset QA, determinism lint, STE, doc-gate, night-gate, and Gitar passed at `35c389c`.
+- Smoke and bit-identity passed at `756d539`. Later commits changed paths in the skip set of D-475. The review-gate and evaluate checks wait for this record.
+- The PR tip at review start was `35c389c`. Its effective head remains `4029e36`.
+
+### In flight
+
+- The author must correct the two findings before this PR can pass the review gate.
+- The metadata commit and the Gitar wait follow this entry.
+
+### Traps and gotchas
+
+- This checkout is detached. Push the metadata commit to `origin/fix/pr-88-review-fixes`.
+- Review the effective head `4029e36`, not the later document commits.
+
+### Open questions that block progress
+
+OQ-195 to OQ-205 remain open. D-581 records the accepted runner risk. These questions do not block this review.
+
+### Next concrete action
+
+The author corrects P1-1 and P1-2, then starts a fresh cross-provider review of the new effective head.
+
 ## Session 248: 2026-09-25, Claude Code
 
 Author: Claude Code
@@ -369,38 +406,3 @@ None.
 ### Next concrete action
 
 After the merge, read the run of `night-promote.yml` at the merge commit for exit test 6. It names `branch-absent` and writes nothing, because this PR had no branch night. The next PR is the fixed seeds of the night (D-560).
-
-## Session 238: 2026-09-24, Claude Code
-
-Author: Claude Code
-Session: PR-82, author. Branch `chore/pr-82-template-gitar-notice`. PR #98, pending merge. Base `2071cb6`.
-
-### What this session did, and why
-
-- Ran a night by hand on `main`, run 35944586534 at `2071cb6`. It passed and ended at 05:06 UTC. The record of `main` is now a success at `2071cb6`, and it replaced the red night of `e069e16`.
-- A night on `main` does not re-run the `night-gate` of an open PR. The re-run step of `night.yml` skips `main` (D-548). The session re-ran the `night-gate` run of this PR by hand, and it passed.
-- Review round 1 read `Blocked` with no finding: `night-gate` was red, and CI was pending. Review round 2 approves the effective head `bc51dde`.
-- The owner asked for a prompt of a parallel PR. A green branch night then counts for `main` after the merge, when the merge commit differs from the tested commit in skip-set paths alone. The prompt went to the owner in chat. That PR has no D-# or OQ-# yet.
-
-### State of the build
-
-- All required checks are green at the PR tip, `night-gate` and smoke on three platforms included.
-- Code head: `bc51dde`. Later commits of this PR change documents only.
-
-### In flight
-
-- The owner merge confirmation, then the auto-merge.
-
-### Traps and gotchas
-
-- The Linux smoke failure in the round 1 record came from a run in progress. The final run passed.
-- After each red night on `main`, each open PR needs a re-run of its `night-gate` by hand, until a PR changes that rule.
-- The parallel PR can collide with this PR on D-# ids and session numbers. This PR holds D-553, D-554, and sessions 235 to 238.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge: the fixed seeds of the night (D-551), or the parallel PR of the night record promotion, as the owner orders them. Follow the next concrete action of Session 232 for the fixed seeds.
