@@ -17,7 +17,7 @@ Session: PR-86, author. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge
 
 ### State of the build
 
-- Effective head `6dfe7f8`. Every check passes but `evaluate` and `review-gate`, which wait for the review record (D-251).
+- Effective head `1678ef5`, the code commit, because each later commit changes documents alone (D-534). Every check of `6dfe7f8` passes but `evaluate` and `review-gate`, which wait for the review record (D-251).
 - The hosted macOS legs ran on the image `macos-26-arm64` 20260907.0351, and each log shows "runs on arm64". Wall times: `ci-macos-arm64` 11 min 29 s, `smoke-macos-arm64` 42 s, `bit-identity-macos-arm64` 25 s. The three platforms agree on `9c79047da9c82a0e`.
 - The local suite passed 1820 of 1820, Smoke included. The gitar pass approved `6dfe7f8` with no finding.
 
