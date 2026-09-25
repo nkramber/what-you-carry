@@ -67,6 +67,13 @@ public sealed record BoneTrack(string Bone, IReadOnlyList<Keyframe> Keyframes)
                 continue;
             }
 
+            // The pose at a keyframe is the keyframe itself. The blend of previous and next at a fraction of one
+            // overflows for a rotation near the float limit, which the loader accepts (F-131).
+            if (tick == next.Tick)
+            {
+                return next.RotationDegrees;
+            }
+
             Keyframe previous = this.Keyframes[index - 1];
             float fraction = (float)(tick - previous.Tick) / (next.Tick - previous.Tick);
             return previous.RotationDegrees + ((next.RotationDegrees - previous.RotationDegrees) * fraction);

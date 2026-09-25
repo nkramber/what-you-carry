@@ -47,6 +47,18 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
     /// </summary>
     public const long LargestSeconds = ContentValidator.LargestLong / Simulation.SimulationLoop.TicksPerSecond;
 
+    /// <summary>The band of the working mine, floors 1 to 5 (D-210).</summary>
+    public const string WorkingMineBand = "working-mine";
+
+    /// <summary>The band of the older workings, floors 6 to 10 (D-210).</summary>
+    public const string OlderWorkingsBand = "older-workings";
+
+    /// <summary>The deep band, floors 11 to 15 (D-210).</summary>
+    public const string DeepBand = "what-the-miners-reached";
+
+    /// <summary>The three bands of D-210. The loader checks the band against them, so an unknown band fails at load and not when a floor of it is dug (G-7).</summary>
+    public static readonly IReadOnlyList<string> Bands = [WorkingMineBand, OlderWorkingsBand, DeepBand];
+
     /// <summary>The names that a floor template must carry.</summary>
     public static readonly IReadOnlyList<string> Required =
     [
@@ -171,6 +183,21 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
             throw ContentError.Make(path, "waveCap", $"is {waveCap}, and the cap of living wave enemies is zero or more (D-410)");
         }
 
+        string band = ContentValidator.Value(path, members, "band", JsonMemberKind.Text);
+        bool knownBand = false;
+        foreach (string known in Bands)
+        {
+            if (band == known)
+            {
+                knownBand = true;
+            }
+        }
+
+        if (!knownBand)
+        {
+            throw ContentError.Make(path, "band", $"is '{band}', and a band is one of the three bands of D-210: '{WorkingMineBand}', '{OlderWorkingsBand}', or '{DeepBand}'");
+        }
+
         return new FloorTemplate(
             ContentValidator.Value(path, members, "id", JsonMemberKind.Text),
             minDepth,
@@ -178,7 +205,7 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
             roomMin,
             roomMax,
             budget,
-            ContentValidator.Value(path, members, "band", JsonMemberKind.Text),
+            band,
             sizeX,
             sizeY,
             sizeZ,

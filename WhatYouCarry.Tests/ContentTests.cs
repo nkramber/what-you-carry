@@ -144,6 +144,45 @@ public sealed class ContentTests
         }
     }
 
+    /// <summary>
+    /// F-131. A floor band outside the three bands of D-210 fails at load and names the field (G-7). The old loader took
+    /// any text, and the detail pass failed only when a floor of the band was dug. Each of the three bands loads.
+    /// </summary>
+    [Fact]
+    public void AnUnknownBandFailsAtLoad()
+    {
+        string odd = Floor.Replace("\"band\":\"working-mine\"", "\"band\":\"sunlit-meadow\"", StringComparison.Ordinal);
+        Assert.NotEqual(Floor, odd);
+        ContextException error = Assert.Throws<ContextException>(
+            () => FloorTemplate.FromMembers("floors/a.json", JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(odd))));
+        Assert.Contains("floors/a.json", error.Message, StringComparison.Ordinal);
+        Assert.Contains("'band'", error.Message, StringComparison.Ordinal);
+        Assert.Contains("sunlit-meadow", error.Message, StringComparison.Ordinal);
+
+        foreach (string band in FloorTemplate.Bands)
+        {
+            string text = Floor.Replace("\"band\":\"working-mine\"", $"\"band\":\"{band}\"", StringComparison.Ordinal);
+            Assert.Equal(band, FloorTemplate.FromMembers("floors/a.json", JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(text))).Band);
+        }
+
+        Assert.Equal(FloorTemplate.WorkingMineBand, Core.Procgen.DetailPass.WorkingMine);
+        Assert.Equal(FloorTemplate.OlderWorkingsBand, Core.Procgen.DetailPass.OlderWorkings);
+        Assert.Equal(FloorTemplate.DeepBand, Core.Procgen.DetailPass.Deep);
+    }
+
+    /// <summary>F-131. An empty string value fails at load and names its id, because it shows the player nothing (D-98, T-2). A value of one space still loads.</summary>
+    [Fact]
+    public void AnEmptyStringFailsAtLoad()
+    {
+        ContextException error = Assert.Throws<ContextException>(
+            () => Strings.FromMembers("strings/en.json", JsonObjectReader.Read("strings/en.json", Encoding.UTF8.GetBytes("{\"hub.descend\":\"Descend\",\"hub.empty\":\"\"}"))));
+        Assert.Contains("strings/en.json", error.Message, StringComparison.Ordinal);
+        Assert.Contains("hub.empty", error.Message, StringComparison.Ordinal);
+
+        Strings spaced = Strings.FromMembers("strings/en.json", JsonObjectReader.Read("strings/en.json", Encoding.UTF8.GetBytes("{\"hub.space\":\" \"}")));
+        Assert.Equal(" ", spaced.Get("hub.space"));
+    }
+
     /// <summary>PR-5 exit test 4. An unknown string id throws, because a blank line on a screen hides it (T-2).</summary>
     [Fact]
     public void UnknownStringIdThrows()

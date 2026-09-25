@@ -269,6 +269,22 @@ public sealed class BlockbenchLoaderTests
         Assert.Contains("one attachment point", twiceError.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>F-131. A locator with a rotation is an error that names it, as a box or a bone with one is, because the loader reads the rest pose alone. A zero rotation loads.</summary>
+    [Fact]
+    public void LoaderRejectsARotatedLocator()
+    {
+        string rotated = ModelJson.Model(
+            elements: ModelJson.Cube("torso", "e1") + ", " + ModelJson.Locator("head", "e2").Replace("\"type\"", "\"rotation\": [0, 45, 0], \"type\"", StringComparison.Ordinal),
+            groups: ModelJson.Group("body", "g1"),
+            outliner: "[{\"uuid\": \"g1\", \"children\": [\"e1\", \"e2\"]}]");
+        ContextException error = Assert.Throws<ContextException>(() => Parse(rotated));
+        Assert.Contains("head", error.Message, StringComparison.Ordinal);
+        Assert.Contains("rotation", error.Message, StringComparison.Ordinal);
+
+        string zero = rotated.Replace("[0, 45, 0]", "[0, 0, 0]", StringComparison.Ordinal);
+        Assert.Single(Parse(zero).Attachments);
+    }
+
     /// <summary>Two boxes of one name are an error, because a keyframe and the asset QA name a box by it.</summary>
     [Fact]
     public void LoaderRejectsARepeatedName()

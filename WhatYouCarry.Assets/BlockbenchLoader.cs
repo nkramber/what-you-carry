@@ -305,6 +305,8 @@ public static class BlockbenchLoader
             }
         }
 
+        // A locator rotation would turn the item that the point holds, and the loader reads the rest pose alone (T-2, F-131).
+        CheckNoRotation(path, element, name);
         Vector3 position = JsonShape.Vector(path, element, name, PositionKey);
         return new AttachmentPoint(name, bone, ToMeters(position));
     }
