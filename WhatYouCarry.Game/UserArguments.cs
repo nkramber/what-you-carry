@@ -17,9 +17,10 @@ namespace WhatYouCarry.Game;
 /// <remarks>
 /// <para>
 /// A word that starts with <see cref="FlagStart"/> is a flag. Any other word belongs to the flag before it, up to the
-/// count of that flag. Five kinds of argument stop the boot: a word that no flag takes, a flag outside the table, a
-/// flag that appears twice, a flag with fewer words than it takes, and a flag that the session ignores (D-317). A flag
-/// is never a word of the flag before it, so a short flag is an error, and never a flag that the session loses.
+/// count of that flag. Six kinds of argument stop the boot: a word that no flag takes, a flag outside the table, a
+/// flag that appears twice, a flag with fewer words than it takes, a flag with an empty word, and a flag that the
+/// session ignores (D-317, F-122). A flag is never a word of the flag before it, so a short flag is an error, and never
+/// a flag that the session loses.
 /// </para>
 /// <para>
 /// The session types read their flags through this type, and no other type reads the argument array. A PR that adds a
@@ -43,6 +44,9 @@ public sealed class UserArguments
     /// <summary>The message of the error for a flag with fewer words after it than it takes.</summary>
     public const string ShortFlagMessage = "The flag has fewer words after it than it takes.";
 
+    /// <summary>The message of the error for a flag with an empty word or a word of white space alone after it (F-122).</summary>
+    public const string EmptyWordMessage = "The flag has an empty word after it, and each word of a flag holds text.";
+
     /// <summary>The message of the error for the contact sheet flag with any other flag (D-317).</summary>
     public const string SheetTakesNoFlagMessage = "The contact sheet starts no loop, so it takes no other flag.";
 
@@ -62,6 +66,7 @@ public sealed class UserArguments
     private const string FlagField = "flag";
     private const string FlagsField = "flags";
     private const string WordsField = "words";
+    private const string WordField = "word";
     private const string OtherField = "other";
     private const string FlagListSeparator = ", ";
 
@@ -89,7 +94,7 @@ public sealed class UserArguments
     /// Reads every user argument once, from the first to the last. A bad argument is an error that names it. An empty
     /// list is a session with no flag.
     /// </summary>
-    /// <exception cref="ContextException">A word that no flag takes, a flag outside the table, a flag twice, a short flag, or a flag that the session ignores.</exception>
+    /// <exception cref="ContextException">A word that no flag takes, a flag outside the table, a flag twice, a short flag, a flag with an empty word, or a flag that the session ignores.</exception>
     public static UserArguments Parse(string[] userArguments)
     {
         Dictionary<string, string[]> flags = new(StringComparer.Ordinal);
@@ -127,6 +132,16 @@ public sealed class UserArguments
                     shortFlag.AddContext(FlagField, argument);
                     shortFlag.AddContext(WordsField, count.ToString(CultureInfo.InvariantCulture));
                     throw shortFlag;
+                }
+
+                // An empty path reached the write of the frame log at the end of the session, and the session never
+                // quit (F-122). No flag takes an empty word, so the boot stops here and names the flag.
+                if (string.IsNullOrWhiteSpace(userArguments[position]))
+                {
+                    ContextException emptyWord = new(EmptyWordMessage);
+                    emptyWord.AddContext(FlagField, argument);
+                    emptyWord.AddContext(WordField, userArguments[position]);
+                    throw emptyWord;
                 }
 
                 words[offset] = userArguments[position];

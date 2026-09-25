@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
@@ -146,6 +147,49 @@ public sealed class ReplayTests
         ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(sink.Record(), TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink())));
         Assert.Contains("frame=1", error.Message, StringComparison.Ordinal);
         Assert.Contains("intentTick=2", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// F-121. A failing replay names the seed of the record, the floor, the tick, and the frame, so the error ties to the
+    /// run state: a frame that fails the checks before its tick, and a frame whose tick fails inside, where the loop
+    /// names the tick and the replay keeps it.
+    /// </summary>
+    [Fact]
+    public void AFailingReplayNamesTheSeedTheFloorTheTickAndTheFrame()
+    {
+        MemorySink outOfOrder = new();
+        outOfOrder.Append(RunRecord.WriteHeader(RunRecord.NewHeader(TestWorld.PeacefulContent.Hash, 81UL)));
+        outOfOrder.Append(new Intent(0U, 0, 0, 0, 0, 0).Encode());
+        outOfOrder.Append(new Intent(1U, 0, 0, 0, 0, 0).Encode());
+        outOfOrder.Append(new Intent(3U, 0, 0, 0, 0, 0).Encode());
+
+        ContextException checkError = Assert.Throws<ContextException>(() => RunReplayer.Replay(outOfOrder.Record(), TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink())));
+        SimulationTests.AssertContextField(checkError, "seed", "81");
+        SimulationTests.AssertContextField(checkError, "floor", "1");
+        SimulationTests.AssertContextField(checkError, "tick", "2");
+        SimulationTests.AssertContextField(checkError, "frame", "2");
+
+        // The hunter of this content has no weapon in the set, so the tick of the expiry fails inside the loop.
+        List<FloorTemplate> floors = [];
+        foreach (FloorTemplate floor in TestWorld.PeacefulContent.Floors)
+        {
+            floors.Add(floor with { TimerSeconds = 1, BossTimerSeconds = 0 });
+        }
+
+        ContentSet content = TestWorld.PeacefulContent with { Floors = floors, Hunter = TestWorld.PeacefulContent.Hunter with { Weapon = "no-such-weapon" } };
+        MemorySink idle = new();
+        idle.Append(RunRecord.WriteHeader(RunRecord.NewHeader(content.Hash, 82UL)));
+        for (uint tick = 0; tick < 2 * SimulationLoop.TicksPerSecond; tick++)
+        {
+            idle.Append(new Intent(tick, 0, 0, 0, 0, 0).Encode());
+        }
+
+        ContextException tickError = Assert.Throws<ContextException>(() => RunReplayer.Replay(idle.Record(), content, new JsonlLogger(new CollectingSink())));
+        Assert.Contains("no-such-weapon", tickError.Message, StringComparison.Ordinal);
+        SimulationTests.AssertContextField(tickError, "seed", "82");
+        SimulationTests.AssertContextField(tickError, "floor", "1");
+        SimulationTests.AssertContextField(tickError, "tick", "59");
+        SimulationTests.AssertContextField(tickError, "frame", "59");
     }
 
     /// <summary>PR-6 exit test 4. A simulation version that differs is a report that names both versions (D-151).</summary>

@@ -7,6 +7,7 @@ using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Game.World;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
@@ -31,13 +32,14 @@ public sealed class TransitionTests
     }
 
     /// <summary>
-    /// PR-18 exit test 1. The worker on a task gives the grid, the spawn, and the stairwell of a dig on the calling
-    /// thread, for the same seed and floor (D-72, D-429). Over ten seeds and every floor below the first.
+    /// PR-18 exit test 1. The worker on a task gives the grid, the spawn, the stairwell, and the enemy spawns of a dig on
+    /// the calling thread, for the same seed and floor (D-72, D-429, F-124). Over ten seeds and every floor below the first.
     /// </summary>
     [Fact]
     public async Task WorkerEqualsSynchronous()
     {
         NextFloorWorker worker = new(TestWorld.Content);
+        int enemySpawns = 0;
         for (ulong seed = 1; seed <= 10; seed++)
         {
             List<Task<FloorPlan>> tasks = [];
@@ -56,26 +58,36 @@ public sealed class TransitionTests
                 Assert.True(ProcgenTests.GridHash(onTask.Grid).Value == ProcgenTests.GridHash(onThread.Grid).Value, $"Seed {seed}, floor {floor}: the worker grid differs from the synchronous grid.");
                 Assert.Equal(onThread.Spawn, onTask.Spawn);
                 Assert.Equal(onThread.Stairwell, onTask.Stairwell);
+                Assert.Equal(onThread.EnemySpawns, onTask.EnemySpawns);
                 Assert.Equal(floor, onTask.Floor);
+                enemySpawns += onTask.EnemySpawns.Count;
             }
         }
+
+        Assert.True(enemySpawns > 0, "No worker floor held an enemy spawn, so the test compared no spawn.");
     }
 
     /// <summary>
     /// A run whose loop takes each next floor from the worker keeps the state hash of a run that digs at the descent,
-    /// on every tick through two descents (D-429). The worker changes no tick.
+    /// on every tick through two descents (D-429). The worker changes no tick. The content with enemies proves that
+    /// the offered floor carries its enemy spawns: the hash folds every enemy, so a spawn that the offer lost or moved
+    /// splits the two runs on the tick of the descent (F-124).
     /// </summary>
-    [Fact]
-    public async Task OfferedFloorKeepsTheRunHash()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OfferedFloorKeepsTheRunHash(bool withEnemies)
     {
         const ulong seed = 3;
-        NextFloorWorker worker = new(TestWorld.PeacefulContent);
-        SimulationLoop offered = TestWorld.NewLoop(seed);
-        SimulationLoop dug = TestWorld.NewLoop(seed);
-        GreedyDescender offeredPolicy = new(TestWorld.PeacefulContent);
-        GreedyDescender dugPolicy = new(TestWorld.PeacefulContent);
+        ContentSet content = withEnemies ? TestWorld.Content : TestWorld.PeacefulContent;
+        NextFloorWorker worker = new(content);
+        SimulationLoop offered = new(seed, content);
+        SimulationLoop dug = new(seed, content);
+        GreedyDescender offeredPolicy = new(content);
+        GreedyDescender dugPolicy = new(content);
         Task<FloorPlan> next = Task.Run(() => worker.Generate(seed, 2));
         bool onOffer = false;
+        int offeredEnemies = 0;
         while (offered.Floor < 3)
         {
             Assert.True(offered.Tick < 3 * MaxWalkTicks && !offered.Ended, $"The run ended or passed its ticks on floor {offered.Floor} at tick {offered.Tick}.");
@@ -94,11 +106,14 @@ public sealed class TransitionTests
             if (offered.Floor != floor)
             {
                 Assert.True(onOffer, $"The descent to floor {offered.Floor} came before the worker ended, so the test proves nothing of the offer.");
+                offeredEnemies += offered.Enemies.Count;
                 int deeper = offered.Floor + 1;
                 next = Task.Run(() => worker.Generate(seed, deeper));
                 onOffer = false;
             }
         }
+
+        Assert.True(withEnemies == (offeredEnemies > 0), $"The offered floors held {offeredEnemies} enemies, and the content {(withEnemies ? "holds" : "holds no")} enemy family.");
     }
 
     /// <summary>An offer of a plan that is not for the next floor is an error that names both floors (T-2).</summary>
@@ -224,5 +239,23 @@ public sealed class TransitionTests
         Assert.Equal(BotRunEnd.Ascend, coward.End);
         Assert.Equal("ascend", WhatYouCarry.Tools.BotRunner.BotRunCommand.EndStateText(BotRunEnd.Ascend));
         Assert.Equal("bottom", WhatYouCarry.Tools.BotRunner.BotRunCommand.EndStateText(BotRunEnd.Bottom));
+    }
+
+    /// <summary>
+    /// F-121. The error of a failed dig task names the seed, the floor, and the cause, and keeps the error of the task
+    /// as its inner error, so the log line names its type. The old error kept the text of the cause alone. A task that
+    /// the engine cancelled has no inner error, and its cause is the status.
+    /// </summary>
+    [Fact]
+    public void ADigErrorKeepsTheErrorOfTheTask()
+    {
+        ContextException cause = new("no template covers the floor");
+        ContextException failed = ChunkSwap.DigError(Task.FromException(cause), 11UL, 4);
+        Assert.Same(cause, failed.InnerException);
+        Assert.Equal([new LogField("seed", "11", true), new LogField("floor", "4", true), new LogField("cause", cause.Message, true)], failed.Context);
+
+        ContextException cancelled = ChunkSwap.DigError(Task.FromCanceled(new System.Threading.CancellationToken(true)), 11UL, 4);
+        Assert.Null(cancelled.InnerException);
+        Assert.Contains(cancelled.Context, field => field.Name == "cause" && field.Value == nameof(TaskStatus.Canceled));
     }
 }

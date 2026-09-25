@@ -154,6 +154,21 @@ public sealed class ChunkSwap
     }
 
     /// <summary>
+    /// The error of a dig task that did not end with a result. It names the seed, the floor, and the cause, and it keeps
+    /// the error of the task as its inner error, so the log line names its type (F-121). A task that the engine
+    /// cancelled has no error, and the cause is its status.
+    /// </summary>
+    public static ContextException DigError(Task task, ulong seed, int floor)
+    {
+        Exception? inner = task.Exception?.InnerException;
+        ContextException error = inner is null ? new(TaskFailedMessage) : new(TaskFailedMessage, inner);
+        error.AddContext(SeedField, seed.ToString(CultureInfo.InvariantCulture));
+        error.AddContext(FloorField, floor.ToString(CultureInfo.InvariantCulture));
+        error.AddContext(CauseField, inner?.Message ?? task.Status.ToString());
+        return error;
+    }
+
+    /// <summary>
     /// Swaps the nodes when the loop descended on the last tick: the old nodes go, and the nodes of the new floor
     /// show. The chunks that the upload did not reach are built in this frame. The task of the floor after it starts.
     /// </summary>
@@ -236,12 +251,7 @@ public sealed class ChunkSwap
             return task.Result;
         }
 
-        string cause = task.Exception?.InnerException?.Message ?? task.Status.ToString();
-        ContextException error = new(TaskFailedMessage);
-        error.AddContext(SeedField, this.seed.ToString(CultureInfo.InvariantCulture));
-        error.AddContext(FloorField, this.diggingFloor.ToString(CultureInfo.InvariantCulture));
-        error.AddContext(CauseField, cause);
-        throw error;
+        throw DigError(task, this.seed, this.diggingFloor);
     }
 
     /// <summary>The nodes of every chunk of a grid that shows a face, meshed on the main thread.</summary>

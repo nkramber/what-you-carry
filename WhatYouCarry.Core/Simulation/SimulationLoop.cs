@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using WhatYouCarry.Core.Ai;
@@ -111,7 +112,8 @@ public sealed class SimulationLoop
         this.pathfinder = new GridPathfinder(this.Plan.Grid);
         this.Timer = FloorTimer.For(this.Plan.Template, FirstFloor);
         this.Escalation = new Escalation(this.Plan.Template);
-        this.Populate();
+        this.PlaceEnemies(this.Plan, this.enemies, this.brains);
+        this.nextOwner = PlayerOwner + 1 + this.enemies.Count;
     }
 
     /// <summary>
@@ -230,7 +232,12 @@ public sealed class SimulationLoop
     public ushort Buttons { get; private set; }
 
     /// <summary>Runs one tick with one intent.</summary>
-    /// <exception cref="ContextException">The run ended, the intent is not for the next tick, the tick counter is full, the intent sets a reserved button bit, or the content set cannot dig the next floor.</exception>
+    /// <remarks>
+    /// An error inside the tick names the seed, the floor, and the tick of the intent (design 6.1, F-121). An error of
+    /// the runtime, such as a null reference, becomes the inner error of a <see cref="ContextException"/> with those
+    /// fields. A descent that fails leaves the floor before it whole.
+    /// </remarks>
+    /// <exception cref="ContextException">The run ended, the intent is not for the next tick, the tick counter is full, the intent sets a reserved button bit, the content set cannot dig the next floor, or the tick failed.</exception>
     public void Step(Intent intent)
     {
         if (this.Ended)
@@ -266,6 +273,28 @@ public sealed class SimulationLoop
             throw reserved;
         }
 
+        try
+        {
+            this.RunTick(intent);
+        }
+        catch (ContextException error)
+        {
+            this.AddRunContext(error, intent.Tick);
+            throw;
+        }
+        catch (Exception error)
+        {
+            // An error of the runtime carries no field of the run, so the wrapper names the run and keeps the error
+            // as its inner error (T-2, D-113).
+            ContextException wrapped = new($"Tick {intent.Tick} on floor {this.Floor} failed: {error.Message}", error);
+            this.AddRunContext(wrapped, intent.Tick);
+            throw wrapped;
+        }
+    }
+
+    /// <summary>The body of one tick, after the checks of <see cref="Step"/>: the look, the player, the enemies, the hunter, the projectiles, the timer, and the stairwell.</summary>
+    private void RunTick(Intent intent)
+    {
         int yaw = (this.Yaw + intent.YawDelta) % FullTurn;
         if (yaw < 0)
         {
@@ -316,6 +345,17 @@ public sealed class SimulationLoop
             // No floor lies under the deepest floor, so a descend there does nothing (D-579).
             this.Descend();
         }
+    }
+
+    /// <summary>
+    /// Adds the seed, the floor, and the tick of the intent to an error of a tick (design 6.1, F-121). A field that a
+    /// lower level already added stays, such as the floor that a failed dig names.
+    /// </summary>
+    private void AddRunContext(ContextException error, uint tick)
+    {
+        error.AddContextIfAbsent("seed", this.Seed.ToString(CultureInfo.InvariantCulture));
+        error.AddContextIfAbsent("floor", ((long)this.Floor).ToString(CultureInfo.InvariantCulture));
+        error.AddContextIfAbsent("tick", ((long)tick).ToString(CultureInfo.InvariantCulture));
     }
 
     /// <summary>
@@ -606,7 +646,7 @@ public sealed class SimulationLoop
 
         foreach (EnemySpawn post in waves.Posts)
         {
-            this.AddEnemy(post, true);
+            this.AddWaveEnemy(post);
         }
 
         this.lastEvents.Add(new TimerEvent(TimerEventKind.Wave, this.Floor, tick, waves.Wave, waves.Posts.Count));
@@ -660,32 +700,34 @@ public sealed class SimulationLoop
     }
 
     /// <summary>
-    /// Puts one enemy and one brain at each spawn of the plan, in spawn order (D-398). The owner id of the first
-    /// enemy is one, because the player holds zero. The feet center of a spawn is the center of the cell over its
-    /// floor cell.
+    /// Fills two new lists with the enemies of a plan and their brains, one of each at each spawn in spawn order, asleep
+    /// (D-398). The owner id of the first enemy is one, because the player holds zero. It sets no field, so a failure
+    /// leaves the floor of the loop whole (F-121).
     /// </summary>
-    private void Populate()
+    private void PlaceEnemies(FloorPlan plan, List<Enemy> planEnemies, List<HumanoidBrain> planBrains)
     {
-        // A new pair of lists, and never a clear of the old ones, because Core approves no member that it does not
-        // need (D-207, D-208).
-        this.enemies = [];
-        this.brains = [];
-        this.hunter = null;
-        this.nextOwner = PlayerOwner + 1;
-        foreach (EnemySpawn spawn in this.Plan.EnemySpawns)
+        foreach (EnemySpawn spawn in plan.EnemySpawns)
         {
-            this.AddEnemy(spawn, false);
+            Enemy enemy = this.NewEnemy(plan.Grid, spawn, PlayerOwner + 1 + planEnemies.Count);
+            planEnemies.Add(enemy);
+            planBrains.Add(new HumanoidBrain(enemy, spawn.Cell, false));
         }
     }
 
-    /// <summary>Puts one enemy and its brain at one post, with the next owner id: asleep for the plan, relentless for a wave (D-398, D-419).</summary>
-    private void AddEnemy(EnemySpawn spawn, bool wave)
+    /// <summary>Puts one wave enemy and its relentless brain at one post, with the next owner id (D-419).</summary>
+    private void AddWaveEnemy(EnemySpawn post)
+    {
+        Enemy enemy = this.NewEnemy(this.Grid, post, this.TakeOwner());
+        this.enemies.Add(enemy);
+        this.brains.Add(new HumanoidBrain(enemy, post.Cell, true));
+    }
+
+    /// <summary>One enemy at one spawn with the weapon of its family. The feet center of a spawn is the center of the cell over its floor cell.</summary>
+    private Enemy NewEnemy(VoxelGrid grid, EnemySpawn spawn, int owner)
     {
         Vector3 feet = new(spawn.Cell.X + 0.5f, spawn.Cell.Y + 1.0f, spawn.Cell.Z + 0.5f);
         WeaponDefinition weapon = WeaponById(this.content, spawn.Family.Weapon, spawn.Family.Id);
-        Enemy enemy = new(this.Grid, feet, spawn.Family, weapon, this.TakeOwner());
-        this.enemies.Add(enemy);
-        this.brains.Add(new HumanoidBrain(enemy, spawn.Cell, wave));
+        return new Enemy(grid, feet, spawn.Family, weapon, owner);
     }
 
     /// <summary>The weapon that an enemy family or the hunter names (D-397, D-413). The loader proves that the set holds it.</summary>
@@ -707,17 +749,37 @@ public sealed class SimulationLoop
     }
 
     /// <summary>Takes the next floor from the worker, or digs it from the run seed and the next floor number when no plan is on offer (D-429), and puts a player at rest at its spawn with the same health, with the enemies, a new timer, and no hunter (D-44, D-257, D-335, D-398).</summary>
+    /// <remarks>
+    /// Every part of the next floor comes before the first field changes. A part that fails then leaves the floor
+    /// before it whole, and the plan, the floor number, and the enemies never disagree (F-121).
+    /// </remarks>
     private void Descend()
     {
         int next = this.Floor + 1;
-        this.Plan = this.offeredFloor ?? FloorGenerator.Generate(this.Seed, next, this.content);
+        FloorPlan plan = this.offeredFloor ?? FloorGenerator.Generate(this.Seed, next, this.content);
+        Player player = new(plan.Grid, plan.Spawn, this.Weapon, this.Player.Health);
+        ProjectileSimulation projectiles = new(plan.Grid, this.content.Projectiles);
+        GridPathfinder floorPathfinder = new(plan.Grid);
+        FloorTimer timer = FloorTimer.For(plan.Template, next);
+        Escalation escalation = new(plan.Template);
+
+        // A new pair of lists, and never a clear of the old ones, because Core approves no member that it does not
+        // need (D-207, D-208).
+        List<Enemy> planEnemies = [];
+        List<HumanoidBrain> planBrains = [];
+        this.PlaceEnemies(plan, planEnemies, planBrains);
+
+        this.Plan = plan;
         this.offeredFloor = null;
-        this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, this.Weapon, this.Player.Health);
-        this.Projectiles = new ProjectileSimulation(this.Plan.Grid, this.content.Projectiles);
-        this.pathfinder = new GridPathfinder(this.Plan.Grid);
+        this.Player = player;
+        this.Projectiles = projectiles;
+        this.pathfinder = floorPathfinder;
         this.Floor = next;
-        this.Timer = FloorTimer.For(this.Plan.Template, next);
-        this.Escalation = new Escalation(this.Plan.Template);
-        this.Populate();
+        this.Timer = timer;
+        this.Escalation = escalation;
+        this.enemies = planEnemies;
+        this.brains = planBrains;
+        this.hunter = null;
+        this.nextOwner = PlayerOwner + 1 + planEnemies.Count;
     }
 }

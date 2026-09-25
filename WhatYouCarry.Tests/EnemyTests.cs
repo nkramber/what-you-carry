@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using WhatYouCarry.Core.Ai;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Entities;
+using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Procgen;
@@ -204,6 +206,40 @@ public sealed class EnemyTests
     }
 
     /// <summary>
+    /// F-120. A chamber whose count of enemies passes the int range is the error of a chamber with too few free cells,
+    /// and never a chamber of no enemy. Each chamber weight here is 2^32 times its weight in the checkout, over a family
+    /// weight of one, so each count of the placement is a whole multiple of 2^32, which a cast to an int wraps to zero.
+    /// The budget grows by the same factor, so the draw of the chambers still fills its window.
+    /// </summary>
+    [Fact]
+    public void AnEnemyCountPastTheIntRangeIsAnError()
+    {
+        const long factor = 1L << 32;
+        List<ChamberKind> heavy = [];
+        foreach (ChamberKind kind in TestWorld.Content.Chambers)
+        {
+            heavy.Add(kind with { Weight = kind.Weight * factor });
+        }
+
+        List<FloorTemplate> floors = [];
+        foreach (FloorTemplate floor in TestWorld.Content.Floors)
+        {
+            floors.Add(floor with { DifficultyBudget = floor.DifficultyBudget * factor });
+        }
+
+        List<EnemyDefinition> light = [];
+        foreach (EnemyDefinition family in TestWorld.Content.Enemies)
+        {
+            light.Add(family with { Weight = 1 });
+        }
+
+        ContentSet content = TestWorld.Content with { Chambers = heavy, Floors = floors, Enemies = light };
+        ContextException error = Assert.Throws<ContextException>(() => FloorGenerator.Generate(1, ScavengerFloor, content));
+        Assert.Contains("free floor cells", error.Message, StringComparison.Ordinal);
+        Assert.Contains("enemyCount=", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// PR-16 exit test 5. When the full clearer takes the stairwell choice, every enemy that it did not drop is
     /// dead. The policy drops an enemy that no path reaches and one that a hunt gains nothing on (D-149). A policy
     /// that the timer sends to the stairwell leaves the rest alive, which D-439 allows.
@@ -253,48 +289,39 @@ public sealed class EnemyTests
     /// PR-16 exit test 6. A replay of a record with enemies gives the state hash of the live run, tick for tick.
     /// The three-platform part of the test is the bit-identity sweep, which folds the same replay (G-9).
     /// </summary>
+    /// <remarks>
+    /// The replay takes the intents of the live run, so a policy that read the state cannot hide a divergence of the
+    /// simulation behind a different choice. The test compares the hash after every tick, and not the end hash alone,
+    /// so a divergence that a later tick hides still fails (F-124).
+    /// </remarks>
     [Fact]
     public void AiIsDeterministic()
     {
         for (ulong seed = 1; seed <= 8; seed++)
         {
             FullClearer live = new(TestWorld.Content);
-            FullClearer twin = new(TestWorld.Content);
             SimulationLoop first = new(seed, TestWorld.Content);
-            SimulationLoop second = new(seed, TestWorld.Content);
             Assert.True(first.Enemies.Count > 0, $"Seed {seed}: floor 1 holds no enemy, so the test read nothing.");
 
             List<Intent> intents = [];
+            List<ulong> hashes = [];
             for (int tick = 0; tick < 900 && !first.Ended; tick++)
             {
                 Intent intent = live.Next(first);
                 intents.Add(intent);
                 first.Step(intent);
+                hashes.Add(first.Hash().Value);
             }
-
-            for (int tick = 0; tick < intents.Count && !second.Ended; tick++)
-            {
-                // The second run takes the intents of the first, so a policy that read the state cannot hide a
-                // divergence of the simulation behind a different choice.
-                second.Step(intents[tick]);
-                Assert.Equal(first.Seed, second.Seed);
-            }
-
-            Assert.Equal(intents.Count, (int)second.Tick);
-            Assert.Equal(twin.Name, live.Name);
 
             SimulationLoop replay = new(seed, TestWorld.Content);
-            foreach (Intent intent in intents)
+            for (int tick = 0; tick < intents.Count; tick++)
             {
-                if (replay.Ended)
-                {
-                    break;
-                }
-
-                replay.Step(intent);
+                Assert.False(replay.Ended, $"Seed {seed}: the replay ended before tick {tick}, and the live run did not.");
+                replay.Step(intents[tick]);
+                Assert.True(hashes[tick] == replay.Hash().Value, $"Seed {seed}: after tick {tick}, the replay hash differs from the live hash.");
             }
 
-            Assert.Equal(first.Hash(), replay.Hash());
+            Assert.Equal(first.Ended, replay.Ended);
             Assert.Equal(first.LivingEnemies, replay.LivingEnemies);
         }
     }

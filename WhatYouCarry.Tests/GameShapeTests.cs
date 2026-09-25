@@ -103,6 +103,46 @@ public sealed class GameShapeTests
     }
 
     /// <summary>
+    /// F-122. The quit of the session reaches the quit of the engine in every case. The engine call sits in the finally
+    /// block of a try statement that holds the rest of the body, and the write of the frame log catches every exception
+    /// with no filter. A write error of another kind left the old method before the engine call, and the session never
+    /// ended.
+    /// </summary>
+    [Fact]
+    public void TheQuitAlwaysReachesTheEngine()
+    {
+        const string EngineQuit = "GetTree().Quit(";
+        Microsoft.CodeAnalysis.SyntaxNode tree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(RepositoryRoot.ReadFile("WhatYouCarry.Game/Main.cs")).GetRoot();
+        Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax quit = Assert.Single(tree.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>(), method => method.Identifier.Text == "Quit");
+        Assert.NotNull(quit.Body);
+
+        Microsoft.CodeAnalysis.CSharp.Syntax.TryStatementSyntax outer = Assert.IsType<Microsoft.CodeAnalysis.CSharp.Syntax.TryStatementSyntax>(quit.Body.Statements[^1]);
+        Assert.NotNull(outer.Finally);
+        Assert.Contains(EngineQuit, outer.Finally.Block.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain(EngineQuit, outer.Block.ToString(), StringComparison.Ordinal);
+
+        Microsoft.CodeAnalysis.CSharp.Syntax.TryStatementSyntax write = Assert.Single(
+            outer.Block.DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.TryStatementSyntax>(),
+            attempt => attempt.Block.ToString().Contains("File.WriteAllText(", StringComparison.Ordinal));
+        Assert.Contains(write.Catches, clause => clause.Filter is null && clause.Declaration?.Type.ToString() == "Exception");
+    }
+
+    /// <summary>
+    /// F-122. The relative outputs of the Game commands land in the project directory that the path flag of the engine
+    /// sets, so the ignore file covers each one there, and not in every directory.
+    /// </summary>
+    [Fact]
+    public void TheRelativeOutputsOfTheGameCommandsAreIgnored()
+    {
+        string[] lines = RepositoryRoot.ReadFile(".gitignore").Split('\n');
+        foreach (string output in new[] { "frames.txt", "sheet.png", "hud.png" })
+        {
+            Assert.Contains(lines, line => line.Trim() == "/WhatYouCarry.Game/" + output);
+            Assert.DoesNotContain(lines, line => line.Trim() == output);
+        }
+    }
+
+    /// <summary>
     /// One defect for each override whose name starts with an underscore, the engine callbacks of Godot, and whose
     /// body is not one try statement with a catch of <c>Exception</c> and no filter. It adds the name of each
     /// callback that it reads to the list.

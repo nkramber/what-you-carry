@@ -119,6 +119,21 @@ public sealed class UserArgumentsTests
     }
 
     /// <summary>
+    /// F-122. An empty word or a word of white space alone after a flag stops the boot with an error that names the flag:
+    /// each path flag, and a word of the press flag. The old parse took an empty frame log path, and the session hung at
+    /// its end.
+    /// </summary>
+    [Fact]
+    public void EmptyWordStopsTheBoot()
+    {
+        AssertStops(UserArguments.EmptyWordMessage, [SmokeSession.Flag, FrameLog.Flag, string.Empty], FrameLog.Flag);
+        AssertStops(UserArguments.EmptyWordMessage, [BotSession.Flag, FrameLog.Flag, "   "], FrameLog.Flag);
+        AssertStops(UserArguments.EmptyWordMessage, [ContactSheet.Flag, string.Empty], ContactSheet.Flag);
+        AssertStops(UserArguments.EmptyWordMessage, [HudShot.Flag, "\t"], HudShot.Flag);
+        AssertStops(UserArguments.EmptyWordMessage, [SmokeSession.Flag, TestExit.PressFlag, TestExit.EscapeName, " "], TestExit.PressFlag);
+    }
+
+    /// <summary>
     /// PR-61 exit test 5. The user arguments of the smoke, test exit, bot, and contact sheet commands in `CLAUDE.md` parse
     /// with no error, and so do the user arguments of every other command there with the separator.
     /// </summary>

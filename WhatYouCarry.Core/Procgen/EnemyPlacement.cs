@@ -69,24 +69,28 @@ public static class EnemyPlacement
             // The running total rounds to the nearest whole enemy, so the floor keeps the weight that the
             // chambers before it left over (D-167).
             long target = (total + (weight / 2)) / weight;
-            int count = (int)(target - placed);
+            long enemies = target - placed;
             placed = target;
-            if (count == 0)
+            if (enemies == 0)
             {
                 continue;
             }
 
+            // The count stays a long until the cells bound it. A cast before the check wraps a count past the int
+            // range, to a chamber of no enemy among others (F-120).
             IReadOnlyList<Cell> cells = FreeCells(grid, chamber, reach);
-            if (cells.Count < count)
+            if (cells.Count < enemies)
             {
-                ContextException error = new($"Chamber {index} of kind '{chamber.Kind.Id}' holds {cells.Count} free floor cells, and the budget of D-167 gives it {count} enemies of the family '{family.Id}' (D-398).");
+                ContextException error = new($"Chamber {index} of kind '{chamber.Kind.Id}' holds {cells.Count} free floor cells, and the budget of D-167 gives it {enemies} enemies of the family '{family.Id}' (D-398).");
                 error.AddContext("chamber", ((long)index).ToString(CultureInfo.InvariantCulture));
                 error.AddContext("chamberKind", chamber.Kind.Id);
                 error.AddContext("enemyFamily", family.Id);
                 error.AddContext("freeCells", ((long)cells.Count).ToString(CultureInfo.InvariantCulture));
-                error.AddContext("enemyCount", ((long)count).ToString(CultureInfo.InvariantCulture));
+                error.AddContext("enemyCount", enemies.ToString(CultureInfo.InvariantCulture));
                 throw error;
             }
+
+            int count = (int)enemies;
 
             // The cells spread over the list, so the first one is at the start and the rest follow at one step
             // of the list for each enemy.

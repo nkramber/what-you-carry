@@ -108,6 +108,13 @@ public sealed record EnemyDefinition(
             throw ContentError.Make(path, "health", "is below one, and a spawn that starts dead is no spawn (D-322)");
         }
 
+        // An enemy holds its health in an int, and a cast of a larger value wraps it, to a spawn that starts dead
+        // among others (F-120).
+        if (health > ContentValidator.LargestInt)
+        {
+            throw ContentError.Make(path, "health", $"is {health}, and the health of a spawn is an int of no more than {ContentValidator.LargestInt}");
+        }
+
         return new EnemyDefinition(
             ContentValidator.Value(path, members, "id", JsonMemberKind.Text),
             minDepth,
@@ -116,10 +123,26 @@ public sealed record EnemyDefinition(
             health,
             ContentValidator.Value(path, members, "weapon", JsonMemberKind.Text),
             AtLeastOne(path, members, "sightCentimetres"),
-            AtLeastOne(path, members, "giveUpTicks"),
+            Ticks(path, members, "giveUpTicks"),
             AtLeastOne(path, members, "attackRangeCentimetres"),
-            AtLeastOne(path, members, "attackCooldownTicks"),
+            Ticks(path, members, "attackCooldownTicks"),
             AtLeastOne(path, members, "speedCentimetresPerSecond"));
+    }
+
+    /// <summary>
+    /// A delay of one tick or more that an enemy counts in an int: the ticks with no line of sight, and the cooldown
+    /// after a swing. A cast of a larger cooldown wraps it, and the int count of blind ticks wraps before it reaches a
+    /// larger give-up count (F-120).
+    /// </summary>
+    private static long Ticks(string path, IReadOnlyList<JsonMember> members, string name)
+    {
+        long value = Number(path, members, name);
+        if (value < 1 || value > ContentValidator.LargestInt)
+        {
+            throw ContentError.Make(path, name, $"is {value}, and this delay is from one tick to the {ContentValidator.LargestInt} ticks that an int holds");
+        }
+
+        return value;
     }
 
     /// <summary>One whole-number field of one or more. Each field here names a distance, a delay, or a speed, and none of the three is zero.</summary>

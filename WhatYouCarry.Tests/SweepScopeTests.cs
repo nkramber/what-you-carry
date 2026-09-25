@@ -60,7 +60,7 @@ public sealed class SweepScopeTests
             Assert.True(tagged, $"The class '{type.FullName}' lacks the category '{SweepScope.SweepCategory}' (D-479).");
         }
 
-        Assert.Equal(7, checkedTypes.Count);
+        Assert.Equal(8, checkedTypes.Count);
     }
 
     [Fact]

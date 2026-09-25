@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Simulation;
@@ -147,6 +150,85 @@ public sealed class SimulationTests
         Assert.Contains("expectedTick=1", error.Message, StringComparison.Ordinal);
         Assert.Contains("intentTick=5", error.Message, StringComparison.Ordinal);
         Assert.Equal(1U, loop.Tick);
+    }
+
+    /// <summary>
+    /// F-121. An error deep inside a tick names the seed, the floor, and the tick of the intent beside the fields of the
+    /// level that threw it (design 6.1, D-113). The hunter of the content names a weapon that the set does not hold, so
+    /// the tick of the expiry fails in the spawn of the hunter.
+    /// </summary>
+    [Fact]
+    public void AnErrorInsideATickNamesTheSeedTheFloorAndTheTick()
+    {
+        ContentSet content = WithOneSecondTimer(TestWorld.PeacefulContent with { Hunter = TestWorld.PeacefulContent.Hunter with { Weapon = "no-such-weapon" } });
+        SimulationLoop loop = new(9UL, content);
+
+        (ContextException error, uint failedTick) = StepUntilTheTickFails(loop);
+        Assert.Contains("no-such-weapon", error.Message, StringComparison.Ordinal);
+        AssertContextField(error, "seed", "9");
+        AssertContextField(error, "floor", "1");
+        AssertContextField(error, "tick", failedTick.ToString(CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>
+    /// F-121. An error of the runtime inside a tick becomes the inner error of a context error that names the seed, the
+    /// floor, and the tick of the intent, and never leaves the loop with no field of the run. The content holds no
+    /// hunter, so the spawn of the hunter at the expiry reads a null reference.
+    /// </summary>
+    [Fact]
+    public void ARuntimeErrorInsideATickIsWrappedWithTheRunFields()
+    {
+        ContentSet content = WithOneSecondTimer(TestWorld.PeacefulContent with { Hunter = null! });
+        SimulationLoop loop = new(10UL, content);
+
+        (ContextException error, uint failedTick) = StepUntilTheTickFails(loop);
+        Assert.IsType<NullReferenceException>(error.InnerException);
+        Assert.Contains(error.InnerException.Message, error.Message, StringComparison.Ordinal);
+        AssertContextField(error, "seed", "10");
+        AssertContextField(error, "floor", "1");
+        AssertContextField(error, "tick", failedTick.ToString(CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>A content set whose every floor runs a timer of one second, so the expiry comes on tick 59.</summary>
+    private static ContentSet WithOneSecondTimer(ContentSet content)
+    {
+        List<FloorTemplate> floors = [];
+        foreach (FloorTemplate floor in content.Floors)
+        {
+            floors.Add(floor with { TimerSeconds = 1, BossTimerSeconds = 0 });
+        }
+
+        return content with { Floors = floors };
+    }
+
+    /// <summary>Steps the loop with idle intents until a tick throws, and gives the error and the tick of its intent. A loop that runs ten seconds with no error fails the test.</summary>
+    private static (ContextException Error, uint FailedTick) StepUntilTheTickFails(SimulationLoop loop)
+    {
+        uint failedTick = 0;
+        ContextException error = Assert.Throws<ContextException>(() =>
+        {
+            for (int step = 0; step < 10 * SimulationLoop.TicksPerSecond; step++)
+            {
+                failedTick = loop.Tick;
+                loop.Step(new Intent(loop.Tick, 0, 0, 0, 0, 0));
+            }
+        });
+        return (error, failedTick);
+    }
+
+    /// <summary>Asserts that the error holds one context field of the name, with the value. The replay and stairwell tests share it.</summary>
+    internal static void AssertContextField(ContextException error, string name, string value)
+    {
+        List<string> values = [];
+        foreach (LogField field in error.Context)
+        {
+            if (field.Name == name)
+            {
+                values.Add(field.Value);
+            }
+        }
+
+        Assert.True(values.Count == 1 && values[0] == value, $"The error holds {values.Count} field(s) named '{name}' with the values [{string.Join(", ", values)}], and the test expects one field with '{value}'. {error.Message}");
     }
 
     /// <summary>The yaw sum wraps at a full turn in both directions, and it never goes negative (D-227).</summary>

@@ -232,7 +232,6 @@ public partial class Main : Node3D
     private const string TickField = "tick";
     private const string SubsystemField = "subsystem";
     private const string EntitiesField = "entities";
-    private const string ErrorField = "error";
     private const string FileField = "file";
     private const string ShotField = "shot";
     private const string HeadlessDisplay = "headless";
@@ -302,8 +301,10 @@ public partial class Main : Node3D
         }
         catch (Exception error)
         {
-            // The boot has no loop yet, so the line carries the first seed, the first floor, and tick zero.
+            // The boot has no loop yet, so the line carries the first seed, the first floor, and tick zero. The boot
+            // measured no frame, so the session writes no frame log, and never an empty one (F-122).
             this.LogFailure(BootFailedMessage, RunFields(FirstSeed, SimulationLoop.FirstFloor, 0), error);
+            this.frames = null;
             this.Quit(ExitFailure);
         }
     }
@@ -974,46 +975,60 @@ public partial class Main : Node3D
     /// </summary>
     private void FailCallback(string callback, Exception error)
     {
-        LogFields fields = this.loop is null
-            ? RunFields(FirstSeed, SimulationLoop.FirstFloor, 0)
-            : RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+        LogFields fields = this.SessionFields();
         fields.Add(CallbackField, callback);
         this.LogFailure(CallbackFailedMessage, fields, error);
         this.Quit(ExitFailure);
     }
 
-    /// <summary>Writes the error line of a failure, with the text of the exception after the run fields.</summary>
+    /// <summary>The run fields of the loop, or of the boot when no loop exists yet: the first seed, the first floor, and tick zero.</summary>
+    private LogFields SessionFields()
+    {
+        return this.loop is null
+            ? RunFields(FirstSeed, SimulationLoop.FirstFloor, 0)
+            : RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+    }
+
+    /// <summary>Writes the error line of a failure, with the text and the type of the exception and of each inner exception after the run fields (F-121).</summary>
     private void LogFailure(string message, LogFields fields, Exception error)
     {
-        fields.Add(ErrorField, error.Message);
+        FailureFields.Add(fields, error);
         this.logger.Write(LogContextKind.Run, LogLevel.Error, message, fields);
     }
 
     /// <summary>
-    /// Ends the session. The frame log, when one runs, goes to its file first, and a write failure of either
-    /// kind, a disk error or a path the user cannot write, turns the exit code to failure. The sound bank releases
-    /// its streams. The engine quits at the end of the frame, and no later tick runs.
+    /// Ends the session. The frame log, when one runs, goes to its file first, and any write failure, such as a disk
+    /// error, a path the user cannot write, or a path the system rejects, is an error line with the run fields of the
+    /// loop and turns the exit code to failure. The sound bank releases its streams. The engine quits at the end of the
+    /// frame in every case, and no later tick runs.
     /// </summary>
     private void Quit(int exitCode)
     {
         this.ended = true;
-        this.sounds?.Release();
-        if (this.frames is not null)
+        try
         {
-            try
+            this.sounds?.Release();
+            if (this.frames is not null)
             {
-                File.WriteAllText(this.frameLogPath, this.frames.Text());
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-            {
-                // A path that the user cannot write raises the second kind, and it is not an IOException.
-                LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
-                fields.Add(FileField, this.frameLogPath);
-                this.LogFailure(FrameLogFailedMessage, fields, error);
-                exitCode = ExitFailure;
+                try
+                {
+                    File.WriteAllText(this.frameLogPath, this.frames.Text());
+                }
+                catch (Exception error)
+                {
+                    LogFields fields = this.SessionFields();
+                    fields.Add(FileField, this.frameLogPath);
+                    this.LogFailure(FrameLogFailedMessage, fields, error);
+                    exitCode = ExitFailure;
+                }
             }
         }
-
-        this.GetTree().Quit(exitCode);
+        finally
+        {
+            // A failure that left this method before the quit left the session running with no tick, and the
+            // process never ended (F-122). An error that leaves here reaches the guard of the caller, which writes
+            // its error line and quits with exit code 1.
+            this.GetTree().Quit(exitCode);
+        }
     }
 }

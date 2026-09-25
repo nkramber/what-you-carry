@@ -58,6 +58,24 @@ public sealed class ContextException : Exception
         this.context.Add(new LogField(name, value, Quoted: true));
     }
 
+    /// <summary>
+    /// Adds one field to the error when no field of this name is present. A level that already named the field
+    /// knows its value best, such as the dig of a floor that names that floor, so the present field stays (F-121).
+    /// </summary>
+    /// <exception cref="ContextException">The name is empty.</exception>
+    public void AddContextIfAbsent(string name, string value)
+    {
+        foreach (LogField field in this.context)
+        {
+            if (field.Name == name)
+            {
+                return;
+            }
+        }
+
+        this.AddContext(name, value);
+    }
+
     /// <summary>The context as one readable group, such as <c>[seed=7 floor=3]</c>.</summary>
     private string ContextText()
     {

@@ -232,19 +232,40 @@ public sealed class BotTests
 
     /// <summary>
     /// The greedy descender leaves every floor of the night of 2026-09-23 (F-111, D-545, D-546). On 26 seeds that
-    /// night read a softlock at `e069e16`. Seeds 940 and 1268 wedged on a detour away from the stairwell, seed 947
-    /// also took a diagonal drop onto an overhang, and seeds 2669 and 2879 softlocked on that drop alone. Seed 4119
-    /// crashed in the local night of PR-81, when an enemy box ended one ulp inside a block (F-112, D-549). The runs
-    /// now end at the bottom or by a death.
+    /// night read a softlock at `e069e16`. Seed 1268 wedged on a detour away from the stairwell, seed 947 also took a
+    /// diagonal drop onto an overhang, and seeds 2669 and 2879 softlocked on that drop alone. The runs now reach the
+    /// bottom.
     /// </summary>
+    /// <remarks>
+    /// The content holds no enemy family, so no death ends a run before the floor that softlocked. With enemies, the
+    /// test took a death as a pass, so a run that died early proved nothing of the fix (F-124). With the fix reverted,
+    /// each of the four seeds softlocks here: 947 on floor 1, 1268 on floor 2, 2879 on floor 3, and 2669 on floor 8.
+    /// </remarks>
     [Theory]
-    [InlineData(940UL)]
     [InlineData(947UL)]
     [InlineData(1268UL)]
     [InlineData(2669UL)]
     [InlineData(2879UL)]
-    [InlineData(4119UL)]
     public void GreedyDescenderLeavesTheFloorsOfTheNight(ulong seed)
+    {
+        BotRunResult result = BotRun.Play(new GreedyDescender(TestWorld.PeacefulContent), seed, TestWorld.PeacefulContent);
+        Assert.True(
+            result.End == BotRunEnd.Bottom,
+            $"Seed {seed}: the greedy descender ended as {result.End} on floor {result.FloorsReached} after {result.Ticks} ticks, and a run with no enemy reaches the bottom. {result.Error}");
+        Assert.Equal(15, result.FloorsReached);
+    }
+
+    /// <summary>
+    /// Two seeds of the night need the enemies, so each run ends at the bottom or by a death, and never as a softlock or
+    /// an error. Seed 940 wedged on a detour away from the stairwell (F-111, D-546). With no enemy it reaches the bottom
+    /// also with the fix reverted, and with enemies it softlocks on floor 3 then, so it stays on this content, where it
+    /// dies on floor 2 with the fix. Seed 4119 crashed in the local night of PR-81, when an enemy box ended one ulp
+    /// inside a block (F-112, D-549).
+    /// </summary>
+    [Theory]
+    [InlineData(940UL)]
+    [InlineData(4119UL)]
+    public void GreedyDescenderEndsTheEnemyRunsOfTheNight(ulong seed)
     {
         BotRunResult result = BotRun.Play(new GreedyDescender(TestWorld.Content), seed, TestWorld.Content);
         Assert.True(

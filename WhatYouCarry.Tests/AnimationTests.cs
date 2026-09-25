@@ -25,6 +25,20 @@ public sealed class AnimationTests
 
     private static WeaponDefinition Sword => SimulationLoop.MainWeapon(TestWorld.Content);
 
+    /// <summary>The weapon of one id in the repository content. An absent id fails the test.</summary>
+    private static WeaponDefinition WeaponOf(string id)
+    {
+        foreach (WeaponDefinition weapon in TestWorld.Content.Weapons)
+        {
+            if (weapon.Id == id)
+            {
+                return weapon;
+            }
+        }
+
+        throw new InvalidOperationException($"The content set holds no weapon '{id}'.");
+    }
+
     private static PlayerClips Clips()
     {
         return PlayerClips.Load(ContentRoot(), Sword);
@@ -41,19 +55,46 @@ public sealed class AnimationTests
     }
 
     /// <summary>
-    /// PR-15 exit test 5. The phases of the swing clip equal the windup, active, and recovery ticks of the sword, and the
-    /// roll clip and the stagger clip last the ticks of the roll and of the stagger (D-87, D-315, D-326, D-327, D-331).
+    /// The weapons of the checkout whose swing clip does not match their phases, which the match theory leaves out until
+    /// the owner answers (F-124). The Overseer pick swings 30, 6, and 30 ticks, 66 in all, and it names the 36-tick clip
+    /// of the sword, whose phases are 12, 6, and 18 ticks.
     /// </summary>
-    [Fact]
-    public void AnimationMatchesCore()
-    {
-        PlayerClips clips = Clips();
-        WeaponDefinition sword = Sword;
-        int windup = (int)sword.WindupTicks;
-        int activeEnd = (int)(sword.WindupTicks + sword.ActiveTicks);
-        int swingEnd = (int)sword.SwingTicks;
+    private static readonly string[] UnmatchedWeapons = ["overseer-pick"];
 
-        Assert.Equal(sword.SwingTicks, (long)clips.Swing.Length);
+    /// <summary>The id of every weapon of the checkout but the ones of <see cref="UnmatchedWeapons"/> (F-124).</summary>
+    public static TheoryData<string> MatchedWeapons
+    {
+        get
+        {
+            TheoryData<string> ids = [];
+            foreach (WeaponDefinition weapon in TestWorld.Content.Weapons)
+            {
+                if (Array.IndexOf(UnmatchedWeapons, weapon.Id) < 0)
+                {
+                    ids.Add(weapon.Id);
+                }
+            }
+
+            return ids;
+        }
+    }
+
+    /// <summary>
+    /// PR-15 exit test 5. The phases of the swing clip of each weapon equal its windup, active, and recovery ticks, and the
+    /// roll clip and the stagger clip last the ticks of the roll and of the stagger (D-87, D-315, D-326, D-327, D-331).
+    /// The test read the main weapon alone, so a weapon that names the clip of another passed with no check (F-124).
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(MatchedWeapons))]
+    public void AnimationMatchesCore(string weaponId)
+    {
+        WeaponDefinition weapon = WeaponOf(weaponId);
+        PlayerClips clips = PlayerClips.Load(ContentRoot(), weapon);
+        int windup = (int)weapon.WindupTicks;
+        int activeEnd = (int)(weapon.WindupTicks + weapon.ActiveTicks);
+        int swingEnd = (int)weapon.SwingTicks;
+
+        Assert.Equal(weapon.SwingTicks, (long)clips.Swing.Length);
         PhaseRange[] swingPhases = [new(0, windup, PhaseTags.Windup), new(windup, activeEnd, PhaseTags.Active), new(activeEnd, swingEnd, PhaseTags.Recovery)];
         Assert.Equal(swingPhases, clips.Swing.Phases);
 
@@ -61,6 +102,21 @@ public sealed class AnimationTests
         Assert.Equal(new[] { new PhaseRange(0, Player.RollTicks, PhaseTags.Idle) }, clips.Dodge.Phases);
         Assert.Equal(Player.StaggerTicks, clips.Stagger.Length);
         Assert.Equal(new[] { new PhaseRange(0, Player.StaggerTicks, PhaseTags.Idle) }, clips.Stagger.Phases);
+    }
+
+    /// <summary>
+    /// Each weapon that the match theory leaves out is a weapon of the checkout whose clip still does not last its
+    /// swing, so the list names no weapon by mistake, and a fixed clip moves its weapon back into the theory (F-124).
+    /// </summary>
+    [Fact]
+    public void EachUnmatchedWeaponStillMissesItsClip()
+    {
+        foreach (string id in UnmatchedWeapons)
+        {
+            WeaponDefinition weapon = WeaponOf(id);
+            PlayerClips clips = PlayerClips.Load(ContentRoot(), weapon);
+            Assert.True(weapon.SwingTicks != clips.Swing.Length, $"The swing clip of '{id}' lasts its {weapon.SwingTicks} ticks now, so the match theory takes it again.");
+        }
     }
 
     /// <summary>Every track of the three clips turns a bone of the body, the body holds the weapon point on the right lower arm, and the sword model loads (D-330, D-331).</summary>

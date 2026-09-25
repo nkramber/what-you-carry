@@ -4,7 +4,10 @@ using System.IO;
 using System.Text;
 using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
+using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Procgen;
+using WhatYouCarry.Core.Simulation;
 using Xunit;
 
 namespace WhatYouCarry.Tests;
@@ -390,6 +393,7 @@ public sealed class ContentTests
     [InlineData("boxCountMax")]
     [InlineData("boxSizeMin")]
     [InlineData("boxSizeMax")]
+    [InlineData("tierChance")]
     public void EveryRequiredChamberKindFieldIsRequired(string omitted)
     {
         List<JsonMember> members = [];
@@ -593,13 +597,18 @@ public sealed class ContentTests
         Assert.Contains(omitted, error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>A projectile definition outside its bounds is an error that names the field: no speed, a lifting gravity, a spread past a half turn (D-266).</summary>
+    /// <summary>
+    /// A projectile definition outside its bounds is an error that names the field: no speed, a lifting gravity, a
+    /// spread past a half turn (D-266), no damage, and a negative area (F-120).
+    /// </summary>
     [Theory]
     [InlineData("\"speedCentimetres\":4000", "\"speedCentimetres\":0", "speedCentimetres")]
     [InlineData("\"gravityScalePercent\":100", "\"gravityScalePercent\":-1", "gravityScalePercent")]
     [InlineData("\"spreadHundredths\":100", "\"spreadHundredths\":-1", "spreadHundredths")]
     [InlineData("\"spreadHundredths\":100", "\"spreadHundredths\":18001", "spreadHundredths")]
     [InlineData("\"lifetimeTicks\":300", "\"lifetimeTicks\":0", "lifetimeTicks")]
+    [InlineData("\"damage\":10", "\"damage\":0", "damage")]
+    [InlineData("\"damage\":10", "\"damage\":10,\"areaCentimetres\":-1", "areaCentimetres")]
     public void AProjectileOutsideItsBoundsIsAnError(string from, string to, string field)
     {
         string text = ProjectileText.Replace(from, to, StringComparison.Ordinal);
@@ -608,6 +617,33 @@ public sealed class ContentTests
         ContextException error = Assert.Throws<ContextException>(
             () => ProjectileDefinition.FromMembers("projectiles/p.json", JsonObjectReader.Read("projectiles/p.json", Encoding.UTF8.GetBytes(text))));
         Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>F-120. A damage of one and a present area of zero are the lowest values that load, and an absent area stays zero.</summary>
+    [Fact]
+    public void AProjectileAtItsLowestBoundsLoads()
+    {
+        string text = ProjectileText.Replace("\"damage\":10", "\"damage\":1,\"areaCentimetres\":0", StringComparison.Ordinal);
+        Assert.NotEqual(ProjectileText, text);
+        ProjectileDefinition lowest = ProjectileDefinition.FromMembers("projectiles/p.json", JsonObjectReader.Read("projectiles/p.json", Encoding.UTF8.GetBytes(text)));
+        Assert.Equal(1, lowest.Damage);
+        Assert.Equal(0, lowest.AreaCentimetres);
+
+        ProjectileDefinition absent = ProjectileDefinition.FromMembers("projectiles/p.json", JsonObjectReader.Read("projectiles/p.json", Encoding.UTF8.GetBytes(ProjectileText)));
+        Assert.Equal(0, absent.AreaCentimetres);
+    }
+
+    /// <summary>Two projectile definitions of one id are an error, because a lookup would take either one.</summary>
+    [Fact]
+    public void ARepeatedProjectileIdIsAnError()
+    {
+        MemorySource source = Valid()
+            .Add("projectiles/a.json", ProjectileText)
+            .Add("projectiles/b.json", ProjectileText);
+
+        ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
+        Assert.Contains("two projectile definitions", error.Message, StringComparison.Ordinal);
+        Assert.Contains("'p'", error.Message, StringComparison.Ordinal);
     }
 
     private const string WeaponText = """
@@ -735,7 +771,11 @@ public sealed class ContentTests
         Assert.Contains("D-413", missing.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>Every field of the hunter is required, and each number is one or more (D-92, D-408).</summary>
+    /// <summary>
+    /// Every field of the hunter is required, and each number is one or more (D-92, D-408). The cooldown fits the int
+    /// that the hunter counts it in: the loader took 2^31, one past <see cref="int.MaxValue"/>, and the cast wrapped it
+    /// to a negative cooldown, which never ends (F-120).
+    /// </summary>
     [Theory]
     [InlineData("\"attackRangeCentimetres\":180", "\"attackRangeCentimetres\":0", "attackRangeCentimetres")]
     [InlineData("\"attackCooldownTicks\":60", "\"attackCooldownTicks\":0", "attackCooldownTicks")]
@@ -743,6 +783,7 @@ public sealed class ContentTests
     [InlineData("\"speedGainCentimetresPerSecond\":100", "\"speedGainCentimetresPerSecond\":0", "speedGainCentimetresPerSecond")]
     [InlineData("\"speedGainTicks\":1200", "\"speedGainTicks\":0", "speedGainTicks")]
     [InlineData(",\"speedGainTicks\":1200", "", "speedGainTicks")]
+    [InlineData("\"attackCooldownTicks\":60", "\"attackCooldownTicks\":2147483648", "attackCooldownTicks")]
     public void ABadHunterFieldFails(string from, string to, string field)
     {
         string text = HunterText.Replace(from, to, StringComparison.Ordinal);
@@ -768,4 +809,192 @@ public sealed class ContentTests
         Assert.Contains(field, error.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// F-120. A floor value past what its consumer holds is an error that names the field. The loader took each one,
+    /// and a cast or a product wrapped it later. Each row holds the first value past the bound: 2^31, one past
+    /// <see cref="int.MaxValue"/>, for the floor number; for the timer and the wave interval, the first count of
+    /// seconds whose ticks, at 60 a second, pass <see cref="long.MaxValue"/>; and for the extra seconds of a boss
+    /// floor, the first count whose sum with the 180 seconds of the timer passes that bound.
+    /// </summary>
+    [Theory]
+    [InlineData("\"maxDepth\":5", "\"maxDepth\":2147483648", "maxDepth")]
+    [InlineData("\"timerSeconds\":180", "\"timerSeconds\":153722867280912931", "timerSeconds")]
+    [InlineData("\"bossTimerSeconds\":120", "\"bossTimerSeconds\":153722867280912751", "bossTimerSeconds")]
+    [InlineData("\"waveIntervalSeconds\":30", "\"waveIntervalSeconds\":153722867280912931", "waveIntervalSeconds")]
+    public void AFloorValuePastWhatItsConsumerHoldsIsAnError(string from, string to, string field)
+    {
+        string text = Floor.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(Floor, text);
+        ContextException error = Assert.Throws<ContextException>(
+            () => FloorTemplate.FromMembers("floors/a.json", JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains("floors/a.json", error.Message, StringComparison.Ordinal);
+        Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// F-120. The last floor value that each consumer holds loads, and the loop reads it with no wrap: the deepest floor
+    /// is <see cref="int.MaxValue"/>, and a timer of the most seconds, alone or with the extra seconds of a boss floor,
+    /// runs <see cref="long.MaxValue"/> ticks rounded down to a whole second.
+    /// </summary>
+    [Fact]
+    public void AFloorValueAtWhatItsConsumerHoldsLoads()
+    {
+        long mostSeconds = long.MaxValue / SimulationLoop.TicksPerSecond;
+        string bossText = Floor
+            .Replace("\"maxDepth\":5", $"\"maxDepth\":{int.MaxValue}", StringComparison.Ordinal)
+            .Replace("\"bossTimerSeconds\":120", $"\"bossTimerSeconds\":{mostSeconds - 180}", StringComparison.Ordinal)
+            .Replace("\"waveIntervalSeconds\":30", $"\"waveIntervalSeconds\":{mostSeconds}", StringComparison.Ordinal);
+        FloorTemplate boss = FloorTemplate.FromMembers("floors/a.json", JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(bossText)));
+        Assert.Equal(int.MaxValue, FloorGenerator.DeepestFloor(TestWorld.Content with { Floors = [boss] }));
+        Assert.Equal(mostSeconds * SimulationLoop.TicksPerSecond, FloorTimer.For(boss, FloorTimer.BossFloors[0]).Length);
+        Escalation waves = new(boss);
+        long intervalTicks = mostSeconds * SimulationLoop.TicksPerSecond;
+        Assert.Equal(0, waves.Step(TestWorld.FlatFloor(), intervalTicks - 1, 0, [], TestWorld.Spawn).Wave);
+        Assert.Equal(1, waves.Step(TestWorld.FlatFloor(), intervalTicks, 0, [], TestWorld.Spawn).Wave);
+
+        string timerText = Floor
+            .Replace("\"timerSeconds\":180", $"\"timerSeconds\":{mostSeconds}", StringComparison.Ordinal)
+            .Replace("\"bossTimerSeconds\":120", "\"bossTimerSeconds\":0", StringComparison.Ordinal);
+        FloorTemplate longest = FloorTemplate.FromMembers("floors/a.json", JsonObjectReader.Read("floors/a.json", Encoding.UTF8.GetBytes(timerText)));
+        Assert.Equal(mostSeconds * SimulationLoop.TicksPerSecond, FloorTimer.For(longest, 1).Length);
+    }
+
+    /// <summary>F-120. The limits that Core writes as numbers, because its member allowlist holds no MaxValue of int or long, are those members.</summary>
+    [Fact]
+    public void TheWrittenLimitsAreTheLimitsOfTheirTypes()
+    {
+        Assert.Equal(int.MaxValue, ContentValidator.LargestInt);
+        Assert.Equal(long.MaxValue, ContentValidator.LargestLong);
+        Assert.Equal(long.MaxValue / SimulationLoop.TicksPerSecond, FloorTemplate.LargestSeconds);
+    }
+
+    private const string EnemyText = """
+        {"id":"e","minDepth":1,"maxDepth":5,"weight":10,"health":40,"weapon":"w","sightCentimetres":2000,"giveUpTicks":300,"attackRangeCentimetres":140,"attackCooldownTicks":30,"speedCentimetresPerSecond":500}
+        """;
+
+    /// <summary>Every field of an enemy family is required, one at a time (D-92, D-395).</summary>
+    [Theory]
+    [InlineData("id")]
+    [InlineData("minDepth")]
+    [InlineData("maxDepth")]
+    [InlineData("weight")]
+    [InlineData("health")]
+    [InlineData("weapon")]
+    [InlineData("sightCentimetres")]
+    [InlineData("giveUpTicks")]
+    [InlineData("attackRangeCentimetres")]
+    [InlineData("attackCooldownTicks")]
+    [InlineData("speedCentimetresPerSecond")]
+    public void EveryRequiredEnemyFieldIsRequired(string omitted)
+    {
+        List<JsonMember> members = [];
+        foreach (JsonMember member in JsonObjectReader.Read("enemies/e.json", Encoding.UTF8.GetBytes(EnemyText)))
+        {
+            if (member.Name != omitted)
+            {
+                members.Add(member);
+            }
+        }
+
+        ContextException error = Assert.Throws<ContextException>(() => EnemyDefinition.FromMembers("enemies/e.json", members));
+        Assert.Contains($"'{omitted}'", error.Message, StringComparison.Ordinal);
+        Assert.Contains("is absent", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// An enemy family outside its bounds is an error that names the field: a first floor below 1, a range upside down,
+    /// no weight, no health, a number that no whole number holds, a field of another kind, and a distance, a delay, or
+    /// a speed of zero (D-3, D-167, D-322, D-395).
+    /// </summary>
+    [Theory]
+    [InlineData("\"minDepth\":1", "\"minDepth\":0", "minDepth")]
+    [InlineData("\"maxDepth\":5", "\"maxDepth\":0", "maxDepth")]
+    [InlineData("\"weight\":10", "\"weight\":0", "weight")]
+    [InlineData("\"health\":40", "\"health\":0", "health")]
+    [InlineData("\"health\":40", "\"health\":1.5", "health")]
+    [InlineData("\"weapon\":\"w\"", "\"weapon\":1", "weapon")]
+    [InlineData("\"sightCentimetres\":2000", "\"sightCentimetres\":0", "sightCentimetres")]
+    [InlineData("\"giveUpTicks\":300", "\"giveUpTicks\":0", "giveUpTicks")]
+    [InlineData("\"attackRangeCentimetres\":140", "\"attackRangeCentimetres\":0", "attackRangeCentimetres")]
+    [InlineData("\"attackCooldownTicks\":30", "\"attackCooldownTicks\":-1", "attackCooldownTicks")]
+    [InlineData("\"speedCentimetresPerSecond\":500", "\"speedCentimetresPerSecond\":0", "speedCentimetresPerSecond")]
+    public void AnEnemyOutsideItsBoundsIsAnError(string from, string to, string field)
+    {
+        string text = EnemyText.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(EnemyText, text);
+        ContextException error = Assert.Throws<ContextException>(
+            () => EnemyDefinition.FromMembers("enemies/e.json", JsonObjectReader.Read("enemies/e.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains("enemies/e.json", error.Message, StringComparison.Ordinal);
+        Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// F-120. An enemy value past the int that an enemy holds it in is an error that names the field. The loader took
+    /// 2^31, one past <see cref="int.MaxValue"/>: a cast wrapped the health to -2^31 and the cooldown to a negative
+    /// count that never ends, and the int count of blind ticks wraps before it reaches that give-up count.
+    /// </summary>
+    [Theory]
+    [InlineData("\"health\":40", "\"health\":2147483648", "health")]
+    [InlineData("\"giveUpTicks\":300", "\"giveUpTicks\":2147483648", "giveUpTicks")]
+    [InlineData("\"attackCooldownTicks\":30", "\"attackCooldownTicks\":2147483648", "attackCooldownTicks")]
+    public void AnEnemyValuePastAnIntIsAnError(string from, string to, string field)
+    {
+        string text = EnemyText.Replace(from, to, StringComparison.Ordinal);
+        Assert.NotEqual(EnemyText, text);
+        ContextException error = Assert.Throws<ContextException>(
+            () => EnemyDefinition.FromMembers("enemies/e.json", JsonObjectReader.Read("enemies/e.json", Encoding.UTF8.GetBytes(text))));
+        Assert.Contains("enemies/e.json", error.Message, StringComparison.Ordinal);
+        Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// F-120. An enemy and a hunter at <see cref="int.MaxValue"/> load, and the spawn holds the health and the cooldown
+    /// with no wrap.
+    /// </summary>
+    [Fact]
+    public void AnEnemyAndAHunterAtTheIntLimitLoad()
+    {
+        string enemyText = EnemyText
+            .Replace("\"health\":40", $"\"health\":{int.MaxValue}", StringComparison.Ordinal)
+            .Replace("\"giveUpTicks\":300", $"\"giveUpTicks\":{int.MaxValue}", StringComparison.Ordinal)
+            .Replace("\"attackCooldownTicks\":30", $"\"attackCooldownTicks\":{int.MaxValue}", StringComparison.Ordinal);
+        EnemyDefinition family = EnemyDefinition.FromMembers("enemies/e.json", JsonObjectReader.Read("enemies/e.json", Encoding.UTF8.GetBytes(enemyText)));
+        Assert.Equal(int.MaxValue, family.GiveUpTicks);
+        Assert.Equal(int.MaxValue, family.AttackCooldownTicks);
+        WeaponDefinition weapon = WeaponDefinition.FromMembers("weapons/w.json", JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(WeaponText)));
+        Enemy enemy = new(TestWorld.FlatFloor(), TestWorld.Spawn, family, weapon, 1);
+        Assert.Equal(int.MaxValue, enemy.Health);
+
+        string hunterText = HunterText.Replace("\"attackCooldownTicks\":60", $"\"attackCooldownTicks\":{int.MaxValue}", StringComparison.Ordinal);
+        HunterDefinition hunter = HunterDefinition.FromMembers("hunter/h.json", JsonObjectReader.Read("hunter/h.json", Encoding.UTF8.GetBytes(hunterText)));
+        Assert.Equal(int.MaxValue, hunter.AttackCooldownTicks);
+    }
+
+    /// <summary>An enemy family that names a weapon of the set loads, and one that names no weapon of the set is an error that names the family and the field (D-31, D-397).</summary>
+    [Fact]
+    public void AnEnemyNamesAWeaponOfTheSet()
+    {
+        ContentSet set = new ContentLoader(Valid().Add("enemies/e.json", EnemyText)).Load();
+        Assert.Equal("w", Assert.Single(set.Enemies).Weapon);
+
+        MemorySource unknown = Valid().Add("enemies/e.json", EnemyText.Replace("\"weapon\":\"w\"", "\"weapon\":\"x\"", StringComparison.Ordinal));
+        ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(unknown).Load());
+        Assert.Contains("enemies/e", error.Message, StringComparison.Ordinal);
+        Assert.Contains("'weapon'", error.Message, StringComparison.Ordinal);
+        Assert.Contains("'x'", error.Message, StringComparison.Ordinal);
+        Assert.Contains("D-397", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Two enemy families of one id are an error, because the spawns look a family up by it (D-395).</summary>
+    [Fact]
+    public void ARepeatedEnemyIdIsAnError()
+    {
+        MemorySource source = Valid()
+            .Add("enemies/a.json", EnemyText)
+            .Add("enemies/b.json", EnemyText);
+
+        ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(source).Load());
+        Assert.Contains("two enemy families", error.Message, StringComparison.Ordinal);
+        Assert.Contains("'e'", error.Message, StringComparison.Ordinal);
+    }
 }

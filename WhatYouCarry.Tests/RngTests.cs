@@ -36,13 +36,15 @@ public sealed class RngTests
     /// <summary>
     /// PR-3 exit test 2. Two streams of one run stay apart across ten thousand outputs: no position holds the
     /// same number, and no run of four outputs of one stream appears anywhere in the other. A shared position in
-    /// the cycle would show as a long matching run.
+    /// the cycle would show as a long matching run. The list holds every declared stream, the Bot stream of D-272
+    /// among them (F-124).
     /// </summary>
     [Fact]
     public void RngStreamsDiffer()
     {
         const int draws = 10000;
-        RngStream[] streams = [RngStream.Procgen, RngStream.Loot, RngStream.Enemy, RngStream.Projectile];
+        RngStream[] streams = [RngStream.Procgen, RngStream.Loot, RngStream.Enemy, RngStream.Projectile, RngStream.Bot];
+        Assert.Equal(Enum.GetValues<RngStream>(), streams);
 
         Dictionary<RngStream, uint[]> outputs = [];
         foreach (RngStream stream in streams)
@@ -117,15 +119,17 @@ public sealed class RngTests
     }
 
     /// <summary>
-    /// Floor zero is the run stream, and floors one to fifteen of every subsystem give sixty streams that stay
-    /// apart from each other and from the four run streams: no first sixteen outputs match at any position (D-159, PR-9).
+    /// Floor zero is the run stream, and floors one to fifteen of every subsystem give seventy-five streams that stay
+    /// apart from each other and from the five run streams: no first sixteen outputs match at any position (D-159,
+    /// D-272, PR-9, F-124).
     /// </summary>
     [Fact]
     public void FloorStreamsAreDistinct()
     {
         const int floors = 15;
         const int draws = 16;
-        RngStream[] streams = [RngStream.Procgen, RngStream.Loot, RngStream.Enemy, RngStream.Projectile];
+        RngStream[] streams = [RngStream.Procgen, RngStream.Loot, RngStream.Enemy, RngStream.Projectile, RngStream.Bot];
+        Assert.Equal(Enum.GetValues<RngStream>(), streams);
 
         Rng run = Rng.ForStream(31UL, RngStream.Loot);
         Rng zero = Rng.ForStream(31UL, RngStream.Loot, 0);

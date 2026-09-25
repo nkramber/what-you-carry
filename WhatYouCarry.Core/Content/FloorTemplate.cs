@@ -41,6 +41,12 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
     /// <summary>The smallest size along Y that the dig plan can carve, in blocks: the smallest dig height and the rows outside it.</summary>
     public const int MinSizeY = SmallestDigSize + RowsOutsideDig;
 
+    /// <summary>
+    /// The largest count of seconds of a timer or a wave interval. The loop multiplies the count by the ticks per second
+    /// into a long, and a larger count wraps the product, to a timer of one second among others (F-120).
+    /// </summary>
+    public const long LargestSeconds = ContentValidator.LargestLong / Simulation.SimulationLoop.TicksPerSecond;
+
     /// <summary>The names that a floor template must carry.</summary>
     public static readonly IReadOnlyList<string> Required =
     [
@@ -71,7 +77,7 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
     public static readonly IReadOnlyList<string> Optional = [];
 
     /// <summary>One template from one validated object.</summary>
-    /// <exception cref="Logging.ContextException">A field is absent, unknown, or of another kind, or a size is outside its bounds.</exception>
+    /// <exception cref="Logging.ContextException">A field is absent, unknown, or of another kind, or a value is outside its bounds.</exception>
     public static FloorTemplate FromMembers(string path, IReadOnlyList<JsonMember> members)
     {
         ContentValidator.Check(path, members, Required, Optional);
@@ -85,6 +91,12 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
         if (minDepth > maxDepth)
         {
             throw ContentError.Make(path, "minDepth", "is above maxDepth, and a band covers no floor then");
+        }
+
+        // A floor number is an int, and a cast of a larger depth wraps the deepest floor of the content (F-120).
+        if (maxDepth > ContentValidator.LargestInt)
+        {
+            throw ContentError.Make(path, "maxDepth", $"is {maxDepth}, and a floor number is an int of no more than {ContentValidator.LargestInt}");
         }
 
         if (roomMin > roomMax)
@@ -125,16 +137,32 @@ public sealed record FloorTemplate(string Id, long MinDepth, long MaxDepth, long
             throw ContentError.Make(path, "timerSeconds", $"is {timerSeconds}, and every floor has a time limit of one second or more (D-44, D-407)");
         }
 
+        if (timerSeconds > LargestSeconds)
+        {
+            throw ContentError.Make(path, "timerSeconds", $"is {timerSeconds}, and the ticks of the timer are a long, so the timer is no more than {LargestSeconds} seconds");
+        }
+
         long bossTimerSeconds = Number(path, members, "bossTimerSeconds");
         if (bossTimerSeconds < 0)
         {
             throw ContentError.Make(path, "bossTimerSeconds", $"is {bossTimerSeconds}, and a boss floor gets zero or more extra seconds (D-140, D-407)");
         }
 
+        // A boss floor runs both counts, so their sum, and not each count alone, fits the long of the ticks.
+        if (bossTimerSeconds > LargestSeconds - timerSeconds)
+        {
+            throw ContentError.Make(path, "bossTimerSeconds", $"is {bossTimerSeconds}, and the ticks of a boss floor timer are a long, so the timer of {timerSeconds} seconds takes no more than {LargestSeconds - timerSeconds} extra seconds");
+        }
+
         long waveIntervalSeconds = Number(path, members, "waveIntervalSeconds");
         if (waveIntervalSeconds < 1)
         {
             throw ContentError.Make(path, "waveIntervalSeconds", $"is {waveIntervalSeconds}, and two waves cannot spawn on one tick (D-410)");
+        }
+
+        if (waveIntervalSeconds > LargestSeconds)
+        {
+            throw ContentError.Make(path, "waveIntervalSeconds", $"is {waveIntervalSeconds}, and the ticks of the interval are a long, so the interval is no more than {LargestSeconds} seconds");
         }
 
         long waveCap = Number(path, members, "waveCap");

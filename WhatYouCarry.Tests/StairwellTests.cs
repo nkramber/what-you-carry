@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Entities;
@@ -7,6 +8,7 @@ using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Procgen;
+using WhatYouCarry.Core.Projectiles;
 using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Core.World;
@@ -342,6 +344,63 @@ public sealed class StairwellTests
         WalkToTheChoice(loop, TestWorld.PeacefulContent);
         Assert.True(StairwellPrompt.OffersDescend(loop));
         Assert.True(WhatYouCarry.Game.Ui.HudState.Of(loop, false).DescendOffered);
+    }
+
+    /// <summary>
+    /// F-121. A descent that fails leaves the floor before it whole: the plan, the floor number, the player, the
+    /// projectiles, the timer, the waves, and the enemies. The offered plan of floor 2 puts its spawn outside the grid,
+    /// so the player of floor 2 fails, and the old loop had already taken the plan of floor 2 on floor 1. The error
+    /// names the seed, the floor, and the tick of the descent.
+    /// </summary>
+    [Fact]
+    public void AFailedDescentLeavesTheFloorBeforeItWhole()
+    {
+        SimulationLoop loop = TestWorld.NewLoop(3UL);
+        WalkToTheChoice(loop, TestWorld.PeacefulContent);
+        FloorPlan plan = loop.Plan;
+        Player player = loop.Player;
+        ProjectileSimulation projectiles = loop.Projectiles;
+        FloorTimer timer = loop.Timer;
+        Escalation escalation = loop.Escalation;
+        IReadOnlyList<Enemy> enemies = loop.Enemies;
+        uint descendTick = loop.Tick;
+        loop.OfferNextFloor(FloorGenerator.Generate(3UL, 2, TestWorld.PeacefulContent) with { Spawn = new Vector3(-1.0f, 0.0f, -1.0f) });
+
+        ContextException error = Assert.Throws<ContextException>(() => loop.Step(Press(loop, Button.Interact)));
+        Assert.Contains("spawn", error.Message, StringComparison.Ordinal);
+        Assert.Equal(SimulationLoop.FirstFloor, loop.Floor);
+        Assert.Same(plan, loop.Plan);
+        Assert.Same(player, loop.Player);
+        Assert.Same(projectiles, loop.Projectiles);
+        Assert.Same(timer, loop.Timer);
+        Assert.Same(escalation, loop.Escalation);
+        Assert.Same(enemies, loop.Enemies);
+        SimulationTests.AssertContextField(error, "seed", "3");
+        SimulationTests.AssertContextField(error, "floor", "1");
+        SimulationTests.AssertContextField(error, "tick", descendTick.ToString(CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>
+    /// F-121. A field that a lower level already named stays, and the step adds the fields that are absent with no
+    /// error for the repeat. Two templates cover floor 2, so the dig of the descent fails and names floor 2 and the
+    /// seed, and the step adds the tick of the descent.
+    /// </summary>
+    [Fact]
+    public void AFailedDigKeepsItsFloorAndTakesTheTick()
+    {
+        FloorTemplate first = Assert.Single(TestWorld.PeacefulContent.Floors, template => template.MinDepth == SimulationLoop.FirstFloor);
+        FloorTemplate second = first with { MinDepth = 2, MaxDepth = 2 };
+        ContentSet content = TestWorld.PeacefulContent with { Floors = [first with { MaxDepth = SimulationLoop.FirstFloor }, second, second] };
+        SimulationLoop loop = new(3UL, content);
+        WalkToTheChoice(loop, content);
+        uint descendTick = loop.Tick;
+
+        ContextException error = Assert.Throws<ContextException>(() => loop.Step(Press(loop, Button.Interact)));
+        Assert.Contains("2 floor templates that cover floor 2", error.Message, StringComparison.Ordinal);
+        SimulationTests.AssertContextField(error, "seed", "3");
+        SimulationTests.AssertContextField(error, "floor", "2");
+        SimulationTests.AssertContextField(error, "tick", descendTick.ToString(CultureInfo.InvariantCulture));
+        Assert.Equal(SimulationLoop.FirstFloor, loop.Floor);
     }
 
     /// <summary>A body is at the stairwell when it stands on the ground on that cell, and not one cell over, and not in the air.</summary>
