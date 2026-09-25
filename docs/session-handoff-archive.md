@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 240: 2026-09-24, Codex
+
+Author: Codex
+Session: PR-83, reviewer. Branch `feat/pr-83-night-record-promotion`. PR #99, pending merge. Base `811c1c9`.
+
+### What this session did, and why
+
+- Reviewed PR #99 at effective head `2b872f9`, the green branch night promotion change.
+- The author is Claude Code, as session 239 records. This Codex review meets the cross-provider rule (T-4, D-101).
+- Reviewed all changed paths, the PR-83 exit tests, decisions D-555 to D-563, the PR comments, the workflows, and the record rules.
+- Added `docs/reviews/pr-99.md` with the verdict `Ready for owner merge`.
+
+### State of the build
+
+- The focused promotion, publication, and workflow tests passed 11 of 11.
+- GitHub checks at `3236111` passed for builds, sweeps, asset QA, bit identity, bots, det-lint, documents, doc-gate, night-gate, smoke, and ste-check.
+- `evaluate` and `review-gate` failed because the review record did not exist at that head. They must rerun after this metadata push.
+- The first metadata push `d7f90c5` matched the PR head in `gh pr view`. This entry records that publication check before its final evidence update.
+
+### In flight
+
+- The review record and this handoff entry share one amended metadata commit on `feat/pr-83-night-record-promotion`.
+- The review verdict applies to effective head `2b872f9`.
+
+### Traps and gotchas
+
+- The current PR tip `3236111` changes only skipped documentation paths after effective head `2b872f9`.
+- The only PR comment is the gitar notice “Gitar is working”. D-550 says that notice needs no answer.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The final amended metadata commit is pushed, and its hash matches the PR head.
+
 ## Session 239: 2026-09-24, Claude Code
 
 Author: Claude Code

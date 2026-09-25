@@ -2,6 +2,46 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 251: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Changes required. Base `a3590ba`.
+
+### What this session did, and why
+
+- Round 2 reviewed PR #104 at effective head `d9c6413` and checked the two findings from round 1.
+- P1-1 is fixed in `f280b72`. P1-2 is fixed in `0d219b1`.
+- P1-3 found a fence info string that can hide a visible `Blocked` verdict from the gate.
+- P2-1 found a cross-file const text that can bypass the Game string lint.
+- The Gitar claims on the roadmap order, four-space fence, and keyframe blend were verified.
+
+### State of the build
+
+- CI, Smoke, bit identity, asset QA, det-lint, documents, STE, doc-gate, night-gate, and Gitar passed at remote head `d9c6413`.
+- The local Documents category passed 190 tests. STE passed with zero findings, and doc-gate found zero problems.
+- `evaluate` and `review-gate` failed because the round 1 record did not approve this head.
+- The review record and this entry publish in one metadata commit (D-182).
+- `make gitar-wait PR=104` passed after the metadata push. Gitar reports the expected review-gate failure because this verdict still requires changes.
+
+### In flight
+
+- P1-3 and P2-1 need correction and regression tests.
+- The review verdict is `Changes required` for `d9c6413`.
+
+### Traps and gotchas
+
+- The filtered local test command exited 0 but gave no runner summary. It does not count as test evidence.
+- The code head has green required CI. The two findings still block approval.
+- Gitar has no open code finding. Its dashboard reports the expected review-gate failure, and the author has no answer in this round.
+
+### Open questions that block progress
+
+None for PR-88. OQ-195 to OQ-205 do not block this review.
+
+### Next concrete action
+
+Correct P1-3 and P2-1. Add each regression test, then run the exact reproducer and its adjacent boundary.
+
 ## Session 250: 2026-09-25, Claude Code
 
 Author: Claude Code
@@ -368,40 +408,3 @@ After PR #100 merges, the next session makes PR-85 alone (D-570, D-571, D-572, D
 - Run a branch night of PR-85 on hosted Linux before the review.
 
 Then PR-86: the macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the hosted macOS arm64 runner. The Free plan runs 5 macOS jobs at once. PR-86 retires `docs/runbooks/macos-runner.md` and the Mac runner rules. It revises D-100, D-157, D-192, and D-358, and it updates the cost model and the agent files. PR-75 follows.
-
-## Session 240: 2026-09-24, Codex
-
-Author: Codex
-Session: PR-83, reviewer. Branch `feat/pr-83-night-record-promotion`. PR #99, pending merge. Base `811c1c9`.
-
-### What this session did, and why
-
-- Reviewed PR #99 at effective head `2b872f9`, the green branch night promotion change.
-- The author is Claude Code, as session 239 records. This Codex review meets the cross-provider rule (T-4, D-101).
-- Reviewed all changed paths, the PR-83 exit tests, decisions D-555 to D-563, the PR comments, the workflows, and the record rules.
-- Added `docs/reviews/pr-99.md` with the verdict `Ready for owner merge`.
-
-### State of the build
-
-- The focused promotion, publication, and workflow tests passed 11 of 11.
-- GitHub checks at `3236111` passed for builds, sweeps, asset QA, bit identity, bots, det-lint, documents, doc-gate, night-gate, smoke, and ste-check.
-- `evaluate` and `review-gate` failed because the review record did not exist at that head. They must rerun after this metadata push.
-- The first metadata push `d7f90c5` matched the PR head in `gh pr view`. This entry records that publication check before its final evidence update.
-
-### In flight
-
-- The review record and this handoff entry share one amended metadata commit on `feat/pr-83-night-record-promotion`.
-- The review verdict applies to effective head `2b872f9`.
-
-### Traps and gotchas
-
-- The current PR tip `3236111` changes only skipped documentation paths after effective head `2b872f9`.
-- The only PR comment is the gitar notice “Gitar is working”. D-550 says that notice needs no answer.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The final amended metadata commit is pushed, and its hash matches the PR head.
