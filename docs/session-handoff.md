@@ -2,6 +2,37 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 263: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-86, author, the hand-over. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge. Base `0d99e2c`. Sessions 259 and 261 hold the earlier work of this session.
+
+### What this session did, and why
+
+- Round 2 approved the effective head `1678ef5` with `Ready for owner merge`, and P2-1 is fixed. The gitar pass approved `817dad3` with no finding, and no review thread exists.
+
+### State of the build
+
+- Effective head `1678ef5`. Every check of the tip passes, `evaluate` and `review-gate` included.
+- The repository has 0 runners, and the Mac Mini holds no runner agent (D-584).
+
+### In flight
+
+- The owner merge decision after the merge summary (D-533, D-552).
+- PR-85 exit test 8: the night of 2026-09-26 from the 07:07 UTC cron has not started. A later session reads its start time, the wall time of each sweep job, its result, and its slice (6001-6500 for each bot policy, 120001-130000 for reachability).
+
+### Traps and gotchas
+
+- Session 259 lists the traps of this PR.
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+When the owner confirms, run `gh pr merge 105 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge.
+
 ## Session 262: 2026-09-25, Codex
 
 Author: Codex
@@ -336,45 +367,3 @@ OQ-195 to OQ-205 remain open. D-581 records the accepted runner risk. These ques
 ### Next concrete action
 
 The author corrects P1-1 and P1-2, then starts a fresh cross-provider review of the new effective head.
-
-## Session 253: 2026-09-25, Claude Code
-
-Author: Claude Code
-Session: PR-88, author. Branch `fix/pr-88-review-fixes`. PR #104, pending merge. Base `a3590ba`.
-
-### What this session did, and why
-
-- The owner asked for the fixes of the repository review of 2026-09-24, with more than one concern in one PR (D-580). The id and the order are PR-88, before PR-86 (D-578).
-- Each finding was reproduced or traced at `a3590ba` before a change. Each fix has a test that fails on the old code:
-  - F-113 and F-114: a death at the stairwell stays a death, and a descend on the deepest floor does nothing (D-322, D-579).
-  - F-115: each engine callback catches every exception and quits with exit code 1.
-  - F-116: `review-gate` reads the verdict from the first line of its section.
-  - F-117 to F-119: the seed sweep, the repeated JSON key, and the depth of the asset gate.
-  - F-120 to F-127: content bounds, the error context of a run, the session end, the follower hash, the test claims, the gate tool edge cases, the runbook temporary files, and the Core tables.
-- The owner skipped the interim fork approval change of the review (D-581).
-- OQ-195 to OQ-205 hold the owner choices of the review that no register settles.
-- F-128 to F-130 record three defects that this work found and did not fix.
-
-### State of the build
-
-- The simulation version is 17. The known answer is `f1c35ddccb2cd0bb`. The version moved it first, and the hash of each follower moved it again.
-- The local checks and their results are in the PR description. The PR head and the remote head come from `gh pr view`.
-
-### In flight
-
-- CI, the gitar pass, and the cross-provider review of PR-88.
-
-### Traps and gotchas
-
-- Worker sessions in `.claude/worktrees/` did part of the work. `ste-check` reads a worktree under the checkout, so remove each one before the check.
-- A file that a backup restores keeps its old time, and an incremental build then skips it. Build with `--no-incremental` after such a restore.
-- PR #102 (PR-85) edits the same registers, section 7 of the design doc, and the Phase 2 order list. The PR that merges second resolves the conflict.
-- A review record needs `**<verdict>.**` at the start of the first line of its Verdict section.
-
-### Open questions that block progress
-
-None for PR-88. OQ-195 to OQ-205 block other work.
-
-### Next concrete action
-
-Wait for CI and the gitar pass, then run `make codex-review` for this PR. The PR description holds the disposition of each finding of the review.
