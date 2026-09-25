@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 249: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-85, reviewer. Branch `feat/pr-85-night-hosted-linux`. PR #102, Changes required. Base `a3590ba`.
+
+### What this session did, and why
+
+- Reviewed PR #102 at effective head `69f5308`.
+- Found one P2 finding: the PR adds repository-wide review prompts outside its night workflow scope.
+- The review record and this entry form one metadata commit (D-182).
+
+### State of the build
+
+- The Documents tests passed 147 of 147. `ste-check` found 0 issues. The gather script fixture checks and shell syntax check passed.
+- GitHub checks passed for CI, bit identity, smoke, asset QA, night gate, doc gate, STE, det-lint, and Gitar. `evaluate` and `review-gate` await the review record.
+- The remote PR head at review start was `69f5308`.
+
+### In flight
+
+- The author must remove the unrelated review prompt file or move it to a separate PR, then request a repeat review.
+
+### Traps and gotchas
+
+- Gitar approved head `69f5308` with no code finding. Its missing-record notice ends when this metadata commit reaches the PR.
+- The author must use `review-response` to answer the review finding (D-381).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The author removes the unrelated file from PR #102 and requests a repeat review.
+
 ## Session 247: 2026-09-25, Codex
 
 Author: Codex

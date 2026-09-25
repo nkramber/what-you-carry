@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 260: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-86, reviewer. Branch `feat/pr-86-hosted-macos`. PR #105, Changes required. Base `0d99e2c`.
+
+### What this session did, and why
+
+- Reviewed the full change and its exit tests for PR-86.
+- Found P2-1: the plain-English roadmap summary says the checks still run on the owner’s Mac.
+- Committed the review record with this handoff entry as one metadata commit (D-182).
+
+### State of the build
+
+- PR head `d063bae`. Effective head `1678ef5`. CI passed on `6dfe7f8`; later document-only runs passed their applicable checks.
+- The full local suite passed 1820 of 1820 tests. The runner API returned 0, and `launchctl` showed no runner agent.
+- The review record names `1678ef5` and requires correction of P2-1.
+
+### In flight
+
+- The author must answer P2-1 and request a new review round.
+
+### Traps and gotchas
+
+- The latest CI runs skip heavy jobs after document-only changes. The `6dfe7f8` run contains the passing hosted macOS legs and bit-identity comparison.
+- Gitar posted an approval summary with no specific item to address (D-550).
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+Correct the roadmap summary, then request a new review round.
+
 ## Session 259: 2026-09-25, Claude Code
 
 Author: Claude Code
@@ -365,37 +399,3 @@ None.
 ### Next concrete action
 
 The author gives the What, How, CI, and review summary. The owner confirms the merge.
-
-## Session 249: 2026-09-25, Codex
-
-Author: Codex
-Session: PR-85, reviewer. Branch `feat/pr-85-night-hosted-linux`. PR #102, Changes required. Base `a3590ba`.
-
-### What this session did, and why
-
-- Reviewed PR #102 at effective head `69f5308`.
-- Found one P2 finding: the PR adds repository-wide review prompts outside its night workflow scope.
-- The review record and this entry form one metadata commit (D-182).
-
-### State of the build
-
-- The Documents tests passed 147 of 147. `ste-check` found 0 issues. The gather script fixture checks and shell syntax check passed.
-- GitHub checks passed for CI, bit identity, smoke, asset QA, night gate, doc gate, STE, det-lint, and Gitar. `evaluate` and `review-gate` await the review record.
-- The remote PR head at review start was `69f5308`.
-
-### In flight
-
-- The author must remove the unrelated review prompt file or move it to a separate PR, then request a repeat review.
-
-### Traps and gotchas
-
-- Gitar approved head `69f5308` with no code finding. Its missing-record notice ends when this metadata commit reaches the PR.
-- The author must use `review-response` to answer the review finding (D-381).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The author removes the unrelated file from PR #102 and requests a repeat review.
