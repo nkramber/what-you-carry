@@ -136,7 +136,7 @@ A recipe is an ordered list of layers (D-507):
 | `grain` | `cell`, `amount`, `seed` | The clustered mottle of a 3D reference (D-527) |
 | `gradient` | `side`, `depth`, `shift` | Grime that fades from one side, in fine steps |
 
-A `shade` from -3 to 3 names a fine step between two colors (D-528). The `noise` of `fill` and `rect`, `edge`, and `band` move whole color steps. `grain` and `gradient` move fine steps. For the mottle of a 3D reference, use `noise` 0 and a `grain`. Measure the variation of the texels in the unlit view, and match it: cell 2 and amount 2 gave the shirt of PR-74. A layer after a `grain` keeps its exact shade, so paint the eyes and the mouth last.
+A `shade` from -3 to 3 names a fine step between two colors (D-528). The `noise` of `fill` and `rect`, `edge`, and `band` move whole color steps. `gradient` moves whole fine steps. `grain` moves a pixel in linear light between two fine shades (D-599). For the mottle of a 3D reference, use `noise` 0 and a `grain`. Measure the variation of the texels in the unlit view, and match it: cell 2 and amount 2 gave the shirt of PR-74. A layer after a `grain` keeps its exact shade, so paint the eyes and the mouth last.
 
 A recipe can extend another with a ramp swap: `{"extends": "skin", "swap": {"bone": "lichen"}}`. Use a swap for an enemy family or an armor tier that keeps the shape and changes the colors.
 
