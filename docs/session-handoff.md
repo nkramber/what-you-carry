@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 274: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-90, reviewer. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+
+### What this session did, and why
+
+- Re-reviewed PR #108 after the author fixed P2-1. `e4d3543` checks the `IHDR` length before it reads fixed offsets.
+- Ran the focused screenshot-reader regression tests at `e4d3543`. All 5 passed, including the short-header case.
+- Updated `docs/reviews/pr-108.md`. P2-1 is fixed, and the verdict approves the effective head `e4d3543`.
+
+### State of the build
+
+- The remote head before this metadata commit was `1ce21f1`. The focused tests passed, and the Documents category passed 196 of 196. STE check passed. The local full suite stayed silent for more than three minutes, so this session interrupted it. The prior handoff reports 1867 of 1867 tests passed at `e4d3543`.
+- The live checks at `1ce21f1` pass for `det-lint`, `doc-gate`, `documents`, `night-gate`, and `ste-check`. The documents-only rule skips the full suite, smoke, asset QA, and bit identity on this metadata tip. `evaluate` and `review-gate` wait for this review record.
+
+### In flight
+
+- The review record and this entry need one metadata commit and a push to `feat/pr-90-texture-resolution`.
+
+### Traps and gotchas
+
+- The effective head is `e4d3543`; later commits change documents only.
+- The source screenshots are absent from this worktree. D-616 records owner approval of the contact sheet.
+
+### Open questions that block progress
+
+None. OQ-208 is resolved by D-603 to D-608.
+
+### Next concrete action
+
+Commit this entry with `docs/reviews/pr-108.md`, push to the PR branch, and verify the remote head.
+
 ## Session 273: 2026-09-26, Claude Code
 
 Author: Claude Code
@@ -319,43 +352,3 @@ None for PR-75.
 ### Next concrete action
 
 The owner checks the new `review-gate` result, then reads the merge summary before confirming the merge.
-
-## Session 264: 2026-09-25, Claude Code
-
-Author: Claude Code
-Session: PR-75, author. Branch `feat/pr-75-sword-art`. PR #106, pending merge. Base `602708d`.
-
-### What this session did, and why
-
-- The sword of PR-15 is now a worn steel arming sword of eight boxes, from one concept image (D-586 to D-590). The owner skipped the 3D reference (D-590).
-- The concept is about 1 meter long, and a sword that hangs straight down reaches into the floor. The `weapon` locator tilts 45 degrees forward, and the loader and `ModelNodes` read the tilt (D-591). The F-131 test now checks that the loader reads the rotation.
-- The owner found the slate blade too blue. The owner chose ten new ramps from twelve candidates (D-592, D-593), and then the darkest of three steel settings (D-594). The owner approved the sheet (D-597).
-- Eleven ramps pass the 256 colors of an indexed PNG, so soot waits. PR-89, a truecolor atlas, and PR-90, a texture resolution, come next, before any more art (D-595). OQ-207 and OQ-208 block them.
-- The owner asked if the repository review of 2026-09-24 is complete. It is not: 13 findings stay open in full and 9 in part. PR-86 fixed RR-P1-1, and the report does not mark it. These findings follow PR-90 (D-596).
-- PR-85 exit test 8: the first night from the `7 7 * * *` cron starts at 07:07 UTC on 2026-09-26. At 22:27 UTC on 2026-09-25 it had not started. The newest night, run 36141884980 at 13:35 UTC, is the old night of one job at `a3590ba`.
-
-### State of the build
-
-- Effective head `4aebdb9`. Round 1 gives `Ready for owner merge` with no finding (`eb09d5f`). The gitar pass approved `9ac2b19` with no finding.
-- Every check of `9ac2b19` passes but `evaluate` and `review-gate`, which waited for the record. Local: 1822 of 1822 tests pass, Smoke included.
-- Core does not change, so the known answer of the sweep stays `9c79047da9c82a0e`.
-
-### In flight
-
-- The owner merge decision after the merge summary (D-533, D-552).
-- PR-85 exit test 8. A later session reads the start time, the wall time of each sweep job, the result, and the slice: 6001-6500 for each bot policy, and 120001-130000 for reachability. After a runner fault, re-run the failed jobs (D-585).
-
-### Traps and gotchas
-
-- A new ramp shifts the atlas index of every shade, and the colors stay the same. `GrainPaintsTheSameBytesOnEachPlatform` pins those indices.
-- The roll puts the held sword under the floor, as it did with the sword of PR-15 (OQ-206). `TheHeldSwordStaysOverTheFloor` leaves the roll out.
-- The Codex CLI 0.157.0 gave `401 Incorrect API key` for about 50 minutes on 2026-09-25 while `codex login status` read ChatGPT. It passed at 23:44 UTC with no new login. A probe every 18 minutes found the end.
-- The reference images sit in `artifacts/reference/meshy-sword-2026-09-25/` of the main checkout, which git ignores.
-
-### Open questions that block progress
-
-None for PR-75. OQ-207 blocks PR-89, and OQ-208 blocks PR-90.
-
-### Next concrete action
-
-When the owner confirms, run `gh pr merge 106 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge. Then read PR-85 exit test 8.
