@@ -12,11 +12,12 @@ using WhatYouCarry.Tools.NightGate;
 namespace WhatYouCarry.Tools.BotRunner;
 
 /// <summary>
-/// <c>bot-run --policy &lt;name&gt; --seeds &lt;list&gt; --output &lt;directory&gt; --root &lt;checkout&gt; [--summary &lt;file&gt;]
-/// [--failures &lt;file&gt;]</c>. Plays one headless run per seed with the policy over the content of the checkout, and
-/// writes one JSONL run log per run to the output directory (D-115, D-127). The list holds ranges <c>from-to</c> and
-/// single seeds, with a comma between them (D-564). Exit 0 means no crash, and no softlock on a policy that promises
-/// progress.
+/// <c>bot-run --policy &lt;name&gt; (--seeds &lt;list&gt; | --seeds-file &lt;file&gt;) --output &lt;directory&gt; --root &lt;checkout&gt;
+/// [--summary &lt;file&gt;] [--failures &lt;file&gt;]</c>. Plays one headless run per seed with the policy over the content of
+/// the checkout, and writes one JSONL run log per run to the output directory (D-115, D-127). The list holds ranges
+/// <c>from-to</c> and single seeds, with a comma between them (D-564). The seeds file holds the same list, so a list of
+/// many carried seeds needs no argument or variable past the size limit of Linux (F-162). Exit 0 means no crash, and
+/// no softlock on a policy that promises progress.
 /// </summary>
 /// <remarks>
 /// The PR job runs one hundred seeds per policy, and the night job five thousand and a slice (D-115, D-564). The command prints one
@@ -42,12 +43,13 @@ public static class BotRunCommand
     /// <summary>The largest count of seeds in one command. The night runs about five thousand five hundred, and a list past this is a typo.</summary>
     public const ulong LargestSpan = 1000000;
 
-    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer|timer-tester|coward> --seeds <from>-<to>[,<seed>|,<from>-<to>]... --output <directory> --root <checkout> [--summary <file>] [--failures <file>]";
+    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer|timer-tester|coward> (--seeds <from>-<to>[,<seed>|,<from>-<to>]... | --seeds-file <file>) --output <directory> --root <checkout> [--summary <file>] [--failures <file>]";
 
     public static int Run(string[] args)
     {
         string? policy = null;
         string? seeds = null;
+        string? seedsFile = null;
         string? output = null;
         string? root = null;
         string? summary = null;
@@ -65,6 +67,7 @@ public static class BotRunCommand
             {
                 case "--policy": policy = args[i + 1]; break;
                 case "--seeds": seeds = args[i + 1]; break;
+                case "--seeds-file": seedsFile = args[i + 1]; break;
                 case "--output": output = args[i + 1]; break;
                 case "--root": root = args[i + 1]; break;
                 case "--summary": summary = args[i + 1]; break;
@@ -77,16 +80,38 @@ public static class BotRunCommand
             i += 2;
         }
 
-        if (policy is null || seeds is null || output is null || root is null)
+        if (policy is null || output is null || root is null)
         {
             Console.Error.WriteLine($"Every option is required. {Usage}");
             return 2;
         }
 
-        List<SeedRange>? list = NightSeeds.TryParseList(seeds, out string listError);
+        if ((seeds is null) == (seedsFile is null))
+        {
+            Console.Error.WriteLine($"The command takes the seeds from --seeds or from --seeds-file, and from exactly one of them. {Usage}");
+            return 2;
+        }
+
+        string source = seedsFile is null ? $"'{seeds}'" : $"of the file '{seedsFile}'";
+        if (seedsFile is not null)
+        {
+            try
+            {
+                seeds = File.ReadAllText(seedsFile).Trim();
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                Console.Error.WriteLine($"The seeds file '{seedsFile}' cannot be read: {error.Message} {Usage}");
+                return 2;
+            }
+        }
+
+        string seedText = seeds ?? throw new InvalidOperationException("The seed list is absent after the check of the two seed options.");
+
+        List<SeedRange>? list = NightSeeds.TryParseList(seedText, out string listError);
         if (list is null)
         {
-            Console.Error.WriteLine($"The seeds are wrong: {listError}. {Usage}");
+            Console.Error.WriteLine($"The seeds {source} are wrong: {listError}. {Usage}");
             return 2;
         }
 
@@ -102,7 +127,7 @@ public static class BotRunCommand
 
         if (NightSeeds.Count(list) > LargestSpan)
         {
-            Console.Error.WriteLine($"The seed list '{seeds}' holds more than {LargestSpan} seeds. {Usage}");
+            Console.Error.WriteLine($"The seed list {source} holds more than {LargestSpan} seeds. {Usage}");
             return 2;
         }
 

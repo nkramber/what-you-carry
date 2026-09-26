@@ -113,6 +113,9 @@ public partial class Main : Node3D
     /// <summary>The message of the line at the end of a session that the test exit ends (D-311).</summary>
     public const string TestExitMessage = "The test exit ends the session.";
 
+    /// <summary>The message of the line at the end of a session that a close of the window ends (F-161).</summary>
+    public const string WindowClosedMessage = "The close of the window ends the session.";
+
     /// <summary>The message of the error line of a boot failure.</summary>
     public const string BootFailedMessage = "The boot failed, and the game quits.";
 
@@ -297,6 +300,9 @@ public partial class Main : Node3D
     {
         try
         {
+            // The engine then sends the close request of the window to this node and waits for its quit, so a close
+            // writes the end line and the frame log, and releases the sounds (F-161).
+            this.GetTree().AutoAcceptQuit = false;
             this.Boot();
         }
         catch (Exception error)
@@ -564,6 +570,39 @@ public partial class Main : Node3D
             this.hudCamera.GlobalTransform = this.camera.GlobalTransform;
             this.hud.Draw(this.shotState ?? HudState.Of(this.loop, this.reader.ControllerLast), this.hudCamera, (float)delta);
         }
+    }
+
+    /// <inheritdoc/>
+    public override void _Notification(int what)
+    {
+        try
+        {
+            if (what == NotificationWMCloseRequest)
+            {
+                this.CloseWindow();
+            }
+        }
+        catch (Exception error)
+        {
+            this.FailCallback(nameof(_Notification), error);
+        }
+    }
+
+    /// <summary>
+    /// The close of the window ends the session as the test exit does: one end line with the run fields, then the quit,
+    /// which writes the frame log and releases the sounds (D-311, F-161). The engine quit with no end line, no frame
+    /// log, and no release before the boot turned off its automatic quit. A session that already ended ignores it.
+    /// </summary>
+    private void CloseWindow()
+    {
+        if (this.ended)
+        {
+            return;
+        }
+
+        LogFields fields = this.loop is null ? this.SessionFields() : this.EndFields();
+        this.logger.Write(LogContextKind.Run, LogLevel.Info, WindowClosedMessage, fields);
+        this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
     }
 
     /// <inheritdoc/>

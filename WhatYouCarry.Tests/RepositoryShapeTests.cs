@@ -293,7 +293,7 @@ public sealed class RepositoryShapeTests
 
         string botSweep = StepText(night, "Bot sweep, the fixed seeds and the slice");
         Assert.Contains("if: matrix.sweep != 'reachability'", botSweep, StringComparison.Ordinal);
-        Assert.Contains("bot-run --policy \"$SWEEP\" --seeds \"$NIGHT_SEEDS\" --output bot-logs --root . --summary \"${RUNNER_TEMP}/sweep/bot-deaths.txt\"", botSweep, StringComparison.Ordinal);
+        Assert.Contains("bot-run --policy \"$SWEEP\" --seeds-file \"$NIGHT_SEEDS_FILE\" --output bot-logs --root . --summary \"${RUNNER_TEMP}/sweep/bot-deaths.txt\"", botSweep, StringComparison.Ordinal);
         Assert.Contains("SWEEP: ${{ matrix.sweep }}", night, StringComparison.Ordinal);
         Assert.Contains(": > \"${RUNNER_TEMP}/sweep/bot-deaths.txt\"", StepText(night, "Start the sweep result"), StringComparison.Ordinal);
         Assert.Contains("--summary \"${RUNNER_TEMP}/bot-deaths.txt\"", StepText(night, "Write the night record"), StringComparison.Ordinal);
@@ -322,14 +322,17 @@ public sealed class RepositoryShapeTests
         Assert.True(workflow.IndexOf("- name: Start the sweep result", StringComparison.Ordinal) < workflow.IndexOf("run: dotnet build WhatYouCarry.slnx", StringComparison.Ordinal), "The sweep result starts before the build, so a broken build still leaves a result.");
         string list = StepText(workflow, "List the seeds of the sweep");
         Assert.Contains("set -euo pipefail", list, StringComparison.Ordinal);
-        Assert.Contains("seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep \"$SWEEP\" --date \"$NIGHT_DATE\" --root . --carry \"${RUNNER_TEMP}/main-night.json\")", list, StringComparison.Ordinal);
-        Assert.Contains("echo \"NIGHT_SEEDS=${seeds}\" >> \"$GITHUB_ENV\"", list, StringComparison.Ordinal);
+        // F-162: the list goes to a file, and no step puts the list itself in a variable or an argument.
+        Assert.Contains("night-seeds --sweep \"$SWEEP\" --date \"$NIGHT_DATE\" --root . --carry \"${RUNNER_TEMP}/main-night.json\" > \"${RUNNER_TEMP}/night-seeds.txt\"", list, StringComparison.Ordinal);
+        Assert.Contains("echo \"NIGHT_SEEDS_FILE=${RUNNER_TEMP}/night-seeds.txt\" >> \"$GITHUB_ENV\"", list, StringComparison.Ordinal);
+        Assert.DoesNotContain("NIGHT_SEEDS=", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("--seeds \"", workflow, StringComparison.Ordinal);
         Assert.Contains("--failures \"${RUNNER_TEMP}/sweep/seed-failures.txt\"", StepText(workflow, "Bot sweep, the fixed seeds and the slice"), StringComparison.Ordinal);
 
         string sweep = StepText(workflow, "Seed sweep, the fixed seeds and the slice");
         Assert.Contains($"if: matrix.sweep == '{NightSeeds.ReachabilitySweep}'", sweep, StringComparison.Ordinal);
-        Assert.Contains("WYC_NIGHT_SEEDS=\"$NIGHT_SEEDS\"", sweep, StringComparison.Ordinal);
-        Assert.Contains("export WYC_NIGHT_SEEDS", sweep, StringComparison.Ordinal);
+        Assert.Contains($"{ProcgenTests.NightSeedsFileVariable}=\"$NIGHT_SEEDS_FILE\"", sweep, StringComparison.Ordinal);
+        Assert.Contains($"export {ProcgenTests.NightSeedsFileVariable}", sweep, StringComparison.Ordinal);
         Assert.Contains("WYC_NIGHT_FAILURES: ${{ runner.temp }}/sweep/seed-failures.txt", sweep, StringComparison.Ordinal);
         Assert.Contains("WYC_NIGHT_SWEEP: \"1\"", sweep, StringComparison.Ordinal);
 

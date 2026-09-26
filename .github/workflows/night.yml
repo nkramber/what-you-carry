@@ -95,17 +95,19 @@ jobs:
           name: main-night
           path: ${{ runner.temp }}
       - name: List the seeds of the sweep
+        # The list goes to a file, and each sweep reads the file. Linux caps one argument or one variable at 131072
+        # bytes, and a list of many carried seeds passes that (F-162).
         shell: bash
         run: |
           set -euo pipefail
-          seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep "$SWEEP" --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json")
-          echo "NIGHT_SEEDS=${seeds}" >> "$GITHUB_ENV"
+          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep "$SWEEP" --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json" > "${RUNNER_TEMP}/night-seeds.txt"
+          echo "NIGHT_SEEDS_FILE=${RUNNER_TEMP}/night-seeds.txt" >> "$GITHUB_ENV"
       - name: Bot sweep, the fixed seeds and the slice
         if: matrix.sweep != 'reachability'
         shell: bash
         run: |
           set -euo pipefail
-          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy "$SWEEP" --seeds "$NIGHT_SEEDS" --output bot-logs --root . --summary "${RUNNER_TEMP}/sweep/bot-deaths.txt" --failures "${RUNNER_TEMP}/sweep/seed-failures.txt"
+          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy "$SWEEP" --seeds-file "$NIGHT_SEEDS_FILE" --output bot-logs --root . --summary "${RUNNER_TEMP}/sweep/bot-deaths.txt" --failures "${RUNNER_TEMP}/sweep/seed-failures.txt"
       - name: Seed sweep, the fixed seeds and the slice
         if: matrix.sweep == 'reachability'
         shell: bash
@@ -114,8 +116,8 @@ jobs:
           WYC_NIGHT_FAILURES: ${{ runner.temp }}/sweep/seed-failures.txt
         run: |
           set -euo pipefail
-          WYC_NIGHT_SEEDS="$NIGHT_SEEDS"
-          export WYC_NIGHT_SEEDS
+          WYC_NIGHT_SEEDS_FILE="$NIGHT_SEEDS_FILE"
+          export WYC_NIGHT_SEEDS_FILE
           dotnet test WhatYouCarry.slnx --no-build --filter "FullyQualifiedName~EveryChamberReachable|FullyQualifiedName~DetailKeepsEveryChamberReachable"
       - name: Keep the bot logs of a failed night
         # The crash text of a failed run lives in its log alone, and the runner is gone after the job (D-280). A sweep

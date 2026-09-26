@@ -6,7 +6,9 @@ Status: reference, written 2026-09-23. Written in ASD-STE100. The byte ceiling o
 
 ## The Game arguments
 
-The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, `--smoke` and `--bot` exclude each other, and `--transitions` needs `--bot` and `--frame-log`.
+The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, `--smoke` and `--bot` exclude each other, and `--transitions` needs `--bot` and `--frame-log`. A Game flag before `--` also ends the boot with exit code 1, because the engine ignores it there (D-624).
+
+A close of the window ends the session like the test exit: one end line, the frame log, and exit code 0 when the log holds no error (F-161).
 
 ## The generated files
 

@@ -384,6 +384,9 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-158 | The floor timer pauses at the stairwell, so a bot policy that promises progress and stands there never reached the softlock of D-420, and `BotRun.Play` never ended | 2026-09-24 | 🔧 PR-91: each floor ends as a softlock after 18000 ticks or its timer length, whichever is later (D-625) |
 | F-159 | The smoke jobs downloaded the Godot zip with no HTTP error check and no hash check | 2026-09-24 | 🔧 PR-91: each job checks a pinned SHA-512 before it unpacks the zip (D-626) |
 | F-160 | The loop took an offered plan of the next floor with no check of its seed or its content set, and the state hash does not read the plan | 2026-09-24 | 🔧 PR-91: the plan carries both, and the offer rejects a mismatch (T-2) |
+| F-161 | A close of the window quit the engine with no end line, no frame log, and no release of the sounds. A windowed run on 2026-09-26 showed it | 2026-09-24 | 🔧 PR-91: the close ends the session like the test exit (D-311) |
+| F-162 | The night passed the seed list of each sweep through a variable. Linux caps one variable at 131072 bytes, and about 18700 carried seeds pass that, so the sweep could not start | 2026-09-24 | 🔧 PR-91: the list passes by file |
+| F-163 | No child process of `codex-review`, `review-gate`, or `doc-gate` had a time limit, so a hung child hung the tool with no error | 2026-09-24 | 🔧 PR-91: each child has a limit, and the error names it (D-627) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -698,9 +701,9 @@ Gate: a frame log on the Deck holds D-295, and the owner approves the contact sh
 > *In plain English:* a sword blade was 3 pixels wide. Every face now has twice the pixels in each direction, and the body and the sword copy their pixels from the 3D reference.
 
 **PR-91: Repository review fixes, part 2.** 🔧
-Fix the open findings F-148 to F-160 of the repository review of 2026-09-24 (D-596). The content loader rejects a set with no main weapon, and it needs the projectile area (D-422, D-622). Each id error and each text that is not UTF-8 names its file. The chunk swap keeps a dig task that a descent passes, and the boot stops on a Game flag before the separator (D-624). Each action has a dependency entry and a test (D-619 to D-621). The night plan upload replaces an earlier attempt, and the smoke session rolls. G-5 binds the Game layer from PR-31 (D-623). A bot floor has a hard cap (D-625), and each Godot zip has a pinned hash (D-626). The loop checks the seed and the content set of an offered plan. This PR holds more than one concern (D-618).
+Fix the open findings F-148 to F-163 of the repository review of 2026-09-24 (D-596). The content loader rejects a set with no main weapon, and it needs the projectile area (D-422, D-622). Each id error and each text that is not UTF-8 names its file. The chunk swap keeps a dig task that a descent passes, and the boot stops on a Game flag before the separator (D-624). Each action has a dependency entry and a test (D-619 to D-621). The night plan upload replaces an earlier attempt, and the smoke session rolls. G-5 binds the Game layer from PR-31 (D-623). A bot floor has a hard cap (D-625), and each Godot zip has a pinned hash (D-626). The loop checks the seed and the content set of an offered plan. A close of the window ends the session, and the night passes each seed list by file. Each child process of the tools has a time limit (D-627). This PR holds more than one concern (D-618).
 Gate: a regression test for each finding fails on the old code, and the suite, the smoke session, and the bit-identity sweep pass.
-> *In plain English:* the repository review left faults open. Some errors named no file, a failed background dig left no trace, and a wrong command passed. This PR fixes thirteen of them.
+> *In plain English:* the repository review left faults open. Some errors named no file, a failed background dig left no trace, and a wrong command passed. This PR fixes sixteen of them.
 
 **The open findings of the repository review.** 🔧
 The findings of the review of 2026-09-24 that stay open are the primary work after PR-90. The first session after PR-90 splits them into PRs of one concern each (D-596). PR-91 holds more than one (D-618).

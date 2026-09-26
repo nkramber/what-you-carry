@@ -163,7 +163,7 @@ public static class CodexReviewCommand
         Console.WriteLine($"Transcript: {transcript}");
 
         IReadOnlyList<string> arguments = CodexReviewSettings.ReviewArguments(worktree, lastMessage, CodexReviewSettings.ReviewPrompt(pullRequest, view.Branch));
-        int codexExit = ExternalProcess.RunToFiles(codex, arguments, worktree, transcript, errorLog, CodexReviewSettings.ApiCredentialVariables);
+        int codexExit = ExternalProcess.RunToFiles(codex, arguments, worktree, transcript, errorLog, CodexReviewSettings.ApiCredentialVariables, ProcessLimit.Review);
         if (codexExit != 0)
         {
             Console.Error.WriteLine($"codex-review: {CodexReviewExit.Fault} (exit {(int)CodexReviewExit.Fault}). Codex exited {codexExit}. Read the transcript {transcript} and the log {errorLog}. The worktree stays at {worktree}.");

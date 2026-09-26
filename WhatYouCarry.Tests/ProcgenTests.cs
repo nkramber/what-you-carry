@@ -24,8 +24,12 @@ public sealed class ProcgenTests
     /// <summary>The environment variable that the night job sets to run the night seed counts (D-116).</summary>
     public const string NightVariable = "WYC_NIGHT_SWEEP";
 
-    /// <summary>The environment variable that holds the seed list of the night reachability sweep, from <c>night-seeds</c> (D-564).</summary>
-    public const string NightSeedsVariable = "WYC_NIGHT_SEEDS";
+    /// <summary>
+    /// The environment variable that names the file of the seed list of the night reachability sweep, which
+    /// <c>night-seeds</c> writes (D-564). A file holds a list of any length. Linux caps one variable at 131072 bytes,
+    /// and a list of many carried seeds passes that (F-162).
+    /// </summary>
+    public const string NightSeedsFileVariable = "WYC_NIGHT_SEEDS_FILE";
 
     /// <summary>The environment variable that names the failures file of the night, which takes the failure line of the sweep (D-567).</summary>
     public const string NightFailuresVariable = "WYC_NIGHT_FAILURES";
@@ -47,7 +51,7 @@ public sealed class ProcgenTests
 
     /// <summary>
     /// The seeds of the reachability sweep. Off the night, the count of <see cref="SweepSeeds"/> from seed 1. On the
-    /// night, the seed list of <see cref="NightSeedsVariable"/>: the fixed range, the slice, and the extra and carried
+    /// night, the seed list of the file of <see cref="NightSeedsFileVariable"/>: the fixed range, the slice, and the extra and carried
     /// seeds (D-564). A night variable with no list gives the fixed range alone, for a night sweep by hand.
     /// </summary>
     /// <exception cref="InvalidOperationException">The list is malformed, or it holds a seed past the largest int.</exception>
@@ -66,12 +70,12 @@ public sealed class ProcgenTests
         }
 
         List<SeedRange> ranges = NightSeeds.TryParseList(list, out string error)
-            ?? throw new InvalidOperationException($"The variable {NightSeedsVariable} is wrong: {error}.");
+            ?? throw new InvalidOperationException($"The seed list of the variable {NightSeedsFileVariable} is wrong: {error}.");
         foreach (SeedRange range in ranges)
         {
             if (range.To >= int.MaxValue)
             {
-                throw new InvalidOperationException($"The variable {NightSeedsVariable} holds the range {range}, past the largest seed of the sweep, {int.MaxValue}.");
+                throw new InvalidOperationException($"The seed list of the variable {NightSeedsFileVariable} holds the range {range}, past the largest seed of the sweep, {int.MaxValue}.");
             }
 
             for (int seed = (int)range.From; seed <= (int)range.To; seed++)
@@ -81,6 +85,25 @@ public sealed class ProcgenTests
         }
 
         return seeds;
+    }
+
+    /// <summary>The seed list in the file that the variable names, or null when the variable is not set (F-162).</summary>
+    /// <exception cref="InvalidOperationException">The file cannot be read. The error names the file.</exception>
+    internal static string? ReadSeedFile(string? path)
+    {
+        if (path is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return File.ReadAllText(path).Trim();
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            throw new InvalidOperationException($"The seed file '{path}' of the variable {NightSeedsFileVariable} cannot be read: {error.Message}", error);
+        }
     }
 
     /// <summary>The floor of a sweep seed: one to fifteen in turn, so every band takes one third of the seeds.</summary>
@@ -183,7 +206,7 @@ public sealed class ProcgenTests
 
     private static SweepReport RunReachabilitySweep()
     {
-        List<int> seeds = ReachabilitySeedList(Environment.GetEnvironmentVariable(NightVariable), Environment.GetEnvironmentVariable(NightSeedsVariable));
+        List<int> seeds = ReachabilitySeedList(Environment.GetEnvironmentVariable(NightVariable), ReadSeedFile(Environment.GetEnvironmentVariable(NightSeedsFileVariable)));
         return Sweep(seeds, TestWorld.Content, Environment.GetEnvironmentVariable(NightFailuresVariable));
     }
 
