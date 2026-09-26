@@ -233,6 +233,13 @@ public sealed class TextureGenTests
         Assert.Throws<ArgumentOutOfRangeException>(() => LinearLight.ToByte(-1));
         Assert.Throws<ArgumentOutOfRangeException>(() => LinearLight.ToByte(LinearLight.Full + 1));
         Assert.Throws<ArgumentOutOfRangeException>(() => LinearLight.Blend(0, 255, Palette.PartsPerFineStep + 1, Palette.PartsPerFineStep));
+
+        // A count of zero parts fails with its own context, and never divides by zero (PR #107 review P2-1).
+        ArgumentOutOfRangeException noParts = Assert.Throws<ArgumentOutOfRangeException>(() => LinearLight.Blend(0, 255, 0, 0));
+        Assert.Contains("The count of parts is 0", noParts.Message, StringComparison.Ordinal);
+        Assert.Throws<ArgumentOutOfRangeException>(() => LinearLight.Blend(0, 255, 0, -1));
+        Assert.Equal((byte)0, LinearLight.Blend(0, 255, 0, Palette.PartsPerFineStep));
+        Assert.Equal((byte)255, LinearLight.Blend(0, 255, Palette.PartsPerFineStep, Palette.PartsPerFineStep));
     }
 
     /// <summary>

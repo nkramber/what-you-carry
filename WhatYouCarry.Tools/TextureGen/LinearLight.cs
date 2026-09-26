@@ -70,9 +70,14 @@ public static class LinearLight
     /// One channel of a blend in linear light: the dark byte at a weight of 0, the light byte at a weight of
     /// <paramref name="parts"/>, and the nearest byte to the linear mix between them.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">The weight lies outside 0 to <paramref name="parts"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The count of parts is not positive, or the weight lies outside 0 to <paramref name="parts"/>.</exception>
     public static byte Blend(byte dark, byte light, int weight, int parts)
     {
+        if (parts <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(parts), $"The count of parts is {Text(parts)}, and a blend needs 1 or more parts.");
+        }
+
         if (weight < 0 || weight > parts)
         {
             throw new ArgumentOutOfRangeException(nameof(weight), $"The weight {Text(weight)} lies outside 0 to {Text(parts)}.");
