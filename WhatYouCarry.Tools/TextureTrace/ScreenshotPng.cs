@@ -25,6 +25,9 @@ public static class ScreenshotPng
     private const byte TrueColor = 2;
     private const byte TrueColorAlpha = 6;
 
+    /// <summary>The data bytes of a PNG header chunk: width, height, bit depth, color type, compression, filter, and interlace (PNG section 11.2.2).</summary>
+    private const int HeaderBytes = 13;
+
     private static readonly byte[] Signature = [137, 80, 78, 71, 13, 10, 26, 10];
 
     /// <summary>The image of one file.</summary>
@@ -73,6 +76,11 @@ public static class ScreenshotPng
             switch (type)
             {
                 case "IHDR":
+                    if (length != HeaderBytes)
+                    {
+                        throw Error(path, $"the header chunk at byte {Text(offset)} has {Text(length)} bytes, and a PNG header has {Text(HeaderBytes)}");
+                    }
+
                     width = ReadInt(file, data);
                     height = ReadInt(file, data + 4);
                     colorType = file[data + 9];

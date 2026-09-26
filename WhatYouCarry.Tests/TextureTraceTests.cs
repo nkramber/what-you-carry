@@ -130,6 +130,7 @@ public sealed class TextureTraceTests
     [InlineData("critical", "the critical chunk 'XBAD'")]
     [InlineData("checksum", "stores the checksum")]
     [InlineData("filter", "the filter type 5")]
+    [InlineData("header", "the header chunk at byte 8 has 0 bytes, and a PNG header has 13")]
     public void ScreenshotReaderRejectsAnotherForm(string fault, string reason)
     {
         ScreenshotPixel[] pixels = [new(1, 2, 3, 255), new(4, 5, 6, 255)];
@@ -138,6 +139,7 @@ public sealed class TextureTraceTests
             "depth" => Png(2, 1, pixels, alpha: false, [0], bitDepth: 16),
             "critical" => Png(2, 1, pixels, alpha: false, [0], extraChunk: "XBAD"),
             "filter" => Png(2, 1, pixels, alpha: false, [5]),
+            "header" => EmptyHeaderAtTheEnd(),
             _ => BreakFirstChecksum(Png(2, 1, pixels, alpha: false, [0])),
         };
 
@@ -478,6 +480,15 @@ public sealed class TextureTraceTests
         file.Write(length);
         file.Write(body);
         file.Write(checksum);
+    }
+
+    /// <summary>A signature and a header chunk of no data bytes, with nothing after it, so a fixed read of the header passes the end of the file.</summary>
+    private static byte[] EmptyHeaderAtTheEnd()
+    {
+        using MemoryStream file = new();
+        file.Write([137, 80, 78, 71, 13, 10, 26, 10]);
+        Chunk(file, "IHDR", []);
+        return file.ToArray();
     }
 
     private static byte[] BreakFirstChecksum(byte[] file)
