@@ -381,6 +381,9 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-155 | The plan job of the night uploaded the record of `main` with no `overwrite`, so a re-run of that job can fail on the name of the first upload | 2026-09-24 | 🔧 PR-91: the upload replaces the artifact of the earlier attempt, as the sweep uploads do |
 | F-156 | The remark of `RunRecorder` said that the Game layer records each intent, and no Game code does so before PR-31. G-5 did not state when it binds the Game layer | 2026-09-24 | 🔧 PR-91: the remark names the callers, and G-5 binds the Game layer from PR-31 (D-623) |
 | F-157 | The smoke session pressed the dodge bit in its last part alone, and the first seed dies on floor 2 before that part, so the session never rolled | 2026-09-24 | 🔧 PR-91: the first walk presses the dodge bit, and a test asserts a roll on floor 2 |
+| F-158 | The floor timer pauses at the stairwell, so a bot policy that promises progress and stands there never reached the softlock of D-420, and `BotRun.Play` never ended | 2026-09-24 | 🔧 PR-91: each floor ends as a softlock after 18000 ticks or its timer length, whichever is later (D-625) |
+| F-159 | The smoke jobs downloaded the Godot zip with no HTTP error check and no hash check | 2026-09-24 | 🔧 PR-91: each job checks a pinned SHA-512 before it unpacks the zip (D-626) |
+| F-160 | The loop took an offered plan of the next floor with no check of its seed or its content set, and the state hash does not read the plan | 2026-09-24 | 🔧 PR-91: the plan carries both, and the offer rejects a mismatch (T-2) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -695,9 +698,9 @@ Gate: a frame log on the Deck holds D-295, and the owner approves the contact sh
 > *In plain English:* a sword blade was 3 pixels wide. Every face now has twice the pixels in each direction, and the body and the sword copy their pixels from the 3D reference.
 
 **PR-91: Repository review fixes, part 2.** 🔧
-Fix the open findings F-148 to F-157 of the repository review of 2026-09-24 (D-596). The content loader rejects a set with no main weapon, and it needs the projectile area (D-422, D-622). Each id error and each text that is not UTF-8 names its file. The chunk swap keeps a dig task that a descent passes, and the boot stops on a Game flag before the separator (D-624). Each action has a dependency entry and a test (D-619 to D-621). The night plan upload replaces an earlier attempt, and the smoke session rolls. G-5 binds the Game layer from PR-31 (D-623). This PR holds more than one concern (D-618).
+Fix the open findings F-148 to F-160 of the repository review of 2026-09-24 (D-596). The content loader rejects a set with no main weapon, and it needs the projectile area (D-422, D-622). Each id error and each text that is not UTF-8 names its file. The chunk swap keeps a dig task that a descent passes, and the boot stops on a Game flag before the separator (D-624). Each action has a dependency entry and a test (D-619 to D-621). The night plan upload replaces an earlier attempt, and the smoke session rolls. G-5 binds the Game layer from PR-31 (D-623). A bot floor has a hard cap (D-625), and each Godot zip has a pinned hash (D-626). The loop checks the seed and the content set of an offered plan. This PR holds more than one concern (D-618).
 Gate: a regression test for each finding fails on the old code, and the suite, the smoke session, and the bit-identity sweep pass.
-> *In plain English:* the repository review left faults open. Some errors named no file, a failed background dig left no trace, and a wrong command passed. This PR fixes ten of them.
+> *In plain English:* the repository review left faults open. Some errors named no file, a failed background dig left no trace, and a wrong command passed. This PR fixes thirteen of them.
 
 **The open findings of the repository review.** 🔧
 The findings of the review of 2026-09-24 that stay open are the primary work after PR-90. The first session after PR-90 splits them into PRs of one concern each (D-596). PR-91 holds more than one (D-618).

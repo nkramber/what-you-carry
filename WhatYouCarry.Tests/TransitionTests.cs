@@ -116,6 +116,30 @@ public sealed class TransitionTests
         Assert.True(withEnemies == (offeredEnemies > 0), $"The offered floors held {offeredEnemies} enemies, and the content {(withEnemies ? "holds" : "holds no")} enemy family.");
     }
 
+    /// <summary>
+    /// F-160. An offer of a plan for the next floor of another seed, or of another content set, is an error that names
+    /// both values. The old loop took such a plan, and the descent dug another floor in silence. The plan of the seed
+    /// and the content set of the run is taken.
+    /// </summary>
+    [Fact]
+    public void OfferRejectsAnotherSeedOrContentSet()
+    {
+        SimulationLoop loop = TestWorld.NewLoop(1);
+        ContextException seedError = Assert.Throws<ContextException>(() => loop.OfferNextFloor(new NextFloorWorker(TestWorld.PeacefulContent).Generate(2, 2)));
+        Assert.Contains(seedError.Context, field => field.Name == "seed" && field.Value == "1");
+        Assert.Contains(seedError.Context, field => field.Name == "offeredSeed" && field.Value == "2");
+
+        ContentSet other = TestWorld.PeacefulContent with { Hash = new string('0', 64) };
+        ContextException contentError = Assert.Throws<ContextException>(() => loop.OfferNextFloor(new NextFloorWorker(other).Generate(1, 2)));
+        Assert.Contains(contentError.Context, field => field.Name == "contentHash" && field.Value == TestWorld.PeacefulContent.Hash);
+        Assert.Contains(contentError.Context, field => field.Name == "offeredContentHash" && field.Value == other.Hash);
+
+        FloorPlan own = new NextFloorWorker(TestWorld.PeacefulContent).Generate(1, 2);
+        Assert.Equal(1UL, own.Seed);
+        Assert.Equal(TestWorld.PeacefulContent.Hash, own.ContentHash);
+        loop.OfferNextFloor(own);
+    }
+
     /// <summary>An offer of a plan that is not for the next floor is an error that names both floors (T-2).</summary>
     [Fact]
     public void OfferRejectsAnotherFloor()

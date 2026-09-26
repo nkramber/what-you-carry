@@ -20,7 +20,9 @@ namespace WhatYouCarry.Core.Procgen;
 /// <param name="Ramps">The ramps, in dig order: the tunnel ramps and then the tier ramps (D-345, D-348).</param>
 /// <param name="Detail">The pools, the pillars, and the collapses of the detail pass (D-254).</param>
 /// <param name="EnemySpawns">The enemy spawns, in chamber order. The chamber of the player spawn holds none (D-398).</param>
-public sealed record FloorPlan(int Floor, FloorTemplate Template, VoxelGrid Grid, Vector3 Spawn, Cell Stairwell, IReadOnlyList<Chamber> Chambers, IReadOnlyList<TunnelStamp> Tunnels, IReadOnlyList<Shaft> Shafts, IReadOnlyList<DugRamp> Ramps, DetailResult Detail, IReadOnlyList<EnemySpawn> EnemySpawns);
+/// <param name="Seed">The run seed that the dig read. The loop rejects an offered plan of another seed (F-160).</param>
+/// <param name="ContentHash">The hash of the content set that the dig read (D-163). The loop rejects an offered plan of another content set (F-160).</param>
+public sealed record FloorPlan(int Floor, FloorTemplate Template, VoxelGrid Grid, Vector3 Spawn, Cell Stairwell, IReadOnlyList<Chamber> Chambers, IReadOnlyList<TunnelStamp> Tunnels, IReadOnlyList<Shaft> Shafts, IReadOnlyList<DugRamp> Ramps, DetailResult Detail, IReadOnlyList<EnemySpawn> EnemySpawns, ulong Seed, string ContentHash);
 
 /// <summary>
 /// One chamber of a floor (D-253, D-255). Its air fills the rows above <paramref name="FloorRow"/> over every

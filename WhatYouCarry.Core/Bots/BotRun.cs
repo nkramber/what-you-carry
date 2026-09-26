@@ -17,7 +17,9 @@ namespace WhatYouCarry.Core.Bots;
 /// (D-430), which the coward takes at the first stairwell. A policy that promises no progress runs out its wander budget and ends by budget.
 /// A policy that promises progress ends as a softlock when the floor timer expires with no floor change, so the
 /// floor budget of such a policy is the length of the timer (D-420). A bot that is stuck then never dies to the
-/// Overseer, and a softlock never hides behind a death. Any
+/// Overseer, and a softlock never hides behind a death. The timer pauses at the stairwell, so each floor of such a
+/// policy also ends as a softlock after <see cref="FloorBudget"/> ticks or the length of its timer, whichever is later,
+/// counted on every tick (D-625). A bot that stands at the stairwell then ends too. Any
 /// exception ends the run as a crash, and the result holds the exception text, so the harness runs the next seed
 /// and the log names the fault (T-2).
 /// </para>
@@ -40,6 +42,18 @@ public static class BotRun
     /// <summary>The ticks that a policy that promises no progress wanders before the run reads budget: ten minutes (D-271).</summary>
     public const uint WanderBudget = 36000;
 
+    /// <summary>
+    /// The least ticks that a policy that promises progress has on one floor, paused or not, before the run reads
+    /// softlock: five minutes, the floor budget of D-271 (D-625). A timer longer than this sets the cap of its floor.
+    /// </summary>
+    public const uint FloorBudget = 18000;
+
+    /// <summary>The ticks that a policy that promises progress has on the floor of one timer: the later of <see cref="FloorBudget"/> and the length of the timer (D-625).</summary>
+    public static long FloorCap(FloorTimer timer)
+    {
+        return timer.Length > FloorBudget ? timer.Length : FloorBudget;
+    }
+
     /// <summary>Plays one run to its end.</summary>
     public static BotRunResult Play(IBotPolicy policy, ulong seed, ContentSet content)
     {
@@ -51,6 +65,8 @@ public static class BotRun
             SimulationLoop loop = new(seed, content);
             int deepest = FloorGenerator.DeepestFloor(content);
             floorsReached = loop.Floor;
+            int floor = loop.Floor;
+            uint floorStart = 0;
             while (true)
             {
                 if (loop.End == RunEnd.Ascend)
@@ -75,6 +91,13 @@ public static class BotRun
                     return new BotRunResult(policy.Name, seed, BotRunEnd.Softlock, floorsReached, ticks, string.Empty, string.Empty, events);
                 }
 
+                // The timer pauses at the stairwell, so a bot that stands there never sees the expiry. Every tick of the
+                // floor counts against the cap (D-625).
+                if (policy.PromisesProgress && ticks - floorStart >= FloorCap(loop.Timer))
+                {
+                    return new BotRunResult(policy.Name, seed, BotRunEnd.Softlock, floorsReached, ticks, string.Empty, string.Empty, events);
+                }
+
                 loop.Step(policy.Next(loop));
                 ticks++;
                 foreach (TimerEvent timerEvent in loop.LastEvents)
@@ -85,6 +108,12 @@ public static class BotRun
                 if (loop.Floor > floorsReached)
                 {
                     floorsReached = loop.Floor;
+                }
+
+                if (loop.Floor != floor)
+                {
+                    floor = loop.Floor;
+                    floorStart = ticks;
                 }
             }
         }

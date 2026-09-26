@@ -310,6 +310,51 @@ public sealed class GameShapeTests
     }
 
     /// <summary>
+    /// F-159. Each download of the engine fails on an HTTP error and checks the SHA-512 that the workflow pins, and the
+    /// cache key holds that value, so a cache hit is a checked binary (D-626). The old steps checked no hash, and curl
+    /// wrote an error page to the zip.
+    /// </summary>
+    [Fact]
+    public void EachEngineDownloadChecksItsPinnedHash()
+    {
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/smoke.yml");
+        (string Job, string Variable, string Check)[] legs =
+        [
+            ("linux-x64", "GODOT_SHA512_LINUX", "echo \"${GODOT_SHA512_LINUX}  godot.zip\" | sha512sum -c -"),
+            ("windows-x64", "GODOT_SHA512_WINDOWS", "if ($hash -ne $env:GODOT_SHA512_WINDOWS) { throw"),
+            ("macos-arm64", "GODOT_SHA512_MACOS", "echo \"${GODOT_SHA512_MACOS}  godot.zip\" | shasum -a 512 -c -"),
+        ];
+        foreach ((string job, string variable, string check) in legs)
+        {
+            string value = EnvValue(workflow, variable);
+            Assert.Matches("^[0-9a-f]{128}$", value);
+            string text = WorkflowText.JobText(workflow, job);
+            Assert.Contains($"-${{{{ env.{variable} }}}}", text, StringComparison.Ordinal);
+            int download = text.IndexOf("godot.zip", StringComparison.Ordinal);
+            int hashCheck = text.IndexOf(check, StringComparison.Ordinal);
+            int unpack = text.IndexOf(job == "windows-x64" ? "Expand-Archive" : "unzip -q godot.zip", StringComparison.Ordinal);
+            Assert.True(download >= 0 && hashCheck > download && unpack > hashCheck, $"The job '{job}' checks the hash after the download and before the unpack.");
+            Assert.DoesNotContain("curl -sSL -o", text, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>The value of one variable of the top <c>env</c> block of a workflow.</summary>
+    private static string EnvValue(string workflow, string name)
+    {
+        string prefix = $"  {name}: ";
+        foreach (string line in workflow.Split('\n'))
+        {
+            if (line.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return line[prefix.Length..].Trim();
+            }
+        }
+
+        Assert.Fail($"The workflow holds no env value '{name}'.");
+        return string.Empty;
+    }
+
+    /// <summary>
     /// The CI jobs hold no engine, so they leave the smoke category to the smoke workflow. Each hosted leg runs the
     /// sweep category in one job and every other test in the other job, so the two jobs cover the suite (D-479).
     /// </summary>

@@ -123,7 +123,7 @@ public static class FloorGenerator
         CheckTiers(plan.Chambers, grid, reach);
         Vector3 spawn = new(first.Anchor.X + 0.5f, first.FloorRow + 1.0f, first.Anchor.Z + 0.5f);
         IReadOnlyList<EnemySpawn> enemies = EnemyPlacement.Place(grid, plan.Chambers, reach, floor, content.Enemies);
-        return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Tunnels, plan.Shafts, plan.Ramps, detail, enemies);
+        return new FloorPlan(floor, template, grid, spawn, stairwell, plan.Chambers, plan.Tunnels, plan.Shafts, plan.Ramps, detail, enemies, runSeed, content.Hash);
     }
 
     /// <summary>
