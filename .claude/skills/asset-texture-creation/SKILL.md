@@ -119,10 +119,10 @@ Meshy artifacts to ignore:
 
 A model face takes its texels from an unlit view of the look reference (D-612). A block keeps a procedural recipe (D-608).
 
-1. Write the spec `content/textures/traces/<asset>.json`: the path of each screenshot, and for each face its box, its recipe name, its area in pixels, its turn, and its ramps.
+1. Write the spec `content/textures/traces/<asset>.json`: the path of each screenshot, and for each face its box, its recipe name, its four corners in pixels, and its ramps.
 2. Measure each area on the screenshot (see "Measure a screenshot"). Frame the face of the model, and not the background.
 3. Name the fewest ramps that hold the colors of the face, such as bone, umber, and timber for the face of the body.
-4. Give the top view a turn, so that its north edge is the top of the area.
+4. Give the corners in the order top left, top right, bottom right, bottom left of the face canvas. A turned view or a part that leans takes its corners in that order. The trace follows them.
 5. Run `texture-trace` with `--root .` and `--spec <asset>`. It writes one recipe for each face, and it keeps each recipe that exists.
 6. Bind each recipe to its face in the paint file.
 7. Correct the features by hand in the rows of the map: no eye white (D-83), and no shade (D-81).

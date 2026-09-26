@@ -155,7 +155,7 @@ public sealed class TextureTraceTests
         AtlasColor skin = palette.AtlasColors[29];
         ScreenshotImage image = Image(8, 4, (x, _) => x < 4 ? shirt : skin);
 
-        MapLayer map = TextureTracer.Trace(image, "shot.png", Face(new ImageArea(0, 0, 8, 4), 0, Rust, Bone), 4, 2, palette);
+        MapLayer map = TextureTracer.Trace(image, "shot.png", Face(Box(0, 0, 8, 4), Rust, Bone), 4, 2, palette);
 
         Assert.Equal(["0011", "0011"], map.Rows);
         Assert.Equal(new MapShade(17, 1), map.Legend['0']);
@@ -171,35 +171,53 @@ public sealed class TextureTraceTests
         AtlasColor line = palette.AtlasColors[0];
         ScreenshotImage image = Image(16, 8, (x, y) => x % 4 == 0 || x % 4 == 3 || y % 4 == 0 || y % 4 == 3 ? line : shirt);
 
-        MapLayer map = TextureTracer.Trace(image, "shot.png", Face(new ImageArea(0, 0, 16, 8), 0, Rust, 0), 4, 2, palette);
+        MapLayer map = TextureTracer.Trace(image, "shot.png", Face(Box(0, 0, 16, 8), Rust, 0), 4, 2, palette);
 
         Assert.Equal(["0000", "0000"], map.Rows);
         Assert.Equal(new MapShade(17, 0), map.Legend['0']);
     }
 
-    /// <summary>A turn of one quarter clockwise brings the lower left corner of the area to the upper left of the canvas.</summary>
+    /// <summary>Corners that start at the lower left of the screenshot turn the face a quarter, so that corner comes to the upper left of the canvas.</summary>
     [Fact]
-    public void TraceTurnsTheArea()
+    public void TraceFollowsTheOrderOfTheCorners()
     {
         Palette palette = RepositoryPalette();
         AtlasColor[] corners = [palette.AtlasColors[17], palette.AtlasColors[29], palette.AtlasColors[33], palette.AtlasColors[37]];
         ScreenshotImage image = Image(4, 4, (x, y) => corners[(y < 2 ? 0 : 2) + (x < 2 ? 0 : 1)]);
 
-        MapLayer map = TextureTracer.Trace(image, "shot.png", Face(new ImageArea(0, 0, 4, 4), 1, Rust, Bone, Umber, Steel), 2, 2, palette);
+        MapLayer map = TextureTracer.Trace(image, "shot.png", Face([new(0, 4), new(0, 0), new(4, 0), new(4, 4)], Rust, Bone, Umber, Steel), 2, 2, palette);
 
         MapShade[] texels = [.. map.Rows.SelectMany(row => row).Select(key => map.Legend[key])];
         Assert.Equal([new MapShade(33, 0), new MapShade(17, 0), new MapShade(37, 0), new MapShade(29, 0)], texels);
     }
 
-    /// <summary>A sample of a pixel that is not fully opaque, and an area past the edge, are errors that name the face and the screenshot (T-2).</summary>
+    /// <summary>
+    /// A face that leans on the screenshot, such as an arm, takes its texels along its lean. Here a band of shirt leans
+    /// one pixel right for each row, on a background of skin, and an upright box of the same corners would read skin, and each texel of the canvas reads shirt.
+    /// </summary>
+    [Fact]
+    public void TraceFollowsALeaningFace()
+    {
+        Palette palette = RepositoryPalette();
+        AtlasColor shirt = palette.AtlasColors[17];
+        AtlasColor skin = palette.AtlasColors[29];
+        ScreenshotImage image = Image(96, 64, (x, y) => x >= y && x < y + 32 ? shirt : skin);
+
+        MapLayer map = TextureTracer.Trace(image, "shot.png", Face([new(0, 0), new(32, 0), new(96, 64), new(64, 64)], Rust, Bone), 4, 8, palette);
+
+        Assert.All(map.Rows, row => Assert.Equal("0000", row));
+        Assert.Equal(new MapShade(17, 0), Assert.Single(map.Legend).Value);
+    }
+
+    /// <summary>A sample of a pixel that is not fully opaque, and a corner past the edge, are errors that name the face and the screenshot (T-2).</summary>
     [Fact]
     public void TraceRejectsABadArea()
     {
         Palette palette = RepositoryPalette();
         ScreenshotImage image = new(2, 2, [new(1, 1, 1, 255), new(1, 1, 1, 255), new(1, 1, 1, 0), new(1, 1, 1, 255)]);
 
-        ContextException clear = Assert.Throws<ContextException>(() => TextureTracer.Trace(image, "shot.png", Face(new ImageArea(0, 0, 2, 2), 0, Rust), 2, 2, palette));
-        ContextException past = Assert.Throws<ContextException>(() => TextureTracer.Trace(image, "shot.png", Face(new ImageArea(1, 0, 2, 2), 0, Rust), 2, 2, palette));
+        ContextException clear = Assert.Throws<ContextException>(() => TextureTracer.Trace(image, "shot.png", Face(Box(0, 0, 2, 2), Rust), 2, 2, palette));
+        ContextException past = Assert.Throws<ContextException>(() => TextureTracer.Trace(image, "shot.png", Face(Box(1, 0, 2, 2), Rust), 2, 2, palette));
 
         Assert.Contains("not fully opaque", clear.Message, StringComparison.Ordinal);
         Assert.Contains("models/player.bbmodel:head_box:north", clear.Message, StringComparison.Ordinal);
@@ -222,7 +240,7 @@ public sealed class TextureTraceTests
 
         ScreenshotImage image = Image(shades.Count, 1, (x, _) => shades[x]);
 
-        ContextException error = Assert.Throws<ContextException>(() => TextureTracer.Trace(image, "shot.png", Face(new ImageArea(0, 0, shades.Count, 1), 0, 0, 1, 2, 3, 4, 5), shades.Count, 1, palette));
+        ContextException error = Assert.Throws<ContextException>(() => TextureTracer.Trace(image, "shot.png", Face(Box(0, 0, shades.Count, 1), 0, 1, 2, 3, 4, 5), shades.Count, 1, palette));
 
         Assert.Contains("more than 62 shades", error.Message, StringComparison.Ordinal);
     }
@@ -261,11 +279,12 @@ public sealed class TextureTraceTests
     [InlineData("\"image\": \"side\"", "image", "no key of that name")]
     [InlineData("\"face\": \"top\"", "face", "a face is one of")]
     [InlineData("\"recipe\": \"Head Face\"", "recipe", "lowercase letters, digits, and hyphens")]
-    [InlineData("\"turn\": 4", "turn", "0 to 3 quarter turns")]
+    [InlineData("\"corners\": [[0, 0], [4, 0], [4, 4]]", "corners", "a list of four corners")]
+    [InlineData("\"corners\": [[0, 0], [0, 4], [4, 4], [4, 0]]", "corners", "does not run clockwise")]
+    [InlineData("\"corners\": [[0, 0], [4, 4], [4, 0], [0, 4]]", "corners", "does not run clockwise")]
+    [InlineData("\"corners\": [[-1, 0], [4, 0], [4, 4], [0, 4]]", "corners", "0 or more on each axis")]
     [InlineData("\"ramps\": [\"rust\", \"rust\"]", "ramps", "twice")]
     [InlineData("\"ramps\": [\"glow\"]", "ramps", "no ramp of that name")]
-    [InlineData("\"at\": [0, 0, 0, 4]", "at", "a size of 1 or more")]
-    [InlineData("\"at\": [0.5, 0, 4, 4]", "at", "whole pixels")]
     public void SpecRejectsABadFace(string change, string field, string reason)
     {
         string name = change.Substring(1, change.IndexOf('"', 1) - 1);
@@ -276,8 +295,7 @@ public sealed class TextureTraceTests
             ["face"] = "\"face\": \"north\"",
             ["recipe"] = "\"recipe\": \"head-front\"",
             ["image"] = "\"image\": \"front\"",
-            ["at"] = "\"at\": [0, 0, 4, 4]",
-            ["turn"] = "\"turn\": 0",
+            ["corners"] = "\"corners\": [[0, 0], [4, 0], [4, 4], [0, 4]]",
             ["ramps"] = "\"ramps\": [\"bone\"]",
         };
         fields[name] = change;
@@ -311,7 +329,7 @@ public sealed class TextureTraceTests
             AtlasColor skin = RepositoryPalette().AtlasColors[29];
             ScreenshotPixel[] pixels = [.. Enumerable.Repeat(new ScreenshotPixel(skin.Red, skin.Green, skin.Blue, 255), 64 * 64)];
             File.WriteAllBytes(Path.Combine(root, "shots", "front.png"), Png(64, 64, pixels, alpha: false, [.. Enumerable.Repeat((byte)2, 64)]));
-            string spec = "{\"images\": {\"front\": \"shots/front.png\"}, \"faces\": [{\"model\": \"models/player.bbmodel\", \"box\": \"head_box\", \"face\": \"north\", \"recipe\": \"head-front\", \"image\": \"front\", \"at\": [0, 0, 64, 64], \"turn\": 0, \"ramps\": [\"bone\"]}]}";
+            string spec = "{\"images\": {\"front\": \"shots/front.png\"}, \"faces\": [{\"model\": \"models/player.bbmodel\", \"box\": \"head_box\", \"face\": \"north\", \"recipe\": \"head-front\", \"image\": \"front\", \"corners\": [[0, 0], [64, 0], [64, 64], [0, 64]], \"ramps\": [\"bone\"]}]}";
             File.WriteAllText(Path.Combine(content, AssetPaths.TraceDirectory, "test.json"), spec);
 
             (int written, int kept) = TextureTraceCommand.Trace(root, "test");
@@ -339,9 +357,14 @@ public sealed class TextureTraceTests
         Assert.Equal(2, TextureTraceCommand.Run(["--spec", "miner", "--glow"]));
     }
 
-    private static TraceFace Face(ImageArea at, int turn, params int[] ramps)
+    private static TraceFace Face(ImagePoint[] corners, params int[] ramps)
     {
-        return new TraceFace(AssetPaths.BodyModel, "head_box", BoxSide.North, "head-front", "front", at, turn, ramps);
+        return new TraceFace(AssetPaths.BodyModel, "head_box", BoxSide.North, "head-front", "front", corners, ramps);
+    }
+
+    private static ImagePoint[] Box(double x, double y, double width, double height)
+    {
+        return [new(x, y), new(x + width, y), new(x + width, y + height), new(x, y + height)];
     }
 
     private static ScreenshotImage Image(int width, int height, Func<int, int, AtlasColor> colorAt)

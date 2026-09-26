@@ -1,20 +1,20 @@
 {
   "model": "models/player.bbmodel",
   "boxes": {
-    "head_box": {"recipe": "hair", "faces": {"north": "face"}},
-    "brow_box": {"recipe": "hair", "faces": {}},
-    "nose_box": {"recipe": "skin", "faces": {}},
-    "beard_box": {"recipe": "hair", "faces": {"north": "beard"}},
-    "torso_box": {"recipe": "torso", "faces": {"north": "torso-front", "up": "cloth", "down": "cloth"}},
-    "arm_left_upper_box": {"recipe": "cloth", "faces": {}},
-    "arm_left_lower_box": {"recipe": "sleeve", "faces": {"up": "cloth", "down": "skin"}},
-    "arm_right_upper_box": {"recipe": "cloth", "faces": {}},
-    "arm_right_lower_box": {"recipe": "sleeve", "faces": {"up": "cloth", "down": "skin"}},
-    "leg_left_upper_box": {"recipe": "trousers", "faces": {"north": "trousers-front"}},
-    "leg_left_lower_box": {"recipe": "boot", "faces": {"up": "boot-toe", "down": "boot-toe"}},
-    "toe_left_box": {"recipe": "boot-toe", "faces": {}},
-    "leg_right_upper_box": {"recipe": "trousers", "faces": {"north": "trousers-front"}},
-    "leg_right_lower_box": {"recipe": "boot", "faces": {"up": "boot-toe", "down": "boot-toe"}},
-    "toe_right_box": {"recipe": "boot-toe", "faces": {}}
+    "head_box": {"recipe": "hair", "faces": {"north": "miner-head-north", "east": "miner-head-east", "south": "miner-head-south", "west": "miner-head-west", "up": "miner-head-up"}},
+    "brow_box": {"recipe": "hair", "faces": {"north": "miner-brow-north"}},
+    "nose_box": {"recipe": "skin", "faces": {"north": "miner-nose-north"}},
+    "beard_box": {"recipe": "hair", "faces": {"north": "miner-beard-north"}},
+    "torso_box": {"recipe": "torso", "faces": {"north": "miner-torso-north", "south": "miner-torso-south", "up": "cloth", "down": "cloth"}},
+    "arm_left_upper_box": {"recipe": "cloth", "faces": {"north": "miner-arm-left-upper-north", "south": "miner-arm-left-upper-south", "west": "miner-arm-left-upper-west", "up": "miner-arm-left-upper-up"}},
+    "arm_left_lower_box": {"recipe": "sleeve", "faces": {"north": "miner-arm-left-lower-north", "south": "miner-arm-left-lower-south", "west": "miner-arm-left-lower-west", "up": "cloth", "down": "skin"}},
+    "arm_right_upper_box": {"recipe": "cloth", "faces": {"north": "miner-arm-right-upper-north", "east": "miner-arm-right-upper-east", "south": "miner-arm-right-upper-south", "up": "miner-arm-right-upper-up"}},
+    "arm_right_lower_box": {"recipe": "sleeve", "faces": {"north": "miner-arm-right-lower-north", "east": "miner-arm-right-lower-east", "south": "miner-arm-right-lower-south", "up": "cloth", "down": "skin"}},
+    "leg_left_upper_box": {"recipe": "trousers", "faces": {"north": "miner-leg-left-upper-north", "south": "miner-leg-left-upper-south", "west": "miner-leg-left-upper-west"}},
+    "leg_left_lower_box": {"recipe": "boot", "faces": {"north": "miner-leg-left-lower-north", "south": "miner-leg-left-lower-south", "west": "miner-leg-left-lower-west", "up": "boot-toe", "down": "boot-toe"}},
+    "toe_left_box": {"recipe": "boot-toe", "faces": {"north": "miner-toe-left-north", "west": "miner-toe-left-west"}},
+    "leg_right_upper_box": {"recipe": "trousers", "faces": {"north": "miner-leg-right-upper-north", "east": "miner-leg-right-upper-east", "south": "miner-leg-right-upper-south"}},
+    "leg_right_lower_box": {"recipe": "boot", "faces": {"north": "miner-leg-right-lower-north", "east": "miner-leg-right-lower-east", "south": "miner-leg-right-lower-south", "up": "boot-toe", "down": "boot-toe"}},
+    "toe_right_box": {"recipe": "boot-toe", "faces": {"north": "miner-toe-right-north", "east": "miner-toe-right-east"}}
   }
 }

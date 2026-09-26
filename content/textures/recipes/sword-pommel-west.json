@@ -1,0 +1,22 @@
+{
+  "layers": [
+    {
+      "kind": "map",
+      "legend": {
+        "0": {"color": 0, "shade": 0},
+        "1": {"color": 0, "shade": 1},
+        "2": {"color": 0, "shade": 2},
+        "3": {"color": 1, "shade": 2},
+        "4": {"color": 1, "shade": 0},
+        "5": {"color": 1, "shade": 1},
+        "6": {"color": 0, "shade": 3}
+      },
+      "rows": [
+        "011100",
+        "023300",
+        "014400",
+        "155361"
+      ]
+    }
+  ]
+}

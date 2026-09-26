@@ -9,10 +9,11 @@ using WhatYouCarry.Tools.TextureGen;
 namespace WhatYouCarry.Tools.TextureTrace;
 
 /// <summary>
-/// Traces one box face from an area of a screenshot into a texel map (D-612). Each texel of the canvas reads the
-/// middle half of its cell of the area, so an edge between two texels of the reference does not blend into it. The
-/// trace takes the mean of those pixels in linear light, and then the palette shade of the named ramps at the least
-/// distance in OKLab, as D-529 measured the base colors.
+/// Traces one box face from a screenshot into a texel map (D-612). The four corners of the face on the screenshot
+/// frame it, and a point of the canvas maps to the screenshot by bilinear steps between them. Each texel reads a grid
+/// of points across the middle half of its cell, so an edge between two texels of the reference does not blend into
+/// it. The trace takes the mean of those pixels in linear light, and then the palette shade of the named ramps at the
+/// least distance in OKLab, as D-529 measured the base colors.
 /// </summary>
 public static class TextureTracer
 {
@@ -22,21 +23,26 @@ public static class TextureTracer
     /// <summary>The share of a texel cell, on each side, that the sample leaves out.</summary>
     private const double Inset = 0.25;
 
+    /// <summary>The points of the sample grid along each side of a texel.</summary>
+    private const int SamplesAcross = 4;
+
     /// <summary>The map of one face.</summary>
     /// <param name="image">The screenshot.</param>
     /// <param name="imagePath">The path of the screenshot, for an error.</param>
-    /// <param name="face">The face, its area of the screenshot, its turn, and its ramps.</param>
+    /// <param name="face">The face, its corners on the screenshot, and its ramps.</param>
     /// <param name="width">The width of the face canvas, in texels.</param>
     /// <param name="height">The height of the face canvas, in texels.</param>
     /// <param name="palette">The palette.</param>
-    /// <exception cref="ContextException">The area passes the edge of the screenshot, a sample reads a pixel that is not fully opaque, or the face needs more shades than the legend has characters.</exception>
+    /// <exception cref="ContextException">A corner passes the edge of the screenshot, a sample reads a pixel that is not fully opaque, or the face needs more shades than the legend has characters.</exception>
     public static MapLayer Trace(ScreenshotImage image, string imagePath, TraceFace face, int width, int height, Palette palette)
     {
         string faceName = TextureLayout.FaceName(face.Model, face.Box, face.Side);
-        ImageArea at = face.At;
-        if (at.X + at.Width > image.Width || at.Y + at.Height > image.Height)
+        foreach (ImagePoint corner in face.Corners)
         {
-            throw new ContextException($"The area [{Text(at.X)}, {Text(at.Y)}, {Text(at.Width)}, {Text(at.Height)}] of the face {faceName} passes the edge of the screenshot '{imagePath}' of {Text(image.Width)} by {Text(image.Height)} pixels.");
+            if (corner.X > image.Width || corner.Y > image.Height)
+            {
+                throw new ContextException($"The corner ({Number(corner.X)}, {Number(corner.Y)}) of the face {faceName} passes the edge of the screenshot '{imagePath}' of {Text(image.Width)} by {Text(image.Height)} pixels.");
+            }
         }
 
         List<(int Ramp, int Fine, OkLab Color)> shades = Shades(palette, face.Ramps);
@@ -136,44 +142,26 @@ public static class TextureTracer
     }
 
     /// <summary>
-    /// The mean color of the middle half of the cell of one texel, in linear light. A cell smaller than two pixels
-    /// holds no pixel center in its middle half, so the sample then reads the pixel under the middle of the cell.
+    /// The mean color of a grid of points across the middle half of the cell of one texel, in linear light. Each point
+    /// reads the pixel under it.
     /// </summary>
     private static OkLab Sample(ScreenshotImage image, string imagePath, TraceFace face, string faceName, int x, int y, int width, int height)
     {
-        (double left, double top) = AreaPoint(face.Turn, (x + Inset) / width, (y + Inset) / height);
-        (double right, double bottom) = AreaPoint(face.Turn, (x + 1 - Inset) / width, (y + 1 - Inset) / height);
-        double lowX = face.At.X + (Math.Min(left, right) * face.At.Width);
-        double highX = face.At.X + (Math.Max(left, right) * face.At.Width);
-        double lowY = face.At.Y + (Math.Min(top, bottom) * face.At.Height);
-        double highY = face.At.Y + (Math.Max(top, bottom) * face.At.Height);
-        int firstColumn = (int)Math.Ceiling(lowX - 0.5);
-        int lastColumn = (int)Math.Ceiling(highX - 0.5) - 1;
-        int firstRow = (int)Math.Ceiling(lowY - 0.5);
-        int lastRow = (int)Math.Ceiling(highY - 0.5) - 1;
-        if (lastColumn < firstColumn)
-        {
-            firstColumn = (int)Math.Floor((lowX + highX) / 2.0);
-            lastColumn = firstColumn;
-        }
-
-        if (lastRow < firstRow)
-        {
-            firstRow = (int)Math.Floor((lowY + highY) / 2.0);
-            lastRow = firstRow;
-        }
-
         double red = 0.0;
         double green = 0.0;
         double blue = 0.0;
-        for (int row = firstRow; row <= lastRow; row++)
+        for (int down = 0; down < SamplesAcross; down++)
         {
-            for (int column = firstColumn; column <= lastColumn; column++)
+            for (int across = 0; across < SamplesAcross; across++)
             {
+                double share = (1.0 - (2.0 * Inset)) / SamplesAcross;
+                ImagePoint point = PointOf(face.Corners, (x + Inset + ((across + 0.5) * share)) / width, (y + Inset + ((down + 0.5) * share)) / height);
+                int column = Math.Min((int)Math.Floor(point.X), image.Width - 1);
+                int row = Math.Min((int)Math.Floor(point.Y), image.Height - 1);
                 ScreenshotPixel pixel = image.Pixels[(row * image.Width) + column];
                 if (pixel.Alpha != byte.MaxValue)
                 {
-                    throw new ContextException($"The texel ({Text(x)}, {Text(y)}) of the face {faceName} reads the pixel ({Text(column)}, {Text(row)}) of the screenshot '{imagePath}', and that pixel is not fully opaque. Move the area of the face onto the model.");
+                    throw new ContextException($"The texel ({Text(x)}, {Text(y)}) of the face {faceName} reads the pixel ({Text(column)}, {Text(row)}) of the screenshot '{imagePath}', and that pixel is not fully opaque. Move the corners of the face onto the model.");
                 }
 
                 red += Linear(pixel.Red);
@@ -182,23 +170,20 @@ public static class TextureTracer
             }
         }
 
-        int count = (lastRow - firstRow + 1) * (lastColumn - firstColumn + 1);
-        return OkLab.FromLinear(red / count, green / count, blue / count);
+        const int Count = SamplesAcross * SamplesAcross;
+        return OkLab.FromLinear(red / Count, green / Count, blue / Count);
     }
 
-    /// <summary>
-    /// The point of the area, in shares of its width and height, under one point of the canvas. The canvas is the area
-    /// turned clockwise by the quarter turns of the face, so the inverse turn gives the point of the area.
-    /// </summary>
-    private static (double X, double Y) AreaPoint(int turn, double across, double down)
+    /// <summary>The point of the screenshot under one point of the canvas, in shares of its width and height: the bilinear mix of the four corners.</summary>
+    private static ImagePoint PointOf(IReadOnlyList<ImagePoint> corners, double across, double down)
     {
-        return turn switch
-        {
-            0 => (across, down),
-            1 => (down, 1.0 - across),
-            2 => (1.0 - across, 1.0 - down),
-            _ => (1.0 - down, across),
-        };
+        double topLeft = (1.0 - across) * (1.0 - down);
+        double topRight = across * (1.0 - down);
+        double bottomRight = across * down;
+        double bottomLeft = (1.0 - across) * down;
+        return new ImagePoint(
+            (corners[0].X * topLeft) + (corners[1].X * topRight) + (corners[2].X * bottomRight) + (corners[3].X * bottomLeft),
+            (corners[0].Y * topLeft) + (corners[1].Y * topRight) + (corners[2].Y * bottomRight) + (corners[3].Y * bottomLeft));
     }
 
     private static double Linear(byte value)
@@ -207,6 +192,11 @@ public static class TextureTracer
     }
 
     private static string Text(int number)
+    {
+        return number.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static string Number(double number)
     {
         return number.ToString(CultureInfo.InvariantCulture);
     }
