@@ -2,6 +2,81 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 265: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-75, reviewer. Branch `feat/pr-75-sword-art`. PR #106, Ready for owner merge at effective head `4aebdb9`. Base `602708d`.
+
+### What this session did, and why
+
+- Reviewed PR #106 against its owner decisions and exit tests.
+- Traced the locator rotation through the loader and Game node tree, and checked the sword, paint, palette, atlas, and tests.
+- Added the revision-specific review record with no findings.
+- Generated and inspected the contact sheet. The sword stays clear of the floor in both body views.
+
+### State of the build
+
+- At review start, branch tip `9ac2b19` held all green checks except `review-gate`, which lacked the review record. The Gitar check passed.
+- The focused local tests passed 89 of 89. Asset QA and determinism lint found no issues. Texture generation matched the committed atlas and layout.
+- The review record and this entry are in one metadata commit pushed to the PR branch. The post-push checks and remote head were verified.
+
+### In flight
+
+- The owner confirms the merge summary after the post-push gates pass (D-533).
+
+### Traps and gotchas
+
+- `4aebdb9` is the effective code head. `9ac2b19` adds only documents in the D-475 skip set.
+- OQ-206 holds the roll pose. It blocks no PR. OQ-207 and OQ-208 block PR-89 and PR-90.
+
+### Open questions that block progress
+
+None for PR-75.
+
+### Next concrete action
+
+The owner checks the new `review-gate` result, then reads the merge summary before confirming the merge.
+
+## Session 264: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-75, author. Branch `feat/pr-75-sword-art`. PR #106, pending merge. Base `602708d`.
+
+### What this session did, and why
+
+- The sword of PR-15 is now a worn steel arming sword of eight boxes, from one concept image (D-586 to D-590). The owner skipped the 3D reference (D-590).
+- The concept is about 1 meter long, and a sword that hangs straight down reaches into the floor. The `weapon` locator tilts 45 degrees forward, and the loader and `ModelNodes` read the tilt (D-591). The F-131 test now checks that the loader reads the rotation.
+- The owner found the slate blade too blue. The owner chose ten new ramps from twelve candidates (D-592, D-593), and then the darkest of three steel settings (D-594). The owner approved the sheet (D-597).
+- Eleven ramps pass the 256 colors of an indexed PNG, so soot waits. PR-89, a truecolor atlas, and PR-90, a texture resolution, come next, before any more art (D-595). OQ-207 and OQ-208 block them.
+- The owner asked if the repository review of 2026-09-24 is complete. It is not: 13 findings stay open in full and 9 in part. PR-86 fixed RR-P1-1, and the report does not mark it. These findings follow PR-90 (D-596).
+- PR-85 exit test 8: the first night from the `7 7 * * *` cron starts at 07:07 UTC on 2026-09-26. At 22:27 UTC on 2026-09-25 it had not started. The newest night, run 36141884980 at 13:35 UTC, is the old night of one job at `a3590ba`.
+
+### State of the build
+
+- Effective head `4aebdb9`. Round 1 gives `Ready for owner merge` with no finding (`eb09d5f`). The gitar pass approved `9ac2b19` with no finding.
+- Every check of `9ac2b19` passes but `evaluate` and `review-gate`, which waited for the record. Local: 1822 of 1822 tests pass, Smoke included.
+- Core does not change, so the known answer of the sweep stays `9c79047da9c82a0e`.
+
+### In flight
+
+- The owner merge decision after the merge summary (D-533, D-552).
+- PR-85 exit test 8. A later session reads the start time, the wall time of each sweep job, the result, and the slice: 6001-6500 for each bot policy, and 120001-130000 for reachability. After a runner fault, re-run the failed jobs (D-585).
+
+### Traps and gotchas
+
+- A new ramp shifts the atlas index of every shade, and the colors stay the same. `GrainPaintsTheSameBytesOnEachPlatform` pins those indices.
+- The roll puts the held sword under the floor, as it did with the sword of PR-15 (OQ-206). `TheHeldSwordStaysOverTheFloor` leaves the roll out.
+- The Codex CLI 0.157.0 gave `401 Incorrect API key` for about 50 minutes on 2026-09-25 while `codex login status` read ChatGPT. It passed at 23:44 UTC with no new login. A probe every 18 minutes found the end.
+- The reference images sit in `artifacts/reference/meshy-sword-2026-09-25/` of the main checkout, which git ignores.
+
+### Open questions that block progress
+
+None for PR-75. OQ-207 blocks PR-89, and OQ-208 blocks PR-90.
+
+### Next concrete action
+
+When the owner confirms, run `gh pr merge 106 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge. Then read PR-85 exit test 8.
+
 ## Session 263: 2026-09-25, Claude Code
 
 Author: Claude Code
@@ -287,83 +362,3 @@ None for PR-88. OQ-195 to OQ-205 do not block this review.
 ### Next concrete action
 
 Correct P1-3 and P2-1. Add each regression test, then run the exact reproducer and its adjacent boundary.
-
-## Session 255: 2026-09-25, Claude Code
-
-Author: Claude Code
-Session: PR-88, correction author. Branch `fix/pr-88-review-fixes`. PR #104, pending merge. Base `a3590ba`.
-
-### What this session did, and why
-
-- Round 1 of the cross-provider review gave `Changes required` at `4029e36` with P1-1 and P1-2. Both had full merit, and `docs/reviews/pr-104-response.md` holds the evidence.
-- P1-1: a finding status now reads its complete form, so `fixed.` with no revision is a fault (F-125, D-514).
-- P1-2: only a fence of the same character and at least the same length closes a fenced block (F-116).
-- Each new test failed on the parsers of `4029e36`.
-- Gitar approved `35c389c` with one finding, the numbers of the sequence tail and the exit tests. Commit `35c389c` fixed it, and the thread is resolved.
-- The owner added five small concerns while the Mac runner ran the night: F-129, the ramp march test, and F-131, the band at load, a rotated locator, an empty string, and the pose at a keyframe. Each new test failed on the old code or on a mutant of the march.
-- The owner then added nine findings of the review while the night held the Mac runner: F-132 to F-140, with F-141 to F-146 for the six merges past a failed gate. The owner revised D-208 in D-582: a Core method entry names its parameter types.
-- Gitar raised a fourth finding at `d4b8d01`: the blend between two keyframes near the float limit overflowed. Commit `9dcd440` weights each keyframe.
-- Gitar approved `4c55f16` with a second finding: the fence parse took any indent, and Markdown takes three spaces at most. It had full merit. The fence now opens after no more than three spaces, and `ReviewGateReadsNoFenceAfterFourSpaces` fails on the parser of `f280b72`.
-
-### State of the build
-
-- The known answer is `9c79047da9c82a0e`: the sweep now folds one real floor and two recorded runs. It moves with the content numbers too.
-- The full suite passed 1749 of 1749, Smoke included. The review tests passed 176 of 176.
-- Smoke and Bit identity skip on a documents head. Their runs on the code came from a re-run on `7207164`, and each passed on the three platforms.
-
-### In flight
-
-- Round 2 gave `Changes required` at `d9c6413` with P1-3 and P2-1, and closed P1-1 and P1-2. Both new findings had full merit, and the response file holds the evidence.
-- The gitar pass and CI of the new head, then round 3 of `make codex-review`.
-
-### Traps and gotchas
-
-- PR #102 and this PR both add a marker to the D-284 row and an entry before `### PR-75`. The PR that merges second joins them by hand.
-- OQ-67 still rests on the Mac as the CI runner, which D-572 ends.
-- A push of documents right after a code push cancels the Smoke and Bit identity runs of the code (D-356), and the later heads skip them. Re-run the cancelled runs before the review.
-
-### Open questions that block progress
-
-None for PR-88.
-
-### Next concrete action
-
-After the gitar pass and green CI, run `make codex-review PR=104` for round 2.
-
-## Session 254: 2026-09-25, Codex
-
-Author: Codex
-Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Changes required. Base `a3590ba`.
-
-### What this session did, and why
-
-- Reviewed PR #104 at effective head `4029e36` to check the fixes of F-113 to F-127.
-- Added two P1 findings for review gates that accept malformed closed finding statuses or fake verdict sections inside valid code fences.
-- Read the PR comments. The Gitar thread about the roadmap order is resolved.
-
-### State of the build
-
-- The focused review-gate tests passed 129 of 129.
-- The Documents tests passed 181 of 181. `ste-check` found 0 issues, and the final `doc-gate` passed over 78 paths.
-- CI platform jobs, sweeps, documents, asset QA, determinism lint, STE, doc-gate, night-gate, and Gitar passed at `35c389c`.
-- The first review metadata push was `da8c2c6`. Its Gitar wait passed, and `gh pr view` confirmed that remote head.
-- The CI, Smoke, and Bit identity jobs skipped the metadata-only head. The previous code head had passing CI, Smoke, and Bit identity results. `review-gate` and `evaluate` fail because the verdict requires changes.
-- Smoke and bit-identity passed at `756d539`. Later commits changed paths in the skip set of D-475.
-- The PR tip at review start was `35c389c`. Its effective head remains `4029e36`.
-
-### In flight
-
-- The author must correct the two findings before this PR can pass the review gate.
-
-### Traps and gotchas
-
-- This checkout is detached. The review record and session handoff were pushed to `origin/fix/pr-88-review-fixes`.
-- Review the effective head `4029e36`, not the later document commits.
-
-### Open questions that block progress
-
-OQ-195 to OQ-205 remain open. D-581 records the accepted runner risk. These questions do not block this review.
-
-### Next concrete action
-
-The author corrects P1-1 and P1-2, then starts a fresh cross-provider review of the new effective head.

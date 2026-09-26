@@ -140,7 +140,7 @@ Every floor is 64 by 20 by 64 blocks, with 5 to 9 chambers (D-343, D-344). A gal
 
 A ramp cell is one block id from 8 to 43, so the grid stays one byte per cell (D-164, D-367). On a ramp, the speed along the slope is the flat speed (D-362). A walk and a sprint stay on the slope on the way down, and a roll leaves it (D-363). A body does not slide on a ramp, and it jumps and rolls from a ramp as from flat ground (D-364 to D-366). The mesher draws every face of a ramp with the raw stone tile, so a ramp reads as the floor that it joins (D-368).
 
-Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of 117 colors (D-85, D-304, D-528, D-530). The palette is nine ramps of four colors from dark to light, with three fine shades between each pair of colors (D-304, D-528, D-530). A tool generates the atlas of 512 from the palette and the recipes (D-305, D-505, D-506). A recipe is a list of paint layers, with clustered grain and fine shades (D-507, D-527). A file next to each model names the recipe of each face (D-508). Every face has 32 texels per meter, a body face too (D-308). Each asset starts as a Meshy look reference, and the agent rebuilds it as boxes (D-496, D-509). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
+Models are cuboid, with a custom proportion set and one shared base body (D-82). Textures are 32 px faces on one atlas from an own palette of 247 colors (D-85, D-304, D-528, D-530, D-592). The palette is nineteen ramps of four colors from dark to light, with three fine shades between each pair of colors (D-304, D-528, D-530, D-592). A tool generates the atlas of 512 from the palette and the recipes (D-305, D-505, D-506). A recipe is a list of paint layers, with clustered grain and fine shades (D-507, D-527). A file next to each model names the recipe of each face (D-508). Every face has 32 texels per meter, a body face too (D-308). Each asset starts as a Meshy look reference, and the agent rebuilds it as boxes (D-496, D-509). A locator can tilt the item that it holds, as the right hand tilts the sword (D-591). The lighting budget is ambient plus a few dynamic point lights, no shadow maps, and vertex ambient occlusion (D-81). Animation is JSON keyframes per bone, and locomotion is procedural (D-87). The camera collides in Core and the Game layer fades walls (D-88). Avoid Minecraft tells (D-83).
 
 A C# synthesizer generates all audio from parameter files, music included (D-89, D-93). Music quality is a register risk (F-18).
 
@@ -354,7 +354,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-128 | The swing of `overseer-pick` is 30, 6, and 30 ticks, and it names the sword clip of 36 ticks with the phases 12, 6, and 18 (D-87). The Game poses the player alone, so no player sees it yet | 2026-09-25 | 🔧 found in PR-88. A test holds the gap until a clip for the pick exists |
 | F-129 | `RampRayTests.TheMarchAgreesWithAFineWalkOverRamps` asserts one condition two times, the fault of F-124 on the ramp march | 2026-09-25 | ✅ PR #104 (PR-88): the test asserts the hit and both bounds of its distance (T-3) |
 | F-130 | `ChamberBudget.WindowTop` and the sums of chamber weights are long values that a very large `difficultyBudget` or chamber weight can overflow | 2026-09-25 | 🔧 found in PR-88 |
-| F-131 | The loaders passed four schema faults: a floor band that no detail pass knows, a locator rotation that the model loader dropped, an empty string in the string table, and a keyframe pose that overflowed near the float limit | 2026-09-24 | ✅ PR #104 (PR-88): each fault fails at load, and the pose at a keyframe tick is the keyframe (D-92, G-7, T-2) |
+| F-131 | The loaders passed four schema faults: a floor band that no detail pass knows, a locator rotation that the model loader dropped, an empty string in the string table, and a keyframe pose that overflowed near the float limit | 2026-09-24 | ✅ PR #104 (PR-88): each fault fails at load, and the pose at a keyframe tick is the keyframe (D-92, G-7, T-2). PR-75 reads a locator rotation in place of the error, so the rotation still never drops (D-591) |
 | F-132 | `det-lint` did not see the constructs that the compiler lowers: an interpolation, a concatenation of a number, a record `GetHashCode`, and `double` in Core, and an interpolated or const text in Game. The member keys counted parameters, so one entry approved every overload of that count | 2026-09-24 | ✅ PR #104 (PR-88): each construct is a finding outside error text, and each method entry names its parameter types (G-2, G-8, D-582) |
 | F-133 | The bit-identity sweep masked the stairwell bits, gave the enemies one damage, dug synthetic floors alone, and ran Debug alone, so the three platforms never compared a descent, a death, an ascend, or a real floor | 2026-09-24 | ✅ PR #104 (PR-88): the sweep folds one real floor and two recorded runs that descend, die, and ascend, and each platform job checks that Release gives the Debug hash (G-9). The known answer now moves with the content numbers too |
 | F-134 | `night-gate.yml` put the base branch into the shell text, it did not state that it runs the code of the PR, and no test stopped a second job named `review-gate` or a second workflow with `checks: write` | 2026-09-24 | ✅ PR #104 (PR-88): the base branch comes through the environment, the workflow states the trust, and two tests hold the rules. The wording of D-197 and a daily night gate re-run wait for the owner |
@@ -668,10 +668,23 @@ The macOS legs of `ci.yml`, `smoke.yml`, and `bit-identity.yml` move to the host
 Gate: the three macOS legs pass on the hosted runner, no workflow names the self-hosted label, and the repository has zero runners.
 > *In plain English:* the last checks leave the Mac of the owner. No code from a pull request runs on that Mac again.
 
-**PR-75: Sword art.** 🔧
-The sword of PR-15 gains the detail that the owner asks for, on the recipes of PR-62 (D-504).
-Gate: the clip check passes, and the owner approves a contact sheet of the sword.
-> *In plain English:* the sword is three plain boxes. This change gives it the detail of a finished weapon.
+**PR-75: Sword art.** ✅ Done in PR #106.
+The sword of PR-15 becomes a worn steel arming sword of eight boxes, from a concept image, on the recipes of PR-62 (D-504, D-586 to D-590, D-594). The hand tilts it 45 degrees forward, so the longer blade stays over the floor (D-591). The palette gains ten ramps (D-592, D-593).
+Gate: the clip check passes, the sword stays over the floor, and the owner approves a contact sheet of the sword (D-597).
+> *In plain English:* the sword was three plain boxes. Now it is a worn steel sword with a pommel, a wrapped grip, and a cross guard. The palette gains colors for later art.
+
+**PR-89: Truecolor atlas.** 🔧
+The atlas stores colors in place of palette indices, so the palette can pass 256 colors and shades (D-595). OQ-207 blocks the start.
+Gate: every subject keeps its colors, and the owner approves a contact sheet.
+> *In plain English:* the texture image holds 256 colors at most. This change removes that limit, so later art has room for more colors.
+
+**PR-90: Texture resolution.** 🔧
+The texel density of D-308 and the atlas side of D-506 rise, so each item shows more detail (D-595). OQ-208 blocks the start.
+Gate: the frame time holds D-295, and the owner approves a contact sheet at the new density.
+> *In plain English:* a sword blade is 3 pixels wide today. This change gives each item more pixels, so the art can show more detail.
+
+**The open findings of the repository review.** 🔧
+The findings of the review of 2026-09-24 that stay open are the primary work after PR-90. The first session after PR-90 splits them into PRs of one concern each (D-596).
 
 **PR-76: Enemy models.** 🔧
 The enemy models of PR-16 gain their own boxes and recipes, and the color swap gives each enemy its colors (D-504, D-507).
@@ -852,7 +865,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80. ✅ PR-70 done in PR #81. ✅ PR-66 done in PR #82. ✅ PR-16 done in PR #83. ✅ PR-17 done in PR #84. ✅ PR-18 done in PR #85.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-76, PR-77. ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77. ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

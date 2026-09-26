@@ -21,7 +21,9 @@ namespace WhatYouCarry.Assets;
 /// <para>
 /// The loader reads the rest pose alone. A box or a bone with a rotation is an error that names it, because a
 /// rotation lives in an animation file (D-87, D-298), and a silent drop of a rotation would show a wrong model
-/// (T-2). Every failure names the file and the box, the bone, or the point at fault (D-92).
+/// (T-2). A locator keeps its rotation: it is the angle at which the point holds its item, such as the sword
+/// that the right hand tilts forward (D-591). Every failure names the file and the box, the bone, or the point
+/// at fault (D-92).
 /// </para>
 /// <para>
 /// The faces and the resolution of the file serve Blockbench alone. The texture generator places each face in the
@@ -305,10 +307,12 @@ public static class BlockbenchLoader
             }
         }
 
-        // A locator rotation would turn the item that the point holds, and the loader reads the rest pose alone (T-2, F-131).
-        CheckNoRotation(path, element, name);
+        // The rotation turns the item that the point holds, so the loader reads it and never drops it (T-2, F-131, D-591).
+        Vector3 rotation = element.TryGetProperty(RotationKey, out JsonElement _)
+            ? JsonShape.Vector(path, element, name, RotationKey)
+            : new Vector3(0.0f, 0.0f, 0.0f);
         Vector3 position = JsonShape.Vector(path, element, name, PositionKey);
-        return new AttachmentPoint(name, bone, ToMeters(position));
+        return new AttachmentPoint(name, bone, ToMeters(position), rotation);
     }
 
     /// <summary>A rotation field, when present, must be zero on every axis.</summary>

@@ -97,7 +97,8 @@ public enum BoxSide
 /// <param name="Slot">The slot name, one of <see cref="EquipmentSlots.Names"/>.</param>
 /// <param name="Bone">The index of the bone that holds the point.</param>
 /// <param name="Position">The point, in meters in model space.</param>
-public sealed record AttachmentPoint(string Slot, int Bone, Vector3 Position);
+/// <param name="RotationDegrees">The turn of the held item about the point, in degrees, in the euler order of Blockbench (D-298, D-591).</param>
+public sealed record AttachmentPoint(string Slot, int Bone, Vector3 Position, Vector3 RotationDegrees);
 
 /// <summary>
 /// The equipment slots that a model can attach to (D-18, D-26), and the main weapon (D-20, D-330). The two ring slots

@@ -1,5 +1,85 @@
 # Session handoff archive
 
+## Session 255: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-88, correction author. Branch `fix/pr-88-review-fixes`. PR #104, pending merge. Base `a3590ba`.
+
+### What this session did, and why
+
+- Round 1 of the cross-provider review gave `Changes required` at `4029e36` with P1-1 and P1-2. Both had full merit, and `docs/reviews/pr-104-response.md` holds the evidence.
+- P1-1: a finding status now reads its complete form, so `fixed.` with no revision is a fault (F-125, D-514).
+- P1-2: only a fence of the same character and at least the same length closes a fenced block (F-116).
+- Each new test failed on the parsers of `4029e36`.
+- Gitar approved `35c389c` with one finding, the numbers of the sequence tail and the exit tests. Commit `35c389c` fixed it, and the thread is resolved.
+- The owner added five small concerns while the Mac runner ran the night: F-129, the ramp march test, and F-131, the band at load, a rotated locator, an empty string, and the pose at a keyframe. Each new test failed on the old code or on a mutant of the march.
+- The owner then added nine findings of the review while the night held the Mac runner: F-132 to F-140, with F-141 to F-146 for the six merges past a failed gate. The owner revised D-208 in D-582: a Core method entry names its parameter types.
+- Gitar raised a fourth finding at `d4b8d01`: the blend between two keyframes near the float limit overflowed. Commit `9dcd440` weights each keyframe.
+- Gitar approved `4c55f16` with a second finding: the fence parse took any indent, and Markdown takes three spaces at most. It had full merit. The fence now opens after no more than three spaces, and `ReviewGateReadsNoFenceAfterFourSpaces` fails on the parser of `f280b72`.
+
+### State of the build
+
+- The known answer is `9c79047da9c82a0e`: the sweep now folds one real floor and two recorded runs. It moves with the content numbers too.
+- The full suite passed 1749 of 1749, Smoke included. The review tests passed 176 of 176.
+- Smoke and Bit identity skip on a documents head. Their runs on the code came from a re-run on `7207164`, and each passed on the three platforms.
+
+### In flight
+
+- Round 2 gave `Changes required` at `d9c6413` with P1-3 and P2-1, and closed P1-1 and P1-2. Both new findings had full merit, and the response file holds the evidence.
+- The gitar pass and CI of the new head, then round 3 of `make codex-review`.
+
+### Traps and gotchas
+
+- PR #102 and this PR both add a marker to the D-284 row and an entry before `### PR-75`. The PR that merges second joins them by hand.
+- OQ-67 still rests on the Mac as the CI runner, which D-572 ends.
+- A push of documents right after a code push cancels the Smoke and Bit identity runs of the code (D-356), and the later heads skip them. Re-run the cancelled runs before the review.
+
+### Open questions that block progress
+
+None for PR-88.
+
+### Next concrete action
+
+After the gitar pass and green CI, run `make codex-review PR=104` for round 2.
+
+## Session 254: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Changes required. Base `a3590ba`.
+
+### What this session did, and why
+
+- Reviewed PR #104 at effective head `4029e36` to check the fixes of F-113 to F-127.
+- Added two P1 findings for review gates that accept malformed closed finding statuses or fake verdict sections inside valid code fences.
+- Read the PR comments. The Gitar thread about the roadmap order is resolved.
+
+### State of the build
+
+- The focused review-gate tests passed 129 of 129.
+- The Documents tests passed 181 of 181. `ste-check` found 0 issues, and the final `doc-gate` passed over 78 paths.
+- CI platform jobs, sweeps, documents, asset QA, determinism lint, STE, doc-gate, night-gate, and Gitar passed at `35c389c`.
+- The first review metadata push was `da8c2c6`. Its Gitar wait passed, and `gh pr view` confirmed that remote head.
+- The CI, Smoke, and Bit identity jobs skipped the metadata-only head. The previous code head had passing CI, Smoke, and Bit identity results. `review-gate` and `evaluate` fail because the verdict requires changes.
+- Smoke and bit-identity passed at `756d539`. Later commits changed paths in the skip set of D-475.
+- The PR tip at review start was `35c389c`. Its effective head remains `4029e36`.
+
+### In flight
+
+- The author must correct the two findings before this PR can pass the review gate.
+
+### Traps and gotchas
+
+- This checkout is detached. The review record and session handoff were pushed to `origin/fix/pr-88-review-fixes`.
+- Review the effective head `4029e36`, not the later document commits.
+
+### Open questions that block progress
+
+OQ-195 to OQ-205 remain open. D-581 records the accepted runner risk. These questions do not block this review.
+
+### Next concrete action
+
+The author corrects P1-1 and P1-2, then starts a fresh cross-provider review of the new effective head.
+
 ## Session 253: 2026-09-25, Claude Code
 
 Author: Claude Code

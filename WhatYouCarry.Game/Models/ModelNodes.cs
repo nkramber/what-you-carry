@@ -26,8 +26,8 @@ public sealed record ModelNodeTree(Node3D Root, IReadOnlyDictionary<string, Node
 /// poses the boxes with, so the screen and the clip check read one pose (D-87, D-298, D-301).
 /// </para>
 /// <para>
-/// A held model hangs from an attachment node: the sword of the right hand from the weapon point (D-330). PR-22 hangs
-/// an armor overlay the same way.
+/// A held model hangs from an attachment node: the sword of the right hand from the weapon point (D-330). The node
+/// takes the rotation of its locator, so the held model tilts with it (D-591). PR-22 hangs an armor overlay the same way.
 /// </para>
 /// </remarks>
 public static class ModelNodes
@@ -71,7 +71,13 @@ public static class ModelNodes
         Dictionary<string, Node3D> attachments = [];
         foreach (AttachmentPoint point in model.Attachments)
         {
-            Node3D node = new() { Name = point.Slot, Position = RenderInterpolation.ToGodot(point.Position - model.Bones[point.Bone].Pivot) };
+            RotationMatrix hold = RotationMatrix.FromEulerDegrees(point.RotationDegrees);
+            Node3D node = new()
+            {
+                Name = point.Slot,
+                Position = RenderInterpolation.ToGodot(point.Position - model.Bones[point.Bone].Pivot),
+                Basis = new Basis(RenderInterpolation.ToGodot(hold.AxisX()), RenderInterpolation.ToGodot(hold.AxisY()), RenderInterpolation.ToGodot(hold.AxisZ())),
+            };
             boneNodes[point.Bone].AddChild(node);
             attachments.Add(point.Slot, node);
         }
