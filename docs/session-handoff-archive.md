@@ -1,5 +1,175 @@
 # Session handoff archive
 
+## Session 265: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-75, reviewer. Branch `feat/pr-75-sword-art`. PR #106, Ready for owner merge at effective head `4aebdb9`. Base `602708d`.
+
+### What this session did, and why
+
+- Reviewed PR #106 against its owner decisions and exit tests.
+- Traced the locator rotation through the loader and Game node tree, and checked the sword, paint, palette, atlas, and tests.
+- Added the revision-specific review record with no findings.
+- Generated and inspected the contact sheet. The sword stays clear of the floor in both body views.
+
+### State of the build
+
+- At review start, branch tip `9ac2b19` held all green checks except `review-gate`, which lacked the review record. The Gitar check passed.
+- The focused local tests passed 89 of 89. Asset QA and determinism lint found no issues. Texture generation matched the committed atlas and layout.
+- The review record and this entry are in one metadata commit pushed to the PR branch. The post-push checks and remote head were verified.
+
+### In flight
+
+- The owner confirms the merge summary after the post-push gates pass (D-533).
+
+### Traps and gotchas
+
+- `4aebdb9` is the effective code head. `9ac2b19` adds only documents in the D-475 skip set.
+- OQ-206 holds the roll pose. It blocks no PR. OQ-207 and OQ-208 block PR-89 and PR-90.
+
+### Open questions that block progress
+
+None for PR-75.
+
+### Next concrete action
+
+The owner checks the new `review-gate` result, then reads the merge summary before confirming the merge.
+
+## Session 264: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-75, author. Branch `feat/pr-75-sword-art`. PR #106, pending merge. Base `602708d`.
+
+### What this session did, and why
+
+- The sword of PR-15 is now a worn steel arming sword of eight boxes, from one concept image (D-586 to D-590). The owner skipped the 3D reference (D-590).
+- The concept is about 1 meter long, and a sword that hangs straight down reaches into the floor. The `weapon` locator tilts 45 degrees forward, and the loader and `ModelNodes` read the tilt (D-591). The F-131 test now checks that the loader reads the rotation.
+- The owner found the slate blade too blue. The owner chose ten new ramps from twelve candidates (D-592, D-593), and then the darkest of three steel settings (D-594). The owner approved the sheet (D-597).
+- Eleven ramps pass the 256 colors of an indexed PNG, so soot waits. PR-89, a truecolor atlas, and PR-90, a texture resolution, come next, before any more art (D-595). OQ-207 and OQ-208 block them.
+- The owner asked if the repository review of 2026-09-24 is complete. It is not: 13 findings stay open in full and 9 in part. PR-86 fixed RR-P1-1, and the report does not mark it. These findings follow PR-90 (D-596).
+- PR-85 exit test 8: the first night from the `7 7 * * *` cron starts at 07:07 UTC on 2026-09-26. At 22:27 UTC on 2026-09-25 it had not started. The newest night, run 36141884980 at 13:35 UTC, is the old night of one job at `a3590ba`.
+
+### State of the build
+
+- Effective head `4aebdb9`. Round 1 gives `Ready for owner merge` with no finding (`eb09d5f`). The gitar pass approved `9ac2b19` with no finding.
+- Every check of `9ac2b19` passes but `evaluate` and `review-gate`, which waited for the record. Local: 1822 of 1822 tests pass, Smoke included.
+- Core does not change, so the known answer of the sweep stays `9c79047da9c82a0e`.
+
+### In flight
+
+- The owner merge decision after the merge summary (D-533, D-552).
+- PR-85 exit test 8. A later session reads the start time, the wall time of each sweep job, the result, and the slice: 6001-6500 for each bot policy, and 120001-130000 for reachability. After a runner fault, re-run the failed jobs (D-585).
+
+### Traps and gotchas
+
+- A new ramp shifts the atlas index of every shade, and the colors stay the same. `GrainPaintsTheSameBytesOnEachPlatform` pins those indices.
+- The roll puts the held sword under the floor, as it did with the sword of PR-15 (OQ-206). `TheHeldSwordStaysOverTheFloor` leaves the roll out.
+- The Codex CLI 0.157.0 gave `401 Incorrect API key` for about 50 minutes on 2026-09-25 while `codex login status` read ChatGPT. It passed at 23:44 UTC with no new login. A probe every 18 minutes found the end.
+- The reference images sit in `artifacts/reference/meshy-sword-2026-09-25/` of the main checkout, which git ignores.
+
+### Open questions that block progress
+
+None for PR-75. OQ-207 blocks PR-89, and OQ-208 blocks PR-90.
+
+### Next concrete action
+
+When the owner confirms, run `gh pr merge 106 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge. Then read PR-85 exit test 8.
+
+## Session 263: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-86, author, the hand-over. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge. Base `0d99e2c`. Sessions 259 and 261 hold the earlier work of this session.
+
+### What this session did, and why
+
+- Round 2 approved the effective head `1678ef5` with `Ready for owner merge`, and P2-1 is fixed. The gitar pass approved `817dad3` with no finding, and no review thread exists.
+
+### State of the build
+
+- Effective head `1678ef5`. Every check of the tip passes, `evaluate` and `review-gate` included.
+- The repository has 0 runners, and the Mac Mini holds no runner agent (D-584).
+
+### In flight
+
+- The owner merge decision after the merge summary (D-533, D-552).
+- PR-85 exit test 8: the night of 2026-09-26 from the 07:07 UTC cron has not started. A later session reads its start time, the wall time of each sweep job, its result, and its slice (6001-6500 for each bot policy, 120001-130000 for reachability).
+
+### Traps and gotchas
+
+- Session 259 lists the traps of this PR.
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+When the owner confirms, run `gh pr merge 105 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge.
+
+## Session 262: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-86, reviewer, round 2. Branch `feat/pr-86-hosted-macos`. PR #105, Ready for owner merge. Base `0d99e2c`.
+
+### What this session did, and why
+
+- Re-reviewed PR #105 after the author answered P2-1.
+- Confirmed that the corrected roadmap text passes the finding’s regression check. Updated the existing review record and kept the earlier verdict.
+- The review record and this entry form one metadata commit (D-182).
+
+### State of the build
+
+- Effective head `1678ef5`; PR tip `817dad3`. The current document checks and Gitar pass. Code jobs skip after the documents-only change.
+- `evaluate` and `review-gate` still read the earlier review record. Recheck them after this metadata commit reaches the PR.
+
+### In flight
+
+- No review work remains. The owner gives the merge summary and confirms the merge (D-533, D-552).
+
+### Traps and gotchas
+
+- The correction changes documents alone. The earlier workflow checks still cover the same implementation head.
+- PR #105 has one Gitar approval summary with no specific item, and no review threads.
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+The owner reads the merge summary and confirms whether to merge PR #105.
+
+## Session 261: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-86, author, the answer to round 1. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge. Base `0d99e2c`. Session 259 holds the earlier work of this session.
+
+### What this session did, and why
+
+- Round 1 gave `Changes required` with P2-1. It had full merit: the plain-English paragraph of the PR-86 entry said that three checks still run on the Mac of the owner. The paragraph now puts that state before the change. `docs/reviews/pr-105-response.md` records the answer.
+- The owner asked why the review waits for the night of PR-85 exit test 8, and then started the review. That night is a record for PR-85, and no part of PR-86 depends on it.
+
+### State of the build
+
+- Effective head `1678ef5`. The correction changes documents alone (D-475, D-534). The gitar pass approved `d063bae` with no finding.
+
+### In flight
+
+- Round 2 of the cross-provider review, and the owner merge decision (D-533, D-552).
+- PR-85 exit test 8: the night of 2026-09-26 from the 07:07 UTC cron has not started. A later session reads its start time, the wall time of each sweep job, its result, and its slice (6001-6500 for each bot policy, 120001-130000 for reachability).
+
+### Traps and gotchas
+
+- Session 259 lists the traps of this PR.
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+Complete the gitar pass of the new head, then run `make codex-review PR=105`.
+
 ## Session 260: 2026-09-25, Codex
 
 Author: Codex

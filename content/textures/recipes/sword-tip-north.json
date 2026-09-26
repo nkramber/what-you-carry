@@ -1,0 +1,15 @@
+{
+  "layers": [
+    {
+      "kind": "map",
+      "legend": {
+        "0": {"color": 37, "shade": 1},
+        "1": {"color": 38, "shade": 1}
+      },
+      "rows": [
+        "01",
+        "11"
+      ]
+    }
+  ]
+}

@@ -35,6 +35,9 @@ public static class AssetPaths
     /// <summary>The directory of the texture recipes: one file per recipe, named after the recipe (D-505).</summary>
     public const string RecipeDirectory = TextureDirectory + "recipes/";
 
+    /// <summary>The directory of the trace specs: the screenshot area of each traced face (D-612).</summary>
+    public const string TraceDirectory = TextureDirectory + "traces/";
+
     /// <summary>The file that binds a recipe to each block id (D-505).</summary>
     public const string BlockPaintFile = TextureDirectory + "blocks.json";
 

@@ -22,6 +22,11 @@ namespace WhatYouCarry.Tools.AssetQa;
 /// A reference with a backslash, a rooted path, or a dot segment is a finding too, because it resolves on one
 /// machine and not on another.
 /// </para>
+/// <para>
+/// The check reads no trace spec under <see cref="AssetPaths.TraceDirectory"/> (D-617). A spec names the screenshots of
+/// the reference folder, which git ignores, from the checkout root and not the content directory (D-496, D-614). The
+/// game never reads a spec, and the <c>texture-trace</c> command reads each screenshot and names the one it cannot read.
+/// </para>
 /// </remarks>
 public static class FileCaseCheck
 {
@@ -38,6 +43,11 @@ public static class FileCaseCheck
         foreach (string file in SortedFiles(contentRoot))
         {
             string path = AssetSet.ContentPath(contentRoot, file);
+            if (path.StartsWith(AssetPaths.TraceDirectory, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             JsonDocument document;
             try
             {

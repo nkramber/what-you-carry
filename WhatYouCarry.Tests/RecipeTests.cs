@@ -269,7 +269,7 @@ public sealed class RecipeTests
 
     /// <summary>
     /// A grain uses whole numbers alone, so each platform paints the same bytes (D-527, D-599). The three CI platforms
-    /// run this test on one canvas of the trousers recipe: the colors of its first row, and the SHA-256 hash of the red,
+    /// run this test on one canvas of the trousers recipe: the first eight colors of its first row, and the SHA-256 hash of the red,
     /// green, and blue bytes of all its pixels.
     /// </summary>
     [Fact]
@@ -278,11 +278,11 @@ public sealed class RecipeTests
         Palette palette = RepositoryPalette();
         IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(TextureGenCommand.ReadRecipeFiles(Path.Combine(RepositoryRoot.Find(), "content")), palette);
 
-        AtlasColor[] pixels = CanvasPainter.Paint(palette, recipes["trousers"], 8, 10, CanvasPainter.SaltOf("models/player.bbmodel:leg_left_upper_box:east"), "east");
+        AtlasColor[] pixels = CanvasPainter.Paint(palette, recipes["trousers"], 16, 20, CanvasPainter.SaltOf("models/player.bbmodel:leg_left_upper_box:east"), "east");
 
         byte[] bytes = pixels.SelectMany(pixel => new[] { pixel.Red, pixel.Green, pixel.Blue }).ToArray();
-        Assert.Equal("#1e1408,#291d10,#3b2d1d,#2a1e10,#1e1409,#2b1f11,#2b1f11,#2a1e10", string.Join(",", pixels.Take(8).Select(PaletteShades.Hex)));
-        Assert.Equal("a09578ee8070373f433e8e80691c77ac1ba36a0627adaa94debd1eb03de24953", Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant());
+        Assert.Equal("#1e1408,#241a0d,#342718,#362919,#362919,#3b2d1d,#2b1f11,#1a1107", string.Join(",", pixels.Take(8).Select(PaletteShades.Hex)));
+        Assert.Equal("0943ff6bd77a9165e67a9016a65242b50ae9747c8fc4479e283384988d218ba9", Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant());
     }
 
     /// <summary>A gradient shifts the full amount at its side and less toward its depth, rounded to whole fine steps, and nothing past the depth (D-527).</summary>
@@ -441,11 +441,11 @@ public sealed class RecipeTests
         }
     }
 
-    /// <summary>A canvas wider or higher than the atlas is an error that names it, also at a size where the sum with the gutter wraps (D-506, T-2).</summary>
+    /// <summary>A canvas wider or higher than the atlas is an error that names it, also at a size where the sum with the gutter wraps (D-604, T-2).</summary>
     [Theory]
     [InlineData(int.MaxValue, 4)]
     [InlineData(4, int.MaxValue)]
-    [InlineData(511, 4)]
+    [InlineData(1023, 4)]
     public void PackerRejectsACanvasLargerThanTheAtlas(int width, int height)
     {
         ContextException error = Assert.Throws<ContextException>(() => AtlasPacker.Pack([new CanvasSize("models/rig.bbmodel:arm:north", width, height)]));
@@ -454,16 +454,16 @@ public sealed class RecipeTests
         Assert.Contains("has no room for the canvas", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>PR-62 exit test 3. A full atlas is an error that names the canvas that does not fit (D-506).</summary>
+    /// <summary>PR-62 exit test 3. A full atlas is an error that names the canvas that does not fit (D-604).</summary>
     [Fact]
     public void PackerReportsAFullAtlas()
     {
-        List<CanvasSize> canvases = [.. Enumerable.Range(0, 300).Select(index => new CanvasSize($"canvas {index}", 32, 32))];
+        List<CanvasSize> canvases = [.. Enumerable.Range(0, 300).Select(index => new CanvasSize($"canvas {index}", AtlasLayout.BlockPixels, AtlasLayout.BlockPixels))];
 
         ContextException error = Assert.Throws<ContextException>(() => AtlasPacker.Pack(canvases));
 
         Assert.Contains("has no room for the canvas", error.Message, StringComparison.Ordinal);
-        Assert.Contains("D-506", error.Message, StringComparison.Ordinal);
+        Assert.Contains("D-604", error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>The layout text parses back to the same places, and a face that the layout does not hold is an error that names it (D-505).</summary>
@@ -486,12 +486,12 @@ public sealed class RecipeTests
 
     /// <summary>A bad layout file is an error that names the file and the field.</summary>
     [Theory]
-    [InlineData("{\"atlas\": 256, \"blocks\": [], \"faces\": []}", "atlas", "512 pixels on a side")]
-    [InlineData("{\"atlas\": 512, \"blocks\": [{\"block\": 1, \"recipe\": \"a\", \"at\": [500, 0, 32, 32]}], \"faces\": []}", "at", "inside the atlas")]
-    [InlineData("{\"atlas\": 512, \"blocks\": [{\"block\": 1, \"recipe\": \"a\", \"at\": [2147483647, 1, 1, 32]}], \"faces\": []}", "at", "inside the atlas")]
-    [InlineData("{\"atlas\": 512, \"blocks\": [], \"faces\": [{\"model\": \"m\", \"box\": \"b\", \"face\": \"up\", \"recipe\": \"a\", \"at\": [1, 2147483647, 4, 1]}]}", "at", "inside the atlas")]
-    [InlineData("{\"atlas\": 512, \"blocks\": [], \"faces\": [{\"model\": \"m\", \"box\": \"b\", \"face\": \"top\", \"recipe\": \"a\", \"at\": [0, 0, 1, 1]}]}", "face", "a face is one of")]
-    [InlineData("{\"atlas\": 512, \"blocks\": [], \"faces\": [], \"size\": 1}", "size", "not a field of the format")]
+    [InlineData("{\"atlas\": 512, \"blocks\": [], \"faces\": []}", "atlas", "1024 pixels on a side")]
+    [InlineData("{\"atlas\": 1024, \"blocks\": [{\"block\": 1, \"recipe\": \"a\", \"at\": [1000, 0, 32, 32]}], \"faces\": []}", "at", "inside the atlas")]
+    [InlineData("{\"atlas\": 1024, \"blocks\": [{\"block\": 1, \"recipe\": \"a\", \"at\": [2147483647, 1, 1, 32]}], \"faces\": []}", "at", "inside the atlas")]
+    [InlineData("{\"atlas\": 1024, \"blocks\": [], \"faces\": [{\"model\": \"m\", \"box\": \"b\", \"face\": \"up\", \"recipe\": \"a\", \"at\": [1, 2147483647, 4, 1]}]}", "at", "inside the atlas")]
+    [InlineData("{\"atlas\": 1024, \"blocks\": [], \"faces\": [{\"model\": \"m\", \"box\": \"b\", \"face\": \"top\", \"recipe\": \"a\", \"at\": [0, 0, 1, 1]}]}", "face", "a face is one of")]
+    [InlineData("{\"atlas\": 1024, \"blocks\": [], \"faces\": [], \"size\": 1}", "size", "not a field of the format")]
     public void LayoutRejectsABadFile(string json, string field, string reason)
     {
         ContextException error = Assert.Throws<ContextException>(() => TextureLayout.Parse(AssetPaths.LayoutFile, Bytes(json)));
@@ -505,7 +505,7 @@ public sealed class RecipeTests
     [Fact]
     public void LayoutRejectsABlockTwice()
     {
-        string json = "{\"atlas\": 512, \"blocks\": [{\"block\": 1, \"recipe\": \"a\", \"at\": [1, 1, 32, 32]}, {\"block\": 1, \"recipe\": \"a\", \"at\": [35, 1, 32, 32]}], \"faces\": []}";
+        string json = "{\"atlas\": 1024, \"blocks\": [{\"block\": 1, \"recipe\": \"a\", \"at\": [1, 1, 32, 32]}, {\"block\": 1, \"recipe\": \"a\", \"at\": [35, 1, 32, 32]}], \"faces\": []}";
 
         ContextException error = Assert.Throws<ContextException>(() => TextureLayout.Parse(AssetPaths.LayoutFile, Bytes(json)));
 
@@ -513,7 +513,7 @@ public sealed class RecipeTests
         Assert.Contains("the block 1 twice", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>The texel size of a face follows its box at 32 texels per meter, and the canvas rounds a fraction up and a float hair down (D-308).</summary>
+    /// <summary>The texel size of a face follows its box at 64 texels per meter, and the canvas rounds a fraction up and a float hair down (D-308, D-603).</summary>
     [Fact]
     public void FaceTexelsFollowTheBox()
     {
@@ -521,11 +521,11 @@ public sealed class RecipeTests
         ModelBox head = player.Box("head_box") ?? throw new InvalidOperationException("The player has no head box.");
         ModelBox torso = player.Box("torso_box") ?? throw new InvalidOperationException("The player has no torso box.");
 
-        Assert.Equal((16, 16), BoxFaces.CanvasTexels(head, BoxSide.North));
-        Assert.Equal((20, 22), BoxFaces.CanvasTexels(torso, BoxSide.North));
-        Assert.Equal((10, 22), BoxFaces.CanvasTexels(torso, BoxSide.East));
-        Assert.Equal((20, 10), BoxFaces.CanvasTexels(torso, BoxSide.Up));
-        Assert.Equal(21.6f, BoxFaces.Texels(torso, BoxSide.West).Height, 0.001f);
+        Assert.Equal((32, 32), BoxFaces.CanvasTexels(head, BoxSide.North));
+        Assert.Equal((40, 44), BoxFaces.CanvasTexels(torso, BoxSide.North));
+        Assert.Equal((20, 44), BoxFaces.CanvasTexels(torso, BoxSide.East));
+        Assert.Equal((40, 20), BoxFaces.CanvasTexels(torso, BoxSide.Up));
+        Assert.Equal(43.2f, BoxFaces.Texels(torso, BoxSide.West).Height, 0.001f);
         Assert.True(BoxFaces.TryParse("down", out BoxSide down) && down == BoxSide.Down);
         Assert.False(BoxFaces.TryParse("top", out _));
     }

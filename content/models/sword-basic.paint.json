@@ -1,13 +1,13 @@
 {
   "model": "models/sword-basic.bbmodel",
   "boxes": {
-    "pommel_box": {"recipe": "iron", "faces": {}},
-    "grip_box": {"recipe": "grip-wrap", "faces": {"up": "leather", "down": "leather"}},
-    "guard_box": {"recipe": "iron", "faces": {"north": "guard-front", "south": "guard-front"}},
-    "guard_left_box": {"recipe": "iron", "faces": {}},
-    "guard_right_box": {"recipe": "iron", "faces": {}},
-    "blade_box": {"recipe": "metal", "faces": {"north": "blade", "south": "blade"}},
-    "tip_step_box": {"recipe": "metal", "faces": {}},
-    "tip_box": {"recipe": "metal", "faces": {}}
+    "pommel_box": {"recipe": "iron", "faces": {"north": "sword-pommel-north", "east": "sword-pommel-east", "south": "sword-pommel-south", "west": "sword-pommel-west"}},
+    "grip_box": {"recipe": "leather", "faces": {"north": "sword-grip-north", "east": "sword-grip-east", "south": "sword-grip-south", "west": "sword-grip-west"}},
+    "guard_box": {"recipe": "iron", "faces": {"north": "sword-guard-north", "east": "sword-guard-east", "south": "sword-guard-south", "west": "sword-guard-west"}},
+    "guard_left_box": {"recipe": "iron", "faces": {"north": "sword-guard-left-north", "south": "sword-guard-left-south"}},
+    "guard_right_box": {"recipe": "iron", "faces": {"north": "sword-guard-right-north", "south": "sword-guard-right-south"}},
+    "blade_box": {"recipe": "metal", "faces": {"north": "sword-blade-north", "east": "sword-blade-east", "south": "sword-blade-south", "west": "sword-blade-west"}},
+    "tip_step_box": {"recipe": "metal", "faces": {"north": "sword-tip-step-north", "east": "sword-tip-step-east", "south": "sword-tip-step-south", "west": "sword-tip-step-west"}},
+    "tip_box": {"recipe": "metal", "faces": {"north": "sword-tip-north", "east": "sword-tip-east", "south": "sword-tip-south", "west": "sword-tip-west"}}
   }
 }

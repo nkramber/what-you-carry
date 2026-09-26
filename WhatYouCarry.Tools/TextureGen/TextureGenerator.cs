@@ -13,7 +13,7 @@ public sealed record AtlasResult(AtlasColor[] Pixels, TextureLayout Layout);
 
 /// <summary>
 /// Paints the atlas from the palette, the recipes, and the bindings (D-305, D-505). Each block id has a canvas of
-/// 32 by 32 pixels. Each face of each box of each model has a canvas of its size at 32 texels per meter (D-308). The
+/// 64 by 64 pixels. Each face of each box of each model has a canvas of its size at 64 texels per meter (D-603). The
 /// packer places every canvas, and a gutter around each canvas repeats its edge pixels. A pixel that no canvas and no
 /// gutter covers holds the first color of the palette.
 /// </summary>

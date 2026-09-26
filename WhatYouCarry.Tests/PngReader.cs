@@ -12,15 +12,12 @@ internal sealed record PngImage(int Width, int Height, AtlasColor[] Pixels);
 
 /// <summary>
 /// A strict reader of the truecolor PNG that the texture generator writes (D-598), so a test reads the file and not
-/// the buffer of the generator. It also reads the indexed PNG that the generator wrote before PR-89, which the fixture
-/// of that atlas holds. It checks the signature and every chunk checksum, reads the header, the palette of an indexed
-/// file, and the image data, and inflates the data with the platform decompressor. Every row must carry filter type
+/// the buffer of the generator. It checks the signature and every chunk checksum, reads the header and the image data,
+/// and inflates the data with the platform decompressor. Every row must carry filter type
 /// zero. Anything else is an error that names what the reader saw.
 /// </summary>
 internal static class PngReader
 {
-    private const byte TrueColor = 2;
-    private const byte IndexedColor = 3;
 
     private static readonly byte[] Signature = [137, 80, 78, 71, 13, 10, 26, 10];
 
@@ -39,9 +36,7 @@ internal static class PngReader
         int offset = Signature.Length;
         int width = 0;
         int height = 0;
-        byte colorType = 0;
         bool headerRead = false;
-        byte[]? palette = null;
         using MemoryStream compressed = new();
         bool ended = false;
         while (!ended)
@@ -71,17 +66,13 @@ internal static class PngReader
                 case "IHDR":
                     width = ReadInt(file, data);
                     height = ReadInt(file, data + 4);
-                    colorType = file[data + 9];
-                    string form = $"{file[data + 8]} {colorType} {file[data + 10]} {file[data + 11]} {file[data + 12]}";
-                    if (form != "8 2 0 0 0" && form != "8 3 0 0 0")
+                    string form = $"{file[data + 8]} {file[data + 9]} {file[data + 10]} {file[data + 11]} {file[data + 12]}";
+                    if (form != "8 2 0 0 0")
                     {
-                        throw new InvalidDataException($"The header gives the bit depth, color type, compression, filter, and interlace '{form}', and the generator writes '8 2 0 0 0', or '8 3 0 0 0' before PR-89.");
+                        throw new InvalidDataException($"The header gives the bit depth, color type, compression, filter, and interlace '{form}', and the generator writes '8 2 0 0 0'.");
                     }
 
                     headerRead = true;
-                    break;
-                case "PLTE":
-                    palette = file.AsSpan(data, length).ToArray();
                     break;
                 case "IDAT":
                     compressed.Write(file, data, length);
@@ -106,17 +97,12 @@ internal static class PngReader
             throw new InvalidDataException("The file has no header chunk.");
         }
 
-        if ((colorType == IndexedColor) != (palette is not null))
-        {
-            throw new InvalidDataException($"The file has the color type {colorType}, and a palette chunk belongs to the indexed type {IndexedColor} alone.");
-        }
-
         compressed.Position = 0;
         using ZLibStream inflater = new(compressed, CompressionMode.Decompress);
         using MemoryStream raw = new();
         inflater.CopyTo(raw);
         byte[] rows = raw.ToArray();
-        int bytesPerPixel = colorType == TrueColor ? 3 : 1;
+        const int bytesPerPixel = 3;
         int rowBytes = 1 + (width * bytesPerPixel);
         if (rows.Length != rowBytes * height)
         {
@@ -135,22 +121,11 @@ internal static class PngReader
             for (int column = 0; column < width; column++)
             {
                 int at = start + 1 + (column * bytesPerPixel);
-                pixels[(row * width) + column] = palette is null ? new AtlasColor(rows[at], rows[at + 1], rows[at + 2]) : PaletteColor(palette, rows[at], row, column);
+                pixels[(row * width) + column] = new AtlasColor(rows[at], rows[at + 1], rows[at + 2]);
             }
         }
 
         return new PngImage(width, height, pixels);
-    }
-
-    /// <summary>The color of one palette index of an indexed file. An index past the palette chunk is an error.</summary>
-    private static AtlasColor PaletteColor(byte[] palette, byte index, int row, int column)
-    {
-        if ((index * 3) + 2 >= palette.Length)
-        {
-            throw new InvalidDataException($"The pixel ({column}, {row}) names the index {index}, and the palette chunk holds {palette.Length / 3} colors.");
-        }
-
-        return new AtlasColor(palette[index * 3], palette[(index * 3) + 1], palette[(index * 3) + 2]);
     }
 
     private static int ReadInt(byte[] bytes, int offset)

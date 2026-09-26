@@ -10,7 +10,7 @@ namespace WhatYouCarry.Tools.TextureGen;
 public sealed record CanvasSize(string Name, int Width, int Height);
 
 /// <summary>
-/// Places each canvas in the atlas on shelves (D-505, D-506). Each canvas takes its size and a gutter on each side.
+/// Places each canvas in the atlas on shelves (D-505, D-604). Each canvas takes its size and a gutter on each side.
 /// The packer sorts the canvases by height, then by width, both from the largest, then by name. It fills a shelf from
 /// the left, and it opens the next shelf under the tallest canvas of the last one. The order and the places depend on
 /// the canvases alone, so the atlas has one form.
@@ -18,7 +18,7 @@ public sealed record CanvasSize(string Name, int Width, int Height);
 public static class AtlasPacker
 {
     /// <summary>The place of each canvas, inside its gutter, in the order of the input.</summary>
-    /// <exception cref="ContextException">A canvas does not fit in the atlas. The error names the canvas (D-506).</exception>
+    /// <exception cref="ContextException">A canvas does not fit in the atlas. The error names the canvas (D-604).</exception>
     public static IReadOnlyList<AtlasRect> Pack(IReadOnlyList<CanvasSize> canvases)
     {
         int[] order = new int[canvases.Count];
@@ -65,10 +65,10 @@ public static class AtlasPacker
         return places;
     }
 
-    /// <summary>The error of a canvas that the atlas has no room for. It names the canvas and its size (D-506).</summary>
+    /// <summary>The error of a canvas that the atlas has no room for. It names the canvas and its size (D-604).</summary>
     private static ContextException NoRoom(CanvasSize canvas)
     {
-        return new ContextException($"The atlas of {Text(AtlasLayout.AtlasPixels)} pixels has no room for the canvas {canvas.Name} of {Text(canvas.Width)} by {Text(canvas.Height)} pixels. A larger atlas needs a new decision (D-506).");
+        return new ContextException($"The atlas of {Text(AtlasLayout.AtlasPixels)} pixels has no room for the canvas {canvas.Name} of {Text(canvas.Width)} by {Text(canvas.Height)} pixels. A larger atlas needs a new decision (D-604).");
     }
 
     private static int Compare(CanvasSize left, CanvasSize right)

@@ -27,7 +27,7 @@ The body of PR-74 is the first asset of this procedure. Its owner answers, D-496
 - Keep the cuboid style and the shared proportion set (D-82). A body change needs an owner decision.
 - Use the palette alone: the ramps of D-304, D-530, and D-592, and the fine shades of D-528. A new color needs a decision.
 - A held item hangs from a locator of the body. The locator can tilt it, as the right hand tilts the sword 45 degrees (D-591). Check the item against the floor in each pose.
-- Each face has 32 texels per meter (D-308). One unit is 2 texels, so an edge on a whole texel sits on a multiple of 0.5 units.
+- Each face has 64 texels per meter (D-308, D-603). One unit is 4 texels, so an edge on a whole texel sits on a multiple of 0.25 units.
 - The game light and the vertex occlusion shade the boxes (D-81). A recipe paints no shade.
 - Every fix goes through the model JSON, a recipe, or a paint file (D-86). Blockbench is for review alone.
 - The reference folder stays out of git. Commit an image only when the owner asks.
@@ -74,7 +74,7 @@ The concept checklist:
 
 - The D-83 tells: eye whites, a flat pixel face layout, a pixel beard with no depth.
 - The proportions: compare with the model, not with a guess. Give the measured ratio in heads.
-- The silhouette at game zoom: 5.4 pixels per texel on the Deck (D-306). A detail under 2 texels does not read.
+- The silhouette at game zoom: about 2.7 pixels per texel on the Deck (D-306, D-603). A detail of 1 texel reads only as a thin line or a speck.
 - The parts that become boxes (a brow, a nose, a toe), and the parts that stay paint.
 - The colors: name the nearest ramp step of D-304 for each part.
 - The shade painted into the image. The recipe ignores it (D-81).
@@ -84,6 +84,7 @@ The concept checklist:
 1. Tell the owner to run Meshy image to 3D on the approved concept image.
 2. Ask for these screenshots: front, back, left side, right side, both three-quarter views, and the front unlit.
 3. Ask for a top view and a close front view of the head when the asset has a face.
+4. For the trace, ask for unlit straight-on views too: front, back, left, right, top, and a close view of the detail (D-614).
 
 ### Step 4: The review of the screenshots
 
@@ -108,11 +109,24 @@ Meshy artifacts to ignore:
 3. Record each answer in `docs/decisions.md` with the next D-# and the local date.
 4. Edit the `.bbmodel` file. Keep the rest pose, rotation zero, and a unique name for each box.
 5. Put each new box flush on its neighbor: a shared face, and no penetration (D-301).
-6. Write the recipes under `content/textures/recipes/`, and the paint file of the model. Take the base shade of each material from the unlit view (D-529).
+6. Write the recipes under `content/textures/recipes/`, and the paint file of the model. Trace each visible face of a model (see "Trace a face"). Give a hidden face and a block a procedural recipe. Take the base shade of each material from the unlit view (D-529).
 7. Run `texture-gen` with `--root .`, and commit the atlas and the layout together.
 8. Run the build, the full test suite, and `asset-qa`.
 9. Render the contact sheet, and show it beside the approved concept image.
 10. Record the approval of the owner as a D-#. The exit test of the asset needs it.
+
+## Trace a face
+
+A model face takes its texels from an unlit view of the look reference (D-612). A block keeps a procedural recipe (D-608).
+
+1. Write the spec `content/textures/traces/<asset>.json`: the path of each screenshot, and for each face its box, its recipe name, its four corners in pixels, and its ramps.
+2. Measure each area on the screenshot (see "Measure a screenshot"). Frame the face of the model, and not the background.
+3. Name the fewest ramps that hold the colors of the face, such as bone, umber, and timber for the face of the body.
+4. Give the corners in the order top left, top right, bottom right, bottom left of the face canvas. A turned view or a part that leans takes its corners in that order. The trace follows them.
+5. Run `texture-trace` with `--root .` and `--spec <asset>`. It writes one recipe for each face, and it keeps each recipe that exists.
+6. Bind each recipe to its face in the paint file.
+7. Correct the features by hand in the rows of the map: no eye white (D-83), and no shade (D-81).
+8. Delete a recipe file to trace its face again.
 
 ## Measure a screenshot
 
@@ -120,7 +134,7 @@ Meshy artifacts to ignore:
 2. Divide its height in pixels by its size in units. The result is pixels per unit.
 3. Measure each feature in pixels, and divide by pixels per unit.
 4. Read the depth of a feature from a side view alone. A front view hides depth.
-5. Round each edge to a multiple of 0.5 units, so the edge sits on a whole texel.
+5. Round each edge to a multiple of 0.25 units, so the edge sits on a whole texel.
 6. Give each number as "about", and let the contact sheet settle it.
 
 ## The build: recipes and paint files
@@ -129,18 +143,19 @@ A recipe is an ordered list of layers (D-507):
 
 | Kind | Fields | Use |
 |---|---|---|
-| `fill` | `color`, `shade`, `noise`, `seed` | The first layer, and only the first: the base material |
+| `fill` | `color`, `shade`, `noise`, `seed` | The first layer, and only the first: the base material. A `map` can be the first layer in its place |
 | `edge` | `steps` | A darker outer ring, as on hewn stone |
 | `rect` | `x`, `y`, `width`, `height`, `color`, `shade`, `noise`, `seed` | A face feature, a cuff, a collar, a knee |
 | `band` | `side`, `depth`, `shift` | A boot band, a hem, one color step at one side |
 | `grain` | `cell`, `amount`, `seed` | The clustered mottle of a 3D reference (D-527) |
 | `gradient` | `side`, `depth`, `shift` | Grime that fades from one side, in fine steps |
+| `map` | `legend`, `rows` | A traced face: one legend character for each texel (D-612) |
 
 A `shade` from -3 to 3 names a fine step between two colors (D-528). The `noise` of `fill` and `rect`, `edge`, and `band` move whole color steps. `gradient` moves whole fine steps. `grain` moves a pixel in linear light between two fine shades (D-599). For the mottle of a 3D reference, use `noise` 0 and a `grain`. Measure the variation of the texels in the unlit view, and match it: cell 2 and amount 2 gave the shirt of PR-74. A layer after a `grain` keeps its exact shade, so paint the eyes and the mouth last.
 
 A recipe can extend another with a ramp swap: `{"extends": "skin", "swap": {"bone": "lichen"}}`. Use a swap for an enemy family or an armor tier that keeps the shape and changes the colors.
 
-A rectangle counts from the top left of the face canvas, in texels. A face canvas is the face size at 32 texels per meter, rounded up. A head face of 8 units is 16 by 16 texels. A rectangle wholly outside a canvas is an error. Bind that face to another recipe in the paint file.
+A rectangle counts from the top left of the face canvas, in texels. A face canvas is the face size at 64 texels per meter, rounded up. A head face of 8 units is 32 by 32 texels. A rectangle wholly outside a canvas is an error. Bind that face to another recipe in the paint file.
 
 The paint file gives each box a recipe, and a recipe for a single face where that face differs:
 

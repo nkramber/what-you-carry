@@ -11,7 +11,7 @@ namespace WhatYouCarry.Game.World;
 /// <summary>
 /// The faces of the ramp cells of one chunk (D-345, D-367): the slopes, merged into the largest rectangles of one
 /// plane and equal occlusion, and each end, side, and bottom of a ramp cell that shows. Every face takes the raw stone
-/// tile (D-368) at 32 texels per meter (D-308), with the vertex occlusion of D-81.
+/// tile (D-368) at 64 texels per meter (D-308, D-603), with the vertex occlusion of D-81.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -20,7 +20,7 @@ namespace WhatYouCarry.Game.World;
 /// plane meets the bottom of the row. Two slopes merge when these and the occlusion levels of their corners are equal.
 /// A slope reads the occlusion of an up face at the cell over the ramp, so two slopes of one plane get the same level
 /// at a corner that they share. The face coordinate along the rise counts meters along the slope from the foot, so the
-/// tile keeps 32 texels per meter on the slope, and a merge does not move it.
+/// tile keeps 64 texels per meter on the slope, and a merge does not move it.
 /// </para>
 /// <para>
 /// The other faces of a ramp cell do not merge. Each is a rectangle, or a triangle where a side comes to a point at

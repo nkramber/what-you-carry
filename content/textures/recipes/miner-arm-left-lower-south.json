@@ -1,0 +1,48 @@
+{
+  "layers": [
+    {
+      "kind": "map",
+      "legend": {
+        "0": {"color": 17, "shade": 2},
+        "1": {"color": 17, "shade": 0},
+        "2": {"color": 17, "shade": 1},
+        "3": {"color": 17, "shade": 3},
+        "4": {"color": 16, "shade": 3},
+        "5": {"color": 16, "shade": 2},
+        "6": {"color": 44, "shade": 2},
+        "7": {"color": 45, "shade": 0},
+        "8": {"color": 45, "shade": 1},
+        "9": {"color": 45, "shade": 2},
+        "a": {"color": 46, "shade": 0},
+        "b": {"color": 46, "shade": 2},
+        "c": {"color": 46, "shade": 1},
+        "d": {"color": 45, "shade": 3},
+        "e": {"color": 46, "shade": 3}
+      },
+      "rows": [
+        "000011122122",
+        "220020022110",
+        "002203002122",
+        "022203330000",
+        "002233033000",
+        "303303003000",
+        "203333022202",
+        "220033000222",
+        "222030330222",
+        "003300030020",
+        "220322220022",
+        "212214115411",
+        "1441116789ab",
+        "bbbbcbbbccbb",
+        "bccbbbadacbc",
+        "bccccabbbbbc",
+        "cbeccdbbbbcc",
+        "bbcd989abccc",
+        "ebccad88cbcc",
+        "ccbcccd9bbcb",
+        "cadbbccccccb",
+        "cadbbccbbbbb"
+      ]
+    }
+  ]
+}

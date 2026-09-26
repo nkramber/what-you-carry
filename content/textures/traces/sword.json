@@ -1,0 +1,36 @@
+{
+  "images": {
+    "front": "artifacts/reference/meshy-sword-2026-09-25/30-unlit-front.png",
+    "edge": "artifacts/reference/meshy-sword-2026-09-25/32-unlit-left.png"
+  },
+  "faces": [
+    {"model": "models/sword-basic.bbmodel", "box": "blade_box", "face": "north", "recipe": "sword-blade-north", "image": "front", "corners": [[320, 565], [247, 565], [247, 160], [320, 160]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "blade_box", "face": "south", "recipe": "sword-blade-south", "image": "front", "corners": [[320, 565], [247, 565], [247, 160], [320, 160]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "blade_box", "face": "east", "recipe": "sword-blade-east", "image": "edge", "corners": [[200, 556], [184, 556], [184, 156], [200, 156]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "blade_box", "face": "west", "recipe": "sword-blade-west", "image": "edge", "corners": [[200, 556], [184, 556], [184, 156], [200, 156]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "tip_step_box", "face": "north", "recipe": "sword-tip-step-north", "image": "front", "corners": [[307, 160], [260, 160], [260, 126], [307, 126]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "tip_step_box", "face": "south", "recipe": "sword-tip-step-south", "image": "front", "corners": [[307, 160], [260, 160], [260, 126], [307, 126]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "tip_step_box", "face": "east", "recipe": "sword-tip-step-east", "image": "edge", "corners": [[200, 156], [184, 156], [184, 122], [200, 122]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "tip_step_box", "face": "west", "recipe": "sword-tip-step-west", "image": "edge", "corners": [[200, 156], [184, 156], [184, 122], [200, 122]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "tip_box", "face": "north", "recipe": "sword-tip-north", "image": "front", "corners": [[295, 126], [273, 126], [273, 96], [295, 96]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "tip_box", "face": "south", "recipe": "sword-tip-south", "image": "front", "corners": [[295, 126], [273, 126], [273, 96], [295, 96]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "tip_box", "face": "east", "recipe": "sword-tip-east", "image": "edge", "corners": [[200, 122], [184, 122], [184, 92], [200, 92]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "tip_box", "face": "west", "recipe": "sword-tip-west", "image": "edge", "corners": [[200, 122], [184, 122], [184, 92], [200, 92]], "ramps": ["steel"]},
+    {"model": "models/sword-basic.bbmodel", "box": "guard_box", "face": "north", "recipe": "sword-guard-north", "image": "front", "corners": [[323, 617], [243, 617], [243, 565], [323, 565]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "guard_box", "face": "south", "recipe": "sword-guard-south", "image": "front", "corners": [[323, 617], [243, 617], [243, 565], [323, 565]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "guard_box", "face": "east", "recipe": "sword-guard-east", "image": "edge", "corners": [[212, 612], [162, 612], [162, 556], [212, 556]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "guard_box", "face": "west", "recipe": "sword-guard-west", "image": "edge", "corners": [[212, 612], [162, 612], [162, 556], [212, 556]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "guard_left_box", "face": "north", "recipe": "sword-guard-left-north", "image": "front", "corners": [[243, 602], [183, 602], [183, 572], [243, 572]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "guard_left_box", "face": "south", "recipe": "sword-guard-left-south", "image": "front", "corners": [[243, 602], [183, 602], [183, 572], [243, 572]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "guard_right_box", "face": "north", "recipe": "sword-guard-right-north", "image": "front", "corners": [[385, 602], [323, 602], [323, 572], [385, 572]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "guard_right_box", "face": "south", "recipe": "sword-guard-right-south", "image": "front", "corners": [[385, 602], [323, 602], [323, 572], [385, 572]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "grip_box", "face": "north", "recipe": "sword-grip-north", "image": "front", "corners": [[300, 755], [266, 755], [266, 617], [300, 617]], "ramps": ["umber"]},
+    {"model": "models/sword-basic.bbmodel", "box": "grip_box", "face": "south", "recipe": "sword-grip-south", "image": "front", "corners": [[300, 755], [266, 755], [266, 617], [300, 617]], "ramps": ["umber"]},
+    {"model": "models/sword-basic.bbmodel", "box": "grip_box", "face": "east", "recipe": "sword-grip-east", "image": "front", "corners": [[300, 755], [266, 755], [266, 617], [300, 617]], "ramps": ["umber"]},
+    {"model": "models/sword-basic.bbmodel", "box": "grip_box", "face": "west", "recipe": "sword-grip-west", "image": "front", "corners": [[300, 755], [266, 755], [266, 617], [300, 617]], "ramps": ["umber"]},
+    {"model": "models/sword-basic.bbmodel", "box": "pommel_box", "face": "north", "recipe": "sword-pommel-north", "image": "front", "corners": [[308, 806], [258, 806], [258, 755], [308, 755]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "pommel_box", "face": "south", "recipe": "sword-pommel-south", "image": "front", "corners": [[308, 806], [258, 806], [258, 755], [308, 755]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "pommel_box", "face": "east", "recipe": "sword-pommel-east", "image": "edge", "corners": [[212, 800], [168, 800], [168, 748], [212, 748]], "ramps": ["rock"]},
+    {"model": "models/sword-basic.bbmodel", "box": "pommel_box", "face": "west", "recipe": "sword-pommel-west", "image": "edge", "corners": [[212, 800], [168, 800], [168, 748], [212, 748]], "ramps": ["rock"]}
+  ]
+}
