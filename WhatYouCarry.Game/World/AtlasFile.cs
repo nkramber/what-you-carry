@@ -8,8 +8,8 @@ namespace WhatYouCarry.Game.World;
 
 /// <summary>
 /// The atlas file of every chunk and every model (D-85, D-305): the PNG file that the texture generator writes under
-/// the content directory, read at boot into one texture. The engine turns the palette of the file into color, so
-/// every material samples the colors of the palette of D-304.
+/// the content directory, read at boot into one texture. The file stores the color of each pixel (D-598), and every
+/// color comes from the palette of D-304, so every material samples the colors of that palette.
 /// </summary>
 /// <remarks>
 /// An absent file, a file that the engine cannot decode, and an image of another size are each an error that names

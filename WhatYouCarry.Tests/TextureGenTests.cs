@@ -17,17 +17,21 @@ namespace WhatYouCarry.Tests;
 
 /// <summary>
 /// The texture generator over the repository content: the palette, the atlas, the layout, the PNG file, and the
-/// command (D-85, D-304, D-305, D-308, D-505, D-506; PR-14 exit tests 1 to 4, PR-62 exit tests 1, 2, and 4).
+/// command (D-85, D-304, D-305, D-308, D-505, D-506, D-598; PR-14 exit tests 1 to 4, PR-62 exit tests 1, 2, and 4,
+/// PR-89 exit tests 1 and 2).
 /// </summary>
 [Collection(ConsoleCollection.Name)]
 public sealed class TextureGenTests
 {
     private const float UvTolerance = 0.0001f;
 
-    /// <summary>The ramp names of the palette of D-304, the umber ramp of D-530, and the ten ramps of D-592, in file order.</summary>
-    private static readonly string[] OwnerRampNames = ["rock", "slate", "timber", "ochre", "rust", "water", "lichen", "bone", "umber", "steel", "brass", "clay", "crimson", "cobalt", "violet", "linen", "moss", "ember", "ice"];
+    /// <summary>The indexed atlas at the base of PR-89, before the truecolor atlas of D-598.</summary>
+    private const string AtlasBeforePr89 = "WhatYouCarry.Tests/Fixtures/atlas-before-pr-89.png";
 
-    /// <summary>The 32 colors of the palette of D-304, the 4 of D-530, and the 40 of D-592, ramp by ramp from dark to light.</summary>
+    /// <summary>The ramp names of the palette of D-304, the umber ramp of D-530, the ten ramps of D-592, and the soot ramp of D-600, in file order.</summary>
+    private static readonly string[] OwnerRampNames = ["rock", "slate", "timber", "ochre", "rust", "water", "lichen", "bone", "umber", "steel", "brass", "clay", "crimson", "cobalt", "violet", "linen", "moss", "ember", "ice", "soot"];
+
+    /// <summary>The 32 colors of the palette of D-304, the 4 of D-530, the 40 of D-592, and the 4 of D-600, ramp by ramp from dark to light.</summary>
     private static readonly string[] OwnerColors =
     [
         "#14161b", "#2a2e33", "#4e4a43", "#746e65",
@@ -49,6 +53,7 @@ public sealed class TextureGenTests
         "#09200b", "#18421c", "#2c6a31", "#4e9a52",
         "#6a2500", "#a74b00", "#df8700", "#ffca70",
         "#2d4e54", "#497b83", "#6daab5", "#a4d8e2",
+        "#08070b", "#15121a", "#25222c", "#3a3642",
     ];
 
     /// <summary>
@@ -66,18 +71,34 @@ public sealed class TextureGenTests
         { 7, "749e352201daa86a731cc2899f47f66fe65c1f15e27a8f6b0b9328fe1c997b90" },
     };
 
-    /// <summary>PR-14 exit test 1. The palette chunk of the atlas is the palette, and every pixel names an index inside it.</summary>
+    /// <summary>PR-14 exit test 1. Every pixel of the atlas is a color or a fine shade of the palette.</summary>
     [Fact]
     public void GeneratorUsesPaletteOnly()
     {
-        Palette palette = RepositoryPalette();
+        PaletteShades shades = new(RepositoryPalette());
         PngImage image = PngReader.Read(TextureGenCommand.Generate(ContentRoot()).Atlas);
 
-        byte[] expected = palette.AtlasColors.SelectMany(color => new[] { color.Red, color.Green, color.Blue }).ToArray();
-        Assert.Equal(expected, image.PaletteBytes);
         for (int pixel = 0; pixel < image.Pixels.Length; pixel++)
         {
-            Assert.True(image.Pixels[pixel] < palette.AtlasColors.Count, $"The pixel {pixel} names the index {image.Pixels[pixel]}, and the palette holds {palette.AtlasColors.Count} colors and shades.");
+            Assert.True(shades.Contains(image.Pixels[pixel]), $"The pixel {pixel} holds {PaletteShades.Hex(image.Pixels[pixel])}, which is no color or fine shade of the palette.");
+        }
+    }
+
+    /// <summary>
+    /// PR-89 exit test 1. The truecolor atlas holds the color of each pixel of the indexed atlas before PR-89, so the
+    /// Game draws every block, the body, and the sword with the same colors (D-598).
+    /// </summary>
+    [Fact]
+    public void TruecolorAtlasKeepsTheColorsOfTheIndexedAtlas()
+    {
+        PngImage before = PngReader.Read(File.ReadAllBytes(Path.Combine(RepositoryRoot.Find(), AtlasBeforePr89)));
+        PngImage after = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
+
+        Assert.Equal(before.Width, after.Width);
+        Assert.Equal(before.Height, after.Height);
+        for (int pixel = 0; pixel < after.Pixels.Length; pixel++)
+        {
+            Assert.True(before.Pixels[pixel] == after.Pixels[pixel], $"The pixel ({pixel % after.Width}, {pixel / after.Width}) holds {PaletteShades.Hex(after.Pixels[pixel])}, and the indexed atlas held {PaletteShades.Hex(before.Pixels[pixel])}.");
         }
     }
 
@@ -125,7 +146,7 @@ public sealed class TextureGenTests
         Assert.Equal(0, image.Width % AtlasLayout.BlockPixels);
     }
 
-    /// <summary>The palette file holds the choice of the owner: nine ramps of four colors, with the values of D-304 and D-530.</summary>
+    /// <summary>The palette file holds the choice of the owner: twenty ramps of four colors, with the values of D-304, D-530, D-592, and D-600.</summary>
     [Fact]
     public void PaletteIsTheOwnerChoice()
     {
@@ -139,14 +160,15 @@ public sealed class TextureGenTests
 
     /// <summary>
     /// Each fine shade lies a quarter, a half, or three quarters of the way between its two colors in linear light, to
-    /// within one byte for each channel (D-528). The atlas holds the colors first, so every block keeps its indices.
+    /// within one byte for each channel (D-528). The list of atlas colors holds the colors first, and the soot ramp takes
+    /// the palette past the 256 colors of an indexed PNG (D-598, D-600).
     /// </summary>
     [Fact]
     public void EachShadeLiesBetweenItsColorsInLinearLight()
     {
         Palette palette = RepositoryPalette();
 
-        Assert.Equal(247, palette.AtlasColors.Count);
+        Assert.Equal(260, palette.AtlasColors.Count);
         for (int ramp = 0; ramp < palette.Ramps.Count; ramp++)
         {
             PaletteRamp named = palette.Ramps[ramp];
@@ -168,12 +190,13 @@ public sealed class TextureGenTests
 
     /// <summary>
     /// PR-62 exit test 2. The canvas of each block in the committed atlas holds the pixels of its tile in the atlas of
-    /// PR-14, so the world keeps its look (D-504, D-309).
+    /// PR-14, so the world keeps its look (D-504, D-309). The test turns each color back into its atlas index.
     /// </summary>
     [Theory]
     [MemberData(nameof(BlockTilesOfPr14))]
     public void BlockCanvasEqualsItsTileOfPr14(int block, string hash)
     {
+        PaletteShades shades = new(RepositoryPalette());
         PngImage image = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
         AtlasRect place = RepositoryTextures.Layout.Block(block);
 
@@ -182,7 +205,7 @@ public sealed class TextureGenTests
         {
             for (int x = 0; x < AtlasLayout.BlockPixels; x++)
             {
-                pixels[(y * AtlasLayout.BlockPixels) + x] = image.Pixels[((place.Y + y) * image.Width) + place.X + x];
+                pixels[(y * AtlasLayout.BlockPixels) + x] = (byte)shades.Index(image.Pixels[((place.Y + y) * image.Width) + place.X + x]);
             }
         }
 
@@ -200,8 +223,9 @@ public sealed class TextureGenTests
     public void BlockCanvasesMatchThePalettePreview(string recipe, string firstRow, string counts)
     {
         Palette palette = RepositoryPalette();
+        PaletteShades shades = new(palette);
         IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(TextureGenCommand.ReadRecipeFiles(ContentRoot()), palette);
-        byte[] pixels = CanvasPainter.Paint(palette, recipes[recipe], AtlasLayout.BlockPixels, AtlasLayout.BlockPixels, CanvasPainter.BlockSalt, recipe);
+        int[] pixels = CanvasPainter.Paint(palette, recipes[recipe], AtlasLayout.BlockPixels, AtlasLayout.BlockPixels, CanvasPainter.BlockSalt, recipe).Select(shades.Index).ToArray();
 
         Assert.Equal(firstRow, string.Join(",", pixels.Take(16)));
         string histogram = string.Join(",", pixels.GroupBy(value => value).OrderBy(group => group.Key).Select(group => $"{group.Key}:{group.Count()}"));
@@ -471,9 +495,9 @@ public sealed class TextureGenTests
                 {
                     int sourceX = Math.Clamp(x, 0, place.Width - 1);
                     int sourceY = Math.Clamp(y, 0, place.Height - 1);
-                    byte gutter = image.Pixels[((place.Y + y) * image.Width) + place.X + x];
-                    byte source = image.Pixels[((place.Y + sourceY) * image.Width) + place.X + sourceX];
-                    Assert.True(gutter == source, $"The pixel ({x}, {y}) of the canvas at ({place.X}, {place.Y}) holds {gutter}, and the nearest canvas pixel holds {source}.");
+                    AtlasColor gutter = image.Pixels[((place.Y + y) * image.Width) + place.X + x];
+                    AtlasColor source = image.Pixels[((place.Y + sourceY) * image.Width) + place.X + sourceX];
+                    Assert.True(gutter == source, $"The pixel ({x}, {y}) of the canvas at ({place.X}, {place.Y}) holds {PaletteShades.Hex(gutter)}, and the nearest canvas pixel holds {PaletteShades.Hex(source)}.");
                 }
             }
         }
@@ -506,16 +530,22 @@ public sealed class TextureGenTests
         Assert.Contains(reason, error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>A palette past 256 colors and shades is an error, because an indexed PNG holds no more.</summary>
+    /// <summary>
+    /// PR-89 exit test 2. The palette has no count limit (D-598): a palette of 1024 colors loads, and a canvas paints
+    /// its last color. An indexed PNG held 256 at most.
+    /// </summary>
     [Fact]
-    public void PaletteRejectsMoreColorsThanAPngHolds()
+    public void PaletteHoldsMoreColorsThanAnIndexedPng()
     {
-        IEnumerable<string> ramps = Enumerable.Range(0, 257).Select(index => $"{{\"name\": \"r{index}\", \"colors\": [\"#{index:x6}\"], \"shades\": []}}");
+        IEnumerable<string> ramps = Enumerable.Range(0, 1024).Select(index => $"{{\"name\": \"r{index}\", \"colors\": [\"#{index:x6}\"], \"shades\": []}}");
         string json = "{\"ramps\": [" + string.Join(", ", ramps) + "]}";
 
-        ContextException error = Assert.Throws<ContextException>(() => Palette.Parse(AssetPaths.PaletteFile, Encoding.UTF8.GetBytes(json)));
+        Palette palette = Palette.Parse(AssetPaths.PaletteFile, Encoding.UTF8.GetBytes(json));
+        Recipe recipe = RecipeFile.ReadAll([(AssetPaths.RecipeDirectory + "last.json", Encoding.UTF8.GetBytes("{\"layers\": [{\"kind\": \"fill\", \"color\": 1023, \"shade\": 0, \"noise\": 0.0, \"seed\": 1}]}"))], palette)["last"];
+        AtlasColor[] pixels = CanvasPainter.Paint(palette, recipe, 2, 2, CanvasPainter.BlockSalt, "test");
 
-        Assert.Contains("holds 257 colors and shades", error.Message, StringComparison.Ordinal);
+        Assert.Equal(1024, palette.AtlasColors.Count);
+        Assert.All(pixels, pixel => Assert.Equal(new AtlasColor(0, 3, 255), pixel));
     }
 
     /// <summary>A ramp with the wrong count of shades is an error that names the ramp and the count (D-528).</summary>
@@ -530,18 +560,16 @@ public sealed class TextureGenTests
         Assert.Contains("on the ramp 'rock' is not a list of 3 shades", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>A small image goes through the writer and the strict reader with its size, its palette, and its pixels.</summary>
+    /// <summary>A small image goes through the writer and the strict reader with its size and the color of each pixel.</summary>
     [Fact]
     public void PngWriterRoundTrips()
     {
-        AtlasColor[] colors = [new AtlasColor(1, 2, 3), new AtlasColor(250, 128, 7)];
-        byte[] pixels = [0, 1, 1, 0, 1, 0];
+        AtlasColor[] pixels = [new AtlasColor(1, 2, 3), new AtlasColor(250, 128, 7), new AtlasColor(0, 0, 0), new AtlasColor(255, 255, 255), new AtlasColor(9, 8, 7), new AtlasColor(1, 2, 3)];
 
-        PngImage image = PngReader.Read(PngWriter.Write(3, 2, colors, pixels));
+        PngImage image = PngReader.Read(PngWriter.Write(3, 2, pixels));
 
         Assert.Equal(3, image.Width);
         Assert.Equal(2, image.Height);
-        Assert.Equal(new byte[] { 1, 2, 3, 250, 128, 7 }, image.PaletteBytes);
         Assert.Equal(pixels, image.Pixels);
     }
 
@@ -549,26 +577,24 @@ public sealed class TextureGenTests
     [Fact]
     public void PngWriterSplitsLongDataIntoStoredBlocks()
     {
-        AtlasColor[] colors = [new AtlasColor(0, 0, 0), new AtlasColor(255, 255, 255)];
-        byte[] pixels = Enumerable.Range(0, 300 * 300).Select(index => (byte)(index % 7 == 0 ? 1 : 0)).ToArray();
+        AtlasColor[] pixels = Enumerable.Range(0, 300 * 300).Select(index => new AtlasColor((byte)index, (byte)(index >> 8), (byte)(index % 7))).ToArray();
 
-        PngImage image = PngReader.Read(PngWriter.Write(300, 300, colors, pixels));
+        PngImage image = PngReader.Read(PngWriter.Write(300, 300, pixels));
 
-        Assert.True((300 + 1) * 300 > PngWriter.MaxStoredBlock);
+        Assert.True(((300 * 3) + 1) * 300 > PngWriter.MaxStoredBlock);
         Assert.Equal(pixels, image.Pixels);
     }
 
-    /// <summary>A pixel past the palette, a pixel count that differs from the size, a size of zero, and an empty palette are each an error.</summary>
+    /// <summary>A pixel count that differs from the size, and a size of zero, are each an error.</summary>
     [Fact]
     public void PngWriterRejectsABadImage()
     {
-        AtlasColor[] colors = [new AtlasColor(1, 2, 3)];
+        AtlasColor color = new(1, 2, 3);
 
-        ArgumentException past = Assert.Throws<ArgumentException>(() => PngWriter.Write(2, 1, colors, [0, 1]));
-        Assert.Contains("The pixel 1 names the index 1", past.Message, StringComparison.Ordinal);
-        Assert.Throws<ArgumentException>(() => PngWriter.Write(2, 2, colors, [0, 0, 0]));
-        Assert.Throws<ArgumentException>(() => PngWriter.Write(0, 1, colors, []));
-        Assert.Throws<ArgumentException>(() => PngWriter.Write(1, 1, [], [0]));
+        ArgumentException count = Assert.Throws<ArgumentException>(() => PngWriter.Write(2, 2, [color, color, color]));
+        Assert.Contains("The image holds 3 pixels", count.Message, StringComparison.Ordinal);
+        ArgumentException size = Assert.Throws<ArgumentException>(() => PngWriter.Write(0, 1, []));
+        Assert.Contains("must be positive", size.Message, StringComparison.Ordinal);
     }
 
     /// <summary>The command writes the atlas and the layout of a small content directory, and both files equal the generator output.</summary>
@@ -743,7 +769,7 @@ public sealed class TextureGenTests
         private readonly Palette palette;
         private readonly AtlasRect at;
         private readonly string name;
-        private readonly Dictionary<int, (int Ramp, int FineStep)> shadeOfIndex = [];
+        private readonly PaletteShades shades;
 
         public ModelCanvas(PngImage atlas, Palette palette, string model, string box, BoxSide side)
         {
@@ -751,13 +777,7 @@ public sealed class TextureGenTests
             this.palette = palette;
             this.at = RepositoryTextures.Layout.Face(model, box, side);
             this.name = TextureLayout.FaceName(model, box, side);
-            for (int ramp = 0; ramp < palette.Ramps.Count; ramp++)
-            {
-                for (int fineStep = 0; fineStep <= palette.FineTop(ramp); fineStep++)
-                {
-                    this.shadeOfIndex.Add(palette.AtlasIndex(ramp, fineStep), (ramp, fineStep));
-                }
-            }
+            this.shades = new PaletteShades(palette);
         }
 
         /// <summary>Asserts that every texel of a rectangle lies on the named ramp.</summary>
@@ -797,8 +817,7 @@ public sealed class TextureGenTests
 
         private (int Ramp, int FineStep) Shade(int column, int row)
         {
-            int index = this.atlas.Pixels[((this.at.Y + row) * this.atlas.Width) + this.at.X + column];
-            return this.shadeOfIndex[index];
+            return this.shades.Shade(this.atlas.Pixels[((this.at.Y + row) * this.atlas.Width) + this.at.X + column]);
         }
     }
 

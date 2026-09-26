@@ -6,8 +6,8 @@ using WhatYouCarry.Core.Logging;
 namespace WhatYouCarry.Tools.TextureGen;
 
 /// <summary>
-/// Paints one canvas from one recipe (D-505, D-507). The result is one palette index per pixel, row by row from the
-/// top left corner.
+/// Paints one canvas from one recipe (D-505, D-507). The result is one color per pixel, row by row from the top left
+/// corner (D-598).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -46,7 +46,7 @@ public static class CanvasPainter
     private const uint FnvOffset = 2166136261;
     private const uint FnvPrime = 16777619;
 
-    /// <summary>The palette index of every pixel of one canvas.</summary>
+    /// <summary>The color of every pixel of one canvas.</summary>
     /// <param name="palette">The palette of the atlas.</param>
     /// <param name="recipe">The recipe that paints the canvas.</param>
     /// <param name="width">The width of the canvas, in pixels, above zero.</param>
@@ -54,7 +54,7 @@ public static class CanvasPainter
     /// <param name="salt">The salt of the canvas: <see cref="BlockSalt"/> for a block, or <see cref="SaltOf"/> of the face name.</param>
     /// <param name="canvasName">The name of the canvas in an error.</param>
     /// <exception cref="ContextException">A rectangle lies wholly outside the canvas, or a seed and the salt give the state zero.</exception>
-    public static byte[] Paint(Palette palette, Recipe recipe, int width, int height, uint salt, string canvasName)
+    public static AtlasColor[] Paint(Palette palette, Recipe recipe, int width, int height, uint salt, string canvasName)
     {
         if (width <= 0 || height <= 0)
         {
@@ -90,11 +90,11 @@ public static class CanvasPainter
             }
         }
 
-        byte[] pixels = new byte[width * height];
+        AtlasColor[] pixels = new AtlasColor[width * height];
         for (int pixel = 0; pixel < pixels.Length; pixel++)
         {
             int fineStep = Math.Clamp(steps[pixel], 0, palette.FineTop(ramps[pixel]));
-            pixels[pixel] = (byte)palette.AtlasIndex(ramps[pixel], fineStep);
+            pixels[pixel] = palette.AtlasColors[palette.AtlasIndex(ramps[pixel], fineStep)];
         }
 
         return pixels;

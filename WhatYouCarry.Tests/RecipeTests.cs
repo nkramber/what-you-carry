@@ -31,7 +31,7 @@ public sealed class RecipeTests
         for (uint seed = 1; seed <= 200; seed++)
         {
             Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.9, seed), new EdgeLayer(3));
-            byte[] pixels = CanvasPainter.Paint(palette, recipe, 20, 12, CanvasPainter.BlockSalt, "test");
+            int[] pixels = PaintIndices(palette, recipe, 20, 12, CanvasPainter.BlockSalt, "test");
 
             Assert.All(pixels, value => Assert.True(value >= timber.First && value < timber.First + timber.Count, $"Seed {seed}: a pixel holds the index {value}, off the ramp '{timber.Name}'."));
             Assert.True(pixels.Distinct().Count() >= 3, $"Seed {seed}: heavy noise gave {pixels.Distinct().Count()} indices, and it moves pixels both down and up the ramp.");
@@ -45,10 +45,10 @@ public sealed class RecipeTests
         Palette palette = RepositoryPalette();
         int first = palette.Ramps[2].First;
 
-        byte[] one = CanvasPainter.Paint(palette, Layers(new FillLayer(first + 2, 0, 0.0, 7), new EdgeLayer(1)), 6, 5, CanvasPainter.BlockSalt, "test");
+        int[] one = PaintIndices(palette, Layers(new FillLayer(first + 2, 0, 0.0, 7), new EdgeLayer(1)), 6, 5, CanvasPainter.BlockSalt, "test");
         AssertRingAndInside(one, 6, 5, first + 1, first + 2);
 
-        byte[] deep = CanvasPainter.Paint(palette, Layers(new FillLayer(first + 2, 0, 0.0, 7), new EdgeLayer(5)), 6, 5, CanvasPainter.BlockSalt, "test");
+        int[] deep = PaintIndices(palette, Layers(new FillLayer(first + 2, 0, 0.0, 7), new EdgeLayer(5)), 6, 5, CanvasPainter.BlockSalt, "test");
         AssertRingAndInside(deep, 6, 5, first, first + 2);
     }
 
@@ -61,11 +61,11 @@ public sealed class RecipeTests
     {
         Palette palette = RepositoryPalette();
         int first = palette.Ramps[2].First;
-        byte[] pixels = CanvasPainter.Paint(palette, Layers(new FillLayer(first + 3, 0, 1.0, 11), new EdgeLayer(1)), 10, 10, CanvasPainter.BlockSalt, "test");
+        int[] pixels = PaintIndices(palette, Layers(new FillLayer(first + 3, 0, 1.0, 11), new EdgeLayer(1)), 10, 10, CanvasPainter.BlockSalt, "test");
 
         for (int x = 0; x < 10; x++)
         {
-            Assert.Contains((int)pixels[x], new[] { first + 1, first + 3 });
+            Assert.Contains(pixels[x], new[] { first + 1, first + 3 });
         }
     }
 
@@ -76,7 +76,7 @@ public sealed class RecipeTests
         Palette palette = RepositoryPalette();
         Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.0, 3), new RectLayer(6, 2, 10, 2, 29, 0, 0.0, 5));
 
-        byte[] pixels = CanvasPainter.Paint(palette, recipe, 8, 6, CanvasPainter.BlockSalt, "test");
+        int[] pixels = PaintIndices(palette, recipe, 8, 6, CanvasPainter.BlockSalt, "test");
 
         for (int y = 0; y < 6; y++)
         {
@@ -110,7 +110,7 @@ public sealed class RecipeTests
     {
         Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.0, 3), new BandLayer(side, depth, -1));
 
-        byte[] pixels = CanvasPainter.Paint(RepositoryPalette(), recipe, 7, 5, CanvasPainter.BlockSalt, "test");
+        int[] pixels = PaintIndices(RepositoryPalette(), recipe, 7, 5, CanvasPainter.BlockSalt, "test");
 
         for (int y = 0; y < 5; y++)
         {
@@ -135,10 +135,10 @@ public sealed class RecipeTests
         Palette palette = RepositoryPalette();
         Recipe recipe = Layers(new FillLayer(TimberTwo, 0, 0.5, 1009));
 
-        byte[] north = CanvasPainter.Paint(palette, recipe, 16, 16, CanvasPainter.SaltOf("models/player.bbmodel:head_box:north"), "north");
-        byte[] east = CanvasPainter.Paint(palette, recipe, 16, 16, CanvasPainter.SaltOf("models/player.bbmodel:head_box:east"), "east");
-        byte[] block = CanvasPainter.Paint(palette, recipe, 16, 16, CanvasPainter.BlockSalt, "block");
-        byte[] again = CanvasPainter.Paint(palette, recipe, 16, 16, CanvasPainter.BlockSalt, "block");
+        int[] north = PaintIndices(palette, recipe, 16, 16, CanvasPainter.SaltOf("models/player.bbmodel:head_box:north"), "north");
+        int[] east = PaintIndices(palette, recipe, 16, 16, CanvasPainter.SaltOf("models/player.bbmodel:head_box:east"), "east");
+        int[] block = PaintIndices(palette, recipe, 16, 16, CanvasPainter.BlockSalt, "block");
+        int[] again = PaintIndices(palette, recipe, 16, 16, CanvasPainter.BlockSalt, "block");
 
         Assert.NotEqual(north, east);
         Assert.NotEqual(north, block);
@@ -165,7 +165,7 @@ public sealed class RecipeTests
     [InlineData("{\"layers\": [{\"kind\": \"edge\", \"steps\": 1}]}", "kind", "the first layer is a 'fill'")]
     [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}, {\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}]}", "kind", "no other layer is one")]
     [InlineData("{\"layers\": []}", "layers", "at least one layer")]
-    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 76, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}]}", "color", "names the color index 76")]
+    [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 80, \"shade\": 0, \"noise\": 0.1, \"seed\": 3}]}", "color", "names the color index 80")]
     [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 1.5, \"seed\": 3}]}", "noise", "from 0 to 1")]
     [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1, \"seed\": 0}]}", "seed", "never leaves zero")]
     [InlineData("{\"layers\": [{\"kind\": \"fill\", \"color\": 1, \"shade\": 0, \"noise\": 0.1}]}", "seed", "is absent")]
@@ -206,7 +206,7 @@ public sealed class RecipeTests
     {
         Palette palette = RepositoryPalette();
 
-        byte[] pixels = CanvasPainter.Paint(palette, Layers(new FillLayer(TimberTwo, shade, 0.0, 3)), 4, 3, CanvasPainter.BlockSalt, "test");
+        int[] pixels = PaintIndices(palette, Layers(new FillLayer(TimberTwo, shade, 0.0, 3)), 4, 3, CanvasPainter.BlockSalt, "test");
 
         int expected = palette.AtlasIndex(2, Palette.ShadesPerStep + shade);
         Assert.All(pixels, value => Assert.Equal(expected, value));
@@ -222,7 +222,7 @@ public sealed class RecipeTests
         for (uint seed = 1; seed <= 100; seed++)
         {
             Recipe recipe = Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(2, 3, seed));
-            byte[] pixels = CanvasPainter.Paint(palette, recipe, 12, 10, CanvasPainter.BlockSalt, "test");
+            int[] pixels = PaintIndices(palette, recipe, 12, 10, CanvasPainter.BlockSalt, "test");
 
             Assert.All(pixels, value => Assert.True(fineStepOf.ContainsKey(value), $"Seed {seed}: a pixel holds the index {value}, off the timber ramp."));
             Assert.True(pixels.Any(value => fineStepOf[value] < 8), $"Seed {seed}: the grain moved no pixel down.");
@@ -241,8 +241,8 @@ public sealed class RecipeTests
         double wide = 0.0;
         for (uint seed = 1; seed <= 40; seed++)
         {
-            single += NeighborCorrelation(CanvasPainter.Paint(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(1, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test"), fineStepOf, 16);
-            wide += NeighborCorrelation(CanvasPainter.Paint(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(4, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test"), fineStepOf, 16);
+            single += NeighborCorrelation(PaintIndices(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(1, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test"), fineStepOf, 16);
+            wide += NeighborCorrelation(PaintIndices(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(4, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test"), fineStepOf, 16);
         }
 
         Assert.True(wide / 40.0 > (single / 40.0) + 0.3, $"The mean neighbor correlation is {wide / 40.0:F2} for a cell of 4 and {single / 40.0:F2} for a cell of 1.");
@@ -251,7 +251,7 @@ public sealed class RecipeTests
     /// <summary>
     /// A grain uses whole numbers alone, so each platform paints the same bytes (D-527). The three CI platforms run
     /// this test on one canvas of the trousers recipe: its first row and the count of each index. The shades follow every
-    /// color in the atlas, so the 40 colors of D-592 moved each umber shade up by 40 indices.
+    /// color in the atlas, so the 40 colors of D-592 moved each umber shade up by 40 indices, and the 4 of D-600 by 4 more.
     /// </summary>
     [Fact]
     public void GrainPaintsTheSameBytesOnEachPlatform()
@@ -259,10 +259,10 @@ public sealed class RecipeTests
         Palette palette = RepositoryPalette();
         IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(TextureGenCommand.ReadRecipeFiles(Path.Combine(RepositoryRoot.Find(), "content")), palette);
 
-        byte[] pixels = CanvasPainter.Paint(palette, recipes["trousers"], 8, 10, CanvasPainter.SaltOf("models/player.bbmodel:leg_left_upper_box:east"), "east");
+        int[] pixels = PaintIndices(palette, recipes["trousers"], 8, 10, CanvasPainter.SaltOf("models/player.bbmodel:leg_left_upper_box:east"), "east");
 
-        Assert.Equal("148,150,153,33,148,33,33,33", string.Join(",", pixels.Take(8)));
-        Assert.Equal("32:1,33:16,34:3,148:4,149:6,150:11,151:18,152:8,153:12,154:1", string.Join(",", pixels.GroupBy(value => value).OrderBy(group => group.Key).Select(group => $"{group.Key}:{group.Count()}")));
+        Assert.Equal("152,154,157,33,152,33,33,33", string.Join(",", pixels.Take(8)));
+        Assert.Equal("32:1,33:16,34:3,152:4,153:6,154:11,155:18,156:8,157:12,158:1", string.Join(",", pixels.GroupBy(value => value).OrderBy(group => group.Key).Select(group => $"{group.Key}:{group.Count()}")));
     }
 
     /// <summary>A gradient shifts the full amount at its side and less toward its depth, rounded to whole fine steps, and nothing past the depth (D-527).</summary>
@@ -272,7 +272,7 @@ public sealed class RecipeTests
         Palette palette = RepositoryPalette();
         Recipe recipe = Layers(new FillLayer(TimberTwo + 1, 0, 0.0, 3), new GradientLayer(CanvasSide.Bottom, 4, -4));
 
-        byte[] pixels = CanvasPainter.Paint(palette, recipe, 3, 6, CanvasPainter.BlockSalt, "test");
+        int[] pixels = PaintIndices(palette, recipe, 3, 6, CanvasPainter.BlockSalt, "test");
 
         int[] expectedFine = [8, 8, 7, 6, 5, 4];
         for (int y = 0; y < 6; y++)
@@ -311,8 +311,8 @@ public sealed class RecipeTests
         Assert.Equal(new RectLayer(0, 0, 2, 2, 9, 0, 0.0, 4), goblin.Layers[1]);
         Assert.Equal(new EdgeLayer(1), goblin.Layers[2]);
 
-        byte[] skin = CanvasPainter.Paint(palette, recipes["skin"], 5, 5, CanvasPainter.BlockSalt, "skin");
-        byte[] green = CanvasPainter.Paint(palette, goblin, 5, 5, CanvasPainter.BlockSalt, "goblin");
+        int[] skin = PaintIndices(palette, recipes["skin"], 5, 5, CanvasPainter.BlockSalt, "skin");
+        int[] green = PaintIndices(palette, goblin, 5, 5, CanvasPainter.BlockSalt, "goblin");
         for (int pixel = 0; pixel < skin.Length; pixel++)
         {
             int expected = palette.Colors[skin[pixel]].Ramp == 7 ? skin[pixel] - 28 + 24 : skin[pixel];
@@ -510,6 +510,13 @@ public sealed class RecipeTests
         Assert.False(BoxFaces.TryParse("top", out _));
     }
 
+    /// <summary>The atlas index of each pixel of one painted canvas: each color turned back into its place in <see cref="Palette.AtlasColors"/>.</summary>
+    private static int[] PaintIndices(Palette palette, Recipe recipe, int width, int height, uint salt, string canvasName)
+    {
+        PaletteShades shades = new(palette);
+        return CanvasPainter.Paint(palette, recipe, width, height, salt, canvasName).Select(shades.Index).ToArray();
+    }
+
     private static Dictionary<int, int> FineStepsOfRamp(Palette palette, int ramp)
     {
         Dictionary<int, int> fineStepOf = [];
@@ -522,7 +529,7 @@ public sealed class RecipeTests
     }
 
     /// <summary>The correlation of the fine step of each pixel with the pixel on its right.</summary>
-    private static double NeighborCorrelation(byte[] pixels, Dictionary<int, int> fineStepOf, int width)
+    private static double NeighborCorrelation(int[] pixels, Dictionary<int, int> fineStepOf, int width)
     {
         double[] values = pixels.Select(value => (double)fineStepOf[value]).ToArray();
         double mean = values.Average();
@@ -573,7 +580,7 @@ public sealed class RecipeTests
         return "{\"model\": \"models/rig.bbmodel\", \"boxes\": {\"torso\": {\"recipe\": \"stone\", \"faces\": {}}, " + armEntry + "}}";
     }
 
-    private static void AssertRingAndInside(byte[] pixels, int width, int height, int ring, int inside)
+    private static void AssertRingAndInside(int[] pixels, int width, int height, int ring, int inside)
     {
         for (int y = 0; y < height; y++)
         {
