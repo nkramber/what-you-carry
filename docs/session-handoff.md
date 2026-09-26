@@ -2,6 +2,38 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 269: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-89, reviewer, round 2. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Effective head `6afe1db`.
+
+### What this session did, and why
+
+- Re-reviewed PR #107 after the author fixed P2-1 from round 1.
+- `LinearLight.Blend` now rejects a count of parts that is not positive. Its regression test passed.
+- Updated `docs/reviews/pr-107.md`. P2-1 is fixed, and the verdict is `Ready for owner merge` at `6afe1db`.
+- CI at tip `2faf0c0` passed for code, smoke, bit identity, bots, assets, lint, documents, and the night gate. `evaluate` and `review-gate` failed because the record still named the earlier verdict.
+
+### State of the build
+
+- Effective head `6afe1db`. The focused linear-light test passed. The current tip is `2faf0c0` on `origin/feat/pr-89-truecolor-atlas`.
+
+### In flight
+
+- Publish this review record and handoff in one metadata commit. Then wait for fresh checks of the new tip.
+
+### Traps and gotchas
+
+- The review uses the code head `6afe1db`. Later commits change only review metadata.
+
+### Open questions that block progress
+
+None for PR-89. OQ-208 blocks PR-90.
+
+### Next concrete action
+
+After the metadata push, confirm `evaluate`, `review-gate`, and Gitar on the new tip. The owner can then use the merge summary of D-533.
+
 ## Session 268: 2026-09-26, Claude Code
 
 Author: Claude Code
@@ -310,41 +342,3 @@ None for PR-86.
 ### Next concrete action
 
 Correct the roadmap summary, then request a new review round.
-
-## Session 259: 2026-09-25, Claude Code
-
-Author: Claude Code
-Session: PR-86, author. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge. Base `0d99e2c`.
-
-### What this session did, and why
-
-- PR-85 exit test 8: PR #102 merged at 18:25 UTC on 2026-09-25, after the 07:07 cron of that day. The first scheduled night from the `7 7 * * *` cron is 2026-09-26, and it has not started. The scheduled run 36141884980 at 13:35 UTC came from the old cron on `main`.
-- The owner chose the floating label `macos-latest` (D-583), and the removal of the runner in this PR (D-584). The re-run rule of D-358 now covers each runner fault of any job (D-585).
-- The three macOS legs run on `macos-latest`. Each one first fails on a machine that is not arm64. Two new shape tests fail on the workflows of `main`.
-- The runbook, the design doc, the roadmap, and the registers retire the runner. D-572 supersedes D-157, and D-584 supersedes D-192.
-- After the hosted legs passed, the session stopped and uninstalled the launch agent, and removed the registration. The repository has 0 runners, and `launchctl list` holds no runner agent (exit test 6).
-
-### State of the build
-
-- Effective head `1678ef5`, the code commit, because each later commit changes documents alone (D-534). Every check of `6dfe7f8` passes but `evaluate` and `review-gate`, which wait for the review record (D-251).
-- The hosted macOS legs ran on the image `macos-26-arm64` 20260907.0351, and each log shows "runs on arm64". Wall times: `ci-macos-arm64` 11 min 29 s, `smoke-macos-arm64` 42 s, `bit-identity-macos-arm64` 25 s. The three platforms agree on `9c79047da9c82a0e`.
-- The local suite passed 1820 of 1820, Smoke included. The gitar pass approved `6dfe7f8` with no finding.
-
-### In flight
-
-- The cross-provider review, and the owner merge decision (D-533, D-552).
-
-### Traps and gotchas
-
-- A citation of D-157 or D-192 now needs its superseder on the same line (D-178).
-- The merge of PR #104 dropped the title line and the rule line of this file. `doc-gate` reads the first entry after a line break, so it read session 257 as the newest. This PR puts both lines back.
-- The macOS shell has no `timeout` command, so a wait wrapped in it ends at once.
-- The Full Disk Access grant of `/bin/bash` and of the runner `node` stays on the Mac Mini until the owner removes it in System Settings.
-
-### Open questions that block progress
-
-None for PR-86.
-
-### Next concrete action
-
-Read the night of 2026-09-26 for PR-85 exit test 8, then run `make codex-review PR=105`.
