@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 260: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-86, reviewer. Branch `feat/pr-86-hosted-macos`. PR #105, Changes required. Base `0d99e2c`.
+
+### What this session did, and why
+
+- Reviewed the full change and its exit tests for PR-86.
+- Found P2-1: the plain-English roadmap summary says the checks still run on the owner’s Mac.
+- Committed the review record with this handoff entry as one metadata commit (D-182).
+
+### State of the build
+
+- PR head `d063bae`. Effective head `1678ef5`. CI passed on `6dfe7f8`; later document-only runs passed their applicable checks.
+- The full local suite passed 1820 of 1820 tests. The runner API returned 0, and `launchctl` showed no runner agent.
+- The review record names `1678ef5` and requires correction of P2-1.
+
+### In flight
+
+- The author must answer P2-1 and request a new review round.
+
+### Traps and gotchas
+
+- The latest CI runs skip heavy jobs after document-only changes. The `6dfe7f8` run contains the passing hosted macOS legs and bit-identity comparison.
+- Gitar posted an approval summary with no specific item to address (D-550).
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+Correct the roadmap summary, then request a new review round.
+
 ## Session 259: 2026-09-25, Claude Code
 
 Author: Claude Code
