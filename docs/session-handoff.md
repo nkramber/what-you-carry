@@ -2,6 +2,36 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 275: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-90, author, merge. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+
+### What this session did, and why
+
+- Review round 2 gave `Ready for owner merge` at the effective head `e4d3543`, with P2-1 fixed. The gitar pass of `1ce21f1` approved with no finding, and no review thread is open.
+- The session asks the owner to confirm the merge with the merge summary (D-533).
+
+### State of the build
+
+- Effective head `e4d3543`. Each check passed at `e4d3543`. At the tip, `review-gate`, `evaluate`, `night-gate`, and Gitar passed, and the code jobs skipped on the documents heads (D-357).
+
+### In flight
+
+- The owner confirmation, then `gh pr merge 108 --auto --squash` (D-516).
+
+### Traps and gotchas
+
+- A Deck run over SSH sets `XAUTHORITY`, or Godot 4.7.2 can hang at exit on the Wayland fallback (F-147).
+
+### Open questions that block progress
+
+None for PR-90.
+
+### Next concrete action
+
+After the merge, the next session starts the open review findings of D-596, as the phase 2 roadmap orders.
+
 ## Session 274: 2026-09-26, Codex
 
 Author: Codex
@@ -317,38 +347,3 @@ None for PR-89. OQ-208 blocks PR-90.
 ### Next concrete action
 
 Wait for the automated pass and the cross-provider review, and answer each finding. Read the night of exit test 8 when it ends.
-
-## Session 265: 2026-09-25, Codex
-
-Author: Codex
-Session: PR-75, reviewer. Branch `feat/pr-75-sword-art`. PR #106, Ready for owner merge at effective head `4aebdb9`. Base `602708d`.
-
-### What this session did, and why
-
-- Reviewed PR #106 against its owner decisions and exit tests.
-- Traced the locator rotation through the loader and Game node tree, and checked the sword, paint, palette, atlas, and tests.
-- Added the revision-specific review record with no findings.
-- Generated and inspected the contact sheet. The sword stays clear of the floor in both body views.
-
-### State of the build
-
-- At review start, branch tip `9ac2b19` held all green checks except `review-gate`, which lacked the review record. The Gitar check passed.
-- The focused local tests passed 89 of 89. Asset QA and determinism lint found no issues. Texture generation matched the committed atlas and layout.
-- The review record and this entry are in one metadata commit pushed to the PR branch. The post-push checks and remote head were verified.
-
-### In flight
-
-- The owner confirms the merge summary after the post-push gates pass (D-533).
-
-### Traps and gotchas
-
-- `4aebdb9` is the effective code head. `9ac2b19` adds only documents in the D-475 skip set.
-- OQ-206 holds the roll pose. It blocks no PR. OQ-207 and OQ-208 block PR-89 and PR-90.
-
-### Open questions that block progress
-
-None for PR-75.
-
-### Next concrete action
-
-The owner checks the new `review-gate` result, then reads the merge summary before confirming the merge.

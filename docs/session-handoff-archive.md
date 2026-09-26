@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 265: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-75, reviewer. Branch `feat/pr-75-sword-art`. PR #106, Ready for owner merge at effective head `4aebdb9`. Base `602708d`.
+
+### What this session did, and why
+
+- Reviewed PR #106 against its owner decisions and exit tests.
+- Traced the locator rotation through the loader and Game node tree, and checked the sword, paint, palette, atlas, and tests.
+- Added the revision-specific review record with no findings.
+- Generated and inspected the contact sheet. The sword stays clear of the floor in both body views.
+
+### State of the build
+
+- At review start, branch tip `9ac2b19` held all green checks except `review-gate`, which lacked the review record. The Gitar check passed.
+- The focused local tests passed 89 of 89. Asset QA and determinism lint found no issues. Texture generation matched the committed atlas and layout.
+- The review record and this entry are in one metadata commit pushed to the PR branch. The post-push checks and remote head were verified.
+
+### In flight
+
+- The owner confirms the merge summary after the post-push gates pass (D-533).
+
+### Traps and gotchas
+
+- `4aebdb9` is the effective code head. `9ac2b19` adds only documents in the D-475 skip set.
+- OQ-206 holds the roll pose. It blocks no PR. OQ-207 and OQ-208 block PR-89 and PR-90.
+
+### Open questions that block progress
+
+None for PR-75.
+
+### Next concrete action
+
+The owner checks the new `review-gate` result, then reads the merge summary before confirming the merge.
+
 ## Session 264: 2026-09-25, Claude Code
 
 Author: Claude Code
