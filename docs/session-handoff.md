@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 266: 2026-09-25, Claude Code
 
 Author: Claude Code
-Session: PR-89, author. Branch `feat/pr-89-truecolor-atlas`. PR pending. Base `9e4833b`.
+Session: PR-89, author. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
 
 ### What this session did, and why
 

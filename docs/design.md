@@ -673,7 +673,7 @@ The sword of PR-15 becomes a worn steel arming sword of eight boxes, from a conc
 Gate: the clip check passes, the sword stays over the floor, and the owner approves a contact sheet of the sword (D-597).
 > *In plain English:* the sword was three plain boxes. Now it is a worn steel sword with a pommel, a wrapped grip, and a cross guard. The palette gains colors for later art.
 
-**PR-89: Truecolor atlas.** 🔧
+**PR-89: Truecolor atlas.** ✅ Done in PR #107.
 The atlas stores the color of each pixel in place of a palette index, so the palette has no count limit (D-595, D-598). The soot ramp joins (D-600). A grain moves a pixel in linear light between two fine shades (D-599). Two commits hold the two changes (D-601).
 Gate: the first commit keeps each color, each pixel after the grain stays next to its old shade, and the owner approves the contact sheet (D-601, D-602).
 > *In plain English:* the texture image held 256 colors at most. Now it holds any color, the palette gains a soot ramp, and the grain blends smoothly between shades.

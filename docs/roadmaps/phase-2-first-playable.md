@@ -1272,6 +1272,8 @@ Gate: exit tests 1 to 5 pass.
 
 ### PR-89: Truecolor atlas
 
+✅ Done in PR #107.
+
 Scope:
 
 - The texture generator and the atlas: the atlas stores colors in place of palette indices, so the palette can hold more than 256 colors and shades (D-595). A recipe names a ramp and a fine step of the palette, and the palette has no count limit (D-598).
@@ -1415,7 +1417,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 44. PR-88. ✅ Done in PR #104. The fixes of the repository review (D-578). ✅ The owner answers of 2026-09-25: D-578 to D-580.
 45. PR-86. The macOS legs on hosted runners (D-572, D-573).
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
-47. PR-89. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
+47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
 48. Owner: answer OQ-208. PR-90, the texture resolution (D-595).
 49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596).
 50. PR-76.
