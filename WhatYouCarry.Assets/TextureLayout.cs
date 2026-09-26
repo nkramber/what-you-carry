@@ -156,7 +156,7 @@ public sealed class TextureLayout
             int atlas = JsonShape.WholeNumber(path, root, RootName, AtlasKey);
             if (atlas != AtlasLayout.AtlasPixels)
             {
-                throw ContentError.Make(path, AtlasKey, $"is {Text(atlas)}, and the atlas is {Text(AtlasLayout.AtlasPixels)} pixels on a side (D-506)");
+                throw ContentError.Make(path, AtlasKey, $"is {Text(atlas)}, and the atlas is {Text(AtlasLayout.AtlasPixels)} pixels on a side (D-604)");
             }
 
             List<BlockPlace> blocks = [];

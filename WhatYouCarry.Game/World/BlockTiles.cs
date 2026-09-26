@@ -17,7 +17,7 @@ public sealed class BlockTiles
     /// <summary>The side of one block canvas as a fraction of the atlas. The world shader multiplies the face coordinate by it.</summary>
     public const float Size = (float)AtlasLayout.BlockPixels / AtlasLayout.AtlasPixels;
 
-    private const string NotOneBlockFace = "The texture layout gives a block a canvas that is not one block face of 32 pixels (D-85).";
+    private const string NotOneBlockFace = "The texture layout gives a block a canvas that is not one block face of 64 pixels (D-603).";
     private const string NoCanvas = "The texture layout has no canvas for the block. Bind a recipe to the block, and run texture-gen (D-505).";
     private const string FileField = "file";
     private const string BlockField = "block";
@@ -27,7 +27,7 @@ public sealed class BlockTiles
     private readonly Dictionary<BlockId, Vector2> origins = [];
 
     /// <summary>The origins of every block canvas of one layout.</summary>
-    /// <exception cref="ContextException">A block canvas is not 32 pixels on a side, or it names an id past a byte.</exception>
+    /// <exception cref="ContextException">A block canvas is not 64 pixels on a side, or it names an id past a byte.</exception>
     public BlockTiles(TextureLayout layout)
     {
         foreach (BlockPlace place in layout.Blocks)

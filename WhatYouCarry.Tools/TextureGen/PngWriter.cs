@@ -13,7 +13,7 @@ namespace WhatYouCarry.Tools.TextureGen;
 /// <remarks>
 /// A stored block copies the bytes and compresses nothing. The file then has one byte form on every platform, which
 /// a compressor of the platform does not promise, so the committed atlas can equal the generator output byte for
-/// byte on Linux, macOS, and Windows. The atlas of 512 by 512 pixels gives a file of about 790 kilobytes. The chunk
+/// byte on Linux, macOS, and Windows. The atlas of 1024 by 1024 pixels gives a file of about 3.1 megabytes. The chunk
 /// checksum is the CRC-32 of Core, which is the checksum that the PNG format names.
 /// </remarks>
 public static class PngWriter

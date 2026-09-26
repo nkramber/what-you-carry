@@ -34,7 +34,7 @@ public static class BoxGeometry
 
     /// <summary>
     /// The mesh of one box: six quads, twenty-four vertices, relative to the pivot of the box. Each face reads the top
-    /// left part of its canvas at 32 texels per meter (D-308): a face of 21.6 texels reads that much of a canvas of 22.
+    /// left part of its canvas at 64 texels per meter (D-308, D-603): a face of 43.2 texels reads that much of a canvas of 44.
     /// </summary>
     /// <param name="modelPath">The path of the model file that holds the box, which the layout names each face by.</param>
     /// <param name="box">The box.</param>

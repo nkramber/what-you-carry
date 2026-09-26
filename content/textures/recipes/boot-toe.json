@@ -1,8 +1,8 @@
 {
   "layers": [
     {"kind": "fill", "color": 32, "shade": 3, "noise": 0, "seed": 1051},
-    {"kind": "grain", "cell": 2, "amount": 1, "seed": 1052},
-    {"kind": "grain", "cell": 4, "amount": 2, "seed": 1057},
-    {"kind": "gradient", "side": "bottom", "depth": 2, "shift": -1}
+    {"kind": "grain", "cell": 4, "amount": 1, "seed": 1052},
+    {"kind": "grain", "cell": 8, "amount": 2, "seed": 1057},
+    {"kind": "gradient", "side": "bottom", "depth": 4, "shift": -1}
   ]
 }

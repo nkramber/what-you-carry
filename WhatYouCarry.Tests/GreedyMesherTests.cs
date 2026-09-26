@@ -374,7 +374,7 @@ public sealed class GreedyMesherTests
         Assert.Throws<ContextException>(() => GreedyMesher.MeshChunk(grid, 0, -1, RepositoryTextures.Tiles));
     }
 
-    /// <summary>The origin of each block canvas is its place in the committed layout, as a fraction of the atlas of 512 pixels (D-85, D-505, D-506).</summary>
+    /// <summary>The origin of each block canvas is its place in the committed layout, as a fraction of the atlas of 1024 pixels (D-85, D-505, D-604).</summary>
     [Fact]
     public void TileOriginsFollowTheLayout()
     {
@@ -483,7 +483,7 @@ public sealed class GreedyMesherTests
         Assert.True(slopeVertices > 0, "The course shows no slope.");
     }
 
-    /// <summary>Every face of a ramp course keeps 32 texels per meter: between any two corners of a triangle, the face coordinate moves as far in tiles as the corners are apart in meters (D-308).</summary>
+    /// <summary>Every face of a ramp course keeps 64 texels per meter: between any two corners of a triangle, the face coordinate moves as far in tiles as the corners are apart in meters (D-308).</summary>
     [Theory]
     [MemberData(nameof(Courses))]
     public void EveryFaceKeepsTheTexelDensity(RampRise rise, int run)

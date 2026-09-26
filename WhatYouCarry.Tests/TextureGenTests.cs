@@ -17,7 +17,7 @@ namespace WhatYouCarry.Tests;
 
 /// <summary>
 /// The texture generator over the repository content: the palette, the atlas, the layout, the PNG file, and the
-/// command (D-85, D-304, D-305, D-308, D-505, D-506, D-598; PR-14 exit tests 1 to 4, PR-62 exit tests 1, 2, and 4,
+/// command (D-85, D-304, D-305, D-308, D-505, D-598, D-603, D-604; PR-14 exit tests 1 to 4, PR-62 exit tests 1, 2, and 4,
 /// PR-89 exit tests 1 and 2, D-599).
 /// </summary>
 [Collection(ConsoleCollection.Name)]
@@ -25,8 +25,10 @@ public sealed class TextureGenTests
 {
     private const float UvTolerance = 0.0001f;
 
+    /// <summary>The side of a block tile in the atlas of PR-14 and in the palette preview, at 32 texels per meter (D-85).</summary>
+    private const int TilePixelsOfPr14 = 32;
+
     /// <summary>The indexed atlas at the base of PR-89, before the truecolor atlas of D-598.</summary>
-    private const string AtlasBeforePr89 = "WhatYouCarry.Tests/Fixtures/atlas-before-pr-89.png";
 
     /// <summary>The ramp names of the palette of D-304, the umber ramp of D-530, the ten ramps of D-592, and the soot ramp of D-600, in file order.</summary>
     private static readonly string[] OwnerRampNames = ["rock", "slate", "timber", "ochre", "rust", "water", "lichen", "bone", "umber", "steel", "brass", "clay", "crimson", "cobalt", "violet", "linen", "moss", "ember", "ice", "soot"];
@@ -87,48 +89,6 @@ public sealed class TextureGenTests
         }
     }
 
-    /// <summary>
-    /// PR-89 exit test 1 (D-601). Against the indexed atlas before PR-89, each pixel keeps its ramp and lies between
-    /// the two fine shades next to its old shade: a grain once rounded its move to a fine step, and a recipe holds two
-    /// grains at most. Each block, and each face with no grain, keeps its exact colors, so the Game draws them as before.
-    /// </summary>
-    [Fact]
-    public void AtlasKeepsTheShadesOfTheIndexedAtlas()
-    {
-        Palette palette = RepositoryPalette();
-        PaletteShades shades = new(palette);
-        IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(TextureGenCommand.ReadRecipeFiles(ContentRoot()), palette);
-        PngImage before = PngReader.Read(File.ReadAllBytes(Path.Combine(RepositoryRoot.Find(), AtlasBeforePr89)));
-        PngImage after = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
-
-        Assert.Equal(before.Width, after.Width);
-        Assert.Equal(before.Height, after.Height);
-        int moved = 0;
-        for (int pixel = 0; pixel < after.Pixels.Length; pixel++)
-        {
-            (int oldRamp, int oldFine) = shades.Shade(before.Pixels[pixel]);
-            bool onRamp = shades.TryPlace(after.Pixels[pixel], oldRamp, out RampPlace place);
-            bool near = onRamp && place.High >= (oldFine - 1) * Palette.PartsPerFineStep && place.Low <= (oldFine + 1) * Palette.PartsPerFineStep;
-            Assert.True(near, $"The pixel ({pixel % after.Width}, {pixel / after.Width}) holds {PaletteShades.Hex(after.Pixels[pixel])}, and the indexed atlas held the fine step {oldFine} of '{palette.Ramps[oldRamp].Name}'.");
-            moved += before.Pixels[pixel] == after.Pixels[pixel] ? 0 : 1;
-        }
-
-        Assert.True(moved > 0, "No pixel left its fine shade, so the grain does not move in lightness (D-599).");
-        List<AtlasRect> exact = [.. RepositoryTextures.Layout.Blocks.Select(place => place.At)];
-        exact.AddRange(RepositoryTextures.Layout.Faces.Where(place => !recipes[place.Recipe].Layers.Any(layer => layer is GrainLayer)).Select(place => place.At));
-        foreach (AtlasRect place in exact)
-        {
-            for (int y = 0; y < place.Height; y++)
-            {
-                for (int x = 0; x < place.Width; x++)
-                {
-                    int pixel = ((place.Y + y) * after.Width) + place.X + x;
-                    Assert.True(before.Pixels[pixel] == after.Pixels[pixel], $"The pixel ({x}, {y}) of the canvas at ({place.X}, {place.Y}) has no grain, and it holds {PaletteShades.Hex(after.Pixels[pixel])} in place of {PaletteShades.Hex(before.Pixels[pixel])}.");
-                }
-            }
-        }
-    }
-
     /// <summary>PR-14 exit test 2 and PR-62 exit test 1. Two runs of the generator give equal atlas bytes and equal layout text.</summary>
     [Fact]
     public void GeneratorIsDeterministic()
@@ -160,13 +120,13 @@ public sealed class TextureGenTests
         Assert.True(committed == generated, "The committed layout differs from the generator output. Run the texture-gen command with --root on the checkout, and commit textures/atlas.png and textures/layout.json (D-505).");
     }
 
-    /// <summary>PR-14 exit test 4. The atlas is a square of 512 pixels, a power of two, that holds whole block canvases (D-506).</summary>
+    /// <summary>PR-14 exit test 4. The atlas is a square of 1024 pixels, a power of two, that holds whole block canvases (D-604).</summary>
     [Fact]
     public void AtlasIsPowerOfTwo()
     {
         PngImage image = PngReader.Read(TextureGenCommand.Generate(ContentRoot()).Atlas);
 
-        Assert.Equal(512, AtlasLayout.AtlasPixels);
+        Assert.Equal(1024, AtlasLayout.AtlasPixels);
         Assert.Equal(AtlasLayout.AtlasPixels, image.Width);
         Assert.Equal(AtlasLayout.AtlasPixels, image.Height);
         Assert.Equal(0, image.Width & (image.Width - 1));
@@ -277,32 +237,29 @@ public sealed class TextureGenTests
     }
 
     /// <summary>
-    /// PR-62 exit test 2. The canvas of each block in the committed atlas holds the pixels of its tile in the atlas of
-    /// PR-14, so the world keeps its look (D-504, D-309). The test turns each color back into its atlas index.
+    /// PR-62 exit test 2. The recipe of each block, painted at the tile size of PR-14, gives the pixels of its tile in the
+    /// atlas of PR-14 (D-504, D-309). The block recipes stay as they are at 64 texels per meter (D-608), so a change of a
+    /// block recipe fails here. The test turns each color back into its atlas index.
     /// </summary>
     [Theory]
     [MemberData(nameof(BlockTilesOfPr14))]
     public void BlockCanvasEqualsItsTileOfPr14(int block, string hash)
     {
-        PaletteShades shades = new(RepositoryPalette());
-        PngImage image = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
-        AtlasRect place = RepositoryTextures.Layout.Block(block);
+        Palette palette = RepositoryPalette();
+        PaletteShades shades = new(palette);
+        IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(TextureGenCommand.ReadRecipeFiles(ContentRoot()), palette);
+        BlockPlace place = RepositoryTextures.Layout.Blocks.Single(candidate => candidate.Block == block);
 
-        byte[] pixels = new byte[AtlasLayout.BlockPixels * AtlasLayout.BlockPixels];
-        for (int y = 0; y < AtlasLayout.BlockPixels; y++)
-        {
-            for (int x = 0; x < AtlasLayout.BlockPixels; x++)
-            {
-                pixels[(y * AtlasLayout.BlockPixels) + x] = (byte)shades.Index(image.Pixels[((place.Y + y) * image.Width) + place.X + x]);
-            }
-        }
+        AtlasColor[] tile = CanvasPainter.Paint(palette, recipes[place.Recipe], TilePixelsOfPr14, TilePixelsOfPr14, CanvasPainter.BlockSalt, place.Recipe);
 
+        byte[] pixels = tile.Select(color => (byte)shades.Index(color)).ToArray();
         Assert.Equal(hash, Convert.ToHexString(SHA256.HashData(pixels)).ToLowerInvariant());
     }
 
     /// <summary>
-    /// A block canvas of each of three recipes equals the tile of the palette preview that the owner chose from (D-304):
-    /// the first row, and the count of each palette index. The skin of D-531 is no longer the skin tile of the preview.
+    /// A canvas of 32 by 32 texels of each of three block recipes equals the tile of the palette preview that the owner
+    /// chose from (D-304): the first row, and the count of each palette index. The skin of D-531 is no longer the skin
+    /// tile of the preview.
     /// </summary>
     [Theory]
     [InlineData("raw-stone", "0,1,1,1,1,0,1,0,1,0,0,0,1,1,1,1", "0:194,1:614,2:216")]
@@ -313,7 +270,7 @@ public sealed class TextureGenTests
         Palette palette = RepositoryPalette();
         PaletteShades shades = new(palette);
         IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(TextureGenCommand.ReadRecipeFiles(ContentRoot()), palette);
-        int[] pixels = CanvasPainter.Paint(palette, recipes[recipe], AtlasLayout.BlockPixels, AtlasLayout.BlockPixels, CanvasPainter.BlockSalt, recipe).Select(shades.Index).ToArray();
+        int[] pixels = CanvasPainter.Paint(palette, recipes[recipe], TilePixelsOfPr14, TilePixelsOfPr14, CanvasPainter.BlockSalt, recipe).Select(shades.Index).ToArray();
 
         Assert.Equal(firstRow, string.Join(",", pixels.Take(16)));
         string histogram = string.Join(",", pixels.GroupBy(value => value).OrderBy(group => group.Key).Select(group => $"{group.Key}:{group.Count()}"));
@@ -321,8 +278,8 @@ public sealed class TextureGenTests
     }
 
     /// <summary>
-    /// PR-62 exit test 4. Each face of the player and the sword has a canvas in the committed layout, of its size at 32
-    /// texels per meter, and the box mesh reads that many texels of it (D-308, D-505).
+    /// PR-62 exit test 4. Each face of the player and the sword has a canvas in the committed layout, of its size at 64
+    /// texels per meter, and the box mesh reads that many texels of it (D-308, D-505, D-603).
     /// </summary>
     [Theory]
     [InlineData("models/player.bbmodel", 15)]
@@ -426,8 +383,8 @@ public sealed class TextureGenTests
     }
 
     /// <summary>
-    /// The committed atlas holds the face, the trim, and the texture of the owner (D-525 to D-531). Each check reads one
-    /// texel of a face canvas, from the top left, as a ramp and a position. A texel with no grain after it holds its
+    /// The committed atlas holds the face, the trim, and the texture of the owner (D-525 to D-531), with each place doubled
+    /// at 64 texels per meter (D-603). Each check reads an area of a face canvas, from the top left, as a ramp and a position. A texel with no grain after it holds its
     /// exact shade. A grained texel lies within half a fine step of its range, the rounding that the grain used before
     /// D-599. The gradient, the band, and the knees compare the mean fine step of two areas.
     /// </summary>
@@ -437,72 +394,73 @@ public sealed class TextureGenTests
         PngImage atlas = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
         Palette palette = RepositoryPalette();
 
-        // The face: hair rows 0 to 2, the peak, the sideburns, the skin, the eyes, and the under-eye texels.
+        // The face: hair rows 0 to 5, the peak, the sideburns, the skin, the eyes, and the under-eye texels.
         ModelCanvas face = new(atlas, palette, AssetPaths.BodyModel, "head_box", BoxSide.North);
-        face.AssertRamp("umber", 0, 0, 16, 3);
-        face.AssertRamp("umber", 7, 3, 2, 1);
-        face.AssertRamp("umber", 0, 3, 1, 8);
-        face.AssertRamp("umber", 15, 3, 1, 8);
-        face.AssertRamp("bone", 1, 3, 6, 3);
-        face.AssertRamp("bone", 9, 3, 6, 3);
-        face.AssertShades("timber", 0, 0, 4, 8, 2, 1);
-        face.AssertShades("timber", 0, 0, 10, 8, 2, 1);
-        face.AssertShades("bone", 0, 0, 4, 9, 2, 1);
-        face.AssertShades("bone", 0, 0, 10, 9, 2, 1);
-        face.AssertRamp("bone", 1, 8, 3, 3);
-        face.AssertRamp("bone", 12, 8, 3, 3);
+        face.AssertRamp("umber", 0, 0, 32, 6);
+        face.AssertRamp("umber", 14, 6, 4, 2);
+        face.AssertRamp("umber", 0, 6, 2, 16);
+        face.AssertRamp("umber", 30, 6, 2, 16);
+        face.AssertRamp("bone", 2, 6, 12, 6);
+        face.AssertRamp("bone", 18, 6, 12, 6);
+        face.AssertShades("timber", 0, 0, 8, 16, 4, 2);
+        face.AssertShades("timber", 0, 0, 20, 16, 4, 2);
+        face.AssertShades("bone", 0, 0, 8, 18, 4, 2);
+        face.AssertShades("bone", 0, 0, 20, 18, 4, 2);
+        face.AssertRamp("bone", 2, 16, 6, 6);
+        face.AssertRamp("bone", 24, 16, 6, 6);
 
         // The mouth notch on the beard, in the skin of D-531: bone 2 minus 2 shades.
         ModelCanvas beard = new(atlas, palette, AssetPaths.BodyModel, "beard_box", BoxSide.North);
-        beard.AssertRamp("umber", 0, 0, 16, 1);
-        beard.AssertShades("bone", 2, 2, 5, 1, 6, 1);
-        beard.AssertShades("bone", 2, 2, 5, 2, 1, 1);
-        beard.AssertShades("bone", 2, 2, 10, 2, 1, 1);
-        beard.AssertRamp("umber", 6, 2, 4, 1);
-        beard.AssertRamp("umber", 0, 3, 16, 2);
+        beard.AssertRamp("umber", 0, 0, 32, 2);
+        beard.AssertShades("bone", 2, 2, 10, 2, 12, 2);
+        beard.AssertShades("bone", 2, 2, 10, 4, 2, 2);
+        beard.AssertShades("bone", 2, 2, 20, 4, 2, 2);
+        beard.AssertRamp("umber", 12, 4, 8, 2);
+        beard.AssertRamp("umber", 0, 6, 32, 4);
 
         // The collar in its hem, the belt, and the grime over the belt, at the front alone.
         ModelCanvas front = new(atlas, palette, AssetPaths.BodyModel, "torso_box", BoxSide.North);
-        front.AssertRamp("bone", 5, 0, 10, 2);
-        front.AssertRamp("bone", 8, 2, 4, 1);
-        front.AssertShades("rust", 0, 3, 4, 0, 1, 2);
-        front.AssertShades("rust", 0, 3, 15, 0, 1, 2);
-        front.AssertShades("rust", 0, 3, 4, 2, 4, 1);
-        front.AssertShades("rust", 0, 3, 12, 2, 4, 1);
-        front.AssertShades("rust", 0, 3, 7, 3, 6, 1);
-        front.AssertRamp("rust", 0, 4, 20, 16);
-        front.AssertRamp("umber", 0, 20, 20, 2);
+        front.AssertRamp("bone", 10, 0, 20, 4);
+        front.AssertRamp("bone", 16, 4, 8, 2);
+        front.AssertShades("rust", 0, 3, 8, 0, 2, 4);
+        front.AssertShades("rust", 0, 3, 30, 0, 2, 4);
+        front.AssertShades("rust", 0, 3, 8, 4, 8, 2);
+        front.AssertShades("rust", 0, 3, 24, 4, 8, 2);
+        front.AssertShades("rust", 0, 3, 14, 6, 12, 2);
+        front.AssertRamp("rust", 0, 8, 40, 32);
+        front.AssertRamp("umber", 0, 40, 40, 4);
         ModelCanvas back = new(atlas, palette, AssetPaths.BodyModel, "torso_box", BoxSide.South);
-        back.AssertRamp("rust", 0, 0, 20, 20);
-        back.AssertRamp("umber", 0, 20, 20, 2);
-        Assert.True(back.MeanFine("rust", 0, 17, 20, 3) + 1.0 < back.MeanFine("rust", 0, 4, 20, 10), "The grime gradient does not darken the rows over the belt (D-527).");
-        new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "torso_box", BoxSide.East).AssertRamp("umber", 0, 20, 10, 2);
+        back.AssertRamp("rust", 0, 0, 40, 40);
+        back.AssertRamp("umber", 0, 40, 40, 4);
+        Assert.True(back.MeanFine("rust", 0, 34, 40, 6) + 1.0 < back.MeanFine("rust", 0, 8, 40, 20), "The grime gradient does not darken the rows over the belt (D-527).");
+        new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "torso_box", BoxSide.East).AssertRamp("umber", 0, 40, 20, 4);
 
         foreach (BoxSide side in new[] { BoxSide.North, BoxSide.East, BoxSide.South, BoxSide.West })
         {
             // The sleeve, its hem, and the skin cuff.
             ModelCanvas sleeve = new(atlas, palette, AssetPaths.BodyModel, "arm_right_lower_box", side);
-            sleeve.AssertRamp("rust", 0, 0, 6, 6);
-            sleeve.AssertShades("rust", 0, 3, 0, 6, 6, 1);
-            sleeve.AssertRamp("bone", 0, 7, 6, 4);
+            sleeve.AssertRamp("rust", 0, 0, 12, 12);
+            sleeve.AssertShades("rust", 0, 3, 0, 12, 12, 2);
+            sleeve.AssertRamp("bone", 0, 14, 12, 8);
 
             // The boot band: the top two rows one step of a color lighter than the boot below.
             ModelCanvas boot = new(atlas, palette, AssetPaths.BodyModel, "leg_left_lower_box", side);
-            boot.AssertRamp("umber", 0, 0, 8, 10);
-            Assert.True(boot.MeanFine("umber", 0, 0, 8, 2) >= boot.MeanFine("umber", 0, 2, 8, 6) + 2.0, $"The boot band on the {side} face is not lighter than the boot (D-526).");
+            boot.AssertRamp("umber", 0, 0, 16, 20);
+            Assert.True(boot.MeanFine("umber", 0, 0, 16, 4) >= boot.MeanFine("umber", 0, 4, 16, 12) + 2.0, $"The boot band on the {side} face is not lighter than the boot (D-526).");
         }
 
         // The knee patch is lighter than the rest of the trousers front.
         ModelCanvas knee = new(atlas, palette, AssetPaths.BodyModel, "leg_right_upper_box", BoxSide.North);
-        knee.AssertRamp("umber", 0, 0, 8, 10);
-        Assert.True(knee.MeanFine("umber", 2, 5, 4, 4) > knee.MeanFine("umber", 0, 0, 8, 4) + 1.0, "The knee patch is not lighter than the trousers.");
+        knee.AssertRamp("umber", 0, 0, 16, 20);
+        Assert.True(knee.MeanFine("umber", 4, 10, 8, 8) > knee.MeanFine("umber", 0, 0, 16, 8) + 1.0, "The knee patch is not lighter than the trousers.");
 
-        new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "arm_left_lower_box", BoxSide.Down).AssertRamp("bone", 0, 0, 6, 6);
-        new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "toe_left_box", BoxSide.North).AssertRamp("umber", 0, 0, 8, 4);
+        new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "arm_left_lower_box", BoxSide.Down).AssertRamp("bone", 0, 0, 12, 12);
+        new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "toe_left_box", BoxSide.North).AssertRamp("umber", 0, 0, 16, 8);
     }
 
     /// <summary>
-    /// The committed atlas holds the paint of the sword (D-588, D-589, D-594). The flat of the blade has two edges of exact
+    /// The committed atlas holds the paint of the sword (D-588, D-589, D-594), with each place doubled at 64 texels per
+    /// meter (D-603). The flat of the blade has two edges of exact
     /// steel 1 plus 3 shades over a grained center on steel 1, and three pits of steel 0 plus 1. The guard, its arms, and the pommel are grained iron
     /// on rock 1, with a lighter panel on the front of the guard. The grip is grained umber leather with three dark bands.
     /// A texel with no grain after it holds its exact shade, and a grain of amount 1 moves a texel by 2 fine steps at most.
@@ -517,44 +475,44 @@ public sealed class TextureGenTests
         foreach (BoxSide side in new[] { BoxSide.North, BoxSide.South })
         {
             ModelCanvas flat = new(atlas, palette, Sword, "blade_box", side);
-            flat.AssertShades("steel", 7, 7, 0, 0, 1, 4);
-            flat.AssertShades("steel", 7, 7, 0, 5, 1, 12);
-            flat.AssertShades("steel", 7, 7, 2, 0, 1, 9);
-            flat.AssertShades("steel", 7, 7, 2, 10, 1, 7);
-            flat.AssertShades("steel", 2, 6, 1, 0, 1, 13);
-            flat.AssertShades("steel", 2, 6, 1, 14, 1, 3);
-            flat.AssertShades("steel", 1, 1, 0, 4, 1, 1);
-            flat.AssertShades("steel", 1, 1, 2, 9, 1, 1);
-            flat.AssertShades("steel", 1, 1, 1, 13, 1, 1);
+            flat.AssertShades("steel", 7, 7, 0, 0, 2, 8);
+            flat.AssertShades("steel", 7, 7, 0, 10, 2, 24);
+            flat.AssertShades("steel", 7, 7, 4, 0, 2, 18);
+            flat.AssertShades("steel", 7, 7, 4, 20, 2, 14);
+            flat.AssertShades("steel", 2, 6, 2, 0, 2, 26);
+            flat.AssertShades("steel", 2, 6, 2, 28, 2, 6);
+            flat.AssertShades("steel", 1, 1, 0, 8, 2, 2);
+            flat.AssertShades("steel", 1, 1, 4, 18, 2, 2);
+            flat.AssertShades("steel", 1, 1, 2, 26, 2, 2);
         }
 
-        new ModelCanvas(atlas, palette, Sword, "blade_box", BoxSide.East).AssertShades("steel", 5, 9, 0, 0, 1, 17);
-        new ModelCanvas(atlas, palette, Sword, "tip_step_box", BoxSide.North).AssertShades("steel", 5, 9, 0, 0, 2, 2);
-        new ModelCanvas(atlas, palette, Sword, "tip_box", BoxSide.North).AssertShades("steel", 5, 9, 0, 0, 1, 1);
+        new ModelCanvas(atlas, palette, Sword, "blade_box", BoxSide.East).AssertShades("steel", 5, 9, 0, 0, 2, 34);
+        new ModelCanvas(atlas, palette, Sword, "tip_step_box", BoxSide.North).AssertShades("steel", 5, 9, 0, 0, 4, 4);
+        new ModelCanvas(atlas, palette, Sword, "tip_box", BoxSide.North).AssertShades("steel", 5, 9, 0, 0, 2, 2);
 
         ModelCanvas guard = new(atlas, palette, Sword, "guard_box", BoxSide.North);
-        guard.AssertShades("rock", 3, 7, 0, 0, 4, 1);
-        guard.AssertShades("rock", 7, 7, 1, 1, 2, 1);
-        guard.AssertShades("rock", 3, 7, 0, 2, 4, 1);
-        new ModelCanvas(atlas, palette, Sword, "guard_left_box", BoxSide.North).AssertShades("rock", 3, 7, 0, 0, 2, 2);
-        new ModelCanvas(atlas, palette, Sword, "pommel_box", BoxSide.North).AssertShades("rock", 3, 7, 0, 0, 3, 2);
+        guard.AssertShades("rock", 3, 7, 0, 0, 8, 2);
+        guard.AssertShades("rock", 7, 7, 2, 2, 4, 2);
+        guard.AssertShades("rock", 3, 7, 0, 4, 8, 2);
+        new ModelCanvas(atlas, palette, Sword, "guard_left_box", BoxSide.North).AssertShades("rock", 3, 7, 0, 0, 4, 4);
+        new ModelCanvas(atlas, palette, Sword, "pommel_box", BoxSide.North).AssertShades("rock", 3, 7, 0, 0, 6, 4);
 
         foreach (BoxSide side in new[] { BoxSide.North, BoxSide.East, BoxSide.South, BoxSide.West })
         {
             ModelCanvas grip = new(atlas, palette, Sword, "grip_box", side);
-            foreach (int row in new[] { 0, 2, 4, 6 })
+            foreach (int row in new[] { 0, 4, 8, 12 })
             {
-                grip.AssertShades("umber", 6, 10, 0, row, 2, 1);
+                grip.AssertShades("umber", 6, 10, 0, row, 4, 2);
             }
 
-            foreach (int row in new[] { 1, 3, 5 })
+            foreach (int row in new[] { 2, 6, 10 })
             {
-                grip.AssertShades("umber", 4, 4, 0, row, 2, 1);
+                grip.AssertShades("umber", 4, 4, 0, row, 4, 2);
             }
         }
     }
 
-    /// <summary>Every block id other than air has a canvas of 32 pixels in the committed layout, bound to the recipe of its material (D-259, D-505).</summary>
+    /// <summary>Every block id other than air has a canvas of 64 pixels in the committed layout, bound to the recipe of its material (D-259, D-505, D-603).</summary>
     [Fact]
     public void EveryBlockHasACanvas()
     {

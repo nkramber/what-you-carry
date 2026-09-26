@@ -1,9 +1,9 @@
 {
   "layers": [
     {"kind": "fill", "color": 32, "shade": 3, "noise": 0, "seed": 1022},
-    {"kind": "grain", "cell": 2, "amount": 3, "seed": 1045},
-    {"kind": "rect", "x": 5, "y": 1, "width": 6, "height": 1, "color": 29, "shade": -2, "noise": 0, "seed": 1023},
-    {"kind": "rect", "x": 5, "y": 2, "width": 1, "height": 1, "color": 29, "shade": -2, "noise": 0, "seed": 1024},
-    {"kind": "rect", "x": 10, "y": 2, "width": 1, "height": 1, "color": 29, "shade": -2, "noise": 0, "seed": 1025}
+    {"kind": "grain", "cell": 4, "amount": 3, "seed": 1045},
+    {"kind": "rect", "x": 10, "y": 2, "width": 12, "height": 2, "color": 29, "shade": -2, "noise": 0, "seed": 1023},
+    {"kind": "rect", "x": 10, "y": 4, "width": 2, "height": 2, "color": 29, "shade": -2, "noise": 0, "seed": 1024},
+    {"kind": "rect", "x": 20, "y": 4, "width": 2, "height": 2, "color": 29, "shade": -2, "noise": 0, "seed": 1025}
   ]
 }

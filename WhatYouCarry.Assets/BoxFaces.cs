@@ -12,7 +12,7 @@ public static class BoxFaces
 {
     /// <summary>
     /// The largest amount that a texel size can stand above a whole number and still count as that number. A box of
-    /// 8 file units is 0.5 meters, and the float product with 32 texels per meter can land a hair above 16.
+    /// 8 file units is 0.5 meters, and the float product with 64 texels per meter can land a hair above 32.
     /// </summary>
     public const float WholeTolerance = 0.001f;
 
@@ -41,7 +41,7 @@ public static class BoxFaces
         return false;
     }
 
-    /// <summary>The width and the height of one face, in texels at 32 texels per meter (D-308). The values can hold a fraction.</summary>
+    /// <summary>The width and the height of one face, in texels at 64 texels per meter (D-308, D-603). The values can hold a fraction.</summary>
     public static (float Width, float Height) Texels(ModelBox box, BoxSide side)
     {
         float x = (box.To.X - box.From.X) * AtlasLayout.TexelsPerMeter;

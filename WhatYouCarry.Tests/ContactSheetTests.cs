@@ -44,14 +44,14 @@ public sealed class ContactSheetTests
         Assert.Contains(ContactSheet.Flag, absent.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>A texel on the sheet has the size of a texel in play on the Deck: about 5.4 pixels at the boom length (D-306).</summary>
+    /// <summary>A texel on the sheet has the size of a texel in play on the Deck: about 2.7 pixels at the boom length (D-306, D-603).</summary>
     [Fact]
     public void SheetIsAtGameZoom()
     {
         Assert.Equal(75.0f, PlaceholderScene.ViewDegrees);
         Assert.Equal(3.0f, ContactSheet.Distance);
         double pixelsPerTexel = ContactSheet.PixelsPerMeter() / AtlasLayout.TexelsPerMeter;
-        Assert.InRange(pixelsPerTexel, 5.4, 5.5);
+        Assert.InRange(pixelsPerTexel, 2.7, 2.75);
     }
 
     /// <summary>
