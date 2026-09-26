@@ -12,12 +12,13 @@ using WhatYouCarry.Tools.NightGate;
 using WhatYouCarry.Tools.ReviewGate;
 using WhatYouCarry.Tools.SteCheck;
 using WhatYouCarry.Tools.TextureGen;
+using WhatYouCarry.Tools.TextureTrace;
 
 namespace WhatYouCarry.Tools;
 
 public static class Program
 {
-    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, doc-gate, handoff-rotate, ste-check, det-lint, asset-qa, texture-gen, audio-synth, audio-analyze, bit-identity, bot-run, night-record, night-gate, night-promote, night-publish-check, night-seeds, ci-skip, codex-review.";
+    private const string Usage = "Usage: WhatYouCarry.Tools <command> [options]. Commands: review-gate, doc-gate, handoff-rotate, ste-check, det-lint, asset-qa, texture-gen, texture-trace, audio-synth, audio-analyze, bit-identity, bot-run, night-record, night-gate, night-promote, night-publish-check, night-seeds, ci-skip, codex-review.";
 
     public static int Main(string[] args)
     {
@@ -45,6 +46,8 @@ public static class Program
                 return AssetQaCommand.Run(commandArgs);
             case "texture-gen":
                 return TextureGenCommand.Run(commandArgs);
+            case "texture-trace":
+                return TextureTraceCommand.Run(commandArgs);
             case "audio-synth":
                 return AudioSynthCommand.Run(commandArgs);
             case "audio-analyze":

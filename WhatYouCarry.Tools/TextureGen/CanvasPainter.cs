@@ -11,7 +11,7 @@ namespace WhatYouCarry.Tools.TextureGen;
 public sealed record CanvasPositions(int[] Ramps, int[] Positions);
 
 /// <summary>
-/// Paints one canvas from one recipe (D-505, D-507). The result is one color per pixel, row by row from the top left
+/// Paints one canvas from one recipe (D-505, D-507, D-612). The result is one color per pixel, row by row from the top left
 /// corner (D-598).
 /// </summary>
 /// <remarks>
@@ -113,6 +113,9 @@ public static class CanvasPainter
                 case GradientLayer gradient:
                     ShiftSide(positions, width, height, gradient.Side, gradient.Depth, distance => GradientShift(gradient, distance) * Parts);
                     break;
+                case MapLayer map:
+                    PaintMap(palette, map, ramps, positions, width, height, recipe, canvasName);
+                    break;
                 default:
                     throw new InvalidOperationException($"The recipe '{recipe.Name}' holds a layer of the type {layer.GetType().Name}, and the painter has no case for it.");
             }
@@ -202,6 +205,29 @@ public static class CanvasPainter
         }
 
         PaintNoise(palette, rect.Color, rect.Shade, rect.Noise, state, ramps, positions, width, rect.X, rect.Y, right, bottom);
+    }
+
+    /// <summary>
+    /// Sets each pixel to the fine shade of its character in the map (D-612). A map of another size than the canvas is
+    /// an error, because the trace then read another box face (T-2).
+    /// </summary>
+    private static void PaintMap(Palette palette, MapLayer map, int[] ramps, int[] positions, int width, int height, Recipe recipe, string canvasName)
+    {
+        if (map.Rows.Count != height || map.Rows[0].Length != width)
+        {
+            throw new ContextException($"The recipe '{recipe.ContentPath}' holds a map of {Text(map.Rows[0].Length)} by {Text(map.Rows.Count)} texels, and the canvas {canvasName} is {Text(width)} by {Text(height)}. Trace the face again at the size of its canvas.");
+        }
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                MapShade shade = map.Legend[map.Rows[y][x]];
+                PaletteColor color = palette.Colors[shade.Color];
+                ramps[(y * width) + x] = color.Ramp;
+                positions[(y * width) + x] = ((color.Step * Palette.ShadesPerStep) + shade.Shade) * Palette.PartsPerFineStep;
+            }
+        }
     }
 
     /// <summary>Moves each pixel of the outer ring by a count of parts.</summary>

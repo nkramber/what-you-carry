@@ -38,6 +38,18 @@ public sealed record GrainLayer(int Cell, int Amount, uint Seed) : RecipeLayer;
 /// <summary>The pixels within a depth of one side move by up to a shift in fine steps, the full shift at the side and less toward the depth (D-527).</summary>
 public sealed record GradientLayer(CanvasSide Side, int Depth, int Shift) : RecipeLayer;
 
+/// <summary>
+/// A texel map (D-612): each pixel of the canvas takes the fine shade that the legend gives its character. The map
+/// covers the whole canvas, so it has the size of the canvas. The <c>texture-trace</c> command writes a map from an
+/// unlit view of the look reference, and a hand edit of a row corrects a feature.
+/// </summary>
+/// <param name="Rows">The rows of the map from the top, each a string of legend characters from the left.</param>
+/// <param name="Legend">The color and the shade of each character.</param>
+public sealed record MapLayer(IReadOnlyList<string> Rows, IReadOnlyDictionary<char, MapShade> Legend) : RecipeLayer;
+
+/// <summary>One entry of a map legend: a flat palette index, and the fine steps from it, as a fill names them (D-528).</summary>
+public readonly record struct MapShade(int Color, int Shade);
+
 /// <summary>The four sides of a canvas, as its texture shows them.</summary>
 public enum CanvasSide
 {
@@ -57,7 +69,7 @@ public enum CanvasSide
 /// <summary>One recipe with its layers resolved: a recipe that extends another holds the layers of the other, with its colors swapped.</summary>
 /// <param name="ContentPath">The path of the recipe file, relative to the content directory.</param>
 /// <param name="Name">The recipe name: the file name without its extension.</param>
-/// <param name="Layers">The layers in paint order. The first layer is the one fill.</param>
+/// <param name="Layers">The layers in paint order. The first layer is the one fill or the one map.</param>
 public sealed record Recipe(string ContentPath, string Name, IReadOnlyList<RecipeLayer> Layers);
 
 /// <summary>
@@ -90,6 +102,9 @@ public static class RecipeFile
     private const string BandKind = "band";
     private const string GrainKind = "grain";
     private const string GradientKind = "gradient";
+    private const string MapKind = "map";
+    private const string LegendKey = "legend";
+    private const string RowsKey = "rows";
     private const string ColorKey = "color";
     private const string NoiseKey = "noise";
     private const string SeedKey = "seed";
@@ -116,6 +131,8 @@ public static class RecipeFile
     private static readonly string[] BandFields = [KindKey, SideKey, DepthKey, ShiftKey];
     private static readonly string[] GrainFields = [KindKey, CellKey, AmountKey, SeedKey];
     private static readonly string[] GradientFields = [KindKey, SideKey, DepthKey, ShiftKey];
+    private static readonly string[] MapFields = [KindKey, LegendKey, RowsKey];
+    private static readonly string[] LegendFields = [ColorKey, ShadeKey];
     private static readonly string[] SideNames = ["top", "bottom", "left", "right"];
 
     /// <summary>The recipe name of one file path: the file name without the directory and the extension.</summary>
@@ -172,7 +189,7 @@ public static class RecipeFile
         return recipes;
     }
 
-    /// <summary>The layers of a layer list. The first layer is the one fill.</summary>
+    /// <summary>The layers of a layer list. The first layer is the one fill or the one map, because each paints every pixel.</summary>
     private static List<RecipeLayer> ReadLayers(string path, JsonElement root, Palette palette)
     {
         JsonElement list = JsonShape.Member(path, root, TextureJson.RootName, LayersKey);
@@ -187,10 +204,10 @@ public static class RecipeFile
             string owner = $"{LayersKey}[{Text(layers.Count)}]";
             RecipeLayer layer = ReadLayer(path, item, owner, palette);
             bool isFirst = layers.Count == 0;
-            bool isFill = layer is FillLayer;
-            if (isFirst != isFill)
+            bool isBase = layer is FillLayer or MapLayer;
+            if (isFirst != isBase)
             {
-                throw ContentError.Make(path, KindKey, $"on '{owner}' is not valid here: the first layer is a '{FillKind}', and no other layer is one");
+                throw ContentError.Make(path, KindKey, $"on '{owner}' is not valid here: the first layer is a '{FillKind}' or a '{MapKind}', and no other layer is one");
             }
 
             layers.Add(layer);
@@ -235,9 +252,85 @@ public static class RecipeFile
                 int shift = ReadShift(path, item, owner);
                 CheckWithinLongestRamp(path, owner, ShiftKey, shift, palette);
                 return new GradientLayer(ReadSide(path, item, owner), ReadAtLeast(path, item, owner, DepthKey, 1), shift);
+            case MapKind:
+                JsonShape.CheckNoUnknownMember(path, item, owner, MapFields);
+                return ReadMap(path, item, owner, palette);
             default:
-                throw ContentError.Make(path, KindKey, $"on '{owner}' is '{kind}', and a layer kind is one of {FillKind}, {EdgeKind}, {RectKind}, {BandKind}, {GrainKind}, and {GradientKind} (D-507, D-527)");
+                throw ContentError.Make(path, KindKey, $"on '{owner}' is '{kind}', and a layer kind is one of {FillKind}, {EdgeKind}, {RectKind}, {BandKind}, {GrainKind}, {GradientKind}, and {MapKind} (D-507, D-527, D-612)");
         }
+    }
+
+    /// <summary>
+    /// A map layer. The legend maps each character of one letter to a color and a shade. Each row has the same length,
+    /// each character of a row has a legend entry, and each legend entry appears in a row, because an unused entry
+    /// hides a typing error (T-2).
+    /// </summary>
+    private static MapLayer ReadMap(string path, JsonElement item, string owner, Palette palette)
+    {
+        JsonElement legendItem = JsonShape.Member(path, item, owner, LegendKey);
+        if (legendItem.ValueKind != JsonValueKind.Object || !legendItem.EnumerateObject().MoveNext())
+        {
+            throw ContentError.Make(path, LegendKey, $"on '{owner}' is not an object that maps at least one character to a color and a shade");
+        }
+
+        Dictionary<char, MapShade> legend = [];
+        foreach (JsonProperty entry in legendItem.EnumerateObject())
+        {
+            string entryOwner = $"{owner}.{LegendKey}.{entry.Name}";
+            if (entry.Name.Length != 1 || char.IsWhiteSpace(entry.Name[0]))
+            {
+                throw ContentError.Make(path, LegendKey, $"on '{owner}' names the key '{entry.Name}', and a legend key is one visible character");
+            }
+
+            if (legend.ContainsKey(entry.Name[0]))
+            {
+                throw ContentError.Make(path, LegendKey, $"on '{owner}' names the key '{entry.Name}' twice");
+            }
+
+            JsonShape.CheckNoUnknownMember(path, entry.Value, entryOwner, LegendFields);
+            int color = ReadColor(path, entry.Value, entryOwner, palette);
+            legend.Add(entry.Name[0], new MapShade(color, ReadShade(path, entry.Value, entryOwner, palette, color)));
+        }
+
+        JsonElement rowsItem = JsonShape.Member(path, item, owner, RowsKey);
+        if (rowsItem.ValueKind != JsonValueKind.Array || rowsItem.GetArrayLength() == 0)
+        {
+            throw ContentError.Make(path, RowsKey, $"on '{owner}' is not a list that holds at least one row");
+        }
+
+        List<string> rows = [];
+        HashSet<char> used = [];
+        foreach (JsonElement rowItem in rowsItem.EnumerateArray())
+        {
+            string row = rowItem.ValueKind == JsonValueKind.String ? rowItem.GetString() ?? string.Empty : string.Empty;
+            string rowOwner = $"{owner}.{RowsKey}[{Text(rows.Count)}]";
+            if (row.Length == 0 || (rows.Count > 0 && row.Length != rows[0].Length))
+            {
+                throw ContentError.Make(path, RowsKey, $"on '{rowOwner}' is not a string of the length of the first row, {Text(rows.Count > 0 ? rows[0].Length : 0)} characters, and every row is a string of one length above zero");
+            }
+
+            for (int column = 0; column < row.Length; column++)
+            {
+                if (!legend.ContainsKey(row[column]))
+                {
+                    throw ContentError.Make(path, RowsKey, $"on '{rowOwner}' holds the character '{row[column]}' at the column {Text(column)}, and the legend has no entry for it");
+                }
+
+                used.Add(row[column]);
+            }
+
+            rows.Add(row);
+        }
+
+        foreach (char key in legend.Keys)
+        {
+            if (!used.Contains(key))
+            {
+                throw ContentError.Make(path, LegendKey, $"on '{owner}' names the key '{key}', and no row uses it");
+            }
+        }
+
+        return new MapLayer(rows, legend);
     }
 
     /// <summary>The swap of a recipe that extends another: from the flat index of each color of a swapped ramp to the index of the same step on the other ramp.</summary>
@@ -290,6 +383,16 @@ public static class RecipeFile
                 case RectLayer rect:
                     used.Add(palette.Colors[rect.Color].Ramp);
                     layers.Add(rect with { Color = swap.GetValueOrDefault(rect.Color, rect.Color) });
+                    break;
+                case MapLayer map:
+                    Dictionary<char, MapShade> legend = [];
+                    foreach ((char key, MapShade shade) in map.Legend)
+                    {
+                        used.Add(palette.Colors[shade.Color].Ramp);
+                        legend.Add(key, shade with { Color = swap.GetValueOrDefault(shade.Color, shade.Color) });
+                    }
+
+                    layers.Add(map with { Legend = legend });
                     break;
                 default:
                     layers.Add(layer);

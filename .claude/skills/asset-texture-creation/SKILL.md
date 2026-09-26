@@ -84,6 +84,7 @@ The concept checklist:
 1. Tell the owner to run Meshy image to 3D on the approved concept image.
 2. Ask for these screenshots: front, back, left side, right side, both three-quarter views, and the front unlit.
 3. Ask for a top view and a close front view of the head when the asset has a face.
+4. For the trace, ask for unlit straight-on views too: front, back, left, right, top, and a close view of the detail (D-614).
 
 ### Step 4: The review of the screenshots
 
@@ -108,11 +109,24 @@ Meshy artifacts to ignore:
 3. Record each answer in `docs/decisions.md` with the next D-# and the local date.
 4. Edit the `.bbmodel` file. Keep the rest pose, rotation zero, and a unique name for each box.
 5. Put each new box flush on its neighbor: a shared face, and no penetration (D-301).
-6. Write the recipes under `content/textures/recipes/`, and the paint file of the model. Take the base shade of each material from the unlit view (D-529).
+6. Write the recipes under `content/textures/recipes/`, and the paint file of the model. Trace each visible face of a model (see "Trace a face"). Give a hidden face and a block a procedural recipe. Take the base shade of each material from the unlit view (D-529).
 7. Run `texture-gen` with `--root .`, and commit the atlas and the layout together.
 8. Run the build, the full test suite, and `asset-qa`.
 9. Render the contact sheet, and show it beside the approved concept image.
 10. Record the approval of the owner as a D-#. The exit test of the asset needs it.
+
+## Trace a face
+
+A model face takes its texels from an unlit view of the look reference (D-612). A block keeps a procedural recipe (D-608).
+
+1. Write the spec `content/textures/traces/<asset>.json`: the path of each screenshot, and for each face its box, its recipe name, its area in pixels, its turn, and its ramps.
+2. Measure each area on the screenshot (see "Measure a screenshot"). Frame the face of the model, and not the background.
+3. Name the fewest ramps that hold the colors of the face, such as bone, umber, and timber for the face of the body.
+4. Give the top view a turn, so that its north edge is the top of the area.
+5. Run `texture-trace` with `--root .` and `--spec <asset>`. It writes one recipe for each face, and it keeps each recipe that exists.
+6. Bind each recipe to its face in the paint file.
+7. Correct the features by hand in the rows of the map: no eye white (D-83), and no shade (D-81).
+8. Delete a recipe file to trace its face again.
 
 ## Measure a screenshot
 
@@ -129,12 +143,13 @@ A recipe is an ordered list of layers (D-507):
 
 | Kind | Fields | Use |
 |---|---|---|
-| `fill` | `color`, `shade`, `noise`, `seed` | The first layer, and only the first: the base material |
+| `fill` | `color`, `shade`, `noise`, `seed` | The first layer, and only the first: the base material. A `map` can be the first layer in its place |
 | `edge` | `steps` | A darker outer ring, as on hewn stone |
 | `rect` | `x`, `y`, `width`, `height`, `color`, `shade`, `noise`, `seed` | A face feature, a cuff, a collar, a knee |
 | `band` | `side`, `depth`, `shift` | A boot band, a hem, one color step at one side |
 | `grain` | `cell`, `amount`, `seed` | The clustered mottle of a 3D reference (D-527) |
 | `gradient` | `side`, `depth`, `shift` | Grime that fades from one side, in fine steps |
+| `map` | `legend`, `rows` | A traced face: one legend character for each texel (D-612) |
 
 A `shade` from -3 to 3 names a fine step between two colors (D-528). The `noise` of `fill` and `rect`, `edge`, and `band` move whole color steps. `gradient` moves whole fine steps. `grain` moves a pixel in linear light between two fine shades (D-599). For the mottle of a 3D reference, use `noise` 0 and a `grain`. Measure the variation of the texels in the unlit view, and match it: cell 2 and amount 2 gave the shirt of PR-74. A layer after a `grain` keeps its exact shade, so paint the eyes and the mouth last.
 

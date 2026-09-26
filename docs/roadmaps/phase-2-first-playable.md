@@ -1302,7 +1302,8 @@ Scope:
 
 - `WhatYouCarry.Assets/AtlasLayout.cs`: every face has 64 texels per meter, a block face and a model face alike (D-603). The atlas is 1024 by 1024 (D-604).
 - `content/textures/`: the generator paints the seven block recipes at 64 as they are (D-608). The committed atlas and layout match its output.
-- `content/textures/recipes/` and the paint files of the body and the sword: new recipes at 64, from the look references of PR-74 and PR-75 (D-607).
+- `WhatYouCarry.Tools/TextureTrace/` and `WhatYouCarry.Tools/TextureGen/`: the `texture-trace` command writes a texel map for each face from an unlit screenshot, and the `map` layer paints it (D-612, D-613).
+- `content/textures/traces/`, `content/textures/recipes/`, and the paint files of the body and the sword: traced maps of each visible face, from the unlit Meshy views of D-614 (D-607, D-612).
 - `WhatYouCarry.Tests/`: the fixture test of D-601 ends with this layout change.
 
 Out of scope: a repaint of the blocks, which a later art PR holds (D-608).
@@ -1311,15 +1312,16 @@ Exit tests:
 
 1. The generator sizes each face at 64 texels per meter in an atlas of 1024, and the committed atlas and layout match its output.
 2. The agent runs the bot session with `--frame-log` on the Deck over SSH, at the head of the PR (D-605, D-606). The PR records the frame times against D-295.
-3. The owner approves the contact sheet of the repainted body and sword at the new density, recorded as a decision (D-607).
+3. The owner approves the contact sheet of the traced body and sword at the new density, recorded as a decision (D-607, D-612).
+4. `TextureTraceTests` passes: the map layer, the screenshot reader, the trace, the spec, and the command.
 
-Review focus: the new recipes against the look references, the frame time and the memory, test quality.
+Review focus: the traced maps against the look references, the trace tool, the frame time and the memory.
 
 Check clause: none.
 
-Gate: exit tests 1 to 3 pass.
+Gate: exit tests 1 to 4 pass.
 
-> *In plain English:* each face showed 32 pixels per meter, so a sword blade was 3 pixels wide. Every face now shows 64, and the body and the sword gain new detail.
+> *In plain English:* each face showed 32 pixels per meter, so a sword blade was 3 pixels wide. Every face now shows 64, and the body and the sword copy their pixels from the 3D reference.
 
 ### PR-76: Enemy models
 
