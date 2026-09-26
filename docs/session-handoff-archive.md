@@ -1,5 +1,36 @@
 # Session handoff archive
 
+## Session 263: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-86, author, the hand-over. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge. Base `0d99e2c`. Sessions 259 and 261 hold the earlier work of this session.
+
+### What this session did, and why
+
+- Round 2 approved the effective head `1678ef5` with `Ready for owner merge`, and P2-1 is fixed. The gitar pass approved `817dad3` with no finding, and no review thread exists.
+
+### State of the build
+
+- Effective head `1678ef5`. Every check of the tip passes, `evaluate` and `review-gate` included.
+- The repository has 0 runners, and the Mac Mini holds no runner agent (D-584).
+
+### In flight
+
+- The owner merge decision after the merge summary (D-533, D-552).
+- PR-85 exit test 8: the night of 2026-09-26 from the 07:07 UTC cron has not started. A later session reads its start time, the wall time of each sweep job, its result, and its slice (6001-6500 for each bot policy, 120001-130000 for reachability).
+
+### Traps and gotchas
+
+- Session 259 lists the traps of this PR.
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+When the owner confirms, run `gh pr merge 105 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge.
+
 ## Session 262: 2026-09-25, Codex
 
 Author: Codex

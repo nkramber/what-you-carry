@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 273: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-90, author, review response. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+
+### What this session did, and why
+
+- Answered round 1 of the review in `docs/reviews/pr-108-response.md`. P2-1 has full merit. `e4d3543` rejects a header chunk that is not 13 bytes, and a regression case failed on the old reader.
+- Ran exit test 2 at the PR head `e4d3543` on the Deck over SSH, on X11, after the owner said the Deck was ready (D-606). After the first 10 s, no frame is over 11111 µs (D-295). In the first 10 s, 67 frames were over, and the worst was 27270 µs.
+- The owner asked for a fix of the exit hang now (F-147). Under gdb, the main thread waits in `pthread_join`, and the thread "Wayland Events" waits in `poll`. On the Wayland fallback of an SSH session, 5 of 14 runs hung, `main` too. With `XAUTHORITY` set, 0 of 9 runs hung.
+- `docs/runbooks/commands.md` holds the Deck run procedure with `XAUTHORITY`, and the agent files name it.
+- The gitar pass of `e4d3543` approved with no finding.
+
+### State of the build
+
+- Effective head `e4d3543`. Each check of `e4d3543` passed except `evaluate` and `review-gate`, which wait for the review record (D-251). The local full suite passed 1867 of 1867.
+- The documents commit of this entry, the response, the runbook, and F-147 comes after `e4d3543`.
+
+### In flight
+
+- The gitar pass of the documents commit, then round 2 of `make codex-review PR=108`.
+
+### Traps and gotchas
+
+- The Deck checkout is on the PR-90 branch at `e4d3543`, and its build is current.
+- The probe `~/hang-probe2.sh <driver> <runs>` on the Deck runs the session under gdb, because `ptrace_scope` is 1. It stops at the first hang.
+- The official Godot binary has no symbols. The libc frames map to a symbol through `readelf -S` and `nm -D` on the Deck.
+
+### Open questions that block progress
+
+None for PR-90.
+
+### Next concrete action
+
+Run `make codex-review PR=108` when each check but the Review gate workflow is green. After a `Ready for owner merge` verdict, give the owner the merge summary (D-533).
+
 ## Session 272: 2026-09-26, Codex
 
 Author: Codex
@@ -323,34 +359,3 @@ None for PR-75. OQ-207 blocks PR-89, and OQ-208 blocks PR-90.
 ### Next concrete action
 
 When the owner confirms, run `gh pr merge 106 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge. Then read PR-85 exit test 8.
-
-## Session 263: 2026-09-25, Claude Code
-
-Author: Claude Code
-Session: PR-86, author, the hand-over. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge. Base `0d99e2c`. Sessions 259 and 261 hold the earlier work of this session.
-
-### What this session did, and why
-
-- Round 2 approved the effective head `1678ef5` with `Ready for owner merge`, and P2-1 is fixed. The gitar pass approved `817dad3` with no finding, and no review thread exists.
-
-### State of the build
-
-- Effective head `1678ef5`. Every check of the tip passes, `evaluate` and `review-gate` included.
-- The repository has 0 runners, and the Mac Mini holds no runner agent (D-584).
-
-### In flight
-
-- The owner merge decision after the merge summary (D-533, D-552).
-- PR-85 exit test 8: the night of 2026-09-26 from the 07:07 UTC cron has not started. A later session reads its start time, the wall time of each sweep job, its result, and its slice (6001-6500 for each bot policy, 120001-130000 for reachability).
-
-### Traps and gotchas
-
-- Session 259 lists the traps of this PR.
-
-### Open questions that block progress
-
-None for PR-86.
-
-### Next concrete action
-
-When the owner confirms, run `gh pr merge 105 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge.
