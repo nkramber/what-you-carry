@@ -1300,23 +1300,26 @@ Gate: exit tests 1 to 3 pass (D-598 to D-602).
 
 Scope:
 
-- The texel density of D-308 and the atlas side of D-506 rise, as the answer to OQ-208 sets (D-595). Each item then shows more detail, such as the sword of PR-75.
+- `WhatYouCarry.Assets/AtlasLayout.cs`: every face has 64 texels per meter, a block face and a model face alike (D-603). The atlas is 1024 by 1024 (D-604).
+- `content/textures/`: the generator paints the seven block recipes at 64 as they are (D-608). The committed atlas and layout match its output.
+- `content/textures/recipes/` and the paint files of the body and the sword: new recipes at 64, from the look references of PR-74 and PR-75 (D-607).
+- `WhatYouCarry.Tests/`: the fixture test of D-601 ends with this layout change.
 
-Out of scope: the repaint of each asset at the new density, which each later art PR holds.
+Out of scope: a repaint of the blocks, which a later art PR holds (D-608).
 
 Exit tests:
 
-1. The generator sizes each face at the new density, and the committed layout matches its output.
-2. A frame log on the Deck, or the answer to OQ-208, shows that the frame time holds D-295.
-3. The owner approves a contact sheet at the new density, recorded as a decision.
+1. The generator sizes each face at 64 texels per meter in an atlas of 1024, and the committed atlas and layout match its output.
+2. The agent runs the bot session with `--frame-log` on the Deck over SSH, at the head of the PR (D-605, D-606). The PR records the frame times against D-295.
+3. The owner approves the contact sheet of the repainted body and sword at the new density, recorded as a decision (D-607).
 
-Review focus: the frame time and the memory, presentation, test quality.
+Review focus: the new recipes against the look references, the frame time and the memory, test quality.
 
 Check clause: none.
 
-Gate: exit tests 1 to 3 pass. OQ-208 blocks the start.
+Gate: exit tests 1 to 3 pass.
 
-> *In plain English:* each face shows 32 pixels per meter, so a sword blade is 3 pixels wide. This change gives each item more pixels, so the art can show more detail.
+> *In plain English:* each face showed 32 pixels per meter, so a sword blade was 3 pixels wide. Every face now shows 64, and the body and the sword gain new detail.
 
 ### PR-76: Enemy models
 
@@ -1418,7 +1421,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 45. PR-86. The macOS legs on hosted runners (D-572, D-573).
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
 47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
-48. Owner: answer OQ-208. PR-90, the texture resolution (D-595).
+48. PR-90. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608.
 49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596).
 50. PR-76.
 51. Owner: answer OQ-181.
@@ -1437,7 +1440,10 @@ Open:
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-181: the antialiasing of the world. Blocks PR-77 (D-504).
 - OQ-206: the held sword in the roll. Blocks nothing.
-- OQ-208: the texture resolution. Blocks PR-90 (D-595).
+
+Resolved 2026-09-26:
+
+- OQ-208 (D-603 to D-605): the texture resolution. PR-90.
 
 Resolved 2026-09-25:
 

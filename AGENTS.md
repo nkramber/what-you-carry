@@ -126,7 +126,7 @@ The build needs the SDK version in `global.json`. Run each command from the chec
 - Test exit session, a headless smoke session that presses Escape or Start at a tick: `/Applications/Godot_mono.app/Contents/MacOS/Godot --headless --path WhatYouCarry.Game --fixed-fps 60 -- --smoke --press escape 100`. The other name is `start`.
 - Play session: `make play` builds and opens it borderless fullscreen at the display resolution, with the mouse captured (D-310). Escape or the Start button ends it (D-311). `make windowed` opens a window.
 - Bot session with a frame log, for M-3: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt`
-- Transition test, PR-18 exit test 6 on the Deck (D-428, D-435): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt --transitions 10`. On the Deck, use the Linux Godot .NET binary of D-294 in place of that path.
+- Transition test, PR-18 exit test 6 on the Deck (D-428, D-435): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt --transitions 10`. Run each Deck test over SSH when the owner says that the Deck is ready, with the Linux Godot .NET binary of D-294 (D-606).
 - Contact sheet, a local run with a window: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
 - HUD shot, the Deck frame of the HUD fixture, with a window (D-133): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --hud-shot hud.png`
 
