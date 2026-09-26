@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-90, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-616. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-90, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -1298,12 +1298,15 @@ Gate: exit tests 1 to 3 pass (D-598 to D-602).
 
 ### PR-90: Texture resolution
 
+✅ Done in PR #108.
+
 Scope:
 
 - `WhatYouCarry.Assets/AtlasLayout.cs`: every face has 64 texels per meter, a block face and a model face alike (D-603). The atlas is 1024 by 1024 (D-604).
 - `content/textures/`: the generator paints the seven block recipes at 64 as they are (D-608). The committed atlas and layout match its output.
 - `WhatYouCarry.Tools/TextureTrace/` and `WhatYouCarry.Tools/TextureGen/`: the `texture-trace` command writes a texel map for each face from an unlit screenshot, and the `map` layer paints it (D-612, D-613).
 - `content/textures/traces/`, `content/textures/recipes/`, and the paint files of the body and the sword: traced maps of each visible face, from the unlit Meshy views of D-614 (D-607, D-612).
+- `WhatYouCarry.Tools/AssetQa/FileCaseCheck.cs`: the file case check skips the trace specs, which name screenshots outside the repository (D-617).
 - `WhatYouCarry.Tests/`: the fixture test of D-601 ends with this layout change.
 
 Out of scope: a repaint of the blocks, which a later art PR holds (D-608).
@@ -1423,7 +1426,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 45. PR-86. The macOS legs on hosted runners (D-572, D-573).
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
 47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
-48. PR-90. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608.
+48. PR-90. ✅ Done in PR #108. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608. The traced maps and the approved sheet: D-612 to D-617.
 49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596).
 50. PR-76.
 51. Owner: answer OQ-181.

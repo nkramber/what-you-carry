@@ -17,6 +17,7 @@ namespace WhatYouCarry.Tests;
 /// The texel maps of D-612: the <c>map</c> layer of a recipe, the screenshot reader, the trace of a face, the trace
 /// spec, and the <c>texture-trace</c> command.
 /// </summary>
+[Collection(ConsoleCollection.Name)]
 public sealed class TextureTraceTests
 {
     private const string RecipePath = "textures/recipes/test.json";

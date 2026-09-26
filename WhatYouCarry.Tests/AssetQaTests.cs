@@ -280,6 +280,23 @@ public sealed class AssetQaTests
         Assert.Empty(Findings(content));
     }
 
+    /// <summary>
+    /// A trace spec names screenshots outside the content directory, so the check skips the trace directory alone (D-617).
+    /// The same reference in another directory stays a finding.
+    /// </summary>
+    [Fact]
+    public void TraceSpecIsNotRead()
+    {
+        const string Spec = "{\"images\": {\"front\": \"artifacts/reference/sword/30-unlit-front.png\"}}";
+        using TemporaryContentDirectory content = new();
+        content.Write(AssetPaths.TraceDirectory + "sword.json", Spec);
+        content.Write("items/sword.json", Spec);
+
+        AssetFinding finding = Assert.Single(Findings(content));
+        Assert.Equal("items/sword.json", finding.Path);
+        Assert.Contains("no directory 'artifacts'", finding.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>A reference to no file, a rooted reference, a backslash, and a dot segment are findings (D-302).</summary>
     [Theory]
     [InlineData("items/axe.json", "no file 'axe.json'")]

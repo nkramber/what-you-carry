@@ -2,7 +2,7 @@
   "model": "models/sword-basic.bbmodel",
   "boxes": {
     "pommel_box": {"recipe": "iron", "faces": {"north": "sword-pommel-north", "east": "sword-pommel-east", "south": "sword-pommel-south", "west": "sword-pommel-west"}},
-    "grip_box": {"recipe": "grip-wrap", "faces": {"north": "sword-grip-north", "east": "sword-grip-east", "south": "sword-grip-south", "west": "sword-grip-west", "up": "leather", "down": "leather"}},
+    "grip_box": {"recipe": "leather", "faces": {"north": "sword-grip-north", "east": "sword-grip-east", "south": "sword-grip-south", "west": "sword-grip-west"}},
     "guard_box": {"recipe": "iron", "faces": {"north": "sword-guard-north", "east": "sword-guard-east", "south": "sword-guard-south", "west": "sword-guard-west"}},
     "guard_left_box": {"recipe": "iron", "faces": {"north": "sword-guard-left-north", "south": "sword-guard-left-south"}},
     "guard_right_box": {"recipe": "iron", "faces": {"north": "sword-guard-right-north", "south": "sword-guard-right-south"}},

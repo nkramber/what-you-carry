@@ -678,8 +678,8 @@ The atlas stores the color of each pixel in place of a palette index, so the pal
 Gate: the first commit keeps each color, each pixel after the grain stays next to its old shade, and the owner approves the contact sheet (D-601, D-602).
 > *In plain English:* the texture image held 256 colors at most. Now it holds any color, the palette gains a soot ramp, and the grain blends smoothly between shades.
 
-**PR-90: Texture resolution.** 🔧
-Every face has 64 texels per meter, a block face too, in an atlas of 1024, so each item shows more detail (D-595, D-603, D-604). The blocks keep their recipes (D-608). A tool traces each face of the body and the sword from unlit views of the 3D reference into a texel map (D-607, D-612 to D-614).
+**PR-90: Texture resolution.** ✅ Done in PR #108.
+Every face has 64 texels per meter, a block face too, in an atlas of 1024, so each item shows more detail (D-595, D-603, D-604). The blocks keep their recipes (D-608). A tool traces each face of the body and the sword from unlit views of the 3D reference into a texel map (D-607, D-612 to D-617).
 Gate: a frame log on the Deck holds D-295, and the owner approves the contact sheet of the traced faces (D-605, D-606, D-612).
 > *In plain English:* a sword blade was 3 pixels wide. Every face now has twice the pixels in each direction, and the body and the sword copy their pixels from the 3D reference.
 

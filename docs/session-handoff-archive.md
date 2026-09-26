@@ -1,5 +1,36 @@
 # Session handoff archive
 
+## Session 261: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-86, author, the answer to round 1. Branch `feat/pr-86-hosted-macos`. PR #105, pending merge. Base `0d99e2c`. Session 259 holds the earlier work of this session.
+
+### What this session did, and why
+
+- Round 1 gave `Changes required` with P2-1. It had full merit: the plain-English paragraph of the PR-86 entry said that three checks still run on the Mac of the owner. The paragraph now puts that state before the change. `docs/reviews/pr-105-response.md` records the answer.
+- The owner asked why the review waits for the night of PR-85 exit test 8, and then started the review. That night is a record for PR-85, and no part of PR-86 depends on it.
+
+### State of the build
+
+- Effective head `1678ef5`. The correction changes documents alone (D-475, D-534). The gitar pass approved `d063bae` with no finding.
+
+### In flight
+
+- Round 2 of the cross-provider review, and the owner merge decision (D-533, D-552).
+- PR-85 exit test 8: the night of 2026-09-26 from the 07:07 UTC cron has not started. A later session reads its start time, the wall time of each sweep job, its result, and its slice (6001-6500 for each bot policy, 120001-130000 for reachability).
+
+### Traps and gotchas
+
+- Session 259 lists the traps of this PR.
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+Complete the gitar pass of the new head, then run `make codex-review PR=105`.
+
 ## Session 260: 2026-09-25, Codex
 
 Author: Codex
