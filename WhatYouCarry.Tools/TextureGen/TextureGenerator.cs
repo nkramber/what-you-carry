@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using WhatYouCarry.Assets;
@@ -6,15 +7,15 @@ using WhatYouCarry.Core.Logging;
 namespace WhatYouCarry.Tools.TextureGen;
 
 /// <summary>The atlas pixels and the texture layout of one generator run.</summary>
-/// <param name="Pixels">The palette index of every pixel of the atlas, row by row from the top left corner.</param>
+/// <param name="Pixels">The color of every pixel of the atlas, row by row from the top left corner.</param>
 /// <param name="Layout">The place of each block canvas and each face canvas.</param>
-public sealed record AtlasResult(byte[] Pixels, TextureLayout Layout);
+public sealed record AtlasResult(AtlasColor[] Pixels, TextureLayout Layout);
 
 /// <summary>
 /// Paints the atlas from the palette, the recipes, and the bindings (D-305, D-505). Each block id has a canvas of
 /// 32 by 32 pixels. Each face of each box of each model has a canvas of its size at 32 texels per meter (D-308). The
 /// packer places every canvas, and a gutter around each canvas repeats its edge pixels. A pixel that no canvas and no
-/// gutter covers holds index 0.
+/// gutter covers holds the first color of the palette.
 /// </summary>
 public static class TextureGenerator
 {
@@ -27,7 +28,7 @@ public static class TextureGenerator
     public static AtlasResult Generate(Palette palette, IReadOnlyDictionary<string, Recipe> recipes, IReadOnlyList<BlockPaint> blocks, IReadOnlyList<ModelPaint> models)
     {
         List<CanvasSize> sizes = [];
-        List<byte[]> canvases = [];
+        List<AtlasColor[]> canvases = [];
         foreach (BlockPaint block in blocks)
         {
             string name = "block " + Text(block.Block);
@@ -57,7 +58,8 @@ public static class TextureGenerator
         }
 
         IReadOnlyList<AtlasRect> places = AtlasPacker.Pack(sizes);
-        byte[] pixels = new byte[AtlasLayout.AtlasPixels * AtlasLayout.AtlasPixels];
+        AtlasColor[] pixels = new AtlasColor[AtlasLayout.AtlasPixels * AtlasLayout.AtlasPixels];
+        Array.Fill(pixels, palette.AtlasColors[0]);
         for (int index = 0; index < canvases.Count; index++)
         {
             Place(pixels, canvases[index], places[index]);
@@ -70,7 +72,7 @@ public static class TextureGenerator
     /// Copies one canvas into the atlas at its place, and fills its gutter: each gutter pixel takes the nearest pixel
     /// of the canvas, the corners included.
     /// </summary>
-    private static void Place(byte[] atlas, byte[] canvas, AtlasRect place)
+    private static void Place(AtlasColor[] atlas, AtlasColor[] canvas, AtlasRect place)
     {
         int gutter = AtlasLayout.Gutter;
         for (int y = -gutter; y < place.Height + gutter; y++)

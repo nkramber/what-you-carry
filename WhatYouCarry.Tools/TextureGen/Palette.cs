@@ -14,21 +14,23 @@ public readonly record struct PaletteColor(byte Red, byte Green, byte Blue, int 
 /// <summary>One ramp of the palette: its name, the flat index of its darkest color, its count of colors, and the atlas index of its first fine shade (D-528).</summary>
 public sealed record PaletteRamp(string Name, int First, int Count, int ShadeFirst);
 
-/// <summary>One entry of the palette of the atlas PNG: three sRGB bytes.</summary>
+/// <summary>One color of the atlas: three sRGB bytes.</summary>
 public readonly record struct AtlasColor(byte Red, byte Green, byte Blue);
 
 /// <summary>
 /// The palette of the atlas (D-85, D-304), read from <c>textures/palette.json</c>: a list of ramps, and each ramp
 /// has a name and its colors from dark to light. The flat index of a color counts through the ramps in file order.
 /// A rule names its base color by that index, and the generator moves a pixel along the ramp of that index alone,
-/// so every pixel of the atlas is a palette color (PR-14 exit test 1).
+/// so every pixel of the atlas lies on a ramp of the palette (PR-14 exit test 1). The atlas stores the color of each
+/// pixel and not an index, so the palette has no count limit (D-598).
 /// </summary>
 /// <remarks>
 /// <para>
 /// Each ramp also lists its fine shades, three between each pair of its colors (D-528). A pixel moves along a ramp in
 /// fine steps: <see cref="ShadesPerStep"/> fine steps make one step of a color, so the fine step of a color is its
-/// step times four. The atlas palette holds every color at its flat index, and then the shades of each ramp in ramp
-/// order, so a block that paints colors alone keeps its pixels.
+/// step times four. The list of atlas colors holds every color at its flat index, and then the shades of each ramp
+/// in ramp order. A grain moves a pixel in parts of a fine step, and the pixel then takes the blend in linear light of
+/// the two fine shades around it (D-599).
 /// </para>
 /// <para>
 /// The palette is a file of this project, so the unknown-field check of D-168 applies. A color is <c>#</c> and six
@@ -38,9 +40,6 @@ public readonly record struct AtlasColor(byte Red, byte Green, byte Blue);
 /// </remarks>
 public sealed class Palette
 {
-    /// <summary>The most colors that the palette of one indexed PNG holds.</summary>
-    public const int MaxColors = 256;
-
     /// <summary>The field of the list of ramps.</summary>
     public const string RampsKey = "ramps";
 
@@ -55,6 +54,9 @@ public sealed class Palette
 
     /// <summary>The fine steps from one color of a ramp to the next (D-528).</summary>
     public const int ShadesPerStep = 4;
+
+    /// <summary>The parts of one fine step. A position on a ramp counts in parts, so a grain can move a pixel between two fine shades (D-599).</summary>
+    public const int PartsPerFineStep = 256;
 
     private const int ColorLength = 7;
 
@@ -74,11 +76,11 @@ public sealed class Palette
     /// <summary>Every color, by flat index.</summary>
     public IReadOnlyList<PaletteColor> Colors { get; }
 
-    /// <summary>The palette of the atlas PNG: every color at its flat index, then the fine shades of each ramp.</summary>
+    /// <summary>Every color and every fine shade: every color at its flat index, then the fine shades of each ramp.</summary>
     public IReadOnlyList<AtlasColor> AtlasColors { get; }
 
     /// <summary>The palette of one file.</summary>
-    /// <exception cref="ContextException">The file is not a JSON object, a field is absent or unknown, a list is empty, a color is not lowercase hex, a ramp has the wrong count of shades, a name or a color appears twice, or the count passes <see cref="MaxColors"/>.</exception>
+    /// <exception cref="ContextException">The file is not a JSON object, a field is absent or unknown, a list is empty, a color is not lowercase hex, a ramp has the wrong count of shades, or a name or a color appears twice.</exception>
     public static Palette Parse(string path, byte[] bytes)
     {
         using JsonDocument document = TextureJson.Parse(path, bytes);
@@ -134,11 +136,6 @@ public sealed class Palette
             atlasColors.AddRange(shadesOfRamp[index]);
         }
 
-        if (atlasColors.Count > MaxColors)
-        {
-            throw ContentError.Make(path, RampsKey, $"holds {Text(atlasColors.Count)} colors and shades, and an indexed PNG holds {Text(MaxColors)} at most");
-        }
-
         return new Palette(ramps, colors, atlasColors);
     }
 
@@ -161,6 +158,34 @@ public sealed class Palette
         int step = fineStep / ShadesPerStep;
         int between = fineStep % ShadesPerStep;
         return between == 0 ? named.First + step : named.ShadeFirst + (step * (ShadesPerStep - 1)) + between - 1;
+    }
+
+    /// <summary>
+    /// The color of one position on one ramp, in parts of a fine step: the fine shade at a whole fine step, and
+    /// otherwise the blend in linear light of the two fine shades around the position (D-599).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The position lies outside the ramp.</exception>
+    public AtlasColor ColorAt(int ramp, int position)
+    {
+        int top = this.FineTop(ramp) * PartsPerFineStep;
+        if (position < 0 || position > top)
+        {
+            throw new ArgumentOutOfRangeException(nameof(position), $"The position {Text(position)} lies outside the ramp '{this.Ramps[ramp].Name}', which runs from 0 to {Text(top)} parts of a fine step.");
+        }
+
+        int fineStep = position / PartsPerFineStep;
+        int weight = position % PartsPerFineStep;
+        AtlasColor dark = this.AtlasColors[this.AtlasIndex(ramp, fineStep)];
+        if (weight == 0)
+        {
+            return dark;
+        }
+
+        AtlasColor light = this.AtlasColors[this.AtlasIndex(ramp, fineStep + 1)];
+        return new AtlasColor(
+            LinearLight.Blend(dark.Red, light.Red, weight, PartsPerFineStep),
+            LinearLight.Blend(dark.Green, light.Green, weight, PartsPerFineStep),
+            LinearLight.Blend(dark.Blue, light.Blue, weight, PartsPerFineStep));
     }
 
     /// <summary>The shades of one ramp: three between each pair of its colors, dark to light (D-528).</summary>

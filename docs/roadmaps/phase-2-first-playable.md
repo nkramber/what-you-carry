@@ -1272,26 +1272,29 @@ Gate: exit tests 1 to 5 pass.
 
 ### PR-89: Truecolor atlas
 
+✅ Done in PR #107.
+
 Scope:
 
-- The texture generator and the atlas: the atlas stores colors in place of palette indices, so the palette can hold more than 256 colors and shades (D-595). The answer to OQ-207 sets the rules of a recipe color.
-- The soot ramp of D-592 can then join the palette.
+- The texture generator and the atlas: the atlas stores colors in place of palette indices, so the palette can hold more than 256 colors and shades (D-595). A recipe names a ramp and a fine step of the palette, and the palette has no count limit (D-598).
+- The grain: it moves a pixel in linear light between two fine shades (D-599).
+- The palette: the soot ramp of D-592 joins (D-600).
 
 Out of scope: the texture density, which PR-90 holds. New art.
 
 Exit tests:
 
-1. The generator writes a truecolor atlas, and the Game draws every block, the body, and the sword with the same colors as before the change.
-2. A palette of more than 256 colors and shades loads, and a test holds the new limit.
-3. The owner approves a contact sheet that matches the sheet before the change, recorded as a decision.
+1. The generator writes a truecolor atlas. After the first commit, each pixel holds its color of the indexed atlas. After the grain of D-599, each pixel keeps its ramp and lies between the two fine shades next to its old shade. Each canvas with no grain keeps its colors (D-601).
+2. A palette of more than 256 colors and shades loads, and a test holds the new limit: none, shown with a palette of 1024 colors (D-598).
+3. The owner approves the contact sheet with the grain of D-599 as a look change, recorded as a decision (D-601, D-602).
 
 Review focus: the atlas format, the unchanged look, test quality.
 
 Check clause: none.
 
-Gate: exit tests 1 to 3 pass. OQ-207 blocks the start.
+Gate: exit tests 1 to 3 pass (D-598 to D-602).
 
-> *In plain English:* the texture image can hold 256 colors at most, and the palette is near that limit. This change lets the image hold any color of the palette, so later art has room.
+> *In plain English:* the texture image held 256 colors at most, and the palette was near that limit. This change lets the image hold any color, so later art has room. The grain now blends smoothly between two shades.
 
 ### PR-90: Texture resolution
 
@@ -1414,7 +1417,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 44. PR-88. ✅ Done in PR #104. The fixes of the repository review (D-578). ✅ The owner answers of 2026-09-25: D-578 to D-580.
 45. PR-86. The macOS legs on hosted runners (D-572, D-573).
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
-47. Owner: answer OQ-207. PR-89, the truecolor atlas (D-595).
+47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
 48. Owner: answer OQ-208. PR-90, the texture resolution (D-595).
 49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596).
 50. PR-76.
@@ -1434,8 +1437,11 @@ Open:
 - OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-181: the antialiasing of the world. Blocks PR-77 (D-504).
 - OQ-206: the held sword in the roll. Blocks nothing.
-- OQ-207: the truecolor atlas. Blocks PR-89 (D-595).
 - OQ-208: the texture resolution. Blocks PR-90 (D-595).
+
+Resolved 2026-09-25:
+
+- OQ-207 (D-598, D-599): the truecolor atlas. PR-89.
 
 Resolved 2026-09-21:
 

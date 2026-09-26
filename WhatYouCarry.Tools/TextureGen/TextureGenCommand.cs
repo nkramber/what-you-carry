@@ -87,7 +87,7 @@ public static class TextureGenCommand
         IReadOnlyList<BlockPaint> blocks = PaintFile.ReadBlocks(AssetPaths.BlockPaintFile, ReadFile(contentRoot, AssetPaths.BlockPaintFile), recipes);
         IReadOnlyList<ModelPaint> models = ReadModelPaints(contentRoot, recipes);
         AtlasResult result = TextureGenerator.Generate(palette, recipes, blocks, models);
-        byte[] atlas = PngWriter.Write(AtlasLayout.AtlasPixels, AtlasLayout.AtlasPixels, palette.AtlasColors, result.Pixels);
+        byte[] atlas = PngWriter.Write(AtlasLayout.AtlasPixels, AtlasLayout.AtlasPixels, result.Pixels);
         return new GeneratorOutput(atlas, result.Layout.ToJson());
     }
 
