@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 268: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-89, author, answer to review round 1. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
+
+### What this session did, and why
+
+- Round 1 gave `Changes required` at effective head `e4a097e` with P2-1: `LinearLight.Blend` divided by zero on a count of 0 parts.
+- P2-1 had full merit. Commit `6afe1db` rejects a count of parts that is not positive with a context error. The regression test failed on the old code with `DivideByZeroException`. `docs/reviews/pr-107-response.md` records it.
+- The automated pass of `2aa88bd` approved with no finding. Its red-gate note got the D-251 reply in comment 5843313742. No `Gitar review` comment was sent.
+- PR-85 exit test 8: at 05:19 UTC on 2026-09-26, the first night of the `7 7 * * *` cron has not started. The newest scheduled night is still run 36141884980 at `a3590ba`, from before the merge of PR-85.
+
+### State of the build
+
+- Effective head `6afe1db`. The full suite passed 1826 of 1826, and `ste-check` found nothing. At `2aa88bd`, each check passed except `evaluate` and `review-gate`, which waited for the record.
+
+### In flight
+
+- The gitar pass of `6afe1db`, CI, and review round 2.
+- PR-85 exit test 8: the night of 2026-09-26.
+
+### Traps and gotchas
+
+- The review of round 1 ran `handoff-rotate`, which moved Session 257 to the archive in commit `0230098`.
+
+### Open questions that block progress
+
+None for PR-89. OQ-208 blocks PR-90.
+
+### Next concrete action
+
+After the gitar pass and green CI, run `make codex-review PR=107`. On approval, give the owner the merge summary (D-533). Read the night of exit test 8 when it ends.
+
 ## Session 267: 2026-09-26, Codex
 
 Author: Codex
@@ -315,37 +348,3 @@ None for PR-86.
 ### Next concrete action
 
 Read the night of 2026-09-26 for PR-85 exit test 8, then run `make codex-review PR=105`.
-
-## Session 258: 2026-09-25, Claude Code
-
-Author: Claude Code
-Session: PR-88, author. Branch `fix/pr-88-review-fixes`. PR #104, pending merge. Base `4e9b59d`.
-
-### What this session did, and why
-
-- Round 2 gave `Changes required` with P1-3 and P2-1. Both had full merit: a backtick in a fence info string opens no fence, and the string scan joins the const names of every Game file. Commit `d027fa8` holds both, with tests that fail on the old code.
-- PR #102 merged into `main`, and the owner asked for a merge from `main`. Commit `5e43e89` merges it. The conflicts were the D-284 and D-285 rows, the handoff, and the archive.
-- Both branches used the session numbers 249 and 251. The entries of this branch took 253 to 256, and the archive holds the union of both sides.
-- Round 3 approved the effective head `5e43e89`. The first record named `d027fa8`, and the review itself corrected the head in `a066510` before the session stopped its process.
-- The repository review report marks each finding that this PR fixed, in full or in part, as complete in PR #104.
-
-### State of the build
-
-- Remote head `a066510`. Effective head `5e43e89`. Every check passes, `review-gate` included.
-- The full suite passed 1816 of 1816 on the merged tree, Smoke included. The known answer is `9c79047da9c82a0e`.
-
-### In flight
-
-- The owner merge decision after the merge summary (D-533, D-552).
-
-### Traps and gotchas
-
-- A review round can go quiet for minutes after its push and then push a last record commit. Read the record on the branch before a stop.
-
-### Open questions that block progress
-
-None for PR-88. OQ-195 to OQ-205 block other work.
-
-### Next concrete action
-
-When the owner confirms, run `gh pr merge 104 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge.
