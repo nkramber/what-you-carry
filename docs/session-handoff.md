@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 267: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-89, reviewer. Branch `feat/pr-89-truecolor-atlas`. PR #107, changes required. Effective head `e4a097e`.
+
+### What this session did, and why
+
+- Reviewed PR #107 against its atlas, palette, and grain contracts (D-598 to D-602).
+- Added P2-1 to `docs/reviews/pr-107.md`: `LinearLight.Blend` accepts zero parts, then divides by zero.
+
+### State of the build
+
+- Remote PR head before this review publication: `2aa88bd`. CI, smoke, bit identity, bots, asset QA, determinism lint, document gate, night gate, and STE passed for the effective head. The review gate awaited this record.
+- The focused texture and recipe tests passed 126 of 126.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and a push.
+- P2-1 needs a correction and regression test before approval.
+
+### Traps and gotchas
+
+- `LinearLight.Blend` uses 256 parts for grain today. Its public method still accepts zero and divides by zero.
+- The review covers effective head `e4a097e`. Later PR commits changed only paths in the skip set of D-475.
+
+### Open questions that block progress
+
+None. OQ-208 blocks PR-90 only.
+
+### Next concrete action
+
+Correct P2-1, test zero parts, and request a new review round.
+
 ## Session 266: 2026-09-25, Claude Code
 
 Author: Claude Code
@@ -316,47 +349,3 @@ None for PR-88. OQ-195 to OQ-205 block other work.
 ### Next concrete action
 
 When the owner confirms, run `gh pr merge 104 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge.
-
-## Session 257: 2026-09-25, Codex
-
-Author: Codex
-Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Ready for owner merge. Base `4e9b59d`.
-
-### What this session did, and why
-
-- Round 3 reviewed PR #104 at effective head `5e43e89` and checked P1-3 and P2-1.
-- Both findings are fixed in `d027fa8`. The review record now approves this head.
-- The targeted review tests passed 73 cases, and det-lint found zero issues.
-- STE passed with zero findings. The Documents category passed 192 tests after handoff rotation. Doc-gate found zero problems.
-
-### State of the build
-
-- Required CI, Smoke, bit identity, bots, asset QA, det-lint, Documents, STE, doc-gate, and night-gate passed at PR head `5e43e89`.
-- The first metadata head `7d37b76` had a stale review head. The corrected metadata head `597d41d` passed `evaluate`, `review-gate`, Gitar, doc-gate, Documents, STE, and all other applicable checks.
-- Heavy code checks skipped at `597d41d` under the documents-only rule. Required code checks passed at effective head `5e43e89` (D-357, D-475).
-- The review record and this handoff publish in one metadata commit (D-182).
-- The latest push and PR head were verified with `gh pr view`.
-
-### In flight
-
-- The review is ready for owner merge at effective head `5e43e89`.
-- No review correction remains in flight.
-
-### Traps and gotchas
-
-- PR head `5e43e89` merges the updated base `4e9b59d`. Its effective-head diff from the base is the already reviewed F-134 test in `RepositoryShapeTests`.
-- The local regression run used the Debug configuration and passed all 73 selected tests.
-- The first Documents run found the handoff archive out of rotation. `handoff-rotate` moved Session 244, then all 192 Documents tests passed.
-- The earlier Gitar claims remain resolved. Its current dashboard reported only the stale review-gate verdict.
-
-### Open questions that block progress
-
-None for PR-88. OQ-195 to OQ-205 do not block this review.
-
-### Next concrete action
-
-Give the owner the review verdict and the merge evidence for PR #104.
-
-# Session handoff
-
-Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
