@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 272: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-90, reviewer. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+
+### What this session did, and why
+
+- Reviewed PR #108 at head `4edcd2c`. The provider gate passed because session 271 names Claude Code as the author.
+- Added P2-1. `ScreenshotPng` reads `IHDR` fields before it checks that the chunk has 13 bytes.
+- The review record names the missing review gate record comment and the author response. It verifies that the gate was red before this record.
+- The source screenshots under `artifacts/reference/` are not in this worktree, so the review could not compare each traced map with its source image.
+
+### State of the build
+
+- At remote work head `4edcd2c`, asset QA, bit identity on three platforms, the bot checks, CI on three platforms, determinism lint, doc gate, documents, night gate, smoke on three platforms, and STE passed.
+- `evaluate` and `review-gate` failed because the review record was absent. Focused local tests passed: 39 `TextureTraceTests`, and 126 tests across texture trace, texture generation, and asset QA.
+- The handoff reports the Deck frame logs at `763efd5` and `60a23ec`. No run at `4edcd2c` appears in the evidence.
+
+### In flight
+
+- P2-1 needs a length check and a regression test. Exit test 2 needs a Deck frame log at the PR head.
+- The review record and this entry need one metadata commit and a push to the PR branch (D-182).
+
+### Traps and gotchas
+
+- The trace screenshots are gitignored files under `artifacts/reference/` and are absent from this worktree.
+- D-606 requires an owner readiness check before a Deck connection. The latest handoff reports that the Deck checkout is on the PR branch.
+- The first local test command used `--no-restore` and gave no result. A later restore and focused run passed.
+
+### Open questions that block progress
+
+No owner decision is open. The current-head Deck run and the source screenshots remain unavailable review evidence.
+
+### Next concrete action
+
+Fix P2-1 with a short-`IHDR` regression test. Run the Deck frame log at the PR head after the owner confirms readiness, then request a repeat review.
+
 ## Session 271: 2026-09-26, Claude Code
 
 Author: Claude Code
@@ -317,36 +354,3 @@ None for PR-86.
 ### Next concrete action
 
 When the owner confirms, run `gh pr merge 105 --auto --squash`, wait on the checks, and write the prompt of `merge-prompt.md` at the merge.
-
-## Session 262: 2026-09-25, Codex
-
-Author: Codex
-Session: PR-86, reviewer, round 2. Branch `feat/pr-86-hosted-macos`. PR #105, Ready for owner merge. Base `0d99e2c`.
-
-### What this session did, and why
-
-- Re-reviewed PR #105 after the author answered P2-1.
-- Confirmed that the corrected roadmap text passes the finding’s regression check. Updated the existing review record and kept the earlier verdict.
-- The review record and this entry form one metadata commit (D-182).
-
-### State of the build
-
-- Effective head `1678ef5`; PR tip `817dad3`. The current document checks and Gitar pass. Code jobs skip after the documents-only change.
-- `evaluate` and `review-gate` still read the earlier review record. Recheck them after this metadata commit reaches the PR.
-
-### In flight
-
-- No review work remains. The owner gives the merge summary and confirms the merge (D-533, D-552).
-
-### Traps and gotchas
-
-- The correction changes documents alone. The earlier workflow checks still cover the same implementation head.
-- PR #105 has one Gitar approval summary with no specific item, and no review threads.
-
-### Open questions that block progress
-
-None for PR-86.
-
-### Next concrete action
-
-The owner reads the merge summary and confirms whether to merge PR #105.

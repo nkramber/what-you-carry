@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 262: 2026-09-25, Codex
+
+Author: Codex
+Session: PR-86, reviewer, round 2. Branch `feat/pr-86-hosted-macos`. PR #105, Ready for owner merge. Base `0d99e2c`.
+
+### What this session did, and why
+
+- Re-reviewed PR #105 after the author answered P2-1.
+- Confirmed that the corrected roadmap text passes the finding’s regression check. Updated the existing review record and kept the earlier verdict.
+- The review record and this entry form one metadata commit (D-182).
+
+### State of the build
+
+- Effective head `1678ef5`; PR tip `817dad3`. The current document checks and Gitar pass. Code jobs skip after the documents-only change.
+- `evaluate` and `review-gate` still read the earlier review record. Recheck them after this metadata commit reaches the PR.
+
+### In flight
+
+- No review work remains. The owner gives the merge summary and confirms the merge (D-533, D-552).
+
+### Traps and gotchas
+
+- The correction changes documents alone. The earlier workflow checks still cover the same implementation head.
+- PR #105 has one Gitar approval summary with no specific item, and no review threads.
+
+### Open questions that block progress
+
+None for PR-86.
+
+### Next concrete action
+
+The owner reads the merge summary and confirms whether to merge PR #105.
+
 ## Session 261: 2026-09-25, Claude Code
 
 Author: Claude Code
