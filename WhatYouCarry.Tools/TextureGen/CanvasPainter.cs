@@ -5,22 +5,29 @@ using WhatYouCarry.Core.Logging;
 
 namespace WhatYouCarry.Tools.TextureGen;
 
+/// <summary>The ramp of each pixel of one canvas, and its position on that ramp in parts of a fine step, row by row from the top left corner.</summary>
+/// <param name="Ramps">The ramp of each pixel.</param>
+/// <param name="Positions">The position of each pixel on its ramp, from 0 to the top of the ramp, in <see cref="Palette.PartsPerFineStep"/> parts of a fine step.</param>
+public sealed record CanvasPositions(int[] Ramps, int[] Positions);
+
 /// <summary>
 /// Paints one canvas from one recipe (D-505, D-507). The result is one color per pixel, row by row from the top left
 /// corner (D-598).
 /// </summary>
 /// <remarks>
 /// <para>
-/// Each pixel holds a ramp and a fine step on it while the layers run (D-528). The noise of a fill or a rectangle, an
-/// edge, and a band move a pixel by whole steps of a color, four fine steps each. A grain and a gradient move it by
-/// fine steps. A step can leave the ramp during the layers, and the painter clamps it to the ramp once, after the last
-/// layer. A fill with noise and then an edge therefore give the pixels of a rule of PR-14 with the same base, noise,
-/// edge, and seed (D-309).
+/// Each pixel holds a ramp and a position on it while the layers run, in parts of a fine step (D-528, D-599). The
+/// noise of a fill or a rectangle, an edge, and a band move a pixel by whole steps of a color, four fine steps each. A
+/// gradient moves it by whole fine steps. A grain moves it by parts, so a pixel can lie between two fine shades. A
+/// position can leave the ramp during the layers, and the painter clamps it to the ramp once, after the last layer. A
+/// fill with noise and then an edge therefore give the pixels of a rule of PR-14 with the same base, noise, edge, and
+/// seed (D-309). The color of a pixel is the color of its position (<see cref="Palette.ColorAt"/>).
 /// </para>
 /// <para>
 /// A grain uses whole numbers alone, so each platform paints the same bytes (D-527). Its lattice holds values from
 /// -256 to 256, and a smoothstep in 256ths joins them. Each pixel adds a dither of up to one and a half fine steps,
-/// which gives the texel mottle of the 3D reference.
+/// which gives the texel mottle of the 3D reference. The grain moves each pixel by the sum in parts, with no rounding
+/// to a fine step (D-599).
 /// </para>
 /// <para>
 /// The noise of a fill or a rectangle comes from a xorshift sequence of 32 bits, one step per pixel, rows from the
@@ -40,13 +47,13 @@ public static class CanvasPainter
     /// <summary>The fixed point of a grain: a value of 256 is one whole unit.</summary>
     private const int GrainUnit = 256;
 
-    /// <summary>The dither of a grain, in 256ths of a fine step: each pixel adds a value from minus this to one less than this.</summary>
+    /// <summary>The dither of a grain, in parts of a fine step: each pixel adds a value from minus this to one less than this.</summary>
     private const int GrainDither = 384;
 
     private const uint FnvOffset = 2166136261;
     private const uint FnvPrime = 16777619;
 
-    /// <summary>The color of every pixel of one canvas.</summary>
+    /// <summary>The color of every pixel of one canvas: the color of its position (<see cref="PaintPositions"/>).</summary>
     /// <param name="palette">The palette of the atlas.</param>
     /// <param name="recipe">The recipe that paints the canvas.</param>
     /// <param name="width">The width of the canvas, in pixels, above zero.</param>
@@ -56,48 +63,67 @@ public static class CanvasPainter
     /// <exception cref="ContextException">A rectangle lies wholly outside the canvas, or a seed and the salt give the state zero.</exception>
     public static AtlasColor[] Paint(Palette palette, Recipe recipe, int width, int height, uint salt, string canvasName)
     {
+        CanvasPositions canvas = PaintPositions(palette, recipe, width, height, salt, canvasName);
+        AtlasColor[] pixels = new AtlasColor[width * height];
+        for (int pixel = 0; pixel < pixels.Length; pixel++)
+        {
+            pixels[pixel] = palette.ColorAt(canvas.Ramps[pixel], canvas.Positions[pixel]);
+        }
+
+        return pixels;
+    }
+
+    /// <summary>The ramp and the position of every pixel of one canvas, after the last layer and the clamp to the ramp.</summary>
+    /// <param name="palette">The palette of the atlas.</param>
+    /// <param name="recipe">The recipe that paints the canvas.</param>
+    /// <param name="width">The width of the canvas, in pixels, above zero.</param>
+    /// <param name="height">The height of the canvas, in pixels, above zero.</param>
+    /// <param name="salt">The salt of the canvas: <see cref="BlockSalt"/> for a block, or <see cref="SaltOf"/> of the face name.</param>
+    /// <param name="canvasName">The name of the canvas in an error.</param>
+    /// <exception cref="ContextException">A rectangle lies wholly outside the canvas, or a seed and the salt give the state zero.</exception>
+    public static CanvasPositions PaintPositions(Palette palette, Recipe recipe, int width, int height, uint salt, string canvasName)
+    {
         if (width <= 0 || height <= 0)
         {
             throw new ArgumentException($"The canvas {canvasName} is {Text(width)} by {Text(height)} pixels, and a canvas has a positive size.", nameof(width));
         }
 
+        const int Parts = Palette.PartsPerFineStep;
         int[] ramps = new int[width * height];
-        int[] steps = new int[width * height];
+        int[] positions = new int[width * height];
         foreach (RecipeLayer layer in recipe.Layers)
         {
             switch (layer)
             {
                 case FillLayer fill:
-                    PaintNoise(palette, fill.Color, fill.Shade, fill.Noise, StartState(fill.Seed, salt, recipe, canvasName), ramps, steps, width, 0, 0, width, height);
+                    PaintNoise(palette, fill.Color, fill.Shade, fill.Noise, StartState(fill.Seed, salt, recipe, canvasName), ramps, positions, width, 0, 0, width, height);
                     break;
                 case EdgeLayer edge:
-                    ShiftRing(steps, width, height, -edge.Steps * Palette.ShadesPerStep);
+                    ShiftRing(positions, width, height, -edge.Steps * Palette.ShadesPerStep * Parts);
                     break;
                 case RectLayer rect:
-                    PaintRect(palette, rect, StartState(rect.Seed, salt, recipe, canvasName), ramps, steps, width, height, recipe, canvasName);
+                    PaintRect(palette, rect, StartState(rect.Seed, salt, recipe, canvasName), ramps, positions, width, height, recipe, canvasName);
                     break;
                 case BandLayer band:
-                    ShiftSide(steps, width, height, band.Side, band.Depth, _ => band.Shift * Palette.ShadesPerStep);
+                    ShiftSide(positions, width, height, band.Side, band.Depth, _ => band.Shift * Palette.ShadesPerStep * Parts);
                     break;
                 case GrainLayer grain:
-                    AddGrain(grain, StartState(grain.Seed, salt, recipe, canvasName), steps, width, height);
+                    AddGrain(grain, StartState(grain.Seed, salt, recipe, canvasName), positions, width, height);
                     break;
                 case GradientLayer gradient:
-                    ShiftSide(steps, width, height, gradient.Side, gradient.Depth, distance => GradientShift(gradient, distance));
+                    ShiftSide(positions, width, height, gradient.Side, gradient.Depth, distance => GradientShift(gradient, distance) * Parts);
                     break;
                 default:
                     throw new InvalidOperationException($"The recipe '{recipe.Name}' holds a layer of the type {layer.GetType().Name}, and the painter has no case for it.");
             }
         }
 
-        AtlasColor[] pixels = new AtlasColor[width * height];
-        for (int pixel = 0; pixel < pixels.Length; pixel++)
+        for (int pixel = 0; pixel < positions.Length; pixel++)
         {
-            int fineStep = Math.Clamp(steps[pixel], 0, palette.FineTop(ramps[pixel]));
-            pixels[pixel] = palette.AtlasColors[palette.AtlasIndex(ramps[pixel], fineStep)];
+            positions[pixel] = Math.Clamp(positions[pixel], 0, palette.FineTop(ramps[pixel]) * Parts);
         }
 
-        return pixels;
+        return new CanvasPositions(ramps, positions);
     }
 
     /// <summary>The salt of a face canvas: the FNV-1a hash of 32 bits of the UTF-8 bytes of its name.</summary>
@@ -138,7 +164,7 @@ public static class CanvasPainter
     /// Sets the pixels of a rectangle of the canvas to a color at a shade, with noise. A roll below half the noise
     /// amount moves the pixel one step of a color down, and a roll above one minus half the amount moves it one up.
     /// </summary>
-    private static void PaintNoise(Palette palette, int color, int shade, double noise, uint state, int[] ramps, int[] steps, int width, int left, int top, int right, int bottom)
+    private static void PaintNoise(Palette palette, int color, int shade, double noise, uint state, int[] ramps, int[] positions, int width, int left, int top, int right, int bottom)
     {
         PaletteColor baseColor = palette.Colors[color];
         int baseStep = (baseColor.Step * Palette.ShadesPerStep) + shade;
@@ -160,13 +186,13 @@ public static class CanvasPainter
                 }
 
                 ramps[(y * width) + x] = baseColor.Ramp;
-                steps[(y * width) + x] = step;
+                positions[(y * width) + x] = step * Palette.PartsPerFineStep;
             }
         }
     }
 
     /// <summary>The rectangle layer, clipped to the canvas. A rectangle with no pixel inside the canvas is an error, because it paints nothing (T-2).</summary>
-    private static void PaintRect(Palette palette, RectLayer rect, uint state, int[] ramps, int[] steps, int width, int height, Recipe recipe, string canvasName)
+    private static void PaintRect(Palette palette, RectLayer rect, uint state, int[] ramps, int[] positions, int width, int height, Recipe recipe, string canvasName)
     {
         int right = Math.Min(rect.X + rect.Width, width);
         int bottom = Math.Min(rect.Y + rect.Height, height);
@@ -175,11 +201,11 @@ public static class CanvasPainter
             throw new ContextException($"The recipe '{recipe.ContentPath}' paints a rectangle at ({Text(rect.X)}, {Text(rect.Y)}), outside the canvas {canvasName} of {Text(width)} by {Text(height)} pixels, so it paints nothing. Bind the face to another recipe.");
         }
 
-        PaintNoise(palette, rect.Color, rect.Shade, rect.Noise, state, ramps, steps, width, rect.X, rect.Y, right, bottom);
+        PaintNoise(palette, rect.Color, rect.Shade, rect.Noise, state, ramps, positions, width, rect.X, rect.Y, right, bottom);
     }
 
-    /// <summary>Moves each pixel of the outer ring by a count of steps.</summary>
-    private static void ShiftRing(int[] steps, int width, int height, int shift)
+    /// <summary>Moves each pixel of the outer ring by a count of parts.</summary>
+    private static void ShiftRing(int[] positions, int width, int height, int shift)
     {
         for (int y = 0; y < height; y++)
         {
@@ -187,17 +213,17 @@ public static class CanvasPainter
             {
                 if (x == 0 || y == 0 || x == width - 1 || y == height - 1)
                 {
-                    steps[(y * width) + x] += shift;
+                    positions[(y * width) + x] += shift;
                 }
             }
         }
     }
 
     /// <summary>
-    /// Moves each pixel within the depth of one side by the shift for its distance from that side, zero at the side. A
-    /// depth past the canvas covers all of it.
+    /// Moves each pixel within the depth of one side by the shift in parts for its distance from that side, zero at the
+    /// side. A depth past the canvas covers all of it.
     /// </summary>
-    private static void ShiftSide(int[] steps, int width, int height, CanvasSide side, int depth, Func<int, int> shiftAt)
+    private static void ShiftSide(int[] positions, int width, int height, CanvasSide side, int depth, Func<int, int> shiftAt)
     {
         for (int y = 0; y < height; y++)
         {
@@ -212,7 +238,7 @@ public static class CanvasPainter
                 };
                 if (distance < depth)
                 {
-                    steps[(y * width) + x] += shiftAt(distance);
+                    positions[(y * width) + x] += shiftAt(distance);
                 }
             }
         }
@@ -226,10 +252,10 @@ public static class CanvasPainter
     }
 
     /// <summary>
-    /// Adds the grain to each pixel. The sequence first fills the lattice, row by row, and then gives one dither to each
-    /// pixel, rows from the top and pixels from the left.
+    /// Adds the grain to each pixel, in parts of a fine step (D-599). The sequence first fills the lattice, row by row,
+    /// and then gives one dither to each pixel, rows from the top and pixels from the left.
     /// </summary>
-    private static void AddGrain(GrainLayer grain, uint state, int[] steps, int width, int height)
+    private static void AddGrain(GrainLayer grain, uint state, int[] positions, int width, int height)
     {
         int columns = (width / grain.Cell) + 2;
         int rows = (height / grain.Cell) + 2;
@@ -246,9 +272,10 @@ public static class CanvasPainter
             {
                 state = NextState(state);
                 int dither = (int)(state % (2 * GrainDither)) - GrainDither;
+                // The lattice value is in 256ths of one unit, and the amount is in fine steps.
                 long smooth = LatticeValue(lattice, columns, grain.Cell, x, y);
-                long moved = (grain.Amount * smooth) + dither + (GrainUnit / 2);
-                steps[(y * width) + x] += (int)FloorDivide(moved, GrainUnit);
+                long moved = FloorDivide(grain.Amount * smooth * Palette.PartsPerFineStep, GrainUnit) + dither;
+                positions[(y * width) + x] += (int)moved;
             }
         }
     }

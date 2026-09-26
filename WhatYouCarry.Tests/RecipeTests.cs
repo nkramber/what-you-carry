@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using WhatYouCarry.Assets;
 using WhatYouCarry.Core.Logging;
@@ -213,21 +214,40 @@ public sealed class RecipeTests
         Assert.Equal(shade == 0, expected == TimberTwo);
     }
 
-    /// <summary>Over a hundred seeds, a grain keeps every pixel on its ramp and moves pixels both down and up by fine steps. A failure names the seed (D-66, D-527).</summary>
+    /// <summary>
+    /// Over a hundred seeds, a grain keeps every pixel on its ramp, moves pixels both down and up, and puts pixels
+    /// between two fine shades. A failure names the seed (D-66, D-527, D-599).
+    /// </summary>
     [Fact]
     public void GrainStaysOnTheRampAndMovesBothWays()
     {
         Palette palette = RepositoryPalette();
-        Dictionary<int, int> fineStepOf = FineStepsOfRamp(palette, 2);
+        const int Start = 8 * Palette.PartsPerFineStep;
         for (uint seed = 1; seed <= 100; seed++)
         {
             Recipe recipe = Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(2, 3, seed));
-            int[] pixels = PaintIndices(palette, recipe, 12, 10, CanvasPainter.BlockSalt, "test");
+            CanvasPositions canvas = CanvasPainter.PaintPositions(palette, recipe, 12, 10, CanvasPainter.BlockSalt, "test");
 
-            Assert.All(pixels, value => Assert.True(fineStepOf.ContainsKey(value), $"Seed {seed}: a pixel holds the index {value}, off the timber ramp."));
-            Assert.True(pixels.Any(value => fineStepOf[value] < 8), $"Seed {seed}: the grain moved no pixel down.");
-            Assert.True(pixels.Any(value => fineStepOf[value] > 8), $"Seed {seed}: the grain moved no pixel up.");
-            Assert.True(pixels.Any(value => fineStepOf[value] % Palette.ShadesPerStep != 0), $"Seed {seed}: the grain painted no fine shade.");
+            Assert.All(canvas.Ramps, ramp => Assert.True(ramp == 2, $"Seed {seed}: a pixel lies on the ramp {ramp}, off the timber ramp."));
+            Assert.True(canvas.Positions.Any(position => position < Start), $"Seed {seed}: the grain moved no pixel down.");
+            Assert.True(canvas.Positions.Any(position => position > Start), $"Seed {seed}: the grain moved no pixel up.");
+            Assert.True(canvas.Positions.Any(position => position % Palette.PartsPerFineStep != 0), $"Seed {seed}: the grain put no pixel between two fine shades.");
+        }
+    }
+
+    /// <summary>The color of each painted pixel is the color of its ramp and its position (D-599).</summary>
+    [Fact]
+    public void PaintGivesTheColorOfEachPosition()
+    {
+        Palette palette = RepositoryPalette();
+        Recipe recipe = Layers(new FillLayer(TimberTwo + 1, 0, 0.4, 5), new GrainLayer(2, 3, 5), new EdgeLayer(1));
+
+        CanvasPositions canvas = CanvasPainter.PaintPositions(palette, recipe, 9, 7, CanvasPainter.BlockSalt, "test");
+        AtlasColor[] pixels = CanvasPainter.Paint(palette, recipe, 9, 7, CanvasPainter.BlockSalt, "test");
+
+        for (int pixel = 0; pixel < pixels.Length; pixel++)
+        {
+            Assert.Equal(palette.ColorAt(canvas.Ramps[pixel], canvas.Positions[pixel]), pixels[pixel]);
         }
     }
 
@@ -236,22 +256,21 @@ public sealed class RecipeTests
     public void GrainClustersByItsCell()
     {
         Palette palette = RepositoryPalette();
-        Dictionary<int, int> fineStepOf = FineStepsOfRamp(palette, 2);
         double single = 0.0;
         double wide = 0.0;
         for (uint seed = 1; seed <= 40; seed++)
         {
-            single += NeighborCorrelation(PaintIndices(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(1, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test"), fineStepOf, 16);
-            wide += NeighborCorrelation(PaintIndices(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(4, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test"), fineStepOf, 16);
+            single += NeighborCorrelation(CanvasPainter.PaintPositions(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(1, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test").Positions, 16);
+            wide += NeighborCorrelation(CanvasPainter.PaintPositions(palette, Layers(new FillLayer(TimberTwo + 1, 0, 0.0, seed), new GrainLayer(4, 3, seed)), 16, 16, CanvasPainter.BlockSalt, "test").Positions, 16);
         }
 
         Assert.True(wide / 40.0 > (single / 40.0) + 0.3, $"The mean neighbor correlation is {wide / 40.0:F2} for a cell of 4 and {single / 40.0:F2} for a cell of 1.");
     }
 
     /// <summary>
-    /// A grain uses whole numbers alone, so each platform paints the same bytes (D-527). The three CI platforms run
-    /// this test on one canvas of the trousers recipe: its first row and the count of each index. The shades follow every
-    /// color in the atlas, so the 40 colors of D-592 moved each umber shade up by 40 indices, and the 4 of D-600 by 4 more.
+    /// A grain uses whole numbers alone, so each platform paints the same bytes (D-527, D-599). The three CI platforms
+    /// run this test on one canvas of the trousers recipe: the colors of its first row, and the SHA-256 hash of the red,
+    /// green, and blue bytes of all its pixels.
     /// </summary>
     [Fact]
     public void GrainPaintsTheSameBytesOnEachPlatform()
@@ -259,10 +278,11 @@ public sealed class RecipeTests
         Palette palette = RepositoryPalette();
         IReadOnlyDictionary<string, Recipe> recipes = RecipeFile.ReadAll(TextureGenCommand.ReadRecipeFiles(Path.Combine(RepositoryRoot.Find(), "content")), palette);
 
-        int[] pixels = PaintIndices(palette, recipes["trousers"], 8, 10, CanvasPainter.SaltOf("models/player.bbmodel:leg_left_upper_box:east"), "east");
+        AtlasColor[] pixels = CanvasPainter.Paint(palette, recipes["trousers"], 8, 10, CanvasPainter.SaltOf("models/player.bbmodel:leg_left_upper_box:east"), "east");
 
-        Assert.Equal("152,154,157,33,152,33,33,33", string.Join(",", pixels.Take(8)));
-        Assert.Equal("32:1,33:16,34:3,152:4,153:6,154:11,155:18,156:8,157:12,158:1", string.Join(",", pixels.GroupBy(value => value).OrderBy(group => group.Key).Select(group => $"{group.Key}:{group.Count()}")));
+        byte[] bytes = pixels.SelectMany(pixel => new[] { pixel.Red, pixel.Green, pixel.Blue }).ToArray();
+        Assert.Equal("#1e1408,#291d10,#3b2d1d,#2a1e10,#1e1409,#2b1f11,#2b1f11,#2a1e10", string.Join(",", pixels.Take(8).Select(PaletteShades.Hex)));
+        Assert.Equal("a09578ee8070373f433e8e80691c77ac1ba36a0627adaa94debd1eb03de24953", Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant());
     }
 
     /// <summary>A gradient shifts the full amount at its side and less toward its depth, rounded to whole fine steps, and nothing past the depth (D-527).</summary>
@@ -517,21 +537,10 @@ public sealed class RecipeTests
         return CanvasPainter.Paint(palette, recipe, width, height, salt, canvasName).Select(shades.Index).ToArray();
     }
 
-    private static Dictionary<int, int> FineStepsOfRamp(Palette palette, int ramp)
+    /// <summary>The correlation of the position of each pixel with the pixel on its right.</summary>
+    private static double NeighborCorrelation(int[] positions, int width)
     {
-        Dictionary<int, int> fineStepOf = [];
-        for (int fineStep = 0; fineStep <= palette.FineTop(ramp); fineStep++)
-        {
-            fineStepOf.Add(palette.AtlasIndex(ramp, fineStep), fineStep);
-        }
-
-        return fineStepOf;
-    }
-
-    /// <summary>The correlation of the fine step of each pixel with the pixel on its right.</summary>
-    private static double NeighborCorrelation(int[] pixels, Dictionary<int, int> fineStepOf, int width)
-    {
-        double[] values = pixels.Select(value => (double)fineStepOf[value]).ToArray();
+        double[] values = positions.Select(value => (double)value).ToArray();
         double mean = values.Average();
         double variance = values.Select(value => (value - mean) * (value - mean)).Average();
         List<double> products = [];
