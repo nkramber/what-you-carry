@@ -20,7 +20,7 @@ namespace WhatYouCarry.Game;
 /// count of that flag. Six kinds of argument stop the boot: a word that no flag takes, a flag outside the table, a
 /// flag that appears twice, a flag with fewer words than it takes, a flag with an empty word, and a flag that the
 /// session ignores (D-317, F-122). A flag is never a word of the flag before it, so a short flag is an error, and never
-/// a flag that the session loses.
+/// a flag that the session loses. A flag of the table before the separator also stops the boot (D-624, F-153).
 /// </para>
 /// <para>
 /// The session types read their flags through this type, and no other type reads the argument array. A PR that adds a
@@ -58,6 +58,12 @@ public sealed class UserArguments
 
     /// <summary>The message of the error for the transitions flag with no bot flag or no frame log flag (D-317, D-435).</summary>
     public const string TransitionsNeedBotAndLogMessage = "The transitions flag counts the descents of the bot session into the frame log, so it needs the bot flag and the frame log flag.";
+
+    /// <summary>The message of the error for a flag of the Game layer before the separator, where the engine ignores it (D-624).</summary>
+    public const string FlagBeforeSeparatorMessage = "A flag of the Game layer stands before the separator --, where the engine ignores it. Put it after the separator.";
+
+    /// <summary>The separator of the engine before the user arguments.</summary>
+    public const string Separator = "--";
 
     /// <summary>The message of the error for a read of the words of a flag that the arguments do not hold.</summary>
     public const string AbsentFlagMessage = "The user arguments hold no such flag.";
@@ -153,6 +159,34 @@ public sealed class UserArguments
 
         RejectIgnoredFlags(flags);
         return new UserArguments(flags);
+    }
+
+    /// <summary>
+    /// Stops the boot when an engine argument is a flag of the table, alone or in the form <c>flag=value</c> (D-624,
+    /// F-153). The engine ignores such a flag, so the session ran with no flag and ended with exit code 0. The check
+    /// stops at the separator, so a user argument never counts, whatever list the engine gives.
+    /// </summary>
+    /// <param name="engineArguments">The arguments of the engine, as the engine gives them.</param>
+    /// <exception cref="ContextException">An engine argument is a flag of the table. The error names it.</exception>
+    public static void RejectFlagsBeforeSeparator(string[] engineArguments)
+    {
+        foreach (string argument in engineArguments)
+        {
+            if (argument == Separator)
+            {
+                return;
+            }
+
+            int equals = argument.IndexOf('=', StringComparison.Ordinal);
+            string name = equals < 0 ? argument : argument.Substring(0, equals);
+            if (WordsTaken.ContainsKey(name))
+            {
+                ContextException error = new(FlagBeforeSeparatorMessage);
+                error.AddContext(FlagField, name);
+                error.AddContext(ArgumentField, argument);
+                throw error;
+            }
+        }
     }
 
     /// <summary>Answers whether the arguments hold one flag of the table.</summary>

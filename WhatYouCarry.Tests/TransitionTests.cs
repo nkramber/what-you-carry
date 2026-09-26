@@ -258,4 +258,57 @@ public sealed class TransitionTests
         Assert.Null(cancelled.InnerException);
         Assert.Contains(cancelled.Context, field => field.Name == "cause" && field.Value == nameof(TaskStatus.Canceled));
     }
+
+    /// <summary>
+    /// F-152. A dig task that a descent passed still reaches the log: a failure after the descent throws at the next
+    /// check with the seed, the floor, and the cause, and a cancel throws too. A task that still runs stays, and a
+    /// task that ended with a result goes with no error. The swap dropped such a task and never read its failure.
+    /// </summary>
+    [Fact]
+    public void ADroppedDigThatFailsThrowsAtTheNextCheck()
+    {
+        DroppedDigs dropped = new();
+        dropped.Add(Task.CompletedTask, 2);
+        Assert.Equal(0, dropped.Count);
+
+        TaskCompletionSource running = new();
+        dropped.Add(running.Task, 3);
+        dropped.Check(11UL);
+        Assert.Equal(1, dropped.Count);
+
+        ContextException cause = new("no template covers the floor");
+        running.SetException(cause);
+        ContextException failed = Assert.Throws<ContextException>(() => dropped.Check(11UL));
+        Assert.Same(cause, failed.InnerException);
+        Assert.Equal([new LogField("seed", "11", true), new LogField("floor", "3", true), new LogField("cause", cause.Message, true)], failed.Context);
+
+        DroppedDigs ended = new();
+        TaskCompletionSource<int> result = new();
+        ended.Add(result.Task, 4);
+        result.SetResult(1);
+        ended.Check(11UL);
+        Assert.Equal(0, ended.Count);
+
+        DroppedDigs cancelled = new();
+        TaskCompletionSource stopped = new();
+        cancelled.Add(stopped.Task, 5);
+        stopped.SetCanceled();
+        ContextException cancel = Assert.Throws<ContextException>(() => cancelled.Check(11UL));
+        Assert.Contains(cancel.Context, field => field.Name == "cause" && field.Value == nameof(TaskStatus.Canceled));
+    }
+
+    /// <summary>F-152. The swap keeps the task that a descent passes, and checks the kept tasks before each tick. The old swap set the task to null.</summary>
+    [Fact]
+    public void TheSwapKeepsAndChecksADroppedDig()
+    {
+        string swap = RepositoryRoot.ReadFile("WhatYouCarry.Game/World/ChunkSwap.cs");
+        int beforeTick = swap.IndexOf("public bool BeforeTick(", StringComparison.Ordinal);
+        int afterTick = swap.IndexOf("public bool AfterTick(", StringComparison.Ordinal);
+        Assert.True(beforeTick > 0 && afterTick > beforeTick, "ChunkSwap.cs holds BeforeTick and then AfterTick.");
+        int check = swap.IndexOf("this.dropped.Check(this.seed);", beforeTick, StringComparison.Ordinal);
+        Assert.True(check > beforeTick && check < afterTick, "BeforeTick checks the dropped digs.");
+        int add = swap.IndexOf("this.dropped.Add(this.digging, this.diggingFloor);", afterTick, StringComparison.Ordinal);
+        int clear = swap.IndexOf("this.digging = null;", afterTick, StringComparison.Ordinal);
+        Assert.True(add > afterTick && add < clear, "AfterTick keeps the task before it forgets it.");
+    }
 }

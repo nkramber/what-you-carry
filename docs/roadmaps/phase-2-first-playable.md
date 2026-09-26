@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-90, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-91, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-624. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -1326,6 +1326,41 @@ Gate: exit tests 1 to 4 pass.
 
 > *In plain English:* each face showed 32 pixels per meter, so a sword blade was 3 pixels wide. Every face now shows 64, and the body and the sword copy their pixels from the 3D reference.
 
+### PR-91: Repository review fixes, part 2
+
+Scope:
+
+- `ContentLoader`: a content set with no weapon of the id `sword-basic` fails to load (D-422, F-148). A repeated id names the file of each record, and a weapon reference names the file of the enemy or the hunter (T-2, F-150).
+- `JsonObjectReader`: text that is not valid UTF-8 is a content error that names the file, and the field when a value holds it (T-2, F-149).
+- `ProjectileDefinition` and `content/projectiles/`: each projectile states the field `areaCentimetres`, and a file without it fails to load (D-622, F-151).
+- `ChunkSwap` and `DroppedDigs`: a dig task that a descent passes stays, and its failure throws before a later tick (T-2, F-152).
+- `UserArguments` and `Main.Boot`: a flag of the Game layer before the separator stops the boot with exit code 1 (D-624, F-153).
+- `ActionDecisionTests` and the decision register: each action has a dependency entry (G-16, D-619 to D-621, F-154).
+- `night.yml`: the upload of the record of `main` replaces the artifact of an earlier attempt (F-155).
+- `RunRecorder` and G-5: the remark names the callers, and G-5 binds the Game layer from PR-31 (D-623, F-156).
+- `SmokeSession`: the first walk presses the dodge bit, so the session rolls on floor 2 (D-149, F-157).
+
+Out of scope: the other open findings of the repository review of 2026-09-24, which later PRs of D-596 hold. This PR holds more than one concern (D-618).
+
+Exit tests:
+
+1. `ASetWithoutTheMainWeaponFailsToLoad`, `AnIdErrorNamesEachFile`, and `TextThatIsNotUtf8NamesTheFile` pass, and each one fails on the loader of `main`.
+2. `EveryRequiredProjectileFieldIsRequired` passes for `areaCentimetres`, and it fails on the validator of `main`.
+3. `ADroppedDigThatFailsThrowsAtTheNextCheck` and `TheSwapKeepsAndChecksADroppedDig` pass. The shape test fails on the swap of `main`.
+4. `AGameFlagBeforeTheSeparatorStopsTheBoot` passes. `AGameFlagBeforeTheSeparatorEndsTheBoot` quits the engine with exit code 1, and it fails on the boot of `main`.
+5. `EachActionHasADependencyDecision` passes, and it fails on the register of `main`.
+6. `TheNightPlansTheSeedsOfEachSweep` asserts the overwrite of the plan upload, and it fails on the workflow of `main`.
+7. `WalkAfterTheScriptDescends` asserts a roll on floor 2, and it fails on the script of `main`. `SmokeSessionPasses` passes on the three platforms.
+8. `BitIdentityKnownAnswer` passes with `9c79047da9c82a0e` on the three platforms. The simulation version stays 17.
+
+Review focus: the path of each content error, the check of the dropped dig task, and the scan of the engine arguments.
+
+Check clause: none.
+
+Gate: exit tests 1 to 8 pass.
+
+> *In plain English:* the repository review left faults open. Some content errors named no file, a failed background dig left no trace, and a test command in the wrong order passed. This PR fixes ten of them, each with a test.
+
 ### PR-76: Enemy models
 
 Scope: the enemy models of PR-16 gain their own boxes and recipes, and the color swap of D-507 gives each enemy its colors (D-339, D-504).
@@ -1427,7 +1462,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
 47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
 48. PR-90. ✅ Done in PR #108. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608. The traced maps and the approved sheet: D-612 to D-617.
-49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596).
+49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ The owner answers of 2026-09-26: D-618 to D-624.
 50. PR-76.
 51. Owner: answer OQ-181.
 52. PR-77.

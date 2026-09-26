@@ -84,8 +84,8 @@ public sealed class SimulationLoop
     /// <summary>The owner id of the player in the projectile simulation.</summary>
     public const int PlayerOwner = 0;
 
-    /// <summary>The id of the weapon that the attack bit swings, until the loadout of PR-30 (D-422).</summary>
-    public const string MainWeaponId = "sword-basic";
+    /// <summary>The id of the weapon that the attack bit swings, until the loadout of PR-30 (D-422). The loader holds the value.</summary>
+    public const string MainWeaponId = ContentLoader.MainWeaponId;
 
     private readonly ContentSet content;
     private List<Enemy> enemies = [];
@@ -120,6 +120,7 @@ public sealed class SimulationLoop
     /// The main weapon of a content set: the weapon with the id <see cref="MainWeaponId"/>, until the loadout of
     /// PR-30 (D-320, D-422). The Game layer reads the same rule for the model and the clips.
     /// </summary>
+    /// <remarks>The loader rejects a set without it, and a set that a caller builds from a loaded set can still lack it.</remarks>
     /// <exception cref="ContextException">The content set holds no weapon of that id (T-2).</exception>
     public static WeaponDefinition MainWeapon(ContentSet content)
     {

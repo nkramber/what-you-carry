@@ -4,5 +4,6 @@
   "gravityScalePercent": 50,
   "lifetimeTicks": 3600,
   "damage": 1,
+  "areaCentimetres": 0,
   "spreadHundredths": 0
 }

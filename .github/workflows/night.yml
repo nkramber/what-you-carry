@@ -49,11 +49,14 @@ jobs:
           git fetch --quiet origin refs/heads/night-results
           git show FETCH_HEAD:night.json > "${RUNNER_TEMP}/main-night.json"
       - name: Keep the record of main for each job
+        # A re-run of this job uploads the record again under the same name, and that upload replaces the artifact of
+        # the earlier attempt, as the sweep uploads do (F-155).
         uses: actions/upload-artifact@v4
         with:
           name: main-night
           path: ${{ runner.temp }}/main-night.json
           if-no-files-found: error
+          overwrite: true
 
   sweep:
     needs: plan

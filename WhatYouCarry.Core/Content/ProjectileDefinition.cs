@@ -24,11 +24,12 @@ public sealed record ProjectileDefinition(string Id, long SpeedCentimetres, long
         "gravityScalePercent",
         "lifetimeTicks",
         "damage",
+        "areaCentimetres",
         "spreadHundredths",
     ];
 
-    /// <summary>The names that a projectile definition can carry.</summary>
-    public static readonly IReadOnlyList<string> Optional = ["areaCentimetres"];
+    /// <summary>The names that a projectile definition can carry. Every name is required, so an absent area is an error and never a zero (D-92, T-2, D-622).</summary>
+    public static readonly IReadOnlyList<string> Optional = [];
 
     /// <summary>One definition from one validated object.</summary>
     /// <exception cref="Logging.ContextException">A field is absent, unknown, of another kind, or outside its bounds.</exception>
@@ -66,18 +67,11 @@ public sealed record ProjectileDefinition(string Id, long SpeedCentimetres, long
             throw ContentError.Make(path, "damage", $"is {damage}, and a hit deals damage");
         }
 
-        // An absent area stays zero. A present one is zero or more centimeters (F-120).
-        long area = 0;
-        foreach (JsonMember member in members)
+        // An area of zero is a projectile with no area (F-120, D-622).
+        long area = Number(path, members, "areaCentimetres");
+        if (area < 0)
         {
-            if (member.Name == "areaCentimetres")
-            {
-                area = Number(path, members, "areaCentimetres");
-                if (area < 0)
-                {
-                    throw ContentError.Make(path, "areaCentimetres", $"is {area}, and an area is zero or more centimeters");
-                }
-            }
+            throw ContentError.Make(path, "areaCentimetres", $"is {area}, and an area is zero or more centimeters");
         }
 
         return new ProjectileDefinition(

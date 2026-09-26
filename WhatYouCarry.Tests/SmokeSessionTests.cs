@@ -81,8 +81,11 @@ public sealed class SmokeSessionTests
         Assert.Equal(SmokeSession.FullMove, strafe.MoveX);
         Assert.Equal(SmokeSession.LookUpRate, strafe.PitchDelta);
 
-        // The two walks press the attack bit once each second, and the strafe presses the dodge bit, one tick each (D-323, D-327).
+        // The two walks press the attack bit once each second, and the first walk and the strafe press the dodge bit, one
+        // tick each (D-323, D-327, F-157).
         Assert.Equal(Button.Attack, walk.Buttons);
+        Assert.Equal(Button.Dodge, SmokeSession.IntentAt(SmokeSession.DodgeOffset).Buttons);
+        Assert.Equal((ushort)0, SmokeSession.IntentAt(SmokeSession.PartTicks + SmokeSession.DodgeOffset).Buttons & Button.Dodge);
         Assert.Equal((ushort)0, SmokeSession.IntentAt(1).Buttons);
         Assert.Equal(Button.Attack, SmokeSession.IntentAt(SmokeSession.PressPeriod).Buttons);
         Assert.Equal(Button.Attack, SmokeSession.IntentAt(5 * SmokeSession.PressPeriod).Buttons);
@@ -139,7 +142,8 @@ public sealed class SmokeSessionTests
     /// <summary>
     /// The greedy descender walks the body of the first seed to the stairwell and descends inside the budget of the
     /// session, on the content of the game, and the prompt opens on the way (PR-18, D-436). The script then plays on
-    /// floor 2, and a death there is a clean end (D-403).
+    /// floor 2, and a death there is a clean end (D-403). The body swings and rolls on floor 2 before the end (F-157):
+    /// the old script pressed the dodge bit in the strafe alone, which the first seed never reached.
     /// </summary>
     [Fact]
     public void WalkAfterTheScriptDescends()
@@ -148,6 +152,8 @@ public sealed class SmokeSessionTests
         GreedyDescender walker = new(TestWorld.Content);
         bool promptOpened = false;
         uint floorStart = 0;
+        int swings = 0;
+        int rolls = 0;
         while (!SmokeSession.IsComplete(loop, loop.Tick - floorStart) && !(loop.Ended && loop.Floor > SimulationLoop.FirstFloor))
         {
             Assert.False(SmokeSession.IsStuck(loop), $"The walk did not descend by tick {loop.Tick}.");
@@ -159,7 +165,15 @@ public sealed class SmokeSessionTests
             {
                 floorStart = loop.Tick;
             }
+            else if (loop.Floor > SimulationLoop.FirstFloor)
+            {
+                swings += loop.Player.SwingTick == 1L ? 1 : 0;
+                rolls += loop.Player.RollRemaining == Player.RollTicks - 1 ? 1 : 0;
+            }
         }
+
+        Assert.True(swings > 0, $"The body swung on no tick of floor 2, which ended at tick {loop.Tick}.");
+        Assert.True(rolls > 0, $"The body rolled on no tick of floor 2, which ended at tick {loop.Tick}, {loop.Tick - floorStart} ticks after the descent.");
 
         Assert.Equal(SimulationLoop.FirstFloor + 1, loop.Floor);
         Assert.True(promptOpened, "The stairwell prompt never opened on the walk.");
@@ -274,6 +288,26 @@ public sealed class SmokeSessionTests
             && line.Contains("unexpected", StringComparison.Ordinal));
         Assert.DoesNotContain(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal));
         Assert.DoesNotContain(lines, line => line.Contains($"\"message\":\"{Main.EndMessage}\"", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// F-153. The smoke flag before the separator stops the boot with exit code 1 and an error line that names the flag,
+    /// before the run starts (D-624). The old session ignored the flag, ran a play session with no smoke script, and a
+    /// test command in this order passed with no test.
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task AGameFlagBeforeTheSeparatorEndsTheBoot()
+    {
+        EngineRun run = await RunEngine("flag before the separator session", ["--headless", "--fixed-fps", "60", SmokeSession.Flag, "--quit-after", "600"], []);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitFailure, $"The flag before the separator session ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        Assert.Contains(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal)
+            && line.Contains(Main.BootFailedMessage, StringComparison.Ordinal)
+            && line.Contains(UserArguments.FlagBeforeSeparatorMessage, StringComparison.Ordinal)
+            && line.Contains(SmokeSession.Flag, StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal));
     }
 
     /// <summary>

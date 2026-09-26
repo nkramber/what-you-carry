@@ -371,6 +371,16 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-145 | PR #94 (PR-74) merged as `2c4e6d5` with the verdict `Blocked` in `docs/reviews/pr-94.md` line 59. The required `review-gate` and `night-gate` checks of head `2a4b1c8` read failure. The owner merged through the admin bypass of the ruleset of `main` (D-520, D-537). Only the session handoff recorded it | 2026-09-25 | ✅ doc. The row records the exception (F-139). No decision covers it |
 | F-146 | PR #95 (PR-79) merged as `25afe34` with the verdict `Blocked` in `docs/reviews/pr-95.md` line 83. The required `review-gate` and `night-gate` checks of head `7efc763` read failure. The owner merged through the admin bypass of the ruleset of `main` (D-520, D-537). Only the session handoff recorded it | 2026-09-25 | ✅ doc. The row records the exception (F-139). No decision covers it |
 | F-147 | On the Deck, the bot session writes its end line and its frame log, and then Godot 4.7.2 does not exit. The main thread waits in `pthread_join`, and the thread "Wayland Events" waits in `poll`. It hung in 5 of 14 runs on the Wayland fallback of an SSH session, at PR-90 heads and at `main` `60a23ec`, and in 0 of 9 runs on X11 | 2026-09-26 | ✅ PR #108 (PR-90): the Deck runs of `docs/runbooks/commands.md` set `XAUTHORITY`, so Godot uses X11, as in a player session |
+| F-148 | D-422 says that a content set with no weapon of the id `sword-basic` fails to load. The loader passed such a set, and the set failed at the first loop | 2026-09-24 | 🔧 PR-91: the loader rejects the set, and the error names the directory and the id (D-422) |
+| F-149 | A byte that is not valid UTF-8 in a content string made the Core reader raise an error of its own, which named no file | 2026-09-24 | 🔧 PR-91: the reader names the file, and the field when a value holds the byte (T-2) |
+| F-150 | A repeated id named the directory and gave the id as the field. A weapon reference of an enemy or of the hunter named the directory and the id as a path that no file has | 2026-09-24 | 🔧 PR-91: each error names the file of each record (T-2) |
+| F-151 | The projectile field `areaCentimetres` was optional, and the loader read an absent area as zero, against D-92 | 2026-09-24 | 🔧 PR-91: the field is required, and each projectile states its area (D-622) |
+| F-152 | A descent before the dig task ended dropped the task, and a failure of that task reached no log, against the remark of `ChunkSwap` | 2026-09-24 | 🔧 PR-91: the swap keeps the task, and its failure throws before a later tick (T-2) |
+| F-153 | A flag of the Game layer before the separator `--` went to the engine, which ignored it, so a test command in that order ran with no flag and quit with exit code 0 | 2026-09-24 | 🔧 PR-91: the boot stops with exit code 1 and names the flag (D-624) |
+| F-154 | `actions/download-artifact` (PR-85) and `actions/checkout` had no dependency entry, against G-16 | 2026-09-24 | 🔧 PR-91: two entries, and a test maps each action to its entry (D-619 to D-621) |
+| F-155 | The plan job of the night uploaded the record of `main` with no `overwrite`, so a re-run of that job can fail on the name of the first upload | 2026-09-24 | 🔧 PR-91: the upload replaces the artifact of the earlier attempt, as the sweep uploads do |
+| F-156 | The remark of `RunRecorder` said that the Game layer records each intent, and no Game code does so before PR-31. G-5 did not state when it binds the Game layer | 2026-09-24 | 🔧 PR-91: the remark names the callers, and G-5 binds the Game layer from PR-31 (D-623) |
+| F-157 | The smoke session pressed the dodge bit in its last part alone, and the first seed dies on floor 2 before that part, so the session never rolled | 2026-09-24 | 🔧 PR-91: the first walk presses the dodge bit, and a test asserts a roll on floor 2 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -391,7 +401,7 @@ The tenets are the constitution. When a tenet conflicts with speed or convenienc
 2. **G-2.** No `System.Math` transcendentals, no `Vector<T>`, no SIMD, no reflection, no dynamic dispatch in Core. The lint tool enforces it (D-67).
 3. **G-3.** Godot physics and navigation never feed the simulation (D-80).
 4. **G-4.** The simulation runs on one thread. Only the next-floor generator runs on a worker (D-72).
-5. **G-5.** Every run records its seed and intent stream from the first tick. That record is the crash report and the resume file (D-97).
+5. **G-5.** Every run records its seed and intent stream from the first tick. That record is the crash report and the resume file (D-97). It binds the Game layer from PR-31, which writes the file sink (D-623).
 6. **G-6.** No hitscan. Every projectile is a simulated object.
 7. **G-7.** Every content file validates against its schema at load and in a test. An absent field is an error (D-92).
 8. **G-8.** No inline strings that the player sees (D-98).
@@ -684,8 +694,13 @@ Every face has 64 texels per meter, a block face too, in an atlas of 1024, so ea
 Gate: a frame log on the Deck holds D-295, and the owner approves the contact sheet of the traced faces (D-605, D-606, D-612).
 > *In plain English:* a sword blade was 3 pixels wide. Every face now has twice the pixels in each direction, and the body and the sword copy their pixels from the 3D reference.
 
+**PR-91: Repository review fixes, part 2.** 🔧
+Fix the open findings F-148 to F-157 of the repository review of 2026-09-24 (D-596). The content loader rejects a set with no main weapon, and it needs the projectile area (D-422, D-622). Each id error and each text that is not UTF-8 names its file. The chunk swap keeps a dig task that a descent passes, and the boot stops on a Game flag before the separator (D-624). Each action has a dependency entry and a test (D-619 to D-621). The night plan upload replaces an earlier attempt, and the smoke session rolls. G-5 binds the Game layer from PR-31 (D-623). This PR holds more than one concern (D-618).
+Gate: a regression test for each finding fails on the old code, and the suite, the smoke session, and the bit-identity sweep pass.
+> *In plain English:* the repository review left faults open. Some errors named no file, a failed background dig left no trace, and a wrong command passed. This PR fixes ten of them.
+
 **The open findings of the repository review.** 🔧
-The findings of the review of 2026-09-24 that stay open are the primary work after PR-90. The first session after PR-90 splits them into PRs of one concern each (D-596).
+The findings of the review of 2026-09-24 that stay open are the primary work after PR-90. The first session after PR-90 splits them into PRs of one concern each (D-596). PR-91 holds more than one (D-618).
 
 **PR-76: Enemy models.** 🔧
 The enemy models of PR-16 gain their own boxes and recipes, and the color swap gives each enemy its colors (D-504, D-507).

@@ -9,9 +9,10 @@ namespace WhatYouCarry.Core.Replay;
 /// frame per tick from the first tick, so no tick runs before its intent is on the record.
 /// </summary>
 /// <remarks>
-/// The recorder hands each byte array to an <see cref="IRunRecordSink"/> and opens no file (D-225). The Game
-/// layer calls <see cref="Record"/> and then <see cref="SimulationLoop.Step"/> with the same intent, so the
-/// record is ahead of the state at every moment, and a crash loses no tick that ran.
+/// The recorder hands each byte array to an <see cref="IRunRecordSink"/> and opens no file (D-225). A caller calls
+/// <see cref="Record"/> and then <see cref="SimulationLoop.Step"/> with the same intent, so the record is ahead of
+/// the state at every moment, and a crash loses no tick that ran. The bit-identity sweep and the tests call it today.
+/// The Game layer has no recorder until the file sink of PR-31, and G-5 binds the Game layer from PR-31 (D-623).
 /// </remarks>
 public sealed class RunRecorder
 {

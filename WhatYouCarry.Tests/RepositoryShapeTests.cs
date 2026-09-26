@@ -341,6 +341,9 @@ public sealed class RepositoryShapeTests
         // that sweep, and a second upload with the same name fails without overwrite.
         Assert.Contains("overwrite: true", result, StringComparison.Ordinal);
         Assert.Contains("overwrite: true", StepText(workflow, "Keep the bot logs of a failed night"), StringComparison.Ordinal);
+
+        // F-155: a re-run of the plan job uploads the record of main again under one name.
+        Assert.Contains("overwrite: true", StepText(workflow, "Keep the record of main for each job"), StringComparison.Ordinal);
         Assert.Contains("pattern: night-sweep-*", StepText(workflow, "Take the result of each sweep"), StringComparison.Ordinal);
         string gather = StepText(workflow, "Gather the sweep results");
         Assert.Contains("status=$(bash .github/scripts/night-gather.sh \"${RUNNER_TEMP}/sweeps\" \"${RUNNER_TEMP}\" \"$PLAN_RESULT\" \"$SWEEP_RESULT\" \"$RECORD_STATUS\")", gather, StringComparison.Ordinal);

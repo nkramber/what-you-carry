@@ -32,7 +32,8 @@ namespace WhatYouCarry.Game.World;
 /// <para>
 /// A descent that comes before the task or the upload ends builds the rest of the chunks in that frame. The
 /// frame is then slow, and the frame log shows it (D-427). A task that failed throws its error at the offer, with
-/// the seed and the floor, so no failure of the worker is lost (T-2).
+/// the seed and the floor. A task that such a descent passed goes to <see cref="DroppedDigs"/>, and its failure
+/// throws before a later tick, so no failure of the worker is lost (T-2, F-152).
 /// </para>
 /// </remarks>
 public sealed class ChunkSwap
@@ -58,6 +59,7 @@ public sealed class ChunkSwap
     private int shownFloor;
     private Task<NextFloor>? digging;
     private int diggingFloor;
+    private readonly DroppedDigs dropped = new();
     private FloorPlan? staged;
     private IReadOnlyList<MeshData> stagedMeshes = [];
     private List<MeshInstance3D> stagedNodes = [];
@@ -104,9 +106,10 @@ public sealed class ChunkSwap
     /// each tick.
     /// </summary>
     /// <returns>True when this call offered a plan.</returns>
-    /// <exception cref="ContextException">The task failed. The error names the seed, the floor, and the cause.</exception>
+    /// <exception cref="ContextException">The task failed, or a task that a descent passed failed. The error names the seed, the floor, and the cause.</exception>
     public bool BeforeTick(SimulationLoop loop)
     {
+        this.dropped.Check(this.seed);
         if (this.digging is null || !this.digging.IsCompleted || this.staged is not null)
         {
             return false;
@@ -204,7 +207,13 @@ public sealed class ChunkSwap
         else
         {
             // The descent came before the task ended, so the loop dug the floor itself, and no node holds it yet.
-            // A task that is still running ends in its own time, and its result is never read.
+            // A task that is still running ends in its own time. Its result is never read, and its failure throws
+            // before a later tick (F-152).
+            if (this.digging is not null)
+            {
+                this.dropped.Add(this.digging, this.diggingFloor);
+            }
+
             this.shown = this.BuildAll(loop.Grid, true);
             this.LastSwapFromWorker = false;
         }
