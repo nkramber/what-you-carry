@@ -2,6 +2,45 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 266: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-89, author. Branch `feat/pr-89-truecolor-atlas`. PR pending. Base `9e4833b`.
+
+### What this session did, and why
+
+- PR-85 exit test 8: the first night from the `7 7 * * *` cron has not started. At 04:47 UTC on 2026-09-26, the newest scheduled night is run 36141884980 of 13:35 UTC on 2026-09-25, at `a3590ba`. That commit is older than the merge of PR-85 at 18:25 UTC, so it ran the old single job.
+- The owner answered OQ-207 and the questions that follow from it: D-598 to D-602.
+- Commit `8fec673`: the atlas PNG stores three sRGB bytes for each pixel, the palette has no count limit, and soot joins at flat indices 76 to 79. The new atlas holds the color of each pixel of the indexed atlas, and the contact sheet did not change.
+- Commit `e4a097e`: a grain moves a pixel in parts of a fine step, and `Palette.ColorAt` blends the two fine shades in linear light with the whole-number table of `LinearLight`.
+- A fixture holds the indexed atlas at the base. A test proves that each pixel keeps its ramp and lies between the two fine shades next to its old shade (D-601).
+- The owner approved the new sheet (D-602). The images are in `artifacts/reference/pr-89/` of the main checkout.
+
+### State of the build
+
+- Remote head: the push of this branch. The local checks: the texture and recipe tests passed 126 of 126, and `det-lint`, `asset-qa`, and `ste-check` found nothing.
+
+### In flight
+
+- The PR, CI, the automated pass, and the cross-provider review.
+- PR-85 exit test 8: read the night of 2026-09-26 when it ends.
+
+### Traps and gotchas
+
+- The atlas grows from about 260 to about 790 kilobytes, because stored deflate blocks compress nothing (D-305). At an atlas of 2048, PR-90 writes about 12 megabytes for each change. OQ-208 can weigh that.
+- A blend of one ramp can give the color of a blend of another ramp. A test reads a pixel on a named ramp through `PaletteShades.TryPlace`.
+- The fixture test compares the layout of PR-75. PR-90 changes the layout and replaces that test.
+- Every face recipe of the body and the sword has a grain, so the exact check of D-601 covers the blocks alone today.
+- Run the Godot build check in a new worktree before a contact sheet. The sheet path must be absolute.
+
+### Open questions that block progress
+
+None for PR-89. OQ-208 blocks PR-90.
+
+### Next concrete action
+
+Wait for the automated pass and the cross-provider review, and answer each finding. Read the night of exit test 8 when it ends.
+
 ## Session 265: 2026-09-25, Codex
 
 Author: Codex
@@ -321,44 +360,3 @@ Give the owner the review verdict and the merge evidence for PR #104.
 # Session handoff
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
-
-## Session 256: 2026-09-25, Codex
-
-Author: Codex
-Session: PR-88, reviewer. Branch `fix/pr-88-review-fixes`. PR #104, Changes required. Base `a3590ba`.
-
-### What this session did, and why
-
-- Round 2 reviewed PR #104 at effective head `d9c6413` and checked the two findings from round 1.
-- P1-1 is fixed in `f280b72`. P1-2 is fixed in `0d219b1`.
-- P1-3 found a fence info string that can hide a visible `Blocked` verdict from the gate.
-- P2-1 found a cross-file const text that can bypass the Game string lint.
-- The Gitar claims on the roadmap order, four-space fence, and keyframe blend were verified.
-
-### State of the build
-
-- CI, Smoke, bit identity, asset QA, det-lint, documents, STE, doc-gate, night-gate, and Gitar passed at remote head `d9c6413`.
-- The local Documents category passed 190 tests. STE passed with zero findings, and doc-gate found zero problems.
-- `evaluate` and `review-gate` failed because the round 1 record did not approve this head.
-- The review record and this entry publish in one metadata commit (D-182).
-- `make gitar-wait PR=104` passed after the metadata push. Gitar reports the expected review-gate failure because this verdict still requires changes.
-
-### In flight
-
-- P1-3 and P2-1 need correction and regression tests.
-- The review verdict is `Changes required` for `d9c6413`.
-
-### Traps and gotchas
-
-- The Codex process of round 2 pushed its record and then stayed open with no output. Read the branch for the record after ten quiet minutes, and stop the process.
-- The filtered local test command exited 0 but gave no runner summary. It does not count as test evidence.
-- The code head has green required CI. The two findings still block approval.
-- Gitar has no open code finding. Its dashboard reports the expected review-gate failure, and the author has no answer in this round.
-
-### Open questions that block progress
-
-None for PR-88. OQ-195 to OQ-205 do not block this review.
-
-### Next concrete action
-
-Correct P1-3 and P2-1. Add each regression test, then run the exact reproducer and its adjacent boundary.
