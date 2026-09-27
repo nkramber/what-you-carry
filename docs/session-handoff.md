@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 279: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Re-reviewed PR #109 after the author corrected P2-1 from round 1.
+- Verified that `69c946a` requires the CRC field to end the run-record header line. The focused regression test passed 2/2 cases.
+- Updated `docs/reviews/pr-109.md`. P2-1 is fixed. The verdict is `Blocked` because a specific Gitar item has no author reply.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective code head is `69c946a`; the remote PR tip before this review commit is `55458cc`.
+- CI, smoke, bit identity, and repository checks passed on the metadata tip. `evaluate` and `review-gate` failed because the published review record still had the round 1 verdict.
+
+### In flight
+
+- The review record and this entry need one metadata commit and a push to `feat/pr-91-review-fixes`.
+- The Gitar pass and `evaluate` and `review-gate` need a new result after the push.
+
+### Traps and gotchas
+
+- The latest Gitar comment has a specific request about the stale review verdict. The reviewer records the claim but does not answer Gitar (D-250).
+
+### Open questions that block progress
+
+- The author must answer Gitar comment 5852038161 before the automated pass is complete.
+
+### Next concrete action
+
+Answer the Gitar comment, then read the new pass and gate results for PR #109.
+
 ## Session 278: 2026-09-26, Claude Code
 
 Author: Claude Code
@@ -313,35 +346,3 @@ None for PR-89. OQ-208 blocks PR-90.
 ### Next concrete action
 
 Read the night of 2026-09-26 for PR-85 exit test 8: its start time, the wall time of each sweep job, its result, and the slices of its record (6001 to 6500 for each bot policy, 120001 to 130000 for reachability). If a job ends with a runner fault, re-run the failed jobs (D-585). Then start PR-90 after the owner answers OQ-208.
-
-## Session 269: 2026-09-26, Codex
-
-Author: Codex
-Session: PR-89, reviewer, round 2. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Effective head `6afe1db`.
-
-### What this session did, and why
-
-- Re-reviewed PR #107 after the author fixed P2-1 from round 1.
-- `LinearLight.Blend` now rejects a count of parts that is not positive. Its regression test passed.
-- Updated `docs/reviews/pr-107.md`. P2-1 is fixed, and the verdict is `Ready for owner merge` at `6afe1db`.
-- CI at tip `2faf0c0` passed for code, smoke, bit identity, bots, assets, lint, documents, and the night gate. `evaluate` and `review-gate` failed because the record still named the earlier verdict.
-
-### State of the build
-
-- Effective head `6afe1db`. The focused linear-light test passed. The current tip is `2faf0c0` on `origin/feat/pr-89-truecolor-atlas`.
-
-### In flight
-
-- Publish this review record and handoff in one metadata commit. Then wait for fresh checks of the new tip.
-
-### Traps and gotchas
-
-- The review uses the code head `6afe1db`. Later commits change only review metadata.
-
-### Open questions that block progress
-
-None for PR-89. OQ-208 blocks PR-90.
-
-### Next concrete action
-
-After the metadata push, confirm `evaluate`, `review-gate`, and Gitar on the new tip. The owner can then use the merge summary of D-533.
