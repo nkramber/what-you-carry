@@ -1,5 +1,35 @@
 # Session handoff archive
 
+## Session 275: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-90, author, merge. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+
+### What this session did, and why
+
+- Review round 2 gave `Ready for owner merge` at the effective head `e4d3543`, with P2-1 fixed. The gitar pass of `1ce21f1` approved with no finding, and no review thread is open.
+- The session asks the owner to confirm the merge with the merge summary (D-533).
+
+### State of the build
+
+- Effective head `e4d3543`. Each check passed at `e4d3543`. At the tip, `review-gate`, `evaluate`, `night-gate`, and Gitar passed, and the code jobs skipped on the documents heads (D-357).
+
+### In flight
+
+- The owner confirmation, then `gh pr merge 108 --auto --squash` (D-516).
+
+### Traps and gotchas
+
+- A Deck run over SSH sets `XAUTHORITY`, or Godot 4.7.2 can hang at exit on the Wayland fallback (F-147).
+
+### Open questions that block progress
+
+None for PR-90.
+
+### Next concrete action
+
+After the merge, the next session starts the open review findings of D-596, as the phase 2 roadmap orders.
+
 ## Session 274: 2026-09-26, Codex
 
 Author: Codex

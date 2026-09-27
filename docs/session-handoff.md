@@ -2,6 +2,38 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 285: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Completed review round 5 at effective head `db8b3c8`. P2-2 and P2-3 are fixed, and their focused tests pass.
+- Reviewed the mesh wrapper correction F-177 and the PR comments. Updated `docs/reviews/pr-109.md` to `Ready for owner merge`.
+- The 20 focused `NightFixerTests` passed. Two hundred headless smoke sessions under eight busy processes also passed.
+
+### State of the build
+
+- Remote code head: `db8b3c8`. Gitar and all product checks passed. `evaluate` and `review-gate` still read the earlier `Changes required` verdict. The review record and this entry form the metadata commit.
+
+### In flight
+
+- Only the metadata push and its fresh checks and Gitar wait remain.
+
+### Traps and gotchas
+
+- The worktree is detached. Compare its pushed commit with the PR head; the local status has no branch or ahead count.
+- The reviewer does not answer comments or merge the PR.
+
+### Open questions that block progress
+
+None for PR-109.
+
+### Next concrete action
+
+Push the metadata commit, wait for fresh checks and Gitar, then give the owner the merge summary and request merge confirmation.
+
 ## Session 284: 2026-09-27, Claude Code
 
 Author: Claude Code
@@ -302,33 +334,3 @@ None for PR-91. The findings that stay open wait for OQ-195, OQ-196, OQ-199 to O
 ### Next concrete action
 
 Finish the gitar pass of PR #109, then run `make codex-review PR=109` when each check but the Review gate workflow is green.
-
-## Session 275: 2026-09-26, Claude Code
-
-Author: Claude Code
-Session: PR-90, author, merge. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
-
-### What this session did, and why
-
-- Review round 2 gave `Ready for owner merge` at the effective head `e4d3543`, with P2-1 fixed. The gitar pass of `1ce21f1` approved with no finding, and no review thread is open.
-- The session asks the owner to confirm the merge with the merge summary (D-533).
-
-### State of the build
-
-- Effective head `e4d3543`. Each check passed at `e4d3543`. At the tip, `review-gate`, `evaluate`, `night-gate`, and Gitar passed, and the code jobs skipped on the documents heads (D-357).
-
-### In flight
-
-- The owner confirmation, then `gh pr merge 108 --auto --squash` (D-516).
-
-### Traps and gotchas
-
-- A Deck run over SSH sets `XAUTHORITY`, or Godot 4.7.2 can hang at exit on the Wayland fallback (F-147).
-
-### Open questions that block progress
-
-None for PR-90.
-
-### Next concrete action
-
-After the merge, the next session starts the open review findings of D-596, as the phase 2 roadmap orders.
