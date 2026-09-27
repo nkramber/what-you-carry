@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 267: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-89, reviewer. Branch `feat/pr-89-truecolor-atlas`. PR #107, changes required. Effective head `e4a097e`.
+
+### What this session did, and why
+
+- Reviewed PR #107 against its atlas, palette, and grain contracts (D-598 to D-602).
+- Added P2-1 to `docs/reviews/pr-107.md`: `LinearLight.Blend` accepts zero parts, then divides by zero.
+
+### State of the build
+
+- Remote PR head before this review publication: `2aa88bd`. CI, smoke, bit identity, bots, asset QA, determinism lint, document gate, night gate, and STE passed for the effective head. The review gate awaited this record.
+- The focused texture and recipe tests passed 126 of 126.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and a push.
+- P2-1 needs a correction and regression test before approval.
+
+### Traps and gotchas
+
+- `LinearLight.Blend` uses 256 parts for grain today. Its public method still accepts zero and divides by zero.
+- The review covers effective head `e4a097e`. Later PR commits changed only paths in the skip set of D-475.
+
+### Open questions that block progress
+
+None. OQ-208 blocks PR-90 only.
+
+### Next concrete action
+
+Correct P2-1, test zero parts, and request a new review round.
+
 ## Session 266: 2026-09-25, Claude Code
 
 Author: Claude Code

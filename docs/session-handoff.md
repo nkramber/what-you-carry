@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 277: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Reviewed PR #109 at effective head `6b327c9` as the cross-provider reviewer.
+- Found that the run-record reader accepts a CRC field before later header fields, which leaves those fields outside the checksum (D-637).
+- Recorded finding P2-1 and the verdict `Changes required` in `docs/reviews/pr-109.md`.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The PR code head is `6b327c9`; the review metadata commit is the head of `origin/feat/pr-91-review-fixes` and `gh pr view` confirmed it.
+- Every code check on `6b327c9` passed. After the metadata push, `Gitar`, `asset-qa`, `det-lint`, `doc-gate`, `documents`, `night-gate`, and `ste-check` passed. `evaluate` and `review-gate` failed because P2-1 gives the verdict `Changes required`.
+
+### In flight
+
+- P2-1 needs a correction and a repeat review.
+
+### Traps and gotchas
+
+- `CheckHeaderCrc` checks the bytes before `headerCrc`, but does not check that the CRC is the final field.
+- The existing bit-flip test covers the canonical writer order. Add a reader case with a CRC before a changed trailing field.
+
+### Open questions that block progress
+
+None for this review. OQ-195, OQ-196, and OQ-199 to OQ-201 concern other open findings.
+
+### Next concrete action
+
+Correct P2-1, add its regression test, and request a repeat review of PR #109.
+
 ## Session 276: 2026-09-26, Claude Code
 
 Author: Claude Code
@@ -313,36 +346,3 @@ None for PR-89. OQ-208 blocks PR-90.
 ### Next concrete action
 
 After the gitar pass and green CI, run `make codex-review PR=107`. On approval, give the owner the merge summary (D-533). Read the night of exit test 8 when it ends.
-
-## Session 267: 2026-09-26, Codex
-
-Author: Codex
-Session: PR-89, reviewer. Branch `feat/pr-89-truecolor-atlas`. PR #107, changes required. Effective head `e4a097e`.
-
-### What this session did, and why
-
-- Reviewed PR #107 against its atlas, palette, and grain contracts (D-598 to D-602).
-- Added P2-1 to `docs/reviews/pr-107.md`: `LinearLight.Blend` accepts zero parts, then divides by zero.
-
-### State of the build
-
-- Remote PR head before this review publication: `2aa88bd`. CI, smoke, bit identity, bots, asset QA, determinism lint, document gate, night gate, and STE passed for the effective head. The review gate awaited this record.
-- The focused texture and recipe tests passed 126 of 126.
-
-### In flight
-
-- The review record and this handoff entry need one metadata commit and a push.
-- P2-1 needs a correction and regression test before approval.
-
-### Traps and gotchas
-
-- `LinearLight.Blend` uses 256 parts for grain today. Its public method still accepts zero and divides by zero.
-- The review covers effective head `e4a097e`. Later PR commits changed only paths in the skip set of D-475.
-
-### Open questions that block progress
-
-None. OQ-208 blocks PR-90 only.
-
-### Next concrete action
-
-Correct P2-1, test zero parts, and request a new review round.
