@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 291: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-76, reviewer. Branch `feat/pr-76-enemy-models`. PR #117, pending merge. Base `d5f7e00`.
+
+### What this session did, and why
+
+- Reviewed PR #117 at effective head `9a0f932`, as the cross-provider review required by T-4 and D-101.
+- Checked the family model field, scavenger model and recipes, model rendering, contact sheet, content errors, and PR-76 exit tests. No in-scope finding remains.
+- Added `docs/reviews/pr-117.md` with the verdict and verification record.
+
+### State of the build
+
+- The PR tip before this metadata commit was `e1316ca`. CI, bit identity, smoke, asset QA, determinism lint, STE, doc gate, documents, night gate, bots, and Gitar passed on that tip. The focused local test filter passed 304 tests, and local asset QA reported zero findings.
+- `evaluate` and `review-gate` failed because the review record was absent before this commit. The review metadata commit does not change the effective head.
+- Local STE check passed with zero findings. The Documents category passed 254 tests.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and a push to `feat/pr-76-enemy-models`.
+
+### Traps and gotchas
+
+- The PR tip `e1316ca` is metadata after effective head `9a0f932`. The review applies to `9a0f932`.
+- The local full suite did not run. The focused suite passed, and the full CI suite passed on the PR tip.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Push the review metadata commit, then fetch and verify the PR head and remote status.
+
 ## Session 290: 2026-09-27, Claude Code
 
 Author: Claude Code
@@ -309,36 +343,3 @@ None for PR-91.
 ### Next concrete action
 
 Push, finish the gitar pass and CI, run review round 4, then ask the owner to confirm the merge.
-
-## Session 281: 2026-09-26, Claude Code
-
-Author: Claude Code
-Session: PR-91, author, merge. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
-
-### What this session did, and why
-
-- Review round 2 gave `Blocked` at `69c946a` with P2-1 fixed: a CI note of the Gitar dashboard had no author reply (D-250). Comments 5852158126 and 5852184443 answer both notes.
-- Review round 3 gave `Ready for owner merge` at the effective head `69c946a`.
-- The owner report `what-you-carry-repository-review.md` marks each finding of PR #109 as complete, and RR-P3-20 as no longer applicable.
-- The session asks the owner to confirm the merge with the merge summary (D-533).
-
-### State of the build
-
-- Remote `main` is `4a20b82`. The effective head is `69c946a`. Each code check passed at `55458cc`, whose code is that of `69c946a`. Gitar approved `55458cc` with no thread.
-
-### In flight
-
-- The owner confirmation, then `gh pr merge 109 --auto --squash` (D-516).
-
-### Traps and gotchas
-
-- A Gitar CI note that names a red review gate is an item. Answer each one before a review round, or the round blocks (D-250).
-- Session 276 lists the other traps of this PR.
-
-### Open questions that block progress
-
-None for PR-91.
-
-### Next concrete action
-
-After the merge, the next session continues the open findings of D-596. They wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
