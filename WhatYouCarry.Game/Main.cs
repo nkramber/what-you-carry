@@ -864,11 +864,14 @@ public partial class Main : Node3D
         WeaponDefinition weapon = SimulationLoop.MainWeapon(content);
         BlockbenchModel bodyModel = BlockbenchLoader.Parse(AssetPaths.BodyModel, AssetFile.Read(contentDirectory, AssetPaths.BodyModel));
         BlockbenchModel swordModel = BlockbenchLoader.Parse(weapon.Model, AssetFile.Read(contentDirectory, weapon.Model));
-        ImageTexture atlas = AtlasFile.Load(contentDirectory);
+        Image atlasImage = AtlasFile.Load(contentDirectory);
+        ImageTexture atlas = AtlasFile.ModelTexture(atlasImage, contentDirectory);
         TextureLayout layout = TextureLayoutFile.Load(contentDirectory);
+        BlockTiles tiles = new(layout);
+        ImageTexture blockAtlas = BlockAtlas.Build(atlasImage, tiles, contentDirectory);
         if (ContactSheet.IsRequested(arguments))
         {
-            this.RenderContactSheet(ContactSheet.PathOf(arguments), contentDirectory, content.Enemies, atlas, layout, swordModel);
+            this.RenderContactSheet(ContactSheet.PathOf(arguments), contentDirectory, content.Enemies, atlas, blockAtlas, layout, swordModel);
             return;
         }
 
@@ -892,8 +895,8 @@ public partial class Main : Node3D
         this.currentPose = loop.Camera();
         this.previousPose = this.currentPose;
 
-        this.worldMaterial = WorldMaterial.Create(atlas);
-        this.chunks = new ChunkSwap(this, this.worldMaterial, new BlockTiles(layout), new NextFloorWorker(content), loop.Seed);
+        this.worldMaterial = WorldMaterial.Create(blockAtlas);
+        this.chunks = new ChunkSwap(this, this.worldMaterial, tiles, new NextFloorWorker(content), loop.Seed);
         this.chunks.Start(loop);
 
         StandardMaterial3D modelMaterial = ModelMaterial(atlas);
@@ -901,6 +904,11 @@ public partial class Main : Node3D
         ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(swordModel, modelMaterial, layout).Root);
         this.playerNodes = nodes;
         this.playerModel = bodyModel;
+
+        // The player carries the lantern, so it follows the feet and turns with the body (D-678, D-679).
+        OmniLight3D lantern = SceneLight.Lantern();
+        lantern.Position = SceneLight.LanternOffset;
+        nodes.Root.AddChild(lantern);
         this.clips = playerClips;
         this.camera = PlaceholderScene.Camera();
         this.AddChild(nodes.Root);
@@ -914,7 +922,7 @@ public partial class Main : Node3D
         this.enemyNodes = enemies;
         this.drawnFloor = loop.Floor;
         this.AddChild(this.camera);
-        this.AddChild(PlaceholderScene.Light());
+        this.AddChild(SceneLight.Environment());
 
         if (HudShot.IsRequested(arguments))
         {
@@ -953,13 +961,16 @@ public partial class Main : Node3D
         this.logger.Write(LogContextKind.Run, LogLevel.Info, StartMessage, RunFields(loop.Seed, loop.Floor, loop.Tick));
     }
 
-    /// <summary>The one material of every model: the atlas with nearest filtering, so a texel stays a square (D-85).</summary>
+    /// <summary>
+    /// The one material of every model: the atlas with nearest filtering, so a texel stays a square (D-85), and with
+    /// mipmaps, so a distant face does not shimmer (D-677).
+    /// </summary>
     private static StandardMaterial3D ModelMaterial(Texture2D atlas)
     {
         return new StandardMaterial3D
         {
             AlbedoTexture = atlas,
-            TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
+            TextureFilter = BaseMaterial3D.TextureFilterEnum.NearestWithMipmaps,
         };
     }
 
@@ -969,7 +980,7 @@ public partial class Main : Node3D
     /// camera moves. The headless display, a shot with no image, and a write failure are each an error line and
     /// exit code 1 (T-2).
     /// </summary>
-    private async void RenderContactSheet(string path, string contentDirectory, IReadOnlyList<EnemyDefinition> families, Texture2D atlas, TextureLayout layout, BlockbenchModel swordModel)
+    private async void RenderContactSheet(string path, string contentDirectory, IReadOnlyList<EnemyDefinition> families, Texture2D atlas, Texture2D blockAtlas, TextureLayout layout, BlockbenchModel swordModel)
     {
         LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
         fields.Add(FileField, path);
@@ -988,13 +999,14 @@ public partial class Main : Node3D
             }
 
             IReadOnlyList<SheetShot> shots = ContactSheet.Shots(modelPaths);
-            ContactSheetNodes nodes = ContactSheetScene.Build(atlas, layout, shots, models, swordModel, ModelMaterial(atlas));
+            ContactSheetNodes nodes = ContactSheetScene.Build(blockAtlas, layout, shots, models, swordModel, ModelMaterial(atlas));
             this.AddChild(nodes.Viewport);
             Image sheet = Image.CreateEmpty(ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(modelPaths.Count), false, Image.Format.Rgb8);
             await this.WaitFrames(ContactSheet.WarmUpFrames);
             foreach (SheetShot shot in shots)
             {
                 nodes.Camera.LookAtFromPosition(ContactSheet.CameraPosition(shot), shot.Target, Vector3.Up);
+                nodes.Lantern.Position = ContactSheet.LanternPosition(shot);
                 await this.WaitFrames(ContactSheet.FramesPerShot);
                 Image frame = nodes.Viewport.GetTexture().GetImage();
                 if (frame is null || frame.IsEmpty())
@@ -1040,6 +1052,7 @@ public partial class Main : Node3D
             {
                 Size = new Vector2I(HudShot.PixelsWide, HudShot.PixelsHigh),
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
+                Msaa3D = PlaceholderScene.EdgeSmoothing,
             };
             this.AddChild(viewport);
             Camera3D shotCamera = PlaceholderScene.Camera();

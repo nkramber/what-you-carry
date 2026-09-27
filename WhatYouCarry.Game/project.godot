@@ -26,3 +26,7 @@ project/assembly_name="WhatYouCarry.Game"
 [physics]
 
 common/physics_ticks_per_second=60
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2

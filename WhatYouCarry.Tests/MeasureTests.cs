@@ -398,6 +398,27 @@ public sealed class MeasureTests
         Assert.True(BotSession.TickBudget > loop.Timer.Length, "The timer of floor 1 expires before the budget of the session (D-407).");
     }
 
+    /// <summary>
+    /// PR-77: the world shader samples the block atlas with nearest filtering and mipmaps (D-677). The level comes from
+    /// the face coordinate before the repeat, so the jump of fract() at a block edge does not select the smallest level.
+    /// The shader measures it before the discard, and it stops the level where one tile is one texel.
+    /// </summary>
+    [Fact]
+    public void WorldShaderSelectsTheMipmapLevelOfTheWholeFace()
+    {
+        string shader = RepositoryRoot.ReadFile("WhatYouCarry.Game/World/world.gdshader");
+
+        Assert.Contains($"uniform sampler2D {WorldMaterial.AtlasName} : source_color, filter_nearest_mipmap;", shader, StringComparison.Ordinal);
+        Assert.Contains("dFdx(face * tile_texels)", shader, StringComparison.Ordinal);
+        Assert.Contains("dFdy(face * tile_texels)", shader, StringComparison.Ordinal);
+        Assert.Contains("clamp(0.5 * log2(footprint), 0.0, log2(tile_texels.x))", shader, StringComparison.Ordinal);
+        int level = shader.IndexOf("float level = tile_level(UV);", StringComparison.Ordinal);
+        int discard = shader.IndexOf("discard;", StringComparison.Ordinal);
+        Assert.True(level >= 0, "The fragment function does not measure the level from the face coordinate.");
+        Assert.True(level < discard, "The fragment function measures the level after the discard.");
+        Assert.DoesNotContain("texture(atlas", shader, StringComparison.Ordinal);
+    }
+
     /// <summary>The world shader declares every uniform that the material sets, and its fade radius equals the constant.</summary>
     [Fact]
     public void WorldShaderDeclaresTheFadeUniforms()
@@ -412,6 +433,7 @@ public sealed class MeasureTests
         Assert.Equal(0.75f, WorldMaterial.FadeRadius);
         Assert.Contains("discard;", shader, StringComparison.Ordinal);
         Assert.Contains("fract(UV)", shader, StringComparison.Ordinal);
+        Assert.Contains("textureLod(atlas, uv, level)", shader, StringComparison.Ordinal);
         Assert.Contains("* COLOR.rgb", shader, StringComparison.Ordinal);
         Assert.Contains("res://World/world.gdshader", WorldMaterial.ShaderPath, StringComparison.Ordinal);
     }
