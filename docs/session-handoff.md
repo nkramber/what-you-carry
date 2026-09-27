@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 294: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-77, author. Branch `feat/pr-77-light-and-edges`. PR #118, pending merge. Base `3fdefef`.
+
+### What this session did, and why
+
+- Answered the review of session 293. The review found no defect in the code, and it blocked exit test 2, because the raw Deck frame logs were not in the checkout.
+- Committed the raw logs in `docs/reviews/pr-118-deck/`: three runs at `ce02802`, the base, the three MSAA modes, the empty scene of F-190, and two traces with a timing patch.
+- Wrote `docs/reviews/pr-118-response.md` with the method of D-683 and the numbers that the logs give.
+
+### State of the build
+
+- Effective head: `ce02802`. The logs and the response are in the metadata set of D-184, so they do not move it.
+- CI, smoke, bit identity, bots, and the other checks passed for `ce02802`. `evaluate` and `review-gate` wait for an approving review.
+
+### In flight
+
+- The second round of `make codex-review PR=118`.
+- PR-92 exit test 3 waits for the scheduled night of 07:07 UTC on 2026-09-28.
+
+### Traps and gotchas
+
+- A frame log holds one frame per line in microseconds. The stall of F-190 comes every 2.245 s, so a check of exit test 2 reads the grid of step 4 of the response file.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the second review. When it approves `ce02802`, check the night of PR-92 exit test 3, and give the owner the merge summary.
+
 ## Session 293: 2026-09-27, Codex
 
 Author: Codex
@@ -319,36 +352,3 @@ None for PR-109.
 ### Next concrete action
 
 Push the metadata update, wait for fresh checks and Gitar, then give the owner the merge summary and request merge confirmation.
-
-## Session 284: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
-
-### What this session did, and why
-
-- The gitar pass of `c505fa9` found that the fixer marked a night handled before its setup. `d32da6b` fixed it, and the thread is resolved.
-- Review round 4 (session 283) gave `Changes required` at `d32da6b` with P2-2 (a queued notice counted as delivered) and P2-3 (a race in the lock). `09c8695` fixes both, and `docs/reviews/pr-109-response.md` records them.
-- The suite of that correction found F-177, an engine crash at exit from leaked mesh wrappers. Under load, the PR head crashed in 3 of 100 smoke sessions, `main` in 0 of 100. The owner chose the fix of the cause, and 200 sessions then gave 0 crashes.
-- The launchd job now copies the folder `.github/scripts` of `origin/main`, so the helper `notify-owner.sh` lies beside the poll. The job is reloaded on this Mac.
-
-### State of the build
-
-- Remote `main` is `4a20b82`. The code head is `09c8695`. The full suite passed 1937 of 1937 at `09c8695` on macOS.
-
-### In flight
-
-- The push, the gitar pass, CI, and review round 5.
-
-### Traps and gotchas
-
-- The auto mode of the harness came back on by itself several times and blocked the fixer work. The owner switched it off each time.
-- F-177 shows under load alone: 0 of 70 plain runs crashed. A stress loop with eight `yes` processes gives the rate.
-
-### Open questions that block progress
-
-None for PR-91.
-
-### Next concrete action
-
-Push, finish the gitar pass and CI, run review round 5, then ask the owner to confirm the merge.

@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 284: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- The gitar pass of `c505fa9` found that the fixer marked a night handled before its setup. `d32da6b` fixed it, and the thread is resolved.
+- Review round 4 (session 283) gave `Changes required` at `d32da6b` with P2-2 (a queued notice counted as delivered) and P2-3 (a race in the lock). `09c8695` fixes both, and `docs/reviews/pr-109-response.md` records them.
+- The suite of that correction found F-177, an engine crash at exit from leaked mesh wrappers. Under load, the PR head crashed in 3 of 100 smoke sessions, `main` in 0 of 100. The owner chose the fix of the cause, and 200 sessions then gave 0 crashes.
+- The launchd job now copies the folder `.github/scripts` of `origin/main`, so the helper `notify-owner.sh` lies beside the poll. The job is reloaded on this Mac.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The code head is `09c8695`. The full suite passed 1937 of 1937 at `09c8695` on macOS.
+
+### In flight
+
+- The push, the gitar pass, CI, and review round 5.
+
+### Traps and gotchas
+
+- The auto mode of the harness came back on by itself several times and blocked the fixer work. The owner switched it off each time.
+- F-177 shows under load alone: 0 of 70 plain runs crashed. A stress loop with eight `yes` processes gives the rate.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+Push, finish the gitar pass and CI, run review round 5, then ask the owner to confirm the merge.
+
 ## Session 283: 2026-09-27, Codex
 
 Author: Codex
