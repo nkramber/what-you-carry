@@ -309,12 +309,37 @@ public sealed class ClaudeReviewTests
         Assert.Equal(
             [new AuthorEntry("## Session 11: 2026-09-27, Codex", "Codex"), new AuthorEntry("## Session 9: 2026-09-27, Codex", "Codex")],
             ProviderGate.AuthorEntries(handoff, Branch));
-        Assert.Null(ProviderGate.Problem(handoff, Branch, new ClaudeReviewer().PullRequestAuthor));
+        Assert.Null(ProviderGate.Problem(handoff, EmptyArchive, Branch, new ClaudeReviewer().PullRequestAuthor));
 
-        string? codexProblem = ProviderGate.Problem(handoff, Branch, new CodexReviewer().PullRequestAuthor);
+        string? codexProblem = ProviderGate.Problem(handoff, EmptyArchive, Branch, new CodexReviewer().PullRequestAuthor);
         Assert.NotNull(codexProblem);
         Assert.Contains("`Author: Codex`", codexProblem, StringComparison.Ordinal);
         Assert.Contains("needs `Author: Claude Code`", codexProblem, StringComparison.Ordinal);
+    }
+
+    /// <summary>The archive of a checkout with no rotated entry.</summary>
+    private const string EmptyArchive = "# Session handoff archive\n";
+
+    /// <summary>
+    /// PR #116 automated pass. The rotation moves each entry after the tenth to the archive (D-379), so the first author
+    /// entry of a long PR can live there alone. The gate reads it, and a PR that both providers wrote stays refused.
+    /// </summary>
+    [Fact]
+    public void TheProviderGateReadsTheAuthorEntriesOfTheArchive()
+    {
+        string handoff = Handoff(Entry(21, "Codex", $"PR-94, author. Branch `{Branch}`."));
+        string archive = Handoff(Entry(9, "Claude Code", $"PR-94, author. Branch `{Branch}`."));
+        string? mixed = ProviderGate.Problem(handoff, archive, Branch, "Codex");
+        Assert.NotNull(mixed);
+        Assert.Contains("## Session 9", mixed, StringComparison.Ordinal);
+
+        string onlyArchived = Handoff(Entry(21, "Claude Code", $"PR-94, reviewer. Branch `{Branch}`."));
+        string codexArchive = Handoff(Entry(9, "Codex", $"PR-94, author. Branch `{Branch}`."));
+        Assert.Null(ProviderGate.Problem(onlyArchived, codexArchive, Branch, "Codex"));
+
+        string? noArchive = ProviderGate.Problem(handoff, null, Branch, "Codex");
+        Assert.NotNull(noArchive);
+        Assert.Contains(ProviderGate.ArchivePath, noArchive, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -324,7 +349,7 @@ public sealed class ClaudeReviewTests
             Entry(11, "Codex", $"PR-94, author. Branch `{Branch}`."),
             Entry(10, "Claude Code", $"PR-94, author. Branch `{Branch}`."));
 
-        string? problem = ProviderGate.Problem(handoff, Branch, "Codex");
+        string? problem = ProviderGate.Problem(handoff, EmptyArchive, Branch, "Codex");
 
         Assert.NotNull(problem);
         Assert.Contains("## Session 10", problem, StringComparison.Ordinal);
@@ -338,10 +363,10 @@ public sealed class ClaudeReviewTests
             Entry(11, "Claude Code", $"PR-94, reviewer. Branch `{Branch}`."),
             Entry(10, "Codex", "PR-93, author. Branch `feat/pr-93-other`."));
 
-        string? problem = ProviderGate.Problem(handoff, Branch, "Codex");
+        string? problem = ProviderGate.Problem(handoff, EmptyArchive, Branch, "Codex");
 
         Assert.NotNull(problem);
-        Assert.Contains($"No author entry of '{ProviderGate.HandoffPath}' names Branch `{Branch}`", problem, StringComparison.Ordinal);
+        Assert.Contains($"No author entry of '{ProviderGate.HandoffPath}' or '{ProviderGate.ArchivePath}' names Branch `{Branch}`", problem, StringComparison.Ordinal);
         Assert.Contains("`Author:` field", problem, StringComparison.Ordinal);
     }
 
@@ -350,8 +375,8 @@ public sealed class ClaudeReviewTests
     {
         string handoff = "# Session handoff\n\n## Session 11: 2026-09-27, Codex\n\nSession: PR-94, author. Branch `" + Branch + "`.\n";
 
-        string? noField = ProviderGate.Problem(handoff, Branch, "Codex");
-        string? noHandoff = ProviderGate.Problem(null, Branch, "Codex");
+        string? noField = ProviderGate.Problem(handoff, EmptyArchive, Branch, "Codex");
+        string? noHandoff = ProviderGate.Problem(null, EmptyArchive, Branch, "Codex");
 
         Assert.NotNull(noField);
         Assert.Contains("has no `Author:` field", noField, StringComparison.Ordinal);

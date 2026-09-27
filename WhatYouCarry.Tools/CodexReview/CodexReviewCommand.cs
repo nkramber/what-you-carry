@@ -142,7 +142,7 @@ public static class CodexReviewCommand
         StartFacts facts = GatherStartFacts(root, git, pullRequest, view, skipGitarReview);
         var problems = new List<string>(reviewer.CliProblems(versionOutput, loginStatus));
         problems.AddRange(StartChecks.Problems(facts, skipGitarReview));
-        string? providerProblem = ProviderGate.Problem(git.ReadFileOrNull(facts.OriginHead, ProviderGate.HandoffPath), view.Branch, reviewer.PullRequestAuthor);
+        string? providerProblem = ProviderGate.Problem(git.ReadFileOrNull(facts.OriginHead, ProviderGate.HandoffPath), git.ReadFileOrNull(facts.OriginHead, ProviderGate.ArchivePath), view.Branch, reviewer.PullRequestAuthor);
         if (providerProblem is not null)
         {
             problems.Add(providerProblem);

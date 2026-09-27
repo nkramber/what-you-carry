@@ -16,27 +16,37 @@ public sealed record AuthorEntry(string Heading, string? Author);
 public static class ProviderGate
 {
     public const string HandoffPath = "docs/session-handoff.md";
+
+    /// <summary>The archive of the handoff. `handoff-rotate` moves each entry after the tenth there (D-379), so an early author entry of a long PR lives in it.</summary>
+    public const string ArchivePath = "docs/session-handoff-archive.md";
     public const string EntryHeading = "## Session ";
     public const string SessionField = "Session: ";
     public const string AuthorField = "Author: ";
     public const string AuthorRole = "author";
 
     /// <summary>
-    /// The problem of the handoff at the PR head, or null when the handoff has an author entry of the branch and each
-    /// author entry of the branch names <paramref name="requiredAuthor"/>. A PR that both providers wrote has no
-    /// eligible reviewer, so one entry of the reviewing provider is a problem too.
+    /// The problem of the handoff and its archive at the PR head, or null when they hold an author entry of the branch
+    /// and each author entry of the branch names <paramref name="requiredAuthor"/>. A PR that both providers wrote has
+    /// no eligible reviewer, so one entry of the reviewing provider is a problem too. The gate reads the archive too,
+    /// because the rotation moves the early entries of a long PR there (D-379).
     /// </summary>
-    public static string? Problem(string? handoff, string branch, string requiredAuthor)
+    public static string? Problem(string? handoff, string? archive, string branch, string requiredAuthor)
     {
         if (handoff is null)
         {
             return $"The PR head has no '{HandoffPath}', so the provider gate cannot read the `Author:` field of an author entry (T-4, D-649).";
         }
 
+        if (archive is null)
+        {
+            return $"The PR head has no '{ArchivePath}', so the provider gate cannot read the author entries that the rotation moved there (T-4, D-379, D-649).";
+        }
+
         List<AuthorEntry> entries = AuthorEntries(handoff, branch);
+        entries.AddRange(AuthorEntries(archive, branch));
         if (entries.Count == 0)
         {
-            return $"No author entry of '{HandoffPath}' names Branch `{branch}`, so the provider gate cannot read the `Author:` field. The review needs an author entry with `Author: {requiredAuthor}` (T-4, D-649).";
+            return $"No author entry of '{HandoffPath}' or '{ArchivePath}' names Branch `{branch}`, so the provider gate cannot read the `Author:` field. The review needs an author entry with `Author: {requiredAuthor}` (T-4, D-649).";
         }
 
         foreach (AuthorEntry entry in entries)
@@ -44,7 +54,7 @@ public static class ProviderGate
             if (entry.Author != requiredAuthor)
             {
                 string found = entry.Author is null ? "no `Author:` field" : $"the field `Author: {entry.Author}`";
-                return $"The author entry '{entry.Heading}' of Branch `{branch}` in '{HandoffPath}' has {found}, and this review needs `Author: {requiredAuthor}`, the other provider (T-4, D-649).";
+                return $"The author entry '{entry.Heading}' of Branch `{branch}` in the handoff has {found}, and this review needs `Author: {requiredAuthor}`, the other provider (T-4, D-649).";
             }
         }
 
