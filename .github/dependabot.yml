@@ -1,0 +1,11 @@
+# Dependabot proposes a new pin for each action of the workflows and the local actions (D-636). Each use names a full
+# commit with its release in a remark, and Dependabot updates both. Each proposal is a PR, and every gate of a PR
+# binds it: CI, the automated pass, the cross-provider review, and a decision entry for the new version (G-16).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: weekly

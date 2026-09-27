@@ -86,6 +86,65 @@ public sealed class GameShapeTests
         Assert.Contains("Main.cs _Process", callbacks);
         Assert.Contains("Main.cs _UnhandledInput", callbacks);
         Assert.Contains("Main.cs _Ready", callbacks);
+        Assert.DoesNotContain("Main.cs _Notification", callbacks);
+    }
+
+    /// <summary>
+    /// F-177. Each mesh goes to its node through <c>ArrayMeshBuilder.BuildInto</c>, which disposes the managed wrapper of
+    /// the mesh at once, and no other code builds a mesh. A wrapper that lived to the exit went to the .NET finalizer after
+    /// the engine shut down. Under load, 3 of 100 smoke sessions then crashed at exit with signal 11 or abort 134, and 0
+    /// of 200 crashed with the dispose.
+    /// </summary>
+    [Fact]
+    public void EachMeshWrapperGoesWhenItsNodeTakesTheMesh()
+    {
+        string builder = RepositoryRoot.ReadFile("WhatYouCarry.Game/Render/ArrayMeshBuilder.cs");
+        int into = builder.IndexOf("public static void BuildInto(MeshInstance3D node, MeshData data)", StringComparison.Ordinal);
+        int take = builder.IndexOf("node.Mesh = mesh;", into, StringComparison.Ordinal);
+        int dispose = builder.IndexOf("mesh.Dispose();", into, StringComparison.Ordinal);
+        Assert.True(into >= 0 && take > into && dispose > take, "BuildInto gives the node the mesh, then disposes the wrapper.");
+        Assert.Contains("private static ArrayMesh Build(MeshData data)", builder, StringComparison.Ordinal);
+        Assert.Contains("using Godot.Collections.Array arrays = [];", builder, StringComparison.Ordinal);
+
+        int callers = 0;
+        foreach (string file in GameStringScan.SourceFiles(RepositoryRoot.Find()))
+        {
+            string text = File.ReadAllText(file);
+            Assert.DoesNotContain("new ArrayMesh", Path.GetFileName(file) == "ArrayMeshBuilder.cs" ? string.Empty : text, StringComparison.Ordinal);
+            Assert.DoesNotContain("Mesh = ArrayMeshBuilder", text, StringComparison.Ordinal);
+            callers += text.Split("ArrayMeshBuilder.BuildInto(").Length - 1;
+        }
+
+        Assert.Equal(3, callers);
+    }
+
+    /// <summary>
+    /// F-161. The boot turns off the automatic quit of the engine, and the close request of the root window reaches the
+    /// end path, which writes the end line and quits through <c>Quit</c>. The old session let the engine quit on a close
+    /// with no end line, no frame log, and no release of the sounds. The handler is a signal and not an override of
+    /// <c>_Notification</c>: the first form of the fix took every engine notification into managed code, the shutdown
+    /// ones too. The abort at exit that one smoke session then showed came from the mesh wrappers of F-177.
+    /// </summary>
+    [Fact]
+    public void TheCloseOfTheWindowEndsTheSession()
+    {
+        string main = RepositoryRoot.ReadFile("WhatYouCarry.Game/Main.cs");
+        int ready = main.IndexOf("public override void _Ready()", StringComparison.Ordinal);
+        int boot = main.IndexOf("this.Boot();", ready, StringComparison.Ordinal);
+        int manual = main.IndexOf("this.GetTree().AutoAcceptQuit = false;", ready, StringComparison.Ordinal);
+        int signal = main.IndexOf("this.GetTree().Root.CloseRequested += this.OnCloseRequested;", ready, StringComparison.Ordinal);
+        Assert.True(ready >= 0 && manual > ready && signal > manual && signal < boot, "_Ready turns off the automatic quit and connects the close request before the boot.");
+        Assert.DoesNotContain("override void _Notification", main, StringComparison.Ordinal);
+
+        int handler = main.IndexOf("private void OnCloseRequested()", StringComparison.Ordinal);
+        int call = main.IndexOf("this.CloseWindow();", handler, StringComparison.Ordinal);
+        int guard = main.IndexOf("catch (Exception error)", handler, StringComparison.Ordinal);
+        Assert.True(handler >= 0 && call > handler && guard > call, "The handler sends the close to CloseWindow inside a catch of every exception.");
+
+        int body = main.IndexOf("private void CloseWindow()", StringComparison.Ordinal);
+        int end = main.IndexOf("WindowClosedMessage, fields);", body, StringComparison.Ordinal);
+        int quit = main.IndexOf("this.Quit(", body, StringComparison.Ordinal);
+        Assert.True(body >= 0 && end > body && quit > end, "CloseWindow writes the end line and then quits.");
     }
 
     /// <summary>The check names the file and the callback of a body with no catch-all, and passes a guarded body.</summary>
@@ -304,9 +363,54 @@ public sealed class GameShapeTests
         Assert.Equal(WorkflowText.HostedMacosLabel, runsOnByJob["macos-arm64"]);
 
         Assert.Contains("GODOT_VERSION: 4.7.2-stable", workflow, StringComparison.Ordinal);
-        Assert.Equal(3, Count(workflow, "uses: actions/cache@v4"));
+        Assert.Equal(3, Count(workflow, $"uses: {ActionDecisionTests.Cache}"));
         Assert.Equal(3, Count(workflow, $"{SmokeSessionTests.GodotVariable}:"));
         Assert.Equal(3, Count(workflow, $"--filter \"Category={SmokeSessionTests.SmokeCategory}\""));
+    }
+
+    /// <summary>
+    /// F-159. Each download of the engine fails on an HTTP error and checks the SHA-512 that the workflow pins, and the
+    /// cache key holds that value, so a cache hit is a checked binary (D-626). The old steps checked no hash, and curl
+    /// wrote an error page to the zip.
+    /// </summary>
+    [Fact]
+    public void EachEngineDownloadChecksItsPinnedHash()
+    {
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/smoke.yml");
+        (string Job, string Variable, string Check)[] legs =
+        [
+            ("linux-x64", "GODOT_SHA512_LINUX", "echo \"${GODOT_SHA512_LINUX}  godot.zip\" | sha512sum -c -"),
+            ("windows-x64", "GODOT_SHA512_WINDOWS", "if ($hash -ne $env:GODOT_SHA512_WINDOWS) { throw"),
+            ("macos-arm64", "GODOT_SHA512_MACOS", "echo \"${GODOT_SHA512_MACOS}  godot.zip\" | shasum -a 512 -c -"),
+        ];
+        foreach ((string job, string variable, string check) in legs)
+        {
+            string value = EnvValue(workflow, variable);
+            Assert.Matches("^[0-9a-f]{128}$", value);
+            string text = WorkflowText.JobText(workflow, job);
+            Assert.Contains($"-${{{{ env.{variable} }}}}", text, StringComparison.Ordinal);
+            int download = text.IndexOf("godot.zip", StringComparison.Ordinal);
+            int hashCheck = text.IndexOf(check, StringComparison.Ordinal);
+            int unpack = text.IndexOf(job == "windows-x64" ? "Expand-Archive" : "unzip -q godot.zip", StringComparison.Ordinal);
+            Assert.True(download >= 0 && hashCheck > download && unpack > hashCheck, $"The job '{job}' checks the hash after the download and before the unpack.");
+            Assert.DoesNotContain("curl -sSL -o", text, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>The value of one variable of the top <c>env</c> block of a workflow.</summary>
+    private static string EnvValue(string workflow, string name)
+    {
+        string prefix = $"  {name}: ";
+        foreach (string line in workflow.Split('\n'))
+        {
+            if (line.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return line[prefix.Length..].Trim();
+            }
+        }
+
+        Assert.Fail($"The workflow holds no env value '{name}'.");
+        return string.Empty;
     }
 
     /// <summary>

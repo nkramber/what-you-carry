@@ -39,6 +39,21 @@ public sealed class TemporaryGitRepository : IDisposable
         Git(["checkout", "-q", "-b", name]);
     }
 
+    /// <summary>
+    /// The settings of each git call. Git 2.46 and later start auto maintenance as a detached process after a commit, and
+    /// that process can write into <c>.git</c> while <see cref="Dispose"/> deletes it, so each call turns auto
+    /// maintenance and auto gc off (F-176).
+    /// </summary>
+    public static readonly IReadOnlyList<string> Configuration =
+    [
+        "user.name=Test",
+        "user.email=test@example.invalid",
+        "commit.gpgsign=false",
+        "core.autocrlf=false",
+        "gc.auto=0",
+        "maintenance.auto=false",
+    ];
+
     public string Git(IReadOnlyList<string> args, string? commitTime = null)
     {
         var startInfo = new ProcessStartInfo("git")
@@ -48,7 +63,7 @@ public sealed class TemporaryGitRepository : IDisposable
             RedirectStandardError = true,
             UseShellExecute = false,
         };
-        foreach (string configuration in new[] { "user.name=Test", "user.email=test@example.invalid", "commit.gpgsign=false", "core.autocrlf=false" })
+        foreach (string configuration in Configuration)
         {
             startInfo.ArgumentList.Add("-c");
             startInfo.ArgumentList.Add(configuration);

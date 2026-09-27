@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-90, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-91, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -83,7 +83,7 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-13: Model loader and mesher
 
-Status: merged 2026-09-12 as PR #52, commit `9749581`. Exit tests 1 to 6 passed before the merge, and CI, smoke, bit identity, bots, det-lint, and STE check passed on the merge commit. Exit test 7 waits for the M-3 run on the Steam Deck of D-296 (OQ-161). OQ-159, OQ-160, and OQ-161 stayed open at the merge. The first two bind the constants of the loader, the mesher, and the shader.
+Status: merged 2026-09-12 as PR #52, commit `9749581`. Exit tests 1 to 6 passed before the merge, and CI, smoke, bit identity, bots, det-lint, and STE check passed on the merge commit. Exit test 7 waits for the M-3 run on the Steam Deck of D-296 (OQ-161). OQ-159, OQ-160, and OQ-161 stayed open at the merge. The first two bind the constants of the loader, the mesher, and the shader, and D-631 and D-632 record them as built.
 
 Scope:
 
@@ -1326,6 +1326,81 @@ Gate: exit tests 1 to 4 pass.
 
 > *In plain English:* each face showed 32 pixels per meter, so a sword blade was 3 pixels wide. Every face now shows 64, and the body and the sword copy their pixels from the 3D reference.
 
+### PR-91: Repository review fixes, part 2
+
+✅ Done in PR #109.
+
+Scope:
+
+- `ContentLoader`: a content set with no weapon of the id `sword-basic` fails to load (D-422, F-148). A repeated id names the file of each record, and a weapon reference names the file of the enemy or the hunter (T-2, F-150).
+- `JsonObjectReader`: text that is not valid UTF-8 is a content error that names the file, and the field when a value holds it (T-2, F-149).
+- `ProjectileDefinition` and `content/projectiles/`: each projectile states the field `areaCentimetres`, and a file without it fails to load (D-622, F-151).
+- `ChunkSwap` and `DroppedDigs`: a dig task that a descent passes stays, and its failure throws before a later tick (T-2, F-152).
+- `UserArguments` and `Main.Boot`: a flag of the Game layer before the separator stops the boot with exit code 1 (D-624, F-153).
+- `ActionDecisionTests` and the decision register: each action has a dependency entry (G-16, D-619 to D-621, F-154).
+- `night.yml`: the upload of the record of `main` replaces the artifact of an earlier attempt (F-155).
+- `RunRecorder` and G-5: the remark names the callers, and G-5 binds the Game layer from PR-31 (D-623, F-156).
+- `SmokeSession`: the first walk presses the dodge bit, so the session rolls on floor 2 (D-149, F-157).
+- `BotRun`: each floor of a policy that promises progress ends as a softlock after 18000 ticks or its timer length, whichever is later (D-625, F-158).
+- `smoke.yml`: each job checks the pinned SHA-512 of the Godot zip before it unpacks it, and the download fails on an HTTP error (D-626, F-159).
+- `FloorPlan` and `SimulationLoop.OfferNextFloor`: the plan carries its seed and its content hash, and the offer rejects a mismatch (T-2, F-160).
+- `Main`: a close of the window ends the session with the end line and the frame log (D-311, F-161).
+- `night.yml`, `bot-run`, and the seed sweep: the seed list of each sweep passes by file (F-162).
+- `ProcessLimit`, `ExternalProcess`, and `GitRepository`: each child process has a time limit (D-627, F-163).
+- `Player`: no hit lands on any of the 18 roll ticks (D-328, D-628, F-164). `SimulationVersion`: 18, and the bit-identity sweep takes a new known answer (G-20).
+- `ContentHash`: the hash skips the string table (D-629, F-165).
+- The design doc: the decision register stays one file (D-630, F-166).
+- The code remarks of the loader, the mesher, and the shader: they cite D-631 and D-632, which record OQ-159 and OQ-160 as built (F-167).
+- `AudioTests`: each shipped recording has the exact CC0 license, the rule of D-633 that approves the footstep recording (F-168).
+- The decision register: D-634 limits the sentence of D-197 to the `review-gate` evaluator (F-169).
+- `RealFrameClock`, `FrameLog`, `Main`, and `BotSession`: the frame log reads the real frame time, and the hitch budget is 22222 microseconds (D-635, F-170).
+- The workflows, the local actions, and `.github/dependabot.yml`: each action use names a full commit, and Dependabot proposes each new pin (D-636, F-171).
+- `RunRecord`: the header ends with a CRC-32, and the format version is 2 (D-637, F-172). The bit-identity sweep takes a new known answer.
+- `Directory.Build.props`: a low or moderate NuGet advisory is a warning (D-639, F-174). The projects keep no lock file (D-641, F-173).
+- The decision register: the Codex CLI stays at the newest release (D-640, F-175).
+- `TemporaryGitRepository`: each git call turns auto maintenance and auto gc off, a defect that the CI of this PR found (F-176).
+- `night.yml`: the job `notify` sends a Pushover notification of a failed night on `main`, from two repository secrets (D-642).
+- `.github/actions/pushover` and `notify.yml`: one action sends each Pushover notice, and the workflow sends one on request (D-645).
+- `.github/scripts/night-fixer.sh`, `docs/runbooks/night-fixer-prompt.md`, and `docs/runbooks/night-fixer.md`: the night fixer, which this session installs as a launchd job (D-643, D-644).
+- `ArrayMeshBuilder` and its three callers: each managed mesh wrapper goes when its node takes the mesh, so no finalizer frees one after the engine shut down (F-177).
+
+Out of scope: the other open findings of the repository review of 2026-09-24, which later PRs of D-596 hold. This PR holds more than one concern (D-618).
+
+Exit tests:
+
+1. `ASetWithoutTheMainWeaponFailsToLoad`, `AnIdErrorNamesEachFile`, and `TextThatIsNotUtf8NamesTheFile` pass, and each one fails on the loader of `main`.
+2. `EveryRequiredProjectileFieldIsRequired` passes for `areaCentimetres`, and it fails on the validator of `main`.
+3. `ADroppedDigThatFailsThrowsAtTheNextCheck` and `TheSwapKeepsAndChecksADroppedDig` pass. The shape test fails on the swap of `main`.
+4. `AGameFlagBeforeTheSeparatorStopsTheBoot` passes. `AGameFlagBeforeTheSeparatorEndsTheBoot` quits the engine with exit code 1, and it fails on the boot of `main`.
+5. `EachActionHasADependencyDecision` passes, and it fails on the register of `main`.
+6. `TheNightPlansTheSeedsOfEachSweep` asserts the overwrite of the plan upload, and it fails on the workflow of `main`.
+7. `WalkAfterTheScriptDescends` asserts a roll on floor 2, and it fails on the script of `main`. `SmokeSessionPasses` passes on the three platforms.
+8. The simulation version is 18, and `BitIdentityKnownAnswer` passes with `e202e84e0f5c188a` on the three platforms (G-9, G-20).
+9. `AProgressPolicyAtTheStairwellEndsAtTheFloorBudget` and `ATimerLongerThanTheFloorBudgetSetsTheCap` pass. The first one fails on the run of `main`.
+10. `EachEngineDownloadChecksItsPinnedHash` passes, and it fails on the workflow of `main`. Each smoke job downloads the zip once and passes its hash check.
+11. `OfferRejectsAnotherSeedOrContentSet` passes, and it fails on the loop of `main`.
+12. `TheCloseOfTheWindowEndsTheSession` passes, and it fails on the `Main.cs` of `main`. A windowed session that the app quit ends with the end line and the frame log.
+13. `TheSeedListPassesByFile` passes, and `TheNightPlansTheSeedsOfEachSweep` fails on the workflow of `main`.
+14. `ProcessLimitTests` passes: a child past its limit stops with an error that names it.
+15. `ARollTakesNoHit` passes, and it fails on the player of `main`.
+16. `TheStringTableIsOutsideTheHash` passes, and it fails on the hash of `main`.
+17. `EveryRecordingHasItsSource` passes with the exact CC0 license, and it fails on a record with another license.
+18. `TheRealFrameClockGivesTheTimeBetweenReadings`, `TheFrameLogReadsTheRealClock`, and `HitchBudgetIsTwoFramesAtTheTarget` pass. The last two fail on the Game of `main`.
+19. `EachActionUseNamesAPinnedCommit` and `DependabotProposesThePins` pass, and they fail on the workflows of `main`.
+20. `EachFlippedBitOfTheHeaderIsAnError` passes, and it fails on the header of `main`.
+21. `OnlyHighAndCriticalAdvisoriesFail` passes, and it fails on the build properties of `main`.
+22. `TheTemporaryRepositoryRunsNoBackgroundMaintenance` passes, and it fails on the helper of `main`.
+23. `AFailedNightOnMainNotifiesTheOwner` and `NightFixerTests` pass.
+24. `EachMeshWrapperGoesWhenItsNodeTakesTheMesh` passes. Under load, 200 smoke sessions end with no crash and no leak report. The test send of the two secrets returned HTTP 200. The first failed night on `main` after the merge proves the job, and a later session records it.
+
+Review focus: the path of each content error, the check of the dropped dig task, and the scan of the engine arguments.
+
+Check clause: none.
+
+Gate: exit tests 1 to 24 pass.
+
+> *In plain English:* the repository review left faults open. Some content errors named no file, a failed background dig left no trace, and a test command in the wrong order passed. This PR fixes twenty-six of them.
+
 ### PR-76: Enemy models
 
 Scope: the enemy models of PR-16 gain their own boxes and recipes, and the color swap of D-507 gives each enemy its colors (D-339, D-504).
@@ -1427,7 +1502,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
 47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
 48. PR-90. ✅ Done in PR #108. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608. The traced maps and the approved sheet: D-612 to D-617.
-49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596).
+49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ PR-91 done in PR #109. ✅ The owner answers of 2026-09-26: D-618 to D-645.
 50. PR-76.
 51. Owner: answer OQ-181.
 52. PR-77.
@@ -1441,14 +1516,15 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 2. Each 
 
 Open:
 
-- OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
-- OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-181: the antialiasing of the world. Blocks PR-77 (D-504).
 - OQ-206: the held sword in the roll. Blocks nothing.
 
 Resolved 2026-09-26:
 
 - OQ-208 (D-603 to D-605): the texture resolution. PR-90.
+- OQ-159 (D-631): the model file format, as PR-13 built it. PR-91.
+- OQ-160 (D-632): the occlusion levels and the wall fade numbers, as PR-13 built them. PR-91.
+- OQ-197 (D-635), OQ-198 (D-624), OQ-202 (D-628), OQ-203 (D-629), OQ-204 (D-633), and OQ-205 (D-630): findings of the repository review. PR-91.
 
 Resolved 2026-09-25:
 

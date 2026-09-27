@@ -22,6 +22,20 @@ public sealed class RepositoryShapeTests
         Assert.Equal(claude, agents);
     }
 
+    /// <summary>
+    /// F-174. A low or moderate NuGet advisory stays a warning, and a high or critical one stays an error, because warnings
+    /// are errors (D-68, D-639). The old build failed on an advisory of any severity.
+    /// </summary>
+    [Fact]
+    public void OnlyHighAndCriticalAdvisoriesFail()
+    {
+        string props = RepositoryRoot.ReadFile("Directory.Build.props");
+        Assert.Contains("<TreatWarningsAsErrors>true</TreatWarningsAsErrors>", props, StringComparison.Ordinal);
+        Assert.Contains("<WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902</WarningsNotAsErrors>", props, StringComparison.Ordinal);
+        string[] exemptions = XDocument.Parse(props).Descendants("WarningsNotAsErrors").Select(element => element.Value).ToArray();
+        Assert.Equal(["$(WarningsNotAsErrors);NU1901;NU1902"], exemptions);
+    }
+
     [Fact]
     public void CoreReferencesNoEngine()
     {
@@ -122,7 +136,7 @@ public sealed class RepositoryShapeTests
         // is not arm64 (D-572, T-2). The check comes before the checkout, so no later step runs on the wrong machine.
         string job = WorkflowText.JobText(RepositoryRoot.ReadFile(workflowPath), "macos-arm64");
         int check = job.IndexOf("      - name: Check the architecture\n", StringComparison.Ordinal);
-        int checkout = job.IndexOf("      - uses: actions/checkout@v5\n", StringComparison.Ordinal);
+        int checkout = job.IndexOf($"      - uses: {ActionDecisionTests.Checkout}\n", StringComparison.Ordinal);
         Assert.True(check >= 0, $"The macOS leg of '{workflowPath}' has no architecture check.");
         Assert.True(checkout > check, $"The architecture check of '{workflowPath}' does not come before the checkout.");
         Assert.Equal(check, job.IndexOf("      - ", StringComparison.Ordinal));
@@ -234,6 +248,42 @@ public sealed class RepositoryShapeTests
         Assert.Contains("(F-95)", workflow, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// D-642. A failed night on main sends a Pushover notification at priority 1: a job that did not succeed, or a record
+    /// whose status is not success. A night on another branch sends none. The keys come from repository secrets alone,
+    /// the job reads the repository and nothing more, and the Pushover action fails the job on a failed send (T-2).
+    /// </summary>
+    [Fact]
+    public void AFailedNightOnMainNotifiesTheOwner()
+    {
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        string notify = WorkflowText.JobText(workflow, "notify");
+        Assert.Contains("    needs: [plan, sweep, record]\n", notify, StringComparison.Ordinal);
+        Assert.Contains("always() && github.ref == 'refs/heads/main' &&", notify, StringComparison.Ordinal);
+        Assert.Contains("needs.plan.result != 'success' || needs.sweep.result != 'success' || needs.record.result != 'success' ||", notify, StringComparison.Ordinal);
+        Assert.Contains("needs.record.outputs.status != 'success'", notify, StringComparison.Ordinal);
+        Assert.Contains("    permissions:\n      contents: read\n", notify, StringComparison.Ordinal);
+        Assert.Contains("uses: ./.github/actions/pushover", notify, StringComparison.Ordinal);
+        Assert.Contains("user-key: ${{ secrets.PUSHOVER_USER_KEY }}", notify, StringComparison.Ordinal);
+        Assert.Contains("api-token: ${{ secrets.PUSHOVER_API_TOKEN }}", notify, StringComparison.Ordinal);
+        Assert.Contains("priority: \"1\"", notify, StringComparison.Ordinal);
+        Assert.Contains("url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}", notify, StringComparison.Ordinal);
+
+        string record = WorkflowText.JobText(workflow, "record");
+        Assert.Contains("      status: ${{ steps.gather.outputs.status }}\n", record, StringComparison.Ordinal);
+        Assert.Contains("echo \"status=${status}\" >> \"$GITHUB_OUTPUT\"", StepText(workflow, "Gather the sweep results"), StringComparison.Ordinal);
+
+        // No file under .github/ gives a Pushover key a literal value: a key of Pushover is 30 letters and digits.
+        System.Text.RegularExpressions.Regex literal = new("(PUSHOVER_(USER_KEY|API_TOKEN)|user-key|api-token|token=|user=)\\s*[:=]?\\s*[\"']?[A-Za-z0-9]{30}\\b");
+        foreach (string file in Directory.GetFiles(System.IO.Path.Combine(RepositoryRoot.Find(), ".github"), "*.yml", SearchOption.AllDirectories))
+        {
+            foreach (string line in File.ReadAllLines(file))
+            {
+                Assert.False(literal.IsMatch(line), $"The line '{line.Trim()}' of '{file}' gives a Pushover key a literal value (D-642).");
+            }
+        }
+    }
+
     [Fact]
     public void TheNightRunsOnHostedLinuxAsOneJobForEachSweep()
     {
@@ -242,7 +292,7 @@ public sealed class RepositoryShapeTests
         // holds the write permissions.
         string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
         Dictionary<string, string> jobs = WorkflowText.RunsOnByJob(workflow);
-        Assert.Equal(new[] { "plan", "record", "sweep" }, jobs.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(new[] { "notify", "plan", "record", "sweep" }, jobs.Keys.Order(StringComparer.Ordinal));
         Assert.All(jobs.Values, runsOn => Assert.Equal("ubuntu-latest", runsOn));
         Assert.DoesNotContain("self-hosted", workflow, StringComparison.Ordinal);
 
@@ -252,7 +302,7 @@ public sealed class RepositoryShapeTests
         Assert.Contains("\n  sweep:\n    needs: plan\n", workflow, StringComparison.Ordinal);
         Assert.Contains("\n  record:\n    needs: [plan, sweep]\n", workflow, StringComparison.Ordinal);
         Assert.Contains("\npermissions:\n  contents: read\n\njobs:\n", workflow, StringComparison.Ordinal);
-        Assert.Contains("\n    permissions:\n      contents: write\n      actions: write\n      pull-requests: read\n    steps:\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("\n    permissions:\n      contents: write\n      actions: write\n      pull-requests: read\n    outputs:\n", workflow, StringComparison.Ordinal);
         Assert.Equal(2, workflow.Split("contents: write").Length);
     }
 
@@ -273,7 +323,7 @@ public sealed class RepositoryShapeTests
         Assert.Equal("The upload step comes before the step 'Seed sweep, the fixed seeds and the slice'.", UploadStepDefect(beforeSeeds));
         string beforeBots = MoveStepBefore(workflow, "Keep the bot logs of a failed night", "Bot sweep, the fixed seeds and the slice");
         Assert.Equal("The upload step comes before the step 'Bot sweep, the fixed seeds and the slice'.", UploadStepDefect(beforeBots));
-        Assert.Equal("The bot log step uploads no artifact.", UploadStepDefect(workflow.Replace("actions/upload-artifact@v4", "actions/other@v4", StringComparison.Ordinal)));
+        Assert.Equal("The bot log step uploads no artifact.", UploadStepDefect(workflow.Replace(ActionDecisionTests.UploadArtifact, "actions/other@v4", StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -293,7 +343,7 @@ public sealed class RepositoryShapeTests
 
         string botSweep = StepText(night, "Bot sweep, the fixed seeds and the slice");
         Assert.Contains("if: matrix.sweep != 'reachability'", botSweep, StringComparison.Ordinal);
-        Assert.Contains("bot-run --policy \"$SWEEP\" --seeds \"$NIGHT_SEEDS\" --output bot-logs --root . --summary \"${RUNNER_TEMP}/sweep/bot-deaths.txt\"", botSweep, StringComparison.Ordinal);
+        Assert.Contains("bot-run --policy \"$SWEEP\" --seeds-file \"$NIGHT_SEEDS_FILE\" --output bot-logs --root . --summary \"${RUNNER_TEMP}/sweep/bot-deaths.txt\"", botSweep, StringComparison.Ordinal);
         Assert.Contains("SWEEP: ${{ matrix.sweep }}", night, StringComparison.Ordinal);
         Assert.Contains(": > \"${RUNNER_TEMP}/sweep/bot-deaths.txt\"", StepText(night, "Start the sweep result"), StringComparison.Ordinal);
         Assert.Contains("--summary \"${RUNNER_TEMP}/bot-deaths.txt\"", StepText(night, "Write the night record"), StringComparison.Ordinal);
@@ -322,14 +372,17 @@ public sealed class RepositoryShapeTests
         Assert.True(workflow.IndexOf("- name: Start the sweep result", StringComparison.Ordinal) < workflow.IndexOf("run: dotnet build WhatYouCarry.slnx", StringComparison.Ordinal), "The sweep result starts before the build, so a broken build still leaves a result.");
         string list = StepText(workflow, "List the seeds of the sweep");
         Assert.Contains("set -euo pipefail", list, StringComparison.Ordinal);
-        Assert.Contains("seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep \"$SWEEP\" --date \"$NIGHT_DATE\" --root . --carry \"${RUNNER_TEMP}/main-night.json\")", list, StringComparison.Ordinal);
-        Assert.Contains("echo \"NIGHT_SEEDS=${seeds}\" >> \"$GITHUB_ENV\"", list, StringComparison.Ordinal);
+        // F-162: the list goes to a file, and no step puts the list itself in a variable or an argument.
+        Assert.Contains("night-seeds --sweep \"$SWEEP\" --date \"$NIGHT_DATE\" --root . --carry \"${RUNNER_TEMP}/main-night.json\" > \"${RUNNER_TEMP}/night-seeds.txt\"", list, StringComparison.Ordinal);
+        Assert.Contains("echo \"NIGHT_SEEDS_FILE=${RUNNER_TEMP}/night-seeds.txt\" >> \"$GITHUB_ENV\"", list, StringComparison.Ordinal);
+        Assert.DoesNotContain("NIGHT_SEEDS=", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("--seeds \"", workflow, StringComparison.Ordinal);
         Assert.Contains("--failures \"${RUNNER_TEMP}/sweep/seed-failures.txt\"", StepText(workflow, "Bot sweep, the fixed seeds and the slice"), StringComparison.Ordinal);
 
         string sweep = StepText(workflow, "Seed sweep, the fixed seeds and the slice");
         Assert.Contains($"if: matrix.sweep == '{NightSeeds.ReachabilitySweep}'", sweep, StringComparison.Ordinal);
-        Assert.Contains("WYC_NIGHT_SEEDS=\"$NIGHT_SEEDS\"", sweep, StringComparison.Ordinal);
-        Assert.Contains("export WYC_NIGHT_SEEDS", sweep, StringComparison.Ordinal);
+        Assert.Contains($"{ProcgenTests.NightSeedsFileVariable}=\"$NIGHT_SEEDS_FILE\"", sweep, StringComparison.Ordinal);
+        Assert.Contains($"export {ProcgenTests.NightSeedsFileVariable}", sweep, StringComparison.Ordinal);
         Assert.Contains("WYC_NIGHT_FAILURES: ${{ runner.temp }}/sweep/seed-failures.txt", sweep, StringComparison.Ordinal);
         Assert.Contains("WYC_NIGHT_SWEEP: \"1\"", sweep, StringComparison.Ordinal);
 
@@ -341,6 +394,9 @@ public sealed class RepositoryShapeTests
         // that sweep, and a second upload with the same name fails without overwrite.
         Assert.Contains("overwrite: true", result, StringComparison.Ordinal);
         Assert.Contains("overwrite: true", StepText(workflow, "Keep the bot logs of a failed night"), StringComparison.Ordinal);
+
+        // F-155: a re-run of the plan job uploads the record of main again under one name.
+        Assert.Contains("overwrite: true", StepText(workflow, "Keep the record of main for each job"), StringComparison.Ordinal);
         Assert.Contains("pattern: night-sweep-*", StepText(workflow, "Take the result of each sweep"), StringComparison.Ordinal);
         string gather = StepText(workflow, "Gather the sweep results");
         Assert.Contains("status=$(bash .github/scripts/night-gather.sh \"${RUNNER_TEMP}/sweeps\" \"${RUNNER_TEMP}\" \"$PLAN_RESULT\" \"$SWEEP_RESULT\" \"$RECORD_STATUS\")", gather, StringComparison.Ordinal);
@@ -511,7 +567,7 @@ public sealed class RepositoryShapeTests
 
         int nextStep = workflow.IndexOf("- name:", stepStart + 1, StringComparison.Ordinal);
         string step = nextStep < 0 ? workflow[stepStart..] : workflow[stepStart..nextStep];
-        if (!step.Contains("uses: actions/upload-artifact@v4", StringComparison.Ordinal))
+        if (!step.Contains($"uses: {ActionDecisionTests.UploadArtifact}", StringComparison.Ordinal))
         {
             return "The bot log step uploads no artifact.";
         }

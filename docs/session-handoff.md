@@ -2,348 +2,330 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
-## Session 275: 2026-09-26, Claude Code
+## Session 286: 2026-09-27, Claude Code
 
 Author: Claude Code
-Session: PR-90, author, merge. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+Session: PR-91, author, merge. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
-- Review round 2 gave `Ready for owner merge` at the effective head `e4d3543`, with P2-1 fixed. The gitar pass of `1ce21f1` approved with no finding, and no review thread is open.
+- The gitar pass of `50862e5` suggested a guard for the removal of a stale fixer lock. `db8b3c8` added it, and the thread is resolved.
+- Review round 5 (session 285) gave `Ready for owner merge` at the effective head `db8b3c8`, with P2-1 to P2-3 fixed.
+- The round ran past the limit of 60 minutes of D-627, because the reviewer ran its own smoke stress test. It pushed the record and its handoff first, and `codex-review` then stopped it with a fault. The limit worked as D-627 states.
 - The session asks the owner to confirm the merge with the merge summary (D-533).
 
 ### State of the build
 
-- Effective head `e4d3543`. Each check passed at `e4d3543`. At the tip, `review-gate`, `evaluate`, `night-gate`, and Gitar passed, and the code jobs skipped on the documents heads (D-357).
+- Remote `main` is `4a20b82`. The effective head is `db8b3c8`. Each check passed at `db8b3c8`, and the review gate passed at the tip.
 
 ### In flight
 
-- The owner confirmation, then `gh pr merge 108 --auto --squash` (D-516).
+- The owner confirmation, then `gh pr merge 109 --auto --squash` (D-516).
 
 ### Traps and gotchas
 
-- A Deck run over SSH sets `XAUTHORITY`, or Godot 4.7.2 can hang at exit on the Wayland fallback (F-147).
+- After the merge, the launchd job `com.whatyoucarry.night-fixer` starts to act on each failed night on `main`. `docs/runbooks/night-fixer.md` holds its stop and its removal.
+- A review round that runs its own stress test can pass the limit of D-627.
 
 ### Open questions that block progress
 
-None for PR-90.
+None for PR-91.
 
 ### Next concrete action
 
-After the merge, the next session starts the open review findings of D-596, as the phase 2 roadmap orders.
+After the merge, the next session continues the open findings of D-596, which wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
 
-## Session 274: 2026-09-26, Codex
+## Session 285: 2026-09-27, Codex
 
 Author: Codex
-Session: PR-90, reviewer. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
-- Re-reviewed PR #108 after the author fixed P2-1. `e4d3543` checks the `IHDR` length before it reads fixed offsets.
-- Ran the focused screenshot-reader regression tests at `e4d3543`. All 5 passed, including the short-header case.
-- Updated `docs/reviews/pr-108.md`. P2-1 is fixed, and the verdict approves the effective head `e4d3543`.
+- Completed review round 5 at effective head `db8b3c8`. P2-2 and P2-3 are fixed, and their focused tests pass.
+- Reviewed the mesh wrapper correction F-177 and the PR comments. Updated `docs/reviews/pr-109.md` to `Ready for owner merge`.
+- The 20 focused `NightFixerTests` passed. Two hundred headless smoke sessions under eight busy processes also passed.
 
 ### State of the build
 
-- The remote head before this metadata commit was `1ce21f1`. The focused tests passed, and the Documents category passed 196 of 196. STE check passed. The local full suite stayed silent for more than three minutes, so this session interrupted it. The prior handoff reports 1867 of 1867 tests passed at `e4d3543`.
-- The live checks at `1ce21f1` pass for `det-lint`, `doc-gate`, `documents`, `night-gate`, and `ste-check`. The documents-only rule skips the full suite, smoke, asset QA, and bit identity on this metadata tip. `evaluate` and `review-gate` wait for this review record.
+- Remote metadata head: `e97c381`. The reviewed code head is `db8b3c8`. Fresh checks passed for Gitar, evaluate, review-gate, asset-qa, det-lint, ste-check, documents, doc-gate, and night-gate. CI, Smoke, bit identity, and bot jobs skipped under the documents-only rule.
 
 ### In flight
 
-- The review record and this entry need one metadata commit and a push to `feat/pr-90-texture-resolution`.
+- A metadata update records the push result. Fresh document checks and the Gitar wait follow that push.
 
 ### Traps and gotchas
 
-- The effective head is `e4d3543`; later commits change documents only.
-- The source screenshots are absent from this worktree. D-616 records owner approval of the contact sheet.
+- The worktree is detached. Compare its pushed commit with the PR head; the local status has no branch or ahead count.
+- The reviewer does not answer comments or merge the PR.
 
 ### Open questions that block progress
 
-None. OQ-208 is resolved by D-603 to D-608.
+None for PR-109.
 
 ### Next concrete action
 
-Commit this entry with `docs/reviews/pr-108.md`, push to the PR branch, and verify the remote head.
+Push the metadata update, wait for fresh checks and Gitar, then give the owner the merge summary and request merge confirmation.
 
-## Session 273: 2026-09-26, Claude Code
+## Session 284: 2026-09-27, Claude Code
 
 Author: Claude Code
-Session: PR-90, author, review response. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
-- Answered round 1 of the review in `docs/reviews/pr-108-response.md`. P2-1 has full merit. `e4d3543` rejects a header chunk that is not 13 bytes, and a regression case failed on the old reader.
-- Ran exit test 2 at the PR head `e4d3543` on the Deck over SSH, on X11, after the owner said the Deck was ready (D-606). After the first 10 s, no frame is over 11111 µs (D-295). In the first 10 s, 67 frames were over, and the worst was 27270 µs.
-- The owner asked for a fix of the exit hang now (F-147). Under gdb, the main thread waits in `pthread_join`, and the thread "Wayland Events" waits in `poll`. On the Wayland fallback of an SSH session, 5 of 14 runs hung, `main` too. With `XAUTHORITY` set, 0 of 9 runs hung.
-- `docs/runbooks/commands.md` holds the Deck run procedure with `XAUTHORITY`, and the agent files name it.
-- The gitar pass of `e4d3543` approved with no finding.
+- The gitar pass of `c505fa9` found that the fixer marked a night handled before its setup. `d32da6b` fixed it, and the thread is resolved.
+- Review round 4 (session 283) gave `Changes required` at `d32da6b` with P2-2 (a queued notice counted as delivered) and P2-3 (a race in the lock). `09c8695` fixes both, and `docs/reviews/pr-109-response.md` records them.
+- The suite of that correction found F-177, an engine crash at exit from leaked mesh wrappers. Under load, the PR head crashed in 3 of 100 smoke sessions, `main` in 0 of 100. The owner chose the fix of the cause, and 200 sessions then gave 0 crashes.
+- The launchd job now copies the folder `.github/scripts` of `origin/main`, so the helper `notify-owner.sh` lies beside the poll. The job is reloaded on this Mac.
 
 ### State of the build
 
-- Effective head `e4d3543`. Each check of `e4d3543` passed except `evaluate` and `review-gate`, which wait for the review record (D-251). The local full suite passed 1867 of 1867.
-- The documents commit of this entry, the response, the runbook, and F-147 comes after `e4d3543`.
+- Remote `main` is `4a20b82`. The code head is `09c8695`. The full suite passed 1937 of 1937 at `09c8695` on macOS.
 
 ### In flight
 
-- The gitar pass of the documents commit, then round 2 of `make codex-review PR=108`.
+- The push, the gitar pass, CI, and review round 5.
 
 ### Traps and gotchas
 
-- The Deck checkout is on the PR-90 branch at `e4d3543`, and its build is current.
-- The probe `~/hang-probe2.sh <driver> <runs>` on the Deck runs the session under gdb, because `ptrace_scope` is 1. It stops at the first hang.
-- The official Godot binary has no symbols. The libc frames map to a symbol through `readelf -S` and `nm -D` on the Deck.
+- The auto mode of the harness came back on by itself several times and blocked the fixer work. The owner switched it off each time.
+- F-177 shows under load alone: 0 of 70 plain runs crashed. A stress loop with eight `yes` processes gives the rate.
 
 ### Open questions that block progress
 
-None for PR-90.
+None for PR-91.
 
 ### Next concrete action
 
-Run `make codex-review PR=108` when each check but the Review gate workflow is green. After a `Ready for owner merge` verdict, give the owner the merge summary (D-533).
+Push, finish the gitar pass and CI, run review round 5, then ask the owner to confirm the merge.
 
-## Session 272: 2026-09-26, Codex
+## Session 283: 2026-09-27, Codex
 
 Author: Codex
-Session: PR-90, reviewer. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
-- Reviewed PR #108 at head `4edcd2c`. The provider gate passed because session 271 names Claude Code as the author.
-- Added P2-1. `ScreenshotPng` reads `IHDR` fields before it checks that the chunk has 13 bytes.
-- The review record names the missing review gate record comment and the author response. It verifies that the gate was red before this record.
-- The source screenshots under `artifacts/reference/` are not in this worktree, so the review could not compare each traced map with its source image.
+- Review round 4 checked the effective head `d32da6b` and the new night fixer, its notice path, tests, and runbooks.
+- The setup failure finding from Gitar is fixed. Two findings remain: the poll can count a notice dispatch as delivery, and concurrent polls can remove a lock before its PID exists.
+- The focused night fixer tests passed 15 of 15 on macOS.
 
 ### State of the build
 
-- At remote work head `4edcd2c`, asset QA, bit identity on three platforms, the bot checks, CI on three platforms, determinism lint, doc gate, documents, night gate, smoke on three platforms, and STE passed.
-- `evaluate` and `review-gate` failed because the review record was absent. Focused local tests passed: 39 `TextureTraceTests`, and 126 tests across texture trace, texture generation, and asset QA.
-- The handoff reports the Deck frame logs at `763efd5` and `60a23ec`. No run at `4edcd2c` appears in the evidence.
+- Remote `main` is `4a20b82`. The effective head is `d32da6b`. GitHub CI, Smoke, bit identity, bots, asset QA, document gates, and Gitar passed. `evaluate` and `review-gate` fail because the review record requires changes.
 
 ### In flight
 
-- P2-1 needs a length check and a regression test. Exit test 2 needs a Deck frame log at the PR head.
-- The review record and this entry need one metadata commit and a push to the PR branch (D-182).
+- The review record and this handoff entry are ready for one metadata commit and push to `feat/pr-91-review-fixes`.
 
 ### Traps and gotchas
 
-- The trace screenshots are gitignored files under `artifacts/reference/` and are absent from this worktree.
-- D-606 requires an owner readiness check before a Deck connection. The latest handoff reports that the Deck checkout is on the PR branch.
-- The first local test command used `--no-restore` and gave no result. A later restore and focused run passed.
+- `gh workflow run notify.yml` starts a workflow. It does not confirm that Pushover sent the notice.
+- A lock directory without a PID can belong to a poll that has not finished startup.
 
 ### Open questions that block progress
 
-No owner decision is open. The current-head Deck run and the source screenshots remain unavailable review evidence.
+None for this review.
 
 ### Next concrete action
 
-Fix P2-1 with a short-`IHDR` regression test. Run the Deck frame log at the PR head after the owner confirms readiness, then request a repeat review.
+Correct P2-2 and P2-3, then request another review round.
 
-## Session 271: 2026-09-26, Claude Code
+## Session 282: 2026-09-27, Claude Code
 
 Author: Claude Code
-Session: PR-90, author. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
-- PR-85 exit test 8 passed. The first night of the `7 7 * * *` cron is run 36241114010 at `60a23ec`. It started at 12:10:52 UTC, about 5 hours after the cron time. The plan job took 9 s, and the record job took 39 s.
-- The sweep jobs: coward 8 min 32 s, timer-tester 19 min 27 s, random-walker 20 min 2 s, greedy-descender 1 h 17 min 43 s, full-clearer 1 h 21 min 41 s, and reachability 2 h 30 min 7 s. Each job passed, with no runner fault. The record names the slice 6001 to 6500 for each bot policy, and 120001 to 130000 for reachability. It carries no seed.
-- The owner answered OQ-208 (D-603 to D-608). Every face has 64 texels per meter, in an atlas of 1024.
-- The owner rejected the first repaint at 64. The `texture-trace` command and the `map` layer now trace each visible face of the body and the sword from unlit Meshy views (D-612 to D-614).
-- The owner approved the traced sheet (D-616), after three rounds on the blade (D-615). The blade flat is mid steel with lighter edges. The skin moved from bone to clay.
-- `asset-qa` skips the trace specs, because a spec names screenshots outside the repository (D-617).
-- The seven procedural recipes that the traces replaced are gone, and the grip box reads `leather`.
-- An earlier session did the work up to the sheet, and a connection failure ended it. This session continued the same PR from the blade review.
+- The owner asked for a Pushover notice of a failed night (D-642) and a night fixer on the Mac Mini (D-643 to D-645). Both joined PR #109.
+- The repository secrets `PUSHOVER_USER_KEY` and `PUSHOVER_API_TOKEN` hold the keys, and a test send returned HTTP 200.
+- The auto mode of the harness blocked the fixer build as an unsafe agent. The owner added allow rules to `.claude/settings.local.json` and moved the session to manual mode, then approved each step.
+- This session installed the launchd job `com.whatyoucarry.night-fixer` on the Mac Mini. It runs the poll of `origin/main`, so it does nothing before the merge. A dry run against GitHub read the newest night on `main` as passed.
 
 ### State of the build
 
-- The local full suite, `det-lint`, `asset-qa`, and `ste-check` passed at the work head. See the PR checks for CI.
-- Exit test 2: four bot sessions with `--frame-log` on the Deck over SSH. Three ran at `763efd5`, and one ran on `main` at `60a23ec` as a control. `763efd5` holds the atlas and layout of the head, byte for byte.
-- After the first 10 s, each of the four runs holds 11111 µs, 90 frames per second, with no frame over (D-295). In the first 10 s, the PR-90 runs had 44, 12, and 303 frames over, and `main` had 16. Most were under 0.6 ms over. The worst was 26.7 ms.
+- Remote `main` is `4a20b82`. The code head is `fa435b2`. The full suite passed 1931 of 1931 at `fa435b2` on macOS.
+- Review round 3 approved `69c946a`. The notice and the fixer moved the effective head, so review round 4 is due.
 
 ### In flight
 
-- The automated pass, then `make codex-review` (D-511).
+- The push of `fa435b2`, the gitar pass, CI, and review round 4.
 
 ### Traps and gotchas
 
-- The Deck is at 10.0.0.46, user `deck`. Export `~/.dotnet` on the path, `DOTNET_ROOT`, `DISPLAY=:0`, `XDG_RUNTIME_DIR=/run/user/1000`, and `WAYLAND_DISPLAY=wayland-0`. X11 refuses the SSH session, and Godot falls back to Wayland.
-- One Deck run did not exit after its end line, and a stop signal ended it. Two later runs exited in 45 s. Wrap each run in `timeout`.
-- The frame misses of the first 10 s vary from 12 to 303 at one head. Compare a head with a control run of `main` on the same Deck.
-- The Deck checkout is on the PR-90 branch now.
-- The trace keeps each recipe that exists. The blade maps are a hand remap of the trace: dark iron to mid steel, rust to pits (D-615). A new trace of the blade loses that remap.
+- `gh workflow run notify.yml` works only after the merge, because a dispatch needs the workflow on `main`.
+- The night fixer runs `claude -p` with no permission prompts under the account of the owner (D-643). `docs/runbooks/night-fixer.md` holds the stop and the removal.
 
 ### Open questions that block progress
 
-None for PR-90.
+None for PR-91.
 
 ### Next concrete action
 
-Answer the automated pass, then run `make codex-review PR=108`. After a `Ready for owner merge` verdict, give the owner the merge summary (D-533).
+Push, finish the gitar pass and CI, run review round 4, then ask the owner to confirm the merge.
 
-## Session 270: 2026-09-26, Claude Code
+## Session 281: 2026-09-26, Claude Code
 
 Author: Claude Code
-Session: PR-89, author, merge. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
+Session: PR-91, author, merge. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
-- Review round 2 gave `Ready for owner merge` at effective head `6afe1db`, with P2-1 fixed. The automated pass of `2faf0c0` approved with no finding.
-- The owner read the merge summary and confirmed the merge (D-533). The session runs `gh pr merge 107 --auto --squash` after this entry.
-- PR-85 exit test 8 stays unread. At 05:57 UTC on 2026-09-26, the first night of the `7 7 * * *` cron has not started. The owner chose to merge before that night ends.
+- Review round 2 gave `Blocked` at `69c946a` with P2-1 fixed: a CI note of the Gitar dashboard had no author reply (D-250). Comments 5852158126 and 5852184443 answer both notes.
+- Review round 3 gave `Ready for owner merge` at the effective head `69c946a`.
+- The owner report `what-you-carry-repository-review.md` marks each finding of PR #109 as complete, and RR-P3-20 as no longer applicable.
+- The session asks the owner to confirm the merge with the merge summary (D-533).
 
 ### State of the build
 
-- Effective head `6afe1db`. The code checks passed at `2faf0c0`, and `review-gate` passed at `90b719a`. The local full suite passed 1826 of 1826.
+- Remote `main` is `4a20b82`. The effective head is `69c946a`. Each code check passed at `55458cc`, whose code is that of `69c946a`. Gitar approved `55458cc` with no thread.
 
 ### In flight
 
-- The auto-merge of PR #107.
+- The owner confirmation, then `gh pr merge 109 --auto --squash` (D-516).
 
 ### Traps and gotchas
 
-- The schedule of a night can start hours after 07:07 UTC. Read `gh run list --workflow night.yml` before you call a miss.
+- A Gitar CI note that names a red review gate is an item. Answer each one before a review round, or the round blocks (D-250).
+- Session 276 lists the other traps of this PR.
 
 ### Open questions that block progress
 
-None for PR-89. OQ-208 blocks PR-90.
+None for PR-91.
 
 ### Next concrete action
 
-Read the night of 2026-09-26 for PR-85 exit test 8: its start time, the wall time of each sweep job, its result, and the slices of its record (6001 to 6500 for each bot policy, 120001 to 130000 for reachability). If a job ends with a runner fault, re-run the failed jobs (D-585). Then start PR-90 after the owner answers OQ-208.
+After the merge, the next session continues the open findings of D-596. They wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
 
-## Session 269: 2026-09-26, Codex
+## Session 280: 2026-09-26, Codex
 
 Author: Codex
-Session: PR-89, reviewer, round 2. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Effective head `6afe1db`.
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
-- Re-reviewed PR #107 after the author fixed P2-1 from round 1.
-- `LinearLight.Blend` now rejects a count of parts that is not positive. Its regression test passed.
-- Updated `docs/reviews/pr-107.md`. P2-1 is fixed, and the verdict is `Ready for owner merge` at `6afe1db`.
-- CI at tip `2faf0c0` passed for code, smoke, bit identity, bots, assets, lint, documents, and the night gate. `evaluate` and `review-gate` failed because the record still named the earlier verdict.
+- Re-reviewed PR #109 after the author answered the Gitar CI note.
+- Confirmed that P2-1 stays fixed at `69c946a` and that Gitar approves the code.
+- Updated the review record to `Ready for owner merge` for the effective head.
 
 ### State of the build
 
-- Effective head `6afe1db`. The focused linear-light test passed. The current tip is `2faf0c0` on `origin/feat/pr-89-truecolor-atlas`.
+- Remote `main` is `4a20b82`. The effective code head is `69c946a`; the remote PR tip before this review commit is `4ec288a`.
+- Code, Smoke, and bit-identity checks passed at `55458cc`. Current metadata checks pass except `evaluate` and `review-gate`, which read the old `Blocked` verdict.
 
 ### In flight
 
-- Publish this review record and handoff in one metadata commit. Then wait for fresh checks of the new tip.
+- The review record and this entry need one metadata commit and a push to `feat/pr-91-review-fixes`.
+- The check wait and the Gitar push wait need a result after the push.
 
 ### Traps and gotchas
 
-- The review uses the code head `6afe1db`. Later commits change only review metadata.
+- The current Gitar pass approves the code. The author answered the CI note at comment 5852184443.
 
 ### Open questions that block progress
 
-None for PR-89. OQ-208 blocks PR-90.
+None for PR-109. OQ-195, OQ-196, and OQ-199 to OQ-201 remain open for other findings.
 
 ### Next concrete action
 
-After the metadata push, confirm `evaluate`, `review-gate`, and Gitar on the new tip. The owner can then use the merge summary of D-533.
+Publish this review and handoff, then read the checks of the new metadata tip.
 
-## Session 268: 2026-09-26, Claude Code
-
-Author: Claude Code
-Session: PR-89, author, answer to review round 1. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
-
-### What this session did, and why
-
-- Round 1 gave `Changes required` at effective head `e4a097e` with P2-1: `LinearLight.Blend` divided by zero on a count of 0 parts.
-- P2-1 had full merit. Commit `6afe1db` rejects a count of parts that is not positive with a context error. The regression test failed on the old code with `DivideByZeroException`. `docs/reviews/pr-107-response.md` records it.
-- The automated pass of `2aa88bd` approved with no finding. Its red-gate note got the D-251 reply in comment 5843313742. No `Gitar review` comment was sent.
-- PR-85 exit test 8: at 05:19 UTC on 2026-09-26, the first night of the `7 7 * * *` cron has not started. The newest scheduled night is still run 36141884980 at `a3590ba`, from before the merge of PR-85.
-
-### State of the build
-
-- Effective head `6afe1db`. The full suite passed 1826 of 1826, and `ste-check` found nothing. At `2aa88bd`, each check passed except `evaluate` and `review-gate`, which waited for the record.
-
-### In flight
-
-- The gitar pass of `6afe1db`, CI, and review round 2.
-- PR-85 exit test 8: the night of 2026-09-26.
-
-### Traps and gotchas
-
-- The review of round 1 ran `handoff-rotate`, which moved Session 257 to the archive in commit `0230098`.
-
-### Open questions that block progress
-
-None for PR-89. OQ-208 blocks PR-90.
-
-### Next concrete action
-
-After the gitar pass and green CI, run `make codex-review PR=107`. On approval, give the owner the merge summary (D-533). Read the night of exit test 8 when it ends.
-
-## Session 267: 2026-09-26, Codex
+## Session 279: 2026-09-26, Codex
 
 Author: Codex
-Session: PR-89, reviewer. Branch `feat/pr-89-truecolor-atlas`. PR #107, changes required. Effective head `e4a097e`.
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
-- Reviewed PR #107 against its atlas, palette, and grain contracts (D-598 to D-602).
-- Added P2-1 to `docs/reviews/pr-107.md`: `LinearLight.Blend` accepts zero parts, then divides by zero.
+- Re-reviewed PR #109 after the author corrected P2-1 from round 1.
+- Verified that `69c946a` requires the CRC field to end the run-record header line. The focused regression test passed 2/2 cases.
+- Updated `docs/reviews/pr-109.md`. P2-1 is fixed. The verdict is `Blocked` because a specific Gitar item has no author reply.
 
 ### State of the build
 
-- Remote PR head before this review publication: `2aa88bd`. CI, smoke, bit identity, bots, asset QA, determinism lint, document gate, night gate, and STE passed for the effective head. The review gate awaited this record.
-- The focused texture and recipe tests passed 126 of 126.
+- Remote `main` is `4a20b82`. The effective code head is `69c946a`; the remote PR tip before this review commit is `55458cc`.
+- CI, smoke, bit identity, and repository checks passed on the metadata tip. `evaluate` and `review-gate` failed because the published review record still had the round 1 verdict.
 
 ### In flight
 
-- The review record and this handoff entry need one metadata commit and a push.
-- P2-1 needs a correction and regression test before approval.
+- The review record and this entry need one metadata commit and a push to `feat/pr-91-review-fixes`.
+- The Gitar pass and `evaluate` and `review-gate` need a new result after the push.
 
 ### Traps and gotchas
 
-- `LinearLight.Blend` uses 256 parts for grain today. Its public method still accepts zero and divides by zero.
-- The review covers effective head `e4a097e`. Later PR commits changed only paths in the skip set of D-475.
+- The latest Gitar comment has a specific request about the stale review verdict. The reviewer records the claim but does not answer Gitar (D-250).
 
 ### Open questions that block progress
 
-None. OQ-208 blocks PR-90 only.
+- The author must answer Gitar comment 5852038161 before the automated pass is complete.
 
 ### Next concrete action
 
-Correct P2-1, test zero parts, and request a new review round.
+Answer the Gitar comment, then read the new pass and gate results for PR #109.
 
-## Session 266: 2026-09-25, Claude Code
+## Session 278: 2026-09-26, Claude Code
 
 Author: Claude Code
-Session: PR-89, author. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
-- PR-85 exit test 8: the first night from the `7 7 * * *` cron has not started. At 04:47 UTC on 2026-09-26, the newest scheduled night is run 36141884980 of 13:35 UTC on 2026-09-25, at `a3590ba`. That commit is older than the merge of PR-85 at 18:25 UTC, so it ran the old single job.
-- The owner answered OQ-207 and the questions that follow from it: D-598 to D-602.
-- Commit `8fec673`: the atlas PNG stores three sRGB bytes for each pixel, the palette has no count limit, and soot joins at flat indices 76 to 79. The new atlas holds the color of each pixel of the indexed atlas, and the contact sheet did not change.
-- Commit `e4a097e`: a grain moves a pixel in parts of a fine step, and `Palette.ColorAt` blends the two fine shades in linear light with the whole-number table of `LinearLight`.
-- A fixture holds the indexed atlas at the base. A test proves that each pixel keeps its ramp and lies between the two fine shades next to its old shade (D-601).
-- The owner approved the new sheet (D-602). The images are in `artifacts/reference/pr-89/` of the main checkout.
+- Review round 1 (session 277) gave `Changes required` at `6b327c9` with P2-1: the run record reader accepted a CRC field before later fields (D-637).
+- Correction `69c946a` requires the CRC field to end the line. `docs/reviews/pr-109-response.md` records the disposition and the regression check.
+- The gitar pass of `6b327c9` approved with no finding. One reply answered the CI note of the red review gate (D-251).
 
 ### State of the build
 
-- Remote head: the push of this branch. The local checks: the texture and recipe tests passed 126 of 126, and `det-lint`, `asset-qa`, and `ste-check` found nothing.
+- Remote `main` is `4a20b82`. The code head is `69c946a`.
+- At `6b327c9`, every check passed except `evaluate` and `review-gate`, which wait for an approving record.
 
 ### In flight
 
-- The PR, CI, the automated pass, and the cross-provider review.
-- PR-85 exit test 8: read the night of 2026-09-26 when it ends.
+- The gitar pass of `69c946a`, the CI of that head, and review round 2 with `make codex-review PR=109`.
 
 ### Traps and gotchas
 
-- The atlas grows from about 260 to about 790 kilobytes, because stored deflate blocks compress nothing (D-305). At an atlas of 2048, PR-90 writes about 12 megabytes for each change. OQ-208 can weigh that.
-- A blend of one ramp can give the color of a blend of another ramp. A test reads a pixel on a named ramp through `PaletteShades.TryPlace`.
-- The fixture test compares the layout of PR-75. PR-90 changes the layout and replaces that test.
-- Every face recipe of the body and the sword has a grain, so the exact check of D-601 covers the blocks alone today.
-- Run the Godot build check in a new worktree before a contact sheet. The sheet path must be absolute.
+- Session 276 lists the traps of this PR: the smoke cache miss, Dependabot, the lock files of D-641, and the abort at exit of one macOS smoke session.
 
 ### Open questions that block progress
 
-None for PR-89. OQ-208 blocks PR-90.
+None for PR-91.
 
 ### Next concrete action
 
-Wait for the automated pass and the cross-provider review, and answer each finding. Read the night of exit test 8 when it ends.
+Push, finish the gitar pass, wait for CI, and run review round 2.
+
+## Session 277: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Reviewed PR #109 at effective head `6b327c9` as the cross-provider reviewer.
+- Found that the run-record reader accepts a CRC field before later header fields, which leaves those fields outside the checksum (D-637).
+- Recorded finding P2-1 and the verdict `Changes required` in `docs/reviews/pr-109.md`.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The PR code head is `6b327c9`; the review metadata commit is the head of `origin/feat/pr-91-review-fixes` and `gh pr view` confirmed it.
+- Every code check on `6b327c9` passed. After the metadata push, `Gitar`, `asset-qa`, `det-lint`, `doc-gate`, `documents`, `night-gate`, and `ste-check` passed. `evaluate` and `review-gate` failed because P2-1 gives the verdict `Changes required`.
+
+### In flight
+
+- P2-1 needs a correction and a repeat review.
+
+### Traps and gotchas
+
+- `CheckHeaderCrc` checks the bytes before `headerCrc`, but does not check that the CRC is the final field.
+- The existing bit-flip test covers the canonical writer order. Add a reader case with a CRC before a changed trailing field.
+
+### Open questions that block progress
+
+None for this review. OQ-195, OQ-196, and OQ-199 to OQ-201 concern other open findings.
+
+### Next concrete action
+
+Correct P2-1, add its regression test, and request a repeat review of PR #109.

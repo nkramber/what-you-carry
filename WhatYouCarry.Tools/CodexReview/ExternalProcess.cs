@@ -25,29 +25,33 @@ public sealed record ProcessResult(string Command, string WorkingDirectory, int 
 /// <summary>
 /// Runs gh and codex. Stdin closes at the start, because <c>codex exec</c> reads a piped stdin into the prompt.
 /// A program that does not start throws with its name and the directory. Each variable in the removed list is absent
-/// from the environment of the child, and the environment of this process does not change.
+/// from the environment of the child, and the environment of this process does not change. A child that runs past its
+/// limit stops, and the error names it (D-627, F-163).
 /// </summary>
 public static class ExternalProcess
 {
-    public static ProcessResult Run(string fileName, IReadOnlyList<string> args, string workingDirectory, IReadOnlyList<string>? removedVariables = null)
+    /// <summary>Runs a short process to its end, inside <see cref="ProcessLimit.Short"/> unless the caller gives another limit.</summary>
+    /// <exception cref="InvalidOperationException">The process ran past the limit (D-627).</exception>
+    public static ProcessResult Run(string fileName, IReadOnlyList<string> args, string workingDirectory, IReadOnlyList<string>? removedVariables = null, TimeSpan? limit = null)
     {
         using Process process = Start(fileName, args, workingDirectory, removedVariables ?? []);
         Task<string> standardError = process.StandardError.ReadToEndAsync();
-        string standardOutput = process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
-        return new ProcessResult(Describe(fileName, args), workingDirectory, process.ExitCode, standardOutput, standardError.Result);
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        ProcessLimit.WaitOrStop(process, limit ?? ProcessLimit.Short, Describe(fileName, args), workingDirectory);
+        return new ProcessResult(Describe(fileName, args), workingDirectory, process.ExitCode, standardOutput.Result, standardError.Result);
     }
 
     /// <summary>Runs a long process and writes stdout and stderr to two files as they arrive. Returns the exit code.</summary>
-    public static int RunToFiles(string fileName, IReadOnlyList<string> args, string workingDirectory, string standardOutputPath, string standardErrorPath, IReadOnlyList<string> removedVariables)
+    /// <exception cref="InvalidOperationException">The process ran past the limit (D-627).</exception>
+    public static int RunToFiles(string fileName, IReadOnlyList<string> args, string workingDirectory, string standardOutputPath, string standardErrorPath, IReadOnlyList<string> removedVariables, TimeSpan limit)
     {
         using Process process = Start(fileName, args, workingDirectory, removedVariables);
         using FileStream standardOutputFile = File.Create(standardOutputPath);
         using FileStream standardErrorFile = File.Create(standardErrorPath);
         Task standardError = process.StandardError.BaseStream.CopyToAsync(standardErrorFile);
-        process.StandardOutput.BaseStream.CopyTo(standardOutputFile);
-        standardError.Wait();
-        process.WaitForExit();
+        Task standardOutput = process.StandardOutput.BaseStream.CopyToAsync(standardOutputFile);
+        ProcessLimit.WaitOrStop(process, limit, Describe(fileName, args), workingDirectory);
+        Task.WaitAll(standardOutput, standardError);
         return process.ExitCode;
     }
 

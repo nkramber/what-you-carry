@@ -11,7 +11,7 @@ namespace WhatYouCarry.Game.World;
 /// <remarks>
 /// <para>
 /// The rule is the one the voxel renderers share: two solid edge cells give the darkest level whatever the
-/// corner holds, because the corner is then out of sight. The four brightness values are OQ-160.
+/// corner holds, because the corner is then out of sight. The four brightness values are the answer of D-632.
 /// </para>
 /// <para>
 /// A ramp is solid under its slope alone (D-345), so it darkens a vertex by the upper half of its run. A cell of the
@@ -27,7 +27,7 @@ public static class AmbientOcclusion
     /// <summary>The level of a vertex with no solid cell around it.</summary>
     public const int Open = Levels - 1;
 
-    /// <summary>The brightness of each level, from the darkest corner to the open vertex (OQ-160).</summary>
+    /// <summary>The brightness of each level, from the darkest corner to the open vertex (D-632).</summary>
     public static readonly float[] Brightness = [0.55f, 0.70f, 0.85f, 1.0f];
 
     /// <summary>The level of one vertex from the three outer cells that touch it.</summary>

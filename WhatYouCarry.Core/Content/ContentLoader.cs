@@ -38,13 +38,16 @@ public sealed class ContentLoader
     /// <summary>The directory that holds the one hunter of the timer (D-45, D-409).</summary>
     public const string HunterDirectory = "hunter/";
 
+    /// <summary>The id of the weapon that the attack bit swings, until the loadout of PR-30. A content set without it fails to load (D-422).</summary>
+    public const string MainWeaponId = "sword-basic";
+
     /// <summary>
-    /// The directory of the models and the animations, which Core never reads (OQ-159, D-298). Every content
+    /// The directory of the models and the animations, which Core never reads (D-631, D-298). Every content
     /// source skips it, so an animation file there is not a content file of this loader.
     /// </summary>
     public const string ModelDirectory = "models/";
 
-    /// <summary>The file extension of a model under the model directory: the project file that Blockbench writes (OQ-159).</summary>
+    /// <summary>The file extension of a model under the model directory: the project file that Blockbench writes (D-631).</summary>
     public const string ModelExtension = ".bbmodel";
 
     /// <summary>The file extension of an animation under the model directory (D-298).</summary>
@@ -96,7 +99,10 @@ public sealed class ContentLoader
         List<ProjectileDefinition> projectiles = [];
         List<WeaponDefinition> weapons = [];
         List<EnemyDefinition> enemies = [];
+        List<string> enemyPaths = [];
         List<HunterDefinition> hunters = [];
+        List<string> hunterPaths = [];
+        List<RecordId> ids = [];
         Strings? strings = null;
 
         foreach (ContentFile file in files)
@@ -109,27 +115,39 @@ public sealed class ContentLoader
             }
             else if (file.Path.StartsWith(FloorDirectory, System.StringComparison.Ordinal))
             {
-                floors.Add(FloorTemplate.FromMembers(file.Path, members));
+                FloorTemplate floor = FloorTemplate.FromMembers(file.Path, members);
+                floors.Add(floor);
+                ids.Add(new RecordId("floor templates", file.Path, floor.Id));
             }
             else if (file.Path.StartsWith(ChamberDirectory, System.StringComparison.Ordinal))
             {
-                chambers.Add(ChamberKind.FromMembers(file.Path, members));
+                ChamberKind chamber = ChamberKind.FromMembers(file.Path, members);
+                chambers.Add(chamber);
+                ids.Add(new RecordId("chamber kinds", file.Path, chamber.Id));
             }
             else if (file.Path.StartsWith(ProjectileDirectory, System.StringComparison.Ordinal))
             {
-                projectiles.Add(ProjectileDefinition.FromMembers(file.Path, members));
+                ProjectileDefinition projectile = ProjectileDefinition.FromMembers(file.Path, members);
+                projectiles.Add(projectile);
+                ids.Add(new RecordId("projectile definitions", file.Path, projectile.Id));
             }
             else if (file.Path.StartsWith(WeaponDirectory, System.StringComparison.Ordinal))
             {
-                weapons.Add(WeaponDefinition.FromMembers(file.Path, members));
+                WeaponDefinition weapon = WeaponDefinition.FromMembers(file.Path, members);
+                weapons.Add(weapon);
+                ids.Add(new RecordId("weapon definitions", file.Path, weapon.Id));
             }
             else if (file.Path.StartsWith(EnemyDirectory, System.StringComparison.Ordinal))
             {
-                enemies.Add(EnemyDefinition.FromMembers(file.Path, members));
+                EnemyDefinition enemy = EnemyDefinition.FromMembers(file.Path, members);
+                enemies.Add(enemy);
+                enemyPaths.Add(file.Path);
+                ids.Add(new RecordId("enemy families", file.Path, enemy.Id));
             }
             else if (file.Path.StartsWith(HunterDirectory, System.StringComparison.Ordinal))
             {
                 hunters.Add(HunterDefinition.FromMembers(file.Path, members));
+                hunterPaths.Add(file.Path);
             }
             else
             {
@@ -145,66 +163,26 @@ public sealed class ContentLoader
             throw error;
         }
 
-        CheckUniqueIds(floors, chambers, projectiles, weapons, enemies);
-        CheckEnemyWeapons(enemies, weapons);
-        HunterDefinition hunter = OneHunter(hunters, weapons);
+        CheckUniqueIds(ids);
+        CheckEnemyWeapons(enemies, enemyPaths, weapons);
+        HunterDefinition hunter = OneHunter(hunters, hunterPaths, weapons);
+        CheckMainWeapon(weapons);
         return new ContentSet(hash, floors, chambers, projectiles, weapons, enemies, hunter, strings);
     }
 
-    /// <summary>Two records of one type must not share an id, because a lookup would then take either one.</summary>
-    private static void CheckUniqueIds(List<FloorTemplate> floors, List<ChamberKind> chambers, List<ProjectileDefinition> projectiles, List<WeaponDefinition> weapons, List<EnemyDefinition> enemies)
+    /// <summary>
+    /// Two records of one type must not share an id, because a lookup would then take either one. The error names
+    /// the file of each record, so the author finds both (T-2, F-150).
+    /// </summary>
+    private static void CheckUniqueIds(List<RecordId> ids)
     {
-        for (int index = 0; index < floors.Count; index++)
+        for (int index = 0; index < ids.Count; index++)
         {
-            for (int other = index + 1; other < floors.Count; other++)
+            for (int other = index + 1; other < ids.Count; other++)
             {
-                if (floors[index].Id == floors[other].Id)
+                if (ids[index].Plural == ids[other].Plural && ids[index].Id == ids[other].Id)
                 {
-                    throw ContentError.Make(ContentLoader.FloorDirectory, floors[index].Id, "is the id of two floor templates");
-                }
-            }
-        }
-
-        for (int index = 0; index < chambers.Count; index++)
-        {
-            for (int other = index + 1; other < chambers.Count; other++)
-            {
-                if (chambers[index].Id == chambers[other].Id)
-                {
-                    throw ContentError.Make(ContentLoader.ChamberDirectory, chambers[index].Id, "is the id of two chamber kinds");
-                }
-            }
-        }
-
-        for (int index = 0; index < projectiles.Count; index++)
-        {
-            for (int other = index + 1; other < projectiles.Count; other++)
-            {
-                if (projectiles[index].Id == projectiles[other].Id)
-                {
-                    throw ContentError.Make(ContentLoader.ProjectileDirectory, projectiles[index].Id, "is the id of two projectile definitions");
-                }
-            }
-        }
-
-        for (int index = 0; index < weapons.Count; index++)
-        {
-            for (int other = index + 1; other < weapons.Count; other++)
-            {
-                if (weapons[index].Id == weapons[other].Id)
-                {
-                    throw ContentError.Make(ContentLoader.WeaponDirectory, weapons[index].Id, "is the id of two weapon definitions");
-                }
-            }
-        }
-
-        for (int index = 0; index < enemies.Count; index++)
-        {
-            for (int other = index + 1; other < enemies.Count; other++)
-            {
-                if (enemies[index].Id == enemies[other].Id)
-                {
-                    throw ContentError.Make(ContentLoader.EnemyDirectory, enemies[index].Id, "is the id of two enemy families");
+                    throw ContentError.Make(ids[other].Path, "id", $"is '{ids[other].Id}', the id of two {ids[other].Plural}: this file and '{ids[index].Path}'");
                 }
             }
         }
@@ -214,7 +192,7 @@ public sealed class ContentLoader
     /// The one hunter of the set (D-56). A set with no hunter or with two is a fault, because the timer spawns one
     /// hunter at expiry (D-45). The hunter names a weapon of the set (D-413).
     /// </summary>
-    private static HunterDefinition OneHunter(List<HunterDefinition> hunters, List<WeaponDefinition> weapons)
+    private static HunterDefinition OneHunter(List<HunterDefinition> hunters, List<string> hunterPaths, List<WeaponDefinition> weapons)
     {
         if (hunters.Count != 1)
         {
@@ -233,17 +211,39 @@ public sealed class ContentLoader
             }
         }
 
-        throw ContentError.Make(HunterDirectory + hunter.Id, "weapon", $"names '{hunter.Weapon}', and the content set holds no weapon of that id (D-413)");
+        throw ContentError.Make(hunterPaths[0], "weapon", $"names '{hunter.Weapon}', and the content set holds no weapon of that id (D-413)");
+    }
+
+    /// <summary>
+    /// The set holds the main weapon, because the attack bit swings it (D-422). A set without it fails here, at
+    /// the load, and not at the first loop that reads it (T-2).
+    /// </summary>
+    private static void CheckMainWeapon(List<WeaponDefinition> weapons)
+    {
+        foreach (WeaponDefinition weapon in weapons)
+        {
+            if (weapon.Id == MainWeaponId)
+            {
+                return;
+            }
+        }
+
+        ContextException error = new($"The content set holds no weapon with the id '{MainWeaponId}' under '{WeaponDirectory}', and the attack bit swings it (D-422).");
+        error.AddContext("directory", WeaponDirectory);
+        error.AddContext("weapon", MainWeaponId);
+        error.AddContext("weapons", ((long)weapons.Count).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        throw error;
     }
 
     /// <summary>
     /// Every enemy family names a weapon of the set (D-31, D-397). An id that no weapon carries is a fault of the
     /// content set, and a spawn with no weapon would swing nothing (T-2).
     /// </summary>
-    private static void CheckEnemyWeapons(List<EnemyDefinition> enemies, List<WeaponDefinition> weapons)
+    private static void CheckEnemyWeapons(List<EnemyDefinition> enemies, List<string> enemyPaths, List<WeaponDefinition> weapons)
     {
-        foreach (EnemyDefinition enemy in enemies)
+        for (int index = 0; index < enemies.Count; index++)
         {
+            EnemyDefinition enemy = enemies[index];
             bool found = false;
             foreach (WeaponDefinition weapon in weapons)
             {
@@ -256,11 +256,14 @@ public sealed class ContentLoader
 
             if (!found)
             {
-                throw ContentError.Make(ContentLoader.EnemyDirectory + enemy.Id, "weapon", $"names '{enemy.Weapon}', and the content set holds no weapon of that id (D-397)");
+                throw ContentError.Make(enemyPaths[index], "weapon", $"names '{enemy.Weapon}', and the content set holds no weapon of that id (D-397)");
             }
         }
     }
 }
+
+/// <summary>The id of one loaded record, the file that holds it, and the plural name of its type for the error text.</summary>
+internal sealed record RecordId(string Plural, string Path, string Id);
 
 /// <summary>Every record of one content set, and the hash that the run record header carries (D-151, D-163).</summary>
 public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, IReadOnlyList<EnemyDefinition> Enemies, HunterDefinition Hunter, Strings Strings);

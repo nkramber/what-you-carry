@@ -45,9 +45,13 @@ public sealed class ContentTests
         {"id":"h","weapon":"w","attackRangeCentimetres":180,"attackCooldownTicks":60,"startSpeedCentimetresPerSecond":350,"speedGainCentimetresPerSecond":100,"speedGainTicks":1200}
         """;
 
+    /// <summary>The main weapon of D-422: the test weapon under the id that the attack bit swings.</summary>
+    private static readonly string MainWeaponText = WeaponText.Replace("\"id\":\"w\"", $"\"id\":\"{ContentLoader.MainWeaponId}\"", StringComparison.Ordinal);
+
     private static MemorySource Valid() => new MemorySource()
         .Add("floors/a.json", Floor)
         .Add("weapons/w.json", WeaponText)
+        .Add("weapons/sword-basic.json", MainWeaponText)
         .Add("hunter/h.json", HunterText)
         .Add(Strings.FilePath, StringTable);
 
@@ -197,6 +201,31 @@ public sealed class ContentTests
         Assert.True(strings.Has("hub.descend"));
     }
 
+    /// <summary>
+    /// F-165. A change of the string table alone keeps the content hash, so a fix of player text keeps each record exact
+    /// (D-629, D-151). The old hash read the table. A change of any other file still moves the hash, and a repeated path
+    /// of the table is still an error.
+    /// </summary>
+    [Fact]
+    public void TheStringTableIsOutsideTheHash()
+    {
+        string first = new ContentLoader(Valid()).Load().Hash;
+        MemorySource retext = new MemorySource()
+            .Add("floors/a.json", Floor)
+            .Add("weapons/w.json", WeaponText)
+            .Add("weapons/sword-basic.json", MainWeaponText)
+            .Add("hunter/h.json", HunterText)
+            .Add(Strings.FilePath, StringTable.Replace("Descend", "Go down", StringComparison.Ordinal));
+        Assert.Equal(first, new ContentLoader(retext).Load().Hash);
+
+        string withTable = ContentHash.Of([new ContentFile("floors/a.json", Encoding.UTF8.GetBytes(Floor)), new ContentFile(Strings.FilePath, Encoding.UTF8.GetBytes(StringTable))]);
+        string withoutTable = ContentHash.Of([new ContentFile("floors/a.json", Encoding.UTF8.GetBytes(Floor))]);
+        Assert.Equal(withoutTable, withTable);
+        Assert.NotEqual(withoutTable, ContentHash.Of([new ContentFile("floors/a.json", Encoding.UTF8.GetBytes(Floor.Replace("100", "101", StringComparison.Ordinal)))]));
+
+        Assert.Throws<ContextException>(() => ContentHash.Of([new ContentFile(Strings.FilePath, []), new ContentFile(Strings.FilePath, [])]));
+    }
+
     /// <summary>PR-5 exit test 5. Two loads of one set give one hash, and one byte of change gives another.</summary>
     [Fact]
     public void ContentHashIsStable()
@@ -207,6 +236,7 @@ public sealed class ContentTests
 
         MemorySource changed = new MemorySource()
             .Add("weapons/w.json", WeaponText)
+            .Add("weapons/sword-basic.json", MainWeaponText)
             .Add("hunter/h.json", HunterText)
             .Add("floors/a.json", Floor.Replace("100", "101", StringComparison.Ordinal))
             .Add(Strings.FilePath, StringTable);
@@ -215,6 +245,7 @@ public sealed class ContentTests
         // The order of the source does not change the hash, and the path does.
         MemorySource reordered = new MemorySource()
             .Add("weapons/w.json", WeaponText)
+            .Add("weapons/sword-basic.json", MainWeaponText)
             .Add("hunter/h.json", HunterText)
             .Add(Strings.FilePath, StringTable)
             .Add("floors/a.json", Floor);
@@ -222,6 +253,7 @@ public sealed class ContentTests
 
         MemorySource renamed = new MemorySource()
             .Add("weapons/w.json", WeaponText)
+            .Add("weapons/sword-basic.json", MainWeaponText)
             .Add("hunter/h.json", HunterText)
             .Add("floors/b.json", Floor)
             .Add(Strings.FilePath, StringTable);
@@ -319,6 +351,38 @@ public sealed class ContentTests
         Assert.Contains("two floor templates", error.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// A repeated id names the file of each record, and a weapon reference names the file that holds it (T-2, F-150).
+    /// The errors named the directory with the id as the field, or the directory and the id as a path that no file
+    /// has. One id in two types is not a repeat.
+    /// </summary>
+    [Fact]
+    public void AnIdErrorNamesEachFile()
+    {
+        MemorySource twoProjectiles = Valid()
+            .Add("projectiles/a.json", ProjectileText)
+            .Add("projectiles/b.json", ProjectileText);
+        ContextException repeated = Assert.Throws<ContextException>(() => new ContentLoader(twoProjectiles).Load());
+        Assert.Contains("The file 'projectiles/b.json' is not valid. The field 'id' is 'p'", repeated.Message, StringComparison.Ordinal);
+        Assert.Contains("'projectiles/a.json'", repeated.Message, StringComparison.Ordinal);
+
+        MemorySource enemy = Valid().Add("enemies/scavenger.json", EnemyText.Replace("\"weapon\":\"w\"", "\"weapon\":\"x\"", StringComparison.Ordinal));
+        ContextException enemyError = Assert.Throws<ContextException>(() => new ContentLoader(enemy).Load());
+        Assert.Contains("The file 'enemies/scavenger.json' is not valid. The field 'weapon'", enemyError.Message, StringComparison.Ordinal);
+
+        MemorySource hunter = new MemorySource()
+            .Add("floors/a.json", Floor)
+            .Add("weapons/sword-basic.json", MainWeaponText)
+            .Add("hunter/overseer.json", HunterText)
+            .Add(Strings.FilePath, StringTable);
+        ContextException hunterError = Assert.Throws<ContextException>(() => new ContentLoader(hunter).Load());
+        Assert.Contains("The file 'hunter/overseer.json' is not valid. The field 'weapon'", hunterError.Message, StringComparison.Ordinal);
+
+        ContentSet shared = new ContentLoader(Valid().Add("chambers/a.json", ChamberKindText.Replace("\"k\"", "\"a\"", StringComparison.Ordinal))).Load();
+        Assert.Equal("a", Assert.Single(shared.Floors).Id);
+        Assert.Equal("a", Assert.Single(shared.Chambers).Id);
+    }
+
     /// <summary>Two weapon definitions of one id are an error, because the loadout of PR-30 looks a weapon up by it (D-334).</summary>
     [Fact]
     public void ARepeatedWeaponIdIsAnError()
@@ -405,9 +469,9 @@ public sealed class ContentTests
         Assert.Contains(field, error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>An optional field can stand absent, and the record then holds its zero.</summary>
+    /// <summary>Each projectile of the repository states its area, and the musket ball states an area of zero (D-622).</summary>
     [Fact]
-    public void AnOptionalFieldCanStandAbsent()
+    public void EachProjectileStatesItsArea()
     {
         ContentSet set = new ContentLoader(new RepositoryContentSource()).Load();
         foreach (ProjectileDefinition projectile in set.Projectiles)
@@ -581,6 +645,7 @@ public sealed class ContentTests
     {
         MemorySource forward = new MemorySource()
             .Add("weapons/w.json", WeaponText)
+            .Add("weapons/sword-basic.json", MainWeaponText)
             .Add("hunter/h.json", HunterText)
             .Add("chambers/a.json", ChamberKindText.Replace("\"k\"", "\"a\"", StringComparison.Ordinal))
             .Add("chambers/b.json", ChamberKindText.Replace("\"k\"", "\"b\"", StringComparison.Ordinal))
@@ -589,6 +654,7 @@ public sealed class ContentTests
             .Add(Strings.FilePath, StringTable);
         MemorySource backward = new MemorySource()
             .Add("weapons/w.json", WeaponText)
+            .Add("weapons/sword-basic.json", MainWeaponText)
             .Add("hunter/h.json", HunterText)
             .Add(Strings.FilePath, StringTable)
             .Add("floors/b.json", Floor.Replace("\"id\":\"a\"", "\"id\":\"b\"", StringComparison.Ordinal).Replace("\"minDepth\":1,\"maxDepth\":5", "\"minDepth\":6,\"maxDepth\":9", StringComparison.Ordinal))
@@ -610,16 +676,20 @@ public sealed class ContentTests
     }
 
     private const string ProjectileText = """
-        {"id":"p","speedCentimetres":4000,"gravityScalePercent":100,"lifetimeTicks":300,"damage":10,"spreadHundredths":100}
+        {"id":"p","speedCentimetres":4000,"gravityScalePercent":100,"lifetimeTicks":300,"damage":10,"areaCentimetres":150,"spreadHundredths":100}
         """;
 
-    /// <summary>Every required field of a projectile definition is required, the spread among them (D-266).</summary>
+    /// <summary>
+    /// Every field of a projectile definition is required, the spread (D-266) and the area among them. An absent area
+    /// loaded as zero (D-92, T-2, D-622, F-151).
+    /// </summary>
     [Theory]
     [InlineData("id")]
     [InlineData("speedCentimetres")]
     [InlineData("gravityScalePercent")]
     [InlineData("lifetimeTicks")]
     [InlineData("damage")]
+    [InlineData("areaCentimetres")]
     [InlineData("spreadHundredths")]
     public void EveryRequiredProjectileFieldIsRequired(string omitted)
     {
@@ -647,7 +717,7 @@ public sealed class ContentTests
     [InlineData("\"spreadHundredths\":100", "\"spreadHundredths\":18001", "spreadHundredths")]
     [InlineData("\"lifetimeTicks\":300", "\"lifetimeTicks\":0", "lifetimeTicks")]
     [InlineData("\"damage\":10", "\"damage\":0", "damage")]
-    [InlineData("\"damage\":10", "\"damage\":10,\"areaCentimetres\":-1", "areaCentimetres")]
+    [InlineData("\"areaCentimetres\":150", "\"areaCentimetres\":-1", "areaCentimetres")]
     public void AProjectileOutsideItsBoundsIsAnError(string from, string to, string field)
     {
         string text = ProjectileText.Replace(from, to, StringComparison.Ordinal);
@@ -658,18 +728,17 @@ public sealed class ContentTests
         Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>F-120. A damage of one and a present area of zero are the lowest values that load, and an absent area stays zero.</summary>
+    /// <summary>F-120. A damage of one and an area of zero are the lowest values that load.</summary>
     [Fact]
     public void AProjectileAtItsLowestBoundsLoads()
     {
-        string text = ProjectileText.Replace("\"damage\":10", "\"damage\":1,\"areaCentimetres\":0", StringComparison.Ordinal);
+        string text = ProjectileText
+            .Replace("\"damage\":10", "\"damage\":1", StringComparison.Ordinal)
+            .Replace("\"areaCentimetres\":150", "\"areaCentimetres\":0", StringComparison.Ordinal);
         Assert.NotEqual(ProjectileText, text);
         ProjectileDefinition lowest = ProjectileDefinition.FromMembers("projectiles/p.json", JsonObjectReader.Read("projectiles/p.json", Encoding.UTF8.GetBytes(text)));
         Assert.Equal(1, lowest.Damage);
         Assert.Equal(0, lowest.AreaCentimetres);
-
-        ProjectileDefinition absent = ProjectileDefinition.FromMembers("projectiles/p.json", JsonObjectReader.Read("projectiles/p.json", Encoding.UTF8.GetBytes(ProjectileText)));
-        Assert.Equal(0, absent.AreaCentimetres);
     }
 
     /// <summary>Two projectile definitions of one id are an error, because a lookup would take either one.</summary>
@@ -784,6 +853,75 @@ public sealed class ContentTests
         WeaponDefinition weapon = WeaponDefinition.FromMembers("weapons/w.json", JsonObjectReader.Read("weapons/w.json", Encoding.UTF8.GetBytes(text)));
         Assert.StartsWith(WeaponDefinition.AssetDirectory, weapon.Model, StringComparison.Ordinal);
         Assert.StartsWith(WeaponDefinition.AssetDirectory, weapon.Animation, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A byte that is not valid UTF-8 in a string value or in a name is a content error that names the file, and the
+    /// field when a value holds it (T-2, F-149). The reader raised its own error, which named no file. A valid two-byte
+    /// letter beside it loads.
+    /// </summary>
+    [Theory]
+    [InlineData("\"Descend\"", "Descend", "'hub.descend'")]
+    [InlineData("\"hub.descend\"", "hub", "a name that is not valid UTF-8")]
+    public void TextThatIsNotUtf8NamesTheFile(string quoted, string word, string expected)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(StringTable.Trim());
+        int at = Encoding.UTF8.GetString(bytes).IndexOf(quoted, StringComparison.Ordinal) + 1;
+        Assert.Equal((byte)word[0], bytes[at]);
+        bytes[at] = 0xFF;
+
+        ContextException error = Assert.Throws<ContextException>(() => JsonObjectReader.Read(Strings.FilePath, bytes));
+        Assert.Contains($"'{Strings.FilePath}'", error.Message, StringComparison.Ordinal);
+        Assert.Contains(expected, error.Message, StringComparison.Ordinal);
+
+        MemorySource source = new MemorySource()
+            .Add("floors/a.json", Floor)
+            .Add("weapons/w.json", WeaponText)
+            .Add("weapons/sword-basic.json", MainWeaponText)
+            .Add("hunter/h.json", HunterText);
+        ContextException loadError = Assert.Throws<ContextException>(() => new ContentLoader(new BytesSource(source, Strings.FilePath, bytes)).Load());
+        Assert.Contains($"'{Strings.FilePath}'", loadError.Message, StringComparison.Ordinal);
+
+        string letter = StringTable.Replace("Descend", "Desc\u00e9nd", StringComparison.Ordinal);
+        IReadOnlyList<JsonMember> members = JsonObjectReader.Read(Strings.FilePath, Encoding.UTF8.GetBytes(letter));
+        Assert.Equal("Desc\u00e9nd", Assert.Single(members).Value);
+    }
+
+    /// <summary>A source of the files of another source and one file of raw bytes.</summary>
+    private sealed class BytesSource(MemorySource files, string path, byte[] bytes) : IContentSource
+    {
+        public IReadOnlyList<ContentFile> Read()
+        {
+            List<ContentFile> all = [.. files.Read()];
+            all.Add(new ContentFile(path, bytes));
+            return all;
+        }
+    }
+
+    /// <summary>
+    /// A content set without the main weapon fails to load, and the error names the directory and the id (D-422, T-2).
+    /// The loop read the id first, so the load passed and the set failed at the first loop. An id that differs in the
+    /// case of one letter is not the main weapon.
+    /// </summary>
+    [Fact]
+    public void ASetWithoutTheMainWeaponFailsToLoad()
+    {
+        Assert.Equal(ContentLoader.MainWeaponId, SimulationLoop.MainWeaponId);
+        Assert.Contains(new ContentLoader(Valid()).Load().Weapons, weapon => weapon.Id == ContentLoader.MainWeaponId);
+
+        MemorySource none = new MemorySource()
+            .Add("floors/a.json", Floor)
+            .Add("weapons/w.json", WeaponText)
+            .Add("hunter/h.json", HunterText)
+            .Add(Strings.FilePath, StringTable);
+        ContextException error = Assert.Throws<ContextException>(() => new ContentLoader(none).Load());
+        Assert.Contains("D-422", error.Message, StringComparison.Ordinal);
+        Assert.Contains("weapon=sword-basic", error.Message, StringComparison.Ordinal);
+        Assert.Contains("directory=weapons/", error.Message, StringComparison.Ordinal);
+
+        MemorySource otherCase = none.Add("weapons/sword-basic.json", WeaponText.Replace("\"id\":\"w\"", "\"id\":\"Sword-basic\"", StringComparison.Ordinal));
+        ContextException caseError = Assert.Throws<ContextException>(() => new ContentLoader(otherCase).Load());
+        Assert.Contains("D-422", caseError.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A content set holds exactly one hunter, and the hunter names a weapon of the set (D-45, D-56, D-413).</summary>

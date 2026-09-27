@@ -60,7 +60,7 @@ public static class JsonObjectReader
                 throw ContentError.MakeForFile(path, "the file holds a value outside a name");
             }
 
-            string name = reader.GetString() ?? string.Empty;
+            string name = Text(path, null, ref reader);
             foreach (JsonMember member in members)
             {
                 if (member.Name == name)
@@ -77,7 +77,7 @@ public static class JsonObjectReader
             switch (reader.TokenType)
             {
                 case JsonTokenType.String:
-                    members.Add(new JsonMember(name, reader.GetString() ?? string.Empty, JsonMemberKind.Text));
+                    members.Add(new JsonMember(name, Text(path, name, ref reader), JsonMemberKind.Text));
                     break;
                 case JsonTokenType.Number:
                     // The token text, and not a conversion. `GetInt64` throws its own error for a fractional or
@@ -110,6 +110,27 @@ public static class JsonObjectReader
         catch (JsonException error)
         {
             throw ContentError.MakeForFile(path, $"the file is not valid JSON. {error.Message}");
+        }
+    }
+
+    /// <summary>
+    /// The text of the name or the string value under the reader. The reader checks UTF-8 only when it gives the text,
+    /// and it then raises an error that names no file, so this method names the file and the field (T-2, F-149).
+    /// </summary>
+    /// <param name="field">The name that holds the value, or null when the text is a name.</param>
+    /// <exception cref="Logging.ContextException">The text is not valid UTF-8.</exception>
+    private static string Text(string path, string? field, ref Utf8JsonReader reader)
+    {
+        try
+        {
+            return reader.GetString() ?? string.Empty;
+        }
+        catch (System.InvalidOperationException)
+        {
+            const string Reason = "holds text that is not valid UTF-8";
+            throw field is null
+                ? ContentError.MakeForFile(path, "the file holds a name that is not valid UTF-8")
+                : ContentError.Make(path, field, Reason);
         }
     }
 

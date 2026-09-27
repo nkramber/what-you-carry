@@ -540,7 +540,11 @@ public sealed class PlayerTests
         Assert.Equal(Player.StaggerTicks, driver.Player.StaggerRemaining);
     }
 
-    /// <summary>No hit lands during a roll: no damage and no stagger. After the roll, a hit lands (D-328).</summary>
+    /// <summary>
+    /// No hit lands during a roll: no damage and no stagger, on each of its 18 ticks (D-328, D-628, F-164). The hit after
+    /// the step of the last roll tick landed on the old player, because the roll had no ticks left. On the tick after the
+    /// roll, a hit lands.
+    /// </summary>
     [Fact]
     public void ARollTakesNoHit()
     {
@@ -551,9 +555,18 @@ public sealed class PlayerTests
         Assert.Equal(0, driver.Player.StaggerRemaining);
         Assert.Equal(Player.RollTicks - 1, driver.Player.RollRemaining);
 
-        driver.Ticks(Player.RollTicks - 1);
+        for (int tick = 1; tick < Player.RollTicks; tick++)
+        {
+            driver.Tick(0);
+            Assert.True(driver.Player.RolledThisTick, $"The body did not roll on roll tick {tick}.");
+            Assert.False(driver.Player.TakeHit(50), $"A hit landed on roll tick {tick}.");
+            Assert.Equal(Player.MaxHealth, driver.Player.Health);
+        }
+
         Assert.Equal(0, driver.Player.RollRemaining);
-        driver.Player.TakeHit(50);
+        driver.Tick(0);
+        Assert.False(driver.Player.RolledThisTick, "The body rolled on the tick after the roll.");
+        Assert.True(driver.Player.TakeHit(50), "A hit on the tick after the roll did not land.");
         Assert.Equal(50, driver.Player.Health);
         Assert.Equal(Player.StaggerTicks, driver.Player.StaggerRemaining);
     }

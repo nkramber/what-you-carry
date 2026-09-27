@@ -156,12 +156,45 @@ public sealed class MeasureTests
         Assert.Throws<ContextException>(() => log.TransitionMaxima());
     }
 
-    /// <summary>The hitch budget is two frames at 90 frames per second (D-295, D-427).</summary>
+    /// <summary>
+    /// The hitch budget is two frames at 90 frames per second, 22222 microseconds (D-295, D-427, D-635, F-170). The old
+    /// budget of 22000 failed a frame that spanned two vsync intervals, and the old log read the rounded interval.
+    /// </summary>
     [Fact]
     public void HitchBudgetIsTwoFramesAtTheTarget()
     {
-        Assert.Equal(22000, BotSession.HitchBudgetMicros);
-        Assert.True(BotSession.HitchBudgetMicros <= 2 * FrameLog.MicrosecondsPerSecond / 90);
+        Assert.Equal(22222, BotSession.HitchBudgetMicros);
+        Assert.Equal(2 * FrameLog.MicrosecondsPerSecond / 90, BotSession.HitchBudgetMicros);
+    }
+
+    /// <summary>
+    /// F-170. The real frame clock gives the microseconds between two readings, no time for the first reading, and an
+    /// error for a reading that runs backward. The frame log takes the time in microseconds as it is.
+    /// </summary>
+    [Fact]
+    public void TheRealFrameClockGivesTheTimeBetweenReadings()
+    {
+        RealFrameClock clock = new();
+        Assert.Null(clock.Next(1000));
+        Assert.Equal(11111L, clock.Next(12111));
+        Assert.Equal(22223L, clock.Next(34334));
+        Assert.Equal(0L, clock.Next(34334));
+        Assert.Throws<ContextException>(() => clock.Next(34333));
+
+        FrameLog log = new();
+        log.AddMicros(22223);
+        Assert.Equal([22223L], log.Frames);
+    }
+
+    /// <summary>F-170. The Game feeds the frame log and the transition trace from the real clock, and never from the engine delta.</summary>
+    [Fact]
+    public void TheFrameLogReadsTheRealClock()
+    {
+        string main = RepositoryRoot.ReadFile("WhatYouCarry.Game/Main.cs");
+        Assert.Contains("this.frameClock.Next((long)Time.GetTicksUsec())", main, StringComparison.Ordinal);
+        Assert.Contains("this.frames?.AddMicros(micros);", main, StringComparison.Ordinal);
+        Assert.DoesNotContain("this.frames?.Add(delta)", main, StringComparison.Ordinal);
+        Assert.DoesNotContain("delta * FrameLog.MicrosecondsPerSecond", main, StringComparison.Ordinal);
     }
 
     /// <summary>

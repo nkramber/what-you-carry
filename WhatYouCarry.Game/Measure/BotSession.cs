@@ -37,9 +37,10 @@ public static class BotSession
 
     /// <summary>
     /// The hitch budget of a transition on the Steam Deck, in microseconds: two frames at the 90 frames per second of
-    /// D-295 (D-427). A fallback of M-3 to 60 frames per second makes it 33000.
+    /// D-295, 22222 (D-427, D-635). The frame log reads the real time of each frame, so one missed vsync reads its own
+    /// time and not the rounded interval. A fallback of M-3 to 60 frames per second makes it 33333.
     /// </summary>
-    public const long HitchBudgetMicros = 22000;
+    public const long HitchBudgetMicros = 22222;
 
     private const string BadCountMessage = "The count of transitions is not a whole number from 1 to 14.";
     private const string CountField = "count";

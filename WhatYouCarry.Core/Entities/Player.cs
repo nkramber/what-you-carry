@@ -123,6 +123,13 @@ public sealed class Player
     /// <summary>Answers whether a press of the dodge bit started a roll on the last tick (D-454). It is not state.</summary>
     public bool StartedRoll { get; private set; }
 
+    /// <summary>
+    /// Answers whether the body moved at roll speed on the last tick. Each hit of a tick lands after the step of the player,
+    /// so the hits of the last roll tick see a roll with no ticks left, and this answer keeps them off (D-328, D-628). It is
+    /// not state: each step sets it before any hit of its tick.
+    /// </summary>
+    public bool RolledThisTick { get; private set; }
+
     /// <summary>Runs one tick.</summary>
     /// <param name="intent">The intent of the tick.</param>
     /// <param name="previousButtons">The buttons of the intent before, which tell a press from a held bit (D-323).</param>
@@ -144,6 +151,7 @@ public sealed class Player
         bool staggered = this.stagger.Holds;
         this.StartedSwing = false;
         this.StartedRoll = false;
+        this.RolledThisTick = false;
         if (this.DodgeCooldown > 0)
         {
             this.DodgeCooldown--;
@@ -173,6 +181,7 @@ public sealed class Player
         else if (this.RollRemaining > 0)
         {
             this.Body.Move(this.RollVelocity, false, inWater, false);
+            this.RolledThisTick = true;
         }
         else
         {
@@ -191,7 +200,7 @@ public sealed class Player
     }
 
     /// <summary>
-    /// Takes one hit. A roll takes no hit (D-328). Otherwise the damage comes off the health, which stops at zero
+    /// Takes one hit. A roll takes no hit on any of its ticks, the last one too (D-328, D-628). Otherwise the damage comes off the health, which stops at zero
     /// (D-322), and the hit staggers the player and cancels a swing, unless a stagger or its guard holds or a
     /// two-handed swing gives hyper-armor (D-29, D-326).
     /// </summary>
@@ -211,7 +220,7 @@ public sealed class Player
             throw new ContextException("The player has no health, and a dead player takes no hit (D-322).");
         }
 
-        if (this.RollRemaining > 0)
+        if (this.RollRemaining > 0 || this.RolledThisTick)
         {
             return false;
         }

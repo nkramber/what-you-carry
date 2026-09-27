@@ -15,9 +15,11 @@ namespace WhatYouCarry.Game.Smoke;
 /// its way, and a wall stops the body with no error (D-235).
 /// </para>
 /// <para>
-/// The two walks press the attack bit once each second, and the strafe presses the dodge bit once each second, so the
-/// session swings the sword, rolls, and plays their clips on every platform (D-149, D-323, D-331). A press sets the bit
-/// for one tick, and the cooldown of a roll ends before the next press (D-327).
+/// The two walks press the attack bit once each second. The first walk and the strafe press the dodge bit once each
+/// second, half a second after each attack press, so the session swings the sword, rolls, and plays their clips on
+/// every platform (D-149, D-323, D-331). The first seed dies on floor 2 before the strafe, so the first walk holds the
+/// roll of the session (F-157). A press sets the bit for one tick, and the cooldown of a roll ends before the next
+/// press (D-327).
 /// </para>
 /// <para>
 /// First the greedy descender walks the body to the stairwell and descends (PR-18, D-436). The walk opens the
@@ -108,7 +110,7 @@ public static class SmokeSession
         uint part = tick / PartTicks;
         switch (part)
         {
-            case 0: return new Intent(tick, 0, 0, 0, FullMove, attack);
+            case 0: return new Intent(tick, 0, 0, 0, FullMove, (ushort)(attack | dodge));
             case 1: return new Intent(tick, TurnRate, 0, 0, FullMove, attack);
             case 2: return new Intent(tick, 0, 0, 0, FullMove, Button.Sprint | Button.Jump);
             default: return new Intent(tick, 0, LookUpRate, FullMove, 0, dodge);

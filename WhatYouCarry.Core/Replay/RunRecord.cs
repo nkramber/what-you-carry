@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using WhatYouCarry.Core.Content;
+using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Simulation;
 
@@ -16,6 +17,8 @@ namespace WhatYouCarry.Core.Replay;
 /// assignment. None of those types exists in Phase 1, so the header writes an empty loadout, an empty tree, and
 /// no amulet, and this type carries no field for them yet. The schema is complete: a Phase 3 record adds items to
 /// the same names, and an older reader then fails on a list with an item, and never on an absent name (D-229).
+/// The line ends with a CRC-32 of the bytes before it, so a changed bit of the header is an error and never another
+/// seed (D-637).
 /// </remarks>
 public sealed record RunRecordHeader(int FormatVersion, int SimulationVersion, string ContentHash, ulong Seed);
 
@@ -25,8 +28,11 @@ public sealed record RunRecordHeader(int FormatVersion, int SimulationVersion, s
 /// </summary>
 public static class RunRecord
 {
-    /// <summary>The version of the record layout. It moves when the header or the frame changes shape.</summary>
-    public const int FormatVersion = 1;
+    /// <summary>
+    /// The version of the record layout. It moves when the header or the frame changes shape. Version 2 adds the CRC-32
+    /// of the header (D-637, F-172).
+    /// </summary>
+    public const int FormatVersion = 2;
 
     /// <summary>The count of hexadecimal digits in a content hash (D-221).</summary>
     public const int ContentHashLength = 64;
@@ -42,6 +48,10 @@ public static class RunRecord
     public const string LoadoutName = "loadout";
     public const string TreeName = "tree";
     public const string AmuletName = "amulet";
+    public const string HeaderCrcName = "headerCrc";
+
+    /// <summary>The bytes that start the CRC field, the last field of the line. The CRC covers each byte before them.</summary>
+    private const string HeaderCrcStart = ",\"" + HeaderCrcName + "\":";
 
     /// <summary>The names that a header must carry (D-151).</summary>
     public static readonly IReadOnlyList<string> Required =
@@ -53,6 +63,7 @@ public static class RunRecord
         LoadoutName,
         TreeName,
         AmuletName,
+        HeaderCrcName,
     ];
 
     /// <summary>The names that a header can carry beyond the required ones. There are none.</summary>
@@ -107,7 +118,14 @@ public static class RunRecord
         text.Append(TreeName);
         text.Append("\":[],\"");
         text.Append(AmuletName);
-        text.Append("\":null}\n");
+        text.Append("\":null");
+
+        // The CRC covers every byte of the line before its own field (D-637).
+        byte[] body = Encoding.UTF8.GetBytes(text.ToString());
+        uint crc = Crc32.Of(body, 0, body.Length);
+        text.Append(HeaderCrcStart);
+        text.Append(((long)crc).ToString(CultureInfo.InvariantCulture));
+        text.Append("}\n");
         return Encoding.UTF8.GetBytes(text.ToString());
     }
 
@@ -153,6 +171,7 @@ public static class RunRecord
             throw mismatch;
         }
 
+        CheckHeaderCrc(line, members);
         ContentValidator.Check(HeaderName, members, Required, Optional);
 
         long simulationVersion = Number(members, SimulationVersionName);
@@ -183,6 +202,66 @@ public static class RunRecord
         ContentValidator.Value(HeaderName, members, AmuletName, JsonMemberKind.Null);
 
         return (new RunRecordHeader((int)formatVersion, (int)simulationVersion, contentHash, seed), lineEnd + 1);
+    }
+
+    /// <summary>
+    /// Compares the CRC field with the CRC-32 of the bytes of the line before it (D-637, F-172). A flipped bit in the seed
+    /// read as another seed, and the record then replayed another run with no error.
+    /// </summary>
+    /// <exception cref="ContextException">The field is absent, is not the last field of the line, or does not match. The error names the header.</exception>
+    private static void CheckHeaderCrc(byte[] line, IReadOnlyList<JsonMember> members)
+    {
+        byte[] start = Encoding.UTF8.GetBytes(HeaderCrcStart);
+        int at = LastIndexOf(line, start);
+        if (at < 0)
+        {
+            throw ContentError.Make(HeaderName, HeaderCrcName, "is absent, and each header of format version 2 ends with the CRC-32 of its other fields (D-637)");
+        }
+
+        // The field ends the line: its digits and the closing brace follow it, and nothing else. A field after it lies
+        // outside the CRC, so a changed seed there read as a valid header (PR #109 review P2-1).
+        int digits = at + start.Length;
+        int close = line.Length - 1;
+        bool endsTheLine = close > digits && line[close] == (byte)'}';
+        for (int index = digits; index < close && endsTheLine; index++)
+        {
+            endsTheLine = line[index] >= (byte)'0' && line[index] <= (byte)'9';
+        }
+
+        if (!endsTheLine)
+        {
+            throw ContentError.Make(HeaderName, HeaderCrcName, "is not the last field of the line, and the CRC-32 covers every other field only when it ends the line (D-637)");
+        }
+
+        long stored = Number(members, HeaderCrcName);
+        uint computed = Crc32.Of(line, 0, at);
+        if (stored != computed)
+        {
+            ContextException mismatch = ContentError.Make(HeaderName, HeaderCrcName, $"is {stored}, and the CRC-32 of the header before it is {computed}, so a byte of the header changed after the write (D-637)");
+            mismatch.AddContext("storedCrc", stored.ToString(CultureInfo.InvariantCulture));
+            mismatch.AddContext("computedCrc", ((long)computed).ToString(CultureInfo.InvariantCulture));
+            throw mismatch;
+        }
+    }
+
+    /// <summary>The offset of the last place where the part starts in the line, or -1 when the line does not hold it.</summary>
+    private static int LastIndexOf(byte[] line, byte[] part)
+    {
+        for (int index = line.Length - part.Length; index >= 0; index--)
+        {
+            int matched = 0;
+            while (matched < part.Length && line[index + matched] == part[matched])
+            {
+                matched++;
+            }
+
+            if (matched == part.Length)
+            {
+                return index;
+            }
+        }
+
+        return -1;
     }
 
     /// <summary>Answers whether the text is 64 lowercase hexadecimal digits, which is the form of D-221.</summary>

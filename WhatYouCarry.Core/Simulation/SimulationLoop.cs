@@ -84,8 +84,8 @@ public sealed class SimulationLoop
     /// <summary>The owner id of the player in the projectile simulation.</summary>
     public const int PlayerOwner = 0;
 
-    /// <summary>The id of the weapon that the attack bit swings, until the loadout of PR-30 (D-422).</summary>
-    public const string MainWeaponId = "sword-basic";
+    /// <summary>The id of the weapon that the attack bit swings, until the loadout of PR-30 (D-422). The loader holds the value.</summary>
+    public const string MainWeaponId = ContentLoader.MainWeaponId;
 
     private readonly ContentSet content;
     private List<Enemy> enemies = [];
@@ -120,6 +120,7 @@ public sealed class SimulationLoop
     /// The main weapon of a content set: the weapon with the id <see cref="MainWeaponId"/>, until the loadout of
     /// PR-30 (D-320, D-422). The Game layer reads the same rule for the model and the clips.
     /// </summary>
+    /// <remarks>The loader rejects a set without it, and a set that a caller builds from a loaded set can still lack it.</remarks>
     /// <exception cref="ContextException">The content set holds no weapon of that id (T-2).</exception>
     public static WeaponDefinition MainWeapon(ContentSet content)
     {
@@ -364,7 +365,7 @@ public sealed class SimulationLoop
     /// digs the floor on the simulation thread.
     /// </summary>
     /// <param name="plan">The plan that <see cref="NextFloorWorker.Generate"/> dug for the seed of this run and the next floor.</param>
-    /// <exception cref="ContextException">The plan is not for the next floor, or the run ended (T-2).</exception>
+    /// <exception cref="ContextException">The plan is not for the next floor, for the seed of this run, or for the content set of this run, or the run ended (T-2, F-160).</exception>
     public void OfferNextFloor(FloorPlan plan)
     {
         if (this.Ended)
@@ -381,6 +382,26 @@ public sealed class SimulationLoop
             wrongFloor.AddContext("floor", ((long)this.Floor).ToString(CultureInfo.InvariantCulture));
             wrongFloor.AddContext("offeredFloor", ((long)plan.Floor).ToString(CultureInfo.InvariantCulture));
             throw wrongFloor;
+        }
+
+        // A plan of another seed or another content set digs another floor, and the descent would take it in
+        // silence, because the hash does not read the plan (F-160).
+        if (plan.Seed != this.Seed)
+        {
+            ContextException wrongSeed = new($"The run has the seed {this.Seed}, and the offered plan for floor {plan.Floor} is for the seed {plan.Seed}. The worker digs with the seed of the run (D-429).");
+            wrongSeed.AddContext("seed", this.Seed.ToString(CultureInfo.InvariantCulture));
+            wrongSeed.AddContext("offeredSeed", plan.Seed.ToString(CultureInfo.InvariantCulture));
+            wrongSeed.AddContext("offeredFloor", ((long)plan.Floor).ToString(CultureInfo.InvariantCulture));
+            throw wrongSeed;
+        }
+
+        if (plan.ContentHash != this.content.Hash)
+        {
+            ContextException wrongContent = new($"The offered plan for floor {plan.Floor} is for another content set. The worker digs with the content set of the run (D-163, D-429).");
+            wrongContent.AddContext("contentHash", this.content.Hash);
+            wrongContent.AddContext("offeredContentHash", plan.ContentHash);
+            wrongContent.AddContext("offeredFloor", ((long)plan.Floor).ToString(CultureInfo.InvariantCulture));
+            throw wrongContent;
         }
 
         this.offeredFloor = plan;

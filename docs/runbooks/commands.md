@@ -6,7 +6,9 @@ Status: reference, written 2026-09-23. Written in ASD-STE100. The byte ceiling o
 
 ## The Game arguments
 
-The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, `--smoke` and `--bot` exclude each other, and `--transitions` needs `--bot` and `--frame-log`.
+The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, `--smoke` and `--bot` exclude each other, and `--transitions` needs `--bot` and `--frame-log`. A Game flag before `--` also ends the boot with exit code 1, because the engine ignores it there (D-624).
+
+A close of the window ends the session like the test exit: one end line, the frame log, and exit code 0 when the log holds no error (F-161).
 
 ## The generated files
 
@@ -22,3 +24,8 @@ The agent runs each Deck test over SSH, after the owner says that the Deck is re
 4. Run the command of `AGENTS.md` under `timeout`, then copy the frame log to the Mac.
 
 Without `XAUTHORITY`, X11 refuses the SSH session, and Godot falls back to Wayland. Godot 4.7.2 can then hang after the end line of the session (F-147). A player session on the Deck has the auth file, so Godot uses X11 there.
+
+## The night notice
+
+A failed night on `main` sends a Pushover notification to the owner (D-642). The job `notify` of `night.yml` reads the repository secrets `PUSHOVER_USER_KEY` and `PUSHOVER_API_TOKEN`. No file holds either value. To change a value, run `gh secret set PUSHOVER_API_TOKEN --repo nkramber/what-you-carry`, and paste the value at the prompt. When the job goes red, the log shows the HTTP answer of Pushover.
+

@@ -56,7 +56,13 @@ public sealed class FrameLog
     /// <summary>Adds one frame from its time in seconds, rounded to the nearest microsecond.</summary>
     public void Add(double seconds)
     {
-        this.frames.Add((long)Math.Round(seconds * MicrosecondsPerSecond));
+        this.AddMicros((long)Math.Round(seconds * MicrosecondsPerSecond));
+    }
+
+    /// <summary>Adds one frame from its real time in microseconds, which <see cref="RealFrameClock"/> measures (D-635).</summary>
+    public void AddMicros(long micros)
+    {
+        this.frames.Add(micros);
     }
 
     /// <summary>

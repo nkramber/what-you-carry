@@ -314,6 +314,51 @@ public sealed class NightSeedsTests
         Assert.False(BotRunCommand.IsFailure(BotRunEnd.Death, promisesProgress: true));
     }
 
+    /// <summary>
+    /// F-162. The runner and the reachability sweep read the seed list from a file. A list with twenty thousand carried
+    /// seeds holds more than 131072 bytes, the Linux limit of one argument or one variable, which the old night passed
+    /// through a variable. The file carries it whole. Both seed options, or neither, is a usage error, and a file that
+    /// is absent names the file.
+    /// </summary>
+    [Fact]
+    public void TheSeedListPassesByFile()
+    {
+        List<ulong> carried = [];
+        for (ulong index = 0; index < 20000; index++)
+        {
+            carried.Add(300001 + (2 * index));
+        }
+
+        List<SeedRange> plan = NightSeeds.Plan(NightSeeds.ReachabilitySweep, NightSeeds.DayZero, [], carried);
+        string list = NightSeeds.FormatList(plan);
+        Assert.True(list.Length > 131072, $"The list holds {list.Length} bytes.");
+
+        string directory = TempDirectory();
+        string logs = Path.Combine(directory, "logs");
+        string seedFile = Path.Combine(directory, "night-seeds.txt");
+        string smallFile = Path.Combine(directory, "small-seeds.txt");
+        string absent = Path.Combine(directory, "absent.txt");
+        try
+        {
+            File.WriteAllText(seedFile, list + "\n");
+            Assert.Equal((int)NightSeeds.Count(plan), ProcgenTests.ReachabilitySeedList("1", ProcgenTests.ReadSeedFile(seedFile)).Count);
+            Assert.Null(ProcgenTests.ReadSeedFile(null));
+            InvalidOperationException missing = Assert.Throws<InvalidOperationException>(() => ProcgenTests.ReadSeedFile(absent));
+            Assert.Contains(absent, missing.Message, StringComparison.Ordinal);
+
+            File.WriteAllText(smallFile, "1,3-4\n");
+            Assert.Equal(0, Program.Main(["bot-run", "--policy", Coward.PolicyName, "--seeds-file", smallFile, "--output", logs, "--root", RepositoryRoot.Find()]));
+            Assert.Equal(3, Directory.GetFiles(logs, "*.jsonl").Length);
+            Assert.Equal(2, Program.Main(["bot-run", "--policy", Coward.PolicyName, "--seeds", "1", "--seeds-file", smallFile, "--output", logs, "--root", RepositoryRoot.Find()]));
+            Assert.Equal(2, Program.Main(["bot-run", "--policy", Coward.PolicyName, "--output", logs, "--root", RepositoryRoot.Find()]));
+            Assert.Equal(2, Program.Main(["bot-run", "--policy", Coward.PolicyName, "--seeds-file", absent, "--output", logs, "--root", RepositoryRoot.Find()]));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     /// <summary>PR-84 exit test 8. The night reachability sweep reads the seed list of the night, and the count of D-480 off the night (D-564).</summary>
     [Fact]
     public void TheReachabilitySweepReadsTheSeedListOfTheNight()

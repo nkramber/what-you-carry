@@ -252,4 +252,32 @@ public sealed class UserArgumentsTests
             Assert.Contains(error.Context, field => field.Value == word);
         }
     }
+
+    /// <summary>
+    /// F-153. A flag of the table before the separator stops the boot, alone or with a value after an equals sign, and the
+    /// error names it (D-624). The engine ignored such a flag, and the session ran with no flag. The engine flags pass, and
+    /// a flag after the separator is a user argument and never counts here.
+    /// </summary>
+    [Theory]
+    [InlineData("--headless --fixed-fps 60 --smoke --path WhatYouCarry.Game", "--smoke", "--smoke")]
+    [InlineData("--path WhatYouCarry.Game --bot --frame-log frames.txt", "--bot", "--bot")]
+    [InlineData("--headless --frame-log=frames.txt", "--frame-log", "--frame-log=frames.txt")]
+    public void AGameFlagBeforeTheSeparatorStopsTheBoot(string engine, string flag, string argument)
+    {
+        ContextException error = Assert.Throws<ContextException>(() => UserArguments.RejectFlagsBeforeSeparator(engine.Split(' ')));
+        Assert.StartsWith(UserArguments.FlagBeforeSeparatorMessage, error.Message, StringComparison.Ordinal);
+        Assert.Contains(error.Context, field => field.Name == "flag" && field.Value == flag);
+        Assert.Contains(error.Context, field => field.Name == "argument" && field.Value == argument);
+    }
+
+    /// <summary>F-153. The engine flags alone pass, and so does a flag of the table after the separator (D-624).</summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("--headless --fixed-fps 60 --path WhatYouCarry.Game")]
+    [InlineData("--headless --path WhatYouCarry.Game -- --smoke --frame-log frames.txt")]
+    [InlineData("--smoker --bots")]
+    public void EngineFlagsAloneAndUserFlagsPass(string engine)
+    {
+        UserArguments.RejectFlagsBeforeSeparator(engine.Length == 0 ? [] : engine.Split(' '));
+    }
 }

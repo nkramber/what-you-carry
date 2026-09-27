@@ -19,7 +19,8 @@
 # night on main re-runs the newest night-gate run of each open PR, because every PR reads its record (D-559). The
 # workflow night-promote.yml also writes night-results, at a merge commit that a branch night tested (D-557). A night on
 # a tag writes no record. A failed sweep keeps its bot logs as a run artifact, because the runner is gone after the job
-# (D-280).
+# (D-280). A failed night on main sends a Pushover notification to the owner at priority 1, through the job notify
+# (D-642).
 name: Night
 
 on:
@@ -36,7 +37,7 @@ jobs:
     outputs:
       date: ${{ steps.plan.outputs.date }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: Plan the seeds
         # D-564 to D-567: the UTC date of the night start selects the slice of every sweep. The record of main names the
         # failed seeds that this night carries. A night on a branch carries the seeds of main too, so its promotion
@@ -49,11 +50,14 @@ jobs:
           git fetch --quiet origin refs/heads/night-results
           git show FETCH_HEAD:night.json > "${RUNNER_TEMP}/main-night.json"
       - name: Keep the record of main for each job
-        uses: actions/upload-artifact@v4
+        # A re-run of this job uploads the record again under the same name, and that upload replaces the artifact of
+        # the earlier attempt, as the sweep uploads do (F-155).
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: main-night
           path: ${{ runner.temp }}/main-night.json
           if-no-files-found: error
+          overwrite: true
 
   sweep:
     needs: plan
@@ -71,7 +75,7 @@ jobs:
       SWEEP: ${{ matrix.sweep }}
       NIGHT_DATE: ${{ needs.plan.outputs.date }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: Start the sweep result
         # The result holds the summary line and the failure line of this sweep. An empty failure file means that the
         # sweep did not end (D-567). The step comes before the build, so a broken build still leaves a result.
@@ -81,28 +85,30 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/sweep"
           : > "${RUNNER_TEMP}/sweep/bot-deaths.txt"
           : > "${RUNNER_TEMP}/sweep/seed-failures.txt"
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
         with:
           global-json-file: global.json
       - name: Build
         run: dotnet build WhatYouCarry.slnx
       - name: Take the record of main from the plan
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: main-night
           path: ${{ runner.temp }}
       - name: List the seeds of the sweep
+        # The list goes to a file, and each sweep reads the file. Linux caps one argument or one variable at 131072
+        # bytes, and a list of many carried seeds passes that (F-162).
         shell: bash
         run: |
           set -euo pipefail
-          seeds=$(dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep "$SWEEP" --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json")
-          echo "NIGHT_SEEDS=${seeds}" >> "$GITHUB_ENV"
+          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep "$SWEEP" --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json" > "${RUNNER_TEMP}/night-seeds.txt"
+          echo "NIGHT_SEEDS_FILE=${RUNNER_TEMP}/night-seeds.txt" >> "$GITHUB_ENV"
       - name: Bot sweep, the fixed seeds and the slice
         if: matrix.sweep != 'reachability'
         shell: bash
         run: |
           set -euo pipefail
-          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy "$SWEEP" --seeds "$NIGHT_SEEDS" --output bot-logs --root . --summary "${RUNNER_TEMP}/sweep/bot-deaths.txt" --failures "${RUNNER_TEMP}/sweep/seed-failures.txt"
+          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy "$SWEEP" --seeds-file "$NIGHT_SEEDS_FILE" --output bot-logs --root . --summary "${RUNNER_TEMP}/sweep/bot-deaths.txt" --failures "${RUNNER_TEMP}/sweep/seed-failures.txt"
       - name: Seed sweep, the fixed seeds and the slice
         if: matrix.sweep == 'reachability'
         shell: bash
@@ -111,14 +117,14 @@ jobs:
           WYC_NIGHT_FAILURES: ${{ runner.temp }}/sweep/seed-failures.txt
         run: |
           set -euo pipefail
-          WYC_NIGHT_SEEDS="$NIGHT_SEEDS"
-          export WYC_NIGHT_SEEDS
+          WYC_NIGHT_SEEDS_FILE="$NIGHT_SEEDS_FILE"
+          export WYC_NIGHT_SEEDS_FILE
           dotnet test WhatYouCarry.slnx --no-build --filter "FullyQualifiedName~EveryChamberReachable|FullyQualifiedName~DetailKeepsEveryChamberReachable"
       - name: Keep the bot logs of a failed night
         # The crash text of a failed run lives in its log alone, and the runner is gone after the job (D-280). A sweep
         # that fails before its runs, or the seed sweep, has no logs, and the step says so instead of failing in silence.
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: bot-logs-${{ matrix.sweep }}
           path: bot-logs
@@ -128,7 +134,7 @@ jobs:
         # A re-run of the failed jobs of a night runs this sweep again, and its result replaces the result of the
         # earlier attempt, so the record reads the newest attempt.
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: night-sweep-${{ matrix.sweep }}
           path: ${{ runner.temp }}/sweep/
@@ -144,12 +150,15 @@ jobs:
       contents: write
       actions: write
       pull-requests: read
+    outputs:
+      # The status of the night record, which the job notify reads (D-642).
+      status: ${{ steps.gather.outputs.status }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           # The order check of a night on main asks git whether the record of main comes after the night commit (D-562).
           fetch-depth: 0
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
         with:
           global-json-file: global.json
       - name: Build
@@ -157,19 +166,20 @@ jobs:
         run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
       - name: Take the record of main from the plan
         if: always()
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: main-night
           path: ${{ runner.temp }}
       - name: Take the result of each sweep
         if: always()
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: night-sweep-*
           path: ${{ runner.temp }}/sweeps
       - name: Gather the sweep results
         # Each sweep result adds its summary line and its failure line. The status reads the plan, every sweep, and
         # the steps of this job before it (D-177).
+        id: gather
         if: always()
         shell: bash
         env:
@@ -181,6 +191,7 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/sweeps"
           status=$(bash .github/scripts/night-gather.sh "${RUNNER_TEMP}/sweeps" "${RUNNER_TEMP}" "$PLAN_RESULT" "$SWEEP_RESULT" "$RECORD_STATUS")
           echo "NIGHT_STATUS=${status}" >> "$GITHUB_ENV"
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
       - name: Write the night record
         if: always()
         env:
@@ -272,3 +283,28 @@ jobs:
         # Every PR reads the record of main, so a night on main re-runs the newest night-gate run of each open PR (D-559).
         if: always() && github.ref == 'refs/heads/main'
         uses: ./.github/actions/rerun-night-gates
+
+  notify:
+    # A failed night on main sends a Pushover notification to the owner (D-642): a job that did not succeed, or a
+    # record with the status failure. A night on another branch sends none. The two keys are repository secrets and
+    # never appear in a file. A failed send fails this job with the HTTP answer, so a broken notification shows on the
+    # run (T-2). The night record and the gates do not read this job.
+    needs: [plan, sweep, record]
+    if: >-
+      always() && github.ref == 'refs/heads/main' &&
+      (needs.plan.result != 'success' || needs.sweep.result != 'success' || needs.record.result != 'success' ||
+      needs.record.outputs.status != 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - name: Send the Pushover notification
+        uses: ./.github/actions/pushover
+        with:
+          user-key: ${{ secrets.PUSHOVER_USER_KEY }}
+          api-token: ${{ secrets.PUSHOVER_API_TOKEN }}
+          title: "What You Carry: the night failed"
+          message: "The night on main failed at ${{ github.sha }}. Plan ${{ needs.plan.result }}, sweeps ${{ needs.sweep.result }}, record ${{ needs.record.result }}, status ${{ needs.record.outputs.status }}. The night fixer on the Mac Mini starts within 15 minutes (D-643)."
+          priority: "1"
+          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

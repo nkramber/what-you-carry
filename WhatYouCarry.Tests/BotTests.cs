@@ -52,6 +52,35 @@ public sealed class BotTests
         }
     }
 
+    /// <summary>
+    /// A fixture policy that promises progress, walks to the stairwell with the greedy descender, and stands there with
+    /// no interact and no ascend, so the timer pauses (D-140). It throws past <see cref="GuardTicks"/>, so a run that the
+    /// cap does not end reads crash and never hangs the test.
+    /// </summary>
+    private sealed class WaitAtTheStairwell(ContentSet content) : IBotPolicy
+    {
+        public const uint GuardTicks = 40000;
+
+        private readonly GreedyDescender walker = new(content);
+
+        public string Name => "wait-at-the-stairwell";
+
+        public bool PromisesProgress => true;
+
+        public Intent Next(SimulationLoop loop)
+        {
+            if (loop.Tick >= GuardTicks)
+            {
+                ContextException error = new("The fixture ran past its guard, so no cap ended the floor.");
+                error.AddContext("tick", loop.Tick.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                throw error;
+            }
+
+            Intent intent = this.walker.Next(loop);
+            return intent with { Buttons = (ushort)(intent.Buttons & ~(Button.Interact | Button.Ascend)) };
+        }
+    }
+
     private sealed class CollectingSink : ILogSink
     {
         public List<string> Lines { get; } = [];
@@ -296,6 +325,41 @@ public sealed class BotTests
         FullClearer hunter = new(TestWorld.Content);
         slow.Step(hunter.Next(slow));
         Assert.False(hunter.IsLeaving, "The clearer leaves with three minutes on the timer.");
+    }
+
+    /// <summary>
+    /// F-158. A policy that promises progress and stands at the stairwell ends as a softlock after the floor budget of
+    /// 18000 ticks, because the paused timer never expires (D-625). The old run never ended, and the guard of the
+    /// fixture turned it into a crash. The timer of floor 1 is 10800 ticks, so the cap is the floor budget.
+    /// </summary>
+    [Fact]
+    public void AProgressPolicyAtTheStairwellEndsAtTheFloorBudget()
+    {
+        BotRunResult result = BotRun.Play(new WaitAtTheStairwell(TestWorld.PeacefulContent), 1, TestWorld.PeacefulContent);
+
+        Assert.True(result.End == BotRunEnd.Softlock, $"The run ended as {result.End} at tick {result.Ticks}: {result.Error}");
+        Assert.Equal(BotRun.FloorBudget, result.Ticks);
+        Assert.Equal(SimulationLoop.FirstFloor, result.FloorsReached);
+    }
+
+    /// <summary>F-158. A timer longer than the floor budget sets the cap of its floor, so a floor keeps its whole timer (D-625, D-407).</summary>
+    [Fact]
+    public void ATimerLongerThanTheFloorBudgetSetsTheCap()
+    {
+        Assert.Equal(18000, BotRun.FloorCap(new FloorTimer(10800)));
+        Assert.Equal(18000, BotRun.FloorCap(new FloorTimer(18000)));
+        Assert.Equal(25200, BotRun.FloorCap(new FloorTimer(25200)));
+
+        List<FloorTemplate> longFloors = [];
+        foreach (FloorTemplate floor in TestWorld.PeacefulContent.Floors)
+        {
+            longFloors.Add(floor with { TimerSeconds = 400 });
+        }
+
+        ContentSet patient = TestWorld.PeacefulContent with { Floors = longFloors };
+        BotRunResult result = BotRun.Play(new WaitAtTheStairwell(patient), 1, patient);
+        Assert.True(result.End == BotRunEnd.Softlock, $"The run ended as {result.End} at tick {result.Ticks}: {result.Error}");
+        Assert.Equal(400U * 60U, result.Ticks);
     }
 
     /// <summary>PR-11 exit test 7. The night record holds the commit, the end time, and the status, and a bad commit or status is an error (D-273).</summary>

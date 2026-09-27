@@ -113,6 +113,9 @@ public partial class Main : Node3D
     /// <summary>The message of the line at the end of a session that the test exit ends (D-311).</summary>
     public const string TestExitMessage = "The test exit ends the session.";
 
+    /// <summary>The message of the line at the end of a session that a close of the window ends (F-161).</summary>
+    public const string WindowClosedMessage = "The close of the window ends the session.";
+
     /// <summary>The message of the error line of a boot failure.</summary>
     public const string BootFailedMessage = "The boot failed, and the game quits.";
 
@@ -275,6 +278,7 @@ public partial class Main : Node3D
     private int drawnFloor;
     private ScriptedPress? press;
     private FrameLog? frames;
+    private readonly RealFrameClock frameClock = new();
     private string frameLogPath = string.Empty;
     private bool smoke;
     private bool ended;
@@ -297,6 +301,12 @@ public partial class Main : Node3D
     {
         try
         {
+            // The engine then sends the close request of the window to the handler and waits for its quit, so a close
+            // writes the end line and the frame log, and releases the sounds (F-161). The handler is a signal of the
+            // root window, and not an override of _Notification, which takes every notification of the engine into
+            // managed code, the notifications of the engine shutdown too.
+            this.GetTree().AutoAcceptQuit = false;
+            this.GetTree().Root.CloseRequested += this.OnCloseRequested;
             this.Boot();
         }
         catch (Exception error)
@@ -515,11 +525,21 @@ public partial class Main : Node3D
             return;
         }
 
-        this.frames?.Add(delta);
+        // The engine delta is smoothed and rounded to the vsync interval, so the log reads the real time of the frame
+        // from the engine clock (D-635, F-170). The first frame has no frame before it, and it enters no log.
+        long? frameMicros = this.frameClock.Next((long)Time.GetTicksUsec());
+        if (frameMicros is long micros)
+        {
+            this.frames?.AddMicros(micros);
+        }
+
         long uploadStarted = Stopwatch.GetTimestamp();
         this.chunks?.UploadSome();
         long uploadMicros = (long)Stopwatch.GetElapsedTime(uploadStarted).TotalMicroseconds;
-        this.TraceFrame(delta, uploadMicros);
+        if (frameMicros is long traced)
+        {
+            this.TraceFrame(traced, uploadMicros);
+        }
 
         float fraction = (float)Engine.GetPhysicsInterpolationFraction();
         CoreVector3 feet = RenderInterpolation.Between(this.previousFeet, this.currentFeet, fraction);
@@ -564,6 +584,36 @@ public partial class Main : Node3D
             this.hudCamera.GlobalTransform = this.camera.GlobalTransform;
             this.hud.Draw(this.shotState ?? HudState.Of(this.loop, this.reader.ControllerLast), this.hudCamera, (float)delta);
         }
+    }
+
+    /// <summary>The handler of the close request of the root window (F-161). Every exception ends the session, as in each engine callback (F-115).</summary>
+    private void OnCloseRequested()
+    {
+        try
+        {
+            this.CloseWindow();
+        }
+        catch (Exception error)
+        {
+            this.FailCallback(nameof(OnCloseRequested), error);
+        }
+    }
+
+    /// <summary>
+    /// The close of the window ends the session as the test exit does: one end line with the run fields, then the quit,
+    /// which writes the frame log and releases the sounds (D-311, F-161). The engine quit with no end line, no frame
+    /// log, and no release before the boot turned off its automatic quit. A session that already ended ignores it.
+    /// </summary>
+    private void CloseWindow()
+    {
+        if (this.ended)
+        {
+            return;
+        }
+
+        LogFields fields = this.loop is null ? this.SessionFields() : this.EndFields();
+        this.logger.Write(LogContextKind.Run, LogLevel.Info, WindowClosedMessage, fields);
+        this.Quit(this.sink.ErrorCount == 0 ? ExitSuccess : ExitFailure);
     }
 
     /// <inheritdoc/>
@@ -655,7 +705,7 @@ public partial class Main : Node3D
     /// Adds the frame to the trace of the transition test, with the tick time since the last frame and the collector
     /// pause and collections since the last frame, and logs the summary of a window that closes (D-435).
     /// </summary>
-    private void TraceFrame(double delta, long uploadMicros)
+    private void TraceFrame(long frameMicros, long uploadMicros)
     {
         if (this.trace is null || this.loop is null)
         {
@@ -668,7 +718,7 @@ public partial class Main : Node3D
         int gen1 = GC.CollectionCount(1);
         int gen2 = GC.CollectionCount(2);
         TraceFrame frame = new(
-            (long)Math.Round(delta * FrameLog.MicrosecondsPerSecond),
+            frameMicros,
             this.tickMicros,
             uploadMicros,
             pause - this.lastPauseMicros,
@@ -742,12 +792,13 @@ public partial class Main : Node3D
 
     /// <summary>
     /// Reads the user arguments with one parser, loads the content, the models of the body and of the main weapon, the
-    /// atlas, and the clips, starts the loop, and builds the scene. A bad argument stops the boot before the content loads
-    /// (D-313, D-317). The contact sheet flag renders the sheet in place of the loop (D-306). In a play session the mouse is
+    /// atlas, and the clips, starts the loop, and builds the scene. A bad argument, or a flag of the Game layer before the
+    /// separator, stops the boot before the content loads (D-313, D-317, D-624). The contact sheet flag renders the sheet in place of the loop (D-306). In a play session the mouse is
     /// captured. In the smoke session and the bot session it is not.
     /// </summary>
     private void Boot()
     {
+        UserArguments.RejectFlagsBeforeSeparator(OS.GetCmdlineArgs());
         UserArguments arguments = UserArguments.Parse(OS.GetCmdlineUserArgs());
         this.smoke = SmokeSession.IsRequested(arguments);
         if (TestExit.IsPressRequested(arguments))

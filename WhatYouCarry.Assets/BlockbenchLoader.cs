@@ -8,14 +8,14 @@ using WhatYouCarry.Core.Physics;
 namespace WhatYouCarry.Assets;
 
 /// <summary>
-/// Reads a Blockbench project file into a <see cref="BlockbenchModel"/> (D-9, D-18, D-86, OQ-159). The file is
+/// Reads a Blockbench project file into a <see cref="BlockbenchModel"/> (D-9, D-18, D-86, D-631). The file is
 /// the JSON that Blockbench 5 writes for its generic format: a flat list of elements, a flat list of groups,
 /// and an outliner tree of ids that gives the hierarchy.
 /// </summary>
 /// <remarks>
 /// <para>
 /// A group is a bone, a cube element is a box under its bone, and a locator element is an attachment point
-/// named after an equipment slot. Sixteen units of the file are one meter (OQ-159), and the frame of the file is
+/// named after an equipment slot. Sixteen units of the file are one meter (D-631), and the frame of the file is
 /// the frame of D-234, so no axis changes.
 /// </para>
 /// <para>
@@ -32,7 +32,7 @@ namespace WhatYouCarry.Assets;
 /// </remarks>
 public static class BlockbenchLoader
 {
-    /// <summary>The count of file units in one meter (OQ-159).</summary>
+    /// <summary>The count of file units in one meter (D-631).</summary>
     public const int UnitsPerMeter = 16;
 
     /// <summary>The lowest major format version that the loader reads. Blockbench 5 writes the flat groups list.</summary>

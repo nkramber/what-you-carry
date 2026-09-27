@@ -236,11 +236,11 @@ public sealed class GitRepository
         using Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"git did not start in '{path}'.");
         // The two streams are read at the same time. git blocks on a full stderr pipe, so a read of stdout to its end
-        // first never ends (F-125).
+        // first never ends (F-125). A git call that hangs stops at the short limit (D-627, F-163).
         Task<string> standardError = process.StandardError.ReadToEndAsync();
-        string standardOutput = process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
-        return new GitResult(path, string.Join(' ', args), process.ExitCode, standardOutput, standardError.Result);
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        ProcessLimit.WaitOrStop(process, ProcessLimit.Short, $"git {string.Join(' ', args)}", path);
+        return new GitResult(path, string.Join(' ', args), process.ExitCode, standardOutput.Result, standardError.Result);
     }
 
     private sealed record GitResult(string Path, string Command, int ExitCode, string StandardOutput, string StandardError)
