@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 280: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Re-reviewed PR #109 after the author answered the Gitar CI note.
+- Confirmed that P2-1 stays fixed at `69c946a` and that Gitar approves the code.
+- Updated the review record to `Ready for owner merge` for the effective head.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective code head is `69c946a`; the remote PR tip before this review commit is `4ec288a`.
+- Code, Smoke, and bit-identity checks passed at `55458cc`. Current metadata checks pass except `evaluate` and `review-gate`, which read the old `Blocked` verdict.
+
+### In flight
+
+- The review record and this entry need one metadata commit and a push to `feat/pr-91-review-fixes`.
+- The check wait and the Gitar push wait need a result after the push.
+
+### Traps and gotchas
+
+- The current Gitar pass approves the code. The author answered the CI note at comment 5852184443.
+
+### Open questions that block progress
+
+None for PR-109. OQ-195, OQ-196, and OQ-199 to OQ-201 remain open for other findings.
+
+### Next concrete action
+
+Publish this review and handoff, then read the checks of the new metadata tip.
+
 ## Session 279: 2026-09-26, Codex
 
 Author: Codex
@@ -315,34 +348,3 @@ None for PR-90.
 ### Next concrete action
 
 Answer the automated pass, then run `make codex-review PR=108`. After a `Ready for owner merge` verdict, give the owner the merge summary (D-533).
-
-## Session 270: 2026-09-26, Claude Code
-
-Author: Claude Code
-Session: PR-89, author, merge. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
-
-### What this session did, and why
-
-- Review round 2 gave `Ready for owner merge` at effective head `6afe1db`, with P2-1 fixed. The automated pass of `2faf0c0` approved with no finding.
-- The owner read the merge summary and confirmed the merge (D-533). The session runs `gh pr merge 107 --auto --squash` after this entry.
-- PR-85 exit test 8 stays unread. At 05:57 UTC on 2026-09-26, the first night of the `7 7 * * *` cron has not started. The owner chose to merge before that night ends.
-
-### State of the build
-
-- Effective head `6afe1db`. The code checks passed at `2faf0c0`, and `review-gate` passed at `90b719a`. The local full suite passed 1826 of 1826.
-
-### In flight
-
-- The auto-merge of PR #107.
-
-### Traps and gotchas
-
-- The schedule of a night can start hours after 07:07 UTC. Read `gh run list --workflow night.yml` before you call a miss.
-
-### Open questions that block progress
-
-None for PR-89. OQ-208 blocks PR-90.
-
-### Next concrete action
-
-Read the night of 2026-09-26 for PR-85 exit test 8: its start time, the wall time of each sweep job, its result, and the slices of its record (6001 to 6500 for each bot policy, 120001 to 130000 for reachability). If a job ends with a runner fault, re-run the failed jobs (D-585). Then start PR-90 after the owner answers OQ-208.

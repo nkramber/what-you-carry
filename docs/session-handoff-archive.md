@@ -1,5 +1,36 @@
 # Session handoff archive
 
+## Session 270: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-89, author, merge. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
+
+### What this session did, and why
+
+- Review round 2 gave `Ready for owner merge` at effective head `6afe1db`, with P2-1 fixed. The automated pass of `2faf0c0` approved with no finding.
+- The owner read the merge summary and confirmed the merge (D-533). The session runs `gh pr merge 107 --auto --squash` after this entry.
+- PR-85 exit test 8 stays unread. At 05:57 UTC on 2026-09-26, the first night of the `7 7 * * *` cron has not started. The owner chose to merge before that night ends.
+
+### State of the build
+
+- Effective head `6afe1db`. The code checks passed at `2faf0c0`, and `review-gate` passed at `90b719a`. The local full suite passed 1826 of 1826.
+
+### In flight
+
+- The auto-merge of PR #107.
+
+### Traps and gotchas
+
+- The schedule of a night can start hours after 07:07 UTC. Read `gh run list --workflow night.yml` before you call a miss.
+
+### Open questions that block progress
+
+None for PR-89. OQ-208 blocks PR-90.
+
+### Next concrete action
+
+Read the night of 2026-09-26 for PR-85 exit test 8: its start time, the wall time of each sweep job, its result, and the slices of its record (6001 to 6500 for each bot policy, 120001 to 130000 for reachability). If a job ends with a runner fault, re-run the failed jobs (D-585). Then start PR-90 after the owner answers OQ-208.
+
 ## Session 269: 2026-09-26, Codex
 
 Author: Codex
