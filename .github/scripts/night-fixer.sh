@@ -7,8 +7,9 @@
 #
 # Usage: night-fixer.sh [--dry-run]
 # --dry-run prints the decision and starts nothing.
-# One session runs at a time: a lock directory holds the process id of the poll that runs the session. An open PR from
-# a branch fix/night-* also blocks a new session, and the poll then notes the run in the file queued.
+# One session runs at a time: the lock is a symbolic link whose target is the process id of the poll that runs the
+# session. One call makes the link and its target, so no lock exists with no process id (PR #109 review P2-3). An open
+# PR from a branch fix/night-* also blocks a new session, and the poll then notes the run in the file queued.
 # A failed read exits 1 with its context (T-2). The variables WYC_FIXER_REPO and WYC_FIXER_STATE replace the checkout
 # and the state directory, for the tests alone.
 set -euo pipefail
@@ -28,27 +29,44 @@ state="${WYC_FIXER_STATE:-${HOME}/Library/Application Support/wyc-night-fixer}"
 mkdir -p "$state"
 touch "$state/handled" "$state/queued"
 
-# A notice to the owner goes through the workflow notify.yml, which reads the Pushover secrets (D-645).
+# A notice to the owner goes through notify-owner.sh beside this file. It returns 0 only when the run of notify.yml
+# delivered the notice, and a queued dispatch alone is no delivery (D-645, PR #109 review P2-2).
 notify() {
-  gh workflow run notify.yml --repo "$repo" --ref main -f title="$1" -f message="$2" -f priority="1" -f url="${3:-}" || {
-    echo "night-fixer: the notice '$1' did not start." >&2
+  bash "$(dirname "$0")/notify-owner.sh" "$1" "$2" "${3:-}" || {
+    echo "night-fixer: the notice '$1' did not reach the owner." >&2
     return 1
   }
 }
 
 lock="$state/lock"
-if ! mkdir "$lock" 2>/dev/null; then
-  holder=$(cat "$lock/pid" 2>/dev/null || true)
-  if [ -n "$holder" ] && kill -0 "$holder" 2>/dev/null; then
+# ln puts a new link inside a directory of the same name and succeeds, so a lock that is no link stops the poll first.
+if [ -e "$lock" ] && [ ! -L "$lock" ]; then
+  echo "night-fixer: the lock ${lock} is no link, so it names no process id, and this poll stops. Read it." >&2
+  exit 1
+fi
+if ! ln -sn "$$" "$lock" 2>/dev/null; then
+  holder=$(readlink "$lock" 2>/dev/null || true)
+  case "$holder" in
+    ''|*[!0-9]*)
+      echo "night-fixer: the lock names '${holder}', which is no process id, so this poll stops. Read ${lock}." >&2
+      exit 1
+      ;;
+  esac
+  if kill -0 "$holder" 2>/dev/null; then
     echo "night-fixer: the session of poll ${holder} runs, so this poll starts none."
     exit 0
   fi
-  echo "night-fixer: the lock of poll '${holder}' stays after its end, and this poll removes it."
-  rm -rf "$lock"
-  mkdir "$lock"
+  echo "night-fixer: the lock of poll ${holder} stays after its end, and this poll removes it."
+  # A second poll can remove the same stale lock and take it first. The link then fails, and this poll stops.
+  if [ "$(readlink "$lock" 2>/dev/null || true)" = "$holder" ]; then
+    rm -f "$lock"
+  fi
+  if ! ln -sn "$$" "$lock" 2>/dev/null; then
+    echo "night-fixer: another poll took the lock, so this poll starts none."
+    exit 0
+  fi
 fi
-echo "$$" > "$lock/pid"
-trap 'rm -rf "$lock"' EXIT
+trap 'if [ "$(readlink "$lock" 2>/dev/null || true)" = "$$" ]; then rm -f "$lock"; fi' EXIT
 
 line=$(gh run list --repo "$repo" --workflow night.yml --branch main --limit 1 \
   --json databaseId,status,conclusion,headSha --jq '.[] | "\(.databaseId) \(.status) \(.conclusion) \(.headSha)"') || {

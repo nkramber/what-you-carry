@@ -9,8 +9,20 @@ namespace WhatYouCarry.Game.Render;
 /// </summary>
 public static class ArrayMeshBuilder
 {
+    /// <summary>
+    /// Gives the node the mesh of the buffers, and disposes the managed wrapper of the mesh at once. The node holds the
+    /// engine reference, so the mesh stays. A wrapper that lived to the exit went to the .NET finalizer after the engine
+    /// shut down, and the finalizer then crashed the process with signal 11 or abort 134 (F-177).
+    /// </summary>
+    public static void BuildInto(MeshInstance3D node, MeshData data)
+    {
+        ArrayMesh mesh = Build(data);
+        node.Mesh = mesh;
+        mesh.Dispose();
+    }
+
     /// <summary>One mesh with one triangle surface from the buffers. A mesh with no triangle has no surface.</summary>
-    public static ArrayMesh Build(MeshData data)
+    private static ArrayMesh Build(MeshData data)
     {
         ArrayMesh mesh = new();
         if (data.TriangleCount == 0)
@@ -39,7 +51,7 @@ public static class ArrayMeshBuilder
             indices[index] = data.Indices[index];
         }
 
-        Godot.Collections.Array arrays = [];
+        using Godot.Collections.Array arrays = [];
         arrays.Resize((int)Mesh.ArrayType.Max);
         arrays[(int)Mesh.ArrayType.Vertex] = positions;
         arrays[(int)Mesh.ArrayType.Normal] = normals;

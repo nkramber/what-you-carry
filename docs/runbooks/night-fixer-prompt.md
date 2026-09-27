@@ -13,8 +13,10 @@ You are the night fixer of What You Carry. The night RUN_ID on `main` failed at 
 - Send each notice to the owner with this command. Give the PR link as the url when a PR exists.
 
 ```
-gh workflow run notify.yml --repo nkramber/what-you-carry --ref main -f title="<title>" -f message="<text>" -f priority=1 -f url="<link>"
+bash .github/scripts/notify-owner.sh "<title>" "<text>" "<link>"
 ```
+
+- The command waits for the run of `notify.yml`, and it exits 0 only when that run delivered the notice. When it fails, send the notice one more time. Then write the failure in the handoff entry of the PR.
 
 ## Owner questions
 

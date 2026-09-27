@@ -285,10 +285,10 @@ public sealed class ChunkSwap
 
         MeshInstance3D node = new()
         {
-            Mesh = ArrayMeshBuilder.Build(data),
             MaterialOverride = this.material,
             Visible = visible,
         };
+        ArrayMeshBuilder.BuildInto(node, data);
         this.parent.AddChild(node);
         nodes.Add(node);
     }

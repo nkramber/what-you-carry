@@ -90,11 +90,40 @@ public sealed class GameShapeTests
     }
 
     /// <summary>
+    /// F-177. Each mesh goes to its node through <c>ArrayMeshBuilder.BuildInto</c>, which disposes the managed wrapper of
+    /// the mesh at once, and no other code builds a mesh. A wrapper that lived to the exit went to the .NET finalizer after
+    /// the engine shut down. Under load, 3 of 100 smoke sessions then crashed at exit with signal 11 or abort 134, and 0
+    /// of 200 crashed with the dispose.
+    /// </summary>
+    [Fact]
+    public void EachMeshWrapperGoesWhenItsNodeTakesTheMesh()
+    {
+        string builder = RepositoryRoot.ReadFile("WhatYouCarry.Game/Render/ArrayMeshBuilder.cs");
+        int into = builder.IndexOf("public static void BuildInto(MeshInstance3D node, MeshData data)", StringComparison.Ordinal);
+        int take = builder.IndexOf("node.Mesh = mesh;", into, StringComparison.Ordinal);
+        int dispose = builder.IndexOf("mesh.Dispose();", into, StringComparison.Ordinal);
+        Assert.True(into >= 0 && take > into && dispose > take, "BuildInto gives the node the mesh, then disposes the wrapper.");
+        Assert.Contains("private static ArrayMesh Build(MeshData data)", builder, StringComparison.Ordinal);
+        Assert.Contains("using Godot.Collections.Array arrays = [];", builder, StringComparison.Ordinal);
+
+        int callers = 0;
+        foreach (string file in GameStringScan.SourceFiles(RepositoryRoot.Find()))
+        {
+            string text = File.ReadAllText(file);
+            Assert.DoesNotContain("new ArrayMesh", Path.GetFileName(file) == "ArrayMeshBuilder.cs" ? string.Empty : text, StringComparison.Ordinal);
+            Assert.DoesNotContain("Mesh = ArrayMeshBuilder", text, StringComparison.Ordinal);
+            callers += text.Split("ArrayMeshBuilder.BuildInto(").Length - 1;
+        }
+
+        Assert.Equal(3, callers);
+    }
+
+    /// <summary>
     /// F-161. The boot turns off the automatic quit of the engine, and the close request of the root window reaches the
     /// end path, which writes the end line and quits through <c>Quit</c>. The old session let the engine quit on a close
     /// with no end line, no frame log, and no release of the sounds. The handler is a signal and not an override of
     /// <c>_Notification</c>: the first form of the fix took every engine notification into managed code, the shutdown
-    /// ones too, and one smoke session on the hosted Mac then aborted at exit with code 134.
+    /// ones too. The abort at exit that one smoke session then showed came from the mesh wrappers of F-177.
     /// </summary>
     [Fact]
     public void TheCloseOfTheWindowEndsTheSession()

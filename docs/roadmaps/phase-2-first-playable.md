@@ -1362,6 +1362,7 @@ Scope:
 - `night.yml`: the job `notify` sends a Pushover notification of a failed night on `main`, from two repository secrets (D-642).
 - `.github/actions/pushover` and `notify.yml`: one action sends each Pushover notice, and the workflow sends one on request (D-645).
 - `.github/scripts/night-fixer.sh`, `docs/runbooks/night-fixer-prompt.md`, and `docs/runbooks/night-fixer.md`: the night fixer, which this session installs as a launchd job (D-643, D-644).
+- `ArrayMeshBuilder` and its three callers: each managed mesh wrapper goes when its node takes the mesh, so no finalizer frees one after the engine shut down (F-177).
 
 Out of scope: the other open findings of the repository review of 2026-09-24, which later PRs of D-596 hold. This PR holds more than one concern (D-618).
 
@@ -1389,13 +1390,14 @@ Exit tests:
 20. `EachFlippedBitOfTheHeaderIsAnError` passes, and it fails on the header of `main`.
 21. `OnlyHighAndCriticalAdvisoriesFail` passes, and it fails on the build properties of `main`.
 22. `TheTemporaryRepositoryRunsNoBackgroundMaintenance` passes, and it fails on the helper of `main`.
-23. `AFailedNightOnMainNotifiesTheOwner` and `NightFixerTests` pass. The test send of the two secrets returned HTTP 200. The first failed night on `main` after the merge proves the job, and a later session records it.
+23. `AFailedNightOnMainNotifiesTheOwner` and `NightFixerTests` pass.
+24. `EachMeshWrapperGoesWhenItsNodeTakesTheMesh` passes. Under load, 200 smoke sessions end with no crash and no leak report. The test send of the two secrets returned HTTP 200. The first failed night on `main` after the merge proves the job, and a later session records it.
 
 Review focus: the path of each content error, the check of the dropped dig task, and the scan of the engine arguments.
 
 Check clause: none.
 
-Gate: exit tests 1 to 23 pass.
+Gate: exit tests 1 to 24 pass.
 
 > *In plain English:* the repository review left faults open. Some content errors named no file, a failed background dig left no trace, and a test command in the wrong order passed. This PR fixes twenty-six of them.
 

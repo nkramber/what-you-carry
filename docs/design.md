@@ -400,6 +400,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-174 | With warnings as errors, a new NuGet advisory of any severity failed every build with no code change | 2026-09-24 | ✅ PR #109 (PR-91): high and critical advisories fail, and low and moderate ones warn (D-639) |
 | F-175 | `make codex-review` installs the newest Codex CLI before each review, so a review can run a CLI that no earlier review ran | 2026-09-24 | ⚠ PR #109 (PR-91): the owner keeps the newest release (D-640), as D-512 states |
 | F-176 | Found in the CI of PR #109. The test helper `TemporaryGitRepository` ran each commit with auto maintenance on, and the Git 2.55 of the Linux runner started it as a detached process. The delete of the repository then failed with "Directory not empty" | 2026-09-26 | ✅ PR #109 (PR-91): each git call of the helper turns auto maintenance and auto gc off |
+| F-177 | Found in PR #109. Each chunk and box mesh kept its managed `ArrayMesh` wrapper to the exit, and the .NET finalizer freed those wrappers after the engine shut down. Under load, 3 of 100 smoke sessions at the head of PR #109 crashed at exit with signal 11 or abort 134, and 0 of 100 on `main` | 2026-09-27 | ✅ PR #109 (PR-91): each wrapper goes when its node takes the mesh, and 0 of 200 sessions crashed |
 
 ## 6. Guardrails (the safety contract for every PR)
 

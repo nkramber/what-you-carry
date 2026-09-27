@@ -4,7 +4,7 @@ Status: reference, written 2026-09-26. Written in ASD-STE100. It holds the insta
 
 ## What it does
 
-A launchd job on the Mac Mini of the owner runs every 15 minutes. It fetches `origin/main`, copies `.github/scripts/night-fixer.sh` from `origin/main`, and runs the copy. So the job runs the reviewed script of `main` alone, and it does nothing before the merge of PR #109.
+A launchd job on the Mac Mini of the owner runs every 15 minutes. It fetches `origin/main`, copies the folder `.github/scripts` of `origin/main`, and runs the copy of `night-fixer.sh`. So the job runs the reviewed scripts of `main` alone, and it does nothing before the merge of PR #109. The poll sends each notice with `notify-owner.sh` from the same copy. That script waits for the run of `notify.yml`, and a notice counts only when that run succeeds.
 
 When the newest night on `main` failed, and no session took that night, the script starts one Claude Code session. The session runs in a new worktree on the branch `fix/night-<run>`, with the prompt `docs/runbooks/night-fixer-prompt.md`. It skips each permission prompt, because the owner chose that (D-643).
 
@@ -36,7 +36,7 @@ The session fixes the night, runs the gitar pass and branch nights, and then run
   <array>
     <string>/bin/bash</string>
     <string>-c</string>
-    <string>set -euo pipefail; state="$HOME/Library/Application Support/wyc-night-fixer"; mkdir -p "$state"; cd /Volumes/SSD-1TB/what-you-carry; git fetch --quiet origin main; if ! git show origin/main:.github/scripts/night-fixer.sh > "$state/night-fixer.sh" 2>/dev/null; then echo "night-fixer: origin/main holds no poll script yet."; exit 0; fi; exec /bin/bash "$state/night-fixer.sh"</string>
+    <string>set -euo pipefail; state="$HOME/Library/Application Support/wyc-night-fixer"; mkdir -p "$state"; cd /Volumes/SSD-1TB/what-you-carry; git fetch --quiet origin main; rm -rf "$state/scripts"; mkdir -p "$state/scripts"; git archive origin/main .github/scripts | tar -x -C "$state/scripts"; if [ ! -f "$state/scripts/.github/scripts/night-fixer.sh" ]; then echo "night-fixer: origin/main holds no poll script yet."; exit 0; fi; exec /bin/bash "$state/scripts/.github/scripts/night-fixer.sh"</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict>

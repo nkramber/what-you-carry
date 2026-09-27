@@ -25,11 +25,9 @@ public static class ChunkNodes
                     continue;
                 }
 
-                instances.Add(new MeshInstance3D
-                {
-                    Mesh = ArrayMeshBuilder.Build(data),
-                    MaterialOverride = material,
-                });
+                MeshInstance3D instance = new() { MaterialOverride = material };
+                ArrayMeshBuilder.BuildInto(instance, data);
+                instances.Add(instance);
             }
         }
 

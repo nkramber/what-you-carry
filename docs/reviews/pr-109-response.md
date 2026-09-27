@@ -21,3 +21,35 @@ No new D-# or F-# id. The correction restores D-637 as written.
 ## PR head
 
 The correction commit is `69c946a`. The handoff commit of session 278 follows it.
+
+## Round 4 at `d32da6b`
+
+### P2-2: The poll marks a night handled when it only dispatches a notice
+
+Disposition: full merit.
+
+Evidence: at `d32da6b`, `notify` in `.github/scripts/night-fixer.sh` returned 0 when GitHub accepted `gh workflow run notify.yml`. A dispatch only puts a run in the queue, and the `notify` job fails when the send fails (D-642). The failed-setup path then marked the night handled with no delivered notice (D-645).
+
+Correction: the new script `.github/scripts/notify-owner.sh` dispatches `notify.yml` with a unique id, which the run name of `notify.yml` carries. It finds that run, and waits for it with `gh run watch --exit-status`. It exits 0 only when the run succeeds. The poll and the prompt send each notice through it, so a failed run keeps the night open for the next poll. The launchd job now copies the whole folder `.github/scripts` of `origin/main`, so the helper lies beside the poll.
+
+Regression check: `NightFixerTests.AFailedNoticeRunKeepsTheNightOpen` gives the fake a dispatch that GitHub accepts and a run that fails. The night stays out of `handled`. The test failed on the poll of `d32da6b`.
+
+### P2-3: A poll can remove a live lock before its PID is written
+
+Disposition: full merit.
+
+Evidence: at `d32da6b`, the lock was a directory, and the poll wrote `lock/pid` after it made the directory. A second poll in that gap read no process id, took the lock as stale, and removed it.
+
+Correction: the lock is a symbolic link whose target is the process id. `ln -sn` makes the link and its target in one call, so no lock exists with no process id. A lock that is no link, or whose target is no number, stops the poll with an error and stays. A stale lock goes only when it still names the same dead process, and a second poll that takes it first wins.
+
+Regression check: `NightFixerTests.ALockWithNoProcessIdStaysAndStopsThePoll` puts a lock with no process id in place, the state of the gap. The poll stops with exit code 1 and keeps the lock. It failed on the poll of `d32da6b`, which removed the lock and read on. `ALockOfAnotherFormStopsThePoll`, `ALiveLockStartsNoSession`, and `AStaleLockGoes` test the other lock states.
+
+### A defect found during the correction: F-177
+
+The full suite of the correction failed once in `SmokeSessionTests.HudConstructsHeadless`: the engine crashed after the end line. Under the load of eight busy processes, 3 of 100 smoke sessions at `adb371a` crashed at exit, and 0 of 100 on `main`. Without the two lines of F-161, 1 of 100 crashed. Each crash was in the .NET finalizer, which freed the leaked `ArrayMesh` wrappers of the chunk and box meshes after the engine shut down. The CI abort of `smoke-macos-arm64` at `6a2d1a8` had the same cause.
+
+The owner chose the fix of the cause in this PR. `ArrayMeshBuilder.BuildInto` gives the node the mesh and disposes the managed wrapper at once, and its three callers use it. With the fix, 0 of 200 smoke sessions crashed under the same load, and no run left a leak report. `GameShapeTests.EachMeshWrapperGoesWhenItsNodeTakesTheMesh` holds the rule.
+
+## PR head after round 4
+
+The corrections are in the commit after `adb371a`. The full suite and the new tests ran before the push.

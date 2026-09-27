@@ -17,14 +17,18 @@ public sealed class NightFixerTests
     private const string Sha = "0123456789abcdef0123456789abcdef01234567";
 
     // The fake reads its state from files beside it. run.txt holds the newest night on main, open.txt the count of open
-    // fix PRs, and a file read-fails makes each read fail. Each call goes to calls.log.
+    // fix PRs, and a file read-fails makes each read fail. A dispatch of notify.yml fails with the file notify-fails. Its
+    // run is 777, and that run fails with the file notify-run-fails. Each call goes to calls.log.
     private const string FakeGh = """
         #!/usr/bin/env bash
         dir="$(dirname "$0")"
         echo "$*" >> "$dir/calls.log"
         if [ -f "$dir/read-fails" ]; then echo "HTTP 502" >&2; exit 1; fi
         case "$1 $2" in
-          "run list") if [ -f "$dir/run.txt" ]; then cat "$dir/run.txt"; fi ;;
+          "run list")
+            case "$*" in *notify.yml*) echo 777; exit 0 ;; esac
+            if [ -f "$dir/run.txt" ]; then cat "$dir/run.txt"; fi ;;
+          "run watch") if [ -f "$dir/notify-run-fails" ]; then exit 1; fi ;;
           "pr list") cat "$dir/open.txt" 2>/dev/null || echo 0 ;;
           "workflow run") if [ -f "$dir/notify-fails" ]; then echo "HTTP 422" >&2; exit 1; fi; echo "$*" >> "$dir/notices.log" ;;
           *) echo "fake gh: unknown call $*" >&2; exit 9 ;;
@@ -100,24 +104,54 @@ public sealed class NightFixerTests
     [Fact]
     public void ALiveLockStartsNoSession()
     {
-        RunCase(new() { ["run.txt"] = $"47 completed failure {Sha}", ["state/lock/pid"] = Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture) }, (result, state) =>
+        string live = Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        RunCase(new() { ["run.txt"] = $"47 completed failure {Sha}" }, (result, state) =>
         {
             Assert.True(result.Exit == 0, result.Errors);
-            Assert.Contains($"the session of poll {Environment.ProcessId} runs", result.Output, StringComparison.Ordinal);
-            Assert.True(Directory.Exists(Path.Combine(state, "lock")), "The poll keeps the lock of a live session.");
-        });
+            Assert.Contains($"the session of poll {live} runs", result.Output, StringComparison.Ordinal);
+            Assert.Equal(live, new FileInfo(Path.Combine(state, "lock")).LinkTarget);
+        }, lockLink: live);
     }
 
-    /// <summary>A lock of a process that ended goes, and the poll reads on.</summary>
+    /// <summary>A lock of a process that ended goes, and the poll takes the lock and reads on.</summary>
     [Fact]
     public void AStaleLockGoes()
     {
-        RunCase(new() { ["run.txt"] = $"48 completed failure {Sha}", ["open.txt"] = "0", ["state/lock/pid"] = "999999" }, (result, _) =>
+        RunCase(new() { ["run.txt"] = $"48 completed failure {Sha}", ["open.txt"] = "0" }, (result, _) =>
         {
             Assert.True(result.Exit == 0, result.Errors);
-            Assert.Contains("the lock of poll '999999' stays after its end", result.Output, StringComparison.Ordinal);
+            Assert.Contains("the lock of poll 999999 stays after its end", result.Output, StringComparison.Ordinal);
             Assert.Contains("a session would start for the night 48", result.Output, StringComparison.Ordinal);
-        });
+        }, lockLink: "999999");
+    }
+
+    /// <summary>
+    /// PR #109 review P2-3. A lock with no process id is the state of the old lock between its directory and its pid
+    /// file, while a live poll writes it. The poll stops with an error and leaves the lock. The old poll removed such a
+    /// lock as stale, and two polls then passed it. The new lock names its process id from its first moment.
+    /// </summary>
+    [Fact]
+    public void ALockWithNoProcessIdStaysAndStopsThePoll()
+    {
+        RunCase(new() { ["run.txt"] = $"51 completed failure {Sha}", ["open.txt"] = "0" }, (result, state) =>
+        {
+            Assert.Equal(1, result.Exit);
+            Assert.Contains("is no link, so it names no process id, and this poll stops", result.Errors, StringComparison.Ordinal);
+            Assert.Empty(Directory.GetFileSystemEntries(Path.Combine(state, "lock")));
+            Assert.True(Directory.Exists(Path.Combine(state, "lock")), "The poll keeps a lock that names no process id.");
+            Assert.DoesNotContain("a session would start", result.Output, StringComparison.Ordinal);
+        }, lockDirectory: true);
+    }
+
+    /// <summary>PR #109 review P2-3. A lock whose target is no number stops the poll, and the lock stays.</summary>
+    [Fact]
+    public void ALockOfAnotherFormStopsThePoll()
+    {
+        RunCase(new() { ["run.txt"] = $"52 completed failure {Sha}", ["open.txt"] = "0" }, (result, state) =>
+        {
+            Assert.Equal(1, result.Exit);
+            Assert.Equal("not-a-pid", new FileInfo(Path.Combine(state, "lock")).LinkTarget);
+        }, lockLink: "not-a-pid");
     }
 
     /// <summary>
@@ -135,18 +169,36 @@ public sealed class NightFixerTests
             string notices = File.ReadAllText(Path.Combine(Path.GetDirectoryName(state)!, "notices.log"));
             Assert.Contains("workflow run notify.yml --repo nkramber/what-you-carry --ref main", notices, StringComparison.Ordinal);
             Assert.Contains("The setup of the session for the night 49 failed", notices, StringComparison.Ordinal);
+            Assert.Contains("-f id=", notices, StringComparison.Ordinal);
+            Assert.Contains("run watch 777 --repo nkramber/what-you-carry --exit-status", File.ReadAllText(Path.Combine(Path.GetDirectoryName(state)!, "calls.log")), StringComparison.Ordinal);
+            Assert.Contains("the run 777 delivered the notice", result.Output, StringComparison.Ordinal);
             Assert.Equal("49\n", File.ReadAllText(Path.Combine(state, "handled")));
         }, []);
     }
 
-    /// <summary>PR #109 automated pass. A failed setup whose notice also fails keeps the night open, so the next poll tries again.</summary>
+    /// <summary>PR #109 automated pass. A failed setup whose notice fails at the dispatch keeps the night open, so the next poll tries again.</summary>
     [Fact]
     public void AFailedSetupWithNoNoticeKeepsTheNightOpen()
     {
         RunCase(new() { ["run.txt"] = $"50 completed failure {Sha}", ["open.txt"] = "0", ["notify-fails"] = "yes" }, (result, state) =>
         {
             Assert.Equal(1, result.Exit);
-            Assert.Contains("the notice 'What You Carry: the night fixer stopped' did not start", result.Errors, StringComparison.Ordinal);
+            Assert.Contains("the notice 'What You Carry: the night fixer stopped' did not reach the owner", result.Errors, StringComparison.Ordinal);
+            Assert.Equal(string.Empty, File.ReadAllText(Path.Combine(state, "handled")));
+        }, []);
+    }
+
+    /// <summary>
+    /// PR #109 review P2-2. A dispatch that GitHub accepts, whose run of notify.yml then fails, is no notice. The night
+    /// stays open, so the next poll tries again. The old poll counted the accepted dispatch as the notice.
+    /// </summary>
+    [Fact]
+    public void AFailedNoticeRunKeepsTheNightOpen()
+    {
+        RunCase(new() { ["run.txt"] = $"53 completed failure {Sha}", ["open.txt"] = "0", ["notify-run-fails"] = "yes" }, (result, state) =>
+        {
+            Assert.Equal(1, result.Exit);
+            Assert.Contains("the run 777 of notify.yml failed, so the notice", result.Errors, StringComparison.Ordinal);
             Assert.Equal(string.Empty, File.ReadAllText(Path.Combine(state, "handled")));
         }, []);
     }
@@ -175,8 +227,16 @@ public sealed class NightFixerTests
         Assert.Contains("git -C \"$checkout\" worktree add --quiet -b \"$branch\" \"$work\" origin/main", script, StringComparison.Ordinal);
         Assert.Contains("\"$work/docs/runbooks/night-fixer-prompt.md\"", script, StringComparison.Ordinal);
         Assert.Contains("claude -p \"$prompt\" --dangerously-skip-permissions", script, StringComparison.Ordinal);
-        Assert.Contains("gh workflow run notify.yml --repo \"$repo\" --ref main", script, StringComparison.Ordinal);
+        Assert.Contains("bash \"$(dirname \"$0\")/notify-owner.sh\"", script, StringComparison.Ordinal);
         Assert.Contains("--workflow night.yml --branch main --limit 1", script, StringComparison.Ordinal);
+        Assert.Contains("ln -sn \"$$\" \"$lock\"", script, StringComparison.Ordinal);
+
+        // A notice counts only when its run of notify.yml succeeds (PR #109 review P2-2).
+        string notice = RepositoryRoot.ReadFile(".github/scripts/notify-owner.sh");
+        Assert.Contains("gh workflow run notify.yml --repo \"$repo\" --ref main", notice, StringComparison.Ordinal);
+        Assert.Contains("-f id=\"$id\"", notice, StringComparison.Ordinal);
+        Assert.Contains("gh run watch \"$run\" --repo \"$repo\" --exit-status", notice, StringComparison.Ordinal);
+        Assert.Contains("run-name: Notify ${{ inputs.id }}", RepositoryRoot.ReadFile(".github/workflows/notify.yml"), StringComparison.Ordinal);
     }
 
     /// <summary>The prompt forbids the merge and each change of a setting, and names each stop and the notice at the end (D-643 to D-645).</summary>
@@ -226,8 +286,11 @@ public sealed class NightFixerTests
         Assert.DoesNotContain("${{ inputs.message }}\"", action, StringComparison.Ordinal);
     }
 
-    /// <summary>Runs the poll with --dry-run under bash, with the fake first on the path and the state in a new directory. Windows skips it.</summary>
-    private static void RunCase(Dictionary<string, string> files, Action<(int Exit, string Output, string Errors), string> check, string[]? arguments = null)
+    /// <summary>
+    /// Runs the poll with --dry-run under bash, with the fake first on the path and the state in a new directory. A lock
+    /// link names its target, and a lock directory is the old form with no process id. Windows skips it.
+    /// </summary>
+    private static void RunCase(Dictionary<string, string> files, Action<(int Exit, string Output, string Errors), string> check, string[]? arguments = null, string? lockLink = null, bool lockDirectory = false)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -247,6 +310,16 @@ public sealed class NightFixerTests
                 string path = Path.Combine(directory, name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                 File.WriteAllText(path, text + "\n");
+            }
+
+            if (lockLink is not null)
+            {
+                File.CreateSymbolicLink(Path.Combine(state, "lock"), lockLink);
+            }
+
+            if (lockDirectory)
+            {
+                Directory.CreateDirectory(Path.Combine(state, "lock"));
             }
 
             check(RunScript(directory, state, arguments ?? ["--dry-run"]), state);
@@ -271,10 +344,13 @@ public sealed class NightFixerTests
         start.Environment["PATH"] = fakeDirectory + Path.PathSeparator + path;
         start.Environment["WYC_FIXER_STATE"] = state;
         start.Environment["WYC_FIXER_REPO"] = fakeDirectory;
+        start.Environment["WYC_NOTIFY_TRIES"] = "2";
+        start.Environment["WYC_NOTIFY_PAUSE"] = "0";
 
         using Process process = Process.Start(start) ?? throw new InvalidOperationException("bash did not start.");
+        System.Threading.Tasks.Task<string> errorsTask = process.StandardError.ReadToEndAsync();
         string output = process.StandardOutput.ReadToEnd();
-        string errors = process.StandardError.ReadToEnd();
+        string errors = errorsTask.Result;
         process.WaitForExit();
         return (process.ExitCode, output, errors);
     }

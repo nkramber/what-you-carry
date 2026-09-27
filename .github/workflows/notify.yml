@@ -2,6 +2,8 @@
 # `gh workflow run notify.yml`, so the Mac holds no Pushover key: the job reads the repository secrets. Only an account
 # with write access can start it.
 name: Notify
+# The run name ends with the id of the request, so notify-owner.sh finds the run of its own dispatch and waits for it.
+run-name: Notify ${{ inputs.id }}
 
 on:
   workflow_dispatch:
@@ -22,6 +24,11 @@ on:
         default: "1"
       url:
         description: A link that the notification opens.
+        required: false
+        type: string
+        default: ""
+      id:
+        description: The id of the request, which the run name carries (PR #109 review P2-2).
         required: false
         type: string
         default: ""

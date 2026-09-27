@@ -61,10 +61,10 @@ public static class ModelNodes
             MeshInstance3D instance = new()
             {
                 Name = box.Name,
-                Mesh = ArrayMeshBuilder.Build(BoxGeometry.Build(model.Path, box, layout)),
                 MaterialOverride = material,
                 Position = RenderInterpolation.ToGodot(box.Pivot - model.Bones[box.Bone].Pivot),
             };
+            ArrayMeshBuilder.BuildInto(instance, BoxGeometry.Build(model.Path, box, layout));
             boneNodes[box.Bone].AddChild(instance);
         }
 
