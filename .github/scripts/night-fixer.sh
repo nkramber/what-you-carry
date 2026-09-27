@@ -88,12 +88,26 @@ if [ "$dry" = "yes" ]; then
   exit 0
 fi
 
-echo "$run" >> "$state/handled"
 branch="fix/night-${run}"
 work="${state}/work-${run}"
-git -C "$checkout" fetch --quiet origin main
-git -C "$checkout" worktree add --quiet -b "$branch" "$work" origin/main
-prompt=$(sed -e "s/RUN_ID/${run}/g" -e "s/RUN_SHA/${sha}/g" -e "s#FIX_BRANCH#${branch}#g" "$work/docs/runbooks/night-fixer-prompt.md")
+
+# The setup of the session: the fetch, the worktree, and the prompt. It prints the prompt.
+prepare() {
+  git -C "$checkout" fetch --quiet origin main >&2 || return 1
+  git -C "$checkout" worktree add --quiet -b "$branch" "$work" origin/main >&2 || return 1
+  sed -e "s/RUN_ID/${run}/g" -e "s/RUN_SHA/${sha}/g" -e "s#FIX_BRANCH#${branch}#g" "$work/docs/runbooks/night-fixer-prompt.md" || return 1
+}
+
+# The poll marks the night handled only after the setup, or after the notice of a failed setup. A setup that failed
+# with no notice keeps the night open, so the next poll tries again (T-2, PR #109 automated pass).
+if ! prompt=$(prepare); then
+  echo "night-fixer: the setup of the session for the night ${run} failed." >&2
+  notify "What You Carry: the night fixer stopped" "The setup of the session for the night ${run} failed, so no session started. Read ~/Library/Logs/wyc-night-fixer.log on the Mac Mini." \
+    "https://github.com/${repo}/actions/runs/${run}" || exit 1
+  echo "$run" >> "$state/handled"
+  exit 1
+fi
+echo "$run" >> "$state/handled"
 log="${state}/session-${run}.log"
 echo "night-fixer: the session for the night ${run} starts in ${work}, and it logs to ${log}."
 set +e

@@ -26,7 +26,7 @@ public sealed class NightFixerTests
         case "$1 $2" in
           "run list") if [ -f "$dir/run.txt" ]; then cat "$dir/run.txt"; fi ;;
           "pr list") cat "$dir/open.txt" 2>/dev/null || echo 0 ;;
-          "workflow run") echo "$*" >> "$dir/notices.log" ;;
+          "workflow run") if [ -f "$dir/notify-fails" ]; then echo "HTTP 422" >&2; exit 1; fi; echo "$*" >> "$dir/notices.log" ;;
           *) echo "fake gh: unknown call $*" >&2; exit 9 ;;
         esac
         """;
@@ -118,6 +118,37 @@ public sealed class NightFixerTests
             Assert.Contains("the lock of poll '999999' stays after its end", result.Output, StringComparison.Ordinal);
             Assert.Contains("a session would start for the night 48", result.Output, StringComparison.Ordinal);
         });
+    }
+
+    /// <summary>
+    /// PR #109 automated pass. A setup that fails, here a fetch in a folder with no git checkout, sends a notice and then
+    /// marks the night handled. The old poll marked the night first, and a failed setup then left it with no session
+    /// and no notice (T-2).
+    /// </summary>
+    [Fact]
+    public void AFailedSetupNotifiesTheOwnerAndThenMarksTheNight()
+    {
+        RunCase(new() { ["run.txt"] = $"49 completed failure {Sha}", ["open.txt"] = "0" }, (result, state) =>
+        {
+            Assert.Equal(1, result.Exit);
+            Assert.Contains("the setup of the session for the night 49 failed", result.Errors, StringComparison.Ordinal);
+            string notices = File.ReadAllText(Path.Combine(Path.GetDirectoryName(state)!, "notices.log"));
+            Assert.Contains("workflow run notify.yml --repo nkramber/what-you-carry --ref main", notices, StringComparison.Ordinal);
+            Assert.Contains("The setup of the session for the night 49 failed", notices, StringComparison.Ordinal);
+            Assert.Equal("49\n", File.ReadAllText(Path.Combine(state, "handled")));
+        }, []);
+    }
+
+    /// <summary>PR #109 automated pass. A failed setup whose notice also fails keeps the night open, so the next poll tries again.</summary>
+    [Fact]
+    public void AFailedSetupWithNoNoticeKeepsTheNightOpen()
+    {
+        RunCase(new() { ["run.txt"] = $"50 completed failure {Sha}", ["open.txt"] = "0", ["notify-fails"] = "yes" }, (result, state) =>
+        {
+            Assert.Equal(1, result.Exit);
+            Assert.Contains("the notice 'What You Carry: the night fixer stopped' did not start", result.Errors, StringComparison.Ordinal);
+            Assert.Equal(string.Empty, File.ReadAllText(Path.Combine(state, "handled")));
+        }, []);
     }
 
     [Fact]
