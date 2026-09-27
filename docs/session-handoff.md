@@ -14,9 +14,9 @@ Session: PR-77, reviewer. Branch `feat/pr-77-light-and-edges`. PR #118, review b
 
 ### State of the build
 
-- Remote head before publication: `0679715` on `feat/pr-77-light-and-edges`. The implementation head is `ce02802`.
+- The remote head before publication was `0679715`. The first review publication reached `9449f83`, verified with `gh pr view`. The implementation head is `ce02802`.
 - The focused contact sheet, atlas mesher, and game-shape tests passed: 112 of 112 on macOS arm64 with .NET 10.0.400.
-- CI, three smoke jobs, bit identity, asset QA, determinism lint, STE, documents, doc gate, night gate, and Gitar passed on `0679715`. The review gate failed because the review record was absent.
+- CI, three smoke jobs, bit identity, asset QA, determinism lint, STE, documents, doc gate, night gate, and Gitar passed on `0679715`. On `9449f83`, Gitar and the document checks passed. Code, smoke, and bit-identity jobs skipped because the push changed documents only. `evaluate` and `review-gate` failed because the review verdict is blocked.
 
 ### In flight
 
