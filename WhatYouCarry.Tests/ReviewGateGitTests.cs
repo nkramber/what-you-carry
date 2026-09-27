@@ -149,6 +149,20 @@ public sealed class ReviewGateGitTests
         Assert.Contains(directory, result.Summary, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// F-176. Each git call of the temporary repository runs with auto maintenance and auto gc off, so no detached git
+    /// process writes into <c>.git</c> during the delete of the repository. The old helper set neither, and on the Git
+    /// 2.55 of the Linux runner the delete failed with "Directory not empty".
+    /// </summary>
+    [Fact]
+    public void TheTemporaryRepositoryRunsNoBackgroundMaintenance()
+    {
+        using var repo = new TemporaryGitRepository();
+        Assert.Equal("false", repo.Git(["config", "--get", "maintenance.auto"]).Trim());
+        Assert.Equal("0", repo.Git(["config", "--get", "gc.auto"]).Trim());
+        Assert.Contains("maintenance.auto=false", TemporaryGitRepository.Configuration);
+    }
+
     [Fact]
     public void TheWorkHeadMovesOnADirectoryWithTheNameOfAMetadataFile()
     {

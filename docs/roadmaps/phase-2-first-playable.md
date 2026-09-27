@@ -1358,6 +1358,7 @@ Scope:
 - `RunRecord`: the header ends with a CRC-32, and the format version is 2 (D-637, F-172). The bit-identity sweep takes a new known answer.
 - `Directory.Build.props`: a low or moderate NuGet advisory is a warning (D-639, F-174). The projects keep no lock file (D-641, F-173).
 - The decision register: the Codex CLI stays at the newest release (D-640, F-175).
+- `TemporaryGitRepository`: each git call turns auto maintenance and auto gc off, a defect that the CI of this PR found (F-176).
 
 Out of scope: the other open findings of the repository review of 2026-09-24, which later PRs of D-596 hold. This PR holds more than one concern (D-618).
 
@@ -1384,12 +1385,13 @@ Exit tests:
 19. `EachActionUseNamesAPinnedCommit` and `DependabotProposesThePins` pass, and they fail on the workflows of `main`.
 20. `EachFlippedBitOfTheHeaderIsAnError` passes, and it fails on the header of `main`.
 21. `OnlyHighAndCriticalAdvisoriesFail` passes, and it fails on the build properties of `main`.
+22. `TheTemporaryRepositoryRunsNoBackgroundMaintenance` passes, and it fails on the helper of `main`.
 
 Review focus: the path of each content error, the check of the dropped dig task, and the scan of the engine arguments.
 
 Check clause: none.
 
-Gate: exit tests 1 to 21 pass.
+Gate: exit tests 1 to 22 pass.
 
 > *In plain English:* the repository review left faults open. Some content errors named no file, a failed background dig left no trace, and a test command in the wrong order passed. This PR fixes twenty-six of them.
 
