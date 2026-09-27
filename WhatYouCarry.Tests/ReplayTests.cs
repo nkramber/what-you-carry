@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
@@ -123,6 +124,114 @@ public sealed class ReplayTests
         Assert.Equal(3, result.TornBytes);
     }
 
+    /// <summary>
+    /// D-656 (RR-P3-5(b)). A crash can leave whole frames of zeros at the end of the file, and the CRC-32 of twelve
+    /// zero bytes is not zero. The replay cuts the tail at the first frame of zeros, and the frames before it replay to
+    /// the live state. Zero bytes are a whole record with no line, 8 and 20 and 40 bytes end in a short frame, and 16
+    /// and 32 bytes are one and two whole frames of zeros.
+    /// </summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(8)]
+    [InlineData(16)]
+    [InlineData(20)]
+    [InlineData(32)]
+    [InlineData(40)]
+    public void ATailOfZerosIsCut(int zeros)
+    {
+        (byte[] whole, string liveHash) = RecordRun(83UL, 10, new Random(10));
+        byte[] padded = new byte[whole.Length + zeros];
+        whole.CopyTo(padded, 0);
+
+        CollectingSink logs = new();
+        ReplayResult result = RunReplayer.Replay(padded, TestWorld.PeacefulContent, new JsonlLogger(logs));
+
+        Assert.Equal(10, result.FrameCount);
+        Assert.Equal(10U, result.Loop.Tick);
+        Assert.Equal(liveHash, result.Loop.Hash().ToString());
+        Assert.Equal(zeros, result.TornBytes);
+        if (zeros == 0)
+        {
+            Assert.Empty(logs.Lines);
+        }
+        else
+        {
+            string line = Assert.Single(logs.Lines);
+            Assert.Contains("\"level\":\"warning\"", line, StringComparison.Ordinal);
+            Assert.Contains("\"tick\":10", line, StringComparison.Ordinal);
+            Assert.Contains($"\"tornBytes\":{zeros}", line, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>
+    /// D-656. A torn short frame after frames of zeros is cut with them when it holds zeros too. A short frame of data
+    /// after one frame of zeros is not a tail of zeros, so it is an error that names the frame of zeros.
+    /// </summary>
+    [Fact]
+    public void AShortFrameAfterZerosIsCutOnlyWhenItIsZero()
+    {
+        (byte[] whole, _) = RecordRun(84UL, 4, new Random(11));
+        int headerLength = whole.Length - (4 * Intent.FrameSize);
+        byte[] nextFrame = new Intent(4U, 5, 5, 1, 1, 0).Encode();
+
+        byte[] zeroThenTorn = new byte[whole.Length + Intent.FrameSize + 7];
+        whole.CopyTo(zeroThenTorn, 0);
+        Array.Copy(nextFrame, 0, zeroThenTorn, whole.Length + Intent.FrameSize, 7);
+
+        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(zeroThenTorn, TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink())));
+        SimulationTests.AssertContextField(error, "frame", "4");
+        SimulationTests.AssertContextField(error, "byteOffset", (headerLength + (4 * Intent.FrameSize)).ToString(CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>
+    /// D-656, T-2. A frame of zeros followed by a byte that is not zero is data that changed, and never a torn tail:
+    /// the error names the frame, its byte offset in the record, and the byte that is not zero. The byte sits in the
+    /// last place of the frame of zeros, and in the first byte after it.
+    /// </summary>
+    [Theory]
+    [InlineData(Intent.FrameSize - 1)]
+    [InlineData(Intent.FrameSize)]
+    [InlineData(Intent.FrameSize + 9)]
+    public void ZerosFollowedByDataAreAnError(int nonZeroAt)
+    {
+        (byte[] whole, _) = RecordRun(85UL, 6, new Random(12));
+        int headerLength = whole.Length - (6 * Intent.FrameSize);
+        byte[] record = new byte[whole.Length + (2 * Intent.FrameSize)];
+        whole.CopyTo(record, 0);
+        record[whole.Length + nonZeroAt] = 0x01;
+
+        TickObserver observer = new();
+        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink()), observer));
+
+        string offset = (headerLength + (6 * Intent.FrameSize)).ToString(CultureInfo.InvariantCulture);
+        string nonZero = (whole.Length + nonZeroAt).ToString(CultureInfo.InvariantCulture);
+        SimulationTests.AssertContextField(error, "frame", "6");
+        SimulationTests.AssertContextField(error, "byteOffset", offset);
+        SimulationTests.AssertContextField(error, "nonZeroByte", nonZero);
+        SimulationTests.AssertContextField(error, "seed", "85");
+        Assert.Contains("fails its checksum", error.Message, StringComparison.Ordinal);
+        Assert.Contains("not a torn tail", error.Message, StringComparison.Ordinal);
+
+        // The check runs before the first tick, so a record with a bad frame replays nothing.
+        Assert.Empty(observer.Ticks);
+    }
+
+    /// <summary>
+    /// D-656, T-2. A frame of zeros in the middle of the record, with whole frames after it, is an error and never a
+    /// cut, because the frames after it are data.
+    /// </summary>
+    [Fact]
+    public void AFrameOfZerosInTheMiddleIsAnError()
+    {
+        (byte[] record, _) = RecordRun(86UL, 6, new Random(13));
+        int headerLength = record.Length - (6 * Intent.FrameSize);
+        Array.Clear(record, headerLength + (3 * Intent.FrameSize), Intent.FrameSize);
+
+        ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink())));
+        SimulationTests.AssertContextField(error, "frame", "3");
+        SimulationTests.AssertContextField(error, "byteOffset", (headerLength + (3 * Intent.FrameSize)).ToString(CultureInfo.InvariantCulture));
+    }
+
     /// <summary>PR-6 exit test 3. One flipped bit in a frame is an error that names the frame (D-162, T-2).</summary>
     [Fact]
     public void FrameChecksumDetectsFlip()
@@ -134,6 +243,7 @@ public sealed class ReplayTests
         ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink())));
         Assert.Contains("frame=2", error.Message, StringComparison.Ordinal);
         Assert.Contains("storedChecksum", error.Message, StringComparison.Ordinal);
+        SimulationTests.AssertContextField(error, "byteOffset", (headerLength + (2 * Intent.FrameSize)).ToString(CultureInfo.InvariantCulture));
     }
 
     /// <summary>A frame whose tick is out of order is an error that names the frame, even with a valid checksum.</summary>
@@ -251,7 +361,7 @@ public sealed class ReplayTests
     {
         string body = "{\"formatVersion\":2,\"simulationVersion\":" + SimulationVersion.Value + ",\"contentHash\":\"" + Hash + "\",\"seed\":42,\"loadout\":[],\"tree\":[],\"amulet\":null";
         byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
-        string expected = body + ",\"headerCrc\":" + Crc32.Of(bodyBytes, 0, bodyBytes.Length).ToString(System.Globalization.CultureInfo.InvariantCulture) + "}\n";
+        string expected = body + ",\"headerCrc\":" + Crc32.Of(bodyBytes, 0, bodyBytes.Length).ToString(CultureInfo.InvariantCulture) + "}\n";
         Assert.Equal(expected, Encoding.UTF8.GetString(RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 42UL))));
     }
 
@@ -305,7 +415,7 @@ public sealed class ReplayTests
         int seed = whole.IndexOf(",\"seed\":", StringComparison.Ordinal);
         string before = whole[..seed];
         byte[] covered = Encoding.UTF8.GetBytes(before);
-        string crc = Crc32.Of(covered, 0, covered.Length).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string crc = Crc32.Of(covered, 0, covered.Length).ToString(CultureInfo.InvariantCulture);
         string rest = whole[(seed + 1)..whole.IndexOf(CrcStart, StringComparison.Ordinal)].Replace(from, to, StringComparison.Ordinal);
         string moved = before + CrcStart + crc + "," + rest + "}\n";
 
@@ -337,7 +447,7 @@ public sealed class ReplayTests
         const string CrcStart = ",\"headerCrc\":";
         int at = header.LastIndexOf(CrcStart, StringComparison.Ordinal);
         byte[] body = Encoding.UTF8.GetBytes(header[..at]);
-        return header[..at] + CrcStart + Crc32.Of(body, 0, body.Length).ToString(System.Globalization.CultureInfo.InvariantCulture) + "}\n";
+        return header[..at] + CrcStart + Crc32.Of(body, 0, body.Length).ToString(CultureInfo.InvariantCulture) + "}\n";
     }
 
     /// <summary>A record with no line break holds no header, and that is an error and never an empty run.</summary>

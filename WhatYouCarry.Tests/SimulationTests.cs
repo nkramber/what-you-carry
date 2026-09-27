@@ -120,6 +120,27 @@ public sealed class SimulationTests
         Assert.Throws<ContextException>(() => Intent.Decode(frame, -1));
     }
 
+    /// <summary>
+    /// The stored checksum is the last four bytes of the frame, and the computed one is the CRC-32 of the twelve bytes
+    /// before them. A frame of zeros stores zero and computes a value that is not zero, so it never passes (D-656).
+    /// A read past the bytes is an error (T-2).
+    /// </summary>
+    [Fact]
+    public void IntentChecksumsReadTheFrameInPlace()
+    {
+        byte[] record = new byte[40];
+        new Intent(9U, 3, -3, 2, -2, 0x0010).Encode().CopyTo(record, 20);
+        Assert.Equal(Crc32.Of(record, 20, Intent.ChecksumOffset), Intent.StoredChecksum(record, 20));
+        Assert.Equal(Intent.StoredChecksum(record, 20), Intent.ComputedChecksum(record, 20));
+
+        Assert.Equal(0U, Intent.StoredChecksum(record, 0));
+        Assert.NotEqual(0U, Intent.ComputedChecksum(record, 0));
+
+        Assert.Throws<ContextException>(() => Intent.StoredChecksum(record, 25));
+        Assert.Throws<ContextException>(() => Intent.ComputedChecksum(record, 25));
+        Assert.Throws<ContextException>(() => Intent.StoredChecksum(record, -1));
+    }
+
     /// <summary>The loop runs at 60 Hz, and the simulation version is 17 since a death on the tick of a stairwell press stayed a death and a descend on the deepest floor did nothing (D-73, D-151, D-322, D-579, G-20).</summary>
     [Fact]
     public void TheConstantsHold()

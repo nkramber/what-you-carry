@@ -16,7 +16,8 @@ namespace WhatYouCarry.Core.Simulation;
 /// </para>
 /// <para>
 /// The checksum makes a flipped bit an error that names its frame. A frame is exactly 16 bytes, so a record needs
-/// no length prefix, and a torn tail is the bytes after the last multiple of 16 (D-152, D-226).
+/// no length prefix. The replay cuts a torn tail at the first frame that fails its checksum when that frame is
+/// short or holds zeros to the end of the record (D-152, D-226, D-656).
 /// </para>
 /// </remarks>
 public readonly record struct Intent(uint Tick, short YawDelta, short PitchDelta, sbyte MoveX, sbyte MoveY, ushort Buttons)
@@ -56,17 +57,9 @@ public readonly record struct Intent(uint Tick, short YawDelta, short PitchDelta
     /// <exception cref="ContextException">The bytes end inside the frame, or the checksum does not match the frame.</exception>
     public static Intent Decode(IReadOnlyList<byte> bytes, int offset)
     {
-        if (offset < 0 || bytes.Count - offset < FrameSize)
-        {
-            ContextException tooShort = new($"An intent frame needs {FrameSize} bytes, and the bytes hold {bytes.Count - offset} from the offset {offset}.");
-            tooShort.AddContext("offset", ((long)offset).ToString(CultureInfo.InvariantCulture));
-            tooShort.AddContext("bytes", ((long)bytes.Count).ToString(CultureInfo.InvariantCulture));
-            throw tooShort;
-        }
-
+        uint stored = StoredChecksum(bytes, offset);
+        uint computed = ComputedChecksum(bytes, offset);
         uint tick = ReadUInt32(bytes, offset);
-        uint stored = ReadUInt32(bytes, offset + ChecksumOffset);
-        uint computed = Crc32.Of(bytes, offset, ChecksumOffset);
 
         // A checksum that differs means the bytes changed after the recorder wrote them. The frame is not an
         // intent then, and a replay that took it would diverge in silence (T-2, D-162).
@@ -88,6 +81,41 @@ public readonly record struct Intent(uint Tick, short YawDelta, short PitchDelta
             (ushort)(bytes[offset + 10] | (bytes[offset + 11] << 8)));
     }
 
+    /// <summary>The checksum that the frame from <paramref name="offset"/> stores in its last four bytes.</summary>
+    /// <exception cref="ContextException">The bytes end inside the frame.</exception>
+    public static uint StoredChecksum(IReadOnlyList<byte> bytes, int offset)
+    {
+        RequireFrame(bytes, offset);
+        return ReadUInt32(bytes, offset + ChecksumOffset);
+    }
+
+    /// <summary>The CRC-32 of the twelve bytes before the checksum of the frame from <paramref name="offset"/>.</summary>
+    /// <exception cref="ContextException">The bytes end inside the frame.</exception>
+    public static uint ComputedChecksum(IReadOnlyList<byte> bytes, int offset)
+    {
+        RequireFrame(bytes, offset);
+        return Crc32.Of(bytes, offset, ChecksumOffset);
+    }
+
+    /// <summary>A checksum as eight lowercase hexadecimal digits with a 0x prefix.</summary>
+    internal static string Hex(uint value)
+    {
+        return "0x" + ((ulong)value).ToString("x8", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>Checks that <see cref="FrameSize"/> bytes follow <paramref name="offset"/>.</summary>
+    /// <exception cref="ContextException">The bytes end inside the frame.</exception>
+    private static void RequireFrame(IReadOnlyList<byte> bytes, int offset)
+    {
+        if (offset < 0 || bytes.Count - offset < FrameSize)
+        {
+            ContextException tooShort = new($"An intent frame needs {FrameSize} bytes, and the bytes hold {bytes.Count - offset} from the offset {offset}.");
+            tooShort.AddContext("offset", ((long)offset).ToString(CultureInfo.InvariantCulture));
+            tooShort.AddContext("bytes", ((long)bytes.Count).ToString(CultureInfo.InvariantCulture));
+            throw tooShort;
+        }
+    }
+
     /// <summary>One little-endian 32-bit word.</summary>
     private static uint ReadUInt32(IReadOnlyList<byte> bytes, int offset)
     {
@@ -95,11 +123,5 @@ public readonly record struct Intent(uint Tick, short YawDelta, short PitchDelta
             | ((uint)bytes[offset + 1] << 8)
             | ((uint)bytes[offset + 2] << 16)
             | ((uint)bytes[offset + 3] << 24);
-    }
-
-    /// <summary>A checksum as eight lowercase hexadecimal digits with a 0x prefix.</summary>
-    private static string Hex(uint value)
-    {
-        return "0x" + ((ulong)value).ToString("x8", CultureInfo.InvariantCulture);
     }
 }
