@@ -15,13 +15,15 @@ Session: PR-76, reviewer. Branch `feat/pr-76-enemy-models`. PR #117, pending mer
 
 ### State of the build
 
-- The PR tip before this metadata commit was `e1316ca`. CI, bit identity, smoke, asset QA, determinism lint, STE, doc gate, documents, night gate, bots, and Gitar passed on that tip. The focused local test filter passed 304 tests, and local asset QA reported zero findings.
-- `evaluate` and `review-gate` failed because the review record was absent before this commit. The review metadata commit does not change the effective head.
+- The PR head `fdfee53` passed `asset-qa`, `det-lint`, `doc-gate`, `documents`, `evaluate`, Gitar, `night-gate`, `review-gate`, and `ste-check`. The documents-only rule skipped the bit-identity, bot, CI, and smoke jobs on this metadata head.
+- The earlier implementation tip `e1316ca` passed CI on all three platforms, bit identity on all three platforms, smoke on all three platforms, asset QA, determinism lint, STE, doc gate, documents, night gate, bots, and Gitar.
+- The focused local test filter passed 304 tests. Local asset QA reported zero findings. The Documents category passed 254 tests, and local STE check reported zero findings.
+- `evaluate` and `review-gate` first failed because the review record was absent. Both passed after the review metadata was published.
 - Local STE check passed with zero findings. The Documents category passed 254 tests.
 
 ### In flight
 
-- The review record and this handoff entry need one metadata commit and a push to `feat/pr-76-enemy-models`.
+- The review record and Session 291 handoff are published to `feat/pr-76-enemy-models`.
 
 ### Traps and gotchas
 
@@ -34,7 +36,7 @@ None.
 
 ### Next concrete action
 
-Push the review metadata commit, then fetch and verify the PR head and remote status.
+Give the owner the merge summary and wait for the owner to decide whether to merge.
 
 ## Session 290: 2026-09-27, Claude Code
 
