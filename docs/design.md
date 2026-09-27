@@ -740,7 +740,7 @@ Gate: the exit tests of PR-92 in the focused roadmap pass, and the first night o
 The findings of the review of 2026-09-24 that stay open are the primary work after PR-90. The first session after PR-90 splits them into PRs of one concern each (D-596). PR-91 holds more than one (D-618).
 
 **PR-76: Enemy models.** 🔧
-The scavenger of PR-16 gains its own boxes and recipes, and the color swap gives it its colors (D-504, D-507, D-660 to D-663).
+The scavenger of PR-16 gains its own model, traced texel maps, and recipes, and the color swap paints each face that no view shows (D-504, D-507, D-660 to D-676). Each family file names its model, and the Game layer draws each enemy with it (D-673).
 Gate: the clip check and the smoke session pass, and the owner approves a contact sheet of the enemies.
 > *In plain English:* the enemies borrow a first-pass look. This change gives them their own bodies and colors.
 

@@ -1445,7 +1445,7 @@ Gate: exit tests 1 to 11 pass. Exit test 3 needs the first night on `main` after
 
 ### PR-76: Enemy models
 
-Scope: the enemy models of PR-16 gain their own boxes and recipes, and the color swap of D-507 gives each enemy its colors (D-339, D-504).
+Scope: the scavenger of PR-16 gains its own model, traced texel maps, and recipes (D-339, D-504, D-660 to D-676). The color swap of D-507 paints each face that no view shows. Each family file names its model, and the Game layer draws each enemy with it (D-673).
 
 Out of scope: the families of PR-36 to PR-42.
 
