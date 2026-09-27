@@ -159,6 +159,17 @@ public sealed class RepositoryShapeTests
     }
 
     [Fact]
+    public void ReviewGateRequestNamesTheRepositoryOfTheCheckSuites()
+    {
+        // D-653: the tool reads the check suites of the work head from the repository of the request. The value
+        // reaches jq as an argument from the environment, and never as shell text of an expression.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/review-gate.yml");
+        Assert.Contains("--arg repository \"$GITHUB_REPOSITORY\"", workflow, StringComparison.Ordinal);
+        Assert.Contains("repository: $repository,", workflow, StringComparison.Ordinal);
+        Assert.Contains("GH_TOKEN: ${{ github.token }}", workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReviewGateRunsOnPullRequestTarget()
     {
         // D-197: the workflow and the tool come from the base branch, and no step checks out the PR head.

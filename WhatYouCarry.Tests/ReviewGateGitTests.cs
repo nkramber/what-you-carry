@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using WhatYouCarry.Tools.ReviewGate;
 using Xunit;
@@ -299,10 +300,76 @@ public sealed class ReviewGateGitTests
         StartBranch(repo);
         string head = repo.Commit("docs: after the label", Files(("docs/design.md", "text")), LabelTime.AddMinutes(5));
 
-        ReviewGateResult result = Evaluate(repo, head, overrideLabel: true);
+        ReviewGateResult result = Evaluate(repo, head, overrideLabel: true, checkSuiteTimes: [LabelTime.AddMinutes(5)]);
 
         Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
         Assert.Contains(head, result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGateFailsOnOverrideLabelWhenACommitterDateBeforeTheLabelHidesALaterPush()
+    {
+        // D-653, RR-P3-11(f): the author can set the committer date to any value. A documents commit with a committer
+        // date before the label, pushed after the label, fails the condition. The old rule read the committer date and
+        // passed it.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string head = repo.Commit("docs: an old committer date", Files(("docs/design.md", "text")), LabelTime.AddHours(-2));
+
+        ReviewGateResult result = Evaluate(repo, head, overrideLabel: true, checkSuiteTimes: [LabelTime.AddMinutes(5)]);
+
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(head, result.Summary, StringComparison.Ordinal);
+        Assert.Contains(LabelTime.AddMinutes(5).ToString("O"), result.Summary, StringComparison.Ordinal);
+        Assert.Contains("Add the label again", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGatePassesOnOverrideLabelWhenACommitterDateAfterTheLabelHasAnEarlierPush()
+    {
+        // D-653: the push time decides, and the committer date does not count in either direction.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string head = repo.Commit("docs: a future committer date", Files(("docs/design.md", "text")), LabelTime.AddHours(2));
+
+        ReviewGateResult result = Evaluate(repo, head, overrideLabel: true, checkSuiteTimes: [LabelTime.AddMinutes(-5)]);
+
+        Assert.Equal(ReviewGateResult.Success, result.Conclusion);
+    }
+
+    [Fact]
+    public void ReviewGateReadsTheCheckSuitesOfTheWorkHeadAndNotOfThePullRequestHead()
+    {
+        // D-539, D-653: a handoff commit after the work head does not move it, so the gate reads the check suites of the
+        // work head alone.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string workHead = repo.Commit("docs: design", Files(("docs/design.md", "text")));
+        string head = repo.Commit("docs: handoff", Files(("docs/session-handoff.md", "entry")));
+        var readShas = new List<string>();
+
+        ReviewGateFacts facts = ReviewGateFacts.Gather(Request(repo, head, overrideLabel: true), sha =>
+        {
+            readShas.Add(sha);
+            return [LabelTime.AddMinutes(-5)];
+        });
+
+        Assert.Equal([workHead], readShas);
+        Assert.Equal(ReviewGateResult.Success, ReviewGateRules.Evaluate(facts).Conclusion);
+    }
+
+    [Fact]
+    public void ReviewGateReadsNoCheckSuiteWithoutTheLabel()
+    {
+        // D-653: the label rule alone reads the push time, so a run without the label makes no API call.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string head = repo.Commit("docs: design", Files(("docs/design.md", "text")));
+
+        ReviewGateFacts facts = ReviewGateFacts.Gather(Request(repo, head, overrideLabel: false), NoCheckSuiteRead);
+
+        Assert.Null(facts.WorkHeadCheckSuiteTimes);
+        Assert.Equal(head, facts.WorkHead?.Sha);
     }
 
     [Fact]
@@ -327,7 +394,7 @@ public sealed class ReviewGateGitTests
         StartBranch(repo);
         string head = repo.Commit("docs: a root document", Files((path, "text")), LabelTime.AddMinutes(-5));
 
-        ReviewGateResult result = Evaluate(repo, head, overrideLabel: true);
+        ReviewGateResult result = Evaluate(repo, head, overrideLabel: true, checkSuiteTimes: [LabelTime.AddMinutes(-5)]);
 
         Assert.Equal(ReviewGateResult.Success, result.Conclusion);
     }
@@ -366,6 +433,23 @@ public sealed class ReviewGateGitTests
         Assert.Throws<JsonException>(() => ReviewGateCommand.Evaluate(inputPath));
     }
 
+    [Fact]
+    public void ReviewGateCommandRejectsARequestWithoutTheRepository()
+    {
+        // D-653, T-2: the check suites of the work head come from the repository of the request, and no default names it.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string head = repo.Commit("docs: design", Files(("docs/design.md", "text")));
+        JsonObject request = JsonSerializer.SerializeToNode(Request(repo, head, overrideLabel: false))?.AsObject()
+            ?? throw new InvalidOperationException("The request serialized to JSON null.");
+        Assert.True(request.Remove(nameof(ReviewGateRequest.Repository)), "The serialized request has no repository field.");
+        string inputPath = Path.Combine(repo.Path, "request.json");
+        File.WriteAllText(inputPath, request.ToJsonString());
+
+        JsonException error = Assert.Throws<JsonException>(() => ReviewGateCommand.Evaluate(inputPath));
+        Assert.Contains("repository", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>A root commit on main with the advisory mode file, then a feature branch.</summary>
     private static void StartBranch(TemporaryGitRepository repo)
     {
@@ -373,10 +457,20 @@ public sealed class ReviewGateGitTests
         repo.CreateBranch("feature");
     }
 
-    private static ReviewGateResult Evaluate(TemporaryGitRepository repo, string head, bool overrideLabel = false)
+    /// <summary>
+    /// Gathers the facts with fixed check suite times for the work head, and applies the rules. With no times, a read
+    /// of the check suites fails the test, so each test that needs the push time names it (D-653).
+    /// </summary>
+    private static ReviewGateResult Evaluate(TemporaryGitRepository repo, string head, bool overrideLabel = false, DateTimeOffset[]? checkSuiteTimes = null)
     {
-        ReviewGateFacts facts = ReviewGateFacts.Gather(Request(repo, head, overrideLabel));
+        Func<string, IReadOnlyList<DateTimeOffset>> reader = checkSuiteTimes is null ? NoCheckSuiteRead : _ => checkSuiteTimes;
+        ReviewGateFacts facts = ReviewGateFacts.Gather(Request(repo, head, overrideLabel), reader);
         return ReviewGateRules.Evaluate(facts);
+    }
+
+    private static IReadOnlyList<DateTimeOffset> NoCheckSuiteRead(string sha)
+    {
+        throw new InvalidOperationException($"The test gives no check suites, and the gate read the check suites of {sha}.");
     }
 
     private static ReviewGateRequest Request(TemporaryGitRepository repo, string head, bool overrideLabel)
@@ -384,6 +478,7 @@ public sealed class ReviewGateGitTests
         return new ReviewGateRequest
         {
             RepositoryPath = repo.Path,
+            Repository = "owner/name",
             PullRequestNumber = PullRequestNumber,
             HeadSha = head,
             BaseRef = "main",

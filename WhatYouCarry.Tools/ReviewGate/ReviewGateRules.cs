@@ -14,7 +14,7 @@ public sealed record ReviewGateResult(string Conclusion, string Title, string Su
 }
 
 /// <summary>
-/// The rules of the review gate (D-179, D-181, D-184, D-185, D-190, D-534, D-541). Pure: the facts go in, and a result comes out.
+/// The rules of the review gate (D-179, D-181, D-184, D-185, D-190, D-534, D-539, D-541, D-653). Pure: the facts go in, and a result comes out.
 /// Every failure names the rule, the expected value, and the value found (T-2).
 /// </summary>
 public static class ReviewGateRules
@@ -111,21 +111,58 @@ public static class ReviewGateRules
         }
 
         // The label reads the work head and not the effective head, so a documents commit after the label needs the
-        // label again (D-190, D-539).
+        // label again (D-190, D-539). The time of the work head is its push time: the earliest creation time of a
+        // check suite that GitHub made for it. The committer date does not count, because the author can set it
+        // (D-653).
         DateTimeOffset labelTime = DateTimeOffset.Parse(labelEvent.CreatedAt, CultureInfo.InvariantCulture);
-        string workHeadText = facts.WorkHead?.Sha ?? "none (every commit in the range is a metadata commit)";
-        if (facts.WorkHead is not null && facts.WorkHead.CommitTime > labelTime)
+        if (facts.WorkHead is null)
         {
-            return Fail(
-                $"Override label '{OverrideLabel}': no commit outside the metadata set is newer than the label event (D-539)",
-                $"work head committed at or before {labelTime:O}",
-                $"work head {facts.WorkHead.Sha} committed at {facts.WorkHead.CommitTime:O}. Add the label again.");
+            return OverrideSuccess(labelEvent.Actor, labelTime, "none (every commit in the range is a metadata commit)");
         }
 
+        string workHead = facts.WorkHead.Sha;
+        string timeRule = $"Override label '{OverrideLabel}': no commit outside the metadata set is newer than the label event, by the push time of the work head (D-539, D-653)";
+        string expected = $"work head {workHead} pushed at or before the label event at {labelTime:O}";
+        if (facts.WorkHeadCheckSuiteTimes is null)
+        {
+            return Fail(timeRule, expected, $"the check suites of work head {workHead} were not read, so its push time is unknown");
+        }
+
+        DateTimeOffset? pushTime = EarliestTime(facts.WorkHeadCheckSuiteTimes);
+        if (pushTime is null)
+        {
+            return Fail(timeRule, expected, $"no check suite on work head {workHead}, so its push time is unknown. The label event is at {labelTime:O}");
+        }
+
+        if (pushTime.Value > labelTime)
+        {
+            return Fail(timeRule, expected, $"work head {workHead} pushed at {pushTime.Value:O}, after the label event at {labelTime:O}. Add the label again.");
+        }
+
+        return OverrideSuccess(labelEvent.Actor, labelTime, $"{workHead}, pushed at {pushTime.Value:O}");
+    }
+
+    private static ReviewGateResult OverrideSuccess(string actor, DateTimeOffset labelTime, string workHeadText)
+    {
         return new ReviewGateResult(
             ReviewGateResult.Success,
             $"Override by label '{OverrideLabel}'",
-            $"Label: {OverrideLabel}\nAdded by: {labelEvent.Actor} at {labelTime:O}\nWork head: {workHeadText}\nEvery changed path is in the skip set of D-475 (D-190, D-541).");
+            $"Label: {OverrideLabel}\nAdded by: {actor} at {labelTime:O}\nWork head: {workHeadText}\nEvery changed path is in the skip set of D-475 (D-190, D-541).");
+    }
+
+    /// <summary>The earliest of the times, or null when the list is empty.</summary>
+    private static DateTimeOffset? EarliestTime(IReadOnlyList<DateTimeOffset> times)
+    {
+        DateTimeOffset? earliest = null;
+        foreach (DateTimeOffset time in times)
+        {
+            if (earliest is null || time < earliest.Value)
+            {
+                earliest = time;
+            }
+        }
+
+        return earliest;
     }
 
     private static ReviewGateResult EvaluateReview(ReviewGateFacts facts, string mode)

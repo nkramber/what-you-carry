@@ -35,27 +35,43 @@ public sealed class ReviewGateFacts
     /// </summary>
     public required CommitStamp? WorkHead { get; init; }
 
+    /// <summary>
+    /// The creation time of each check suite that GitHub made for the work head, from every page of the API. The
+    /// earliest one is the push time of the work head (D-653). Gather reads it only for the override label, the one
+    /// rule that reads it, so it is null when the label is absent or the work head is absent. An empty list means that
+    /// the work head has no check suite.
+    /// </summary>
+    public required IReadOnlyList<DateTimeOffset>? WorkHeadCheckSuiteTimes { get; init; }
+
     /// <summary>The review file on the PR head, or null when it is absent (D-179).</summary>
     public required string? ReviewFileText { get; init; }
 
     /// <summary>The newest commit that changed the review file, or null when the file is absent. The output names it (D-198).</summary>
     public required CommitSubject? ReviewFileCommit { get; init; }
 
-    /// <summary>Reads the facts for a request from its git checkout.</summary>
-    public static ReviewGateFacts Gather(ReviewGateRequest request)
+    /// <summary>
+    /// Reads the facts for a request from its git checkout, and the check suites of the work head through the reader.
+    /// The command passes <see cref="CheckSuites.ReadCreationTimes"/>, and a test passes a fixed list.
+    /// </summary>
+    /// <param name="request">The request that the workflow writes.</param>
+    /// <param name="readCheckSuiteTimes">Returns the creation time of each check suite of the commit with the given hash (D-653).</param>
+    public static ReviewGateFacts Gather(ReviewGateRequest request, Func<string, IReadOnlyList<DateTimeOffset>> readCheckSuiteTimes)
     {
         var git = new GitRepository(request.RepositoryPath);
         string mergeBase = git.MergeBase(request.BaseRef, request.HeadSha);
+        bool hasOverrideLabel = request.Labels.Contains(ReviewGateRules.OverrideLabel);
+        CommitStamp? workHead = git.NewestCommitOutside(mergeBase, request.HeadSha, ReviewGateRules.MetadataPaths);
         return new ReviewGateFacts
         {
             PullRequestNumber = request.PullRequestNumber,
             HeadSha = request.HeadSha,
             ModeText = git.ReadFileOrNull(request.BaseRef, ReviewGateRules.ModeFilePath),
-            HasOverrideLabel = request.Labels.Contains(ReviewGateRules.OverrideLabel),
+            HasOverrideLabel = hasOverrideLabel,
             NewestOverrideLabelEvent = NewestEvent(request.OverrideLabelEvents),
             ChangedPaths = git.ChangedPaths(mergeBase, request.HeadSha),
             EffectiveHead = git.NewestCommitOutside(mergeBase, request.HeadSha, ReviewGateRules.SkipPaths),
-            WorkHead = git.NewestCommitOutside(mergeBase, request.HeadSha, ReviewGateRules.MetadataPaths),
+            WorkHead = workHead,
+            WorkHeadCheckSuiteTimes = hasOverrideLabel && workHead is not null ? readCheckSuiteTimes(workHead.Sha) : null,
             ReviewFileText = git.ReadFileOrNull(request.HeadSha, ReviewGateRules.ReviewFilePath(request.PullRequestNumber)),
             ReviewFileCommit = git.NewestCommitThatChanged(request.HeadSha, ReviewGateRules.ReviewFilePath(request.PullRequestNumber)),
         };

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using WhatYouCarry.Tools.CodexReview;
 using WhatYouCarry.Tools.ReviewGate;
 using Xunit;
@@ -10,6 +11,7 @@ namespace WhatYouCarry.Tests;
 public sealed class ReviewGateRulesTests
 {
     private const string Head = "0123456789abcdef0123456789abcdef01234567";
+    private static readonly DateTimeOffset LabelTime = DateTimeOffset.Parse("2026-09-07T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture);
 
     [Fact]
     public void ReviewGateIsNeutralWithNoReviewFile()
@@ -390,11 +392,108 @@ public sealed class ReviewGateRulesTests
     public void ReviewGateFailsOnOverrideLabelBeforeNewCommit()
     {
         ReviewGateFacts facts = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"],
-            commitTime: DateTimeOffset.Parse("2026-09-07T12:00:01Z", System.Globalization.CultureInfo.InvariantCulture));
+            checkSuiteTimes: [LabelTime.AddSeconds(1)]);
         ReviewGateResult result = ReviewGateRules.Evaluate(facts);
         Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
         Assert.Contains("Add the label again", result.Summary, StringComparison.Ordinal);
         AssertNamesRuleExpectedAndFound(result);
+    }
+
+    [Fact]
+    public void ReviewGateOverrideLabelNamesTheWorkHeadThePushTimeAndTheLabelTime()
+    {
+        // D-653: the failure names the work head, its push time, and the label time.
+        DateTimeOffset pushTime = LabelTime.AddMinutes(3);
+        ReviewGateFacts facts = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"], checkSuiteTimes: [pushTime]);
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(Head, result.Summary, StringComparison.Ordinal);
+        Assert.Contains(pushTime.ToString("O"), result.Summary, StringComparison.Ordinal);
+        Assert.Contains(LabelTime.ToString("O"), result.Summary, StringComparison.Ordinal);
+        Assert.Contains("D-653", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGatePassesOnOverrideLabelWhenTheWorkHeadWasPushedAtTheLabelTime()
+    {
+        // D-653: the label passes when its event is at or after the push time of the work head. The summary names both.
+        ReviewGateFacts facts = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"], checkSuiteTimes: [LabelTime]);
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+        Assert.Equal(ReviewGateResult.Success, result.Conclusion);
+        Assert.Contains($"{Head}, pushed at {LabelTime:O}", result.Summary, StringComparison.Ordinal);
+        Assert.Contains($"at {LabelTime:O}", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGateFailsOnOverrideLabelWhenTheWorkHeadHasNoCheckSuite()
+    {
+        // D-653, T-2: a work head with no check suite has no push time, and that fails the condition. It never passes.
+        ReviewGateFacts facts = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"], checkSuiteTimes: []);
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains($"no check suite on work head {Head}", result.Summary, StringComparison.Ordinal);
+        AssertNamesRuleExpectedAndFound(result);
+    }
+
+    [Fact]
+    public void ReviewGateOverrideLabelReadsTheEarliestCheckSuite()
+    {
+        // D-653: the push time is the earliest creation time of the check suites, whatever the order of the list. A
+        // later suite, for example the one of a check run that came after the label, does not move the push time.
+        ReviewGateFacts before = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"],
+            checkSuiteTimes: [LabelTime.AddMinutes(10), LabelTime.AddMinutes(-10), LabelTime.AddHours(1)]);
+        ReviewGateResult passed = ReviewGateRules.Evaluate(before);
+        Assert.Equal(ReviewGateResult.Success, passed.Conclusion);
+        Assert.Contains($"pushed at {LabelTime.AddMinutes(-10):O}", passed.Summary, StringComparison.Ordinal);
+
+        ReviewGateFacts after = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"],
+            checkSuiteTimes: [LabelTime.AddMinutes(20), LabelTime.AddMinutes(5)]);
+        ReviewGateResult failed = ReviewGateRules.Evaluate(after);
+        Assert.Equal(ReviewGateResult.Failure, failed.Conclusion);
+        Assert.Contains($"pushed at {LabelTime.AddMinutes(5):O}", failed.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGateFailsOnOverrideLabelWhenTheCheckSuitesWereNotRead()
+    {
+        // T-2: a work head without its check suites is an error, never a pass.
+        ReviewGateFacts read = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"]);
+        var facts = new ReviewGateFacts
+        {
+            PullRequestNumber = read.PullRequestNumber,
+            HeadSha = read.HeadSha,
+            ModeText = read.ModeText,
+            HasOverrideLabel = read.HasOverrideLabel,
+            NewestOverrideLabelEvent = read.NewestOverrideLabelEvent,
+            ChangedPaths = read.ChangedPaths,
+            EffectiveHead = read.EffectiveHead,
+            WorkHead = read.WorkHead,
+            WorkHeadCheckSuiteTimes = null,
+            ReviewFileText = read.ReviewFileText,
+            ReviewFileCommit = read.ReviewFileCommit,
+        };
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains($"the check suites of work head {Head} were not read", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CheckSuiteCreationTimesParseFromEachLine()
+    {
+        // D-653: gh prints one creation time for each check suite, from every page.
+        IReadOnlyList<DateTimeOffset> times = CheckSuites.ParseCreationTimes("owner/name", Head, "2026-09-07T11:00:00Z\n2026-09-07T12:30:00Z\n");
+        Assert.Equal(new[] { LabelTime.AddHours(-1), LabelTime.AddMinutes(30) }, times);
+        Assert.Empty(CheckSuites.ParseCreationTimes("owner/name", Head, string.Empty));
+    }
+
+    [Fact]
+    public void CheckSuiteCreationTimeOfNullIsAnError()
+    {
+        // T-2: jq prints null for an absent creation time, and that is an error that names the commit, never a time.
+        FormatException error = Assert.Throws<FormatException>(() => CheckSuites.ParseCreationTimes("owner/name", Head, "2026-09-07T11:00:00Z\nnull\n"));
+        Assert.Contains(Head, error.Message, StringComparison.Ordinal);
+        Assert.Contains("owner/name", error.Message, StringComparison.Ordinal);
+        Assert.Contains("'null'", error.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -403,7 +502,7 @@ public sealed class ReviewGateRulesTests
         // D-539: the label keeps the metadata set of D-190. A documents commit after the label has no effective head,
         // and the label still needs to come again.
         ReviewGateFacts facts = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"], documentsOnly: true,
-            commitTime: DateTimeOffset.Parse("2026-09-07T12:00:01Z", System.Globalization.CultureInfo.InvariantCulture));
+            checkSuiteTimes: [LabelTime.AddSeconds(1)]);
         ReviewGateResult result = ReviewGateRules.Evaluate(facts);
         Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
         Assert.Contains("Add the label again", result.Summary, StringComparison.Ordinal);
@@ -457,20 +556,20 @@ public sealed class ReviewGateRulesTests
         bool overrideLabel = false,
         string[]? changedPaths = null,
         bool labelEvent = true,
-        DateTimeOffset? commitTime = null,
+        DateTimeOffset[]? checkSuiteTimes = null,
         bool documentsOnly = false)
     {
-        DateTimeOffset labelTime = DateTimeOffset.Parse("2026-09-07T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture);
         return new ReviewGateFacts
         {
             PullRequestNumber = 7,
             HeadSha = Head,
             ModeText = mode,
             HasOverrideLabel = overrideLabel,
-            NewestOverrideLabelEvent = labelEvent ? new LabelEvent { CreatedAt = labelTime.ToString("O"), Actor = "owner-login" } : null,
+            NewestOverrideLabelEvent = labelEvent ? new LabelEvent { CreatedAt = LabelTime.ToString("O"), Actor = "owner-login" } : null,
             ChangedPaths = changedPaths ?? ["WhatYouCarry.Core/Core.cs"],
-            EffectiveHead = documentsOnly ? null : new CommitStamp(Head, commitTime ?? labelTime.AddHours(-1)),
-            WorkHead = new CommitStamp(Head, commitTime ?? labelTime.AddHours(-1)),
+            EffectiveHead = documentsOnly ? null : new CommitStamp(Head),
+            WorkHead = new CommitStamp(Head),
+            WorkHeadCheckSuiteTimes = checkSuiteTimes ?? [LabelTime.AddHours(-1)],
             ReviewFileText = reviewFile,
             ReviewFileCommit = reviewFile is null ? null : new CommitSubject("fedcba9876543210fedcba9876543210fedcba98", "docs: review PR #7"),
         };

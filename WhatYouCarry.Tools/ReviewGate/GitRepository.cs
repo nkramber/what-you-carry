@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Threading.Tasks;
 
 namespace WhatYouCarry.Tools.ReviewGate;
 
-/// <summary>A commit and its committer time.</summary>
-public sealed record CommitStamp(string Sha, DateTimeOffset CommitTime);
+/// <summary>
+/// A commit of a range, by its hash. It holds no committer date, because the author can set that date to any value,
+/// and no rule reads it (D-653).
+/// </summary>
+public sealed record CommitStamp(string Sha);
 
 /// <summary>A commit and its subject line.</summary>
 public sealed record CommitSubject(string Sha, string Subject);
@@ -83,7 +85,7 @@ public sealed class GitRepository
     /// <summary>The newest commit in the range that changes a path of the pathspecs, or null when no commit does.</summary>
     private CommitStamp? NewestCommitIn(string mergeBase, string head, IReadOnlyList<string> pathspecs)
     {
-        var args = new List<string> { "log", "-1", "--format=%H %cI", $"{mergeBase}..{head}", "--" };
+        var args = new List<string> { "log", "-1", "--format=%H", $"{mergeBase}..{head}", "--" };
         args.AddRange(pathspecs);
         string line = Run(args).Trim();
         if (line.Length == 0)
@@ -91,14 +93,12 @@ public sealed class GitRepository
             return null;
         }
 
-        string[] parts = line.Split(' ');
-        if (parts.Length != 2)
+        if (line.Contains(' ', StringComparison.Ordinal) || line.Contains('\n', StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"git log returned '{line}', and the expected form is '<sha> <ISO 8601 time>'.");
+            throw new InvalidOperationException($"git log returned '{line}', and the expected form is one '<sha>'.");
         }
 
-        DateTimeOffset time = DateTimeOffset.Parse(parts[1], CultureInfo.InvariantCulture);
-        return new CommitStamp(parts[0], time);
+        return new CommitStamp(line);
     }
 
     /// <summary>
