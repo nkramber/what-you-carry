@@ -135,14 +135,17 @@ public sealed class UserArgumentsTests
     }
 
     /// <summary>
-    /// PR-61 exit test 5. The user arguments of the smoke, test exit, bot, and contact sheet commands in `CLAUDE.md` parse
-    /// with no error, and so do the user arguments of every other command there with the separator.
+    /// PR-61 exit test 5. The user arguments of the smoke, test exit, bot, and contact sheet commands in `CLAUDE.md` and
+    /// in the section "The Godot sessions" of `docs/runbooks/commands.md` parse with no error, and so do the user
+    /// arguments of every other command there with the separator. PR-92 moved the Godot sessions to the runbook, to win
+    /// bytes in the agent files (RR-P3-26).
     /// </summary>
     [Fact]
     public void SessionCommandsParse()
     {
         List<string> commands = [];
-        foreach (string line in RepositoryRoot.ReadFile("CLAUDE.md").Split('\n'))
+        string text = RepositoryRoot.ReadFile("CLAUDE.md") + "\n" + RepositoryRoot.ReadFile("docs/runbooks/commands.md");
+        foreach (string line in text.Split('\n'))
         {
             string[] spans = line.Split('`');
             for (int index = 1; index < spans.Length; index += 2)
@@ -159,6 +162,9 @@ public sealed class UserArgumentsTests
         Assert.Contains("--smoke --press escape 100", commands);
         Assert.Contains("--bot --frame-log frames.txt", commands);
         Assert.Contains("--contact-sheet sheet.png", commands);
+        Assert.Contains("--bot --frame-log frames.txt --transitions 10", commands);
+        Assert.Contains("--bot --policy timer-tester --frame-log frames.txt", commands);
+        Assert.Contains("--hud-shot hud.png", commands);
         foreach (string command in commands)
         {
             Exception? error = Record.Exception(() => UserArguments.Parse(command.Split(' ')));

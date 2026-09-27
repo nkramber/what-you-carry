@@ -80,6 +80,6 @@ Load `.claude/skills/gitar-review/SKILL.md` after each push, and follow its proc
 - Do not answer a gitar notice: a comment with no specific item, such as "Gitar is working" or a plan notice (D-550).
 - A reply names no provider, harness, or model as the source of the work (T-6, D-176).
 - Resolve each thread after its reply, also after a fix. The ruleset of `main` needs each thread resolved (D-522).
-- When the pass ends and CI is green, run `make codex-review PR=<n>`, or apply the override label (D-511, D-517, D-577). The file `references/review-and-merge.md` of `one-pr-one-session` holds the loop and the auto-merge.
+- When the pass ends and CI is green, run `make codex-review PR=<n>`, or `make claude-review PR=<n>` for a PR that Codex writes. For a PR that changes no code, apply the override label yourself (D-511, D-517, D-577, D-649, D-652). The file `references/review-and-merge.md` of `one-pr-one-session` holds the loop and the auto-merge.
 - Record the pass in the handoff entry. Give the count of findings, the count with merit, and the commit that answered each one.
 - Record each `Gitar review` comment in the handoff entry too (D-303).
