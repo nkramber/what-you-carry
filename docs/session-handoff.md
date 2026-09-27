@@ -15,11 +15,11 @@ Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending mer
 
 ### State of the build
 
-- Remote code head: `db8b3c8`. Gitar and all product checks passed. `evaluate` and `review-gate` still read the earlier `Changes required` verdict. The review record and this entry form the metadata commit.
+- Remote metadata head: `e97c381`. The reviewed code head is `db8b3c8`. Fresh checks passed for Gitar, evaluate, review-gate, asset-qa, det-lint, ste-check, documents, doc-gate, and night-gate. CI, Smoke, bit identity, and bot jobs skipped under the documents-only rule.
 
 ### In flight
 
-- Only the metadata push and its fresh checks and Gitar wait remain.
+- A metadata update records the push result. Fresh document checks and the Gitar wait follow that push.
 
 ### Traps and gotchas
 
@@ -32,7 +32,7 @@ None for PR-109.
 
 ### Next concrete action
 
-Push the metadata commit, wait for fresh checks and Gitar, then give the owner the merge summary and request merge confirmation.
+Push the metadata update, wait for fresh checks and Gitar, then give the owner the merge summary and request merge confirmation.
 
 ## Session 284: 2026-09-27, Claude Code
 
