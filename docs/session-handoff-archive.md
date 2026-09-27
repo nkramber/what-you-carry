@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 274: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-90, reviewer. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+
+### What this session did, and why
+
+- Re-reviewed PR #108 after the author fixed P2-1. `e4d3543` checks the `IHDR` length before it reads fixed offsets.
+- Ran the focused screenshot-reader regression tests at `e4d3543`. All 5 passed, including the short-header case.
+- Updated `docs/reviews/pr-108.md`. P2-1 is fixed, and the verdict approves the effective head `e4d3543`.
+
+### State of the build
+
+- The remote head before this metadata commit was `1ce21f1`. The focused tests passed, and the Documents category passed 196 of 196. STE check passed. The local full suite stayed silent for more than three minutes, so this session interrupted it. The prior handoff reports 1867 of 1867 tests passed at `e4d3543`.
+- The live checks at `1ce21f1` pass for `det-lint`, `doc-gate`, `documents`, `night-gate`, and `ste-check`. The documents-only rule skips the full suite, smoke, asset QA, and bit identity on this metadata tip. `evaluate` and `review-gate` wait for this review record.
+
+### In flight
+
+- The review record and this entry need one metadata commit and a push to `feat/pr-90-texture-resolution`.
+
+### Traps and gotchas
+
+- The effective head is `e4d3543`; later commits change documents only.
+- The source screenshots are absent from this worktree. D-616 records owner approval of the contact sheet.
+
+### Open questions that block progress
+
+None. OQ-208 is resolved by D-603 to D-608.
+
+### Next concrete action
+
+Commit this entry with `docs/reviews/pr-108.md`, push to the PR branch, and verify the remote head.
+
 ## Session 273: 2026-09-26, Claude Code
 
 Author: Claude Code

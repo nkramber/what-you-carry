@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 284: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- The gitar pass of `c505fa9` found that the fixer marked a night handled before its setup. `d32da6b` fixed it, and the thread is resolved.
+- Review round 4 (session 283) gave `Changes required` at `d32da6b` with P2-2 (a queued notice counted as delivered) and P2-3 (a race in the lock). `09c8695` fixes both, and `docs/reviews/pr-109-response.md` records them.
+- The suite of that correction found F-177, an engine crash at exit from leaked mesh wrappers. Under load, the PR head crashed in 3 of 100 smoke sessions, `main` in 0 of 100. The owner chose the fix of the cause, and 200 sessions then gave 0 crashes.
+- The launchd job now copies the folder `.github/scripts` of `origin/main`, so the helper `notify-owner.sh` lies beside the poll. The job is reloaded on this Mac.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The code head is `09c8695`. The full suite passed 1937 of 1937 at `09c8695` on macOS.
+
+### In flight
+
+- The push, the gitar pass, CI, and review round 5.
+
+### Traps and gotchas
+
+- The auto mode of the harness came back on by itself several times and blocked the fixer work. The owner switched it off each time.
+- F-177 shows under load alone: 0 of 70 plain runs crashed. A stress loop with eight `yes` processes gives the rate.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+Push, finish the gitar pass and CI, run review round 5, then ask the owner to confirm the merge.
+
 ## Session 283: 2026-09-27, Codex
 
 Author: Codex
@@ -299,36 +332,3 @@ None for PR-90.
 ### Next concrete action
 
 After the merge, the next session starts the open review findings of D-596, as the phase 2 roadmap orders.
-
-## Session 274: 2026-09-26, Codex
-
-Author: Codex
-Session: PR-90, reviewer. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
-
-### What this session did, and why
-
-- Re-reviewed PR #108 after the author fixed P2-1. `e4d3543` checks the `IHDR` length before it reads fixed offsets.
-- Ran the focused screenshot-reader regression tests at `e4d3543`. All 5 passed, including the short-header case.
-- Updated `docs/reviews/pr-108.md`. P2-1 is fixed, and the verdict approves the effective head `e4d3543`.
-
-### State of the build
-
-- The remote head before this metadata commit was `1ce21f1`. The focused tests passed, and the Documents category passed 196 of 196. STE check passed. The local full suite stayed silent for more than three minutes, so this session interrupted it. The prior handoff reports 1867 of 1867 tests passed at `e4d3543`.
-- The live checks at `1ce21f1` pass for `det-lint`, `doc-gate`, `documents`, `night-gate`, and `ste-check`. The documents-only rule skips the full suite, smoke, asset QA, and bit identity on this metadata tip. `evaluate` and `review-gate` wait for this review record.
-
-### In flight
-
-- The review record and this entry need one metadata commit and a push to `feat/pr-90-texture-resolution`.
-
-### Traps and gotchas
-
-- The effective head is `e4d3543`; later commits change documents only.
-- The source screenshots are absent from this worktree. D-616 records owner approval of the contact sheet.
-
-### Open questions that block progress
-
-None. OQ-208 is resolved by D-603 to D-608.
-
-### Next concrete action
-
-Commit this entry with `docs/reviews/pr-108.md`, push to the PR branch, and verify the remote head.
