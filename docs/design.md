@@ -413,6 +413,9 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-187 | Three process rules disagreed: who applies the override label, a session that changes nothing, and the unit of the three-strike count (RR-P3-23(a), (c), (d)) | 2026-09-24 | ✅ PR #116 (PR-92): D-652, D-650, and D-651, and the markers on D-146, D-188, D-190, D-513, and D-514 |
 | F-188 | Dependabot security updates and secret scanning were off on the public repository (RR-P3-14) | 2026-09-24 | ✅ PR #116 (PR-92): each setting is on (D-657) |
 | F-189 | `AGENTS.md` held 14980 of its 15000 bytes, so a rule change had no room (RR-P3-26) | 2026-09-24 | ✅ PR #116 (PR-92): the Godot sessions move to `docs/runbooks/commands.md`, and the file holds about 14600 bytes |
+| F-190 | On the Deck in desktop mode, over SSH, a frame of 18 to 19 ms comes every 2.245 seconds, also in an empty scene, so the game code does not cause it | 2026-09-27 | ⚠ PR-77: exit test 2 excludes it (D-683). A check in Game Mode is open |
+| F-191 | The bot run on the Deck has frames of 26 to 30 ms after the first 10 seconds, on `main` too | 2026-09-27 | 🔧 PR-77 (D-683) |
+| F-192 | The floor transition takes 31 to 40 ms on the Deck, over the budget of 22222 microseconds of D-635 | 2026-09-27 | 🔧 PR-77 (D-683) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
