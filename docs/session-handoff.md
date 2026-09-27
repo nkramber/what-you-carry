@@ -1,3 +1,38 @@
+# Session handoff
+
+Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
+
+## Session 296: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-77, author. Branch `feat/pr-77-light-and-edges`. PR #118, pending merge. Base `3fdefef`.
+
+### What this session did, and why
+
+- Read the second review of session 295. The record gives `Ready for owner merge` for the effective head `ce02802`, with no finding.
+- Moved the title and the rule line of this file back above the newest entry, where session 295 had put its entry.
+
+### State of the build
+
+- Each check of PR #118 is green at `fc85d96`, `review-gate` and `evaluate` included. The effective head stays `ce02802`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #118 (D-524, D-533).
+- PR-92 exit test 3 waits for the scheduled night of 07:07 UTC on 2026-09-28.
+
+### Traps and gotchas
+
+- A review entry can land above the title line of this file. Put the title and the rule line back on top, and keep the entry text as it is.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, check the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
+
 ## Session 295: 2026-09-27, Codex
 
 Author: Codex
@@ -35,10 +70,6 @@ None.
 ### Next concrete action
 
 The owner reads the review, confirms the merge summary of D-533, and then merges PR #118.
-
-# Session handoff
-
-Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
 ## Session 294: 2026-09-27, Claude Code
 
@@ -325,36 +356,3 @@ None for PR-92.
 ### Next concrete action
 
 Finish the review loop of PR #116. The frame costs of F-184 wait for M-3 and PR-77.
-
-## Session 286: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-91, author, merge. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
-
-### What this session did, and why
-
-- The gitar pass of `50862e5` suggested a guard for the removal of a stale fixer lock. `db8b3c8` added it, and the thread is resolved.
-- Review round 5 (session 285) gave `Ready for owner merge` at the effective head `db8b3c8`, with P2-1 to P2-3 fixed.
-- The round ran past the limit of 60 minutes of D-627, because the reviewer ran its own smoke stress test. It pushed the record and its handoff first, and `codex-review` then stopped it with a fault. The limit worked as D-627 states.
-- The session asks the owner to confirm the merge with the merge summary (D-533).
-
-### State of the build
-
-- Remote `main` is `4a20b82`. The effective head is `db8b3c8`. Each check passed at `db8b3c8`, and the review gate passed at the tip.
-
-### In flight
-
-- The owner confirmation, then `gh pr merge 109 --auto --squash` (D-516).
-
-### Traps and gotchas
-
-- After the merge, the launchd job `com.whatyoucarry.night-fixer` starts to act on each failed night on `main`. `docs/runbooks/night-fixer.md` holds its stop and its removal.
-- A review round that runs its own stress test can pass the limit of D-627.
-
-### Open questions that block progress
-
-None for PR-91.
-
-### Next concrete action
-
-After the merge, the next session continues the open findings of D-596, which wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.

@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 286: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-91, author, merge. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- The gitar pass of `50862e5` suggested a guard for the removal of a stale fixer lock. `db8b3c8` added it, and the thread is resolved.
+- Review round 5 (session 285) gave `Ready for owner merge` at the effective head `db8b3c8`, with P2-1 to P2-3 fixed.
+- The round ran past the limit of 60 minutes of D-627, because the reviewer ran its own smoke stress test. It pushed the record and its handoff first, and `codex-review` then stopped it with a fault. The limit worked as D-627 states.
+- The session asks the owner to confirm the merge with the merge summary (D-533).
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective head is `db8b3c8`. Each check passed at `db8b3c8`, and the review gate passed at the tip.
+
+### In flight
+
+- The owner confirmation, then `gh pr merge 109 --auto --squash` (D-516).
+
+### Traps and gotchas
+
+- After the merge, the launchd job `com.whatyoucarry.night-fixer` starts to act on each failed night on `main`. `docs/runbooks/night-fixer.md` holds its stop and its removal.
+- A review round that runs its own stress test can pass the limit of D-627.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+After the merge, the next session continues the open findings of D-596, which wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
+
 ## Session 285: 2026-09-27, Codex
 
 Author: Codex
