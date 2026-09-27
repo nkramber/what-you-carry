@@ -105,6 +105,10 @@ public sealed class GameShapeTests
         int dispose = builder.IndexOf("mesh.Dispose();", into, StringComparison.Ordinal);
         Assert.True(into >= 0 && take > into && dispose > take, "BuildInto gives the node the mesh, then disposes the wrapper.");
         Assert.Contains("private static ArrayMesh Build(MeshData data)", builder, StringComparison.Ordinal);
+        int share = builder.IndexOf("public static void ShareInto(MeshInstance3D target, MeshInstance3D source)", StringComparison.Ordinal);
+        int shareTake = builder.IndexOf("target.Mesh = mesh;", share, StringComparison.Ordinal);
+        int shareDispose = builder.IndexOf("mesh.Dispose();", share, StringComparison.Ordinal);
+        Assert.True(share >= 0 && shareTake > share && shareDispose > shareTake, "ShareInto gives the target the mesh, then disposes the wrapper.");
         Assert.Contains("using Godot.Collections.Array arrays = [];", builder, StringComparison.Ordinal);
 
         int callers = 0;
@@ -251,6 +255,29 @@ public sealed class GameShapeTests
         int application = project.IndexOf("[application]", StringComparison.Ordinal);
         Assert.True(application >= 0, "The project has no application section.");
         Assert.Contains("boot_splash/show_image=false", SectionAfter(project, application), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// PR-77 regression (F-192): a descent builds no mesh. The Deck trace measured 16.7 ms in the tick of a descent for
+    /// the meshes of eight enemies. Each enemy tree and its sword now share the meshes of a template that the constructor
+    /// of <c>EnemyNodes</c> builds once, so the tree builder reads no layout and calls no mesh build.
+    /// </summary>
+    [Fact]
+    public void DescentBuildsNoEnemyMesh()
+    {
+        string nodes = RepositoryRoot.ReadFile("WhatYouCarry.Game/Render/EnemyNodes.cs");
+        int builder = nodes.IndexOf("private ModelNodeTree BuildTree(ModelNodeTree template, BlockbenchModel model)", StringComparison.Ordinal);
+        Assert.True(builder >= 0, "EnemyNodes has no tree builder that takes a template.");
+        int end = nodes.IndexOf("\n    }\n", builder, StringComparison.Ordinal);
+        string body = nodes[builder..end];
+        Assert.Equal(2, body.Split("ModelNodes.Share(").Length - 1);
+        Assert.DoesNotContain("ModelNodes.Build(", body, StringComparison.Ordinal);
+
+        int constructor = nodes.IndexOf("public EnemyNodes(", StringComparison.Ordinal);
+        int constructorEnd = nodes.IndexOf("\n    }\n", constructor, StringComparison.Ordinal);
+        int builds = nodes.Split("ModelNodes.Build(").Length - 1;
+        Assert.Equal(3, builds);
+        Assert.Equal(builds, nodes[constructor..constructorEnd].Split("ModelNodes.Build(").Length - 1);
     }
 
     /// <summary>
