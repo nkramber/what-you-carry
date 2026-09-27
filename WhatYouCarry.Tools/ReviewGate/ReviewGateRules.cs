@@ -112,8 +112,10 @@ public static class ReviewGateRules
 
         // The label reads the work head and not the effective head, so a documents commit after the label needs the
         // label again (D-190, D-539). The time of the work head is its push time: the earliest creation time of a
-        // check suite that GitHub made for it. The committer date does not count, because the author can set it
-        // (D-653).
+        // check suite on the work head or on a later commit up to the PR head. GitHub makes a check suite for the tip
+        // of each push alone, so a work head that came in one push with a later metadata commit has no suite of its
+        // own, and the earliest suite over the list is the push that first carried the work head. The committer date
+        // does not count, because the author can set it (D-653).
         DateTimeOffset labelTime = DateTimeOffset.Parse(labelEvent.CreatedAt, CultureInfo.InvariantCulture);
         if (facts.WorkHead is null)
         {
@@ -123,23 +125,58 @@ public static class ReviewGateRules
         string workHead = facts.WorkHead.Sha;
         string timeRule = $"Override label '{OverrideLabel}': no commit outside the metadata set is newer than the label event, by the push time of the work head (D-539, D-653)";
         string expected = $"work head {workHead} pushed at or before the label event at {labelTime:O}";
-        if (facts.WorkHeadCheckSuiteTimes is null)
+        if (facts.WorkHeadPushCheckSuites is null)
         {
-            return Fail(timeRule, expected, $"the check suites of work head {workHead} were not read, so its push time is unknown");
+            return Fail(timeRule, expected, $"the check suites of work head {workHead} and of the later commits were not read, so its push time is unknown");
         }
 
-        DateTimeOffset? pushTime = EarliestTime(facts.WorkHeadCheckSuiteTimes);
-        if (pushTime is null)
+        CheckSuiteTime? push = EarliestCheckSuite(facts.WorkHeadPushCheckSuites);
+        if (push is null)
         {
-            return Fail(timeRule, expected, $"no check suite on work head {workHead}, so its push time is unknown. The label event is at {labelTime:O}");
+            return Fail(
+                timeRule,
+                expected,
+                $"no check suite on work head {workHead} or on a later commit up to the PR head, so its push time is unknown. Commits read: {ShaList(facts.WorkHeadPushCheckSuites)}. The label event is at {labelTime:O}");
         }
 
-        if (pushTime.Value > labelTime)
+        if (push.Time > labelTime)
         {
-            return Fail(timeRule, expected, $"work head {workHead} pushed at {pushTime.Value:O}, after the label event at {labelTime:O}. Add the label again.");
+            return Fail(timeRule, expected, $"work head {workHead} pushed at {push.Time:O} (the earliest check suite, on {push.Sha}), after the label event at {labelTime:O}. Add the label again.");
         }
 
-        return OverrideSuccess(labelEvent.Actor, labelTime, $"{workHead}, pushed at {pushTime.Value:O}");
+        return OverrideSuccess(labelEvent.Actor, labelTime, $"{workHead}, pushed at {push.Time:O} (the earliest check suite, on {push.Sha})");
+    }
+
+    /// <summary>The creation time of one check suite and the commit that it belongs to.</summary>
+    private sealed record CheckSuiteTime(string Sha, DateTimeOffset Time);
+
+    /// <summary>The earliest check suite over every commit of the list, or null when no commit has one.</summary>
+    private static CheckSuiteTime? EarliestCheckSuite(IReadOnlyList<CommitCheckSuites> commits)
+    {
+        CheckSuiteTime? earliest = null;
+        foreach (CommitCheckSuites commit in commits)
+        {
+            foreach (DateTimeOffset time in commit.CreationTimes)
+            {
+                if (earliest is null || time < earliest.Time)
+                {
+                    earliest = new CheckSuiteTime(commit.Sha, time);
+                }
+            }
+        }
+
+        return earliest;
+    }
+
+    private static string ShaList(IReadOnlyList<CommitCheckSuites> commits)
+    {
+        var shas = new List<string>();
+        foreach (CommitCheckSuites commit in commits)
+        {
+            shas.Add(commit.Sha);
+        }
+
+        return shas.Count == 0 ? "none" : string.Join(", ", shas);
     }
 
     private static ReviewGateResult OverrideSuccess(string actor, DateTimeOffset labelTime, string workHeadText)
@@ -148,21 +185,6 @@ public static class ReviewGateRules
             ReviewGateResult.Success,
             $"Override by label '{OverrideLabel}'",
             $"Label: {OverrideLabel}\nAdded by: {actor} at {labelTime:O}\nWork head: {workHeadText}\nEvery changed path is in the skip set of D-475 (D-190, D-541).");
-    }
-
-    /// <summary>The earliest of the times, or null when the list is empty.</summary>
-    private static DateTimeOffset? EarliestTime(IReadOnlyList<DateTimeOffset> times)
-    {
-        DateTimeOffset? earliest = null;
-        foreach (DateTimeOffset time in times)
-        {
-            if (earliest is null || time < earliest.Value)
-            {
-                earliest = time;
-            }
-        }
-
-        return earliest;
     }
 
     private static ReviewGateResult EvaluateReview(ReviewGateFacts facts, string mode)

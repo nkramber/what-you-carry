@@ -1,6 +1,7 @@
 # Publishes the review-gate check run on the PR head (D-179, D-181, D-184, D-185, D-190, D-197).
 # The rules live in WhatYouCarry.Tools, command review-gate. This file gathers the inputs and posts the result. The tool
-# reads the check suites of the work head itself, because the tool alone finds the work head in git (D-653).
+# reads the check suites of the work head and of each later commit itself, because the tool alone finds the work head
+# in git (D-653).
 #
 # The event is pull_request_target, so GitHub runs this file and the tool from the base branch (D-197).
 # The PR head is data only. The job fetches it into the git object store and never checks it out.
@@ -75,8 +76,9 @@ jobs:
           cat request.json
 
       - name: Evaluate the rules with the base-branch tool
-        # With the override label, the tool reads the check suites of the work head through gh and the job token
-        # (GH_TOKEN, checks: write includes read). The earliest one is the push time of the work head (D-653).
+        # With the override label, the tool reads the check suites of the work head and of each later commit through gh
+        # and the job token (GH_TOKEN, checks: write includes read). The earliest one is the push time of the work head
+        # (D-653).
         run: dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj -- review-gate --input request.json --output check-run.json
 
       - name: Publish the check run

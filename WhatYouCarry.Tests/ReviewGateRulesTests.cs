@@ -11,6 +11,7 @@ namespace WhatYouCarry.Tests;
 public sealed class ReviewGateRulesTests
 {
     private const string Head = "0123456789abcdef0123456789abcdef01234567";
+    private const string LaterMetadataCommit = "89abcdef0123456789abcdef0123456789abcdef";
     private static readonly DateTimeOffset LabelTime = DateTimeOffset.Parse("2026-09-07T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture);
 
     [Fact]
@@ -427,12 +428,45 @@ public sealed class ReviewGateRulesTests
     [Fact]
     public void ReviewGateFailsOnOverrideLabelWhenTheWorkHeadHasNoCheckSuite()
     {
-        // D-653, T-2: a work head with no check suite has no push time, and that fails the condition. It never passes.
-        ReviewGateFacts facts = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"], checkSuiteTimes: []);
+        // D-653, T-2: with no check suite on the work head or on any later commit up to the PR head, the work head has
+        // no push time, and that fails the condition. It never passes. The failure names each commit read.
+        ReviewGateFacts facts = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"],
+            pushCheckSuites: [new CommitCheckSuites(Head, []), new CommitCheckSuites(LaterMetadataCommit, [])]);
         ReviewGateResult result = ReviewGateRules.Evaluate(facts);
         Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
-        Assert.Contains($"no check suite on work head {Head}", result.Summary, StringComparison.Ordinal);
+        Assert.Contains($"no check suite on work head {Head} or on a later commit", result.Summary, StringComparison.Ordinal);
+        Assert.Contains($"Commits read: {Head}, {LaterMetadataCommit}.", result.Summary, StringComparison.Ordinal);
         AssertNamesRuleExpectedAndFound(result);
+    }
+
+    [Fact]
+    public void ReviewGateOverrideLabelReadsTheSuiteOfALaterMetadataCommitForAWorkHeadWithNoSuite()
+    {
+        // D-653: GitHub makes a check suite for the tip of each push alone. A work head that came in one push with a
+        // later metadata commit has no suite of its own, and the suite of that later commit is its push time.
+        ReviewGateFacts before = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"],
+            pushCheckSuites: [new CommitCheckSuites(Head, []), new CommitCheckSuites(LaterMetadataCommit, [LabelTime.AddMinutes(-5)])]);
+        ReviewGateResult passed = ReviewGateRules.Evaluate(before);
+        Assert.Equal(ReviewGateResult.Success, passed.Conclusion);
+        Assert.Contains($"{Head}, pushed at {LabelTime.AddMinutes(-5):O} (the earliest check suite, on {LaterMetadataCommit})", passed.Summary, StringComparison.Ordinal);
+
+        ReviewGateFacts after = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"],
+            pushCheckSuites: [new CommitCheckSuites(Head, []), new CommitCheckSuites(LaterMetadataCommit, [LabelTime.AddMinutes(5)])]);
+        ReviewGateResult failed = ReviewGateRules.Evaluate(after);
+        Assert.Equal(ReviewGateResult.Failure, failed.Conclusion);
+        Assert.Contains($"work head {Head} pushed at {LabelTime.AddMinutes(5):O} (the earliest check suite, on {LaterMetadataCommit})", failed.Summary, StringComparison.Ordinal);
+        Assert.Contains("Add the label again", failed.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGateOverrideLabelReadsTheEarliestSuiteOverTheWorkHeadAndTheLaterCommits()
+    {
+        // D-653: the earliest suite over the whole list decides, also when a later commit holds it.
+        ReviewGateFacts facts = Facts(mode: "advisory", reviewFile: null, overrideLabel: true, changedPaths: ["docs/design.md"],
+            pushCheckSuites: [new CommitCheckSuites(Head, [LabelTime.AddMinutes(30)]), new CommitCheckSuites(LaterMetadataCommit, [LabelTime.AddMinutes(-30), LabelTime.AddMinutes(40)])]);
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+        Assert.Equal(ReviewGateResult.Success, result.Conclusion);
+        Assert.Contains($"pushed at {LabelTime.AddMinutes(-30):O}", result.Summary, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -468,13 +502,13 @@ public sealed class ReviewGateRulesTests
             ChangedPaths = read.ChangedPaths,
             EffectiveHead = read.EffectiveHead,
             WorkHead = read.WorkHead,
-            WorkHeadCheckSuiteTimes = null,
+            WorkHeadPushCheckSuites = null,
             ReviewFileText = read.ReviewFileText,
             ReviewFileCommit = read.ReviewFileCommit,
         };
         ReviewGateResult result = ReviewGateRules.Evaluate(facts);
         Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
-        Assert.Contains($"the check suites of work head {Head} were not read", result.Summary, StringComparison.Ordinal);
+        Assert.Contains($"the check suites of work head {Head} and of the later commits were not read", result.Summary, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -557,6 +591,7 @@ public sealed class ReviewGateRulesTests
         string[]? changedPaths = null,
         bool labelEvent = true,
         DateTimeOffset[]? checkSuiteTimes = null,
+        CommitCheckSuites[]? pushCheckSuites = null,
         bool documentsOnly = false)
     {
         return new ReviewGateFacts
@@ -569,7 +604,7 @@ public sealed class ReviewGateRulesTests
             ChangedPaths = changedPaths ?? ["WhatYouCarry.Core/Core.cs"],
             EffectiveHead = documentsOnly ? null : new CommitStamp(Head),
             WorkHead = new CommitStamp(Head),
-            WorkHeadCheckSuiteTimes = checkSuiteTimes ?? [LabelTime.AddHours(-1)],
+            WorkHeadPushCheckSuites = pushCheckSuites ?? [new CommitCheckSuites(Head, checkSuiteTimes ?? [LabelTime.AddHours(-1)])],
             ReviewFileText = reviewFile,
             ReviewFileCommit = reviewFile is null ? null : new CommitSubject("fedcba9876543210fedcba9876543210fedcba98", "docs: review PR #7"),
         };

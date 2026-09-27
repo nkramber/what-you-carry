@@ -338,14 +338,16 @@ public sealed class ReviewGateGitTests
     }
 
     [Fact]
-    public void ReviewGateReadsTheCheckSuitesOfTheWorkHeadAndNotOfThePullRequestHead()
+    public void ReviewGateReadsTheCheckSuitesOfTheWorkHeadAndOfEachLaterCommit()
     {
-        // D-539, D-653: a handoff commit after the work head does not move it, so the gate reads the check suites of the
-        // work head alone.
+        // D-539, D-653: handoff commits after the work head do not move it. The gate reads the check suites of the work
+        // head and of each later commit up to the PR head, and of no commit before the work head.
         using var repo = new TemporaryGitRepository();
         StartBranch(repo);
-        string workHead = repo.Commit("docs: design", Files(("docs/design.md", "text")));
-        string head = repo.Commit("docs: handoff", Files(("docs/session-handoff.md", "entry")));
+        repo.Commit("docs: an older design", Files(("docs/design.md", "old")), LabelTime.AddMinutes(-40));
+        string workHead = repo.Commit("docs: design", Files(("docs/design.md", "text")), LabelTime.AddMinutes(-30));
+        string handoff = repo.Commit("docs: handoff", Files(("docs/session-handoff.md", "entry")), LabelTime.AddMinutes(-20));
+        string head = repo.Commit("docs: handoff again", Files(("docs/session-handoff.md", "entry 2")), LabelTime.AddMinutes(-10));
         var readShas = new List<string>();
 
         ReviewGateFacts facts = ReviewGateFacts.Gather(Request(repo, head, overrideLabel: true), sha =>
@@ -354,8 +356,47 @@ public sealed class ReviewGateGitTests
             return [LabelTime.AddMinutes(-5)];
         });
 
-        Assert.Equal([workHead], readShas);
+        Assert.Equal([workHead, head, handoff], readShas);
         Assert.Equal(ReviewGateResult.Success, ReviewGateRules.Evaluate(facts).Conclusion);
+    }
+
+    [Theory]
+    [InlineData(-5, true)]
+    [InlineData(5, false)]
+    public void ReviewGateReadsThePushTimeOfAWorkHeadFromALaterMetadataCommit(int suiteMinutesAfterLabel, bool passes)
+    {
+        // D-653: GitHub makes a check suite for the tip of each push alone. A work head pushed in one push with a later
+        // handoff commit has no suite of its own, so the suite of the handoff commit is the push time of the work head.
+        // Before the label it passes, and after the label it fails.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string workHead = repo.Commit("docs: design", Files(("docs/design.md", "text")));
+        string head = repo.Commit("docs: handoff", Files(("docs/session-handoff.md", "entry")));
+        DateTimeOffset suiteTime = LabelTime.AddMinutes(suiteMinutesAfterLabel);
+
+        ReviewGateFacts facts = ReviewGateFacts.Gather(Request(repo, head, overrideLabel: true), sha => sha == head ? [suiteTime] : []);
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+
+        Assert.Equal(passes ? ReviewGateResult.Success : ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains(workHead, result.Summary, StringComparison.Ordinal);
+        Assert.Contains($"pushed at {suiteTime:O} (the earliest check suite, on {head})", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReviewGateFailsOnOverrideLabelWithNoCheckSuiteFromTheWorkHeadToTheHead()
+    {
+        // D-653, T-2: no check suite on the work head or on a later commit fails, and the failure names each commit read.
+        using var repo = new TemporaryGitRepository();
+        StartBranch(repo);
+        string workHead = repo.Commit("docs: design", Files(("docs/design.md", "text")));
+        string head = repo.Commit("docs: handoff", Files(("docs/session-handoff.md", "entry")));
+
+        ReviewGateFacts facts = ReviewGateFacts.Gather(Request(repo, head, overrideLabel: true), _ => []);
+        ReviewGateResult result = ReviewGateRules.Evaluate(facts);
+
+        Assert.Equal(ReviewGateResult.Failure, result.Conclusion);
+        Assert.Contains($"no check suite on work head {workHead}", result.Summary, StringComparison.Ordinal);
+        Assert.Contains($"Commits read: {workHead}, {head}.", result.Summary, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -368,7 +409,7 @@ public sealed class ReviewGateGitTests
 
         ReviewGateFacts facts = ReviewGateFacts.Gather(Request(repo, head, overrideLabel: false), NoCheckSuiteRead);
 
-        Assert.Null(facts.WorkHeadCheckSuiteTimes);
+        Assert.Null(facts.WorkHeadPushCheckSuites);
         Assert.Equal(head, facts.WorkHead?.Sha);
     }
 

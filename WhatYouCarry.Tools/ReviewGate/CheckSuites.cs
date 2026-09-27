@@ -5,9 +5,13 @@ using WhatYouCarry.Tools.CodexReview;
 
 namespace WhatYouCarry.Tools.ReviewGate;
 
+/// <summary>The creation time of each check suite that GitHub made for one commit. The list is empty when the commit has none.</summary>
+public sealed record CommitCheckSuites(string Sha, IReadOnlyList<DateTimeOffset> CreationTimes);
+
 /// <summary>
-/// The check suites that GitHub made for one commit. The earliest creation time is the push time of the commit, and
-/// the override label compares its event time with the push time of the work head (D-653).
+/// The check suites that GitHub made for a commit. GitHub makes a check suite for the tip of each push alone, so the
+/// earliest creation time over the work head and each later commit up to the PR head is the time of the push that
+/// first carried the work head. The override label compares its event time with that push time (D-653).
 /// </summary>
 public static class CheckSuites
 {

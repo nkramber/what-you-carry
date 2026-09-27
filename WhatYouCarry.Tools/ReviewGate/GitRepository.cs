@@ -126,6 +126,19 @@ public sealed class GitRepository
             $"The commits {first.Sha} and {second.Sha} lie on separate lines of the history from {mergeBase} to {head}, so neither is the newest commit outside the excluded paths.");
     }
 
+    /// <summary>
+    /// The commit first, then each later commit up to the head that has the commit as an ancestor, newest first. The
+    /// ancestry path keeps out a commit that a merge brings in from another line, because that commit does not carry
+    /// the first commit (D-653).
+    /// </summary>
+    public IReadOnlyList<string> CommitAndLaterCommits(string commit, string head)
+    {
+        var commits = new List<string> { commit };
+        string output = Run(["rev-list", "--ancestry-path", $"{commit}..{head}"]);
+        commits.AddRange(output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        return commits;
+    }
+
     /// <summary>The newest commit up to the head that changes the path, with its subject, or null when no commit does.</summary>
     public CommitSubject? NewestCommitThatChanged(string head, string filePath)
     {

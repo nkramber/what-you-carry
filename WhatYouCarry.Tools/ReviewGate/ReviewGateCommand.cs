@@ -35,8 +35,8 @@ public sealed class CheckRunOutput
 
 /// <summary>
 /// <c>review-gate --input request.json --output check-run.json</c>.
-/// Reads the request, gathers the facts from git and the check suites of the work head from the GitHub API (D-653),
-/// applies the rules, and writes the check-run body.
+/// Reads the request, gathers the facts from git and the check suites of the work head and of each later commit from
+/// the GitHub API (D-653), applies the rules, and writes the check-run body.
 /// Exit 0 means the body was written, with any conclusion. A nonzero exit means the tool itself failed.
 /// </summary>
 public static class ReviewGateCommand
