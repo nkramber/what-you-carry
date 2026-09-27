@@ -30,6 +30,7 @@ Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge
 - The first CI run of `smoke.yml` misses the cache, because each cache key now holds the pinned SHA-512 (D-626). Each job downloads and checks its zip one time.
 - The lock files of D-638 failed CI with NU1403: the Godot packages of the Godot app and of nuget.org differ in bytes. D-641 drops them.
 - Dependabot now opens a PR for each new action pin (D-636). Each such PR needs every gate of a PR.
+- At `6a2d1a8`, one of 11 engine sessions of `smoke-macos-arm64` aborted at exit with code 134 (`mutex lock failed`) after a clean end line. 30 local runs passed. The close handler then moved from an override of `_Notification` to the close signal of the root window. The cause is not proven, so watch each macOS smoke run.
 
 ### Open questions that block progress
 

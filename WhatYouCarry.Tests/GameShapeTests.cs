@@ -86,13 +86,15 @@ public sealed class GameShapeTests
         Assert.Contains("Main.cs _Process", callbacks);
         Assert.Contains("Main.cs _UnhandledInput", callbacks);
         Assert.Contains("Main.cs _Ready", callbacks);
-        Assert.Contains("Main.cs _Notification", callbacks);
+        Assert.DoesNotContain("Main.cs _Notification", callbacks);
     }
 
     /// <summary>
-    /// F-161. The boot turns off the automatic quit of the engine, and the close request of the window reaches the end
-    /// path, which writes the end line and quits through <c>Quit</c>. The old session let the engine quit on a close with
-    /// no end line, no frame log, and no release of the sounds.
+    /// F-161. The boot turns off the automatic quit of the engine, and the close request of the root window reaches the
+    /// end path, which writes the end line and quits through <c>Quit</c>. The old session let the engine quit on a close
+    /// with no end line, no frame log, and no release of the sounds. The handler is a signal and not an override of
+    /// <c>_Notification</c>: the first form of the fix took every engine notification into managed code, the shutdown
+    /// ones too, and one smoke session on the hosted Mac then aborted at exit with code 134.
     /// </summary>
     [Fact]
     public void TheCloseOfTheWindowEndsTheSession()
@@ -101,13 +103,14 @@ public sealed class GameShapeTests
         int ready = main.IndexOf("public override void _Ready()", StringComparison.Ordinal);
         int boot = main.IndexOf("this.Boot();", ready, StringComparison.Ordinal);
         int manual = main.IndexOf("this.GetTree().AutoAcceptQuit = false;", ready, StringComparison.Ordinal);
-        Assert.True(ready >= 0 && manual > ready && manual < boot, "_Ready turns off the automatic quit before the boot.");
+        int signal = main.IndexOf("this.GetTree().Root.CloseRequested += this.OnCloseRequested;", ready, StringComparison.Ordinal);
+        Assert.True(ready >= 0 && manual > ready && signal > manual && signal < boot, "_Ready turns off the automatic quit and connects the close request before the boot.");
+        Assert.DoesNotContain("override void _Notification", main, StringComparison.Ordinal);
 
-        int notification = main.IndexOf("public override void _Notification(int what)", StringComparison.Ordinal);
-        Assert.True(notification >= 0, "Main.cs overrides _Notification.");
-        int close = main.IndexOf("if (what == NotificationWMCloseRequest)", notification, StringComparison.Ordinal);
-        int call = main.IndexOf("this.CloseWindow();", notification, StringComparison.Ordinal);
-        Assert.True(close > notification && call > close, "_Notification sends the close request to CloseWindow.");
+        int handler = main.IndexOf("private void OnCloseRequested()", StringComparison.Ordinal);
+        int call = main.IndexOf("this.CloseWindow();", handler, StringComparison.Ordinal);
+        int guard = main.IndexOf("catch (Exception error)", handler, StringComparison.Ordinal);
+        Assert.True(handler >= 0 && call > handler && guard > call, "The handler sends the close to CloseWindow inside a catch of every exception.");
 
         int body = main.IndexOf("private void CloseWindow()", StringComparison.Ordinal);
         int end = main.IndexOf("WindowClosedMessage, fields);", body, StringComparison.Ordinal);

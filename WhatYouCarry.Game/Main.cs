@@ -301,9 +301,12 @@ public partial class Main : Node3D
     {
         try
         {
-            // The engine then sends the close request of the window to this node and waits for its quit, so a close
-            // writes the end line and the frame log, and releases the sounds (F-161).
+            // The engine then sends the close request of the window to the handler and waits for its quit, so a close
+            // writes the end line and the frame log, and releases the sounds (F-161). The handler is a signal of the
+            // root window, and not an override of _Notification, which takes every notification of the engine into
+            // managed code, the notifications of the engine shutdown too.
             this.GetTree().AutoAcceptQuit = false;
+            this.GetTree().Root.CloseRequested += this.OnCloseRequested;
             this.Boot();
         }
         catch (Exception error)
@@ -583,19 +586,16 @@ public partial class Main : Node3D
         }
     }
 
-    /// <inheritdoc/>
-    public override void _Notification(int what)
+    /// <summary>The handler of the close request of the root window (F-161). Every exception ends the session, as in each engine callback (F-115).</summary>
+    private void OnCloseRequested()
     {
         try
         {
-            if (what == NotificationWMCloseRequest)
-            {
-                this.CloseWindow();
-            }
+            this.CloseWindow();
         }
         catch (Exception error)
         {
-            this.FailCallback(nameof(_Notification), error);
+            this.FailCallback(nameof(OnCloseRequested), error);
         }
     }
 
