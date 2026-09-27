@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 279: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Re-reviewed PR #109 after the author corrected P2-1 from round 1.
+- Verified that `69c946a` requires the CRC field to end the run-record header line. The focused regression test passed 2/2 cases.
+- Updated `docs/reviews/pr-109.md`. P2-1 is fixed. The verdict is `Blocked` because a specific Gitar item has no author reply.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective code head is `69c946a`; the remote PR tip before this review commit is `55458cc`.
+- CI, smoke, bit identity, and repository checks passed on the metadata tip. `evaluate` and `review-gate` failed because the published review record still had the round 1 verdict.
+
+### In flight
+
+- The review record and this entry need one metadata commit and a push to `feat/pr-91-review-fixes`.
+- The Gitar pass and `evaluate` and `review-gate` need a new result after the push.
+
+### Traps and gotchas
+
+- The latest Gitar comment has a specific request about the stale review verdict. The reviewer records the claim but does not answer Gitar (D-250).
+
+### Open questions that block progress
+
+- The author must answer Gitar comment 5852038161 before the automated pass is complete.
+
+### Next concrete action
+
+Answer the Gitar comment, then read the new pass and gate results for PR #109.
+
 ## Session 278: 2026-09-26, Claude Code
 
 Author: Claude Code
