@@ -689,7 +689,7 @@ public sealed class NightSeedsTests
             Assert.Equal(0, Program.Main([.. common, "--shard", "1"]));
             Assert.Equal(0, Program.Main([.. common, "--shard", "2"]));
             Assert.Equal(0, Program.Main(common));
-            Assert.Equal(new[] { "1-2500,6001-6250,5250", "2501-5000,6251-6500", "1-5000,6001-6500,5250" }, output.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries));
+            Assert.Equal(new[] { "1-2500,6001-6250,5250", "2501-5000,6251-6500", "1-5000,6001-6500,5250" }, output.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries));
             Assert.Contains("the shard 2 of 2", errors.ToString(), StringComparison.Ordinal);
             Assert.Contains("because shard 1 runs them", errors.ToString(), StringComparison.Ordinal);
 
