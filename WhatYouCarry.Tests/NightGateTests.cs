@@ -670,7 +670,7 @@ public sealed class NightGateTests
 
             // D-648, trigger (b): the night failed a slice seed that the later record does not name, so a failure
             // record at the later commit holds it.
-            PublishNight(remote, ("night.json", SeedRecord(later, NightDate, "success", EndedWith(), NoSeeds())));
+            PublishNight(remote, ("night.json", SeedRecord(later, NightDate.AddDays(1), "success", EndedWith(), NoSeeds())));
             File.WriteAllText(night, SeedRecord(nightCommit, NightDate, "failure", EndedWith((FullClearer.PolicyName, 6620)), NoSeeds()));
             File.WriteAllText(failures, FailureLines(EndedWith((FullClearer.PolicyName, 6620))));
             Assert.Equal(0, Program.Main(Args(RecordHead(remote))));
@@ -678,6 +678,41 @@ public sealed class NightGateTests
             Assert.Equal(later, NightRecordParser.TryParse(published, out _)!.Commit);
             Assert.Equal("failure", NightRecordParser.TryParse(published, out _)!.Status);
             Assert.Equal(new ulong[] { 6620 }, FailedOf(published, FullClearer.PolicyName));
+
+            // D-567, D-648: the night of the later record ran the seed in its slice and passed it, so the record stays.
+            PublishNight(remote, ("night.json", SeedRecord(later, NightDate, "success", EndedWith(), NoSeeds())));
+            File.Delete(output);
+            Assert.Equal(NightPublishCheckCommand.KeepExit, Program.Main(Args(RecordHead(remote))));
+            Assert.False(File.Exists(output));
+
+            // T-2, D-565: bad inputs of this night fail closed with their own exit code, so the step publishes the
+            // failure record. The old command gave the fault exit, and the record of main stayed as it was.
+            string goodNight = File.ReadAllText(night);
+            (string File, string Text)[] badInputs =
+            [
+                (failures, "full-clearer 6620\n"),
+                (failures, "walker:\n"),
+                (night, "not json"),
+                (night, SeedRecord(earlier, NightDate, "failure", EndedWith((FullClearer.PolicyName, 6620)), NoSeeds())),
+                (night, goodNight.Replace("\"failedSeeds\":{", "\"failedSeeds\":[],\"x\":{", StringComparison.Ordinal)),
+            ];
+            foreach ((string file, string text) in badInputs)
+            {
+                string before = File.ReadAllText(file);
+                File.WriteAllText(file, text);
+                Assert.Equal(NightPublishCheckCommand.BadNightExit, Program.Main(Args(RecordHead(remote))));
+                Assert.False(File.Exists(output));
+                File.WriteAllText(file, before);
+            }
+
+            File.Delete(failures);
+            Assert.Equal(NightPublishCheckCommand.BadNightExit, Program.Main(Args(RecordHead(remote))));
+            File.WriteAllText(failures, FailureLines(EndedWith((FullClearer.PolicyName, 6620))));
+            Assert.Equal(NightPublishCheckCommand.KeepExit, Program.Main(Args(RecordHead(remote))));
+
+            // A moved lease stays the fault exit, also with bad inputs: the record of main was not read inside the lease.
+            File.WriteAllText(failures, "walker:\n");
+            Assert.Equal(NightPublishCheckCommand.FaultExit, Program.Main(Args(stale)));
 
             Assert.Equal(2, Program.Main(["night-publish-check", "--root", local.Path, "--remote", "origin"]));
             Assert.Equal(2, Program.Main(Args("abc")));
@@ -761,7 +796,7 @@ public sealed class NightGateTests
         ulong sliceSeed = NightSeeds.Slice(FullClearer.PolicyName, NightDate).From + 120;
         ulong reachSeed = NightSeeds.Slice(NightSeeds.ReachabilitySweep, NightDate).To;
         Dictionary<string, List<ulong>> laterFailed = EndedWith((FullClearer.PolicyName, sliceSeed + 3), (Coward.PolicyName, 5100));
-        string promoted = PromotedRecord(SeedRecord(Commit, NightDate, "failure", laterFailed, NoSeeds(), "coward=2 ascends=4998 scavenger:2\n"));
+        string promoted = PromotedRecord(SeedRecord(Commit, NightDate.AddDays(1), "failure", laterFailed, NoSeeds(), "coward=2 ascends=4998 scavenger:2\n"));
         Dictionary<string, List<ulong>> ended = EndedWith((FullClearer.PolicyName, sliceSeed + 3), (FullClearer.PolicyName, sliceSeed), (NightSeeds.ReachabilitySweep, reachSeed));
         string nightText = SeedRecord(EffectiveHead, NightDate, "failure", ended, NoSeeds());
         DateTimeOffset publishTime = Now.AddMinutes(7);
@@ -794,6 +829,46 @@ public sealed class NightGateTests
         }
 
         Assert.Equal(before.RootElement.EnumerateObject().Count(), after.RootElement.EnumerateObject().Count());
+    }
+
+    /// <summary>
+    /// D-567, D-648 (owner answer of PR-92). The M0 night failed a seed s that the later record at M1 does not name, and
+    /// the night of the later record ran s: in its slice, in its carried seeds, or in the fixed range. That night passed
+    /// s on the later code, so the later record stays. A seed that the later night did not run still joins it.
+    /// </summary>
+    [Fact]
+    public void ALaterRecordStaysWhenItsNightPassedTheNewSeed()
+    {
+        ulong sliceSeed = NightSeeds.Slice(FullClearer.PolicyName, NightDate).From + 40;
+        ulong carriedSeed = NightSeeds.Slice(GreedyDescender.PolicyName, NightDate.AddDays(-1)).From + 4;
+        const ulong fixedSeed = 4321;
+        Dictionary<string, List<ulong>> laterCarry = new(StringComparer.Ordinal) { [GreedyDescender.PolicyName] = [carriedSeed] };
+        string laterRecord = PromotedRecord(SeedRecord(Commit, NightDate, "success", EndedWith(), laterCarry));
+        (string Sweep, ulong Seed)[] ranByLater = [(FullClearer.PolicyName, sliceSeed), (GreedyDescender.PolicyName, carriedSeed), (Coward.PolicyName, fixedSeed)];
+        foreach ((string sweep, ulong seed) in ranByLater)
+        {
+            Dictionary<string, List<ulong>> ended = EndedWith((sweep, seed));
+            string nightText = SeedRecord(EffectiveHead, NightDate.AddDays(-1), "failure", ended, NoSeeds());
+            NightPublishDecision decision = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, laterRecord), true, EffectiveHead, nightText, ended, Now);
+            Assert.False(decision.Writes, $"The seed {seed} of {sweep}, which the later night ran, blocks: {decision.Message}");
+            Assert.Null(decision.Record);
+            Assert.Contains($"{sweep} {seed}", decision.Message, StringComparison.Ordinal);
+            Assert.Contains("D-567", decision.Message, StringComparison.Ordinal);
+        }
+
+        // With one seed that the later night ran and one that it did not run, only the second joins the failure record.
+        ulong notRun = NightSeeds.Slice(FullClearer.PolicyName, NightDate.AddDays(-1)).From;
+        Dictionary<string, List<ulong>> both = EndedWith((FullClearer.PolicyName, sliceSeed), (FullClearer.PolicyName, notRun));
+        string bothNight = SeedRecord(EffectiveHead, NightDate.AddDays(-1), "failure", both, NoSeeds());
+        NightPublishDecision joined = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, laterRecord), true, EffectiveHead, bothNight, both, Now);
+        Assert.True(joined.Writes);
+        Assert.Equal(new[] { notRun }, FailedOf(joined.Record!, FullClearer.PolicyName));
+        Assert.Equal(Commit, NightRecordParser.TryParse(joined.Record!, out _)!.Commit);
+        Assert.Equal("failure", NightRecordParser.TryParse(joined.Record!, out _)!.Status);
+
+        // A malformed seed field of this night is a fault in the later case too, so the step fails closed (T-2).
+        string badNight = bothNight.Replace("\"failedSeeds\":{", "\"failedSeeds\":[],\"x\":{", StringComparison.Ordinal);
+        Assert.Throws<FormatException>(() => NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, laterRecord), true, EffectiveHead, badNight, both, Now));
     }
 
     /// <summary>D-562 stands: a later record that names each seed that the night failed stays, and so does a later record after a night with no failure.</summary>

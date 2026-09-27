@@ -35,15 +35,43 @@ public sealed record NightPublishDecision(bool Writes, string? Record, string Me
 /// which <c>night-record</c> read: they tell which sweeps ended and which seeds this night failed.
 /// </para>
 /// <para>
-/// Exit 0 writes the record to publish to the output file. Exit 1 means the record of main stays (D-562), and the
-/// output file is not written. Exit 2 means a wrong option. Exit 3 is a fault that the message names: a git failure,
-/// a moved lease, or an unreadable night file or failures file (T-2).
+/// The exit codes, each one a branch of the publish step:
+/// <list type="bullet">
+/// <item><see cref="WriteExit"/> (0): the output file holds the record to publish.</item>
+/// <item><see cref="KeepExit"/> (1): the record of main stays (D-562), and the output file is not written.</item>
+/// <item><see cref="UsageExit"/> (2): a wrong option.</item>
+/// <item>
+/// <see cref="FaultExit"/> (3): a git failure, or a branch that moved from the lease. The step pushes nothing, because
+/// a push with the lease fails anyway, and a re-run of the job reads the new record.
+/// </item>
+/// <item>
+/// <see cref="BadNightExit"/> (4): the inputs of this night are bad: an unreadable or malformed failures file, an
+/// unreadable or malformed night file, or a night record at another commit. The record of main at the lease is read,
+/// so the step fails closed (T-2, D-565): it publishes the failure record of <c>night-failure-record.sh</c> from the
+/// record of main at the lease, which keeps its failed seeds, pushes it with the lease, and then fails the job.
+/// </item>
+/// </list>
 /// </para>
 /// </remarks>
 public static class NightPublishCheckCommand
 {
     /// <summary>The name of the command.</summary>
     public const string CommandName = "night-publish-check";
+
+    /// <summary>The exit code of a record to publish in the output file.</summary>
+    public const int WriteExit = 0;
+
+    /// <summary>The exit code of a record of main that stays (D-562).</summary>
+    public const int KeepExit = 1;
+
+    /// <summary>The exit code of a wrong option.</summary>
+    public const int UsageExit = 2;
+
+    /// <summary>The exit code of a git failure or a moved lease: the step pushes nothing (D-648).</summary>
+    public const int FaultExit = 3;
+
+    /// <summary>The exit code of bad inputs of this night: the step publishes the failure record, and the job fails (T-2, D-565).</summary>
+    public const int BadNightExit = 4;
 
     private const string Usage = "Usage: night-publish-check --root <checkout> --remote <name> --commit <night commit> --lease <commit of night-results, or empty> --night <night.json> --failures <file> --output <file>";
 
@@ -62,7 +90,7 @@ public static class NightPublishCheckCommand
             if (i + 1 >= args.Length)
             {
                 Console.Error.WriteLine($"The option '{args[i]}' needs a value. {Usage}");
-                return 2;
+                return UsageExit;
             }
 
             switch (args[i])
@@ -76,7 +104,7 @@ public static class NightPublishCheckCommand
                 case "--output": output = args[i + 1]; break;
                 default:
                     Console.Error.WriteLine($"Unexpected argument '{args[i]}'. {Usage}");
-                    return 2;
+                    return UsageExit;
             }
 
             i += 2;
@@ -85,47 +113,58 @@ public static class NightPublishCheckCommand
         if (root is null || remote is null || commit is null || lease is null || night is null || failures is null || output is null)
         {
             Console.Error.WriteLine($"Every option is required. {Usage}");
-            return 2;
+            return UsageExit;
         }
 
         if (lease.Length > 0 && !NightRecordCommand.IsHash(lease))
         {
             Console.Error.WriteLine($"The lease '{lease}' is not 40 lowercase hexadecimal digits or an empty text. {Usage}");
-            return 2;
+            return UsageExit;
         }
 
-        NightPublishDecision decision;
+        string nightCommit;
+        NightRecordRead main;
+        bool? mainAfterNight = null;
         try
         {
             var git = new GitRepository(root);
-            string nightCommit = git.Run(["rev-parse", "--verify", $"{commit}^{{commit}}"]).Trim();
-            NightRecordRead main = ReadRecordAtLease(git, remote, lease);
-            bool? mainAfterNight = null;
+            nightCommit = git.Run(["rev-parse", "--verify", $"{commit}^{{commit}}"]).Trim();
+            main = ReadRecordAtLease(git, remote, lease);
             if (main.Record is not null)
             {
                 string recordCommit = main.Record.Commit;
                 mainAfterNight = recordCommit != nightCommit && git.HasCommit(recordCommit) && git.IsAncestor(nightCommit, recordCommit);
             }
+        }
+        catch (InvalidOperationException exception)
+        {
+            Console.Error.WriteLine($"{CommandName}: fault, and the step pushes no record: {exception.Message}");
+            return FaultExit;
+        }
 
+        NightPublishDecision decision;
+        try
+        {
             string nightText = File.ReadAllText(night);
             Dictionary<string, List<ulong>> ended = NightSeeds.ReadFailures(File.ReadAllText(failures), failures);
             decision = Decide(main, mainAfterNight, nightCommit, nightText, ended, DateTimeOffset.UtcNow);
         }
-        catch (Exception exception) when (exception is InvalidOperationException or FormatException or IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (exception is FormatException or IOException or UnauthorizedAccessException)
         {
-            Console.Error.WriteLine($"{CommandName}: fault, and no record is written: {exception.Message}");
-            return 3;
+            // Fail closed (T-2, D-565): the step publishes the failure record from the record of main at the lease.
+            Console.Error.WriteLine($"{CommandName}: the inputs of this night are bad, so the step publishes the failure record of this night and fails the job: {exception.Message}");
+            return BadNightExit;
         }
 
         Console.Out.WriteLine($"{CommandName}: {(decision.Writes ? "write" : "keep")}. {decision.Message}");
         if (!decision.Writes)
         {
-            return 1;
+            return KeepExit;
         }
 
         // UTF-8 without the byte-order mark, as night-record writes it.
         File.WriteAllText(output, decision.Record, new UTF8Encoding(false));
-        return 0;
+        return WriteExit;
     }
 
     /// <summary>
@@ -133,9 +172,11 @@ public static class NightPublishCheckCommand
     /// <list type="number">
     /// <item>An absent or malformed record of main, a malformed seed field included, is replaced by the night record as it is.</item>
     /// <item>
-    /// A record of main at a later commit stays (D-562), unless this night failed a seed that it does not name. Then
-    /// the decision writes a failure record at the later commit: the later record with the failed seeds of both, the
-    /// end time <paramref name="now"/>, and the status failure (D-648).
+    /// A record of main at a later commit stays (D-562), unless this night failed a seed that it does not name and that
+    /// the night of the later record did not run. Then the decision writes a failure record at the later commit: the
+    /// later record with those seeds added to its failed seeds, the end time <paramref name="now"/>, and the status
+    /// failure (D-648). A seed that the night of the later record ran and does not name passed on the later code, so it
+    /// goes away (D-567). That night ran the fixed range, the slice of the later record, and its carried seeds.
     /// </item>
     /// <item>
     /// Any other record of main is replaced by the night record. Each failed seed of the record of main that this
@@ -164,6 +205,11 @@ public static class NightPublishCheckCommand
             throw new FormatException($"The record of this night names the commit {night.Commit}, and the night tested {nightCommit}.");
         }
 
+        // Each seed field of this night is read in every case, so a malformed night record fails closed (T-2, D-565).
+        Dictionary<string, List<ulong>> nightFailed = NightSeeds.ReadRecordSeeds(nightText, NightSeeds.FailedSeedsName, "the record of this night");
+        Dictionary<string, List<ulong>> nightCarried = NightSeeds.ReadRecordSeeds(nightText, NightSeeds.CarriedSeedsName, "the record of this night");
+        Dictionary<string, SeedRange> nightSlices = NightSeeds.ReadSlices(nightText, "the record of this night");
+
         if (main.Text is null)
         {
             return new NightPublishDecision(true, nightText, $"The record of main is absent: {main.AbsentReason}. The night at {nightCommit} writes the first record.");
@@ -175,9 +221,13 @@ public static class NightPublishCheckCommand
         }
 
         Dictionary<string, List<ulong>> mainFailed;
+        Dictionary<string, List<ulong>> mainCarried;
+        Dictionary<string, SeedRange> mainSlices;
         try
         {
             mainFailed = NightSeeds.ReadRecordSeeds(main.Text, NightSeeds.FailedSeedsName, $"the branch {main.Branch}");
+            mainCarried = NightSeeds.ReadRecordSeeds(main.Text, NightSeeds.CarriedSeedsName, $"the branch {main.Branch}");
+            mainSlices = NightSeeds.ReadSlices(main.Text, $"the branch {main.Branch}");
         }
         catch (FormatException exception)
         {
@@ -186,58 +236,67 @@ public static class NightPublishCheckCommand
 
         if (mainAfterNight == true)
         {
-            return DecideLater(main, mainFailed, nightCommit, ended, now);
+            return DecideLater(main, mainFailed, mainSlices, mainCarried, nightCommit, ended, now);
         }
 
-        return DecideReplace(main, mainFailed, nightCommit, nightText, ended);
+        return DecideReplace(main, mainFailed, nightCommit, nightText, nightFailed, nightSlices, nightCarried, ended);
     }
 
     /// <summary>
-    /// The record of main at a later commit stays, unless this night failed a seed that it does not name. Then the
-    /// decision writes the later record with the failed seeds of both, the end time of the publish, and the status
-    /// failure (D-562, D-648).
+    /// The record of main at a later commit stays, unless this night failed a seed that it does not name and that its
+    /// night did not run. Then the decision writes the later record with those seeds added to its failed seeds, the end
+    /// time of the publish, and the status failure (D-562, D-648). A seed that the later night ran passed on the later
+    /// code, so it goes away (D-567).
     /// </summary>
-    private static NightPublishDecision DecideLater(NightRecordRead main, Dictionary<string, List<ulong>> mainFailed, string nightCommit, IReadOnlyDictionary<string, List<ulong>> ended, DateTimeOffset now)
+    private static NightPublishDecision DecideLater(NightRecordRead main, Dictionary<string, List<ulong>> mainFailed, Dictionary<string, SeedRange> laterSlices, Dictionary<string, List<ulong>> laterCarried, string nightCommit, IReadOnlyDictionary<string, List<ulong>> ended, DateTimeOffset now)
     {
         string laterCommit = main.Record!.Commit;
         List<string> added = [];
+        List<string> passedLater = [];
         Dictionary<string, List<ulong>> union = new(StringComparer.Ordinal);
         foreach (string sweep in NightSeeds.Sweeps)
         {
             SortedSet<ulong> seeds = [.. NightSeeds.SeedsOf(mainFailed, sweep)];
             foreach (ulong seed in NightSeeds.SeedsOf(ended, sweep))
             {
-                if (seeds.Add(seed))
+                if (seeds.Contains(seed))
                 {
-                    added.Add($"{sweep} {seed.ToString(CultureInfo.InvariantCulture)}");
+                    continue;
                 }
+
+                string name = $"{sweep} {seed.ToString(CultureInfo.InvariantCulture)}";
+                if (NightSeeds.Ran(sweep, seed, laterSlices, laterCarried))
+                {
+                    passedLater.Add(name);
+                    continue;
+                }
+
+                seeds.Add(seed);
+                added.Add(name);
             }
 
             union[sweep] = [.. seeds];
         }
 
+        string passedText = passedLater.Count == 0 ? string.Empty : $" The night of the later record ran and passed the failed seeds {string.Join(", ", passedLater)} of this night, so they go away (D-567).";
         if (added.Count == 0)
         {
-            return new NightPublishDecision(false, null, $"The record of main names the commit {laterCommit}, which comes after the night commit {nightCommit}, and it names each seed that this night failed, so it stays (D-562).");
+            return new NightPublishDecision(false, null, $"The record of main names the commit {laterCommit}, which comes after the night commit {nightCommit}, and it names each seed that this night failed, or its night passed the seed, so it stays (D-562).{passedText}");
         }
 
         JsonObject record = ParseObject(main.Text!, $"the record of main at {laterCommit}");
         record[NightRecordCommand.EndedAtName] = now.UtcDateTime.ToString(NightRecordParser.TimeFormat, CultureInfo.InvariantCulture);
         record[NightRecordCommand.StatusName] = "failure";
         record[NightSeeds.FailedSeedsName] = SeedsObject(union);
-        return new NightPublishDecision(true, record.ToJsonString() + "\n", $"The record of main names the commit {laterCommit}, which comes after the night commit {nightCommit}. This night failed seeds that it does not name: {string.Join(", ", added)}. The failure record at {laterCommit} holds the failed seeds of both records (D-648).");
+        return new NightPublishDecision(true, record.ToJsonString() + "\n", $"The record of main names the commit {laterCommit}, which comes after the night commit {nightCommit}. This night failed seeds that it does not name and that its night did not run: {string.Join(", ", added)}. The failure record at {laterCommit} adds them to its failed seeds (D-648).{passedText}");
     }
 
     /// <summary>
     /// The night record replaces the record of main. Each failed seed of the record of main that this night did not run
     /// stays in the failed seeds of the night record, and the record then reads failure (D-648).
     /// </summary>
-    /// <exception cref="FormatException">A seed field of the night record is malformed.</exception>
-    private static NightPublishDecision DecideReplace(NightRecordRead main, Dictionary<string, List<ulong>> mainFailed, string nightCommit, string nightText, IReadOnlyDictionary<string, List<ulong>> ended)
+    private static NightPublishDecision DecideReplace(NightRecordRead main, Dictionary<string, List<ulong>> mainFailed, string nightCommit, string nightText, Dictionary<string, List<ulong>> nightFailed, Dictionary<string, SeedRange> slices, Dictionary<string, List<ulong>> carried, IReadOnlyDictionary<string, List<ulong>> ended)
     {
-        Dictionary<string, List<ulong>> nightFailed = NightSeeds.ReadRecordSeeds(nightText, NightSeeds.FailedSeedsName, "the record of this night");
-        Dictionary<string, List<ulong>> carried = NightSeeds.ReadRecordSeeds(nightText, NightSeeds.CarriedSeedsName, "the record of this night");
-        Dictionary<string, SeedRange> slices = NightSeeds.ReadSlices(nightText, "the record of this night");
         List<string> kept = [];
         Dictionary<string, List<ulong>> union = new(StringComparer.Ordinal);
         foreach (string sweep in NightSeeds.Sweeps)

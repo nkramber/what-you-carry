@@ -599,6 +599,32 @@ public sealed class RepositoryShapeTests
         Assert.Contains("cp \"$publish\" night.json", publish, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void BadInputsOfANightPublishTheFailureRecordAndFailTheJob()
+    {
+        // T-2, D-565, D-648: the exit code of bad inputs of this night makes the step write the failure record of the
+        // script from the record of main at the lease, push it with the lease, and fail the job after the push. The
+        // fault exit pushes nothing. The old step left the record of main as it was on any fault.
+        string publish = StepText(RepositoryRoot.ReadFile(".github/workflows/night.yml"), "Publish the night record");
+        string badInputs = $"if [ \"$rc\" -eq {NightPublishCheckCommand.BadNightExit} ]; then";
+        int branch = publish.IndexOf(badInputs, StringComparison.Ordinal);
+        int show = publish.IndexOf("git show \"${lease}:night.json\" > \"${RUNNER_TEMP}/main-night-lease.json\"", StringComparison.Ordinal);
+        int script = publish.IndexOf("bash .github/scripts/night-failure-record.sh \"${GITHUB_SHA}\" \"${RUNNER_TEMP}/main-night-lease.json\" \"${RUNNER_TEMP}/night-publish.json\"", StringComparison.Ordinal);
+        int mark = publish.IndexOf("fail_after_push=\"true\"", StringComparison.Ordinal);
+        int fault = publish.IndexOf("if [ \"$rc\" -ne 0 ]; then", StringComparison.Ordinal);
+        int push = publish.IndexOf("git push --force-with-lease=\"refs/heads/night-results:${lease}\"", StringComparison.Ordinal);
+        int fail = publish.IndexOf("if [ \"$fail_after_push\" = \"true\" ]; then", StringComparison.Ordinal);
+        Assert.True(branch >= 0 && show >= 0 && script >= 0 && mark >= 0 && fault >= 0 && push >= 0 && fail >= 0, "The publish step lacks a part of the branch of bad night inputs.");
+        Assert.True(branch < show && show < script && script < mark && mark < fault && fault < push && push < fail, "The bad input branch writes the failure record from the lease before the push, and the job fails after the push.");
+        Assert.Contains("echo \"{}\" > \"${RUNNER_TEMP}/main-night-lease.json\"", publish, StringComparison.Ordinal);
+        Assert.Contains("fail_after_push=\"false\"", publish, StringComparison.Ordinal);
+        string tail = publish[fail..];
+        Assert.Contains("exit 1", tail, StringComparison.Ordinal);
+        Assert.Equal(4, NightPublishCheckCommand.BadNightExit);
+        Assert.Equal(3, NightPublishCheckCommand.FaultExit);
+        Assert.Equal(1, NightPublishCheckCommand.KeepExit);
+    }
+
     /// <summary>The text of one workflow step, from its name line to the next step or the end of the workflow.</summary>
     private static string StepText(string workflow, string stepName)
     {

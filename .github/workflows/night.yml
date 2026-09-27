@@ -253,6 +253,7 @@ jobs:
             bash .github/scripts/night-failure-record.sh "${GITHUB_SHA}" "${RUNNER_TEMP}/main-night-now.json" "${RUNNER_TEMP}/night.json"
           fi
           publish="${RUNNER_TEMP}/night.json"
+          fail_after_push="false"
           if [ "$target" = "night-results" ]; then
             # The record of main at publish time decides the record that this night writes (D-562, D-648). A record at
             # a later commit stays, unless this night failed a seed that it does not name. Each failed seed of the
@@ -263,12 +264,27 @@ jobs:
               dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-publish-check --root . --remote origin --commit "${GITHUB_SHA}" --lease "$lease" --night "${RUNNER_TEMP}/night.json" --failures "${RUNNER_TEMP}/seed-failures.txt" --output "${RUNNER_TEMP}/night-publish.json"
               rc=$?
               set -e
+              # The exit codes of night-publish-check: 0 publish its output, 1 keep the record of main (D-562), 3 a git
+              # fault or a moved lease, so no push, and 4 bad inputs of this night.
               if [ "$rc" -eq 1 ]; then
                 echo "This night writes no record. Its result stays in this run."
                 exit 0
               fi
+              if [ "$rc" -eq 4 ]; then
+                # Fail closed (T-2, D-565, D-648): the inputs of this night are bad, so the failure record of this night
+                # replaces the record of main. It keeps the failed seeds of the record of main at the lease, the push
+                # takes the lease, and the job fails after the push, so the fault shows.
+                if [ -n "$lease" ]; then
+                  git show "${lease}:night.json" > "${RUNNER_TEMP}/main-night-lease.json"
+                else
+                  echo "{}" > "${RUNNER_TEMP}/main-night-lease.json"
+                fi
+                bash .github/scripts/night-failure-record.sh "${GITHUB_SHA}" "${RUNNER_TEMP}/main-night-lease.json" "${RUNNER_TEMP}/night-publish.json"
+                fail_after_push="true"
+                rc=0
+              fi
               if [ "$rc" -ne 0 ]; then
-                echo "The night-publish-check command exited ${rc}."
+                echo "The night-publish-check command exited ${rc}, and the step pushes no record."
                 exit "$rc"
               fi
               publish="${RUNNER_TEMP}/night-publish.json"
@@ -293,6 +309,10 @@ jobs:
             git push --force-with-lease="refs/heads/night-results:${lease}" origin "HEAD:refs/heads/${target}"
           else
             git push --force origin "HEAD:refs/heads/${target}"
+          fi
+          if [ "$fail_after_push" = "true" ]; then
+            echo "The inputs of this night were bad, so its failure record replaced the record of main, and the job fails (T-2, D-565)."
+            exit 1
           fi
       - name: Re-run the night gate of the branch
         # The night-gate check of a PR runs on a pull_request event, so a night that ends later re-runs its newest run
