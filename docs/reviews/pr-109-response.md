@@ -40,7 +40,7 @@ Disposition: full merit.
 
 Evidence: at `d32da6b`, the lock was a directory, and the poll wrote `lock/pid` after it made the directory. A second poll in that gap read no process id, took the lock as stale, and removed it.
 
-Correction: the lock is a symbolic link whose target is the process id. `ln -sn` makes the link and its target in one call, so no lock exists with no process id. A lock that is no link, or whose target is no number, stops the poll with an error and stays. A stale lock goes only when it still names the same dead process, and a second poll that takes it first wins.
+Correction: the lock is a symbolic link whose target is the process id. `ln -sn` makes the link and its target in one call, so no lock exists with no process id. A lock that is no link, or whose target is no number, stops the poll with an error and stays. A stale lock goes only when it still names the same dead process. That check and the removal were still two open steps, and the gitar pass of `50862e5` showed that a second poll could remove a live lock between them. The correction after `50862e5` puts the two steps behind the guard `lock.reap`, which one `mkdir` takes, so one poll alone removes a stale lock. A guard older than 10 minutes stops each poll with an error. `NightFixerTests.AGuardOfAnotherPollLeavesTheStaleLock` and `AnOldGuardStopsThePoll` failed on the poll of `50862e5`.
 
 Regression check: `NightFixerTests.ALockWithNoProcessIdStaysAndStopsThePoll` puts a lock with no process id in place, the state of the gap. The poll stops with exit code 1 and keeps the lock. It failed on the poll of `d32da6b`, which removed the lock and read on. `ALockOfAnotherFormStopsThePoll`, `ALiveLockStartsNoSession`, and `AStaleLockGoes` test the other lock states.
 

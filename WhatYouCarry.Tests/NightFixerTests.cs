@@ -117,12 +117,40 @@ public sealed class NightFixerTests
     [Fact]
     public void AStaleLockGoes()
     {
-        RunCase(new() { ["run.txt"] = $"48 completed failure {Sha}", ["open.txt"] = "0" }, (result, _) =>
+        RunCase(new() { ["run.txt"] = $"48 completed failure {Sha}", ["open.txt"] = "0" }, (result, state) =>
         {
             Assert.True(result.Exit == 0, result.Errors);
+            Assert.False(Directory.Exists(Path.Combine(state, "lock.reap")), "The poll removes its guard after the removal of the stale lock.");
             Assert.Contains("the lock of poll 999999 stays after its end", result.Output, StringComparison.Ordinal);
             Assert.Contains("a session would start for the night 48", result.Output, StringComparison.Ordinal);
         }, lockLink: "999999");
+    }
+
+    /// <summary>
+    /// PR #109 automated pass. A poll that finds another poll in the removal of a stale lock steps back and leaves the lock.
+    /// The check of the target and the removal were two open steps, so a second poll could remove a lock that the first
+    /// poll took between them.
+    /// </summary>
+    [Fact]
+    public void AGuardOfAnotherPollLeavesTheStaleLock()
+    {
+        RunCase(new() { ["run.txt"] = $"54 completed failure {Sha}", ["open.txt"] = "0" }, (result, state) =>
+        {
+            Assert.True(result.Exit == 0, result.Errors);
+            Assert.Contains("another poll removes the stale lock, so this poll starts none", result.Output, StringComparison.Ordinal);
+            Assert.Equal("999999", new FileInfo(Path.Combine(state, "lock")).LinkTarget);
+        }, lockLink: "999999", guardAgeMinutes: 0);
+    }
+
+    /// <summary>PR #109 automated pass. A guard that stays for more than 10 minutes stops each poll with an error, so a stopped poll never blocks the fixer in silence.</summary>
+    [Fact]
+    public void AnOldGuardStopsThePoll()
+    {
+        RunCase(new() { ["run.txt"] = $"55 completed failure {Sha}", ["open.txt"] = "0" }, (result, _) =>
+        {
+            Assert.Equal(1, result.Exit);
+            Assert.Contains("stays for more than 10 minutes, so this poll stops", result.Errors, StringComparison.Ordinal);
+        }, lockLink: "999999", guardAgeMinutes: 11);
     }
 
     /// <summary>
@@ -290,7 +318,7 @@ public sealed class NightFixerTests
     /// Runs the poll with --dry-run under bash, with the fake first on the path and the state in a new directory. A lock
     /// link names its target, and a lock directory is the old form with no process id. Windows skips it.
     /// </summary>
-    private static void RunCase(Dictionary<string, string> files, Action<(int Exit, string Output, string Errors), string> check, string[]? arguments = null, string? lockLink = null, bool lockDirectory = false)
+    private static void RunCase(Dictionary<string, string> files, Action<(int Exit, string Output, string Errors), string> check, string[]? arguments = null, string? lockLink = null, bool lockDirectory = false, int? guardAgeMinutes = null)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -320,6 +348,13 @@ public sealed class NightFixerTests
             if (lockDirectory)
             {
                 Directory.CreateDirectory(Path.Combine(state, "lock"));
+            }
+
+            if (guardAgeMinutes is int age)
+            {
+                string guard = Path.Combine(state, "lock.reap");
+                Directory.CreateDirectory(guard);
+                Directory.SetLastWriteTimeUtc(guard, DateTime.UtcNow.AddMinutes(-age));
             }
 
             check(RunScript(directory, state, arguments ?? ["--dry-run"]), state);

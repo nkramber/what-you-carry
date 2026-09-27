@@ -56,15 +56,28 @@ if ! ln -sn "$$" "$lock" 2>/dev/null; then
     echo "night-fixer: the session of poll ${holder} runs, so this poll starts none."
     exit 0
   fi
+  # The check of the target and the removal are two steps. Only the poll that holds the guard lock.reap does them, so no
+  # poll removes a lock that another poll took after the check (PR #109 automated pass). A guard older than 10 minutes
+  # comes from a poll that stopped inside these lines, and it stops each poll until the owner removes it (T-2).
+  guard="${lock}.reap"
+  if ! mkdir "$guard" 2>/dev/null; then
+    if [ -n "$(find "$guard" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+      echo "night-fixer: the guard ${guard} stays for more than 10 minutes, so this poll stops. Remove it." >&2
+      exit 1
+    fi
+    echo "night-fixer: another poll removes the stale lock, so this poll starts none."
+    exit 0
+  fi
   echo "night-fixer: the lock of poll ${holder} stays after its end, and this poll removes it."
-  # A second poll can remove the same stale lock and take it first. The link then fails, and this poll stops.
   if [ "$(readlink "$lock" 2>/dev/null || true)" = "$holder" ]; then
     rm -f "$lock"
   fi
   if ! ln -sn "$$" "$lock" 2>/dev/null; then
+    rmdir "$guard"
     echo "night-fixer: another poll took the lock, so this poll starts none."
     exit 0
   fi
+  rmdir "$guard"
 fi
 trap 'if [ "$(readlink "$lock" 2>/dev/null || true)" = "$$" ]; then rm -f "$lock"; fi' EXIT
 
