@@ -235,8 +235,10 @@ public sealed class InputReader
     {
         float stickLookX = this.poll.GetJoyAxis(FirstController, LookAxisX);
         float stickLookY = this.poll.GetJoyAxis(FirstController, LookAxisY);
-        float strafe = this.KeyAxis(RightKey, LeftKey) + this.poll.GetJoyAxis(FirstController, MoveAxisX);
-        float forward = this.KeyAxis(ForwardKey, BackKey) - this.poll.GetJoyAxis(FirstController, MoveAxisY);
+        // The move stick takes its dead zone before the keys add, so a stick at rest adds nothing (D-658).
+        (float stickStrafe, float stickForward) = IntentBuilder.MoveStick(this.poll.GetJoyAxis(FirstController, MoveAxisX), -this.poll.GetJoyAxis(FirstController, MoveAxisY));
+        float strafe = this.KeyAxis(RightKey, LeftKey) + stickStrafe;
+        float forward = this.KeyAxis(ForwardKey, BackKey) + stickForward;
 
         ushort buttons = 0;
         if (this.poll.IsKeyPressed(JumpKey) || this.poll.IsJoyButtonPressed(FirstController, JumpButton))

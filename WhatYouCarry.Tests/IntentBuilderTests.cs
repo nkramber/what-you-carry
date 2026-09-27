@@ -90,6 +90,28 @@ public sealed class IntentBuilderTests
         Assert.Equal((short)-IntentBuilder.StickHundredthsPerTick, down.PitchDelta);
     }
 
+    /// <summary>
+    /// The move stick has a radial dead zone and a linear rescale (D-289, D-658): a length inside the dead zone gives
+    /// zero, full deflection gives one, the middle of the live range gives one half, and the direction stays.
+    /// </summary>
+    [Theory]
+    [InlineData(0.0f, 0.0f, 0.0f, 0.0f)]
+    [InlineData(0.067f, 0.0f, 0.0f, 0.0f)]
+    [InlineData(0.1f, -0.1f, 0.0f, 0.0f)]
+    [InlineData(0.15f, 0.0f, 0.0f, 0.0f)]
+    [InlineData(1.0f, 0.0f, 1.0f, 0.0f)]
+    [InlineData(0.0f, -1.0f, 0.0f, -1.0f)]
+    [InlineData(0.575f, 0.0f, 0.5f, 0.0f)]
+    [InlineData(0.0f, -0.575f, 0.0f, -0.5f)]
+    [InlineData(0.6f, 0.8f, 0.6f, 0.8f)]
+    [InlineData(1.2f, 1.6f, 0.6f, 0.8f)]
+    public void MoveStickHasARadialDeadZoneAndALinearRescale(float strafe, float forward, float expectedStrafe, float expectedForward)
+    {
+        (float outStrafe, float outForward) = IntentBuilder.MoveStick(strafe, forward);
+        Assert.Equal(expectedStrafe, outStrafe, 5);
+        Assert.Equal(expectedForward, outForward, 5);
+    }
+
     /// <summary>The movement bytes clamp to the range of D-233, and a fraction scales by 127.</summary>
     [Theory]
     [InlineData(0.0f, 0)]
