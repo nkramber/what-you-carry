@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 276: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- PR-91 fixes open findings of the repository review of 2026-09-24 (D-596). The owner lifted one concern per PR for it (D-618), so it holds 26 fixes and two owner answers with no code (D-640, D-641).
+- The owner answered each open choice in the session: D-618 to D-641. OQ-159, OQ-160, OQ-197, OQ-198, OQ-202 to OQ-205 are resolved.
+- The owner corrected two answers after new evidence: the bot floor cap (D-625, the boss timers pass 18000 ticks) and the review time limit (D-627, a PR #104 round took about 32 minutes).
+- Each regression test failed on the old behavior in a scratch worktree. A windowed run proved the close of the window (F-161).
+- The findings are F-148 to F-175 in the design register.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The branch head before this entry is `efd48a8`.
+- At `efd48a8`, the full suite passed 1915 of 1915 with the Smoke category, on macOS. `det-lint` and `asset-qa` gave 0 findings. `ste-check` gave 0 findings.
+- The simulation version is 18 (D-628), and the run record format version is 2 (D-637). The bit-identity answer is `e202e84e0f5c188a` in Debug and Release on macOS.
+
+### In flight
+
+- PR #109 is open with the done marks. The gitar pass, the CI checks, and `make codex-review` come next.
+
+### Traps and gotchas
+
+- The first CI run of `smoke.yml` misses the cache, because each cache key now holds the pinned SHA-512 (D-626). Each job downloads and checks its zip one time.
+- The lock files of D-638 failed CI with NU1403: the Godot packages of the Godot app and of nuget.org differ in bytes. D-641 drops them.
+- Dependabot now opens a PR for each new action pin (D-636). Each such PR needs every gate of a PR.
+- At `6a2d1a8`, one of 11 engine sessions of `smoke-macos-arm64` aborted at exit with code 134 (`mutex lock failed`) after a clean end line. 30 local runs passed. The close handler then moved from an override of `_Notification` to the close signal of the root window. The cause is not proven, so watch each macOS smoke run.
+
+### Open questions that block progress
+
+None for PR-91. The findings that stay open wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
+
+### Next concrete action
+
+Finish the gitar pass of PR #109, then run `make codex-review PR=109` when each check but the Review gate workflow is green.
+
 ## Session 275: 2026-09-26, Claude Code
 
 Author: Claude Code
