@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Godot;
 using WhatYouCarry.Assets;
 using WhatYouCarry.Core.Logging;
@@ -7,11 +9,12 @@ using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 
 namespace WhatYouCarry.Game.Models;
 
-/// <summary>The scene nodes of one model: the root, the node of each bone by bone name, and the node of each attachment point by slot name.</summary>
+/// <summary>The scene nodes of one model: the root, the node of each bone by bone name, the node of each attachment point by slot name, and the node of each box.</summary>
 /// <param name="Root">The root node at the model origin.</param>
 /// <param name="Bones">The node of each bone, by bone name.</param>
 /// <param name="Attachments">The node of each attachment point, by slot name.</param>
-public sealed record ModelNodeTree(Node3D Root, IReadOnlyDictionary<string, Node3D> Bones, IReadOnlyDictionary<string, Node3D> Attachments);
+/// <param name="Boxes">The mesh node of each box, in the box order of the model.</param>
+public sealed record ModelNodeTree(Node3D Root, IReadOnlyDictionary<string, Node3D> Bones, IReadOnlyDictionary<string, Node3D> Attachments, IReadOnlyList<MeshInstance3D> Boxes);
 
 /// <summary>
 /// The scene nodes of one model: a node per bone, a mesh instance per box under its bone, and an empty node per
@@ -33,6 +36,9 @@ public sealed record ModelNodeTree(Node3D Root, IReadOnlyDictionary<string, Node
 public static class ModelNodes
 {
     private const string NotABone = "The pose names a bone that the model does not have.";
+    private const string OtherTemplate = "The template tree holds another count of boxes than the model, so it is the tree of another model.";
+    private const string TemplateBoxesField = "templateBoxes";
+    private const string ModelBoxesField = "modelBoxes";
     private const string NotASlot = "The model has no attachment point for the slot.";
     private const string BoneField = "bone";
     private const string SlotField = "slot";
@@ -41,6 +47,31 @@ public static class ModelNodes
     /// <summary>The node tree of a model, with one material on every box. Each face reads its canvas from the texture layout (D-505).</summary>
     /// <exception cref="ContextException">The layout has no canvas for a face of the model.</exception>
     public static ModelNodeTree Build(BlockbenchModel model, Material material, TextureLayout layout)
+    {
+        return BuildTree(model, material, (instance, index) => ArrayMeshBuilder.BuildInto(instance, BoxGeometry.Build(model.Path, model.Boxes[index], layout)));
+    }
+
+    /// <summary>
+    /// The node tree of a model that shares the mesh of each box of a template tree of the same model, and builds no
+    /// mesh. A descent builds the tree of each enemy this way, so it costs nodes alone (F-192).
+    /// </summary>
+    /// <exception cref="ContextException">The template holds another count of boxes, so it is the tree of another model.</exception>
+    public static ModelNodeTree Share(ModelNodeTree template, BlockbenchModel model, Material material)
+    {
+        if (template.Boxes.Count != model.Boxes.Count)
+        {
+            ContextException error = new(OtherTemplate);
+            error.AddContext(ModelField, model.Path);
+            error.AddContext(TemplateBoxesField, template.Boxes.Count.ToString(CultureInfo.InvariantCulture));
+            error.AddContext(ModelBoxesField, model.Boxes.Count.ToString(CultureInfo.InvariantCulture));
+            throw error;
+        }
+
+        return BuildTree(model, material, (instance, index) => ArrayMeshBuilder.ShareInto(instance, template.Boxes[index]));
+    }
+
+    /// <summary>The nodes of a model. The give-mesh call puts the mesh of each box, by its index in the model, on its node.</summary>
+    private static ModelNodeTree BuildTree(BlockbenchModel model, Material material, Action<MeshInstance3D, int> giveMesh)
     {
         Node3D root = new() { Name = model.Name };
         Node3D[] boneNodes = new Node3D[model.Bones.Count];
@@ -56,16 +87,19 @@ public static class ModelNodes
             parent.AddChild(node);
         }
 
-        foreach (ModelBox box in model.Boxes)
+        List<MeshInstance3D> boxes = [];
+        for (int index = 0; index < model.Boxes.Count; index++)
         {
+            ModelBox box = model.Boxes[index];
             MeshInstance3D instance = new()
             {
                 Name = box.Name,
                 MaterialOverride = material,
                 Position = RenderInterpolation.ToGodot(box.Pivot - model.Bones[box.Bone].Pivot),
             };
-            ArrayMeshBuilder.BuildInto(instance, BoxGeometry.Build(model.Path, box, layout));
+            giveMesh(instance, index);
             boneNodes[box.Bone].AddChild(instance);
+            boxes.Add(instance);
         }
 
         Dictionary<string, Node3D> attachments = [];
@@ -82,7 +116,7 @@ public static class ModelNodes
             attachments.Add(point.Slot, node);
         }
 
-        return new ModelNodeTree(root, bones, attachments);
+        return new ModelNodeTree(root, bones, attachments, boxes);
     }
 
     /// <summary>

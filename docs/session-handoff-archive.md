@@ -1,5 +1,169 @@
 # Session handoff archive
 
+## Session 286: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-91, author, merge. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- The gitar pass of `50862e5` suggested a guard for the removal of a stale fixer lock. `db8b3c8` added it, and the thread is resolved.
+- Review round 5 (session 285) gave `Ready for owner merge` at the effective head `db8b3c8`, with P2-1 to P2-3 fixed.
+- The round ran past the limit of 60 minutes of D-627, because the reviewer ran its own smoke stress test. It pushed the record and its handoff first, and `codex-review` then stopped it with a fault. The limit worked as D-627 states.
+- The session asks the owner to confirm the merge with the merge summary (D-533).
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective head is `db8b3c8`. Each check passed at `db8b3c8`, and the review gate passed at the tip.
+
+### In flight
+
+- The owner confirmation, then `gh pr merge 109 --auto --squash` (D-516).
+
+### Traps and gotchas
+
+- After the merge, the launchd job `com.whatyoucarry.night-fixer` starts to act on each failed night on `main`. `docs/runbooks/night-fixer.md` holds its stop and its removal.
+- A review round that runs its own stress test can pass the limit of D-627.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+After the merge, the next session continues the open findings of D-596, which wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
+
+## Session 285: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Completed review round 5 at effective head `db8b3c8`. P2-2 and P2-3 are fixed, and their focused tests pass.
+- Reviewed the mesh wrapper correction F-177 and the PR comments. Updated `docs/reviews/pr-109.md` to `Ready for owner merge`.
+- The 20 focused `NightFixerTests` passed. Two hundred headless smoke sessions under eight busy processes also passed.
+
+### State of the build
+
+- Remote metadata head: `e97c381`. The reviewed code head is `db8b3c8`. Fresh checks passed for Gitar, evaluate, review-gate, asset-qa, det-lint, ste-check, documents, doc-gate, and night-gate. CI, Smoke, bit identity, and bot jobs skipped under the documents-only rule.
+
+### In flight
+
+- A metadata update records the push result. Fresh document checks and the Gitar wait follow that push.
+
+### Traps and gotchas
+
+- The worktree is detached. Compare its pushed commit with the PR head; the local status has no branch or ahead count.
+- The reviewer does not answer comments or merge the PR.
+
+### Open questions that block progress
+
+None for PR-109.
+
+### Next concrete action
+
+Push the metadata update, wait for fresh checks and Gitar, then give the owner the merge summary and request merge confirmation.
+
+## Session 284: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- The gitar pass of `c505fa9` found that the fixer marked a night handled before its setup. `d32da6b` fixed it, and the thread is resolved.
+- Review round 4 (session 283) gave `Changes required` at `d32da6b` with P2-2 (a queued notice counted as delivered) and P2-3 (a race in the lock). `09c8695` fixes both, and `docs/reviews/pr-109-response.md` records them.
+- The suite of that correction found F-177, an engine crash at exit from leaked mesh wrappers. Under load, the PR head crashed in 3 of 100 smoke sessions, `main` in 0 of 100. The owner chose the fix of the cause, and 200 sessions then gave 0 crashes.
+- The launchd job now copies the folder `.github/scripts` of `origin/main`, so the helper `notify-owner.sh` lies beside the poll. The job is reloaded on this Mac.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The code head is `09c8695`. The full suite passed 1937 of 1937 at `09c8695` on macOS.
+
+### In flight
+
+- The push, the gitar pass, CI, and review round 5.
+
+### Traps and gotchas
+
+- The auto mode of the harness came back on by itself several times and blocked the fixer work. The owner switched it off each time.
+- F-177 shows under load alone: 0 of 70 plain runs crashed. A stress loop with eight `yes` processes gives the rate.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+Push, finish the gitar pass and CI, run review round 5, then ask the owner to confirm the merge.
+
+## Session 283: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Review round 4 checked the effective head `d32da6b` and the new night fixer, its notice path, tests, and runbooks.
+- The setup failure finding from Gitar is fixed. Two findings remain: the poll can count a notice dispatch as delivery, and concurrent polls can remove a lock before its PID exists.
+- The focused night fixer tests passed 15 of 15 on macOS.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective head is `d32da6b`. GitHub CI, Smoke, bit identity, bots, asset QA, document gates, and Gitar passed. `evaluate` and `review-gate` fail because the review record requires changes.
+
+### In flight
+
+- The review record and this handoff entry are ready for one metadata commit and push to `feat/pr-91-review-fixes`.
+
+### Traps and gotchas
+
+- `gh workflow run notify.yml` starts a workflow. It does not confirm that Pushover sent the notice.
+- A lock directory without a PID can belong to a poll that has not finished startup.
+
+### Open questions that block progress
+
+None for this review.
+
+### Next concrete action
+
+Correct P2-2 and P2-3, then request another review round.
+
+## Session 282: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- The owner asked for a Pushover notice of a failed night (D-642) and a night fixer on the Mac Mini (D-643 to D-645). Both joined PR #109.
+- The repository secrets `PUSHOVER_USER_KEY` and `PUSHOVER_API_TOKEN` hold the keys, and a test send returned HTTP 200.
+- The auto mode of the harness blocked the fixer build as an unsafe agent. The owner added allow rules to `.claude/settings.local.json` and moved the session to manual mode, then approved each step.
+- This session installed the launchd job `com.whatyoucarry.night-fixer` on the Mac Mini. It runs the poll of `origin/main`, so it does nothing before the merge. A dry run against GitHub read the newest night on `main` as passed.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The code head is `fa435b2`. The full suite passed 1931 of 1931 at `fa435b2` on macOS.
+- Review round 3 approved `69c946a`. The notice and the fixer moved the effective head, so review round 4 is due.
+
+### In flight
+
+- The push of `fa435b2`, the gitar pass, CI, and review round 4.
+
+### Traps and gotchas
+
+- `gh workflow run notify.yml` works only after the merge, because a dispatch needs the workflow on `main`.
+- The night fixer runs `claude -p` with no permission prompts under the account of the owner (D-643). `docs/runbooks/night-fixer.md` holds the stop and the removal.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+Push, finish the gitar pass and CI, run review round 4, then ask the owner to confirm the merge.
+
 ## Session 281: 2026-09-26, Claude Code
 
 Author: Claude Code

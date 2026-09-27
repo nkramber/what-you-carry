@@ -374,14 +374,66 @@ public sealed class GreedyMesherTests
         Assert.Throws<ContextException>(() => GreedyMesher.MeshChunk(grid, 0, -1, RepositoryTextures.Tiles));
     }
 
-    /// <summary>The origin of each block canvas is its place in the committed layout, as a fraction of the atlas of 1024 pixels (D-85, D-505, D-604).</summary>
+    /// <summary>
+    /// PR-77 regression: each slot starts at a multiple of 64 pixels, inside the block atlas, and no two slots share a
+    /// place. The atlas file places its canvases on a pitch of 66 pixels, so a mipmap level of 4 pixels or more mixed
+    /// two canvases at each block edge. The slots then keep each canvas apart down to one pixel (D-677).
+    /// </summary>
     [Fact]
-    public void TileOriginsFollowTheLayout()
+    public void BlockSlotsSitOnTheGridOfOneCanvas()
     {
-        foreach (BlockPlace place in RepositoryTextures.Layout.Blocks)
+        HashSet<Vector2I> seen = [];
+        foreach (BlockCanvas canvas in RepositoryTextures.Tiles.Canvases)
         {
-            Vector2 expected = new((float)place.At.X / AtlasLayout.AtlasPixels, (float)place.At.Y / AtlasLayout.AtlasPixels);
-            Assert.Equal(expected, RepositoryTextures.Tiles.Origin((BlockId)place.Block));
+            Assert.Equal(0, canvas.Slot.X % AtlasLayout.BlockPixels);
+            Assert.Equal(0, canvas.Slot.Y % AtlasLayout.BlockPixels);
+            Assert.InRange(canvas.Slot.X, 0, AtlasLayout.AtlasPixels - AtlasLayout.BlockPixels);
+            Assert.InRange(canvas.Slot.Y, 0, AtlasLayout.AtlasPixels - AtlasLayout.BlockPixels);
+            Assert.True(seen.Add(canvas.Slot), $"Two blocks share the slot {canvas.Slot}.");
+        }
+
+        Assert.Contains(RepositoryTextures.Layout.Blocks, place => place.At.X % AtlasLayout.BlockPixels != 0);
+    }
+
+    /// <summary>
+    /// The block atlas has a slot for each block id, so every layout fits. The last id of a byte takes the last slot,
+    /// in the bottom right corner (D-677).
+    /// </summary>
+    [Fact]
+    public void BlockAtlasHasASlotForEachBlockId()
+    {
+        Assert.Equal(byte.MaxValue + 1, BlockTiles.SlotsPerSide * BlockTiles.SlotsPerSide);
+
+        List<BlockPlace> places = [];
+        for (int block = 0; block <= byte.MaxValue; block++)
+        {
+            places.Add(new BlockPlace(block, "raw-stone", new AtlasRect(0, 0, AtlasLayout.BlockPixels, AtlasLayout.BlockPixels)));
+        }
+
+        BlockTiles tiles = new(new TextureLayout(places, []));
+        int last = AtlasLayout.AtlasPixels - AtlasLayout.BlockPixels;
+        Assert.Equal(new Vector2I(last, last), tiles.Canvases[byte.MaxValue].Slot);
+    }
+
+    /// <summary>
+    /// Each block canvas comes from its place in the committed layout, and it moves to a slot of the block atlas in
+    /// layout order. The origin of each block is its slot as a fraction of the block atlas of 1024 pixels (D-85,
+    /// D-505, D-604, D-677).
+    /// </summary>
+    [Fact]
+    public void TileOriginsAreTheSlotsOfTheLayoutCanvases()
+    {
+        IReadOnlyList<BlockPlace> places = RepositoryTextures.Layout.Blocks;
+        IReadOnlyList<BlockCanvas> canvases = RepositoryTextures.Tiles.Canvases;
+        Assert.Equal(places.Count, canvases.Count);
+        for (int index = 0; index < places.Count; index++)
+        {
+            BlockPlace place = places[index];
+            BlockCanvas canvas = canvases[index];
+            Assert.Equal((BlockId)place.Block, canvas.Block);
+            Assert.Equal(new Rect2I(place.At.X, place.At.Y, place.At.Width, place.At.Height), canvas.Source);
+            Vector2 expected = new((float)canvas.Slot.X / AtlasLayout.AtlasPixels, (float)canvas.Slot.Y / AtlasLayout.AtlasPixels);
+            Assert.Equal(expected, RepositoryTextures.Tiles.Origin(canvas.Block));
         }
 
         Assert.Equal(1.0f / 16.0f, BlockTiles.Size);

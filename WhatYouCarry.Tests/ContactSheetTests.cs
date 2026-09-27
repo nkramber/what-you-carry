@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Godot;
 using WhatYouCarry.Assets;
+using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Core.World;
@@ -45,6 +46,41 @@ public sealed class ContactSheetTests
 
         ContextException absent = Assert.Throws<ContextException>(() => ContactSheet.PathOf(UserArguments.Parse([])));
         Assert.Contains(ContactSheet.Flag, absent.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The lantern of each shot stands halfway from the target to the camera (D-678). Its light ends before the
+    /// nearest other subject, so no cell shows the light of another shot.
+    /// </summary>
+    [Fact]
+    public void LanternOfEachShotLightsItsOwnSubjectAlone()
+    {
+        foreach (SheetShot shot in ContactSheet.Shots(Models))
+        {
+            Vector3 lantern = ContactSheet.LanternPosition(shot);
+            Vector3 camera = ContactSheet.CameraPosition(shot);
+            Assert.True(lantern.IsEqualApprox((shot.Target + camera) / 2.0f), $"The lantern of shot {shot.Index} is not halfway to the camera.");
+        }
+
+        // A subject reaches at most one meter from its origin, so the light stops one meter short of the next origin.
+        float lanternFromTarget = ContactSheet.Distance * ContactSheet.LanternShare;
+        Assert.True(ContactSheet.SubjectSpacing - lanternFromTarget - 1.0f > SceneLight.LanternRange, "The lantern of one shot reaches the next subject.");
+    }
+
+    /// <summary>
+    /// The lantern of play sits above the head and behind the center of the body (D-680). The play camera stands
+    /// behind the body, so the lantern lights the back that the camera sees. The ambient light has the start value of
+    /// D-681, and the lantern ends inside the room around the player.
+    /// </summary>
+    [Fact]
+    public void LanternSitsAboveAndBehindTheHead()
+    {
+        Assert.True(SceneLight.LanternOffset.Y > PlayerBody.Height, "The lantern is not above the head.");
+        Assert.True(SceneLight.LanternOffset.Z > 0.0f, "The lantern is not behind the body, on the side of the camera.");
+        Assert.Equal(0.0f, SceneLight.LanternOffset.X);
+        Assert.Equal(new Vector3(0.0f, 2.1f, 0.5f), SceneLight.LanternOffset);
+        Assert.Equal(4.0f, SceneLight.AmbientEnergy);
+        Assert.InRange(SceneLight.LanternRange, 1.0f, 12.0f);
     }
 
     /// <summary>A texel on the sheet has the size of a texel in play on the Deck: about 2.7 pixels at the boom length (D-306, D-603).</summary>

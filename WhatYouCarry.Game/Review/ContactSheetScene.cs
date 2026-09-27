@@ -8,13 +8,13 @@ using WhatYouCarry.Game.World;
 
 namespace WhatYouCarry.Game.Review;
 
-/// <summary>The nodes of the contact sheet: the viewport that renders each shot, and its camera.</summary>
-public sealed record ContactSheetNodes(SubViewport Viewport, Camera3D Camera);
+/// <summary>The nodes of the contact sheet: the viewport that renders each shot, its camera, and the lantern that each shot moves.</summary>
+public sealed record ContactSheetNodes(SubViewport Viewport, Camera3D Camera, OmniLight3D Lantern);
 
 /// <summary>
 /// Builds the scene of the contact sheet (D-306) in a viewport with a world of its own: each block in a small grid
 /// and each ramp in its ramp scene through the greedy mesher and the world material, the two bodies with the sword in
-/// the hand and the model material (D-336), the scene light, and the camera of play. Every subject stands at the place
+/// the hand and the model material (D-336), the scene light of play (D-678), and the camera of play. Every subject stands at the place
 /// that its shot gives. Each model shot draws the model that it names, with the sword in the hand (D-673).
 /// </summary>
 public static class ContactSheetScene
@@ -29,23 +29,24 @@ public static class ContactSheetScene
     public static readonly Vector3 FarPoint = new(0.0f, -1000.0f, 0.0f);
 
     /// <summary>The viewport and the camera, with the subject of every shot in the viewport.</summary>
-    /// <param name="atlas">The texture atlas.</param>
+    /// <param name="blockAtlas">The block atlas of <see cref="BlockAtlas"/>, which the world material reads.</param>
     /// <param name="layout">The texture layout, which places each face of every model and block.</param>
     /// <param name="shots">The shots of <see cref="ContactSheet.Shots"/>.</param>
     /// <param name="models">Each model that a shot names, by its path.</param>
     /// <param name="sword">The weapon model that each model holds.</param>
     /// <param name="modelMaterial">The one model material of the scene (D-85).</param>
     /// <exception cref="Core.Logging.ContextException">A shot names a model that the models do not hold.</exception>
-    public static ContactSheetNodes Build(Texture2D atlas, TextureLayout layout, IReadOnlyList<SheetShot> shots, IReadOnlyDictionary<string, BlockbenchModel> models, BlockbenchModel sword, Material modelMaterial)
+    public static ContactSheetNodes Build(Texture2D blockAtlas, TextureLayout layout, IReadOnlyList<SheetShot> shots, IReadOnlyDictionary<string, BlockbenchModel> models, BlockbenchModel sword, Material modelMaterial)
     {
         SubViewport viewport = new()
         {
             Size = new Vector2I(ContactSheet.RenderPixels, ContactSheet.RenderPixels),
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
             OwnWorld3D = true,
+            Msaa3D = PlaceholderScene.EdgeSmoothing,
         };
 
-        ShaderMaterial worldMaterial = WorldMaterial.Create(atlas);
+        ShaderMaterial worldMaterial = WorldMaterial.Create(blockAtlas);
         BlockTiles tiles = new(layout);
         WorldMaterial.SetFade(worldMaterial, FarPoint, FarPoint);
         foreach (SheetShot shot in shots)
@@ -89,9 +90,11 @@ public static class ContactSheetScene
             }
         }
 
-        viewport.AddChild(PlaceholderScene.Light());
+        viewport.AddChild(SceneLight.Environment());
+        OmniLight3D lantern = SceneLight.Lantern();
+        viewport.AddChild(lantern);
         Camera3D camera = PlaceholderScene.Camera();
         viewport.AddChild(camera);
-        return new ContactSheetNodes(viewport, camera);
+        return new ContactSheetNodes(viewport, camera, lantern);
     }
 }

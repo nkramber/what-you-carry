@@ -73,8 +73,11 @@ public static class ContactSheet
     /// <summary>The height of the camera over the subject, in degrees, so the up faces show.</summary>
     public const float CameraPitchDegrees = 25.0f;
 
-    /// <summary>The meters between two subjects along X, so no cell shows a neighbor.</summary>
-    public const float SubjectSpacing = 10.0f;
+    /// <summary>The meters between two subjects along X, so no cell shows a neighbor, and the lantern of one shot does not reach the next subject.</summary>
+    public const float SubjectSpacing = 12.0f;
+
+    /// <summary>The part of the way from the target to the camera where the lantern of a shot stands.</summary>
+    public const float LanternShare = 0.5f;
 
     /// <summary>The meters along minus X between two ramps, and between the first ramp and the first block.</summary>
     public const float RampSpacing = 100.0f;
@@ -236,6 +239,15 @@ public static class ContactSheet
         double pitch = CameraPitchDegrees * Math.PI / 180.0;
         Vector3 direction = new((float)(Math.Sin(yaw) * Math.Cos(pitch)), (float)Math.Sin(pitch), (float)(Math.Cos(yaw) * Math.Cos(pitch)));
         return shot.Target + (direction * Distance);
+    }
+
+    /// <summary>
+    /// The place of the lantern of one shot: halfway from the target to the camera, as the player stands between the
+    /// camera and the room in play (D-678). One lantern moves to each shot, so no shot has the light of another.
+    /// </summary>
+    public static Vector3 LanternPosition(SheetShot shot)
+    {
+        return shot.Target + ((CameraPosition(shot) - shot.Target) * LanternShare);
     }
 
     /// <summary>The screen pixels along one meter at the camera distance: the rows of a render over the height of the view there.</summary>

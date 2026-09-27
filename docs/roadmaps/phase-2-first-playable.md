@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-92, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-92, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. PR-77 applies D-677 to D-685. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -29,6 +29,8 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-40 | D-88's effect note put wall fade in the mesher. A shader test needs no mesher change | PR-13 |
 | F-41 | No item said whether a Steam Deck unit exists for M-3 | M-3 |
 | F-96 | The art stayed a first pass, and no item raised it to finished quality | PR-62, PR-74 to PR-77 |
+| F-191 | The bot run on the Deck has frames of 26 to 30 ms after the first 10 seconds | PR-77 |
+| F-192 | The floor transition on the Deck is over the budget of D-635 | PR-77 |
 | F-97 | The tunnels felt cramped in play, and every rise in a tunnel needed a jump | PR-63, PR-64, PR-65, PR-66, PR-16 |
 | F-98 | On the wide sizes, about one floor in 96000 ran the dig job cap with a chamber still in rock | PR-63, PR-67, PR-66 |
 | F-101 | The night of 2026-09-15 found a shaft that lands on an unreachable floor on the wide sizes: seed 79146, floor 7 | PR-68, PR-66 |
@@ -1465,24 +1467,29 @@ Gate: exit tests 1 to 3 pass.
 
 ### PR-77: Scene light and edge smoothing
 
+✅ Done in PR #118.
+
 Scope:
 
-- The scene light of play and of the contact sheet moves toward the torchlight of D-59, inside the budget of D-81.
-- The antialiasing mode and the texture filter of OQ-181, measured on the Deck against D-295 (D-504).
+- The scene light of play and of the contact sheet moves toward the torchlight of D-59, inside the budget of D-81: a lantern that the player carries above and behind the head, and a dark ambient light, with no directional light (D-678, D-680, D-681).
+- The antialiasing mode and the texture filter of D-677: MSAA at 4x, and nearest filtering with mipmaps. MSAA off, 2x, and 4x measure the same on the Deck, so the fallback to 2x does not apply (D-684).
+- The frame costs that the game adds on the Deck: the frames of 26 to 30 ms in the bot run (F-191), and the floor transition over the budget of D-635 (F-192). This PR holds more than one concern (D-683).
+- `Directory.Build.props`: every configuration builds optimized code, so the Godot build of the checkout runs the code that ships (D-685, F-191).
+- `EnemyNodes`, `ModelNodes`, and `ArrayMeshBuilder`: one hidden template tree of each model, built at boot. Each enemy tree and its sword share the meshes of the templates, so a descent builds no mesh (F-192).
 
-Out of scope: new light sources in the world.
+Out of scope: new light sources in the world, the frames of the first 10 seconds, and the periodic stall of the Deck desktop (F-190).
 
 Exit tests:
 
 1. `SmokeSessionPasses` passes on the three platforms with the new light and the new edge mode.
-2. A frame log on the Deck meets D-295 with the chosen mode.
+2. A bot frame log on the Deck at MSAA 4x meets D-683. After the first 10 seconds, no frame is over 16.7 ms, except the stall of F-190. The transition is under 22222 microseconds.
 3. The owner approves a contact sheet with the new light, recorded as a decision.
 
 Review focus: the frame time, presentation.
 
 Check clause: none.
 
-Gate: exit tests 1 to 3 pass. OQ-181 blocks the start.
+Gate: exit tests 1 to 3 pass.
 
 > *In plain English:* the light is one flat setting, and block edges look jagged on the Deck. This change adds torchlight and smooth edges inside the frame budget.
 
@@ -1566,8 +1573,8 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 48. PR-90. ✅ Done in PR #108. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608. The traced maps and the approved sheet: D-612 to D-617.
 49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ PR-91 done in PR #109. ✅ The owner answers of 2026-09-26: D-618 to D-645. PR-92 holds the second part, with more than one concern (D-646). ✅ PR-92 done in PR #116. ✅ The owner answers of 2026-09-27: D-646 to D-659.
 50. PR-76. ✅ Done in PR #117. The scavenger model, its traced maps, and the model field of its family: D-660 to D-676.
-51. Owner: answer OQ-181.
-52. PR-77.
+51. ✅ Owner: answer OQ-181. Resolved 2026-09-27: D-677.
+52. PR-77. ✅ Done in PR #118. The light, the edges, and the frame cost of the Deck: D-677 to D-685.
 53. PR-93. The Overseer model (D-660).
 54. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
 55. Tier 4 pass on the screenshot fixture (D-133).
@@ -1579,11 +1586,11 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 2. Each 
 
 Open:
 
-- OQ-181: the antialiasing of the world. Blocks PR-77 (D-504).
 - OQ-206: the held sword in the roll. Blocks nothing.
 
 Resolved 2026-09-27:
 
+- OQ-181 (D-677): the antialiasing mode and the texture filter of the world. PR-77.
 - OQ-195 (D-647), OQ-196 (D-648), OQ-199 (D-649), OQ-200 (D-650), and OQ-201 (D-651): findings of the repository review. PR-92.
 
 Resolved 2026-09-26:

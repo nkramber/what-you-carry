@@ -21,6 +21,18 @@ public static class ArrayMeshBuilder
         mesh.Dispose();
     }
 
+    /// <summary>
+    /// Gives the target node the mesh of the source node, so the two nodes share one engine mesh and no mesh is built
+    /// (F-192). The read of the source mesh makes a managed wrapper, and the call disposes it at once, as
+    /// <see cref="BuildInto"/> does (F-177).
+    /// </summary>
+    public static void ShareInto(MeshInstance3D target, MeshInstance3D source)
+    {
+        Mesh mesh = source.Mesh;
+        target.Mesh = mesh;
+        mesh.Dispose();
+    }
+
     /// <summary>One mesh with one triangle surface from the buffers. A mesh with no triangle has no surface.</summary>
     private static ArrayMesh Build(MeshData data)
     {

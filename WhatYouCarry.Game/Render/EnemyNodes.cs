@@ -25,6 +25,11 @@ namespace WhatYouCarry.Game.Render;
 /// after it builds its tree (D-410). The Overseer gets its tree on the tick that it spawns (D-415). A descent frees
 /// every tree and builds the trees of the next floor.
 /// </para>
+/// <para>
+/// The constructor builds one hidden template tree of each model: each family model, the body model of the
+/// Overseer, and the sword. Every tree after it shares the meshes of its template, so a descent builds nodes and no
+/// mesh. The Deck trace measured 16.7 ms for the meshes of eight enemies in the tick of a descent (F-192).
+/// </para>
 /// </remarks>
 public sealed class EnemyNodes
 {
@@ -33,7 +38,9 @@ public sealed class EnemyNodes
     private readonly EnemyModel hunterModel;
     private readonly BlockbenchModel sword;
     private readonly Material material;
-    private readonly TextureLayout layout;
+    private readonly Dictionary<string, ModelNodeTree> familyTemplates = new(System.StringComparer.Ordinal);
+    private readonly ModelNodeTree hunterTemplate;
+    private readonly ModelNodeTree swordTemplate;
     private readonly List<ModelNodeTree> trees = [];
     private readonly List<CoreVector3> previous = [];
     private readonly List<CoreVector3> current = [];
@@ -51,12 +58,27 @@ public sealed class EnemyNodes
     /// <param name="layout">The texture layout, which places each face of every model (D-505).</param>
     public EnemyNodes(Node parent, IReadOnlyDictionary<string, EnemyModel> familyModels, EnemyModel hunterModel, BlockbenchModel sword, Material material, TextureLayout layout)
     {
-        this.layout = layout;
         this.parent = parent;
         this.familyModels = familyModels;
         this.hunterModel = hunterModel;
         this.sword = sword;
         this.material = material;
+
+        // The templates hang from one hidden node under the parent, so they never draw, and the engine frees them
+        // with the scene at the exit.
+        Node3D templates = new() { Visible = false };
+        parent.AddChild(templates);
+        foreach (KeyValuePair<string, EnemyModel> family in familyModels)
+        {
+            ModelNodeTree template = ModelNodes.Build(family.Value.Model, material, layout);
+            templates.AddChild(template.Root);
+            this.familyTemplates.Add(family.Key, template);
+        }
+
+        this.hunterTemplate = ModelNodes.Build(hunterModel.Model, material, layout);
+        templates.AddChild(this.hunterTemplate.Root);
+        this.swordTemplate = ModelNodes.Build(sword, material, layout);
+        templates.AddChild(this.swordTemplate.Root);
     }
 
     /// <summary>The count of enemy trees that stand under the parent now.</summary>
@@ -111,7 +133,7 @@ public sealed class EnemyNodes
 
         if (this.hunterTree is null)
         {
-            this.hunterTree = this.BuildTree(this.hunterModel.Model);
+            this.hunterTree = this.BuildTree(this.hunterTemplate, this.hunterModel.Model);
             this.hunterCurrent = hunter.Body.Position;
         }
 
@@ -125,18 +147,18 @@ public sealed class EnemyNodes
         for (int index = this.trees.Count; index < enemies.Count; index++)
         {
             EnemyModel model = EnemyModels.Of(this.familyModels, enemies[index].Definition);
-            this.trees.Add(this.BuildTree(model.Model));
+            this.trees.Add(this.BuildTree(this.familyTemplates[model.Path], model.Model));
             this.lowests.Add(model.Lowest);
             this.previous.Add(enemies[index].Body.Position);
             this.current.Add(enemies[index].Body.Position);
         }
     }
 
-    /// <summary>One tree of a model with the sword in the weapon slot, under the parent (D-397, D-673).</summary>
-    private ModelNodeTree BuildTree(BlockbenchModel model)
+    /// <summary>One tree of a model with the sword in the weapon slot, under the parent (D-397, D-673). The tree and the sword share the meshes of their templates (F-192).</summary>
+    private ModelNodeTree BuildTree(ModelNodeTree template, BlockbenchModel model)
     {
-        ModelNodeTree tree = ModelNodes.Build(model, this.material, this.layout);
-        ModelNodes.Hold(tree, EquipmentSlots.Weapon, ModelNodes.Build(this.sword, this.material, this.layout).Root);
+        ModelNodeTree tree = ModelNodes.Share(template, model, this.material);
+        ModelNodes.Hold(tree, EquipmentSlots.Weapon, ModelNodes.Share(this.swordTemplate, this.sword, this.material).Root);
         this.parent.AddChild(tree.Root);
         return tree;
     }
