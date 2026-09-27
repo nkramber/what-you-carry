@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 276: 2026-09-26, Claude Code
 
 Author: Claude Code
-Session: PR-91, author. Branch `feat/pr-91-review-fixes`. The PR opens with this push. Base `4a20b82`.
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
 
 ### What this session did, and why
 
@@ -23,7 +23,7 @@ Session: PR-91, author. Branch `feat/pr-91-review-fixes`. The PR opens with this
 
 ### In flight
 
-- The push, the PR, the done marks of the design doc and the roadmap, the gitar pass, and `make codex-review`.
+- PR #109 is open with the done marks. The gitar pass, the CI checks, and `make codex-review` come next.
 
 ### Traps and gotchas
 
@@ -37,7 +37,7 @@ None for PR-91. The findings that stay open wait for OQ-195, OQ-196, OQ-199 to O
 
 ### Next concrete action
 
-Push, open the PR with the override of D-618 in its description, mark the design doc and the roadmap, and run the gitar pass and the review.
+Finish the gitar pass of PR #109, then run `make codex-review PR=109` when each check but the Review gate workflow is green.
 
 ## Session 275: 2026-09-26, Claude Code
 

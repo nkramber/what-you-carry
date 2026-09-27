@@ -1328,6 +1328,8 @@ Gate: exit tests 1 to 4 pass.
 
 ### PR-91: Repository review fixes, part 2
 
+✅ Done in PR #109.
+
 Scope:
 
 - `ContentLoader`: a content set with no weapon of the id `sword-basic` fails to load (D-422, F-148). A repeated id names the file of each record, and a weapon reference names the file of the enemy or the hunter (T-2, F-150).
@@ -1492,7 +1494,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
 47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
 48. PR-90. ✅ Done in PR #108. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608. The traced maps and the approved sheet: D-612 to D-617.
-49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ The owner answers of 2026-09-26: D-618 to D-640.
+49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ PR-91 done in PR #109. ✅ The owner answers of 2026-09-26: D-618 to D-640.
 50. PR-76.
 51. Owner: answer OQ-181.
 52. PR-77.
