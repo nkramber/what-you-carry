@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 282: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- The owner asked for a Pushover notice of a failed night (D-642) and a night fixer on the Mac Mini (D-643 to D-645). Both joined PR #109.
+- The repository secrets `PUSHOVER_USER_KEY` and `PUSHOVER_API_TOKEN` hold the keys, and a test send returned HTTP 200.
+- The auto mode of the harness blocked the fixer build as an unsafe agent. The owner added allow rules to `.claude/settings.local.json` and moved the session to manual mode, then approved each step.
+- This session installed the launchd job `com.whatyoucarry.night-fixer` on the Mac Mini. It runs the poll of `origin/main`, so it does nothing before the merge. A dry run against GitHub read the newest night on `main` as passed.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The code head is `fa435b2`. The full suite passed 1931 of 1931 at `fa435b2` on macOS.
+- Review round 3 approved `69c946a`. The notice and the fixer moved the effective head, so review round 4 is due.
+
+### In flight
+
+- The push of `fa435b2`, the gitar pass, CI, and review round 4.
+
+### Traps and gotchas
+
+- `gh workflow run notify.yml` works only after the merge, because a dispatch needs the workflow on `main`.
+- The night fixer runs `claude -p` with no permission prompts under the account of the owner (D-643). `docs/runbooks/night-fixer.md` holds the stop and the removal.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+Push, finish the gitar pass and CI, run review round 4, then ask the owner to confirm the merge.
+
 ## Session 281: 2026-09-26, Claude Code
 
 Author: Claude Code
@@ -302,40 +336,3 @@ None for PR-90.
 ### Next concrete action
 
 Run `make codex-review PR=108` when each check but the Review gate workflow is green. After a `Ready for owner merge` verdict, give the owner the merge summary (D-533).
-
-## Session 272: 2026-09-26, Codex
-
-Author: Codex
-Session: PR-90, reviewer. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
-
-### What this session did, and why
-
-- Reviewed PR #108 at head `4edcd2c`. The provider gate passed because session 271 names Claude Code as the author.
-- Added P2-1. `ScreenshotPng` reads `IHDR` fields before it checks that the chunk has 13 bytes.
-- The review record names the missing review gate record comment and the author response. It verifies that the gate was red before this record.
-- The source screenshots under `artifacts/reference/` are not in this worktree, so the review could not compare each traced map with its source image.
-
-### State of the build
-
-- At remote work head `4edcd2c`, asset QA, bit identity on three platforms, the bot checks, CI on three platforms, determinism lint, doc gate, documents, night gate, smoke on three platforms, and STE passed.
-- `evaluate` and `review-gate` failed because the review record was absent. Focused local tests passed: 39 `TextureTraceTests`, and 126 tests across texture trace, texture generation, and asset QA.
-- The handoff reports the Deck frame logs at `763efd5` and `60a23ec`. No run at `4edcd2c` appears in the evidence.
-
-### In flight
-
-- P2-1 needs a length check and a regression test. Exit test 2 needs a Deck frame log at the PR head.
-- The review record and this entry need one metadata commit and a push to the PR branch (D-182).
-
-### Traps and gotchas
-
-- The trace screenshots are gitignored files under `artifacts/reference/` and are absent from this worktree.
-- D-606 requires an owner readiness check before a Deck connection. The latest handoff reports that the Deck checkout is on the PR branch.
-- The first local test command used `--no-restore` and gave no result. A later restore and focused run passed.
-
-### Open questions that block progress
-
-No owner decision is open. The current-head Deck run and the source screenshots remain unavailable review evidence.
-
-### Next concrete action
-
-Fix P2-1 with a short-`IHDR` regression test. Run the Deck frame log at the PR head after the owner confirms readiness, then request a repeat review.

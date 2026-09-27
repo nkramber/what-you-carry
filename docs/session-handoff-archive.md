@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 272: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-90, reviewer. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+
+### What this session did, and why
+
+- Reviewed PR #108 at head `4edcd2c`. The provider gate passed because session 271 names Claude Code as the author.
+- Added P2-1. `ScreenshotPng` reads `IHDR` fields before it checks that the chunk has 13 bytes.
+- The review record names the missing review gate record comment and the author response. It verifies that the gate was red before this record.
+- The source screenshots under `artifacts/reference/` are not in this worktree, so the review could not compare each traced map with its source image.
+
+### State of the build
+
+- At remote work head `4edcd2c`, asset QA, bit identity on three platforms, the bot checks, CI on three platforms, determinism lint, doc gate, documents, night gate, smoke on three platforms, and STE passed.
+- `evaluate` and `review-gate` failed because the review record was absent. Focused local tests passed: 39 `TextureTraceTests`, and 126 tests across texture trace, texture generation, and asset QA.
+- The handoff reports the Deck frame logs at `763efd5` and `60a23ec`. No run at `4edcd2c` appears in the evidence.
+
+### In flight
+
+- P2-1 needs a length check and a regression test. Exit test 2 needs a Deck frame log at the PR head.
+- The review record and this entry need one metadata commit and a push to the PR branch (D-182).
+
+### Traps and gotchas
+
+- The trace screenshots are gitignored files under `artifacts/reference/` and are absent from this worktree.
+- D-606 requires an owner readiness check before a Deck connection. The latest handoff reports that the Deck checkout is on the PR branch.
+- The first local test command used `--no-restore` and gave no result. A later restore and focused run passed.
+
+### Open questions that block progress
+
+No owner decision is open. The current-head Deck run and the source screenshots remain unavailable review evidence.
+
+### Next concrete action
+
+Fix P2-1 with a short-`IHDR` regression test. Run the Deck frame log at the PR head after the owner confirms readiness, then request a repeat review.
+
 ## Session 271: 2026-09-26, Claude Code
 
 Author: Claude Code
