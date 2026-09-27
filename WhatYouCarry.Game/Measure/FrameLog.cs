@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Simulation;
 
 namespace WhatYouCarry.Game.Measure;
 
@@ -13,7 +14,9 @@ namespace WhatYouCarry.Game.Measure;
 /// </summary>
 /// <remarks>
 /// The log also marks the frame of each floor transition. The slowest frame of the window around a mark is the
-/// hitch of that transition, which exit test 6 of PR-18 holds under the budget of D-427 (D-435).
+/// hitch of that transition, which exit test 6 of PR-18 holds under the budget of D-427 (D-435). The log marks the
+/// frame of each expiry of the floor timer the same way, because the spawn of the Overseer on that tick scans the
+/// floor for a cell (D-646, RR-P3-16). No budget holds the expiry window yet: the Deck measures it first.
 /// </remarks>
 public sealed class FrameLog
 {
@@ -31,11 +34,15 @@ public sealed class FrameLog
     public const int TransitionWindowFrames = 30;
 
     private const string NoFrames = "The frame log holds no frame, and a percentile needs at least one.";
-    private const string NoWindowFrames = "The window of a transition mark holds no frame.";
+    private const string NoWindowFrames = "The window of a mark holds no frame.";
     private const string MarkField = "mark";
+    private const string KindField = "kind";
+    private const string TransitionKind = "transition";
+    private const string ExpiryKind = "expiry";
 
     private readonly List<long> frames = [];
     private readonly List<int> marks = [];
+    private readonly List<int> expiryMarks = [];
 
     /// <summary>Every frame time so far, in microseconds, in frame order.</summary>
     public IReadOnlyList<long> Frames => this.frames;
@@ -100,15 +107,61 @@ public sealed class FrameLog
     /// <exception cref="ContextException">A window holds no frame, so the log cannot state the hitch of that transition (T-2).</exception>
     public IReadOnlyList<long> TransitionMaxima()
     {
-        List<long> maxima = [];
-        for (int index = 0; index < this.marks.Count; index++)
+        return this.WindowMaxima(this.marks, TransitionKind);
+    }
+
+    /// <summary>The count of expiry marks so far.</summary>
+    public int Expiries => this.expiryMarks.Count;
+
+    /// <summary>Marks the expiry of a floor timer at the next frame. The frames before it and after it form its window (D-646).</summary>
+    public void MarkExpiry()
+    {
+        this.expiryMarks.Add(this.frames.Count);
+    }
+
+    /// <summary>
+    /// Answers whether the timer events of one tick hold the expiry of the floor timer. The loop gives the expiry
+    /// event once, on the tick of the countdown that reaches zero, and the Overseer spawns on that tick (D-45, D-415).
+    /// The Game layer reads the events after the step, and nothing of the Game layer enters the tick (G-3).
+    /// </summary>
+    /// <param name="events">The timer events of the last tick, as the loop gives them.</param>
+    public static bool HoldsExpiry(IReadOnlyList<TimerEvent> events)
+    {
+        foreach (TimerEvent timerEvent in events)
         {
-            int mark = this.marks[index];
+            if (timerEvent.Kind == TimerEventKind.Expiry)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// The slowest frame of the window of each expiry mark, in microseconds, in mark order. The window is the one of a
+    /// transition: up to <see cref="TransitionWindowFrames"/> frames before the mark and as many from the mark on.
+    /// </summary>
+    /// <exception cref="ContextException">A window holds no frame, so the log cannot state the cost of that expiry (T-2).</exception>
+    public IReadOnlyList<long> ExpiryMaxima()
+    {
+        return this.WindowMaxima(this.expiryMarks, ExpiryKind);
+    }
+
+    /// <summary>The slowest frame of the window of each mark of one list, in mark order. An error names the kind and the index of the mark.</summary>
+    /// <exception cref="ContextException">A window holds no frame.</exception>
+    private IReadOnlyList<long> WindowMaxima(List<int> markList, string kind)
+    {
+        List<long> maxima = [];
+        for (int index = 0; index < markList.Count; index++)
+        {
+            int mark = markList[index];
             int first = Math.Max(0, mark - TransitionWindowFrames);
             int end = Math.Min(this.frames.Count, mark + TransitionWindowFrames);
             if (first >= end)
             {
                 ContextException error = new(NoWindowFrames);
+                error.AddContext(KindField, kind);
                 error.AddContext(MarkField, index.ToString(CultureInfo.InvariantCulture));
                 throw error;
             }

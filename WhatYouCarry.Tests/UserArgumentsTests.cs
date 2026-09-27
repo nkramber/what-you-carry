@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Game;
 using WhatYouCarry.Game.Input;
@@ -217,6 +218,56 @@ public sealed class UserArgumentsTests
             UserArguments arguments = UserArguments.Parse([BotSession.Flag, FrameLog.Flag, "frames.txt", BotSession.TransitionsFlag, bad]);
             ContextException error = Assert.Throws<ContextException>(() => BotSession.TransitionsOf(arguments));
             Assert.Contains(error.Context, field => field.Value == bad);
+        }
+    }
+
+    /// <summary>
+    /// The policy flag names the bot of the bot session, so it stops the boot with no bot flag, and the transitions test
+    /// walks the greedy descender alone on floors with no enemy, so the two flags exclude each other (D-317, D-437,
+    /// D-646). Each error names both flags. The policy flag takes one word, and parses with the bot flag and the frame log.
+    /// </summary>
+    [Fact]
+    public void PolicyNeedsTheBotAndTakesNoTransitions()
+    {
+        AssertStops(UserArguments.PolicyNeedsBotMessage, [BotSession.PolicyFlag, TimerTester.PolicyName], BotSession.PolicyFlag, BotSession.Flag);
+        AssertStops(UserArguments.PolicyNeedsBotMessage, [FrameLog.Flag, "frames.txt", BotSession.PolicyFlag, TimerTester.PolicyName], BotSession.PolicyFlag, BotSession.Flag);
+        AssertStops(UserArguments.SmokeTakesNoBotMessage, [SmokeSession.Flag, BotSession.Flag, BotSession.PolicyFlag, TimerTester.PolicyName], SmokeSession.Flag, BotSession.Flag);
+        AssertStops(UserArguments.TransitionsTakeNoPolicyMessage, [BotSession.Flag, FrameLog.Flag, "frames.txt", BotSession.TransitionsFlag, "10", BotSession.PolicyFlag, GreedyDescender.PolicyName], BotSession.TransitionsFlag, BotSession.PolicyFlag);
+        AssertStops(UserArguments.TransitionsTakeNoPolicyMessage, [BotSession.PolicyFlag, TimerTester.PolicyName, BotSession.Flag, FrameLog.Flag, "frames.txt", BotSession.TransitionsFlag, "3"], BotSession.TransitionsFlag, BotSession.PolicyFlag);
+        AssertStops(UserArguments.ShortFlagMessage, [BotSession.Flag, BotSession.PolicyFlag], BotSession.PolicyFlag, "1");
+        AssertStops(UserArguments.ShortFlagMessage, [BotSession.PolicyFlag, BotSession.Flag], BotSession.PolicyFlag, "1");
+
+        UserArguments timer = UserArguments.Parse([BotSession.Flag, BotSession.PolicyFlag, TimerTester.PolicyName, FrameLog.Flag, "frames.txt"]);
+        Assert.True(BotSession.IsRequested(timer));
+        Assert.Equal([TimerTester.PolicyName], timer.WordsOf(BotSession.PolicyFlag));
+    }
+
+    /// <summary>
+    /// The policy flag takes each name of a bot policy of Core, and no flag gives the greedy descender, so every command
+    /// before the flag drives the same bot (D-646). An unknown name stops the boot, and the error names the word and
+    /// lists every name (T-2).
+    /// </summary>
+    [Fact]
+    public void PolicyNamesABotPolicyOfCore()
+    {
+        Assert.Equal(GreedyDescender.PolicyName, BotSession.PolicyNameOf(UserArguments.Parse([BotSession.Flag])));
+        Assert.Equal(GreedyDescender.PolicyName, BotSession.PolicyNameOf(UserArguments.Parse([BotSession.Flag, FrameLog.Flag, "frames.txt", BotSession.TransitionsFlag, "10"])));
+        Assert.Equal(GreedyDescender.PolicyName, BotSession.PolicyNameOf(UserArguments.Parse([])));
+
+        string[] names = [RandomWalker.PolicyName, GreedyDescender.PolicyName, FullClearer.PolicyName, TimerTester.PolicyName, Coward.PolicyName];
+        Assert.Equal(names, BotSession.PolicyNames);
+        foreach (string name in names)
+        {
+            Assert.Equal(name, BotSession.PolicyNameOf(UserArguments.Parse([BotSession.Flag, BotSession.PolicyFlag, name])));
+        }
+
+        foreach (string bad in new[] { "timer", "Timer-Tester", "greedy_descender", "coward " })
+        {
+            UserArguments arguments = UserArguments.Parse([BotSession.Flag, BotSession.PolicyFlag, bad]);
+            ContextException error = Assert.Throws<ContextException>(() => BotSession.PolicyNameOf(arguments));
+            Assert.StartsWith(BotSession.UnknownPolicyMessage, error.Message, StringComparison.Ordinal);
+            Assert.Contains(error.Context, field => field.Name == "policy" && field.Value == bad);
+            Assert.Contains(error.Context, field => field.Name == "policies" && field.Value == string.Join(", ", names));
         }
     }
 

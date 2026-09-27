@@ -43,8 +43,9 @@ namespace WhatYouCarry.Game;
 /// A boot failure, a step failure, a pose failure, and a failure anywhere else in an engine callback each write an
 /// error line and quit with exit code 1 (T-2). The smoke session quits with exit code 0 only when the log holds no
 /// error line (D-114). The bot session of M-3 drives
-/// the loop with the greedy descender over one floor, and the frame log flag writes every frame time to a file
-/// at the end of any session (D-295, D-296). The content, the models, the clips, and the atlas come from the directory
+/// the loop with the greedy descender over one floor, or with the bot policy of the policy flag (D-646), and the
+/// frame log flag writes every frame time to a file at the end of any session (D-295, D-296). The frame log marks
+/// each floor transition and each expiry of the floor timer. The content, the models, the clips, and the atlas come from the directory
 /// next to the project directory, which is the content directory of the checkout (D-219, D-305).
 /// </para>
 /// <para>
@@ -203,6 +204,18 @@ public partial class Main : Node3D
     /// <summary>The name of the field of the end line that holds the slowest frame near a transition, in microseconds.</summary>
     public const string TransitionMicrosMaxField = "transitionMicrosMax";
 
+    /// <summary>The message of the line of the tick whose floor timer expires, the tick of the spawn of the Overseer (D-45, D-646).</summary>
+    public const string ExpiryMessage = "The floor timer expires.";
+
+    /// <summary>The name of the field of the end line that holds the count of expiries of the frame log (D-646).</summary>
+    public const string ExpiriesField = "expiries";
+
+    /// <summary>The name of the field of the end line that holds the slowest frame near an expiry of the floor timer, in microseconds (D-646).</summary>
+    public const string ExpiryMicrosMaxField = "expiryMicrosMax";
+
+    /// <summary>The name of the field of the end line of a bot session that names its bot policy (D-646).</summary>
+    public const string PolicyField = "policy";
+
     /// <summary>The message of the line at the end of the contact sheet.</summary>
     public const string ContactSheetEndMessage = "The contact sheet is written.";
 
@@ -255,7 +268,7 @@ public partial class Main : Node3D
     private PlayerClips? clips;
     private Camera3D? camera;
     private ShaderMaterial? worldMaterial;
-    private GreedyDescender? bot;
+    private IBotPolicy? bot;
     private GreedyDescender? smokeWalker;
     private ChunkSwap? chunks;
     private readonly StairwellHold hold = new();
@@ -439,6 +452,14 @@ public partial class Main : Node3D
             LogFields swap = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
             swap.Add(FromWorkerField, this.chunks.LastSwapFromWorker);
             this.logger.Write(LogContextKind.Run, LogLevel.Info, SwapMessage, swap);
+        }
+
+        // The Overseer spawns on the tick of the expiry and scans the floor for a cell, so the frame log marks that
+        // tick for the Deck measurement (D-646, RR-P3-16). The Game reads the events of the step, and feeds none back.
+        if (FrameLog.HoldsExpiry(this.loop.LastEvents))
+        {
+            this.frames?.MarkExpiry();
+            this.logger.Write(LogContextKind.Run, LogLevel.Info, ExpiryMessage, RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick));
         }
 
         bool open = StairwellPrompt.IsOpen(this.loop);
@@ -680,12 +701,21 @@ public partial class Main : Node3D
         return fields;
     }
 
-    /// <summary>The run fields of the loop, how the run ended, and the frame count and the 99th percentile when a frame log runs.</summary>
+    /// <summary>
+    /// The run fields of the loop, how the run ended, the bot policy of a bot session, and the frame count and the 99th
+    /// percentile when a frame log runs. A frame log with a transition or an expiry adds the count and the slowest frame
+    /// of the windows of that kind, and a log with none of a kind adds no field of that kind.
+    /// </summary>
     private LogFields EndFields()
     {
         SimulationLoop loop = this.loop ?? throw new InvalidOperationException(StepFailedMessage);
         LogFields fields = RunFields(loop.Seed, loop.Floor, loop.Tick);
         fields.Add(EndStateField, RunEnds.TextOf(loop.End));
+        if (this.bot is not null)
+        {
+            fields.Add(PolicyField, this.bot.Name);
+        }
+
         if (this.frames is not null && this.frames.Frames.Count > 0)
         {
             fields.Add(FramesField, (long)this.frames.Frames.Count);
@@ -696,6 +726,12 @@ public partial class Main : Node3D
         {
             fields.Add(TransitionsField, (long)this.frames.Transitions);
             fields.Add(TransitionMicrosMaxField, Slowest(this.frames.TransitionMaxima()));
+        }
+
+        if (this.frames is not null && this.frames.Expiries > 0)
+        {
+            fields.Add(ExpiriesField, (long)this.frames.Expiries);
+            fields.Add(ExpiryMicrosMaxField, Slowest(this.frames.ExpiryMaxima()));
         }
 
         return fields;
@@ -751,7 +787,7 @@ public partial class Main : Node3D
         this.logger.Write(LogContextKind.Run, LogLevel.Info, TraceMessage, fields);
     }
 
-    /// <summary>The largest of the values. The list holds one value for each transition, so it is never empty.</summary>
+    /// <summary>The largest of the values. The list holds one value for each mark, and the caller reads it only when a mark exists, so it is never empty.</summary>
     private static long Slowest(IReadOnlyList<long> values)
     {
         long slowest = values[0];
@@ -801,6 +837,9 @@ public partial class Main : Node3D
         UserArguments.RejectFlagsBeforeSeparator(OS.GetCmdlineArgs());
         UserArguments arguments = UserArguments.Parse(OS.GetCmdlineUserArgs());
         this.smoke = SmokeSession.IsRequested(arguments);
+
+        // A bad policy name stops the boot before the content loads. With no policy flag, the name is the greedy descender (D-646).
+        string policyName = BotSession.PolicyNameOf(arguments);
         if (TestExit.IsPressRequested(arguments))
         {
             this.press = TestExit.PressOf(arguments);
@@ -838,7 +877,7 @@ public partial class Main : Node3D
         this.loop = loop;
         if (BotSession.IsRequested(arguments))
         {
-            this.bot = new GreedyDescender(content);
+            this.bot = BotSession.PolicyFor(policyName, content, loop.Seed);
             this.transitions = BotSession.TransitionsOf(arguments);
             this.trace = this.transitionTest ? new TransitionTrace() : null;
         }

@@ -92,6 +92,126 @@ public sealed class MeasureTests
     }
 
     /// <summary>
+    /// The log marks each expiry of the floor timer apart from the transitions, and the slowest frame of the window of
+    /// the same size around each expiry mark is the cost of that expiry (D-646, RR-P3-16). A transition mark is no part of
+    /// the expiry maxima, and an expiry mark is no part of the transition maxima.
+    /// </summary>
+    [Fact]
+    public void FrameLogTakesTheSlowestFrameNearEachExpiry()
+    {
+        FrameLog log = new();
+        int window = FrameLog.TransitionWindowFrames;
+        for (int frame = 0; frame < 300; frame++)
+        {
+            if (frame == 60)
+            {
+                log.MarkTransition();
+            }
+
+            if (frame == 200)
+            {
+                log.MarkExpiry();
+            }
+
+            // A hitch on the transition, a slow frame just outside the expiry window, and one on its last frame.
+            long micros = frame == 60 ? 40000 : frame == 200 - window - 1 ? 90000 : frame == 200 + window - 1 ? 33000 : 11000;
+            log.AddMicros(micros);
+        }
+
+        Assert.Equal(1, log.Expiries);
+        Assert.Equal([33000L], log.ExpiryMaxima());
+        Assert.Equal(1, log.Transitions);
+        Assert.Equal([40000L], log.TransitionMaxima());
+
+        FrameLog none = new();
+        none.AddMicros(11000);
+        Assert.Equal(0, none.Expiries);
+        Assert.Empty(none.ExpiryMaxima());
+    }
+
+    /// <summary>An expiry mark with no frame in its window has no cost, and the error names the kind of the mark (T-2).</summary>
+    [Fact]
+    public void FrameLogRejectsAnEmptyExpiryWindow()
+    {
+        FrameLog log = new();
+        log.MarkExpiry();
+        ContextException error = Assert.Throws<ContextException>(() => log.ExpiryMaxima());
+        Assert.Contains(error.Context, field => field.Name == "kind" && field.Value == "expiry");
+        Assert.Contains(error.Context, field => field.Name == "mark" && field.Value == "0");
+    }
+
+    /// <summary>The events of a tick hold the expiry only with an expiry event: the spawn of the Overseer or a wave alone is no expiry (D-646).</summary>
+    [Fact]
+    public void TheExpiryIsTheTickOfTheExpiryEvent()
+    {
+        Assert.False(FrameLog.HoldsExpiry([]));
+        Assert.False(FrameLog.HoldsExpiry([new TimerEvent(TimerEventKind.HunterSpawn, 1, 10799, 0, 0)]));
+        Assert.False(FrameLog.HoldsExpiry([new TimerEvent(TimerEventKind.Wave, 1, 12599, 1, 1), new TimerEvent(TimerEventKind.WaveSkip, 1, 12599, 1, 2)]));
+        Assert.True(FrameLog.HoldsExpiry([new TimerEvent(TimerEventKind.Expiry, 1, 10799, 0, 0), new TimerEvent(TimerEventKind.HunterSpawn, 1, 10799, 0, 0)]));
+    }
+
+    /// <summary>
+    /// The timer tester on the seed of the session, with the enemies, reaches the expiry of the floor timer on floor 1
+    /// before a death and before the tick budget, so the command with the policy flag measures the expiry (D-646,
+    /// RR-P3-16). The session then ends on its own, at the end of the run, inside the budget.
+    /// </summary>
+    [Fact]
+    public void TheTimerTesterReachesTheExpiryWithTheEnemies()
+    {
+        SimulationLoop loop = new(Main.FirstSeed, TestWorld.Content);
+        IBotPolicy bot = BotSession.PolicyFor(TimerTester.PolicyName, TestWorld.Content, Main.FirstSeed);
+        Assert.NotEmpty(TestWorld.Content.Enemies);
+        long expiryTick = -1;
+        while (!loop.Ended && !BotSession.IsComplete(loop, 1, loop.Tick) && !BotSession.IsStuck(loop, 1, loop.Tick))
+        {
+            loop.Step(bot.Next(loop));
+            if (FrameLog.HoldsExpiry(loop.LastEvents))
+            {
+                Assert.Equal(-1, expiryTick);
+                expiryTick = loop.Tick;
+                Assert.NotNull(loop.Hunter);
+            }
+        }
+
+        Assert.True(expiryTick > 0, $"The timer tester of seed {Main.FirstSeed} met no expiry. It ended at tick {loop.Tick} as {loop.End}.");
+        Assert.Equal(SimulationLoop.FirstFloor, loop.Floor);
+        Assert.True(loop.Ended, $"The run of seed {Main.FirstSeed} did not end inside the tick budget, at tick {loop.Tick}.");
+        Assert.True(loop.Tick < BotSession.TickBudget);
+        Assert.True(loop.Tick > expiryTick + FrameLog.TransitionWindowFrames, "The run ends before the window after the expiry fills.");
+    }
+
+    /// <summary>Each name of the policy flag builds the policy of that name, and a name outside the list is an error that names it (T-2, D-646).</summary>
+    [Fact]
+    public void BotSessionBuildsEachPolicy()
+    {
+        foreach (string name in BotSession.PolicyNames)
+        {
+            IBotPolicy policy = BotSession.PolicyFor(name, TestWorld.Content, Main.FirstSeed);
+            Assert.Equal(name, policy.Name);
+        }
+
+        ContextException error = Assert.Throws<ContextException>(() => BotSession.PolicyFor("idler", TestWorld.Content, Main.FirstSeed));
+        Assert.StartsWith(BotSession.UnknownPolicyMessage, error.Message, StringComparison.Ordinal);
+        Assert.Contains(error.Context, field => field.Name == "policy" && field.Value == "idler");
+    }
+
+    /// <summary>
+    /// The Game drives the bot of the policy flag, marks the expiry from the timer events of the step, and writes the
+    /// count and the slowest frame of the expiry windows into the end line (D-646).
+    /// </summary>
+    [Fact]
+    public void TheGameMarksTheExpiryAndDrivesThePolicy()
+    {
+        string main = RepositoryRoot.ReadFile("WhatYouCarry.Game/Main.cs");
+        Assert.Contains("this.bot = BotSession.PolicyFor(policyName, content, loop.Seed);", main, StringComparison.Ordinal);
+        Assert.Contains("if (FrameLog.HoldsExpiry(this.loop.LastEvents))", main, StringComparison.Ordinal);
+        Assert.Contains("this.frames?.MarkExpiry();", main, StringComparison.Ordinal);
+        Assert.Contains("fields.Add(ExpiryMicrosMaxField, Slowest(this.frames.ExpiryMaxima()));", main, StringComparison.Ordinal);
+        Assert.Equal("expiryMicrosMax", Main.ExpiryMicrosMaxField);
+        Assert.Equal("expiries", Main.ExpiriesField);
+    }
+
+    /// <summary>
     /// The trace sums the collector pauses and the collections of the frames after a mark, takes the slowest frame and
     /// the most tick and upload time, counts the frames of a dig, and closes after the window (D-109, D-435). A frame
     /// with no open window is not traced, and a new mark closes a window that is still open.
