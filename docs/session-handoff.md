@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 276: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. The PR opens with this push. Base `4a20b82`.
+
+### What this session did, and why
+
+- PR-91 fixes open findings of the repository review of 2026-09-24 (D-596). The owner lifted one concern per PR for it (D-618), so it holds 27 fixes and one owner answer with no code (D-640).
+- The owner answered each open choice in the session: D-618 to D-640. OQ-159, OQ-160, OQ-197, OQ-198, OQ-202 to OQ-205 are resolved.
+- The owner corrected two answers after new evidence: the bot floor cap (D-625, the boss timers pass 18000 ticks) and the review time limit (D-627, a PR #104 round took about 32 minutes).
+- Each regression test failed on the old behavior in a scratch worktree. A windowed run proved the close of the window (F-161).
+- The findings are F-148 to F-175 in the design register.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The branch head before this entry is `efd48a8`.
+- At `efd48a8`, the full suite passed 1915 of 1915 with the Smoke category, on macOS. `det-lint` and `asset-qa` gave 0 findings. `ste-check` gave 0 findings.
+- The simulation version is 18 (D-628), and the run record format version is 2 (D-637). The bit-identity answer is `e202e84e0f5c188a` in Debug and Release on macOS.
+
+### In flight
+
+- The push, the PR, the done marks of the design doc and the roadmap, the gitar pass, and `make codex-review`.
+
+### Traps and gotchas
+
+- The first CI run of `smoke.yml` misses the cache, because each cache key now holds the pinned SHA-512 (D-626). Each job downloads and checks its zip one time.
+- CI restores in locked mode (D-638). A package change needs its `packages.lock.json` in the same commit, or each job fails with NU1004.
+- Dependabot now opens a PR for each new action pin (D-636). Each such PR needs every gate of a PR.
+
+### Open questions that block progress
+
+None for PR-91. The findings that stay open wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
+
+### Next concrete action
+
+Push, open the PR with the override of D-618 in its description, mark the design doc and the roadmap, and run the gitar pass and the review.
+
 ## Session 275: 2026-09-26, Claude Code
 
 Author: Claude Code
@@ -308,42 +345,3 @@ None. OQ-208 blocks PR-90 only.
 ### Next concrete action
 
 Correct P2-1, test zero parts, and request a new review round.
-
-## Session 266: 2026-09-25, Claude Code
-
-Author: Claude Code
-Session: PR-89, author. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
-
-### What this session did, and why
-
-- PR-85 exit test 8: the first night from the `7 7 * * *` cron has not started. At 04:47 UTC on 2026-09-26, the newest scheduled night is run 36141884980 of 13:35 UTC on 2026-09-25, at `a3590ba`. That commit is older than the merge of PR-85 at 18:25 UTC, so it ran the old single job.
-- The owner answered OQ-207 and the questions that follow from it: D-598 to D-602.
-- Commit `8fec673`: the atlas PNG stores three sRGB bytes for each pixel, the palette has no count limit, and soot joins at flat indices 76 to 79. The new atlas holds the color of each pixel of the indexed atlas, and the contact sheet did not change.
-- Commit `e4a097e`: a grain moves a pixel in parts of a fine step, and `Palette.ColorAt` blends the two fine shades in linear light with the whole-number table of `LinearLight`.
-- A fixture holds the indexed atlas at the base. A test proves that each pixel keeps its ramp and lies between the two fine shades next to its old shade (D-601).
-- The owner approved the new sheet (D-602). The images are in `artifacts/reference/pr-89/` of the main checkout.
-
-### State of the build
-
-- Remote head: the push of this branch. The local checks: the texture and recipe tests passed 126 of 126, and `det-lint`, `asset-qa`, and `ste-check` found nothing.
-
-### In flight
-
-- The PR, CI, the automated pass, and the cross-provider review.
-- PR-85 exit test 8: read the night of 2026-09-26 when it ends.
-
-### Traps and gotchas
-
-- The atlas grows from about 260 to about 790 kilobytes, because stored deflate blocks compress nothing (D-305). At an atlas of 2048, PR-90 writes about 12 megabytes for each change. OQ-208 can weigh that.
-- A blend of one ramp can give the color of a blend of another ramp. A test reads a pixel on a named ramp through `PaletteShades.TryPlace`.
-- The fixture test compares the layout of PR-75. PR-90 changes the layout and replaces that test.
-- Every face recipe of the body and the sword has a grain, so the exact check of D-601 covers the blocks alone today.
-- Run the Godot build check in a new worktree before a contact sheet. The sheet path must be absolute.
-
-### Open questions that block progress
-
-None for PR-89. OQ-208 blocks PR-90.
-
-### Next concrete action
-
-Wait for the automated pass and the cross-provider review, and answer each finding. Read the night of exit test 8 when it ends.

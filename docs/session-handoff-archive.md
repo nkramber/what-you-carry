@@ -1,5 +1,44 @@
 # Session handoff archive
 
+## Session 266: 2026-09-25, Claude Code
+
+Author: Claude Code
+Session: PR-89, author. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
+
+### What this session did, and why
+
+- PR-85 exit test 8: the first night from the `7 7 * * *` cron has not started. At 04:47 UTC on 2026-09-26, the newest scheduled night is run 36141884980 of 13:35 UTC on 2026-09-25, at `a3590ba`. That commit is older than the merge of PR-85 at 18:25 UTC, so it ran the old single job.
+- The owner answered OQ-207 and the questions that follow from it: D-598 to D-602.
+- Commit `8fec673`: the atlas PNG stores three sRGB bytes for each pixel, the palette has no count limit, and soot joins at flat indices 76 to 79. The new atlas holds the color of each pixel of the indexed atlas, and the contact sheet did not change.
+- Commit `e4a097e`: a grain moves a pixel in parts of a fine step, and `Palette.ColorAt` blends the two fine shades in linear light with the whole-number table of `LinearLight`.
+- A fixture holds the indexed atlas at the base. A test proves that each pixel keeps its ramp and lies between the two fine shades next to its old shade (D-601).
+- The owner approved the new sheet (D-602). The images are in `artifacts/reference/pr-89/` of the main checkout.
+
+### State of the build
+
+- Remote head: the push of this branch. The local checks: the texture and recipe tests passed 126 of 126, and `det-lint`, `asset-qa`, and `ste-check` found nothing.
+
+### In flight
+
+- The PR, CI, the automated pass, and the cross-provider review.
+- PR-85 exit test 8: read the night of 2026-09-26 when it ends.
+
+### Traps and gotchas
+
+- The atlas grows from about 260 to about 790 kilobytes, because stored deflate blocks compress nothing (D-305). At an atlas of 2048, PR-90 writes about 12 megabytes for each change. OQ-208 can weigh that.
+- A blend of one ramp can give the color of a blend of another ramp. A test reads a pixel on a named ramp through `PaletteShades.TryPlace`.
+- The fixture test compares the layout of PR-75. PR-90 changes the layout and replaces that test.
+- Every face recipe of the body and the sword has a grain, so the exact check of D-601 covers the blocks alone today.
+- Run the Godot build check in a new worktree before a contact sheet. The sheet path must be absolute.
+
+### Open questions that block progress
+
+None for PR-89. OQ-208 blocks PR-90.
+
+### Next concrete action
+
+Wait for the automated pass and the cross-provider review, and answer each finding. Read the night of exit test 8 when it ends.
+
 ## Session 265: 2026-09-25, Codex
 
 Author: Codex
