@@ -9,5 +9,6 @@
   "giveUpTicks": 300,
   "attackRangeCentimetres": 140,
   "attackCooldownTicks": 30,
-  "speedCentimetresPerSecond": 500
+  "speedCentimetresPerSecond": 500,
+  "model": "models/scavenger.bbmodel"
 }

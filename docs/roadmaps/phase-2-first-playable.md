@@ -1445,7 +1445,7 @@ Gate: exit tests 1 to 11 pass. Exit test 3 needs the first night on `main` after
 
 ### PR-76: Enemy models
 
-Scope: the enemy models of PR-16 gain their own boxes and recipes, and the color swap of D-507 gives each enemy its colors (D-339, D-504).
+Scope: the scavenger of PR-16 gains its own model, traced texel maps, and recipes (D-339, D-504, D-660 to D-676). The color swap of D-507 paints each face that no view shows. Each family file names its model, and the Game layer draws each enemy with it (D-673).
 
 Out of scope: the families of PR-36 to PR-42.
 
@@ -1485,6 +1485,26 @@ Check clause: none.
 Gate: exit tests 1 to 3 pass. OQ-181 blocks the start.
 
 > *In plain English:* the light is one flat setting, and block edges look jagged on the Deck. This change adds torchlight and smooth edges inside the frame budget.
+
+### PR-93: Overseer model
+
+Scope: the Overseer gains its own model, recipes, and paint file through the steps of `asset-texture-creation`: a tall, faceless figure in a company coat and a lamp helmet (D-409, D-660). Until this PR, the Overseer draws with the body model of the player and the box of D-165 (D-401, D-423).
+
+Out of scope: the lamp as a light source in the world, and the families of PR-36 to PR-42.
+
+Exit tests:
+
+1. `RepositoryModelsPass` passes on the Overseer model and every clip.
+2. `SmokeSessionPasses` passes on the three platforms.
+3. The owner approves a contact sheet of the Overseer, recorded as a decision.
+
+Review focus: presentation, the height against the box of D-165, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* the Overseer looks like the player today. This change gives it the tall coat and the lamp helmet that the owner chose.
 
 ### M-3: Steam Deck frame time
 
@@ -1545,12 +1565,13 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
 48. PR-90. ✅ Done in PR #108. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608. The traced maps and the approved sheet: D-612 to D-617.
 49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ PR-91 done in PR #109. ✅ The owner answers of 2026-09-26: D-618 to D-645. PR-92 holds the second part, with more than one concern (D-646). ✅ PR-92 done in PR #116. ✅ The owner answers of 2026-09-27: D-646 to D-659.
-50. PR-76.
+50. PR-76. ✅ Done in PR #117. The scavenger model, its traced maps, and the model field of its family: D-660 to D-676.
 51. Owner: answer OQ-181.
 52. PR-77.
-53. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-54. Tier 4 pass on the screenshot fixture (D-133).
-55. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+53. PR-93. The Overseer model (D-660).
+54. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+55. Tier 4 pass on the screenshot fixture (D-133).
+56. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

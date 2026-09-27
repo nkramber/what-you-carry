@@ -1046,7 +1046,7 @@ public sealed class ContentTests
     }
 
     private const string EnemyText = """
-        {"id":"e","minDepth":1,"maxDepth":5,"weight":10,"health":40,"weapon":"w","sightCentimetres":2000,"giveUpTicks":300,"attackRangeCentimetres":140,"attackCooldownTicks":30,"speedCentimetresPerSecond":500}
+        {"id":"e","minDepth":1,"maxDepth":5,"weight":10,"health":40,"weapon":"w","sightCentimetres":2000,"giveUpTicks":300,"attackRangeCentimetres":140,"attackCooldownTicks":30,"speedCentimetresPerSecond":500,"model":"models/e.bbmodel"}
         """;
 
     /// <summary>Every field of an enemy family is required, one at a time (D-92, D-395).</summary>
@@ -1062,6 +1062,7 @@ public sealed class ContentTests
     [InlineData("attackRangeCentimetres")]
     [InlineData("attackCooldownTicks")]
     [InlineData("speedCentimetresPerSecond")]
+    [InlineData("model")]
     public void EveryRequiredEnemyFieldIsRequired(string omitted)
     {
         List<JsonMember> members = [];
@@ -1081,7 +1082,7 @@ public sealed class ContentTests
     /// <summary>
     /// An enemy family outside its bounds is an error that names the field: a first floor below 1, a range upside down,
     /// no weight, no health, a number that no whole number holds, a field of another kind, and a distance, a delay, or
-    /// a speed of zero (D-3, D-167, D-322, D-395).
+    /// a speed of zero, and a model path outside the model directory or of another kind (D-3, D-167, D-322, D-395, D-673).
     /// </summary>
     [Theory]
     [InlineData("\"minDepth\":1", "\"minDepth\":0", "minDepth")]
@@ -1095,6 +1096,11 @@ public sealed class ContentTests
     [InlineData("\"attackRangeCentimetres\":140", "\"attackRangeCentimetres\":0", "attackRangeCentimetres")]
     [InlineData("\"attackCooldownTicks\":30", "\"attackCooldownTicks\":-1", "attackCooldownTicks")]
     [InlineData("\"speedCentimetresPerSecond\":500", "\"speedCentimetresPerSecond\":0", "speedCentimetresPerSecond")]
+    [InlineData("\"model\":\"models/e.bbmodel\"", "\"model\":\"e.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/e.bbmodel\"", "\"model\":\"models/../floors/a.json\"", "model")]
+    [InlineData("\"model\":\"models/e.bbmodel\"", "\"model\":\"models/player.e.json\"", "model")]
+    [InlineData("\"model\":\"models/e.bbmodel\"", "\"model\":\"models\\\\e.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/e.bbmodel\"", "\"model\":1", "model")]
     public void AnEnemyOutsideItsBoundsIsAnError(string from, string to, string field)
     {
         string text = EnemyText.Replace(from, to, StringComparison.Ordinal);
@@ -1103,6 +1109,15 @@ public sealed class ContentTests
             () => EnemyDefinition.FromMembers("enemies/e.json", JsonObjectReader.Read("enemies/e.json", Encoding.UTF8.GetBytes(text))));
         Assert.Contains("enemies/e.json", error.Message, StringComparison.Ordinal);
         Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>An enemy family keeps the path of its model, which the Game layer draws each spawn with (D-673).</summary>
+    [Fact]
+    public void AnEnemyFamilyNamesItsModel()
+    {
+        EnemyDefinition family = EnemyDefinition.FromMembers("enemies/e.json", JsonObjectReader.Read("enemies/e.json", Encoding.UTF8.GetBytes(EnemyText)));
+
+        Assert.Equal("models/e.bbmodel", family.Model);
     }
 
     /// <summary>

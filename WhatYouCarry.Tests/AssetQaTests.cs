@@ -357,7 +357,10 @@ public sealed class AssetQaTests
         Assert.Contains("'models/Player.bbmodel'", finding.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>PR-57 exit test 4. Every model, overlay, and animation of the checkout passes, and the checkout holds the body.</summary>
+    /// <summary>
+    /// PR-57 exit test 4, and PR-76 exit test 1. Every model, overlay, and animation of the checkout passes, and the
+    /// checkout holds the body and the model of each enemy family (D-673).
+    /// </summary>
     [Fact]
     public void RepositoryModelsPass()
     {
@@ -368,6 +371,25 @@ public sealed class AssetQaTests
 
         Assert.Empty(findings.Select(finding => finding.Line()));
         Assert.Contains(set.Bodies, body => body.Path == AssetPaths.BodyModel);
+        Assert.NotEmpty(TestWorld.Content.Enemies);
+        foreach (Core.Content.EnemyDefinition family in TestWorld.Content.Enemies)
+        {
+            Assert.Contains(set.Bodies, body => body.Path == family.Model);
+        }
+    }
+
+    /// <summary>An enemy family that names an absent model file is a finding on the family file (D-302, D-673).</summary>
+    [Fact]
+    public void AnAbsentEnemyModelIsAFinding()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write(AssetPaths.BodyModel, ModelJson.TorsoBody());
+        content.Write("enemies/scavenger.json", "{\"id\": \"scavenger\", \"model\": \"models/gone.bbmodel\"}");
+
+        AssetFinding finding = Assert.Single(Findings(content));
+
+        Assert.Equal("enemies/scavenger.json", finding.Path);
+        Assert.Contains("'models/gone.bbmodel'", finding.Message, StringComparison.Ordinal);
     }
 
     /// <summary>PR-57 exit test 5. The asset-qa workflow runs on every pull request and calls the command on the checkout (G-19).</summary>

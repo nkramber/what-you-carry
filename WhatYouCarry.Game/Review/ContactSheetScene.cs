@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using WhatYouCarry.Assets;
 using WhatYouCarry.Core.World;
@@ -14,18 +15,28 @@ public sealed record ContactSheetNodes(SubViewport Viewport, Camera3D Camera);
 /// Builds the scene of the contact sheet (D-306) in a viewport with a world of its own: each block in a small grid
 /// and each ramp in its ramp scene through the greedy mesher and the world material, the two bodies with the sword in
 /// the hand and the model material (D-336), the scene light, and the camera of play. Every subject stands at the place
-/// that its shot gives.
+/// that its shot gives. Each model shot draws the model that it names, with the sword in the hand (D-673).
 /// </summary>
 public static class ContactSheetScene
 {
     /// <summary>The side of the small grid of one block. The block fills the middle cell, with air on every side, so all six faces show.</summary>
     public const int GridSide = 3;
 
+    private const string NoSceneModel = "A shot of the contact sheet names a model that the scene does not hold.";
+    private const string ModelField = "model";
+
     /// <summary>A point far from every subject. Both ends of the fade segment sit there, so no fragment of a subject fades (D-292).</summary>
     public static readonly Vector3 FarPoint = new(0.0f, -1000.0f, 0.0f);
 
-    /// <summary>The viewport and the camera, with every subject of <see cref="ContactSheet.Shots"/> in the viewport.</summary>
-    public static ContactSheetNodes Build(Texture2D atlas, TextureLayout layout, BlockbenchModel body, BlockbenchModel sword, Material modelMaterial)
+    /// <summary>The viewport and the camera, with the subject of every shot in the viewport.</summary>
+    /// <param name="atlas">The texture atlas.</param>
+    /// <param name="layout">The texture layout, which places each face of every model and block.</param>
+    /// <param name="shots">The shots of <see cref="ContactSheet.Shots"/>.</param>
+    /// <param name="models">Each model that a shot names, by its path.</param>
+    /// <param name="sword">The weapon model that each model holds.</param>
+    /// <param name="modelMaterial">The one model material of the scene (D-85).</param>
+    /// <exception cref="Core.Logging.ContextException">A shot names a model that the models do not hold.</exception>
+    public static ContactSheetNodes Build(Texture2D atlas, TextureLayout layout, IReadOnlyList<SheetShot> shots, IReadOnlyDictionary<string, BlockbenchModel> models, BlockbenchModel sword, Material modelMaterial)
     {
         SubViewport viewport = new()
         {
@@ -37,11 +48,18 @@ public static class ContactSheetScene
         ShaderMaterial worldMaterial = WorldMaterial.Create(atlas);
         BlockTiles tiles = new(layout);
         WorldMaterial.SetFade(worldMaterial, FarPoint, FarPoint);
-        foreach (SheetShot shot in ContactSheet.Shots())
+        foreach (SheetShot shot in shots)
         {
-            if (shot.IsBody)
+            if (shot.Model is not null)
             {
-                ModelNodeTree nodes = ModelNodes.Build(body, modelMaterial, layout);
+                if (!models.TryGetValue(shot.Model, out BlockbenchModel? model))
+                {
+                    Core.Logging.ContextException error = new(NoSceneModel);
+                    error.AddContext(ModelField, shot.Model);
+                    throw error;
+                }
+
+                ModelNodeTree nodes = ModelNodes.Build(model, modelMaterial, layout);
                 ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(sword, modelMaterial, layout).Root);
                 nodes.Root.Position = shot.Origin;
                 nodes.Root.RotationDegrees = new Vector3(0.0f, shot.BodyYawDegrees, 0.0f);

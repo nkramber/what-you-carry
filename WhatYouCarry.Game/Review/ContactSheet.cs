@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Godot;
+using WhatYouCarry.Assets;
 using WhatYouCarry.Core.Camera;
+using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.World;
@@ -11,15 +13,19 @@ using WhatYouCarry.Game.Render;
 namespace WhatYouCarry.Game.Review;
 
 /// <summary>
-/// One shot of the contact sheet: its cell, whether it shows the body or a block, the block, the yaw of the body,
-/// the origin of the subject in the scene, and the point that the camera looks at. A ramp shot names the low end of
-/// its ramp as the block.
+/// One shot of the contact sheet: its cell, the model path of a body shot or null for a block shot, the block, the yaw
+/// of the body, the origin of the subject in the scene, and the point that the camera looks at. A ramp shot names the
+/// low end of its ramp as the block.
 /// </summary>
-public readonly record struct SheetShot(int Index, bool IsBody, BlockId Block, float BodyYawDegrees, Vector3 Origin, Vector3 Target);
+public readonly record struct SheetShot(int Index, string? Model, BlockId Block, float BodyYawDegrees, Vector3 Origin, Vector3 Target)
+{
+    /// <summary>Answers whether the shot shows a model: the body of the player or the model of an enemy family.</summary>
+    public bool IsBody => this.Model is not null;
+}
 
 /// <summary>
-/// The contact sheet of PR-14 (D-83, D-306): every block material, the body, and a ramp of each slope (PR-65) at game
-/// zoom, in one PNG file for the review of the owner. <c>Main</c> starts it on the flag, renders one shot per subject,
+/// The contact sheet of PR-14 (D-83, D-306): every block material, the body, the model of each enemy family (PR-76),
+/// and a ramp of each slope (PR-65) at game zoom, in one PNG file for the review of the owner. <c>Main</c> starts it on the flag, renders one shot per subject,
 /// and quits.
 /// </summary>
 /// <remarks>
@@ -29,8 +35,8 @@ public readonly record struct SheetShot(int Index, bool IsBody, BlockId Block, f
 /// and keeps its middle cell, so a texel on the sheet has the size of a texel in play, about 5.4 pixels.
 /// </para>
 /// <para>
-/// The camera looks from the south-east and from above, so a block shows its south, east, and up faces. The body
-/// stands twice, and the second body turns half a circle, so the sheet shows all four sides and the top of the body.
+/// The camera looks from the south-east and from above, so a block shows its south, east, and up faces. Each model
+/// stands twice, and the second turns half a circle, so the sheet shows all four sides and the top of each model.
 /// The subjects stand far apart, so no cell shows a neighbor. The render needs a window, because the headless display
 /// renders no image, so the sheet runs on a desktop and not in CI.
 /// </para>
@@ -73,11 +79,11 @@ public static class ContactSheet
     /// <summary>The meters along minus X between two ramps, and between the first ramp and the first block.</summary>
     public const float RampSpacing = 100.0f;
 
-    /// <summary>The yaw of the second body, in degrees, which shows the faces that the first body hides.</summary>
+    /// <summary>The yaw of the second shot of a model, in degrees, which shows the faces that the first shot hides.</summary>
     public const float TurnedBodyYawDegrees = 180.0f;
 
-    /// <summary>The count of body shots.</summary>
-    public const int BodyShots = 2;
+    /// <summary>The count of shots of each model.</summary>
+    public const int ShotsPerModel = 2;
 
     /// <summary>The size of a ramp scene along X, in blocks: the wall, the ramp, and a column of air.</summary>
     public const int RampSceneWidth = 4;
@@ -130,21 +136,42 @@ public static class ContactSheet
         return userArguments.WordsOf(Flag)[0];
     }
 
-    /// <summary>Every shot, in cell order: one per block, then the body, then the turned body, then one per ramp.</summary>
-    public static IReadOnlyList<SheetShot> Shots()
+    /// <summary>
+    /// The models of the sheet: the body of the player, then each model that an enemy family names, once, in family
+    /// order (D-673).
+    /// </summary>
+    public static IReadOnlyList<string> Models(IReadOnlyList<EnemyDefinition> families)
+    {
+        List<string> models = [AssetPaths.BodyModel];
+        foreach (EnemyDefinition family in families)
+        {
+            if (!models.Contains(family.Model))
+            {
+                models.Add(family.Model);
+            }
+        }
+
+        return models;
+    }
+
+    /// <summary>Every shot, in cell order: one per block, then each model and the same model turned, then one per ramp.</summary>
+    public static IReadOnlyList<SheetShot> Shots(IReadOnlyList<string> models)
     {
         List<SheetShot> shots = [];
         foreach (BlockId block in Blocks)
         {
             Vector3 origin = new(shots.Count * SubjectSpacing, 0.0f, 0.0f);
-            shots.Add(new SheetShot(shots.Count, IsBody: false, block, 0.0f, origin, origin + new Vector3(0.5f, 0.5f, 0.5f)));
+            shots.Add(new SheetShot(shots.Count, Model: null, block, 0.0f, origin, origin + new Vector3(0.5f, 0.5f, 0.5f)));
         }
 
         float[] bodyYaws = [0.0f, TurnedBodyYawDegrees];
-        foreach (float yaw in bodyYaws)
+        foreach (string model in models)
         {
-            Vector3 origin = new(shots.Count * SubjectSpacing, 0.0f, 0.0f);
-            shots.Add(new SheetShot(shots.Count, IsBody: true, BlockId.Air, yaw, origin, origin + new Vector3(0.0f, PlayerBody.Height / 2.0f, 0.0f)));
+            foreach (float yaw in bodyYaws)
+            {
+                Vector3 origin = new(shots.Count * SubjectSpacing, 0.0f, 0.0f);
+                shots.Add(new SheetShot(shots.Count, model, BlockId.Air, yaw, origin, origin + new Vector3(0.0f, PlayerBody.Height / 2.0f, 0.0f)));
+            }
         }
 
         for (int ramp = 0; ramp < Ramps.Length; ramp++)
@@ -154,7 +181,7 @@ public static class ContactSheet
             int run = Ramp.FromId(Ramps[ramp]).Run;
             Vector3 origin = new(-(ramp + 1) * RampSpacing, 0.0f, 0.0f);
             Vector3 foot = new(RampFirstColumn + (RampColumns / 2.0f), 1.0f, run + 1.0f);
-            shots.Add(new SheetShot(shots.Count, IsBody: false, Ramps[ramp], 0.0f, origin, origin + foot));
+            shots.Add(new SheetShot(shots.Count, Model: null, Ramps[ramp], 0.0f, origin, origin + foot));
         }
 
         return shots;
@@ -230,13 +257,15 @@ public static class ContactSheet
         return new Rect2I(margin, margin, CellPixels, CellPixels);
     }
 
-    /// <summary>The top left pixel of the cell of one shot on the sheet: the blocks and the bodies in rows of three, then the ramps in one row under them.</summary>
-    public static Vector2I CellOrigin(SheetShot shot)
+    /// <summary>The top left pixel of the cell of one shot on the sheet: the blocks and the models in rows of three, then the ramps in one row under them.</summary>
+    /// <param name="shot">The shot.</param>
+    /// <param name="modelCount">The count of models of the sheet.</param>
+    public static Vector2I CellOrigin(SheetShot shot, int modelCount)
     {
         if (Ramp.IsRamp(shot.Block))
         {
-            int firstRamp = Blocks.Length + BodyShots;
-            return new Vector2I((shot.Index - firstRamp) * RampCellPixels, SquareRows() * CellPixels);
+            int firstRamp = SquareCells(modelCount);
+            return new Vector2I((shot.Index - firstRamp) * RampCellPixels, SquareRows(modelCount) * CellPixels);
         }
 
         return new Vector2I((shot.Index % Columns) * CellPixels, (shot.Index / Columns) * CellPixels);
@@ -248,16 +277,21 @@ public static class ContactSheet
         return Math.Max(Columns * CellPixels, Ramps.Length * RampCellPixels);
     }
 
-    /// <summary>The height of the sheet, in pixels: the rows of the blocks and the bodies, then the row of ramps.</summary>
-    public static int SheetPixelsHigh()
+    /// <summary>The height of the sheet, in pixels: the rows of the blocks and the models, then the row of ramps.</summary>
+    public static int SheetPixelsHigh(int modelCount)
     {
-        return (SquareRows() * CellPixels) + RampCellPixels;
+        return (SquareRows(modelCount) * CellPixels) + RampCellPixels;
     }
 
-    /// <summary>The count of rows that the cells of the blocks and the bodies fill.</summary>
-    private static int SquareRows()
+    /// <summary>The count of the square cells: one for each block, and two for each model.</summary>
+    private static int SquareCells(int modelCount)
     {
-        int shots = Blocks.Length + BodyShots;
-        return (shots + Columns - 1) / Columns;
+        return Blocks.Length + (modelCount * ShotsPerModel);
+    }
+
+    /// <summary>The count of rows that the cells of the blocks and the models fill.</summary>
+    private static int SquareRows(int modelCount)
+    {
+        return (SquareCells(modelCount) + Columns - 1) / Columns;
     }
 }

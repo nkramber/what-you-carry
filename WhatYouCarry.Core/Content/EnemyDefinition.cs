@@ -11,8 +11,8 @@ namespace WhatYouCarry.Core.Content;
 /// <para>
 /// Every number is a whole number, as in the weapon type (D-266): the two distances in centimeters, and the two
 /// delays in ticks. A humanoid family carries a weapon of the player gear pool, and one weapon serves every spawn
-/// of the family (D-31, D-397). The family holds no model path, because the Game layer draws every enemy with the
-/// body model of the player until PR-62 (D-401).
+/// of the family (D-31, D-397). The family names its model, and the Game layer draws each spawn with it (D-673). Core
+/// never reads the model file (D-631).
 /// </para>
 /// <para>
 /// The weight maps the room weights of D-167 to spawns: the generator fills each chamber past the first with
@@ -31,6 +31,7 @@ namespace WhatYouCarry.Core.Content;
 /// <param name="AttackRangeCentimetres">How near the two feet centers come before a swing starts (D-402).</param>
 /// <param name="AttackCooldownTicks">The ticks from the end of one swing to the tick that can start the next (D-402).</param>
 /// <param name="SpeedCentimetresPerSecond">How fast the family moves, in centimeters per second (D-402).</param>
+/// <param name="Model">The path of the model of the family under the model directory (D-673).</param>
 public sealed record EnemyDefinition(
     string Id,
     long MinDepth,
@@ -42,7 +43,8 @@ public sealed record EnemyDefinition(
     long GiveUpTicks,
     long AttackRangeCentimetres,
     long AttackCooldownTicks,
-    long SpeedCentimetresPerSecond)
+    long SpeedCentimetresPerSecond,
+    string Model)
 {
     /// <summary>The names that an enemy family must carry.</summary>
     public static readonly IReadOnlyList<string> Required =
@@ -58,6 +60,7 @@ public sealed record EnemyDefinition(
         "attackRangeCentimetres",
         "attackCooldownTicks",
         "speedCentimetresPerSecond",
+        "model",
     ];
 
     /// <summary>An enemy family carries no optional name.</summary>
@@ -126,7 +129,8 @@ public sealed record EnemyDefinition(
             Ticks(path, members, "giveUpTicks"),
             AtLeastOne(path, members, "attackRangeCentimetres"),
             Ticks(path, members, "attackCooldownTicks"),
-            AtLeastOne(path, members, "speedCentimetresPerSecond"));
+            AtLeastOne(path, members, "speedCentimetresPerSecond"),
+            ContentValidator.AssetPath(path, members, "model", ContentLoader.ModelExtension));
     }
 
     /// <summary>

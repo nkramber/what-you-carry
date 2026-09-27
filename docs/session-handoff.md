@@ -2,6 +2,79 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 291: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-76, reviewer. Branch `feat/pr-76-enemy-models`. PR #117, pending merge. Base `d5f7e00`.
+
+### What this session did, and why
+
+- Reviewed PR #117 at effective head `9a0f932`, as the cross-provider review required by T-4 and D-101.
+- Checked the family model field, scavenger model and recipes, model rendering, contact sheet, content errors, and PR-76 exit tests. No in-scope finding remains.
+- Added `docs/reviews/pr-117.md` with the verdict and verification record.
+
+### State of the build
+
+- The PR head `fdfee53` passed `asset-qa`, `det-lint`, `doc-gate`, `documents`, `evaluate`, Gitar, `night-gate`, `review-gate`, and `ste-check`. The documents-only rule skipped the bit-identity, bot, CI, and smoke jobs on this metadata head.
+- The earlier implementation tip `e1316ca` passed CI on all three platforms, bit identity on all three platforms, smoke on all three platforms, asset QA, determinism lint, STE, doc gate, documents, night gate, bots, and Gitar.
+- The focused local test filter passed 304 tests. Local asset QA reported zero findings. The Documents category passed 254 tests, and local STE check reported zero findings.
+- `evaluate` and `review-gate` first failed because the review record was absent. Both passed after the review metadata was published.
+- Local STE check passed with zero findings. The Documents category passed 254 tests.
+
+### In flight
+
+- The review record and Session 291 handoff are published to `feat/pr-76-enemy-models`.
+
+### Traps and gotchas
+
+- The PR tip `e1316ca` is metadata after effective head `9a0f932`. The review applies to `9a0f932`.
+- The local full suite did not run. The focused suite passed, and the full CI suite passed on the PR tip.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Give the owner the merge summary and wait for the owner to decide whether to merge.
+
+## Session 290: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-76, author. Branch `feat/pr-76-enemy-models`. PR #117, pending merge. Base `d5f7e00`.
+
+### What this session did, and why
+
+- The session continued the PR-76 author session in a new context, from the resume prompt in the reference folder.
+- The Step 1 template of `asset-texture-creation` names no texel grid and no texel count. In concept 03, a count gave texels 4 times too big. An edit of the earlier image is the fix path (D-664).
+- `content/models/scavenger.bbmodel`: the base body without the brow, the nose, and the beard. Four hood plates of 1 unit (D-666, D-674), the scarf (D-670), and the sack of 9.5 by 2.5 by 3.5 (D-675). The owner chose the sack size because the D-667 sack shared its back and side planes with the hood back plate.
+- `traces/scavenger.json` traces 52 faces. The hand corrections: soot up one step (D-666), clay down one shade (D-669), the grey hood band and the background texels removed, the eyes (D-671), and the belt, knot, and ends (D-672). The torso front names umber for the trousers in the coat opening.
+- Hidden faces extend miner recipes with the swap of D-507. The family file names its model (D-673). `EnemyNodes` draws each enemy with its family model, and the contact sheet shows each model.
+- The owner approved the contact sheet (D-676, exit test 3).
+
+### State of the build
+
+- Remote `main` is `d5f7e00`. The PR head carries the code and the done marks. Locally: the build, the full suite (2066 of 2067, and the one failure was the STE check of the ignored resume prompt, clean on a worktree), `asset-qa`, `det-lint`, and the Godot build check pass.
+
+### In flight
+
+- CI, the gitar pass, and the cross-provider review of PR #117.
+- PR-92 exit test 3: the first night on `main` after `d5f7e00` is the 07:07 UTC cron of 2026-09-28, and it can lag hours. Check that it runs eight sweep jobs and that the `night-results` record names each sweep once.
+
+### Traps and gotchas
+
+- The hand corrections are not idempotent. To trace a scavenger face again, delete its recipe, run `texture-trace`, and apply each correction of this entry once.
+- The top view `10` has the model front at the image right, so the up face corners turn by a quarter.
+- The STE check reads the ignored reference folder on a local run. The resume prompt there has findings, and CI never sees them.
+
+### Open questions that block progress
+
+None for PR-76.
+
+### Next concrete action
+
+Answer the gitar pass of PR #117, then run `make codex-review PR=117` when every check but the Review gate workflow is green.
+
 ## Session 289: 2026-09-27, Claude Code
 
 Author: Claude Code
@@ -272,69 +345,3 @@ None for PR-91.
 ### Next concrete action
 
 Push, finish the gitar pass and CI, run review round 4, then ask the owner to confirm the merge.
-
-## Session 281: 2026-09-26, Claude Code
-
-Author: Claude Code
-Session: PR-91, author, merge. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
-
-### What this session did, and why
-
-- Review round 2 gave `Blocked` at `69c946a` with P2-1 fixed: a CI note of the Gitar dashboard had no author reply (D-250). Comments 5852158126 and 5852184443 answer both notes.
-- Review round 3 gave `Ready for owner merge` at the effective head `69c946a`.
-- The owner report `what-you-carry-repository-review.md` marks each finding of PR #109 as complete, and RR-P3-20 as no longer applicable.
-- The session asks the owner to confirm the merge with the merge summary (D-533).
-
-### State of the build
-
-- Remote `main` is `4a20b82`. The effective head is `69c946a`. Each code check passed at `55458cc`, whose code is that of `69c946a`. Gitar approved `55458cc` with no thread.
-
-### In flight
-
-- The owner confirmation, then `gh pr merge 109 --auto --squash` (D-516).
-
-### Traps and gotchas
-
-- A Gitar CI note that names a red review gate is an item. Answer each one before a review round, or the round blocks (D-250).
-- Session 276 lists the other traps of this PR.
-
-### Open questions that block progress
-
-None for PR-91.
-
-### Next concrete action
-
-After the merge, the next session continues the open findings of D-596. They wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
-
-## Session 280: 2026-09-26, Codex
-
-Author: Codex
-Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
-
-### What this session did, and why
-
-- Re-reviewed PR #109 after the author answered the Gitar CI note.
-- Confirmed that P2-1 stays fixed at `69c946a` and that Gitar approves the code.
-- Updated the review record to `Ready for owner merge` for the effective head.
-
-### State of the build
-
-- Remote `main` is `4a20b82`. The effective code head is `69c946a`; the remote PR tip before this review commit is `4ec288a`.
-- Code, Smoke, and bit-identity checks passed at `55458cc`. Current metadata checks pass except `evaluate` and `review-gate`, which read the old `Blocked` verdict.
-
-### In flight
-
-- The review record and this entry need one metadata commit and a push to `feat/pr-91-review-fixes`.
-- The check wait and the Gitar push wait need a result after the push.
-
-### Traps and gotchas
-
-- The current Gitar pass approves the code. The author answered the CI note at comment 5852184443.
-
-### Open questions that block progress
-
-None for PR-109. OQ-195, OQ-196, and OQ-199 to OQ-201 remain open for other findings.
-
-### Next concrete action
-
-Publish this review and handoff, then read the checks of the new metadata tip.

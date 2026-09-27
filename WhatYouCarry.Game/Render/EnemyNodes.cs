@@ -8,16 +8,16 @@ using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 namespace WhatYouCarry.Game.Render;
 
 /// <summary>
-/// The model of every enemy of a floor and of the Overseer (D-401). Each one draws with the body model of PR-13 and
-/// the sword of PR-15, at the position of the simulation. PR-62 gives a family a model of its own, and PR-14 gives
-/// one to the Overseer (D-409, D-423).
+/// The model of every enemy of a floor and of the Overseer. Each enemy draws with the model that its family names
+/// (D-673), and the Overseer with the body model of PR-13 until PR-93 (D-660). Each one holds the sword of PR-15 (D-397),
+/// at the position of the simulation.
 /// </summary>
 /// <remarks>
 /// <para>
-/// PR-16 poses no enemy, so every enemy stands in the rest pose of the body model. The position comes from the
+/// PR-16 poses no enemy, so every enemy stands in the rest pose of its model. The position comes from the
 /// simulation between the two newest ticks, like the position of the player, so a frame rate over the tick rate
 /// draws a smooth walk (D-329). The rest pose stands on the feet, so the root of a tree sits at the feet of its
-/// enemy.
+/// enemy, at the lowest corner of its own model.
 /// </para>
 /// <para>
 /// A dead enemy holds its place in the list of the loop, so an owner id never moves (D-322). Its node hides
@@ -29,33 +29,34 @@ namespace WhatYouCarry.Game.Render;
 public sealed class EnemyNodes
 {
     private readonly Node parent;
-    private readonly BlockbenchModel body;
+    private readonly IReadOnlyDictionary<string, EnemyModel> familyModels;
+    private readonly EnemyModel hunterModel;
     private readonly BlockbenchModel sword;
     private readonly Material material;
     private readonly TextureLayout layout;
     private readonly List<ModelNodeTree> trees = [];
     private readonly List<CoreVector3> previous = [];
     private readonly List<CoreVector3> current = [];
-    private readonly float lowest;
+    private readonly List<float> lowests = [];
     private ModelNodeTree? hunterTree;
     private CoreVector3 hunterPrevious;
     private CoreVector3 hunterCurrent;
 
     /// <summary>The trees of the enemies of one floor, under one parent node.</summary>
     /// <param name="parent">The node that holds every enemy tree.</param>
-    /// <param name="body">The body model of PR-13, which every enemy draws with (D-401).</param>
+    /// <param name="familyModels">The model of each family, by the model path that the family names (D-673).</param>
+    /// <param name="hunterModel">The body model of PR-13, which the Overseer draws with until PR-93 (D-660).</param>
     /// <param name="sword">The weapon model of PR-15, which every enemy holds (D-397).</param>
     /// <param name="material">The one model material of the scene (D-85).</param>
-    /// <param name="layout">The texture layout, which places each face of both models (D-505).</param>
-    /// <param name="lowest">The lowest box corner of the rest pose, which the root offset reads.</param>
-    public EnemyNodes(Node parent, BlockbenchModel body, BlockbenchModel sword, Material material, TextureLayout layout, float lowest)
+    /// <param name="layout">The texture layout, which places each face of every model (D-505).</param>
+    public EnemyNodes(Node parent, IReadOnlyDictionary<string, EnemyModel> familyModels, EnemyModel hunterModel, BlockbenchModel sword, Material material, TextureLayout layout)
     {
         this.layout = layout;
         this.parent = parent;
-        this.body = body;
+        this.familyModels = familyModels;
+        this.hunterModel = hunterModel;
         this.sword = sword;
         this.material = material;
-        this.lowest = lowest;
     }
 
     /// <summary>The count of enemy trees that stand under the parent now.</summary>
@@ -79,6 +80,7 @@ public sealed class EnemyNodes
         this.trees.Clear();
         this.previous.Clear();
         this.current.Clear();
+        this.lowests.Clear();
         if (this.hunterTree is not null)
         {
             this.parent.RemoveChild(this.hunterTree.Root);
@@ -109,7 +111,7 @@ public sealed class EnemyNodes
 
         if (this.hunterTree is null)
         {
-            this.hunterTree = this.BuildTree();
+            this.hunterTree = this.BuildTree(this.hunterModel.Model);
             this.hunterCurrent = hunter.Body.Position;
         }
 
@@ -122,16 +124,18 @@ public sealed class EnemyNodes
     {
         for (int index = this.trees.Count; index < enemies.Count; index++)
         {
-            this.trees.Add(this.BuildTree());
+            EnemyModel model = EnemyModels.Of(this.familyModels, enemies[index].Definition);
+            this.trees.Add(this.BuildTree(model.Model));
+            this.lowests.Add(model.Lowest);
             this.previous.Add(enemies[index].Body.Position);
             this.current.Add(enemies[index].Body.Position);
         }
     }
 
-    /// <summary>One tree of the body model with the sword in the weapon slot, under the parent (D-397, D-401).</summary>
-    private ModelNodeTree BuildTree()
+    /// <summary>One tree of a model with the sword in the weapon slot, under the parent (D-397, D-673).</summary>
+    private ModelNodeTree BuildTree(BlockbenchModel model)
     {
-        ModelNodeTree tree = ModelNodes.Build(this.body, this.material, this.layout);
+        ModelNodeTree tree = ModelNodes.Build(model, this.material, this.layout);
         ModelNodes.Hold(tree, EquipmentSlots.Weapon, ModelNodes.Build(this.sword, this.material, this.layout).Root);
         this.parent.AddChild(tree.Root);
         return tree;
@@ -146,7 +150,7 @@ public sealed class EnemyNodes
         if (this.hunterTree is not null && hunter is not null)
         {
             CoreVector3 hunterFeet = RenderInterpolation.Between(this.hunterPrevious, this.hunterCurrent, fraction);
-            this.hunterTree.Root.Position = RenderInterpolation.ToGodot(hunterFeet) + new Vector3(0.0f, -this.lowest, 0.0f);
+            this.hunterTree.Root.Position = RenderInterpolation.ToGodot(hunterFeet) + new Vector3(0.0f, -this.hunterModel.Lowest, 0.0f);
             this.hunterTree.Root.RotationDegrees = new Vector3(0.0f, hunter.Yaw / 100.0f, 0.0f);
         }
 
@@ -162,7 +166,7 @@ public sealed class EnemyNodes
 
             tree.Root.Visible = true;
             CoreVector3 feet = RenderInterpolation.Between(this.previous[index], this.current[index], fraction);
-            tree.Root.Position = RenderInterpolation.ToGodot(feet) + new Vector3(0.0f, -this.lowest, 0.0f);
+            tree.Root.Position = RenderInterpolation.ToGodot(feet) + new Vector3(0.0f, -this.lowests[index], 0.0f);
 
             // The yaw turns counterclockwise seen from above, as a positive rotation about Y does (D-234).
             tree.Root.RotationDegrees = new Vector3(0.0f, enemy.Yaw / 100.0f, 0.0f);

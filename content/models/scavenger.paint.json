@@ -1,0 +1,23 @@
+{
+  "model": "models/scavenger.bbmodel",
+  "boxes": {
+    "head_box": {"recipe": "scavenger-hood", "faces": {"north": "scavenger-head-north"}},
+    "hood_top_box": {"recipe": "scavenger-hood", "faces": {"north": "scavenger-hood-top-north", "east": "scavenger-hood-top-east", "south": "scavenger-hood-top-south", "west": "scavenger-hood-top-west", "up": "scavenger-hood-top-up"}},
+    "hood_left_box": {"recipe": "scavenger-hood", "faces": {"north": "scavenger-hood-left-north", "west": "scavenger-hood-left-west"}},
+    "hood_right_box": {"recipe": "scavenger-hood", "faces": {"north": "scavenger-hood-right-north", "east": "scavenger-hood-right-east"}},
+    "hood_back_box": {"recipe": "scavenger-hood", "faces": {"east": "scavenger-hood-back-east", "south": "scavenger-hood-back-south", "west": "scavenger-hood-back-west"}},
+    "scarf_box": {"recipe": "scavenger-hood", "faces": {"north": "scavenger-scarf-north"}},
+    "sack_box": {"recipe": "scavenger-sack", "faces": {"east": "scavenger-sack-east", "south": "scavenger-sack-south", "west": "scavenger-sack-west", "up": "scavenger-sack-up"}},
+    "torso_box": {"recipe": "scavenger-coat", "faces": {"north": "scavenger-torso-north", "east": "scavenger-torso-east", "south": "scavenger-torso-south", "west": "scavenger-torso-west"}},
+    "arm_left_upper_box": {"recipe": "scavenger-coat", "faces": {"north": "scavenger-arm-left-upper-north", "south": "scavenger-arm-left-upper-south", "west": "scavenger-arm-left-upper-west", "up": "scavenger-arm-left-upper-up"}},
+    "arm_left_lower_box": {"recipe": "scavenger-sleeve", "faces": {"north": "scavenger-arm-left-lower-north", "south": "scavenger-arm-left-lower-south", "west": "scavenger-arm-left-lower-west", "up": "scavenger-coat", "down": "skin"}},
+    "arm_right_upper_box": {"recipe": "scavenger-coat", "faces": {"north": "scavenger-arm-right-upper-north", "east": "scavenger-arm-right-upper-east", "south": "scavenger-arm-right-upper-south", "up": "scavenger-arm-right-upper-up"}},
+    "arm_right_lower_box": {"recipe": "scavenger-sleeve", "faces": {"north": "scavenger-arm-right-lower-north", "east": "scavenger-arm-right-lower-east", "south": "scavenger-arm-right-lower-south", "up": "scavenger-coat", "down": "skin"}},
+    "leg_left_upper_box": {"recipe": "trousers", "faces": {"north": "scavenger-leg-left-upper-north", "south": "scavenger-leg-left-upper-south", "west": "scavenger-leg-left-upper-west"}},
+    "leg_left_lower_box": {"recipe": "boot", "faces": {"north": "scavenger-leg-left-lower-north", "south": "scavenger-leg-left-lower-south", "west": "scavenger-leg-left-lower-west", "up": "boot-toe", "down": "boot-toe"}},
+    "toe_left_box": {"recipe": "boot-toe", "faces": {"north": "scavenger-toe-left-north", "west": "scavenger-toe-left-west"}},
+    "leg_right_upper_box": {"recipe": "trousers", "faces": {"north": "scavenger-leg-right-upper-north", "east": "scavenger-leg-right-upper-east", "south": "scavenger-leg-right-upper-south"}},
+    "leg_right_lower_box": {"recipe": "boot", "faces": {"north": "scavenger-leg-right-lower-north", "east": "scavenger-leg-right-lower-east", "south": "scavenger-leg-right-lower-south", "up": "boot-toe", "down": "boot-toe"}},
+    "toe_right_box": {"recipe": "boot-toe", "faces": {"north": "scavenger-toe-right-north", "east": "scavenger-toe-right-east"}}
+  }
+}

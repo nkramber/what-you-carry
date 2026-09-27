@@ -1,5 +1,71 @@
 # Session handoff archive
 
+## Session 281: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-91, author, merge. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Review round 2 gave `Blocked` at `69c946a` with P2-1 fixed: a CI note of the Gitar dashboard had no author reply (D-250). Comments 5852158126 and 5852184443 answer both notes.
+- Review round 3 gave `Ready for owner merge` at the effective head `69c946a`.
+- The owner report `what-you-carry-repository-review.md` marks each finding of PR #109 as complete, and RR-P3-20 as no longer applicable.
+- The session asks the owner to confirm the merge with the merge summary (D-533).
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective head is `69c946a`. Each code check passed at `55458cc`, whose code is that of `69c946a`. Gitar approved `55458cc` with no thread.
+
+### In flight
+
+- The owner confirmation, then `gh pr merge 109 --auto --squash` (D-516).
+
+### Traps and gotchas
+
+- A Gitar CI note that names a red review gate is an item. Answer each one before a review round, or the round blocks (D-250).
+- Session 276 lists the other traps of this PR.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+After the merge, the next session continues the open findings of D-596. They wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
+
+## Session 280: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Re-reviewed PR #109 after the author answered the Gitar CI note.
+- Confirmed that P2-1 stays fixed at `69c946a` and that Gitar approves the code.
+- Updated the review record to `Ready for owner merge` for the effective head.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective code head is `69c946a`; the remote PR tip before this review commit is `4ec288a`.
+- Code, Smoke, and bit-identity checks passed at `55458cc`. Current metadata checks pass except `evaluate` and `review-gate`, which read the old `Blocked` verdict.
+
+### In flight
+
+- The review record and this entry need one metadata commit and a push to `feat/pr-91-review-fixes`.
+- The check wait and the Gitar push wait need a result after the push.
+
+### Traps and gotchas
+
+- The current Gitar pass approves the code. The author answered the CI note at comment 5852184443.
+
+### Open questions that block progress
+
+None for PR-109. OQ-195, OQ-196, and OQ-199 to OQ-201 remain open for other findings.
+
+### Next concrete action
+
+Publish this review and handoff, then read the checks of the new metadata tip.
+
 ## Session 279: 2026-09-26, Codex
 
 Author: Codex

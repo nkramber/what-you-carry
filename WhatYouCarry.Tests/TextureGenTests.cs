@@ -27,10 +27,10 @@ public sealed class TextureGenTests
     private const float UvTolerance = 0.0001f;
 
     /// <summary>The faces of the trace specs: 40 of the body and 28 of the sword (D-612).</summary>
-    private const int TracedFaceCount = 68;
+    private const int TracedFaceCount = 120;
 
     /// <summary>The trace specs of the repository (D-612).</summary>
-    private static readonly string[] TraceSpecs = ["miner", "sword"];
+    private static readonly string[] TraceSpecs = ["miner", "sword", "scavenger"];
 
     /// <summary>The side of a block tile in the atlas of PR-14 and in the palette preview, at 32 texels per meter (D-85).</summary>
     private const int TilePixelsOfPr14 = 32;
@@ -327,6 +327,7 @@ public sealed class TextureGenTests
     {
         const string Player = "models/player.bbmodel:";
         const string Sword = "models/sword-basic.bbmodel:";
+        const string Scavenger = "models/scavenger.bbmodel:";
         Dictionary<string, string> boxRecipe = new()
         {
             [Player + "head_box"] = "hair",
@@ -352,6 +353,24 @@ public sealed class TextureGenTests
             [Sword + "blade_box"] = "metal",
             [Sword + "tip_step_box"] = "metal",
             [Sword + "tip_box"] = "metal",
+            [Scavenger + "head_box"] = "scavenger-hood",
+            [Scavenger + "hood_top_box"] = "scavenger-hood",
+            [Scavenger + "hood_left_box"] = "scavenger-hood",
+            [Scavenger + "hood_right_box"] = "scavenger-hood",
+            [Scavenger + "hood_back_box"] = "scavenger-hood",
+            [Scavenger + "scarf_box"] = "scavenger-hood",
+            [Scavenger + "sack_box"] = "scavenger-sack",
+            [Scavenger + "torso_box"] = "scavenger-coat",
+            [Scavenger + "arm_left_upper_box"] = "scavenger-coat",
+            [Scavenger + "arm_left_lower_box"] = "scavenger-sleeve",
+            [Scavenger + "arm_right_upper_box"] = "scavenger-coat",
+            [Scavenger + "arm_right_lower_box"] = "scavenger-sleeve",
+            [Scavenger + "leg_left_upper_box"] = "trousers",
+            [Scavenger + "leg_left_lower_box"] = "boot",
+            [Scavenger + "toe_left_box"] = "boot-toe",
+            [Scavenger + "leg_right_upper_box"] = "trousers",
+            [Scavenger + "leg_right_lower_box"] = "boot",
+            [Scavenger + "toe_right_box"] = "boot-toe",
         };
         Dictionary<string, string> faceRecipe = new()
         {
@@ -365,6 +384,14 @@ public sealed class TextureGenTests
             [Player + "leg_left_lower_box:down"] = "boot-toe",
             [Player + "leg_right_lower_box:up"] = "boot-toe",
             [Player + "leg_right_lower_box:down"] = "boot-toe",
+            [Scavenger + "arm_left_lower_box:up"] = "scavenger-coat",
+            [Scavenger + "arm_left_lower_box:down"] = "skin",
+            [Scavenger + "arm_right_lower_box:up"] = "scavenger-coat",
+            [Scavenger + "arm_right_lower_box:down"] = "skin",
+            [Scavenger + "leg_left_lower_box:up"] = "boot-toe",
+            [Scavenger + "leg_left_lower_box:down"] = "boot-toe",
+            [Scavenger + "leg_right_lower_box:up"] = "boot-toe",
+            [Scavenger + "leg_right_lower_box:down"] = "boot-toe",
         };
 
         IReadOnlyList<TraceFace> traced = RepositoryTraceFaces();
@@ -411,6 +438,36 @@ public sealed class TextureGenTests
         Palette palette = RepositoryPalette();
         new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "arm_left_lower_box", BoxSide.Down).AssertShades("clay", 9, 12, 0, 0, 12, 12);
         new ModelCanvas(atlas, palette, AssetPaths.BodyModel, "nose_box", BoxSide.East).AssertShades("clay", 9, 12, 0, 0, 3, 6);
+    }
+
+    /// <summary>
+    /// The paint of the scavenger (PR-76). The rope belt is a linen band 2 texels tall on the four torso faces, with a
+    /// knot of 3 by 3 and two ends 2 texels wide on the front (D-672). The eye band is skin, and each eye is dark skin of
+    /// 2 by 3 texels with no white (D-83, D-669, D-671). The hood reads soot 1 or lighter (D-666).
+    /// </summary>
+    [Fact]
+    public void ScavengerPaintFollowsItsDecisions()
+    {
+        const string Scavenger = "models/scavenger.bbmodel";
+        PngImage atlas = PngReader.Read(File.ReadAllBytes(Path.Combine(ContentRoot(), AssetPaths.AtlasImage)));
+        Palette palette = RepositoryPalette();
+        foreach ((BoxSide side, int width) in new[] { (BoxSide.North, 40), (BoxSide.South, 40), (BoxSide.East, 20), (BoxSide.West, 20) })
+        {
+            new ModelCanvas(atlas, palette, Scavenger, "torso_box", side).AssertRamp("linen", 0, 29, width, 2);
+        }
+
+        ModelCanvas front = new(atlas, palette, Scavenger, "torso_box", BoxSide.North);
+        front.AssertRamp("linen", 22, 31, 3, 3);
+        front.AssertRamp("linen", 21, 34, 2, 5);
+        front.AssertRamp("linen", 24, 34, 2, 5);
+
+        ModelCanvas face = new(atlas, palette, Scavenger, "head_box", BoxSide.North);
+        face.AssertRamp("clay", 4, 11, 24, 7);
+        face.AssertShades("clay", 0, 0, 9, 15, 2, 3);
+        face.AssertShades("clay", 0, 0, 21, 15, 2, 3);
+
+        new ModelCanvas(atlas, palette, Scavenger, "hood_back_box", BoxSide.South).AssertShades("soot", 4, 12, 0, 0, 40, 32);
+        new ModelCanvas(atlas, palette, Scavenger, "hood_top_box", BoxSide.Up).AssertShades("soot", 4, 12, 0, 0, 40, 40);
     }
 
     /// <summary>
