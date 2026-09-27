@@ -1486,6 +1486,26 @@ Gate: exit tests 1 to 3 pass. OQ-181 blocks the start.
 
 > *In plain English:* the light is one flat setting, and block edges look jagged on the Deck. This change adds torchlight and smooth edges inside the frame budget.
 
+### PR-93: Overseer model
+
+Scope: the Overseer gains its own model, recipes, and paint file through the steps of `asset-texture-creation`: a tall, faceless figure in a company coat and a lamp helmet (D-409, D-660). Until this PR, the Overseer draws with the body model of the player and the box of D-165 (D-401, D-423).
+
+Out of scope: the lamp as a light source in the world, and the families of PR-36 to PR-42.
+
+Exit tests:
+
+1. `RepositoryModelsPass` passes on the Overseer model and every clip.
+2. `SmokeSessionPasses` passes on the three platforms.
+3. The owner approves a contact sheet of the Overseer, recorded as a decision.
+
+Review focus: presentation, the height against the box of D-165, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* the Overseer looks like the player today. This change gives it the tall coat and the lamp helmet that the owner chose.
+
 ### M-3: Steam Deck frame time
 
 Procedure: on the Steam Deck OLED of the owner (D-296), run the PR-13 build and then the PR-18 build over one full floor. The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target comes from D-295. A miss files a question that binds the next render PR (F-3).
@@ -1548,9 +1568,10 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 50. PR-76.
 51. Owner: answer OQ-181.
 52. PR-77.
-53. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-54. Tier 4 pass on the screenshot fixture (D-133).
-55. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+53. PR-93. The Overseer model (D-660).
+54. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+55. Tier 4 pass on the screenshot fixture (D-133).
+56. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

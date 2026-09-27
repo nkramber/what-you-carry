@@ -740,7 +740,7 @@ Gate: the exit tests of PR-92 in the focused roadmap pass, and the first night o
 The findings of the review of 2026-09-24 that stay open are the primary work after PR-90. The first session after PR-90 splits them into PRs of one concern each (D-596). PR-91 holds more than one (D-618).
 
 **PR-76: Enemy models.** 🔧
-The enemy models of PR-16 gain their own boxes and recipes, and the color swap gives each enemy its colors (D-504, D-507).
+The scavenger of PR-16 gains its own boxes and recipes, and the color swap gives it its colors (D-504, D-507, D-660 to D-663).
 Gate: the clip check and the smoke session pass, and the owner approves a contact sheet of the enemies.
 > *In plain English:* the enemies borrow a first-pass look. This change gives them their own bodies and colors.
 
@@ -748,6 +748,11 @@ Gate: the clip check and the smoke session pass, and the owner approves a contac
 The scene light moves toward the torchlight of D-59, inside the budget of D-81. The antialiasing mode and the texture filter of OQ-181 follow a measurement on the Deck against D-295 (D-504). OQ-181 blocks the start.
 Gate: a frame log on the Deck meets D-295, and the owner approves a contact sheet with the new light.
 > *In plain English:* the light is one flat setting, and block edges look jagged on the Deck. This change adds torchlight and smooth edges inside the frame budget.
+
+**PR-93: Overseer model.** 🔧
+The Overseer gains its own model, recipes, and paint file: a tall, faceless figure in a company coat and a lamp helmet (D-409, D-660).
+Gate: the clip check and the smoke session pass, and the owner approves a contact sheet of the Overseer.
+> *In plain English:* the Overseer looks like the player today. This change gives it the tall coat and the lamp helmet that the owner chose.
 
 **M-3: Steam Deck frame time.** 🔧
 Measure the 99th percentile frame time on the Steam Deck OLED of D-296 over one full floor, with the target of D-295. Binds every render PR (F-3).
@@ -918,7 +923,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80. ✅ PR-70 done in PR #81. ✅ PR-66 done in PR #82. ✅ PR-16 done in PR #83. ✅ PR-17 done in PR #84. ✅ PR-18 done in PR #85.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77. ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

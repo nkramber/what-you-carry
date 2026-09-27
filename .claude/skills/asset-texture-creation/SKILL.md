@@ -52,14 +52,18 @@ edges. Head [H] units, torso [W] wide by [H] high, arms [W] thick, legs [W]
 thick, total height [H] units, [N] heads tall.
 [FEATURES: for example a heavy brow bar, small dark eyes with no whites, a
 dark beard block on the lower third of the face.]
-Low resolution pixel texture with visible square texels, flat colors, light
-mottling. Colors: [PART] [color name] [hex], [PART] [color name] [hex].
+Clean hand-painted texture with broad flat areas of color and soft,
+large-scale mottling. No pixel art and no pixel-level detail.
+Colors: [PART] [color name] [hex], [PART] [color name] [hex].
 Dark fantasy mine setting. Even flat light, no cast shadows, no shading
 painted into the texture. Plain light grey background. No props, no ground,
 no text.
-Avoid: eye whites, a flat pixel face, rounded shapes, bevels, smooth curves,
+Avoid: pixel art, visible pixels, square texels, dithering, fine pixel noise,
+eye whites, a flat pixel face, rounded shapes, bevels, smooth curves,
 glossy materials.
 ```
+
+A concept has no pixel-level detail (D-664). The trace makes the texels from the 3D reference (D-612).
 
 For an item, a weapon, or a prop, replace the first two lines with "Three-quarter view from slightly above of a single [SUBJECT], centered". Keep the other lines. If the Meshy form has a separate negative prompt field, put the avoid list there.
 
@@ -73,6 +77,7 @@ For an item, a weapon, or a prop, replace the first two lines with "Three-quarte
 The concept checklist:
 
 - The D-83 tells: eye whites, a flat pixel face layout, a pixel beard with no depth.
+- Pixel-level detail: pixel art, visible texels, or dithering. Ask for a new image (D-664).
 - The proportions: compare with the model, not with a guess. Give the measured ratio in heads.
 - The silhouette at game zoom: about 2.7 pixels per texel on the Deck (D-306, D-603). A detail of 1 texel reads only as a thin line or a speck.
 - The parts that become boxes (a brow, a nose, a toe), and the parts that stay paint.
