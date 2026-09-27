@@ -11,7 +11,7 @@ The `one-pr-one-session` skill names this file at the end of the gitar pass. It 
 5. Read the outcome line of the command and its exit code.
 6. Do the step that the table below gives for that exit code.
 
-No round uses API pricing. The command removes each API credential variable from the reviewer processes, and it refuses a login that is not the account login of the CLI (D-523, D-649). A review round takes longer than the ten-minute limit of a tool call. Do not poll the round. The command starts Codex in a detached worktree at the PR head, so the author checkout does not change. Codex pushes the review record and its own handoff entry as one metadata commit (D-182, D-518).
+No round uses API pricing. The command removes each API credential variable from the reviewer processes. It refuses a login that is not the account login of the CLI (D-523, D-649). A review round takes longer than the ten-minute limit of a tool call. Do not poll the round. The command starts Codex in a detached worktree at the PR head, so the author checkout does not change. Codex pushes the review record and its own handoff entry as one metadata commit (D-182, D-518).
 
 | Exit | Outcome | Next step |
 |---|---|---|

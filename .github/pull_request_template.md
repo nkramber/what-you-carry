@@ -13,7 +13,7 @@ Each line holds before the merge, by auto-merge or by the owner (`CLAUDE.md`, PR
 - [ ] The `det-lint` job is green (G-2, G-21).
 - [ ] The `ste-check` job is green (G-14). It runs the STE checker, the reference check, and the session number check (D-178, D-187).
 - [ ] The automated pass of gitar approved the head, or every gitar comment with an item has its answer (D-250, D-550, D-574).
-- [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-184, D-534). A PR that changes no code is exempt when the owner adds the `review-override` label (D-188, D-190).
+- [ ] The other provider reviewed it, and `docs/reviews/pr-<number>.md` has the verdict `Ready for owner merge` for the effective head (T-4, D-101, D-184, D-534). A PR that changes no code is exempt when it has the `review-override` label (D-188, D-190, D-652).
 - [ ] The `review-gate` check is green. Red means no review record, or a review that does not approve this head (D-181, D-185, D-521).
 - [ ] No review thread stays open, and the ruleset of `main` holds (D-522).
 - [ ] The owner confirmed the merge after the merge summary: What, How, CI, and Codex review (D-524, D-533).
