@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Tools;
 using WhatYouCarry.Tools.BotRunner;
@@ -617,8 +619,9 @@ public sealed class NightGateTests
     }
 
     /// <summary>
-    /// D-562. A night on main keeps a record at a later commit, which a promotion wrote while the night ran. It
-    /// replaces a record at its own commit or an earlier one, and it writes the first record.
+    /// D-562, D-648. A night on main keeps a record at a later commit, which a promotion wrote while the night ran,
+    /// unless the night failed a seed that the record does not name. It replaces a record at its own commit or an
+    /// earlier one, and it writes the first record. The command reads the record of main at the lease alone.
     /// </summary>
     [Fact]
     public void NightOnMainKeepsARecordAtALaterCommit()
@@ -628,43 +631,382 @@ public sealed class NightGateTests
         string nightCommit = remote.Commit("feat: night", Files(("b.cs", "b")));
         string later = remote.Commit("fix: merged later (#97)", Files(("c.cs", "c")));
         using TemporaryGitRepository local = CloneOf(remote);
-        string[] args = ["night-publish-check", "--root", local.Path, "--remote", "origin", "--commit", nightCommit];
-
-        Assert.Equal(0, Program.Main(args));
-
-        PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", later)));
-        Assert.Equal(1, Program.Main(args));
-
-        foreach (string commit in new[] { nightCommit, earlier })
+        string directory = Path.Combine(Path.GetTempPath(), $"wyc-publish-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
         {
-            PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", commit)));
-            Assert.Equal(0, Program.Main(args));
+            string night = Path.Combine(directory, "night.json");
+            string failures = Path.Combine(directory, "seed-failures.txt");
+            string output = Path.Combine(directory, "night-publish.json");
+            File.WriteAllText(night, SeedRecord(nightCommit, NightDate, "success", EndedWith(), NoSeeds()));
+            File.WriteAllText(failures, FailureLines(EndedWith()));
+            string[] Args(string lease) => ["night-publish-check", "--root", local.Path, "--remote", "origin", "--commit", nightCommit, "--lease", lease, "--night", night, "--failures", failures, "--output", output];
+
+            Assert.Equal(0, Program.Main(Args(string.Empty)));
+            Assert.Equal(File.ReadAllText(night), File.ReadAllText(output));
+
+            PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", later)));
+            File.Delete(output);
+            Assert.Equal(1, Program.Main(Args(RecordHead(remote))));
+            Assert.False(File.Exists(output));
+
+            foreach (string commit in new[] { nightCommit, earlier })
+            {
+                PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", commit)));
+                Assert.Equal(0, Program.Main(Args(RecordHead(remote))));
+                Assert.Equal(File.ReadAllText(night), File.ReadAllText(output));
+            }
+
+            PublishNight(remote, ("night.json", "not json"));
+            Assert.Equal(0, Program.Main(Args(RecordHead(remote))));
+
+            // D-648: a lease that is not the head of night-results is a fault, and the command writes nothing.
+            string stale = RecordHead(remote);
+            PublishNight(remote, ("night.json", Record(Now.AddHours(-1), "success", earlier)));
+            File.Delete(output);
+            Assert.Equal(3, Program.Main(Args(stale)));
+            Assert.Equal(3, Program.Main(Args(string.Empty)));
+            Assert.False(File.Exists(output));
+
+            // D-648, trigger (b): the night failed a slice seed that the later record does not name, so a failure
+            // record at the later commit holds it.
+            PublishNight(remote, ("night.json", SeedRecord(later, NightDate.AddDays(1), "success", EndedWith(), NoSeeds())));
+            File.WriteAllText(night, SeedRecord(nightCommit, NightDate, "failure", EndedWith((FullClearer.PolicyName, 6620)), NoSeeds()));
+            File.WriteAllText(failures, FailureLines(EndedWith((FullClearer.PolicyName, 6620))));
+            Assert.Equal(0, Program.Main(Args(RecordHead(remote))));
+            string published = File.ReadAllText(output);
+            Assert.Equal(later, NightRecordParser.TryParse(published, out _)!.Commit);
+            Assert.Equal("failure", NightRecordParser.TryParse(published, out _)!.Status);
+            Assert.Equal(new ulong[] { 6620 }, FailedOf(published, FullClearer.PolicyName));
+
+            // D-567, D-648: the night of the later record ran the seed in its slice and passed it, so the record stays.
+            PublishNight(remote, ("night.json", SeedRecord(later, NightDate, "success", EndedWith(), NoSeeds())));
+            File.Delete(output);
+            Assert.Equal(NightPublishCheckCommand.KeepExit, Program.Main(Args(RecordHead(remote))));
+            Assert.False(File.Exists(output));
+
+            // T-2, D-565: bad inputs of this night fail closed with their own exit code, so the step publishes the
+            // failure record. The old command gave the fault exit, and the record of main stayed as it was.
+            string goodNight = File.ReadAllText(night);
+            (string File, string Text)[] badInputs =
+            [
+                (failures, "full-clearer 6620\n"),
+                (failures, "walker:\n"),
+                (night, "not json"),
+                (night, SeedRecord(earlier, NightDate, "failure", EndedWith((FullClearer.PolicyName, 6620)), NoSeeds())),
+                (night, goodNight.Replace("\"failedSeeds\":{", "\"failedSeeds\":[],\"x\":{", StringComparison.Ordinal)),
+            ];
+            foreach ((string file, string text) in badInputs)
+            {
+                string before = File.ReadAllText(file);
+                File.WriteAllText(file, text);
+                Assert.Equal(NightPublishCheckCommand.BadNightExit, Program.Main(Args(RecordHead(remote))));
+                Assert.False(File.Exists(output));
+                File.WriteAllText(file, before);
+            }
+
+            File.Delete(failures);
+            Assert.Equal(NightPublishCheckCommand.BadNightExit, Program.Main(Args(RecordHead(remote))));
+            File.WriteAllText(failures, FailureLines(EndedWith((FullClearer.PolicyName, 6620))));
+            Assert.Equal(NightPublishCheckCommand.KeepExit, Program.Main(Args(RecordHead(remote))));
+
+            // A moved lease stays the fault exit, also with bad inputs: the record of main was not read inside the lease.
+            File.WriteAllText(failures, "walker:\n");
+            Assert.Equal(NightPublishCheckCommand.FaultExit, Program.Main(Args(stale)));
+
+            Assert.Equal(2, Program.Main(["night-publish-check", "--root", local.Path, "--remote", "origin"]));
+            Assert.Equal(2, Program.Main(Args("abc")));
         }
-
-        PublishNight(remote, ("night.json", "not json"));
-        Assert.Equal(0, Program.Main(args));
-
-        Assert.Equal(2, Program.Main(["night-publish-check", "--root", local.Path, "--remote", "origin"]));
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
-    /// <summary>The order check names each case, and keeps a record only at a later commit (D-562, T-2).</summary>
+    /// <summary>The publish check names each case, and keeps a record only at a later commit (D-562, D-648, T-2).</summary>
     [Fact]
     public void NightPublishDecisionNamesEachCase()
     {
-        NightPublishDecision absent = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, null), null, EffectiveHead);
-        NightPublishDecision malformed = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, "[]"), null, EffectiveHead);
-        NightPublishDecision later = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, Record(Now, "failure")), true, EffectiveHead);
-        NightPublishDecision earlier = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, Record(Now, "success")), false, EffectiveHead);
+        string nightText = SeedRecord(EffectiveHead, NightDate, "success", EndedWith(), NoSeeds());
+        Dictionary<string, List<ulong>> ended = EndedWith();
+        NightPublishDecision absent = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, null), null, EffectiveHead, nightText, ended, Now);
+        NightPublishDecision malformed = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, "[]"), null, EffectiveHead, nightText, ended, Now);
+        NightPublishDecision later = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, Record(Now, "failure")), true, EffectiveHead, nightText, ended, Now);
+        NightPublishDecision earlier = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, Record(Now, "success")), false, EffectiveHead, nightText, ended, Now);
 
         Assert.True(absent.Writes);
+        Assert.Equal(nightText, absent.Record);
         Assert.Contains("absent", absent.Message, StringComparison.Ordinal);
         Assert.True(malformed.Writes);
+        Assert.Equal(nightText, malformed.Record);
         Assert.Contains("malformed", malformed.Message, StringComparison.Ordinal);
         Assert.False(later.Writes);
+        Assert.Null(later.Record);
         Assert.Contains(Commit, later.Message, StringComparison.Ordinal);
         Assert.Contains("D-562", later.Message, StringComparison.Ordinal);
         Assert.True(earlier.Writes);
+        Assert.Equal(nightText, earlier.Record);
         Assert.Contains(EffectiveHead, earlier.Message, StringComparison.Ordinal);
+
+        // A night record that is not a record, or names another commit, is a fault and never a publish (T-2).
+        Assert.Throws<FormatException>(() => NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, null), null, EffectiveHead, "not json", ended, Now));
+        Assert.Throws<FormatException>(() => NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, null), null, Commit, nightText, ended, Now));
+    }
+
+    /// <summary>
+    /// D-648, RR-P2-5 trigger (a). Night B at one commit failed a slice seed, and its record is the record of main. A
+    /// re-run of the failed jobs of an older night A at the same commit then publishes. The plan of A read the record
+    /// of main before B, so A did not run the seed. The old step published the success record of A, and the seed was
+    /// lost. The record now keeps the seed and reads failure.
+    /// </summary>
+    [Fact]
+    public void ARerunAtOneCommitKeepsTheFailedSeedOfTheOtherNight()
+    {
+        DateOnly dateB = NightDate.AddDays(1);
+        ulong seed = NightSeeds.Slice(GreedyDescender.PolicyName, dateB).From + 9;
+        string recordB = SeedRecord(EffectiveHead, dateB, "failure", EndedWith((GreedyDescender.PolicyName, seed)), NoSeeds());
+        string recordA = SeedRecord(EffectiveHead, NightDate, "success", EndedWith(), NoSeeds());
+
+        NightPublishDecision decision = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, recordB), false, EffectiveHead, recordA, EndedWith(), Now);
+
+        Assert.True(decision.Writes);
+        Assert.Equal("failure", NightRecordParser.TryParse(decision.Record!, out _)!.Status);
+        Assert.Equal(new[] { seed }, FailedOf(decision.Record!, GreedyDescender.PolicyName));
+        Assert.Equal(EffectiveHead, NightRecordParser.TryParse(decision.Record!, out _)!.Commit);
+        Assert.Contains($"{GreedyDescender.PolicyName} {seed}", decision.Message, StringComparison.Ordinal);
+        Assert.Contains("D-648", decision.Message, StringComparison.Ordinal);
+
+        // The slice, the carried seeds, and the counts of night A stay as night A wrote them.
+        Assert.Equal(NightSeeds.ReadSlices(recordA, "A"), NightSeeds.ReadSlices(decision.Record!, "published"));
+        foreach (string sweep in NightSeeds.Sweeps)
+        {
+            Assert.Equal(NightSeeds.SeedsOf(NightSeeds.ReadRecordSeeds(recordA, NightSeeds.CarriedSeedsName, "A"), sweep), NightSeeds.SeedsOf(NightSeeds.ReadRecordSeeds(decision.Record!, NightSeeds.CarriedSeedsName, "published"), sweep));
+        }
+    }
+
+    /// <summary>
+    /// D-648, RR-P2-5 trigger (b). A night on main started at M0, a PR merged at M1, and a promotion wrote a success
+    /// record at M1 (D-557). The M0 night then failed a slice seed. The old check kept the record at M1 (D-562), and no
+    /// record named the seed. The step now writes a failure record at M1 with the failed seeds of both records and the
+    /// other fields of the record at M1.
+    /// </summary>
+    [Fact]
+    public void ALaterRecordTakesTheNewFailedSeedOfTheNight()
+    {
+        ulong sliceSeed = NightSeeds.Slice(FullClearer.PolicyName, NightDate).From + 120;
+        ulong reachSeed = NightSeeds.Slice(NightSeeds.ReachabilitySweep, NightDate).To;
+        Dictionary<string, List<ulong>> laterFailed = EndedWith((FullClearer.PolicyName, sliceSeed + 3), (Coward.PolicyName, 5100));
+        string promoted = PromotedRecord(SeedRecord(Commit, NightDate.AddDays(1), "failure", laterFailed, NoSeeds(), "coward=2 ascends=4998 scavenger:2\n"));
+        Dictionary<string, List<ulong>> ended = EndedWith((FullClearer.PolicyName, sliceSeed + 3), (FullClearer.PolicyName, sliceSeed), (NightSeeds.ReachabilitySweep, reachSeed));
+        string nightText = SeedRecord(EffectiveHead, NightDate, "failure", ended, NoSeeds());
+        DateTimeOffset publishTime = Now.AddMinutes(7);
+
+        NightPublishDecision decision = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, promoted), true, EffectiveHead, nightText, ended, publishTime);
+
+        Assert.True(decision.Writes);
+        NightRecord record = NightRecordParser.TryParse(decision.Record!, out string error) ?? throw new InvalidOperationException(error);
+        Assert.Equal(Commit, record.Commit);
+        Assert.Equal("failure", record.Status);
+        Assert.Equal(publishTime, record.EndedAt);
+        Assert.Equal(new[] { sliceSeed, sliceSeed + 3 }, FailedOf(decision.Record!, FullClearer.PolicyName));
+        Assert.Equal(new ulong[] { 5100 }, FailedOf(decision.Record!, Coward.PolicyName));
+        Assert.Equal(new[] { reachSeed }, FailedOf(decision.Record!, NightSeeds.ReachabilitySweep));
+        Assert.Empty(FailedOf(decision.Record!, GreedyDescender.PolicyName));
+        Assert.Contains($"{FullClearer.PolicyName} {sliceSeed}", decision.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain($"{FullClearer.PolicyName} {sliceSeed + 3}", decision.Message, StringComparison.Ordinal);
+
+        // Each other field of the record at M1 stays as it is: the slice, the carried seeds, the counts, and the source.
+        using JsonDocument before = JsonDocument.Parse(promoted);
+        using JsonDocument after = JsonDocument.Parse(decision.Record!);
+        foreach (JsonProperty property in before.RootElement.EnumerateObject())
+        {
+            if (property.Name is NightRecordCommand.EndedAtName or NightRecordCommand.StatusName or NightSeeds.FailedSeedsName)
+            {
+                continue;
+            }
+
+            Assert.Equal(property.Value.GetRawText(), after.RootElement.GetProperty(property.Name).GetRawText());
+        }
+
+        Assert.Equal(before.RootElement.EnumerateObject().Count(), after.RootElement.EnumerateObject().Count());
+    }
+
+    /// <summary>
+    /// D-567, D-648 (owner answer of PR-92). The M0 night failed a seed s that the later record at M1 does not name, and
+    /// the night of the later record ran s: in its slice, in its carried seeds, or in the fixed range. That night passed
+    /// s on the later code, so the later record stays. A seed that the later night did not run still joins it.
+    /// </summary>
+    [Fact]
+    public void ALaterRecordStaysWhenItsNightPassedTheNewSeed()
+    {
+        ulong sliceSeed = NightSeeds.Slice(FullClearer.PolicyName, NightDate).From + 40;
+        ulong carriedSeed = NightSeeds.Slice(GreedyDescender.PolicyName, NightDate.AddDays(-1)).From + 4;
+        const ulong fixedSeed = 4321;
+        Dictionary<string, List<ulong>> laterCarry = new(StringComparer.Ordinal) { [GreedyDescender.PolicyName] = [carriedSeed] };
+        string laterRecord = PromotedRecord(SeedRecord(Commit, NightDate, "success", EndedWith(), laterCarry));
+        (string Sweep, ulong Seed)[] ranByLater = [(FullClearer.PolicyName, sliceSeed), (GreedyDescender.PolicyName, carriedSeed), (Coward.PolicyName, fixedSeed)];
+        foreach ((string sweep, ulong seed) in ranByLater)
+        {
+            Dictionary<string, List<ulong>> ended = EndedWith((sweep, seed));
+            string nightText = SeedRecord(EffectiveHead, NightDate.AddDays(-1), "failure", ended, NoSeeds());
+            NightPublishDecision decision = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, laterRecord), true, EffectiveHead, nightText, ended, Now);
+            Assert.False(decision.Writes, $"The seed {seed} of {sweep}, which the later night ran, blocks: {decision.Message}");
+            Assert.Null(decision.Record);
+            Assert.Contains($"{sweep} {seed}", decision.Message, StringComparison.Ordinal);
+            Assert.Contains("D-567", decision.Message, StringComparison.Ordinal);
+        }
+
+        // With one seed that the later night ran and one that it did not run, only the second joins the failure record.
+        ulong notRun = NightSeeds.Slice(FullClearer.PolicyName, NightDate.AddDays(-1)).From;
+        Dictionary<string, List<ulong>> both = EndedWith((FullClearer.PolicyName, sliceSeed), (FullClearer.PolicyName, notRun));
+        string bothNight = SeedRecord(EffectiveHead, NightDate.AddDays(-1), "failure", both, NoSeeds());
+        NightPublishDecision joined = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, laterRecord), true, EffectiveHead, bothNight, both, Now);
+        Assert.True(joined.Writes);
+        Assert.Equal(new[] { notRun }, FailedOf(joined.Record!, FullClearer.PolicyName));
+        Assert.Equal(Commit, NightRecordParser.TryParse(joined.Record!, out _)!.Commit);
+        Assert.Equal("failure", NightRecordParser.TryParse(joined.Record!, out _)!.Status);
+
+        // A malformed seed field of this night is a fault in the later case too, so the step fails closed (T-2).
+        string badNight = bothNight.Replace("\"failedSeeds\":{", "\"failedSeeds\":[],\"x\":{", StringComparison.Ordinal);
+        Assert.Throws<FormatException>(() => NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, laterRecord), true, EffectiveHead, badNight, both, Now));
+    }
+
+    /// <summary>D-562 stands: a later record that names each seed that the night failed stays, and so does a later record after a night with no failure.</summary>
+    [Fact]
+    public void ALaterRecordStaysWhenTheNightFailedNoNewSeed()
+    {
+        ulong seed = NightSeeds.Slice(FullClearer.PolicyName, NightDate).From + 5;
+        string laterRecord = SeedRecord(Commit, NightDate, "failure", EndedWith((FullClearer.PolicyName, seed)), NoSeeds());
+        Dictionary<string, List<ulong>> sameFailure = EndedWith((FullClearer.PolicyName, seed));
+        string failedNight = SeedRecord(EffectiveHead, NightDate, "failure", sameFailure, NoSeeds());
+        Assert.False(NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, laterRecord), true, EffectiveHead, failedNight, sameFailure, Now).Writes);
+
+        string passedNight = SeedRecord(EffectiveHead, NightDate, "success", EndedWith(), NoSeeds());
+        string laterSuccess = SeedRecord(Commit, NightDate, "success", EndedWith(), NoSeeds());
+        Assert.False(NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, laterSuccess), true, EffectiveHead, passedNight, EndedWith(), Now).Writes);
+
+        // A sweep that did not end names the carry of its plan as failed seeds, and this night did not fail them. A
+        // promotion proved them on the later code (D-569), so the later record stays.
+        Dictionary<string, List<ulong>> carry = new(StringComparer.Ordinal) { [GreedyDescender.PolicyName] = [5200] };
+        Dictionary<string, List<ulong>> notEnded = EndedWith();
+        notEnded.Remove(GreedyDescender.PolicyName);
+        string brokenNight = SeedRecord(EffectiveHead, NightDate, "failure", notEnded, carry);
+        Assert.Equal(new ulong[] { 5200 }, FailedOf(brokenNight, GreedyDescender.PolicyName));
+        Assert.False(NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, laterSuccess), true, EffectiveHead, brokenNight, notEnded, Now).Writes);
+    }
+
+    /// <summary>
+    /// D-567, D-648. A failed seed of the record of main that this night ran and passed goes away: a carried seed, and
+    /// a seed of the slice of this night. A seed of a sweep that did not end stays, because the sweep did not run it to
+    /// the end.
+    /// </summary>
+    [Fact]
+    public void ASeedThatTheNightRanAndPassedGoesAway()
+    {
+        ulong carriedSeed = NightSeeds.Slice(GreedyDescender.PolicyName, NightDate.AddDays(-1)).From + 1;
+        ulong sliceSeed = NightSeeds.Slice(Coward.PolicyName, NightDate).From + 2;
+        string mainRecord = SeedRecord(Commit, NightDate.AddDays(-1), "failure", EndedWith((GreedyDescender.PolicyName, carriedSeed), (Coward.PolicyName, sliceSeed)), NoSeeds());
+        Dictionary<string, List<ulong>> carry = new(StringComparer.Ordinal) { [GreedyDescender.PolicyName] = [carriedSeed] };
+        string passed = SeedRecord(EffectiveHead, NightDate, "success", EndedWith(), carry);
+
+        NightPublishDecision decision = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, mainRecord), false, EffectiveHead, passed, EndedWith(), Now);
+        Assert.True(decision.Writes);
+        Assert.Equal(passed, decision.Record);
+
+        // The coward sweep did not end, so its slice seed stays, and the record reads failure.
+        Dictionary<string, List<ulong>> notEnded = EndedWith();
+        notEnded.Remove(Coward.PolicyName);
+        string broken = SeedRecord(EffectiveHead, NightDate, "failure", notEnded, carry);
+        NightPublishDecision kept = NightPublishCheckCommand.Decide(Read(NightGateFacts.RecordBranch, mainRecord), false, EffectiveHead, broken, notEnded, Now);
+        Assert.True(kept.Writes);
+        Assert.Equal(new[] { sliceSeed }, FailedOf(kept.Record!, Coward.PolicyName));
+        Assert.Empty(FailedOf(kept.Record!, GreedyDescender.PolicyName));
+        Assert.Equal("failure", NightRecordParser.TryParse(kept.Record!, out _)!.Status);
+    }
+
+    /// <summary>D-562 stands: an absent record of main, or one with a malformed record or seed field, is replaced by the night record as it is.</summary>
+    [Fact]
+    public void AMalformedOrAbsentRecordOfMainIsReplaced()
+    {
+        string nightText = SeedRecord(EffectiveHead, NightDate, "success", EndedWith(), NoSeeds());
+        string badSeeds = Record(Now, "failure").Replace("}\n", ",\"failedSeeds\":[7]}\n", StringComparison.Ordinal);
+        Assert.NotNull(NightRecordParser.TryParse(badSeeds, out _));
+        foreach (string? mainText in new[] { null, "not json", "{}", badSeeds })
+        {
+            foreach (bool? after in new bool?[] { null, true, false })
+            {
+                NightRecordRead main = Read(NightGateFacts.RecordBranch, mainText);
+                if (after is not null && main.Record is null)
+                {
+                    continue;
+                }
+
+                NightPublishDecision decision = NightPublishCheckCommand.Decide(main, after, EffectiveHead, nightText, EndedWith(), Now);
+                Assert.True(decision.Writes, $"The record of main '{mainText}' stays.");
+                Assert.Equal(nightText, decision.Record);
+                Assert.Contains(mainText is null ? "absent" : "malformed", decision.Message, StringComparison.Ordinal);
+            }
+        }
+    }
+
+    /// <summary>The date of the nights of the publish tests, three days after day 0 of the slices.</summary>
+    private static readonly DateOnly NightDate = NightSeeds.DayZero.AddDays(3);
+
+    /// <summary>A night record with the seed fields of <see cref="NightSeeds.RecordFields"/>, as night-record writes it.</summary>
+    private static string SeedRecord(string commit, DateOnly date, string status, Dictionary<string, List<ulong>> ended, Dictionary<string, List<ulong>> carry, string summary = "")
+    {
+        return NightRecordCommand.Build(commit, Now.UtcDateTime.AddHours(-2), status, summary, NightSeeds.RecordFields(date, status, ended, carry));
+    }
+
+    /// <summary>A record at a merge commit with the source field of a promotion, which names the branch night at <see cref="EffectiveHead"/> (D-557).</summary>
+    private static string PromotedRecord(string mergeRecord)
+    {
+        return mergeRecord.Replace("}\n", $",\"{NightPromotionRules.PromotedFromName}\":{{\"branch\":\"{HeadBranch}\",\"commit\":\"{EffectiveHead}\"}}}}\n", StringComparison.Ordinal);
+    }
+
+    /// <summary>A map of failure lines where each sweep ended, with the failed seeds given.</summary>
+    private static Dictionary<string, List<ulong>> EndedWith(params (string Sweep, ulong Seed)[] failed)
+    {
+        Dictionary<string, List<ulong>> ended = new(StringComparer.Ordinal);
+        foreach (string sweep in NightSeeds.Sweeps)
+        {
+            ended[sweep] = [];
+        }
+
+        foreach ((string sweep, ulong seed) in failed)
+        {
+            ended[sweep].Add(seed);
+        }
+
+        return ended;
+    }
+
+    private static Dictionary<string, List<ulong>> NoSeeds()
+    {
+        return new Dictionary<string, List<ulong>>(StringComparer.Ordinal);
+    }
+
+    /// <summary>The failure lines of a map of ended sweeps.</summary>
+    private static string FailureLines(Dictionary<string, List<ulong>> ended)
+    {
+        string text = string.Empty;
+        foreach (KeyValuePair<string, List<ulong>> sweep in ended)
+        {
+            text += NightSeeds.FailureLine(sweep.Key, sweep.Value);
+        }
+
+        return text;
+    }
+
+    private static List<ulong> FailedOf(string record, string sweep)
+    {
+        return [.. NightSeeds.SeedsOf(NightSeeds.ReadRecordSeeds(record, NightSeeds.FailedSeedsName, "the record"), sweep)];
+    }
+
+    /// <summary>The head commit of the branch night-results of the remote, the lease of a publish.</summary>
+    private static string RecordHead(TemporaryGitRepository remote)
+    {
+        return remote.Git(["rev-parse", NightGateFacts.RecordBranch]).Trim();
     }
 
     /// <summary>The facts of one promotion, with <see cref="EffectiveHead"/> as the commit of the branch night and a record of main at <see cref="Commit"/>.</summary>

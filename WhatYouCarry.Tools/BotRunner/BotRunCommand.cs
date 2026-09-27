@@ -13,7 +13,7 @@ namespace WhatYouCarry.Tools.BotRunner;
 
 /// <summary>
 /// <c>bot-run --policy &lt;name&gt; (--seeds &lt;list&gt; | --seeds-file &lt;file&gt;) --output &lt;directory&gt; --root &lt;checkout&gt;
-/// [--summary &lt;file&gt;] [--failures &lt;file&gt;]</c>. Plays one headless run per seed with the policy over the content of
+/// [--summary &lt;file&gt;] [--failures &lt;file&gt;] [--shard &lt;k&gt;]</c>. Plays one headless run per seed with the policy over the content of
 /// the checkout, and writes one JSONL run log per run to the output directory (D-115, D-127). The list holds ranges
 /// <c>from-to</c> and single seeds, with a comma between them (D-564). The seeds file holds the same list, so a list of
 /// many carried seeds needs no argument or variable past the size limit of Linux (F-162). Exit 0 means no crash, and
@@ -23,7 +23,9 @@ namespace WhatYouCarry.Tools.BotRunner;
 /// The PR job runs one hundred seeds per policy, and the night job five thousand and a slice (D-115, D-564). The command prints one
 /// summary line per end state on standard output, and the log of each run holds the policy, the seed, the end
 /// state, the deepest floor, the ticks, and the text of a crash. The failures file takes one line with each failed
-/// seed, which the night record reads (D-567).
+/// seed, which the night record reads (D-567). With <c>--shard</c>, the summary line and the failure line name shard k
+/// of the policy in the label of <see cref="NightSeeds.ShardLabel"/>, so the night record joins the shards of one
+/// policy (D-655). The shard changes no seed: the seed list of the shard comes from <c>night-seeds --shard</c>.
 /// </remarks>
 public static class BotRunCommand
 {
@@ -43,7 +45,7 @@ public static class BotRunCommand
     /// <summary>The largest count of seeds in one command. The night runs about five thousand five hundred, and a list past this is a typo.</summary>
     public const ulong LargestSpan = 1000000;
 
-    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer|timer-tester|coward> (--seeds <from>-<to>[,<seed>|,<from>-<to>]... | --seeds-file <file>) --output <directory> --root <checkout> [--summary <file>] [--failures <file>]";
+    private const string Usage = "Usage: bot-run --policy <random-walker|greedy-descender|full-clearer|timer-tester|coward> (--seeds <from>-<to>[,<seed>|,<from>-<to>]... | --seeds-file <file>) --output <directory> --root <checkout> [--summary <file>] [--failures <file>] [--shard <k>]";
 
     public static int Run(string[] args)
     {
@@ -54,6 +56,7 @@ public static class BotRunCommand
         string? root = null;
         string? summary = null;
         string? failures = null;
+        string? shardText = null;
         int i = 0;
         while (i < args.Length)
         {
@@ -72,6 +75,7 @@ public static class BotRunCommand
                 case "--root": root = args[i + 1]; break;
                 case "--summary": summary = args[i + 1]; break;
                 case "--failures": failures = args[i + 1]; break;
+                case "--shard": shardText = args[i + 1]; break;
                 default:
                     Console.Error.WriteLine($"Unexpected argument '{args[i]}'. {Usage}");
                     return 2;
@@ -92,6 +96,26 @@ public static class BotRunCommand
             return 2;
         }
 
+        int? shard = null;
+        if (shardText is not null)
+        {
+            if (policy == NightSeeds.ReachabilitySweep || Array.IndexOf(NightSeeds.Sweeps, policy) < 0)
+            {
+                Console.Error.WriteLine($"The option --shard needs a bot policy of the night, and '{policy}' is not one. {Usage}");
+                return 2;
+            }
+
+            int shards = NightSeeds.ShardCount(policy);
+            if (!int.TryParse(shardText, NumberStyles.None, CultureInfo.InvariantCulture, out int parsed) || parsed < 1 || parsed > shards)
+            {
+                Console.Error.WriteLine($"The shard '{shardText}' is not a shard of the policy {policy}, which runs as {shards} shard(s), numbered from 1 to {shards} (D-655). {Usage}");
+                return 2;
+            }
+
+            shard = parsed;
+        }
+
+        string label = shard is null ? policy : NightSeeds.ShardLabel(policy, shard);
         string source = seedsFile is null ? $"'{seeds}'" : $"of the file '{seedsFile}'";
         if (seedsFile is not null)
         {
@@ -169,13 +193,13 @@ public static class BotRunCommand
         if (summary is not null)
         {
             // One line for each policy, appended, so the night gathers every policy into its record (D-403).
-            File.AppendAllText(summary, DeathLine(policy, counts[(int)BotRunEnd.Death], counts[(int)BotRunEnd.Ascend], causes), new UTF8Encoding(false));
+            File.AppendAllText(summary, DeathLine(label, counts[(int)BotRunEnd.Death], counts[(int)BotRunEnd.Ascend], causes), new UTF8Encoding(false));
         }
 
         if (failures is not null)
         {
             // One line for each policy, appended, so the night record names each failed seed (D-567).
-            File.AppendAllText(failures, NightSeeds.FailureLine(policy, failed), new UTF8Encoding(false));
+            File.AppendAllText(failures, NightSeeds.FailureLine(policy, shard, failed), new UTF8Encoding(false));
         }
 
         if (failed.Count > 0)
@@ -269,14 +293,15 @@ public static class BotRunCommand
     }
 
     /// <summary>
-    /// One summary line of a policy: its name, an equals sign, and the count of deaths (D-403), then the word
+    /// One summary line of a policy: its label, an equals sign, and the count of deaths (D-403), then the word
     /// <c>ascends=count</c> (D-430), then one <c>cause:count</c> word for each cause, in the ordinal order of the
-    /// causes (D-411).
+    /// causes (D-411). The label is the policy name, or the shard label of <see cref="NightSeeds.ShardLabel"/> for one
+    /// shard of a policy (D-655).
     /// </summary>
-    public static string DeathLine(string policy, int deaths, int ascends, SortedDictionary<string, int> causes)
+    public static string DeathLine(string label, int deaths, int ascends, SortedDictionary<string, int> causes)
     {
         StringBuilder line = new();
-        line.Append(policy).Append('=').Append(deaths.ToString(CultureInfo.InvariantCulture));
+        line.Append(label).Append('=').Append(deaths.ToString(CultureInfo.InvariantCulture));
         line.Append(' ').Append(NightRecordCommand.AscendsWord).Append('=').Append(ascends.ToString(CultureInfo.InvariantCulture));
         foreach (KeyValuePair<string, int> cause in causes)
         {

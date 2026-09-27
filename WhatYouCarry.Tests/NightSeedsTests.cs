@@ -503,6 +503,331 @@ public sealed class NightSeedsTests
         }
     }
 
+    /// <summary>
+    /// D-655. The sweeps full-clearer and reachability run as two shards, and each other sweep as one. Shard 1 runs the
+    /// lower half of the fixed range and of the slice, and shard 2 the upper half, with no gap and no overlap.
+    /// </summary>
+    [Fact]
+    public void EachShardRunsItsHalfOfTheFixedRangeAndTheSlice()
+    {
+        Assert.Equal(2, NightSeeds.ShardCount(FullClearer.PolicyName));
+        Assert.Equal(2, NightSeeds.ShardCount(NightSeeds.ReachabilitySweep));
+        foreach (string sweep in new[] { RandomWalker.PolicyName, GreedyDescender.PolicyName, TimerTester.PolicyName, Coward.PolicyName })
+        {
+            Assert.Equal(1, NightSeeds.ShardCount(sweep));
+        }
+
+        Assert.Throws<ArgumentException>(() => NightSeeds.ShardCount("walker"));
+
+        DateOnly date = NightSeeds.DayZero.AddDays(3);
+        Assert.Equal("1-2500,6501-6750", NightSeeds.FormatList(NightSeeds.ShardPlan(FullClearer.PolicyName, date, [], [], 1)));
+        Assert.Equal("2501-5000,6751-7000", NightSeeds.FormatList(NightSeeds.ShardPlan(FullClearer.PolicyName, date, [], [], 2)));
+        Assert.Equal("1-50000,130001-135000", NightSeeds.FormatList(NightSeeds.ShardPlan(NightSeeds.ReachabilitySweep, date, [], [], 1)));
+        Assert.Equal("50001-100000,135001-140000", NightSeeds.FormatList(NightSeeds.ShardPlan(NightSeeds.ReachabilitySweep, date, [], [], 2)));
+        Assert.Equal(NightSeeds.FormatList(NightSeeds.Plan(Coward.PolicyName, date, [], [7000])), NightSeeds.FormatList(NightSeeds.ShardPlan(Coward.PolicyName, date, [], [7000], 1)));
+
+        foreach (int wrong in new[] { 0, 3, -1 })
+        {
+            ArgumentException exception = Assert.Throws<ArgumentException>(() => NightSeeds.ShardPlan(FullClearer.PolicyName, date, [], [], wrong));
+            Assert.Contains("D-655", exception.Message, StringComparison.Ordinal);
+        }
+
+        Assert.Throws<ArgumentException>(() => NightSeeds.ShardPlan(Coward.PolicyName, date, [], [], 2));
+
+        // An odd size splits exactly: the parts follow each other with no gap and no overlap, and the upper half of two
+        // holds the one seed more. Each size and each count of parts covers its range, seed by seed.
+        Assert.Equal(new SeedRange(10, 11), NightSeeds.ShardPart(new SeedRange(10, 14), 1, 2));
+        Assert.Equal(new SeedRange(12, 14), NightSeeds.ShardPart(new SeedRange(10, 14), 2, 2));
+        for (ulong size = 1; size <= 41; size++)
+        {
+            for (int shards = 1; shards <= 3 && (ulong)shards <= size; shards++)
+            {
+                SeedRange range = new(100, 100 + size - 1);
+                ulong next = range.From;
+                for (int shard = 1; shard <= shards; shard++)
+                {
+                    SeedRange part = NightSeeds.ShardPart(range, shard, shards);
+                    Assert.True(part.From == next && part.To >= part.From, $"The part {shard} of {shards} of {range} is {part}, and it starts at {next}.");
+                    next = part.To + 1;
+                }
+
+                Assert.True(next == range.To + 1, $"The parts of {shards} of {range} end at {next - 1}.");
+            }
+        }
+
+        Assert.Throws<ArgumentException>(() => NightSeeds.ShardPart(new SeedRange(5, 5), 1, 2));
+        Assert.Throws<ArgumentException>(() => NightSeeds.ShardPart(new SeedRange(5, 9), 3, 2));
+    }
+
+    /// <summary>D-655. Shard 1 alone runs each extra seed and each carried seed, and the shards of a sweep together hold the plan of the sweep, each seed once.</summary>
+    [Fact]
+    public void TheShardsOfASweepHoldThePlanOfTheSweep()
+    {
+        DateOnly date = NightSeeds.DayZero.AddDays(5);
+        List<ulong> extra = [9000, 7000];
+        List<ulong> carried = [7000, 6600, 3, 12000, 7300];
+        List<SeedRange> first = NightSeeds.ShardPlan(FullClearer.PolicyName, date, extra, carried, 1);
+        List<SeedRange> second = NightSeeds.ShardPlan(FullClearer.PolicyName, date, extra, carried, 2);
+        Assert.Equal("1-2500,7501-7750,6600,7000,7300,9000,12000", NightSeeds.FormatList(first));
+        Assert.Equal("2501-5000,7751-8000", NightSeeds.FormatList(second));
+
+        foreach (string sweep in new[] { FullClearer.PolicyName, NightSeeds.ReachabilitySweep })
+        {
+            List<ulong> sweepExtra = sweep == FullClearer.PolicyName ? extra : [100002, 250000];
+            List<ulong> sweepCarried = sweep == FullClearer.PolicyName ? carried : [150003, 99, 250000];
+            List<SeedRange> whole = NightSeeds.Plan(sweep, date, sweepExtra, sweepCarried);
+            SortedSet<ulong> shardSeeds = [];
+            ulong count = 0;
+            for (int shard = 1; shard <= NightSeeds.ShardCount(sweep); shard++)
+            {
+                List<SeedRange> plan = NightSeeds.ShardPlan(sweep, date, sweepExtra, sweepCarried, shard);
+                count += NightSeeds.Count(plan);
+                shardSeeds.UnionWith(Expand(plan));
+            }
+
+            Assert.Equal(NightSeeds.Count(whole), count);
+            Assert.Equal(Expand(whole).Order(), shardSeeds);
+        }
+    }
+
+    /// <summary>
+    /// D-655. The line of one shard names the shard, and the record reads a sweep of two shards as ended only when both
+    /// lines are present: the failed seeds join, and so do the counts of the bot summary. A sweep with a line of one
+    /// shard alone did not end, so the record keeps the failed seeds of the record of main for it.
+    /// </summary>
+    [Fact]
+    public void TheRecordJoinsTheLinesOfTheShardsOfASweep()
+    {
+        Assert.Equal("full-clearer#2/2: 2600 6800\n", NightSeeds.FailureLine(FullClearer.PolicyName, 2, [2600, 6800]));
+        Assert.Equal("reachability#1/2:\n", NightSeeds.FailureLine(NightSeeds.ReachabilitySweep, 1, []));
+        string both = NightSeeds.FailureLine(FullClearer.PolicyName, 2, [2600, 6800])
+            + NightSeeds.FailureLine(Coward.PolicyName, 1, [])
+            + NightSeeds.FailureLine(FullClearer.PolicyName, 1, [6700, 1200]);
+        Dictionary<string, List<ulong>> ended = NightSeeds.ReadFailures(both, "failures.txt");
+        Assert.Equal(new ulong[] { 1200, 2600, 6700, 6800 }, ended[FullClearer.PolicyName]);
+        Assert.Empty(ended[Coward.PolicyName]);
+
+        // The line of shard 2 alone: the sweep did not end, and the record keeps the carried seed of main for it.
+        Dictionary<string, List<ulong>> half = NightSeeds.ReadFailures(NightSeeds.FailureLine(FullClearer.PolicyName, 2, [2600]), "failures.txt");
+        Assert.False(half.ContainsKey(FullClearer.PolicyName));
+        Dictionary<string, List<ulong>> carry = new(StringComparer.Ordinal) { [FullClearer.PolicyName] = [5900] };
+        using JsonDocument fields = Parse(NightSeeds.RecordFields(NightSeeds.DayZero.AddDays(1), "failure", half, carry));
+        Assert.Equal(new ulong[] { 5900 }, Seeds(fields, NightSeeds.FailedSeedsName, FullClearer.PolicyName));
+
+        // The summary lines of the two shards join into one count of each policy: deaths, ascends, and each cause.
+        SortedDictionary<string, int> firstCauses = new(StringComparer.Ordinal) { ["scavenger"] = 4, ["overseer"] = 1 };
+        SortedDictionary<string, int> secondCauses = new(StringComparer.Ordinal) { ["scavenger"] = 3, ["ash-hound"] = 2 };
+        string summary = BotRunCommand.DeathLine(NightSeeds.ShardLabel(FullClearer.PolicyName, 1), 5, 10, firstCauses)
+            + BotRunCommand.DeathLine(Coward.PolicyName, 0, 5500, new SortedDictionary<string, int>(StringComparer.Ordinal))
+            + BotRunCommand.DeathLine(NightSeeds.ShardLabel(FullClearer.PolicyName, 2), 5, 12, secondCauses);
+        Assert.StartsWith("full-clearer#1/2=5 ascends=10 ", summary, StringComparison.Ordinal);
+        Assert.Equal("{\"full-clearer\":10,\"coward\":0}", NightRecordCommand.DeathsObject(summary));
+        Assert.Equal("{\"full-clearer\":22,\"coward\":5500}", NightRecordCommand.AscendsObject(summary));
+        Assert.Equal("{\"full-clearer\":{\"ash-hound\":2,\"overseer\":1,\"scavenger\":7},\"coward\":{}}", NightRecordCommand.CausesObject(summary));
+
+        // A policy with the summary line of one shard alone has no count, because the night did not measure it.
+        string halfSummary = BotRunCommand.DeathLine(NightSeeds.ShardLabel(FullClearer.PolicyName, 2), 5, 12, secondCauses);
+        Assert.Equal("{}", NightRecordCommand.DeathsObject(halfSummary));
+        Assert.Equal("{}", NightRecordCommand.AscendsObject(halfSummary));
+        Assert.Equal("{}", NightRecordCommand.CausesObject(halfSummary));
+
+        // A repeated shard, or a whole line beside a shard line of one sweep, is an error (T-2).
+        foreach (string wrong in new[] { "full-clearer#1/2: 3\nfull-clearer#1/2:", "full-clearer:\nfull-clearer#2/2:", "full-clearer#2/2:\nfull-clearer:" })
+        {
+            FormatException exception = Assert.Throws<FormatException>(() => NightSeeds.ReadFailures(wrong, "failures.txt"));
+            Assert.Contains("failures.txt", exception.Message, StringComparison.Ordinal);
+        }
+
+        Assert.Throws<FormatException>(() => NightRecordCommand.DeathsObject("full-clearer#1/2=1\nfull-clearer#1/2=2\n"));
+        Assert.Throws<FormatException>(() => NightRecordCommand.DeathsObject("full-clearer=1\nfull-clearer#2/2=2\n"));
+        Assert.Throws<FormatException>(() => NightRecordCommand.DeathsObject("coward=1\ncoward=2\n"));
+    }
+
+    /// <summary>D-655. A sweep of one shard keeps the old line form, and a shard label names a sweep of two shards and a shard of it.</summary>
+    [Fact]
+    public void AnUnshardedSweepKeepsTheOldLineForm()
+    {
+        Assert.Equal("coward: 5100\n", NightSeeds.FailureLine(Coward.PolicyName, 1, [5100]));
+        Assert.Equal(NightSeeds.FailureLine(Coward.PolicyName, [5100]), NightSeeds.FailureLine(Coward.PolicyName, 1, [5100]));
+        Assert.Equal("full-clearer: 5100\n", NightSeeds.FailureLine(FullClearer.PolicyName, null, [5100]));
+        Assert.Equal(Coward.PolicyName, NightSeeds.ShardLabel(Coward.PolicyName, 1));
+        Assert.Equal("reachability#2/2", NightSeeds.ShardLabel(NightSeeds.ReachabilitySweep, 2));
+        Assert.Throws<ArgumentException>(() => NightSeeds.ShardLabel(Coward.PolicyName, 2));
+        Assert.Throws<ArgumentException>(() => NightSeeds.ShardLabel(FullClearer.PolicyName, 3));
+
+        Assert.Equal(("coward", (int?)null), NightSeeds.ReadLabel("coward", "failures.txt"));
+        Assert.Equal(("full-clearer", (int?)2), NightSeeds.ReadLabel("full-clearer#2/2", "failures.txt"));
+        foreach (string wrong in new[] { "coward#1/1", "coward#1/2", "full-clearer#3/2", "full-clearer#0/2", "full-clearer#1/3", "full-clearer#1", "full-clearer#a/2", "walker#1/2", "full-clearer#1/2/2" })
+        {
+            FormatException exception = Assert.Throws<FormatException>(() => NightSeeds.ReadLabel(wrong, "failures.txt"));
+            Assert.Contains(wrong, exception.Message, StringComparison.Ordinal);
+            Assert.Contains("failures.txt", exception.Message, StringComparison.Ordinal);
+            Assert.Throws<FormatException>(() => NightSeeds.ReadFailures(wrong + ":", "failures.txt"));
+        }
+
+        // A whole line of a sweep of two shards, as a run by hand writes it, still ends the sweep.
+        Assert.Equal(new ulong[] { 5100 }, NightSeeds.ReadFailures("full-clearer: 5100\n", "failures.txt")[FullClearer.PolicyName]);
+    }
+
+    /// <summary>D-655. The seed command takes the shard, and refuses a shard out of range for the sweep with a clear error.</summary>
+    [Fact]
+    public void NightSeedsCommandPrintsTheListOfAShard()
+    {
+        string directory = TempDirectory();
+        string carry = Path.Combine(directory, "night.json");
+        File.WriteAllText(carry, NightRecordCommand.Build(Commit, new DateTime(2026, 9, 25, 5, 0, 0, DateTimeKind.Utc), "failure", string.Empty, NightSeeds.RecordFields(NightSeeds.DayZero, "failure", Failed(FullClearer.PolicyName, 5250), new Dictionary<string, List<ulong>>())));
+        TextWriter savedOut = Console.Out;
+        TextWriter savedError = Console.Error;
+        try
+        {
+            StringWriter output = new();
+            StringWriter errors = new();
+            Console.SetOut(output);
+            Console.SetError(errors);
+            string[] common = ["night-seeds", "--sweep", FullClearer.PolicyName, "--date", "2026-09-26", "--root", RepositoryRoot.Find(), "--carry", carry];
+
+            Assert.Equal(0, Program.Main([.. common, "--shard", "1"]));
+            Assert.Equal(0, Program.Main([.. common, "--shard", "2"]));
+            Assert.Equal(0, Program.Main(common));
+            Assert.Equal(new[] { "1-2500,6001-6250,5250", "2501-5000,6251-6500", "1-5000,6001-6500,5250" }, output.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries));
+            Assert.Contains("the shard 2 of 2", errors.ToString(), StringComparison.Ordinal);
+            Assert.Contains("because shard 1 runs them", errors.ToString(), StringComparison.Ordinal);
+
+            foreach (string wrong in new[] { "0", "3", "x", "-1" })
+            {
+                errors.GetStringBuilder().Clear();
+                Assert.Equal(2, Program.Main([.. common, "--shard", wrong]));
+                Assert.Contains($"The shard '{wrong}' is not a shard of the sweep full-clearer", errors.ToString(), StringComparison.Ordinal);
+            }
+
+            Assert.Equal(2, Program.Main(["night-seeds", "--sweep", Coward.PolicyName, "--date", "2026-09-26", "--root", RepositoryRoot.Find(), "--carry", carry, "--shard", "2"]));
+            Assert.Contains("runs as 1 shard(s)", errors.ToString(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            Console.SetOut(savedOut);
+            Console.SetError(savedError);
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>D-655. The runner writes the label of its shard in its summary line and its failure line, and the reachability sweep reads its shard from the night.</summary>
+    [Fact]
+    public void BotRunAndTheSeedSweepNameTheirShard()
+    {
+        string directory = TempDirectory();
+        string logs = Path.Combine(directory, "logs");
+        string failures = Path.Combine(directory, "failures.txt");
+        string summary = Path.Combine(directory, "bot-deaths.txt");
+        TextWriter savedOut = Console.Out;
+        TextWriter savedError = Console.Error;
+        try
+        {
+            Console.SetOut(new StringWriter());
+            StringWriter errors = new();
+            Console.SetError(errors);
+            string[] run = ["bot-run", "--seeds", "1", "--output", logs, "--root", RepositoryRoot.Find(), "--failures", failures, "--summary", summary];
+            Assert.Equal(0, Program.Main([.. run, "--policy", FullClearer.PolicyName, "--shard", "2"]));
+            Assert.Equal(0, Program.Main([.. run, "--policy", Coward.PolicyName, "--shard", "1"]));
+            Assert.Equal("full-clearer#2/2:\ncoward:\n", File.ReadAllText(failures));
+            string[] lines = File.ReadAllLines(summary);
+            Assert.StartsWith("full-clearer#2/2=", lines[0], StringComparison.Ordinal);
+            Assert.StartsWith("coward=", lines[1], StringComparison.Ordinal);
+
+            Assert.Equal(2, Program.Main([.. run, "--policy", Coward.PolicyName, "--shard", "2"]));
+            Assert.Equal(2, Program.Main([.. run, "--policy", FullClearer.PolicyName, "--shard", "3"]));
+            Assert.Equal(2, Program.Main([.. run, "--policy", "walker", "--shard", "1"]));
+            Assert.Contains("D-655", errors.ToString(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            Console.SetOut(savedOut);
+            Console.SetError(savedError);
+            Directory.Delete(directory, recursive: true);
+        }
+
+        Assert.Null(ProcgenTests.ReadShard(null));
+        Assert.Equal(2, ProcgenTests.ReadShard("2"));
+        foreach (string wrong in new[] { "0", "3", "x", string.Empty })
+        {
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => ProcgenTests.ReadShard(wrong));
+            Assert.Contains(ProcgenTests.NightShardVariable, exception.Message, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>D-655. The record job gathers the result of each shard, and the record joins the two shards of a sweep, or keeps the carry of main for a sweep with one shard missing.</summary>
+    [Fact]
+    public void TheRecordJobJoinsTheShardResults()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        string script = Path.Combine(RepositoryRoot.Find(), ".github", "scripts", "night-gather.sh");
+        DateOnly date = NightSeeds.DayZero.AddDays(1);
+        SortedDictionary<string, int> noCause = new(StringComparer.Ordinal);
+        string directory = Path.Combine(Path.GetTempPath(), $"wyc-night-shards-{Guid.NewGuid():N}");
+        try
+        {
+            string results = Path.Combine(directory, "sweeps");
+            string output = Path.Combine(directory, "record");
+            foreach (string sweep in NightSeeds.Sweeps)
+            {
+                for (int shard = 1; shard <= NightSeeds.ShardCount(sweep); shard++)
+                {
+                    List<ulong> shardFailed = sweep == FullClearer.PolicyName && shard == 2 ? [5400] : [];
+                    string deaths = sweep == NightSeeds.ReachabilitySweep ? string.Empty : BotRunCommand.DeathLine(NightSeeds.ShardLabel(sweep, shard), shard, 100, noCause);
+                    string failureLine = sweep == NightSeeds.ReachabilitySweep && shard == 2 ? string.Empty : NightSeeds.FailureLine(sweep, shard, shardFailed);
+                    WriteSweepResult(results, $"{sweep}-{shard}", deaths, failureLine);
+                }
+            }
+
+            (int exit, string status, string errors) = RunBash(script, results, output, "success", "failure", "success");
+            Assert.True(exit == 0, errors);
+            Assert.Equal("failure\n", status);
+            Assert.Contains("8 sweep results", errors, StringComparison.Ordinal);
+
+            Dictionary<string, List<ulong>> failures = NightSeeds.ReadFailures(File.ReadAllText(Path.Combine(output, "seed-failures.txt")), output);
+            Assert.Equal(new ulong[] { 5400 }, failures[FullClearer.PolicyName]);
+            Assert.False(failures.ContainsKey(NightSeeds.ReachabilitySweep));
+            Dictionary<string, List<ulong>> carry = new(StringComparer.Ordinal) { [NightSeeds.ReachabilitySweep] = [100200] };
+            string record = NightRecordCommand.Build(Head, new DateTime(2026, 9, 25, 9, 0, 0, DateTimeKind.Utc), "failure", File.ReadAllText(Path.Combine(output, "bot-deaths.txt")), NightSeeds.RecordFields(date, "failure", failures, carry));
+            Dictionary<string, List<ulong>> failed = NightSeeds.ReadRecordSeeds(record, NightSeeds.FailedSeedsName, "the gathered record");
+            Assert.Equal(new ulong[] { 5400 }, NightSeeds.SeedsOf(failed, FullClearer.PolicyName));
+            Assert.Equal(new ulong[] { 100200 }, NightSeeds.SeedsOf(failed, NightSeeds.ReachabilitySweep));
+
+            // The record names the sweep, never a shard, and one count of each policy: the full clearer died 1 + 2 times.
+            Assert.DoesNotContain(NightSeeds.ShardMark, record, StringComparison.Ordinal);
+            using JsonDocument document = JsonDocument.Parse(record);
+            Assert.Equal(3, document.RootElement.GetProperty(NightRecordCommand.DeathsName).GetProperty(FullClearer.PolicyName).GetInt32());
+            Assert.Equal(200, document.RootElement.GetProperty(NightRecordCommand.AscendsName).GetProperty(FullClearer.PolicyName).GetInt32());
+            Assert.Equal(5, document.RootElement.GetProperty(NightRecordCommand.DeathsName).EnumerateObject().Count());
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    /// <summary>Each seed of a seed list, in the order of the list.</summary>
+    private static List<ulong> Expand(IReadOnlyList<SeedRange> seeds)
+    {
+        List<ulong> all = [];
+        foreach (SeedRange range in seeds)
+        {
+            for (ulong seed = range.From; seed <= range.To; seed++)
+            {
+                all.Add(seed);
+            }
+        }
+
+        return all;
+    }
+
     /// <summary>Writes the result of one sweep job, as the artifact of the sweep job holds it: the summary and the failure line.</summary>
     private static void WriteSweepResult(string results, string sweep, string summary, string failureLine)
     {

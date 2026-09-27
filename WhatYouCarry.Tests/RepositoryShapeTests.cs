@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using WhatYouCarry.Tools.DocGate;
 using WhatYouCarry.Tools.NightGate;
@@ -159,6 +160,17 @@ public sealed class RepositoryShapeTests
     }
 
     [Fact]
+    public void ReviewGateRequestNamesTheRepositoryOfTheCheckSuites()
+    {
+        // D-653: the tool reads the check suites of the work head from the repository of the request. The value
+        // reaches jq as an argument from the environment, and never as shell text of an expression.
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/review-gate.yml");
+        Assert.Contains("--arg repository \"$GITHUB_REPOSITORY\"", workflow, StringComparison.Ordinal);
+        Assert.Contains("repository: $repository,", workflow, StringComparison.Ordinal);
+        Assert.Contains("GH_TOKEN: ${{ github.token }}", workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReviewGateRunsOnPullRequestTarget()
     {
         // D-197: the workflow and the tool come from the base branch, and no step checks out the PR head.
@@ -296,7 +308,19 @@ public sealed class RepositoryShapeTests
         Assert.All(jobs.Values, runsOn => Assert.Equal("ubuntu-latest", runsOn));
         Assert.DoesNotContain("self-hosted", workflow, StringComparison.Ordinal);
 
-        Assert.Contains($"\n        sweep: [{string.Join(", ", NightSeeds.Sweeps)}]\n", workflow, StringComparison.Ordinal);
+        // D-655: the matrix holds one leg for each shard of each sweep, in the order of NightSeeds.Sweeps, and no other leg.
+        StringBuilder legs = new("\n        include:\n");
+        foreach (string sweep in NightSeeds.Sweeps)
+        {
+            for (int shard = 1; shard <= NightSeeds.ShardCount(sweep); shard++)
+            {
+                legs.Append($"          - {{sweep: {sweep}, shard: {shard}}}\n");
+            }
+        }
+
+        Assert.Contains(legs.ToString() + "    env:\n", workflow, StringComparison.Ordinal);
+        Assert.Equal(9, workflow.Split("          - {sweep: ").Length);
+        Assert.Contains("\n      SHARD: ${{ matrix.shard }}\n", workflow, StringComparison.Ordinal);
         Assert.Contains("\n      fail-fast: false\n", workflow, StringComparison.Ordinal);
         Assert.Contains("\n    timeout-minutes: 360\n", workflow, StringComparison.Ordinal);
         Assert.Contains("\n  sweep:\n    needs: plan\n", workflow, StringComparison.Ordinal);
@@ -373,11 +397,11 @@ public sealed class RepositoryShapeTests
         string list = StepText(workflow, "List the seeds of the sweep");
         Assert.Contains("set -euo pipefail", list, StringComparison.Ordinal);
         // F-162: the list goes to a file, and no step puts the list itself in a variable or an argument.
-        Assert.Contains("night-seeds --sweep \"$SWEEP\" --date \"$NIGHT_DATE\" --root . --carry \"${RUNNER_TEMP}/main-night.json\" > \"${RUNNER_TEMP}/night-seeds.txt\"", list, StringComparison.Ordinal);
+        Assert.Contains("night-seeds --sweep \"$SWEEP\" --shard \"$SHARD\" --date \"$NIGHT_DATE\" --root . --carry \"${RUNNER_TEMP}/main-night.json\" > \"${RUNNER_TEMP}/night-seeds.txt\"", list, StringComparison.Ordinal);
         Assert.Contains("echo \"NIGHT_SEEDS_FILE=${RUNNER_TEMP}/night-seeds.txt\" >> \"$GITHUB_ENV\"", list, StringComparison.Ordinal);
         Assert.DoesNotContain("NIGHT_SEEDS=", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("--seeds \"", workflow, StringComparison.Ordinal);
-        Assert.Contains("--failures \"${RUNNER_TEMP}/sweep/seed-failures.txt\"", StepText(workflow, "Bot sweep, the fixed seeds and the slice"), StringComparison.Ordinal);
+        Assert.Contains("--failures \"${RUNNER_TEMP}/sweep/seed-failures.txt\" --shard \"$SHARD\"", StepText(workflow, "Bot sweep, the fixed seeds and the slice"), StringComparison.Ordinal);
 
         string sweep = StepText(workflow, "Seed sweep, the fixed seeds and the slice");
         Assert.Contains($"if: matrix.sweep == '{NightSeeds.ReachabilitySweep}'", sweep, StringComparison.Ordinal);
@@ -385,10 +409,13 @@ public sealed class RepositoryShapeTests
         Assert.Contains($"export {ProcgenTests.NightSeedsFileVariable}", sweep, StringComparison.Ordinal);
         Assert.Contains("WYC_NIGHT_FAILURES: ${{ runner.temp }}/sweep/seed-failures.txt", sweep, StringComparison.Ordinal);
         Assert.Contains("WYC_NIGHT_SWEEP: \"1\"", sweep, StringComparison.Ordinal);
+        Assert.Contains($"{ProcgenTests.NightShardVariable}: ${{{{ matrix.shard }}}}", sweep, StringComparison.Ordinal);
 
         string result = StepText(workflow, "Keep the sweep result for the record");
         Assert.Contains("if: always()", result, StringComparison.Ordinal);
-        Assert.Contains("name: night-sweep-${{ matrix.sweep }}", result, StringComparison.Ordinal);
+        // D-655: each shard of a sweep uploads its result and its logs under a name of its own.
+        Assert.Contains("name: night-sweep-${{ matrix.sweep }}-${{ matrix.shard }}\n", result, StringComparison.Ordinal);
+        Assert.Contains("name: bot-logs-${{ matrix.sweep }}-${{ matrix.shard }}\n", StepText(workflow, "Keep the bot logs of a failed night"), StringComparison.Ordinal);
 
         // The run of 2026-09-24 lost the runner of one sweep. A re-run of the failed jobs replaces the artifacts of
         // that sweep, and a second upload with the same name fails without overwrite.
@@ -539,12 +566,63 @@ public sealed class RepositoryShapeTests
     }
 
     [Fact]
-    public void TheNightNeverCancels()
+    public void ANewNightWaitsForTheNightInProgress()
     {
-        // D-356: the night gate fails a cancelled night record (D-274), so the night workflow takes no concurrency group.
+        // D-648: the night takes one concurrency group for each ref, so a new night waits for the night in progress, and
+        // two nights never publish at once. No run is cancelled in progress, because the night gate fails a cancelled
+        // night record (D-274, D-356). The old workflow took no group, and two nights at one commit lost a failed seed.
         string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
-        Assert.DoesNotContain("concurrency:", workflow, StringComparison.Ordinal);
-        Assert.DoesNotContain("cancel-in-progress", workflow, StringComparison.Ordinal);
+        Assert.Contains("\nconcurrency:\n  group: night-${{ github.ref }}\n  cancel-in-progress: false\n", workflow, StringComparison.Ordinal);
+        Assert.Equal(2, workflow.Split("concurrency:").Length);
+        Assert.Equal(2, workflow.Split("cancel-in-progress").Length);
+        Assert.DoesNotContain("cancel-in-progress: true", workflow, StringComparison.Ordinal);
+        Assert.True(workflow.IndexOf("\nconcurrency:\n", StringComparison.Ordinal) < workflow.IndexOf("\njobs:\n", StringComparison.Ordinal), "The concurrency group of the night is at the level of the workflow.");
+        Assert.Contains("(D-648)", workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ANightOnMainReadsTheRecordOfMainInsideItsLease()
+    {
+        // D-648: the publish step reads the lease before any read of the record of main, the publish check reads the
+        // record at the lease, and the push takes the same lease. The build failure path checks the lease too.
+        string publish = StepText(RepositoryRoot.ReadFile(".github/workflows/night.yml"), "Publish the night record");
+        int lease = publish.IndexOf("lease=$(git ls-remote origin refs/heads/night-results | cut -f1)", StringComparison.Ordinal);
+        int fetch = publish.IndexOf("git fetch --quiet origin refs/heads/night-results", StringComparison.Ordinal);
+        int check = publish.IndexOf("night-publish-check --root . --remote origin --commit \"${GITHUB_SHA}\" --lease \"$lease\" --night \"${RUNNER_TEMP}/night.json\" --failures \"${RUNNER_TEMP}/seed-failures.txt\" --output \"${RUNNER_TEMP}/night-publish.json\"", StringComparison.Ordinal);
+        int push = publish.IndexOf("git push --force-with-lease=\"refs/heads/night-results:${lease}\"", StringComparison.Ordinal);
+        Assert.True(lease >= 0 && fetch >= 0 && check >= 0 && push >= 0, "The publish step lacks the lease, the fetch, the check, or the push.");
+        Assert.True(lease < fetch && fetch < check && check < push, "The lease comes before each read of the record of main, and the push comes last.");
+        Assert.Equal(2, publish.Split("git ls-remote").Length);
+        Assert.Contains("[ \"$(git rev-parse FETCH_HEAD)\" != \"$lease\" ]", publish, StringComparison.Ordinal);
+        Assert.Contains("publish=\"${RUNNER_TEMP}/night-publish.json\"", publish, StringComparison.Ordinal);
+        Assert.Contains("status=$(jq -r '.status' \"$publish\")", publish, StringComparison.Ordinal);
+        Assert.Contains("cp \"$publish\" night.json", publish, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BadInputsOfANightPublishTheFailureRecordAndFailTheJob()
+    {
+        // T-2, D-565, D-648: the exit code of bad inputs of this night makes the step write the failure record of the
+        // script from the record of main at the lease, push it with the lease, and fail the job after the push. The
+        // fault exit pushes nothing. The old step left the record of main as it was on any fault.
+        string publish = StepText(RepositoryRoot.ReadFile(".github/workflows/night.yml"), "Publish the night record");
+        string badInputs = $"if [ \"$rc\" -eq {NightPublishCheckCommand.BadNightExit} ]; then";
+        int branch = publish.IndexOf(badInputs, StringComparison.Ordinal);
+        int show = publish.IndexOf("git show \"${lease}:night.json\" > \"${RUNNER_TEMP}/main-night-lease.json\"", StringComparison.Ordinal);
+        int script = publish.IndexOf("bash .github/scripts/night-failure-record.sh \"${GITHUB_SHA}\" \"${RUNNER_TEMP}/main-night-lease.json\" \"${RUNNER_TEMP}/night-publish.json\"", StringComparison.Ordinal);
+        int mark = publish.IndexOf("fail_after_push=\"true\"", StringComparison.Ordinal);
+        int fault = publish.IndexOf("if [ \"$rc\" -ne 0 ]; then", StringComparison.Ordinal);
+        int push = publish.IndexOf("git push --force-with-lease=\"refs/heads/night-results:${lease}\"", StringComparison.Ordinal);
+        int fail = publish.IndexOf("if [ \"$fail_after_push\" = \"true\" ]; then", StringComparison.Ordinal);
+        Assert.True(branch >= 0 && show >= 0 && script >= 0 && mark >= 0 && fault >= 0 && push >= 0 && fail >= 0, "The publish step lacks a part of the branch of bad night inputs.");
+        Assert.True(branch < show && show < script && script < mark && mark < fault && fault < push && push < fail, "The bad input branch writes the failure record from the lease before the push, and the job fails after the push.");
+        Assert.Contains("echo \"{}\" > \"${RUNNER_TEMP}/main-night-lease.json\"", publish, StringComparison.Ordinal);
+        Assert.Contains("fail_after_push=\"false\"", publish, StringComparison.Ordinal);
+        string tail = publish[fail..];
+        Assert.Contains("exit 1", tail, StringComparison.Ordinal);
+        Assert.Equal(4, NightPublishCheckCommand.BadNightExit);
+        Assert.Equal(3, NightPublishCheckCommand.FaultExit);
+        Assert.Equal(1, NightPublishCheckCommand.KeepExit);
     }
 
     /// <summary>The text of one workflow step, from its name line to the next step or the end of the workflow.</summary>

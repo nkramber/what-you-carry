@@ -134,18 +134,40 @@ public sealed class InputReaderTests
         poll.JoyButtons.Add((InputReader.FirstController, InputReader.SprintButton));
         poll.JoyButtons.Add((InputReader.FirstController, InputReader.InteractButton));
         poll.Axes[(InputReader.FirstController, InputReader.AttackAxis)] = 0.6f;
-        poll.Axes[(InputReader.FirstController, InputReader.MoveAxisX)] = 0.5f;
-        poll.Axes[(InputReader.FirstController, InputReader.MoveAxisY)] = -0.5f;
+        poll.Axes[(InputReader.FirstController, InputReader.MoveAxisX)] = 0.6f;
+        poll.Axes[(InputReader.FirstController, InputReader.MoveAxisY)] = -0.8f;
         poll.Axes[(InputReader.FirstController, InputReader.LookAxisX)] = 0.3f;
         poll.Axes[(InputReader.FirstController, InputReader.LookAxisY)] = -0.2f;
 
         RawInput raw = new InputReader(poll).Read();
 
         Assert.Equal(CoreButton.Jump | CoreButton.Sprint | CoreButton.Dodge | CoreButton.Attack | CoreButton.Interact, raw.Buttons);
-        Assert.Equal(0.5f, raw.Strafe);
-        Assert.Equal(0.5f, raw.Forward);
+        // A full push keeps its direction, so the dead zone of D-658 changes nothing here.
+        Assert.Equal(0.6f, raw.Strafe, 5);
+        Assert.Equal(0.8f, raw.Forward, 5);
         Assert.Equal(0.3f, raw.StickLookX);
         Assert.Equal(-0.2f, raw.StickLookY);
+    }
+
+    /// <summary>
+    /// D-658. The left stick of the Steam Deck rests at 0.067 on its x axis. With no dead zone on the move stick, an
+    /// idle player on seed 1 walked sideways and died at tick 310. A stick at rest now moves nothing, and a key still
+    /// moves at full speed with it.
+    /// </summary>
+    [Fact]
+    public void MoveStickAtRestMovesNothing()
+    {
+        FakePoll poll = new();
+        poll.Axes[(InputReader.FirstController, InputReader.MoveAxisX)] = 0.067f;
+        poll.Axes[(InputReader.FirstController, InputReader.MoveAxisY)] = 0.042f;
+        RawInput rest = new InputReader(poll).Read();
+        Assert.Equal(0.0f, rest.Strafe);
+        Assert.Equal(0.0f, rest.Forward);
+
+        poll.Keys.Add(InputReader.ForwardKey);
+        RawInput key = new InputReader(poll).Read();
+        Assert.Equal(0.0f, key.Strafe);
+        Assert.Equal(1.0f, key.Forward);
     }
 
     /// <summary>A trigger under the press point is not an attack.</summary>

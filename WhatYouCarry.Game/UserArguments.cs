@@ -59,6 +59,12 @@ public sealed class UserArguments
     /// <summary>The message of the error for the transitions flag with no bot flag or no frame log flag (D-317, D-435).</summary>
     public const string TransitionsNeedBotAndLogMessage = "The transitions flag counts the descents of the bot session into the frame log, so it needs the bot flag and the frame log flag.";
 
+    /// <summary>The message of the error for the policy flag with no bot flag (D-317, D-646).</summary>
+    public const string PolicyNeedsBotMessage = "The policy flag names the bot of the bot session, so it needs the bot flag.";
+
+    /// <summary>The message of the error for the policy flag with the transitions flag (D-317, D-437, D-646).</summary>
+    public const string TransitionsTakeNoPolicyMessage = "The transitions test counts the descents of the greedy descender on floors with no enemy, so the transitions flag takes no policy flag.";
+
     /// <summary>The message of the error for a flag of the Game layer before the separator, where the engine ignores it (D-624).</summary>
     public const string FlagBeforeSeparatorMessage = "A flag of the Game layer stands before the separator --, where the engine ignores it. Put it after the separator.";
 
@@ -82,6 +88,7 @@ public sealed class UserArguments
         [SmokeSession.Flag] = 0,
         [BotSession.Flag] = 0,
         [BotSession.TransitionsFlag] = 1,
+        [BotSession.PolicyFlag] = 1,
         [FrameLog.Flag] = 1,
         [ContactSheet.Flag] = 1,
         [HudShot.Flag] = 1,
@@ -224,9 +231,11 @@ public sealed class UserArguments
     /// Stops the boot on a flag that the session ignores (D-317). The contact sheet starts no loop, and the HUD shot takes
     /// no tick, so each one ignores every other flag. The smoke script gives the intent of every tick, so the bot of the bot flag never drives the loop.
     /// The transitions flag counts the descents of the bot session into the frame log, so it needs both (D-435).
+    /// The policy flag names the bot of the bot session, so it needs the bot flag, and the transitions test walks the
+    /// greedy descender alone on floors with no enemy (D-437), so it takes no policy flag (D-646).
     /// The error names both flags.
     /// </summary>
-    /// <exception cref="ContextException">The contact sheet flag or the HUD shot flag with another flag, the smoke flag with the bot flag, or the transitions flag with no bot flag or no frame log flag.</exception>
+    /// <exception cref="ContextException">The contact sheet flag or the HUD shot flag with another flag, the smoke flag with the bot flag, the transitions flag with no bot flag or no frame log flag, or the policy flag with no bot flag or with the transitions flag.</exception>
     private static void RejectIgnoredFlags(Dictionary<string, string[]> flags)
     {
         RejectCompanions(flags, ContactSheet.Flag, SheetTakesNoFlagMessage);
@@ -246,6 +255,22 @@ public sealed class UserArguments
             alone.AddContext(FlagField, BotSession.TransitionsFlag);
             alone.AddContext(OtherField, flags.ContainsKey(BotSession.Flag) ? FrameLog.Flag : BotSession.Flag);
             throw alone;
+        }
+
+        if (flags.ContainsKey(BotSession.PolicyFlag) && !flags.ContainsKey(BotSession.Flag))
+        {
+            ContextException noBot = new(PolicyNeedsBotMessage);
+            noBot.AddContext(FlagField, BotSession.PolicyFlag);
+            noBot.AddContext(OtherField, BotSession.Flag);
+            throw noBot;
+        }
+
+        if (flags.ContainsKey(BotSession.PolicyFlag) && flags.ContainsKey(BotSession.TransitionsFlag))
+        {
+            ContextException withTransitions = new(TransitionsTakeNoPolicyMessage);
+            withTransitions.AddContext(FlagField, BotSession.TransitionsFlag);
+            withTransitions.AddContext(OtherField, BotSession.PolicyFlag);
+            throw withTransitions;
         }
     }
 

@@ -6,12 +6,15 @@ GAME := WhatYouCarry.Game
 TOOLS := dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --
 # The Codex CLI of the cross-provider review. The codex-review target installs the newest release first (D-512).
 CODEX ?= $(shell npm prefix -g)/bin/codex
-# Make reads each word after `--` as a goal. The codex-review target passes each goal that starts with `--` to the
-# command, as in `make codex-review PR=96 -- --skip-gitar-review`, and the `--%` rule keeps make from a stop (D-543).
+# The Claude Code CLI of the cross-provider review of a PR that Codex writes. The owner keeps it updated (D-649).
+CLAUDE ?= $(shell command -v claude)
+# Make reads each word after `--` as a goal. The codex-review and claude-review targets pass each goal that starts
+# with `--` to the command, as in `make codex-review PR=96 -- --skip-gitar-review`, and the `--%` rule keeps make
+# from a stop (D-543).
 CODEX_REVIEW_FLAGS := $(filter --%,$(MAKECMDGOALS))
 
 .DEFAULT_GOAL := help
-.PHONY: help play windowed build build-game test test-fast smoke bot sounds analyze lint gitar-wait codex-review
+.PHONY: help play windowed build build-game test test-fast smoke bot sounds analyze lint gitar-wait codex-review claude-review
 
 help: ## Print this list
 	@grep -hE '^[a-z-]+:.*##' $(MAKEFILE_LIST) | sed -E 's/:.*## /\t/' | expand -t 14
@@ -59,6 +62,11 @@ codex-review: ## Run the cross-provider review of one PR through the Codex CLI: 
 	@test -n "$(PR)" || { echo "Name the PR: make codex-review PR=<number>" >&2; exit 2; }
 	npm install -g @openai/codex@latest
 	$(TOOLS) codex-review --root . --pr $(PR) --codex $(CODEX) $(CODEX_REVIEW_FLAGS)
+
+claude-review: ## Run the cross-provider review of one PR that Codex writes, through the Claude Code CLI: make claude-review PR=93 [-- --skip-gitar-review] (D-649)
+	@test -n "$(PR)" || { echo "Name the PR: make claude-review PR=<number>" >&2; exit 2; }
+	@test -n "$(CLAUDE)" || { echo "No claude on the command path. Name it: make claude-review PR=<number> CLAUDE=<path>" >&2; exit 2; }
+	$(TOOLS) claude-review --root . --pr $(PR) --claude $(CLAUDE) $(CODEX_REVIEW_FLAGS)
 
 --%:
 	@:

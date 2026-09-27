@@ -7,11 +7,11 @@ The `one-pr-one-session` skill names this file at the end of the gitar pass. It 
 1. Push the round of changes.
 2. Complete the gitar pass with `make gitar-wait PR=<n>` and the `gitar-review` skill (D-574, D-575). Resolve each thread after its reply (D-522).
 3. Wait until each check of the head is green. The Review gate workflow alone can be red (D-577).
-4. Run `make codex-review PR=<n>` in the background, and wait for the completion notice (D-511).
+4. Run `make codex-review PR=<n>` in the background, and wait for the completion notice (D-511). For a PR that Codex writes, run `make claude-review PR=<n>` (D-649).
 5. Read the outcome line of the command and its exit code.
 6. Do the step that the table below gives for that exit code.
 
-No round uses API pricing. The command removes each API credential variable from the Codex processes, and it refuses a login that is not ChatGPT (D-523). A review round takes longer than the ten-minute limit of a tool call. Do not poll the round. The command starts Codex in a detached worktree at the PR head, so the author checkout does not change. Codex pushes the review record and its own handoff entry as one metadata commit (D-182, D-518).
+No round uses API pricing. The command removes each API credential variable from the reviewer processes. It refuses a login that is not the account login of the CLI (D-523, D-649). A review round takes longer than the ten-minute limit of a tool call. Do not poll the round. The command starts Codex in a detached worktree at the PR head, so the author checkout does not change. Codex pushes the review record and its own handoff entry as one metadata commit (D-182, D-518).
 
 | Exit | Outcome | Next step |
 |---|---|---|
@@ -27,7 +27,7 @@ The record names the effective head, which skips each documents commit (D-534). 
 
 ## Procedure: the three-strike stop
 
-A P0, P1, or P2 finding that is open in three review rounds stops the fix loop (D-513 to D-515). The `Open at:` line of each finding holds the count.
+A P0, P1, or P2 finding that is open at three distinct effective heads stops the fix loop (D-513 to D-515, D-651). The `Open at:` line of each finding holds the count, so a round that only refutes a finding at the same head adds nothing.
 
 1. Run `gh pr merge <n> --disable-auto`.
 2. Stop the fix loop. Make no more commits for the finding.

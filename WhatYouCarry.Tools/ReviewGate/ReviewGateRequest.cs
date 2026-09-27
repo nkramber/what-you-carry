@@ -11,6 +11,9 @@ public sealed class ReviewGateRequest
     /// <summary>The path of the git checkout that holds the PR head and the base branch.</summary>
     public required string RepositoryPath { get; init; }
 
+    /// <summary>The GitHub repository in the form <c>owner/name</c>. The check suites of the work head are read from it (D-653).</summary>
+    public required string Repository { get; init; }
+
     /// <summary>The GitHub PR number. It names the review file (D-101).</summary>
     public required int PullRequestNumber { get; init; }
 

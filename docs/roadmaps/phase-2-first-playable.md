@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-91, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-92, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -1401,6 +1401,48 @@ Gate: exit tests 1 to 24 pass.
 
 > *In plain English:* the repository review left faults open. Some content errors named no file, a failed background dig left no trace, and a test command in the wrong order passed. This PR fixes twenty-six of them.
 
+### PR-92: Repository review fixes, part 3
+
+✅ Done in PR #116.
+
+Scope:
+
+- `NightPublishCheckCommand` and `night.yml`: the publish step reads the record of `main` inside its lease. Each failed seed of that record that this night did not run stays in the record that it writes. A later record takes each new failed seed that its own night did not run (D-648, F-179). Bad inputs of a night write the failure record, and the job fails. The workflow runs in one concurrency group.
+- `NightSeeds`, `NightSeedsCommand`, `BotRunCommand`, `NightRecordCommand`, and `night.yml`: the sweeps `full-clearer` and `reachability` run as two shards each, and the record joins the lines of the shards (D-655, F-182).
+- `ReviewGateRules` and `ReviewGateFacts`: the override label reads the push time of the work head, the earliest check suite from the work head to the PR head (D-653, F-180).
+- `RunReplayer`: the replay cuts a tail of zeros or a short frame. A failed CRC with data after it names the frame and its byte offset (D-656, F-181).
+- `CodexReviewCommand`, `Reviewer`, `ClaudeReviewSettings`, `ProviderGate`, and the `Makefile`: `make claude-review` reviews a PR that Codex writes, and each review command checks the provider of the author entries (D-649, F-183).
+- `IntentBuilder` and `InputReader`: the move stick takes the dead zone of D-289 with a linear rescale (D-658, F-178).
+- `BotSession`, `FrameLog`, and `Main`: the bot session takes `--policy`, and the frame log marks each timer expiry (D-646, F-184).
+- The Deck: the HUD text is readable (D-659), and the frame costs of a transition and a timer expiry with the enemies have a measurement (F-184).
+- The decision register: the owner accepts the trust boundary of the review (D-647, F-185) and a night gate after its window (D-654, F-186). The session applies the override label (D-652), a session that changes nothing writes no entry (D-650), and the three-strike count reads distinct heads (D-651, F-187).
+- The repository settings: Dependabot alerts, Dependabot security updates, secret scanning, and push protection are on (D-657, F-188).
+- `AGENTS.md` and `CLAUDE.md`: the Godot sessions move to `docs/runbooks/commands.md`, and the files have room below their ceiling (F-189).
+
+Out of scope: the frame cost fixes of the transition and the expiry, which M-3 and PR-77 hold after this measurement (G-17). This PR holds more than one concern (D-646).
+
+Exit tests:
+
+1. `ARerunAtOneCommitKeepsTheFailedSeedOfTheOtherNight`, `ALaterRecordTakesTheNewFailedSeedOfTheNight`, and `ALaterRecordStaysWhenItsNightPassedTheNewSeed` pass. The first two lose the seed on the publish check of `main`.
+2. `ANewNightWaitsForTheNightInProgress` and `BadInputsOfANightPublishTheFailureRecordAndFailTheJob` pass, and they fail on the workflow of `main`.
+3. `EachShardRunsItsHalfOfTheFixedRangeAndTheSlice` and `TheRecordJoinsTheLinesOfTheShardsOfASweep` pass. The first night on `main` after the merge runs eight sweep jobs, and its record names each sweep once. A later session records it.
+4. `ReviewGateFailsOnOverrideLabelWhenACommitterDateBeforeTheLabelHidesALaterPush` and `ReviewGateReadsThePushTimeOfAWorkHeadFromALaterMetadataCommit` pass. The first one passes the label on the rule of `main`.
+5. `ATailOfZerosIsCut` and `ZerosFollowedByDataAreAnError` pass, and they fail on the replayer of `main`. `BitIdentityKnownAnswer` passes with no change of the simulation version.
+6. `ReviewRunIsThePrintRunWithTheModelThePermissionModeAndTheEventStream` and `TheProviderGateReadsTheAuthorEntriesAndSkipsTheReviewerEntries` pass. Every earlier `CodexReviewTests` case passes.
+7. `MoveStickAtRestMovesNothing` and `MoveStickHasARadialDeadZoneAndALinearRescale` pass. The first one fails on the reader of `main`. An idle session on the Deck lives to tick 12873, where it died at tick 310 on `main`.
+8. `PolicyNeedsTheBotAndTakesNoTransitions`, `FrameLogTakesTheSlowestFrameNearEachExpiry`, and `TheTimerTesterReachesTheExpiryWithTheEnemies` pass.
+9. The Deck runs of `docs/runbooks/commands.md` give the numbers of F-184, and the owner reads each HUD text on the Deck (D-659).
+10. The repository API gives `enabled` for each setting of D-657.
+11. `SessionCommandsParse` reads the commands of the runbook, and `ContextBudgetTests` pass.
+
+Review focus: the publish step of the night and its lease, the shard lines and their join, and the provider gate of the review commands.
+
+Check clause: none.
+
+Gate: exit tests 1 to 11 pass. Exit test 3 needs the first night on `main` after the merge.
+
+> *In plain English:* the repository review left more faults open. A night can lose a failed seed, and a PR that Codex writes has no reviewer. On the Deck, an idle player walked to death in five seconds. This PR fixes them and measures the Deck.
+
 ### PR-76: Enemy models
 
 Scope: the enemy models of PR-16 gain their own boxes and recipes, and the color swap of D-507 gives each enemy its colors (D-339, D-504).
@@ -1502,7 +1544,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
 47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
 48. PR-90. ✅ Done in PR #108. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608. The traced maps and the approved sheet: D-612 to D-617.
-49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ PR-91 done in PR #109. ✅ The owner answers of 2026-09-26: D-618 to D-645.
+49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ PR-91 done in PR #109. ✅ The owner answers of 2026-09-26: D-618 to D-645. PR-92 holds the second part, with more than one concern (D-646). ✅ PR-92 done in PR #116. ✅ The owner answers of 2026-09-27: D-646 to D-659.
 50. PR-76.
 51. Owner: answer OQ-181.
 52. PR-77.
@@ -1518,6 +1560,10 @@ Open:
 
 - OQ-181: the antialiasing of the world. Blocks PR-77 (D-504).
 - OQ-206: the held sword in the roll. Blocks nothing.
+
+Resolved 2026-09-27:
+
+- OQ-195 (D-647), OQ-196 (D-648), OQ-199 (D-649), OQ-200 (D-650), and OQ-201 (D-651): findings of the repository review. PR-92.
 
 Resolved 2026-09-26:
 

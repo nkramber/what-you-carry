@@ -74,7 +74,7 @@ public sealed class ProcessLimitTests
     public void EachCallerTakesItsLimit()
     {
         string review = RepositoryRoot.ReadFile("WhatYouCarry.Tools/CodexReview/CodexReviewCommand.cs");
-        Assert.Contains("CodexReviewSettings.ApiCredentialVariables, ProcessLimit.Review);", review, StringComparison.Ordinal);
+        Assert.Contains("reviewer.CredentialVariables, ProcessLimit.Review);", review, StringComparison.Ordinal);
         string git = RepositoryRoot.ReadFile("WhatYouCarry.Tools/ReviewGate/GitRepository.cs");
         Assert.Contains("ProcessLimit.WaitOrStop(process, ProcessLimit.Short,", git, StringComparison.Ordinal);
         Assert.DoesNotContain("process.StandardOutput.ReadToEnd()", git, StringComparison.Ordinal);

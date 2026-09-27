@@ -1,3 +1,4 @@
+using System;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Simulation;
 
@@ -93,6 +94,32 @@ public sealed class IntentBuilder
 
         float curved = scaled * scaled * scaled;
         return deflection < 0.0f ? -curved : curved;
+    }
+
+    /// <summary>
+    /// The move stick with the radial dead zone of D-289 and a linear rescale (D-658). A deflection whose length is
+    /// inside the dead zone gives zero, so a stick at rest never walks the player: the left stick of the Steam Deck
+    /// rests at 0.067. Past it, the length rescales so the edge of the dead zone is zero and full deflection is one,
+    /// and the direction stays. The move stick takes no cube, so a partial push walks at a direct speed.
+    /// </summary>
+    /// <param name="strafe">The stick deflection to the right, from minus one to one.</param>
+    /// <param name="forward">The stick deflection forward, from minus one to one.</param>
+    public static (float Strafe, float Forward) MoveStick(float strafe, float forward)
+    {
+        float length = MathF.Sqrt((strafe * strafe) + (forward * forward));
+        if (length <= StickDeadZone)
+        {
+            return (0.0f, 0.0f);
+        }
+
+        float scaled = (length - StickDeadZone) / (1.0f - StickDeadZone);
+        if (scaled > 1.0f)
+        {
+            scaled = 1.0f;
+        }
+
+        float factor = scaled / length;
+        return (strafe * factor, forward * factor);
     }
 
     /// <summary>

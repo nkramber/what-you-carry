@@ -35,3 +35,7 @@ Do not perform a substitute review with another model from the same provider.
 If both providers wrote substantive changes in the PR, neither qualifies for the whole PR.
 Record the conflict and request an owner decision about how to separate the changes.
 Do not approve through reciprocal review of selected hunks.
+
+## The two review commands
+
+`make codex-review` starts a Codex review of a PR that Claude Code writes. `make claude-review` starts a Claude Code review of a PR that Codex writes (D-649). Each command reads the author entries of the branch in `docs/session-handoff.md` at the PR head. It refuses with exit 3 when an entry has no `Author:` field or names the provider of its own reviewer. The command check does not replace this gate. Run the gate at step 1 too.

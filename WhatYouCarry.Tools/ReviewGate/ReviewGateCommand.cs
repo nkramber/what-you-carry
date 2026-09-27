@@ -35,7 +35,8 @@ public sealed class CheckRunOutput
 
 /// <summary>
 /// <c>review-gate --input request.json --output check-run.json</c>.
-/// Reads the request, gathers the facts from git, applies the rules, and writes the check-run body.
+/// Reads the request, gathers the facts from git and the check suites of the work head and of each later commit from
+/// the GitHub API (D-653), applies the rules, and writes the check-run body.
 /// Exit 0 means the body was written, with any conclusion. A nonzero exit means the tool itself failed.
 /// </summary>
 public static class ReviewGateCommand
@@ -83,7 +84,7 @@ public static class ReviewGateCommand
         string json = File.ReadAllText(inputPath);
         ReviewGateRequest request = JsonSerializer.Deserialize<ReviewGateRequest>(json, JsonOptions)
             ?? throw new InvalidOperationException($"The request file '{inputPath}' holds JSON null.");
-        ReviewGateFacts facts = ReviewGateFacts.Gather(request);
+        ReviewGateFacts facts = ReviewGateFacts.Gather(request, sha => CheckSuites.ReadCreationTimes(request.RepositoryPath, request.Repository, sha));
         ReviewGateResult result = ReviewGateRules.Evaluate(facts);
         return new CheckRunPayload
         {

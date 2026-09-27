@@ -10,15 +10,13 @@ namespace WhatYouCarry.Tools.CodexReview;
 /// </summary>
 public sealed record GitarCheck(string Sha, string Status, DateTimeOffset? StartedAt);
 
-/// <summary>Everything the start checks read, gathered once from the CLI, git, and GitHub. The rules do no I/O.</summary>
+/// <summary>
+/// Everything the start checks of the PR read, gathered once from git and GitHub. The rules do no I/O. The facts of
+/// the reviewer CLI, its version and its login, belong to <see cref="IReviewer.CliProblems"/> (D-649).
+/// </summary>
 public sealed class StartFacts
 {
     public required int PullRequestNumber { get; init; }
-
-    public required CodexVersion Version { get; init; }
-
-    /// <summary>The output of <c>codex login status</c>, with every API credential variable removed (D-523).</summary>
-    public required string LoginStatus { get; init; }
 
     /// <summary>The state of the PR on GitHub: <c>OPEN</c>, <c>CLOSED</c>, or <c>MERGED</c>.</summary>
     public required string PullRequestState { get; init; }
@@ -59,8 +57,9 @@ public sealed class StartFacts
 }
 
 /// <summary>
-/// The conditions that must hold before a review round starts (D-511). Each problem names the fact that failed
-/// and the value found (T-2). The command refuses the round when the list is not empty.
+/// The conditions of the PR that must hold before a review round starts (D-511). Both review commands share them
+/// (D-649). Each problem names the fact that failed and the value found (T-2). The command refuses the round when
+/// this list, the problems of the reviewer CLI, or the problem of the provider gate is not empty.
 /// </summary>
 public static class StartChecks
 {
@@ -79,16 +78,6 @@ public static class StartChecks
     public static IReadOnlyList<string> Problems(StartFacts facts, bool skipGitarReview)
     {
         var problems = new List<string>();
-        if (!facts.Version.IsAtLeast(CodexReviewSettings.MinimumVersion))
-        {
-            problems.Add($"The Codex CLI is {facts.Version}, and the minimum is {CodexReviewSettings.MinimumVersion} (D-512). Run `npm install -g @openai/codex@latest`.");
-        }
-
-        if (!facts.LoginStatus.StartsWith(CodexReviewSettings.ChatGptLoginStatus, StringComparison.Ordinal))
-        {
-            problems.Add($"`codex login status` gives '{facts.LoginStatus.Trim()}', and a review needs '{CodexReviewSettings.ChatGptLoginStatus}', so it never uses API pricing (D-523). Run `codex login` and choose ChatGPT.");
-        }
-
         if (facts.PullRequestState != OpenState)
         {
             problems.Add(NotOpenProblem(facts.PullRequestNumber, facts.PullRequestState));
