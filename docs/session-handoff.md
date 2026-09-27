@@ -2,6 +2,38 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 278: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Review round 1 (session 277) gave `Changes required` at `6b327c9` with P2-1: the run record reader accepted a CRC field before later fields (D-637).
+- Correction `69c946a` requires the CRC field to end the line. `docs/reviews/pr-109-response.md` records the disposition and the regression check.
+- The gitar pass of `6b327c9` approved with no finding. One reply answered the CI note of the red review gate (D-251).
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The code head is `69c946a`.
+- At `6b327c9`, every check passed except `evaluate` and `review-gate`, which wait for an approving record.
+
+### In flight
+
+- The gitar pass of `69c946a`, the CI of that head, and review round 2 with `make codex-review PR=109`.
+
+### Traps and gotchas
+
+- Session 276 lists the traps of this PR: the smoke cache miss, Dependabot, the lock files of D-641, and the abort at exit of one macOS smoke session.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+Push, finish the gitar pass, wait for CI, and run review round 2.
+
 ## Session 277: 2026-09-26, Codex
 
 Author: Codex
@@ -313,36 +345,3 @@ None for PR-89. OQ-208 blocks PR-90.
 ### Next concrete action
 
 After the metadata push, confirm `evaluate`, `review-gate`, and Gitar on the new tip. The owner can then use the merge summary of D-533.
-
-## Session 268: 2026-09-26, Claude Code
-
-Author: Claude Code
-Session: PR-89, author, answer to review round 1. Branch `feat/pr-89-truecolor-atlas`. PR #107, pending merge. Base `9e4833b`.
-
-### What this session did, and why
-
-- Round 1 gave `Changes required` at effective head `e4a097e` with P2-1: `LinearLight.Blend` divided by zero on a count of 0 parts.
-- P2-1 had full merit. Commit `6afe1db` rejects a count of parts that is not positive with a context error. The regression test failed on the old code with `DivideByZeroException`. `docs/reviews/pr-107-response.md` records it.
-- The automated pass of `2aa88bd` approved with no finding. Its red-gate note got the D-251 reply in comment 5843313742. No `Gitar review` comment was sent.
-- PR-85 exit test 8: at 05:19 UTC on 2026-09-26, the first night of the `7 7 * * *` cron has not started. The newest scheduled night is still run 36141884980 at `a3590ba`, from before the merge of PR-85.
-
-### State of the build
-
-- Effective head `6afe1db`. The full suite passed 1826 of 1826, and `ste-check` found nothing. At `2aa88bd`, each check passed except `evaluate` and `review-gate`, which waited for the record.
-
-### In flight
-
-- The gitar pass of `6afe1db`, CI, and review round 2.
-- PR-85 exit test 8: the night of 2026-09-26.
-
-### Traps and gotchas
-
-- The review of round 1 ran `handoff-rotate`, which moved Session 257 to the archive in commit `0230098`.
-
-### Open questions that block progress
-
-None for PR-89. OQ-208 blocks PR-90.
-
-### Next concrete action
-
-After the gitar pass and green CI, run `make codex-review PR=107`. On approval, give the owner the merge summary (D-533). Read the night of exit test 8 when it ends.
