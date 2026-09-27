@@ -68,9 +68,12 @@ public sealed class BitIdentityTests
     /// same, and the Debug and the Release builds give the new answer. PR-91 moved it from `9c79047da9c82a0e` when the
     /// simulation version rose to 18 and a hit on the last tick of a roll stopped landing (D-628, G-20). The old roll
     /// with the version at 18 gave `11d803d4eb8c52a0` too, so the version alone moved the hash: no hit of the sweep
-    /// falls on the last tick of a roll. The Debug and the Release builds give the new answer.
+    /// falls on the last tick of a roll. The Debug and the Release builds give the new answer. The same PR then moved it
+    /// from `11d803d4eb8c52a0` when the run record header gained its CRC-32 and the format version rose to 2 (D-637,
+    /// F-172). The sweep folds the header of each recorded run, so the header bytes alone moved the hash, and the
+    /// simulation version stayed at 18.
     /// </remarks>
-    private const string ExpectedHash = "11d803d4eb8c52a0";
+    private const string ExpectedHash = "e202e84e0f5c188a";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

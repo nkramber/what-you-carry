@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using WhatYouCarry.Core.Content;
+using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
@@ -207,11 +208,12 @@ public sealed class ReplayTests
     [Fact]
     public void FormatVersionMismatchReports()
     {
-        byte[] record = Encoding.UTF8.GetBytes("{\"formatVersion\":2,\"somethingNew\":true}\n");
+        int next = RunRecord.FormatVersion + 1;
+        byte[] record = Encoding.UTF8.GetBytes("{\"formatVersion\":" + next + ",\"somethingNew\":true}\n");
 
         ContextException error = Assert.Throws<ContextException>(() => RunRecord.ReadHeader(record));
-        Assert.Contains("recordFormatVersion=2", error.Message, StringComparison.Ordinal);
-        Assert.Contains("buildFormatVersion=1", error.Message, StringComparison.Ordinal);
+        Assert.Contains($"recordFormatVersion={next}", error.Message, StringComparison.Ordinal);
+        Assert.Contains($"buildFormatVersion={RunRecord.FormatVersion}", error.Message, StringComparison.Ordinal);
         Assert.DoesNotContain("somethingNew", error.Message, StringComparison.Ordinal);
     }
 
@@ -240,12 +242,75 @@ public sealed class ReplayTests
         Assert.Equal((byte)'\n', line[^1]);
     }
 
-    /// <summary>The header text, byte for byte. A change to the shape is a change to the format version, and the simulation version moves on its own (D-163, G-20).</summary>
+    /// <summary>
+    /// The header text, byte for byte. A change to the shape is a change to the format version, and the simulation version
+    /// moves on its own (D-163, G-20). Format version 2 ends the line with the CRC-32 of the bytes before the field (D-637).
+    /// </summary>
     [Fact]
     public void HeaderText()
     {
-        string expected = "{\"formatVersion\":1,\"simulationVersion\":" + SimulationVersion.Value + ",\"contentHash\":\"" + Hash + "\",\"seed\":42,\"loadout\":[],\"tree\":[],\"amulet\":null}\n";
+        string body = "{\"formatVersion\":2,\"simulationVersion\":" + SimulationVersion.Value + ",\"contentHash\":\"" + Hash + "\",\"seed\":42,\"loadout\":[],\"tree\":[],\"amulet\":null";
+        byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
+        string expected = body + ",\"headerCrc\":" + Crc32.Of(bodyBytes, 0, bodyBytes.Length).ToString(System.Globalization.CultureInfo.InvariantCulture) + "}\n";
         Assert.Equal(expected, Encoding.UTF8.GetString(RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 42UL))));
+    }
+
+    /// <summary>
+    /// F-172. Each flip of one bit of the header line is an error, and never a header with another value (D-637). A flip
+    /// of the seed digit '1' to '3' read as the seed 3 on the old format, and the record replayed another run with no error.
+    /// </summary>
+    [Fact]
+    public void EachFlippedBitOfTheHeaderIsAnError()
+    {
+        byte[] line = RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 1UL));
+        for (int index = 0; index < line.Length; index++)
+        {
+            for (int bit = 0; bit < 8; bit++)
+            {
+                byte[] flipped = (byte[])line.Clone();
+                flipped[index] ^= (byte)(1 << bit);
+                Assert.True(Throws(flipped), $"The flip of bit {bit} of byte {index} read as a header.");
+            }
+        }
+    }
+
+    /// <summary>F-172. A header with a CRC that does not match names the header and the field, and a header of format version 1 fails on the version.</summary>
+    [Fact]
+    public void AWrongHeaderCrcNamesTheHeader()
+    {
+        string whole = Encoding.UTF8.GetString(RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 1UL)));
+        string wrong = whole.Replace("\"seed\":1,", "\"seed\":3,", StringComparison.Ordinal);
+        Assert.NotEqual(whole, wrong);
+        ContextException error = Assert.Throws<ContextException>(() => RunRecord.ReadHeader(Encoding.UTF8.GetBytes(wrong)));
+        Assert.Contains($"'{RunRecord.HeaderName}'", error.Message, StringComparison.Ordinal);
+        Assert.Contains($"'{RunRecord.HeaderCrcName}'", error.Message, StringComparison.Ordinal);
+
+        string first = "{\"formatVersion\":1,\"simulationVersion\":" + SimulationVersion.Value + ",\"contentHash\":\"" + Hash + "\",\"seed\":1,\"loadout\":[],\"tree\":[],\"amulet\":null}\n";
+        ContextException old = Assert.Throws<ContextException>(() => RunRecord.ReadHeader(Encoding.UTF8.GetBytes(first)));
+        Assert.Contains("format version 1", old.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Answers whether the read of a header throws the error of a record.</summary>
+    private static bool Throws(byte[] record)
+    {
+        try
+        {
+            RunRecord.ReadHeader(record);
+            return false;
+        }
+        catch (ContextException)
+        {
+            return true;
+        }
+    }
+
+    /// <summary>A header line with the CRC of its edited text, so a test of a field reaches the check of that field (D-637).</summary>
+    private static string Resign(string header)
+    {
+        const string CrcStart = ",\"headerCrc\":";
+        int at = header.LastIndexOf(CrcStart, StringComparison.Ordinal);
+        byte[] body = Encoding.UTF8.GetBytes(header[..at]);
+        return header[..at] + CrcStart + Crc32.Of(body, 0, body.Length).ToString(System.Globalization.CultureInfo.InvariantCulture) + "}\n";
     }
 
     /// <summary>A record with no line break holds no header, and that is an error and never an empty run.</summary>
@@ -265,12 +330,13 @@ public sealed class ReplayTests
     [InlineData("loadout")]
     [InlineData("tree")]
     [InlineData("amulet")]
+    [InlineData("headerCrc")]
     public void EveryRequiredHeaderFieldIsRequired(string omitted)
     {
         string whole = Encoding.UTF8.GetString(RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 1UL)));
         int start = whole.IndexOf(",\"" + omitted + "\":", StringComparison.Ordinal);
         int end = whole.IndexOf(",\"", start + 1, StringComparison.Ordinal);
-        string cut = end < 0 ? whole[..start] + "}\n" : whole[..start] + whole[end..];
+        string cut = end < 0 ? whole[..start] + "}\n" : Resign(whole[..start] + whole[end..]);
 
         ContextException error = Assert.Throws<ContextException>(() => RunRecord.ReadHeader(Encoding.UTF8.GetBytes(cut)));
         Assert.Contains(omitted, error.Message, StringComparison.Ordinal);
@@ -290,7 +356,7 @@ public sealed class ReplayTests
     {
         string whole = Encoding.UTF8.GetString(RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 42UL)));
         Assert.Contains(from, whole, StringComparison.Ordinal);
-        byte[] record = Encoding.UTF8.GetBytes(whole.Replace(from, to, StringComparison.Ordinal));
+        byte[] record = Encoding.UTF8.GetBytes(Resign(whole.Replace(from, to, StringComparison.Ordinal)));
 
         ContextException error = Assert.Throws<ContextException>(() => RunRecord.ReadHeader(record));
         Assert.Contains($"'{field}'", error.Message, StringComparison.Ordinal);

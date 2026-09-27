@@ -331,7 +331,7 @@ public sealed class GameShapeTests
         Assert.Equal(WorkflowText.HostedMacosLabel, runsOnByJob["macos-arm64"]);
 
         Assert.Contains("GODOT_VERSION: 4.7.2-stable", workflow, StringComparison.Ordinal);
-        Assert.Equal(3, Count(workflow, "uses: actions/cache@v4"));
+        Assert.Equal(3, Count(workflow, $"uses: {ActionDecisionTests.Cache}"));
         Assert.Equal(3, Count(workflow, $"{SmokeSessionTests.GodotVariable}:"));
         Assert.Equal(3, Count(workflow, $"--filter \"Category={SmokeSessionTests.SmokeCategory}\""));
     }

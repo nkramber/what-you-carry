@@ -122,7 +122,7 @@ public sealed class RepositoryShapeTests
         // is not arm64 (D-572, T-2). The check comes before the checkout, so no later step runs on the wrong machine.
         string job = WorkflowText.JobText(RepositoryRoot.ReadFile(workflowPath), "macos-arm64");
         int check = job.IndexOf("      - name: Check the architecture\n", StringComparison.Ordinal);
-        int checkout = job.IndexOf("      - uses: actions/checkout@v5\n", StringComparison.Ordinal);
+        int checkout = job.IndexOf($"      - uses: {ActionDecisionTests.Checkout}\n", StringComparison.Ordinal);
         Assert.True(check >= 0, $"The macOS leg of '{workflowPath}' has no architecture check.");
         Assert.True(checkout > check, $"The architecture check of '{workflowPath}' does not come before the checkout.");
         Assert.Equal(check, job.IndexOf("      - ", StringComparison.Ordinal));
@@ -273,7 +273,7 @@ public sealed class RepositoryShapeTests
         Assert.Equal("The upload step comes before the step 'Seed sweep, the fixed seeds and the slice'.", UploadStepDefect(beforeSeeds));
         string beforeBots = MoveStepBefore(workflow, "Keep the bot logs of a failed night", "Bot sweep, the fixed seeds and the slice");
         Assert.Equal("The upload step comes before the step 'Bot sweep, the fixed seeds and the slice'.", UploadStepDefect(beforeBots));
-        Assert.Equal("The bot log step uploads no artifact.", UploadStepDefect(workflow.Replace("actions/upload-artifact@v4", "actions/other@v4", StringComparison.Ordinal)));
+        Assert.Equal("The bot log step uploads no artifact.", UploadStepDefect(workflow.Replace(ActionDecisionTests.UploadArtifact, "actions/other@v4", StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -517,7 +517,7 @@ public sealed class RepositoryShapeTests
 
         int nextStep = workflow.IndexOf("- name:", stepStart + 1, StringComparison.Ordinal);
         string step = nextStep < 0 ? workflow[stepStart..] : workflow[stepStart..nextStep];
-        if (!step.Contains("uses: actions/upload-artifact@v4", StringComparison.Ordinal))
+        if (!step.Contains($"uses: {ActionDecisionTests.UploadArtifact}", StringComparison.Ordinal))
         {
             return "The bot log step uploads no artifact.";
         }

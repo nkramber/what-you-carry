@@ -278,6 +278,7 @@ public partial class Main : Node3D
     private int drawnFloor;
     private ScriptedPress? press;
     private FrameLog? frames;
+    private readonly RealFrameClock frameClock = new();
     private string frameLogPath = string.Empty;
     private bool smoke;
     private bool ended;
@@ -521,11 +522,21 @@ public partial class Main : Node3D
             return;
         }
 
-        this.frames?.Add(delta);
+        // The engine delta is smoothed and rounded to the vsync interval, so the log reads the real time of the frame
+        // from the engine clock (D-635, F-170). The first frame has no frame before it, and it enters no log.
+        long? frameMicros = this.frameClock.Next((long)Time.GetTicksUsec());
+        if (frameMicros is long micros)
+        {
+            this.frames?.AddMicros(micros);
+        }
+
         long uploadStarted = Stopwatch.GetTimestamp();
         this.chunks?.UploadSome();
         long uploadMicros = (long)Stopwatch.GetElapsedTime(uploadStarted).TotalMicroseconds;
-        this.TraceFrame(delta, uploadMicros);
+        if (frameMicros is long traced)
+        {
+            this.TraceFrame(traced, uploadMicros);
+        }
 
         float fraction = (float)Engine.GetPhysicsInterpolationFraction();
         CoreVector3 feet = RenderInterpolation.Between(this.previousFeet, this.currentFeet, fraction);
@@ -694,7 +705,7 @@ public partial class Main : Node3D
     /// Adds the frame to the trace of the transition test, with the tick time since the last frame and the collector
     /// pause and collections since the last frame, and logs the summary of a window that closes (D-435).
     /// </summary>
-    private void TraceFrame(double delta, long uploadMicros)
+    private void TraceFrame(long frameMicros, long uploadMicros)
     {
         if (this.trace is null || this.loop is null)
         {
@@ -707,7 +718,7 @@ public partial class Main : Node3D
         int gen1 = GC.CollectionCount(1);
         int gen2 = GC.CollectionCount(2);
         TraceFrame frame = new(
-            (long)Math.Round(delta * FrameLog.MicrosecondsPerSecond),
+            frameMicros,
             this.tickMicros,
             uploadMicros,
             pause - this.lastPauseMicros,
