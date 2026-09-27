@@ -9,8 +9,8 @@ Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge
 
 ### What this session did, and why
 
-- PR-91 fixes open findings of the repository review of 2026-09-24 (D-596). The owner lifted one concern per PR for it (D-618), so it holds 27 fixes and one owner answer with no code (D-640).
-- The owner answered each open choice in the session: D-618 to D-640. OQ-159, OQ-160, OQ-197, OQ-198, OQ-202 to OQ-205 are resolved.
+- PR-91 fixes open findings of the repository review of 2026-09-24 (D-596). The owner lifted one concern per PR for it (D-618), so it holds 26 fixes and two owner answers with no code (D-640, D-641).
+- The owner answered each open choice in the session: D-618 to D-641. OQ-159, OQ-160, OQ-197, OQ-198, OQ-202 to OQ-205 are resolved.
 - The owner corrected two answers after new evidence: the bot floor cap (D-625, the boss timers pass 18000 ticks) and the review time limit (D-627, a PR #104 round took about 32 minutes).
 - Each regression test failed on the old behavior in a scratch worktree. A windowed run proved the close of the window (F-161).
 - The findings are F-148 to F-175 in the design register.
@@ -28,7 +28,7 @@ Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge
 ### Traps and gotchas
 
 - The first CI run of `smoke.yml` misses the cache, because each cache key now holds the pinned SHA-512 (D-626). Each job downloads and checks its zip one time.
-- CI restores in locked mode (D-638). A package change needs its `packages.lock.json` in the same commit, or each job fails with NU1004.
+- The lock files of D-638 failed CI with NU1403: the Godot packages of the Godot app and of nuget.org differ in bytes. D-641 drops them.
 - Dependabot now opens a PR for each new action pin (D-636). Each such PR needs every gate of a PR.
 
 ### Open questions that block progress

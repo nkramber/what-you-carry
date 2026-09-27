@@ -23,29 +23,6 @@ public sealed class RepositoryShapeTests
     }
 
     /// <summary>
-    /// F-173. Each project commits its NuGet lock file, and a restore in CI runs in locked mode, so a changed package
-    /// graph fails the restore (D-638). The old projects kept no lock file.
-    /// </summary>
-    [Fact]
-    public void EachProjectRestoresFromItsLockFile()
-    {
-        string root = RepositoryRoot.Find();
-        string props = RepositoryRoot.ReadFile("Directory.Build.props");
-        Assert.Contains("<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>", props, StringComparison.Ordinal);
-        Assert.Contains("<RestoreLockedMode Condition=\"'$(CI)' == 'true'\">true</RestoreLockedMode>", props, StringComparison.Ordinal);
-        string[] projects = Directory.GetFiles(root, "*.csproj", SearchOption.AllDirectories)
-            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-                && !path.Contains($"{Path.DirectorySeparatorChar}.claude{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
-            .ToArray();
-        Assert.Equal(5, projects.Length);
-        foreach (string project in projects)
-        {
-            string lockFile = Path.Combine(Path.GetDirectoryName(project)!, "packages.lock.json");
-            Assert.True(File.Exists(lockFile), $"The project '{Path.GetFileName(project)}' has no packages.lock.json (D-638).");
-        }
-    }
-
-    /// <summary>
     /// F-174. A low or moderate NuGet advisory stays a warning, and a high or critical one stays an error, because warnings
     /// are errors (D-68, D-639). The old build failed on an advisory of any severity.
     /// </summary>
