@@ -19,7 +19,8 @@
 # night on main re-runs the newest night-gate run of each open PR, because every PR reads its record (D-559). The
 # workflow night-promote.yml also writes night-results, at a merge commit that a branch night tested (D-557). A night on
 # a tag writes no record. A failed sweep keeps its bot logs as a run artifact, because the runner is gone after the job
-# (D-280).
+# (D-280). A failed night on main sends a Pushover notification to the owner at priority 1, through the job notify
+# (D-642).
 name: Night
 
 on:
@@ -149,6 +150,9 @@ jobs:
       contents: write
       actions: write
       pull-requests: read
+    outputs:
+      # The status of the night record, which the job notify reads (D-642).
+      status: ${{ steps.gather.outputs.status }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -175,6 +179,7 @@ jobs:
       - name: Gather the sweep results
         # Each sweep result adds its summary line and its failure line. The status reads the plan, every sweep, and
         # the steps of this job before it (D-177).
+        id: gather
         if: always()
         shell: bash
         env:
@@ -186,6 +191,7 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/sweeps"
           status=$(bash .github/scripts/night-gather.sh "${RUNNER_TEMP}/sweeps" "${RUNNER_TEMP}" "$PLAN_RESULT" "$SWEEP_RESULT" "$RECORD_STATUS")
           echo "NIGHT_STATUS=${status}" >> "$GITHUB_ENV"
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
       - name: Write the night record
         if: always()
         env:
@@ -277,3 +283,42 @@ jobs:
         # Every PR reads the record of main, so a night on main re-runs the newest night-gate run of each open PR (D-559).
         if: always() && github.ref == 'refs/heads/main'
         uses: ./.github/actions/rerun-night-gates
+
+  notify:
+    # A failed night on main sends a Pushover notification to the owner (D-642): a job that did not succeed, or a
+    # record with the status failure. A night on another branch sends none. The two keys are repository secrets and
+    # never appear in a file. A failed send fails this job with the HTTP answer, so a broken notification shows on the
+    # run (T-2). The night record and the gates do not read this job.
+    needs: [plan, sweep, record]
+    if: >-
+      always() && github.ref == 'refs/heads/main' &&
+      (needs.plan.result != 'success' || needs.sweep.result != 'success' || needs.record.result != 'success' ||
+      needs.record.outputs.status != 'success')
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Send the Pushover notification
+        shell: bash
+        env:
+          PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
+          PUSHOVER_API_TOKEN: ${{ secrets.PUSHOVER_API_TOKEN }}
+          PLAN_RESULT: ${{ needs.plan.result }}
+          SWEEP_RESULT: ${{ needs.sweep.result }}
+          RECORD_RESULT: ${{ needs.record.result }}
+          NIGHT_STATUS: ${{ needs.record.outputs.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PUSHOVER_USER_KEY}" ] || [ -z "${PUSHOVER_API_TOKEN}" ]; then
+            echo "The secrets PUSHOVER_USER_KEY and PUSHOVER_API_TOKEN must both be set, so the failed night sends no notification (D-642)."
+            exit 1
+          fi
+          message="The night on main failed at ${GITHUB_SHA:0:7}. Plan ${PLAN_RESULT}, sweeps ${SWEEP_RESULT}, record ${RECORD_RESULT}, status ${NIGHT_STATUS:-none}."
+          curl -sS --fail-with-body --retry 2 -X POST https://api.pushover.net/1/messages.json \
+            --form-string "token=${PUSHOVER_API_TOKEN}" \
+            --form-string "user=${PUSHOVER_USER_KEY}" \
+            --form-string "priority=1" \
+            --form-string "title=What You Carry: the night failed" \
+            --form-string "message=${message}" \
+            --form-string "url=${RUN_URL}" \
+            --form-string "url_title=The night run"

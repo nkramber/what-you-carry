@@ -248,6 +248,48 @@ public sealed class RepositoryShapeTests
         Assert.Contains("(F-95)", workflow, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// D-642. A failed night on main sends a Pushover notification at priority 1: a job that did not succeed, or a record
+    /// whose status is not success. A night on another branch sends none. The keys come from repository secrets alone,
+    /// the job holds no permission, and a failed send fails the job with the HTTP answer (T-2).
+    /// </summary>
+    [Fact]
+    public void AFailedNightOnMainNotifiesTheOwner()
+    {
+        string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
+        string notify = WorkflowText.JobText(workflow, "notify");
+        Assert.Contains("    needs: [plan, sweep, record]\n", notify, StringComparison.Ordinal);
+        Assert.Contains("always() && github.ref == 'refs/heads/main' &&", notify, StringComparison.Ordinal);
+        Assert.Contains("needs.plan.result != 'success' || needs.sweep.result != 'success' || needs.record.result != 'success' ||", notify, StringComparison.Ordinal);
+        Assert.Contains("needs.record.outputs.status != 'success'", notify, StringComparison.Ordinal);
+        Assert.Contains("    permissions: {}\n", notify, StringComparison.Ordinal);
+        Assert.Contains("PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}", notify, StringComparison.Ordinal);
+        Assert.Contains("PUSHOVER_API_TOKEN: ${{ secrets.PUSHOVER_API_TOKEN }}", notify, StringComparison.Ordinal);
+        Assert.Contains("curl -sS --fail-with-body", notify, StringComparison.Ordinal);
+        Assert.Contains("--form-string \"token=${PUSHOVER_API_TOKEN}\"", notify, StringComparison.Ordinal);
+        Assert.Contains("--form-string \"user=${PUSHOVER_USER_KEY}\"", notify, StringComparison.Ordinal);
+        Assert.Contains("--form-string \"priority=1\"", notify, StringComparison.Ordinal);
+        Assert.Contains("--form-string \"url=${RUN_URL}\"", notify, StringComparison.Ordinal);
+        Assert.Contains("exit 1", notify, StringComparison.Ordinal);
+
+        string record = WorkflowText.JobText(workflow, "record");
+        Assert.Contains("      status: ${{ steps.gather.outputs.status }}\n", record, StringComparison.Ordinal);
+        Assert.Contains("echo \"status=${status}\" >> \"$GITHUB_OUTPUT\"", StepText(workflow, "Gather the sweep results"), StringComparison.Ordinal);
+
+        // The keys are secrets. Only the notify job names them, and each file under .github/ names them through secrets alone.
+        foreach (string file in Directory.GetFiles(System.IO.Path.Combine(RepositoryRoot.Find(), ".github"), "*.yml", SearchOption.AllDirectories))
+        {
+            foreach (string line in File.ReadAllLines(file))
+            {
+                if (line.Contains("PUSHOVER_", StringComparison.Ordinal) && line.Contains(": ", StringComparison.Ordinal) && !line.TrimStart().StartsWith('#'))
+                {
+                    Assert.True(line.Contains("${{ secrets.PUSHOVER_", StringComparison.Ordinal) || line.Contains("${PUSHOVER_", StringComparison.Ordinal) || line.Contains("must both be set", StringComparison.Ordinal),
+                        $"The line '{line.Trim()}' of '{file}' gives a Pushover key another source than a secret (D-642).");
+                }
+            }
+        }
+    }
+
     [Fact]
     public void TheNightRunsOnHostedLinuxAsOneJobForEachSweep()
     {
@@ -256,7 +298,7 @@ public sealed class RepositoryShapeTests
         // holds the write permissions.
         string workflow = RepositoryRoot.ReadFile(".github/workflows/night.yml");
         Dictionary<string, string> jobs = WorkflowText.RunsOnByJob(workflow);
-        Assert.Equal(new[] { "plan", "record", "sweep" }, jobs.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(new[] { "notify", "plan", "record", "sweep" }, jobs.Keys.Order(StringComparer.Ordinal));
         Assert.All(jobs.Values, runsOn => Assert.Equal("ubuntu-latest", runsOn));
         Assert.DoesNotContain("self-hosted", workflow, StringComparison.Ordinal);
 
@@ -266,7 +308,7 @@ public sealed class RepositoryShapeTests
         Assert.Contains("\n  sweep:\n    needs: plan\n", workflow, StringComparison.Ordinal);
         Assert.Contains("\n  record:\n    needs: [plan, sweep]\n", workflow, StringComparison.Ordinal);
         Assert.Contains("\npermissions:\n  contents: read\n\njobs:\n", workflow, StringComparison.Ordinal);
-        Assert.Contains("\n    permissions:\n      contents: write\n      actions: write\n      pull-requests: read\n    steps:\n", workflow, StringComparison.Ordinal);
+        Assert.Contains("\n    permissions:\n      contents: write\n      actions: write\n      pull-requests: read\n    outputs:\n", workflow, StringComparison.Ordinal);
         Assert.Equal(2, workflow.Split("contents: write").Length);
     }
 
