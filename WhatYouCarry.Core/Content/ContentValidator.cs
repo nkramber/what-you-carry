@@ -170,4 +170,59 @@ public static class ContentValidator
             default: return "unknown";
         }
     }
+
+    /// <summary>
+    /// A path to an asset of one kind: under the model directory, with a forward slash between segments, no empty, '.',
+    /// or '..' segment, and a file name that ends in the extension of its kind after a name (D-219, D-298, D-302). A
+    /// path that leaves the model directory, or that names another kind of file, fails at the content file that names
+    /// it and not at the boot (PR #62 review P2-1). A weapon and an enemy family name their assets with it (D-673).
+    /// </summary>
+    public static string AssetPath(string path, IReadOnlyList<JsonMember> members, string name, string extension)
+    {
+        string value = Value(path, members, name, JsonMemberKind.Text);
+        if (!value.StartsWith(ContentLoader.ModelDirectory, System.StringComparison.Ordinal))
+        {
+            throw ContentError.Make(path, name, $"is '{value}', and the path starts with '{ContentLoader.ModelDirectory}' (D-298)");
+        }
+
+        // The loop reads one segment at each slash and at the end. The last segment it reads is the file name.
+        int segmentStart = 0;
+        int fileNameStart = 0;
+        for (int index = 0; index <= value.Length; index++)
+        {
+            if (index < value.Length && value[index] == '\\')
+            {
+                throw ContentError.Make(path, name, $"is '{value}', and a content path separates its segments with a forward slash alone (D-219)");
+            }
+
+            if (index < value.Length && value[index] != '/')
+            {
+                continue;
+            }
+
+            int segmentLength = index - segmentStart;
+            bool dot = segmentLength == 1 && value[segmentStart] == '.';
+            bool dotDot = segmentLength == 2 && value[segmentStart] == '.' && value[segmentStart + 1] == '.';
+            if (segmentLength == 0 || dot || dotDot)
+            {
+                throw ContentError.Make(path, name, $"is '{value}', and a content path holds no empty, '.', or '..' segment (D-298)");
+            }
+
+            fileNameStart = segmentStart;
+            segmentStart = index + 1;
+        }
+
+        bool endsInExtension = value.Length - fileNameStart > extension.Length;
+        for (int offset = 0; endsInExtension && offset < extension.Length; offset++)
+        {
+            endsInExtension = value[value.Length - extension.Length + offset] == extension[offset];
+        }
+
+        if (!endsInExtension)
+        {
+            throw ContentError.Make(path, name, $"is '{value}', and the file name ends in '{extension}' after a name (D-298, D-334)");
+        }
+
+        return value;
+    }
 }

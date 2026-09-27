@@ -25,6 +25,9 @@ public sealed class ContactSheetTests
     /// <summary>The radius of a sphere around a block, in meters, for the neighbor test.</summary>
     private const double NeighborRadius = 1.0;
 
+    /// <summary>The models of the sheet of the repository content: the body, then the model of each enemy family (D-673).</summary>
+    private static readonly IReadOnlyList<string> Models = ContactSheet.Models(TestWorld.Content.Enemies);
+
     /// <summary>The flag starts the sheet, and nothing else does.</summary>
     [Fact]
     public void IsRequestedReadsTheFlag()
@@ -55,30 +58,33 @@ public sealed class ContactSheetTests
     }
 
     /// <summary>
-    /// The sheet shows each block once, in id order, the body from both sides, and the low end of a ramp of each slope.
-    /// Each shot has a cell of its own inside the sheet, and no two cells overlap.
+    /// The sheet shows each block once, in id order, the body and the scavenger from both sides, and the low end of a
+    /// ramp of each slope (PR-76 exit test 3). Each shot has a cell of its own inside the sheet, and no two cells overlap.
     /// </summary>
     [Fact]
-    public void ShotsCoverEveryBlockBothSidesOfTheBodyAndEachSlope()
+    public void ShotsCoverEveryBlockBothSidesOfEachModelAndEachSlope()
     {
-        IReadOnlyList<SheetShot> shots = ContactSheet.Shots();
+        IReadOnlyList<SheetShot> shots = ContactSheet.Shots(Models);
 
-        Assert.Equal(12, shots.Count);
+        Assert.Equal(new[] { AssetPaths.BodyModel, "models/scavenger.bbmodel" }, Models);
+        Assert.Equal(14, shots.Count);
         BlockId[] blocks = shots.Where(shot => !shot.IsBody && !Ramp.IsRamp(shot.Block)).Select(shot => shot.Block).ToArray();
         Assert.Equal(new[] { BlockId.RawStone, BlockId.HewnStone, BlockId.TimberBeam, BlockId.OreVein, BlockId.StillWater, BlockId.Rubble, BlockId.Plank }, blocks);
         float[] yaws = shots.Where(shot => shot.IsBody).Select(shot => shot.BodyYawDegrees).ToArray();
-        Assert.Equal(new[] { 0.0f, 180.0f }, yaws);
+        Assert.Equal(new[] { 0.0f, 180.0f, 0.0f, 180.0f }, yaws);
+        string?[] models = shots.Where(shot => shot.IsBody).Select(shot => shot.Model).ToArray();
+        Assert.Equal(new[] { AssetPaths.BodyModel, AssetPaths.BodyModel, "models/scavenger.bbmodel", "models/scavenger.bbmodel" }, models);
         Ramp[] ramps = shots.Where(shot => Ramp.IsRamp(shot.Block)).Select(shot => Ramp.FromId(shot.Block)).ToArray();
         Assert.Equal(new[] { new Ramp(RampRise.MinusZ, 2, 0), new Ramp(RampRise.MinusZ, 3, 0), new Ramp(RampRise.MinusZ, 4, 0) }, ramps);
 
         Rect2I render = new(0, 0, ContactSheet.RenderPixels, ContactSheet.RenderPixels);
-        Rect2I sheet = new(0, 0, ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh());
+        Rect2I sheet = new(0, 0, ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(Models.Count));
         List<Rect2I> cells = [];
         for (int index = 0; index < shots.Count; index++)
         {
             Assert.Equal(index, shots[index].Index);
             Rect2I crop = ContactSheet.CropRect(shots[index]);
-            Rect2I cell = new(ContactSheet.CellOrigin(shots[index]), crop.Size);
+            Rect2I cell = new(ContactSheet.CellOrigin(shots[index], Models.Count), crop.Size);
             Assert.True(render.Encloses(crop), $"The crop {crop} of the shot {index} leaves the render.");
             Assert.True(sheet.Encloses(cell), $"The cell {cell} of the shot {index} leaves the sheet {sheet}.");
             foreach (Rect2I earlier in cells)
@@ -94,8 +100,8 @@ public sealed class ContactSheetTests
     }
 
     /// <summary>
-    /// A sphere around each block projects inside its cell, so no cell cuts its subject. Each box corner of the player
-    /// model and of the sword that its right hand tilts forward projects inside the cell of each body shot (D-336, D-591).
+    /// A sphere around each block projects inside its cell, so no cell cuts its subject. Each box corner of the model of
+    /// a shot and of the sword that its right hand tilts forward projects inside the cell of the shot (D-336, D-591).
     /// Each corner of the slope of a ramp projects inside its render.
     /// </summary>
     [Fact]
@@ -104,21 +110,21 @@ public sealed class ContactSheetTests
         double blockRadius = Math.Sqrt(3.0) / 2.0;
         Assert.True(ProjectedDiameter(blockRadius) < ContactSheet.CellPixels, $"A block spans {ProjectedDiameter(blockRadius)} pixels, and a cell holds {ContactSheet.CellPixels}.");
 
-        double bodyRadius = BodyRadius();
+        double bodyRadius = BodyRadius(AssetPaths.BodyModel);
         Assert.True(bodyRadius > 0.9, $"The body radius is {bodyRadius} meters, and the body is 1.8 meters tall.");
         float cellHalf = ContactSheet.CellPixels / (float)ContactSheet.RenderPixels;
-        foreach (SheetShot shot in ContactSheet.Shots().Where(shot => shot.IsBody))
+        foreach (SheetShot shot in ContactSheet.Shots(Models).Where(shot => shot.IsBody))
         {
-            // The scene stands the body at the origin of the shot and turns it about the up axis by the yaw of the shot.
+            // The scene stands the model at the origin of the shot and turns it about the up axis by the yaw of the shot.
             Basis turn = new(Vector3.Up, Mathf.DegToRad(shot.BodyYawDegrees));
-            foreach (Vector3 corner in BodyCorners())
+            foreach (Vector3 corner in BodyCorners(shot.Model!))
             {
                 Vector2 place = ViewPlace(shot, shot.Origin + (turn * corner));
                 Assert.True(Math.Abs(place.X) <= cellHalf && Math.Abs(place.Y) <= cellHalf, $"The body corner {corner} of the shot {shot.Index} is at {place} on the render, outside its cell of {cellHalf}.");
             }
         }
 
-        foreach (SheetShot shot in ContactSheet.Shots().Where(shot => Ramp.IsRamp(shot.Block)))
+        foreach (SheetShot shot in ContactSheet.Shots(Models).Where(shot => Ramp.IsRamp(shot.Block)))
         {
             int run = Ramp.FromId(shot.Block).Run;
             foreach (float x in new float[] { ContactSheet.RampFirstColumn, ContactSheet.RampFirstColumn + ContactSheet.RampColumns })
@@ -137,7 +143,7 @@ public sealed class ContactSheetTests
     [Fact]
     public void CamerasStandAtTheBoomLength()
     {
-        foreach (SheetShot shot in ContactSheet.Shots())
+        foreach (SheetShot shot in ContactSheet.Shots(Models))
         {
             Vector3 camera = ContactSheet.CameraPosition(shot);
             Assert.InRange(camera.DistanceTo(shot.Target), ContactSheet.Distance - 0.001f, ContactSheet.Distance + 0.001f);
@@ -149,7 +155,7 @@ public sealed class ContactSheetTests
     [Fact]
     public void NoShotSeesANeighbor()
     {
-        IReadOnlyList<SheetShot> shots = ContactSheet.Shots();
+        IReadOnlyList<SheetShot> shots = ContactSheet.Shots(Models);
         double halfView = PlaceholderScene.ViewDegrees * Math.PI / 360.0;
         foreach (SheetShot shot in shots)
         {
@@ -219,12 +225,12 @@ public sealed class ContactSheetTests
         return new Vector2((float)(offset.Dot(right) / (depth * tangent)), (float)(offset.Dot(up) / (depth * tangent)));
     }
 
-    /// <summary>The radius of a sphere around the target of a shot that holds its subject: the farthest corner of the scene grid of a ramp, the farthest corner of the body and its sword, and one meter for a block.</summary>
+    /// <summary>The radius of a sphere around the target of a shot that holds its subject: the farthest corner of the scene grid of a ramp, the farthest corner of the model and its sword, and one meter for a block.</summary>
     private static double SubjectRadius(SheetShot shot)
     {
-        if (shot.IsBody)
+        if (shot.Model is not null)
         {
-            return BodyRadius();
+            return BodyRadius(shot.Model);
         }
 
         if (!Ramp.IsRamp(shot.Block))
@@ -249,22 +255,22 @@ public sealed class ContactSheetTests
         return radius;
     }
 
-    /// <summary>The largest distance from the target of a body shot to a box corner of the player model or of its held sword, in meters (D-336).</summary>
-    private static double BodyRadius()
+    /// <summary>The largest distance from the target of a shot of one model to a box corner of the model or of its held sword, in meters (D-336).</summary>
+    private static double BodyRadius(string modelPath)
     {
-        SheetShot shot = ContactSheet.Shots().First(candidate => candidate.IsBody);
+        SheetShot shot = ContactSheet.Shots(Models).First(candidate => candidate.Model == modelPath);
         Vector3 center = shot.Target - shot.Origin;
-        return BodyCorners().Max(corner => (double)corner.DistanceTo(center));
+        return BodyCorners(modelPath).Max(corner => (double)corner.DistanceTo(center));
     }
 
     /// <summary>
-    /// Every box corner of the player model, and of the sword at the weapon point of its right hand, in meters in model
-    /// space. The sword hangs from the point at the tilt of the point, as the Game hangs it (D-330, D-591).
+    /// Every box corner of one model, and of the sword at the weapon point of its right hand, in meters in model space.
+    /// The sword hangs from the point at the tilt of the point, as the Game hangs it (D-330, D-591).
     /// </summary>
-    private static List<Vector3> BodyCorners()
+    private static List<Vector3> BodyCorners(string modelPath)
     {
         string content = Path.Combine(RepositoryRoot.Find(), "content");
-        BlockbenchModel body = BlockbenchLoader.Parse(AssetPaths.BodyModel, File.ReadAllBytes(Path.Combine(content, AssetPaths.BodyModel)));
+        BlockbenchModel body = BlockbenchLoader.Parse(modelPath, File.ReadAllBytes(Path.Combine(content, modelPath)));
         string swordPath = SimulationLoop.MainWeapon(TestWorld.Content).Model;
         BlockbenchModel sword = BlockbenchLoader.Parse(swordPath, File.ReadAllBytes(Path.Combine(content, swordPath)));
         AttachmentPoint hand = body.Attachments.First(point => point.Slot == EquipmentSlots.Weapon);

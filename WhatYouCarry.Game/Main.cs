@@ -868,7 +868,7 @@ public partial class Main : Node3D
         TextureLayout layout = TextureLayoutFile.Load(contentDirectory);
         if (ContactSheet.IsRequested(arguments))
         {
-            this.RenderContactSheet(ContactSheet.PathOf(arguments), atlas, layout, bodyModel, swordModel);
+            this.RenderContactSheet(ContactSheet.PathOf(arguments), contentDirectory, content.Enemies, atlas, layout, swordModel);
             return;
         }
 
@@ -905,10 +905,11 @@ public partial class Main : Node3D
         this.camera = PlaceholderScene.Camera();
         this.AddChild(nodes.Root);
 
-        // Every enemy draws with the body model until PR-62 gives its family one (D-401). The rest pose stands on
-        // the feet, so the root offset reads the lowest corner of that pose.
-        float restLowest = ModelPose.LowestPoint(AssetPaths.BodyModel, bodyModel, BodyPose.RestRotations());
-        EnemyNodes enemies = new(this, bodyModel, swordModel, modelMaterial, layout, restLowest);
+        // Each enemy draws with the model of its family, and the Overseer with the body model until PR-93 (D-660,
+        // D-673). The rest pose stands on the feet, so the root offset reads the lowest corner of each model.
+        IReadOnlyDictionary<string, EnemyModel> familyModels = EnemyModels.Load(contentDirectory, content.Enemies);
+        EnemyModel hunterModel = EnemyModels.Read(contentDirectory, AssetPaths.BodyModel);
+        EnemyNodes enemies = new(this, familyModels, hunterModel, swordModel, modelMaterial, layout);
         enemies.Rebuild(loop.Enemies);
         this.enemyNodes = enemies;
         this.drawnFloor = loop.Floor;
@@ -968,7 +969,7 @@ public partial class Main : Node3D
     /// camera moves. The headless display, a shot with no image, and a write failure are each an error line and
     /// exit code 1 (T-2).
     /// </summary>
-    private async void RenderContactSheet(string path, Texture2D atlas, TextureLayout layout, BlockbenchModel bodyModel, BlockbenchModel swordModel)
+    private async void RenderContactSheet(string path, string contentDirectory, IReadOnlyList<EnemyDefinition> families, Texture2D atlas, TextureLayout layout, BlockbenchModel swordModel)
     {
         LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
         fields.Add(FileField, path);
@@ -979,11 +980,19 @@ public partial class Main : Node3D
                 throw new ContextException(ContactSheetNeedsWindow);
             }
 
-            ContactSheetNodes nodes = ContactSheetScene.Build(atlas, layout, bodyModel, swordModel, ModelMaterial(atlas));
+            IReadOnlyList<string> modelPaths = ContactSheet.Models(families);
+            Dictionary<string, BlockbenchModel> models = [];
+            foreach (string modelPath in modelPaths)
+            {
+                models.Add(modelPath, BlockbenchLoader.Parse(modelPath, AssetFile.Read(contentDirectory, modelPath)));
+            }
+
+            IReadOnlyList<SheetShot> shots = ContactSheet.Shots(modelPaths);
+            ContactSheetNodes nodes = ContactSheetScene.Build(atlas, layout, shots, models, swordModel, ModelMaterial(atlas));
             this.AddChild(nodes.Viewport);
-            Image sheet = Image.CreateEmpty(ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(), false, Image.Format.Rgb8);
+            Image sheet = Image.CreateEmpty(ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(modelPaths.Count), false, Image.Format.Rgb8);
             await this.WaitFrames(ContactSheet.WarmUpFrames);
-            foreach (SheetShot shot in ContactSheet.Shots())
+            foreach (SheetShot shot in shots)
             {
                 nodes.Camera.LookAtFromPosition(ContactSheet.CameraPosition(shot), shot.Target, Vector3.Up);
                 await this.WaitFrames(ContactSheet.FramesPerShot);
@@ -996,7 +1005,7 @@ public partial class Main : Node3D
                 }
 
                 frame.Convert(Image.Format.Rgb8);
-                sheet.BlitRect(frame, ContactSheet.CropRect(shot), ContactSheet.CellOrigin(shot));
+                sheet.BlitRect(frame, ContactSheet.CropRect(shot), ContactSheet.CellOrigin(shot, modelPaths.Count));
             }
 
             File.WriteAllBytes(path, sheet.SavePngToBuffer());

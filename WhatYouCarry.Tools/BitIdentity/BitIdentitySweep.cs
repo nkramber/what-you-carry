@@ -339,7 +339,7 @@ public static class BitIdentitySweep
         ];
         EnemyDefinition[] enemies =
         [
-            new("sweep-scavenger", 1, 3, 10, 40, "sweep-club", 2000, 300, 140, 30, 500),
+            new("sweep-scavenger", 1, 3, 10, 40, "sweep-club", 2000, 300, 140, 30, 500, "models/sweep-scavenger.bbmodel"),
         ];
         HunterDefinition hunter = new("sweep-overseer", "sweep-pick", 180, 60, 350, 100, 1200);
         return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, enemies, hunter, Strings.FromMembers(Strings.FilePath, []));
