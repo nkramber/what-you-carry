@@ -42,12 +42,12 @@ public sealed class ContentLoader
     public const string MainWeaponId = "sword-basic";
 
     /// <summary>
-    /// The directory of the models and the animations, which Core never reads (OQ-159, D-298). Every content
+    /// The directory of the models and the animations, which Core never reads (D-631, D-298). Every content
     /// source skips it, so an animation file there is not a content file of this loader.
     /// </summary>
     public const string ModelDirectory = "models/";
 
-    /// <summary>The file extension of a model under the model directory: the project file that Blockbench writes (OQ-159).</summary>
+    /// <summary>The file extension of a model under the model directory: the project file that Blockbench writes (D-631).</summary>
     public const string ModelExtension = ".bbmodel";
 
     /// <summary>The file extension of an animation under the model directory (D-298).</summary>

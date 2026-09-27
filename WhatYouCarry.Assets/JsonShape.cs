@@ -14,7 +14,7 @@ namespace WhatYouCarry.Assets;
 /// <remarks>
 /// A Blockbench file holds many editor fields that the game never reads, such as the colors and the open state
 /// of the outliner. The model loader reads a named subset and passes over the rest, so a real file loads. The
-/// unknown-field check of D-168 does not apply to a file that another program writes (OQ-159). The animation
+/// unknown-field check of D-168 does not apply to a file that another program writes (D-631). The animation
 /// loader writes its own format, so it applies the check.
 /// </remarks>
 public static class JsonShape

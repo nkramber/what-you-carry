@@ -7,7 +7,7 @@ namespace WhatYouCarry.Game.World;
 /// two ends of the fade segment on every frame, from the camera to the player.
 /// </summary>
 /// <remarks>
-/// The fade radius and the dither are OQ-160. The shader file holds the default of the radius, and this class
+/// The fade radius and the dither are the answer of D-632. The shader file holds the default of the radius, and this class
 /// holds the same number, so a test reads one place and the shader reads the other.
 /// </remarks>
 public static class WorldMaterial
@@ -15,7 +15,7 @@ public static class WorldMaterial
     /// <summary>The shader of every world chunk.</summary>
     public const string ShaderPath = "res://World/world.gdshader";
 
-    /// <summary>The radius of the fade capsule, in meters (OQ-160).</summary>
+    /// <summary>The radius of the fade capsule, in meters (D-632).</summary>
     public const float FadeRadius = 0.75f;
 
     /// <summary>The uniform that holds the atlas.</summary>

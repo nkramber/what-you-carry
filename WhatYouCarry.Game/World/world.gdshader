@@ -2,7 +2,7 @@
 // coordinate repeats across a merged face, and the vertex color carries the occlusion of D-81.
 //
 // The wall fade: a fragment inside the capsule around the segment from the camera to the player fades. The
-// fade is a screen-door dither, so the chunk stays in the opaque pass and needs no sort (OQ-160). The game
+// fade is a screen-door dither, so the chunk stays in the opaque pass and needs no sort (D-632). The game
 // sets the two ends of the segment on every frame.
 shader_type spatial;
 render_mode cull_back;

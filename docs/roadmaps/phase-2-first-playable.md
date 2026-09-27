@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-91, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-630. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-91, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-634. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -83,7 +83,7 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-13: Model loader and mesher
 
-Status: merged 2026-09-12 as PR #52, commit `9749581`. Exit tests 1 to 6 passed before the merge, and CI, smoke, bit identity, bots, det-lint, and STE check passed on the merge commit. Exit test 7 waits for the M-3 run on the Steam Deck of D-296 (OQ-161). OQ-159, OQ-160, and OQ-161 stayed open at the merge. The first two bind the constants of the loader, the mesher, and the shader.
+Status: merged 2026-09-12 as PR #52, commit `9749581`. Exit tests 1 to 6 passed before the merge, and CI, smoke, bit identity, bots, det-lint, and STE check passed on the merge commit. Exit test 7 waits for the M-3 run on the Steam Deck of D-296 (OQ-161). OQ-159, OQ-160, and OQ-161 stayed open at the merge. The first two bind the constants of the loader, the mesher, and the shader, and D-631 and D-632 record them as built.
 
 Scope:
 
@@ -1348,6 +1348,9 @@ Scope:
 - `Player`: no hit lands on any of the 18 roll ticks (D-328, D-628, F-164). `SimulationVersion`: 18, and the bit-identity sweep takes a new known answer (G-20).
 - `ContentHash`: the hash skips the string table (D-629, F-165).
 - The design doc: the decision register stays one file (D-630, F-166).
+- The code remarks of the loader, the mesher, and the shader: they cite D-631 and D-632, which record OQ-159 and OQ-160 as built (F-167).
+- `AudioTests`: each shipped recording has the exact CC0 license, the rule of D-633 that approves the footstep recording (F-168).
+- The decision register: D-634 limits the sentence of D-197 to the `review-gate` evaluator (F-169).
 
 Out of scope: the other open findings of the repository review of 2026-09-24, which later PRs of D-596 hold. This PR holds more than one concern (D-618).
 
@@ -1369,14 +1372,15 @@ Exit tests:
 14. `ProcessLimitTests` passes: a child past its limit stops with an error that names it.
 15. `ARollTakesNoHit` passes, and it fails on the player of `main`.
 16. `TheStringTableIsOutsideTheHash` passes, and it fails on the hash of `main`.
+17. `EveryRecordingHasItsSource` passes with the exact CC0 license, and it fails on a record with another license.
 
 Review focus: the path of each content error, the check of the dropped dig task, and the scan of the engine arguments.
 
 Check clause: none.
 
-Gate: exit tests 1 to 16 pass.
+Gate: exit tests 1 to 17 pass.
 
-> *In plain English:* the repository review left faults open. Some content errors named no file, a failed background dig left no trace, and a test command in the wrong order passed. This PR fixes nineteen of them, each with a test.
+> *In plain English:* the repository review left faults open. Some content errors named no file, a failed background dig left no trace, and a test command in the wrong order passed. This PR fixes twenty-two of them.
 
 ### PR-76: Enemy models
 
@@ -1479,7 +1483,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
 47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
 48. PR-90. ✅ Done in PR #108. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608. The traced maps and the approved sheet: D-612 to D-617.
-49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ The owner answers of 2026-09-26: D-618 to D-630.
+49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ The owner answers of 2026-09-26: D-618 to D-634.
 50. PR-76.
 51. Owner: answer OQ-181.
 52. PR-77.
@@ -1493,14 +1497,15 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 2. Each 
 
 Open:
 
-- OQ-159: the model file format. Blocks nothing, and it binds the loader of PR-13.
-- OQ-160: the occlusion levels and the wall fade numbers. Blocks nothing, and it binds the mesher and the shader of PR-13.
 - OQ-181: the antialiasing of the world. Blocks PR-77 (D-504).
 - OQ-206: the held sword in the roll. Blocks nothing.
 
 Resolved 2026-09-26:
 
 - OQ-208 (D-603 to D-605): the texture resolution. PR-90.
+- OQ-159 (D-631): the model file format, as PR-13 built it. PR-91.
+- OQ-160 (D-632): the occlusion levels and the wall fade numbers, as PR-13 built them. PR-91.
+- OQ-198 (D-624), OQ-202 (D-628), OQ-203 (D-629), OQ-204 (D-633), and OQ-205 (D-630): findings of the repository review. PR-91.
 
 Resolved 2026-09-25:
 

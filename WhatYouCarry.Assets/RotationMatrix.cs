@@ -15,7 +15,7 @@ namespace WhatYouCarry.Assets;
 /// </para>
 /// <para>
 /// The sine and the cosine come from the runtime, and not from DetMath. This project is not Core, and the
-/// simulation never reads a pose (OQ-159). The asset QA runs on one platform, and a difference in the last bit
+/// simulation never reads a pose (D-631). The asset QA runs on one platform, and a difference in the last bit
 /// of a pose changes no finding, because the clip rule has a tolerance for float noise (D-301).
 /// </para>
 /// </remarks>

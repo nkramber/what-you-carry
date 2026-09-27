@@ -14,10 +14,10 @@ public static class AssetPaths
     /// <summary>The directory of the armor overlays, under the model directory (D-300).</summary>
     public const string ArmorDirectory = ModelDirectory + "armor/";
 
-    /// <summary>The shared base body that every armor overlay covers (D-82, D-300, OQ-159).</summary>
+    /// <summary>The shared base body that every armor overlay covers (D-82, D-300, D-631).</summary>
     public const string BodyModel = ModelDirectory + "player.bbmodel";
 
-    /// <summary>The file extension that Blockbench writes for a project (OQ-159).</summary>
+    /// <summary>The file extension that Blockbench writes for a project (D-631).</summary>
     public const string ModelExtension = ContentLoader.ModelExtension;
 
     /// <summary>The file extension of an animation (D-298).</summary>

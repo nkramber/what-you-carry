@@ -183,7 +183,11 @@ public sealed class AudioTests
         Assert.All(SoundBindings.All, binding => Assert.Contains(binding.Bus, names));
     }
 
-    /// <summary>Each recording lies under the recording directory, and the source file names it with its CC0 license (D-461, D-467).</summary>
+    /// <summary>
+    /// Each recording lies under the recording directory, and the source file names it with the CC0 license, the one license
+    /// that lets a reference ship (D-461, D-467, D-633). The old check took any license text that held the words of the CC0
+    /// path, so a license of another version or another kind could pass.
+    /// </summary>
     [Fact]
     public void EveryRecordingHasItsSource()
     {
@@ -194,7 +198,7 @@ public sealed class AudioTests
         {
             Assert.NotNull(record);
             byFile.Add(record["file"]!.GetValue<string>(), record);
-            Assert.Contains("publicdomain/zero", record["license"]!.GetValue<string>(), StringComparison.Ordinal);
+            Assert.True(IsCc0(record["license"]!.GetValue<string>()), $"The recording '{record["file"]}' has the license '{record["license"]}', and a shipped reference has CC0 alone (D-633).");
             Assert.False(string.IsNullOrWhiteSpace(record["author"]!.GetValue<string>()), "A record of a recording names no author.");
         }
 
@@ -208,6 +212,24 @@ public sealed class AudioTests
                 Assert.True(byFile.ContainsKey(Path.GetFileName(layer.File)), $"The sound '{sound.ParameterPath}' plays '{layer.File}', and the source file does not name it.");
             }
         }
+    }
+
+    /// <summary>The check of the CC0 license takes the CC0 1.0 deed alone, over http or https (D-633).</summary>
+    [Theory]
+    [InlineData("http://creativecommons.org/publicdomain/zero/1.0/", true)]
+    [InlineData("https://creativecommons.org/publicdomain/zero/1.0/", true)]
+    [InlineData("https://creativecommons.org/licenses/by/4.0/", false)]
+    [InlineData("https://creativecommons.org/publicdomain/zero/2.0/", false)]
+    [InlineData("https://example.org/publicdomain/zero/1.0/", false)]
+    public void TheLicenseCheckTakesCc0Alone(string license, bool expected)
+    {
+        Assert.Equal(expected, IsCc0(license));
+    }
+
+    /// <summary>Answers whether a license text is the CC0 1.0 deed (D-633).</summary>
+    private static bool IsCc0(string license)
+    {
+        return license is "http://creativecommons.org/publicdomain/zero/1.0/" or "https://creativecommons.org/publicdomain/zero/1.0/";
     }
 
     /// <summary>An absent field, a value outside its range, a bad name, a bad frame size, and a bad level are each an error that names the field (D-92, D-462).</summary>

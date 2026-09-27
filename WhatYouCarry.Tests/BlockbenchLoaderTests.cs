@@ -12,7 +12,7 @@ using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The Blockbench loader of the Assets project and the box geometry of Game (D-9, D-18, D-86, D-87, D-299, OQ-159; PR-13 exit tests 1 and 2).</summary>
+/// <summary>The Blockbench loader of the Assets project and the box geometry of Game (D-9, D-18, D-86, D-87, D-299, D-631; PR-13 exit tests 1 and 2).</summary>
 public sealed class BlockbenchLoaderTests
 {
     /// <summary>The pivots of the fifteen boxes of the player model, in meters: sixteen file units per meter. The brow, the nose, and the beard turn with the head, and each toe with its lower leg (D-497, D-498, D-501, D-502).</summary>
