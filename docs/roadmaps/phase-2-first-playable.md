@@ -1473,6 +1473,7 @@ Scope:
 - The antialiasing mode and the texture filter of D-677: MSAA at 4x, and nearest filtering with mipmaps. MSAA off, 2x, and 4x measure the same on the Deck, so the fallback to 2x does not apply (D-684).
 - The frame costs that the game adds on the Deck: the frames of 26 to 30 ms in the bot run (F-191), and the floor transition over the budget of D-635 (F-192). This PR holds more than one concern (D-683).
 - `Directory.Build.props`: every configuration builds optimized code, so the Godot build of the checkout runs the code that ships (D-685, F-191).
+- `EnemyNodes`, `ModelNodes`, and `ArrayMeshBuilder`: one hidden template tree of each model, built at boot. Each enemy tree and its sword share the meshes of the templates, so a descent builds no mesh (F-192).
 
 Out of scope: new light sources in the world, the frames of the first 10 seconds, and the periodic stall of the Deck desktop (F-190).
 

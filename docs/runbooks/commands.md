@@ -37,6 +37,8 @@ The agent runs each Deck test over SSH, after the owner says that the Deck is re
 
 Without `XAUTHORITY`, X11 refuses the SSH session, and Godot falls back to Wayland. Godot 4.7.2 can then hang after the end line of the session (F-147). A player session on the Deck has the auth file, so Godot uses X11 there.
 
+The build of step 3 is the Debug configuration, and it compiles optimized code (D-685). A frame log before PR-77 measured code with no optimization. In desktop mode over SSH, a frame of 18 to 19 ms comes every 2.245 seconds, also in an empty scene (F-190). A frame log reads those frames as the stall of the desktop, and not as a cost of the game (D-683).
+
 ## The night notice
 
 A failed night on `main` sends a Pushover notification to the owner (D-642). The job `notify` of `night.yml` reads the repository secrets `PUSHOVER_USER_KEY` and `PUSHOVER_API_TOKEN`. No file holds either value. To change a value, run `gh secret set PUSHOVER_API_TOKEN --repo nkramber/what-you-carry`, and paste the value at the prompt. When the job goes red, the log shows the HTTP answer of Pushover.
