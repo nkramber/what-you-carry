@@ -1,0 +1,45 @@
+# Sends one Pushover notification to the owner on request (D-645). The night fixer on the Mac Mini runs it with
+# `gh workflow run notify.yml`, so the Mac holds no Pushover key: the job reads the repository secrets. Only an account
+# with write access can start it.
+name: Notify
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: The title of the notification.
+        required: true
+        type: string
+      message:
+        description: The text of the notification.
+        required: true
+        type: string
+      priority:
+        description: The Pushover priority.
+        required: true
+        type: choice
+        options: ["0", "1"]
+        default: "1"
+      url:
+        description: A link that the notification opens.
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - name: Send the notification
+        uses: ./.github/actions/pushover
+        with:
+          user-key: ${{ secrets.PUSHOVER_USER_KEY }}
+          api-token: ${{ secrets.PUSHOVER_API_TOKEN }}
+          title: ${{ inputs.title }}
+          message: ${{ inputs.message }}
+          priority: ${{ inputs.priority }}
+          url: ${{ inputs.url }}

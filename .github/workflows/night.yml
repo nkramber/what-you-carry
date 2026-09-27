@@ -295,30 +295,16 @@ jobs:
       (needs.plan.result != 'success' || needs.sweep.result != 'success' || needs.record.result != 'success' ||
       needs.record.outputs.status != 'success')
     runs-on: ubuntu-latest
-    permissions: {}
+    permissions:
+      contents: read
     steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: Send the Pushover notification
-        shell: bash
-        env:
-          PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
-          PUSHOVER_API_TOKEN: ${{ secrets.PUSHOVER_API_TOKEN }}
-          PLAN_RESULT: ${{ needs.plan.result }}
-          SWEEP_RESULT: ${{ needs.sweep.result }}
-          RECORD_RESULT: ${{ needs.record.result }}
-          NIGHT_STATUS: ${{ needs.record.outputs.status }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          set -euo pipefail
-          if [ -z "${PUSHOVER_USER_KEY}" ] || [ -z "${PUSHOVER_API_TOKEN}" ]; then
-            echo "The secrets PUSHOVER_USER_KEY and PUSHOVER_API_TOKEN must both be set, so the failed night sends no notification (D-642)."
-            exit 1
-          fi
-          message="The night on main failed at ${GITHUB_SHA:0:7}. Plan ${PLAN_RESULT}, sweeps ${SWEEP_RESULT}, record ${RECORD_RESULT}, status ${NIGHT_STATUS:-none}."
-          curl -sS --fail-with-body --retry 2 -X POST https://api.pushover.net/1/messages.json \
-            --form-string "token=${PUSHOVER_API_TOKEN}" \
-            --form-string "user=${PUSHOVER_USER_KEY}" \
-            --form-string "priority=1" \
-            --form-string "title=What You Carry: the night failed" \
-            --form-string "message=${message}" \
-            --form-string "url=${RUN_URL}" \
-            --form-string "url_title=The night run"
+        uses: ./.github/actions/pushover
+        with:
+          user-key: ${{ secrets.PUSHOVER_USER_KEY }}
+          api-token: ${{ secrets.PUSHOVER_API_TOKEN }}
+          title: "What You Carry: the night failed"
+          message: "The night on main failed at ${{ github.sha }}. Plan ${{ needs.plan.result }}, sweeps ${{ needs.sweep.result }}, record ${{ needs.record.result }}, status ${{ needs.record.outputs.status }}. The night fixer on the Mac Mini starts within 15 minutes (D-643)."
+          priority: "1"
+          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

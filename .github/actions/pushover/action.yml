@@ -1,0 +1,55 @@
+# Sends one Pushover notification to the owner (D-642, D-645). The caller passes the two keys from the repository
+# secrets PUSHOVER_USER_KEY and PUSHOVER_API_TOKEN, and no file holds them. A key that is absent, or a send that fails,
+# fails the step with the HTTP answer, so a broken notification shows on the run (T-2). Each text goes through the
+# environment and never into the shell text.
+name: Pushover notification
+description: Send one Pushover notification to the owner.
+inputs:
+  user-key:
+    description: The user key, from the secret PUSHOVER_USER_KEY.
+    required: true
+  api-token:
+    description: The application token, from the secret PUSHOVER_API_TOKEN.
+    required: true
+  title:
+    description: The title of the notification.
+    required: true
+  message:
+    description: The text of the notification.
+    required: true
+  priority:
+    description: The Pushover priority, 0 or 1.
+    required: true
+  url:
+    description: A link that the notification opens, or empty.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Send the notification
+      shell: bash
+      env:
+        PUSHOVER_USER_KEY: ${{ inputs.user-key }}
+        PUSHOVER_API_TOKEN: ${{ inputs.api-token }}
+        NOTICE_TITLE: ${{ inputs.title }}
+        NOTICE_MESSAGE: ${{ inputs.message }}
+        NOTICE_PRIORITY: ${{ inputs.priority }}
+        NOTICE_URL: ${{ inputs.url }}
+      run: |
+        set -euo pipefail
+        if [ -z "${PUSHOVER_USER_KEY}" ] || [ -z "${PUSHOVER_API_TOKEN}" ]; then
+          echo "The secrets PUSHOVER_USER_KEY and PUSHOVER_API_TOKEN must both be set, so no notification goes out (D-642)."
+          exit 1
+        fi
+        if [ "${NOTICE_PRIORITY}" != "0" ] && [ "${NOTICE_PRIORITY}" != "1" ]; then
+          echo "The priority is '${NOTICE_PRIORITY}', and a notification takes 0 or 1 (D-642, D-645)."
+          exit 1
+        fi
+        curl -sS --fail-with-body --retry 2 -X POST https://api.pushover.net/1/messages.json \
+          --form-string "token=${PUSHOVER_API_TOKEN}" \
+          --form-string "user=${PUSHOVER_USER_KEY}" \
+          --form-string "priority=${NOTICE_PRIORITY}" \
+          --form-string "title=${NOTICE_TITLE}" \
+          --form-string "message=${NOTICE_MESSAGE}" \
+          --form-string "url=${NOTICE_URL}"
