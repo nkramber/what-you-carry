@@ -1,5 +1,37 @@
 # Session handoff archive
 
+## Session 283: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Review round 4 checked the effective head `d32da6b` and the new night fixer, its notice path, tests, and runbooks.
+- The setup failure finding from Gitar is fixed. Two findings remain: the poll can count a notice dispatch as delivery, and concurrent polls can remove a lock before its PID exists.
+- The focused night fixer tests passed 15 of 15 on macOS.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective head is `d32da6b`. GitHub CI, Smoke, bit identity, bots, asset QA, document gates, and Gitar passed. `evaluate` and `review-gate` fail because the review record requires changes.
+
+### In flight
+
+- The review record and this handoff entry are ready for one metadata commit and push to `feat/pr-91-review-fixes`.
+
+### Traps and gotchas
+
+- `gh workflow run notify.yml` starts a workflow. It does not confirm that Pushover sent the notice.
+- A lock directory without a PID can belong to a poll that has not finished startup.
+
+### Open questions that block progress
+
+None for this review.
+
+### Next concrete action
+
+Correct P2-2 and P2-3, then request another review round.
+
 ## Session 282: 2026-09-27, Claude Code
 
 Author: Claude Code

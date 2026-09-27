@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 293: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-77, reviewer. Branch `feat/pr-77-light-and-edges`. PR #118, review blocked. Effective head `ce02802`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-77 diff, its contracts, tests, documents, and comments.
+- The code review found no defect. The review record is blocked because exit test 2 lacks the raw Deck frame logs.
+
+### State of the build
+
+- Remote head before publication: `0679715` on `feat/pr-77-light-and-edges`. The implementation head is `ce02802`.
+- The focused contact sheet, atlas mesher, and game-shape tests passed: 112 of 112 on macOS arm64 with .NET 10.0.400.
+- CI, three smoke jobs, bit identity, asset QA, determinism lint, STE, documents, doc gate, night gate, and Gitar passed on `0679715`. The review gate failed because the review record was absent.
+
+### In flight
+
+- The review record needs the Deck frame logs for exit test 2 before it can approve PR #118.
+
+### Traps and gotchas
+
+- The handoff of session 292 reports the Deck measurements, but the logs and their artifact path are not in this checkout.
+- The approved contact sheet of D-682 is outside this checkout.
+
+### Open questions that block progress
+
+None. Required evidence is missing for exit test 2.
+
+### Next concrete action
+
+Add the three Deck frame logs to the review evidence, then reassess exit test 2 and update the review record.
+
 ## Session 292: 2026-09-27, Claude Code
 
 Author: Claude Code
@@ -319,35 +352,3 @@ None for PR-91.
 ### Next concrete action
 
 Push, finish the gitar pass and CI, run review round 5, then ask the owner to confirm the merge.
-
-## Session 283: 2026-09-27, Codex
-
-Author: Codex
-Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
-
-### What this session did, and why
-
-- Review round 4 checked the effective head `d32da6b` and the new night fixer, its notice path, tests, and runbooks.
-- The setup failure finding from Gitar is fixed. Two findings remain: the poll can count a notice dispatch as delivery, and concurrent polls can remove a lock before its PID exists.
-- The focused night fixer tests passed 15 of 15 on macOS.
-
-### State of the build
-
-- Remote `main` is `4a20b82`. The effective head is `d32da6b`. GitHub CI, Smoke, bit identity, bots, asset QA, document gates, and Gitar passed. `evaluate` and `review-gate` fail because the review record requires changes.
-
-### In flight
-
-- The review record and this handoff entry are ready for one metadata commit and push to `feat/pr-91-review-fixes`.
-
-### Traps and gotchas
-
-- `gh workflow run notify.yml` starts a workflow. It does not confirm that Pushover sent the notice.
-- A lock directory without a PID can belong to a poll that has not finished startup.
-
-### Open questions that block progress
-
-None for this review.
-
-### Next concrete action
-
-Correct P2-2 and P2-3, then request another review round.
