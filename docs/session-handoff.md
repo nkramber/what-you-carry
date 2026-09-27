@@ -2,7 +2,7 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
-## Session 279: 2026-09-26, Claude Code
+## Session 281: 2026-09-26, Claude Code
 
 Author: Claude Code
 Session: PR-91, author, merge. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
@@ -339,45 +339,3 @@ No owner decision is open. The current-head Deck run and the source screenshots 
 ### Next concrete action
 
 Fix P2-1 with a short-`IHDR` regression test. Run the Deck frame log at the PR head after the owner confirms readiness, then request a repeat review.
-
-## Session 271: 2026-09-26, Claude Code
-
-Author: Claude Code
-Session: PR-90, author. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
-
-### What this session did, and why
-
-- PR-85 exit test 8 passed. The first night of the `7 7 * * *` cron is run 36241114010 at `60a23ec`. It started at 12:10:52 UTC, about 5 hours after the cron time. The plan job took 9 s, and the record job took 39 s.
-- The sweep jobs: coward 8 min 32 s, timer-tester 19 min 27 s, random-walker 20 min 2 s, greedy-descender 1 h 17 min 43 s, full-clearer 1 h 21 min 41 s, and reachability 2 h 30 min 7 s. Each job passed, with no runner fault. The record names the slice 6001 to 6500 for each bot policy, and 120001 to 130000 for reachability. It carries no seed.
-- The owner answered OQ-208 (D-603 to D-608). Every face has 64 texels per meter, in an atlas of 1024.
-- The owner rejected the first repaint at 64. The `texture-trace` command and the `map` layer now trace each visible face of the body and the sword from unlit Meshy views (D-612 to D-614).
-- The owner approved the traced sheet (D-616), after three rounds on the blade (D-615). The blade flat is mid steel with lighter edges. The skin moved from bone to clay.
-- `asset-qa` skips the trace specs, because a spec names screenshots outside the repository (D-617).
-- The seven procedural recipes that the traces replaced are gone, and the grip box reads `leather`.
-- An earlier session did the work up to the sheet, and a connection failure ended it. This session continued the same PR from the blade review.
-
-### State of the build
-
-- The local full suite, `det-lint`, `asset-qa`, and `ste-check` passed at the work head. See the PR checks for CI.
-- Exit test 2: four bot sessions with `--frame-log` on the Deck over SSH. Three ran at `763efd5`, and one ran on `main` at `60a23ec` as a control. `763efd5` holds the atlas and layout of the head, byte for byte.
-- After the first 10 s, each of the four runs holds 11111 µs, 90 frames per second, with no frame over (D-295). In the first 10 s, the PR-90 runs had 44, 12, and 303 frames over, and `main` had 16. Most were under 0.6 ms over. The worst was 26.7 ms.
-
-### In flight
-
-- The automated pass, then `make codex-review` (D-511).
-
-### Traps and gotchas
-
-- The Deck is at 10.0.0.46, user `deck`. Export `~/.dotnet` on the path, `DOTNET_ROOT`, `DISPLAY=:0`, `XDG_RUNTIME_DIR=/run/user/1000`, and `WAYLAND_DISPLAY=wayland-0`. X11 refuses the SSH session, and Godot falls back to Wayland.
-- One Deck run did not exit after its end line, and a stop signal ended it. Two later runs exited in 45 s. Wrap each run in `timeout`.
-- The frame misses of the first 10 s vary from 12 to 303 at one head. Compare a head with a control run of `main` on the same Deck.
-- The Deck checkout is on the PR-90 branch now.
-- The trace keeps each recipe that exists. The blade maps are a hand remap of the trace: dark iron to mid steel, rust to pits (D-615). A new trace of the blade loses that remap.
-
-### Open questions that block progress
-
-None for PR-90.
-
-### Next concrete action
-
-Answer the automated pass, then run `make codex-review PR=108`. After a `Ready for owner merge` verdict, give the owner the merge summary (D-533).
