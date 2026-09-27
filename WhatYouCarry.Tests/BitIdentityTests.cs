@@ -65,9 +65,12 @@ public sealed class BitIdentityTests
     /// `f1c35ddccb2cd0bb` when the sweep gained one floor of the content of the checkout and two stairwell records
     /// on it: a descent to the offered floor 2 and a death there, and an ascend at floor 1 (F-133). The simulation
     /// version stayed at 17, because no Core number changed. The earlier parts of the sweep fold first and are the
-    /// same, and the Debug and the Release builds give the new answer.
+    /// same, and the Debug and the Release builds give the new answer. PR-91 moved it from `9c79047da9c82a0e` when the
+    /// simulation version rose to 18 and a hit on the last tick of a roll stopped landing (D-628, G-20). The old roll
+    /// with the version at 18 gave `11d803d4eb8c52a0` too, so the version alone moved the hash: no hit of the sweep
+    /// falls on the last tick of a roll. The Debug and the Release builds give the new answer.
     /// </remarks>
-    private const string ExpectedHash = "9c79047da9c82a0e";
+    private const string ExpectedHash = "11d803d4eb8c52a0";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

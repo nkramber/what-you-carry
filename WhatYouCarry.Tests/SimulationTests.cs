@@ -125,7 +125,7 @@ public sealed class SimulationTests
     public void TheConstantsHold()
     {
         Assert.Equal(60, SimulationLoop.TicksPerSecond);
-        Assert.Equal(17, SimulationVersion.Value);
+        Assert.Equal(18, SimulationVersion.Value);
     }
 
     /// <summary>One intent is one tick, and the loop starts at tick zero.</summary>

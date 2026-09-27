@@ -120,7 +120,7 @@ Death keeps a share of the run's skill points. The share scales with the depth r
 
 The hub is one small scene with a bank, a skill shrine, a loadout screen, and the descent entrance (D-9). One profile file holds the tree, the bank, and the suspended-run pointer, with a schema version, a generation number, and a migration path (D-94, D-152). The game writes it atomically. One profile write commits an ascension or a death. A run id in the profile makes completion idempotent.
 
-A run record is a separate append-only file (D-151, D-152). Its header carries a format version, a simulation version constant, a content hash, the seed, and an immutable initial state. The initial state holds the loadout items with their rolls, the tree state, and the amulet assignment. The fixed 16-byte tick frames of D-162 follow, each with a CRC-32 (D-226). The loader truncates a torn tail. Replay ignores the live bank and tree.
+A run record is a separate append-only file (D-151, D-152). Its header carries a format version, a simulation version constant, a content hash, the seed, and an immutable initial state. The content hash skips the string table, so a fix of player text keeps each record exact (D-629). The initial state holds the loadout items with their rolls, the tree state, and the amulet assignment. The fixed 16-byte tick frames of D-162 follow, each with a CRC-32 (D-226). The loader truncates a torn tail. Replay ignores the live bank and tree.
 
 Suspend works anywhere. Resume replays the record to five seconds before the exit tick when the simulation version and the content hash match (D-97, D-151). On a mismatch, or on a repeat crash, resume starts at floor start with a notice and a log line. Steam achievements and cloud saves ship at launch (D-96).
 
@@ -185,7 +185,7 @@ Two harnesses work the repo: Claude Code and Codex (D-137). One session is one h
 The document protocol (D-118, D-120, D-125, D-129, D-132):
 
 - `docs/design.md`: this file. Update it when intent changes.
-- `docs/decisions.md`: the decision register. One file until about 300 rows (D-141).
+- `docs/decisions.md`: the decision register. One file at any count of rows, read by id with the lookup of D-378 (D-630).
 - `docs/questions.md`: the open questions register, OQ-1 onward (D-144).
 - `docs/session-handoff.md`: the 10 newest sessions, newest first. A session reads the newest entry first (D-377). Each session adds an entry, and the `handoff-rotate` command moves older entries to `docs/session-handoff-archive.md` (D-146, D-379).
 - `docs/reviews/`: one file per PR.
@@ -387,6 +387,9 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-161 | A close of the window quit the engine with no end line, no frame log, and no release of the sounds. A windowed run on 2026-09-26 showed it | 2026-09-24 | 🔧 PR-91: the close ends the session like the test exit (D-311) |
 | F-162 | The night passed the seed list of each sweep through a variable. Linux caps one variable at 131072 bytes, and about 18700 carried seeds pass that, so the sweep could not start | 2026-09-24 | 🔧 PR-91: the list passes by file |
 | F-163 | No child process of `codex-review`, `review-gate`, or `doc-gate` had a time limit, so a hung child hung the tool with no error | 2026-09-24 | 🔧 PR-91: each child has a limit, and the error names it (D-627) |
+| F-164 | A hit on the last tick of a roll landed, because the hits of a tick land after the step of the player and the roll then had no ticks left, against D-328 | 2026-09-24 | 🔧 PR-91: no hit lands on any roll tick, and the simulation version rises to 18 (D-628) |
+| F-165 | The content hash read the string table, so a fix of player text alone broke an exact resume and a replay (D-151) | 2026-09-24 | 🔧 PR-91: the hash skips the string table (D-629) |
+| F-166 | D-141 split the decision register past about 300 rows, and the register held 627 rows in one file | 2026-09-24 | 🔧 PR-91: one file stays, read by id (D-630) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -701,9 +704,9 @@ Gate: a frame log on the Deck holds D-295, and the owner approves the contact sh
 > *In plain English:* a sword blade was 3 pixels wide. Every face now has twice the pixels in each direction, and the body and the sword copy their pixels from the 3D reference.
 
 **PR-91: Repository review fixes, part 2.** 🔧
-Fix the open findings F-148 to F-163 of the repository review of 2026-09-24 (D-596). The content loader rejects a set with no main weapon, and it needs the projectile area (D-422, D-622). Each id error and each text that is not UTF-8 names its file. The chunk swap keeps a dig task that a descent passes, and the boot stops on a Game flag before the separator (D-624). Each action has a dependency entry and a test (D-619 to D-621). The night plan upload replaces an earlier attempt, and the smoke session rolls. G-5 binds the Game layer from PR-31 (D-623). A bot floor has a hard cap (D-625), and each Godot zip has a pinned hash (D-626). The loop checks the seed and the content set of an offered plan. A close of the window ends the session, and the night passes each seed list by file. Each child process of the tools has a time limit (D-627). This PR holds more than one concern (D-618).
+Fix the open findings F-148 to F-166 of the repository review of 2026-09-24 (D-596). The content loader rejects a set with no main weapon, and it needs the projectile area (D-422, D-622). Each id error and each text that is not UTF-8 names its file. The chunk swap keeps a dig task that a descent passes, and the boot stops on a Game flag before the separator (D-624). Each action has a dependency entry and a test (D-619 to D-621). The night plan upload replaces an earlier attempt, and the smoke session rolls. G-5 binds the Game layer from PR-31 (D-623). A bot floor has a hard cap (D-625), and each Godot zip has a pinned hash (D-626). The loop checks the seed and the content set of an offered plan. A close of the window ends the session, and the night passes each seed list by file. Each child process of the tools has a time limit (D-627). No hit lands on the last roll tick, the content hash skips the string table, and the register stays one file (D-628 to D-630). The simulation version rises (G-20). This PR holds more than one concern (D-618).
 Gate: a regression test for each finding fails on the old code, and the suite, the smoke session, and the bit-identity sweep pass.
-> *In plain English:* the repository review left faults open. Some errors named no file, a failed background dig left no trace, and a wrong command passed. This PR fixes sixteen of them.
+> *In plain English:* the repository review left faults open. Some errors named no file, a failed background dig left no trace, and a wrong command passed. This PR fixes nineteen of them.
 
 **The open findings of the repository review.** 🔧
 The findings of the review of 2026-09-24 that stay open are the primary work after PR-90. The first session after PR-90 splits them into PRs of one concern each (D-596). PR-91 holds more than one (D-618).

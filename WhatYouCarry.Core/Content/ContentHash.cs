@@ -14,6 +14,10 @@ namespace WhatYouCarry.Core.Content;
 /// the same whatever order the host gives, and the path in the input makes a rename a change.
 /// </para>
 /// <para>
+/// The hash skips the string table (D-629). No tick reads player text, so a fix of the text alone keeps each run record
+/// and each saved run exact, as the textures and the audio do (D-305, D-453).
+/// </para>
+/// <para>
 /// SHA-256 and not FNV-1a: this hash guards a run record against a content set that somebody changed, and
 /// FNV-1a is fast and easy to collide on purpose. The state hash of D-160 needs the speed, and this one needs
 /// the resistance (D-221).
@@ -51,6 +55,11 @@ public static class ContentHash
         List<byte> input = [];
         foreach (ContentFile file in sorted)
         {
+            if (file.Path == Strings.FilePath)
+            {
+                continue;
+            }
+
             byte[] path = Encoding.UTF8.GetBytes(file.Path);
             AppendLength(input, path.Length);
             foreach (byte part in path)

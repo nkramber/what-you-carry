@@ -201,6 +201,31 @@ public sealed class ContentTests
         Assert.True(strings.Has("hub.descend"));
     }
 
+    /// <summary>
+    /// F-165. A change of the string table alone keeps the content hash, so a fix of player text keeps each record exact
+    /// (D-629, D-151). The old hash read the table. A change of any other file still moves the hash, and a repeated path
+    /// of the table is still an error.
+    /// </summary>
+    [Fact]
+    public void TheStringTableIsOutsideTheHash()
+    {
+        string first = new ContentLoader(Valid()).Load().Hash;
+        MemorySource retext = new MemorySource()
+            .Add("floors/a.json", Floor)
+            .Add("weapons/w.json", WeaponText)
+            .Add("weapons/sword-basic.json", MainWeaponText)
+            .Add("hunter/h.json", HunterText)
+            .Add(Strings.FilePath, StringTable.Replace("Descend", "Go down", StringComparison.Ordinal));
+        Assert.Equal(first, new ContentLoader(retext).Load().Hash);
+
+        string withTable = ContentHash.Of([new ContentFile("floors/a.json", Encoding.UTF8.GetBytes(Floor)), new ContentFile(Strings.FilePath, Encoding.UTF8.GetBytes(StringTable))]);
+        string withoutTable = ContentHash.Of([new ContentFile("floors/a.json", Encoding.UTF8.GetBytes(Floor))]);
+        Assert.Equal(withoutTable, withTable);
+        Assert.NotEqual(withoutTable, ContentHash.Of([new ContentFile("floors/a.json", Encoding.UTF8.GetBytes(Floor.Replace("100", "101", StringComparison.Ordinal)))]));
+
+        Assert.Throws<ContextException>(() => ContentHash.Of([new ContentFile(Strings.FilePath, []), new ContentFile(Strings.FilePath, [])]));
+    }
+
     /// <summary>PR-5 exit test 5. Two loads of one set give one hash, and one byte of change gives another.</summary>
     [Fact]
     public void ContentHashIsStable()
