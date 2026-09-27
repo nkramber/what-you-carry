@@ -208,13 +208,29 @@ public static class RunRecord
     /// Compares the CRC field with the CRC-32 of the bytes of the line before it (D-637, F-172). A flipped bit in the seed
     /// read as another seed, and the record then replayed another run with no error.
     /// </summary>
-    /// <exception cref="ContextException">The field is absent, is not the last field, or does not match. The error names the header.</exception>
+    /// <exception cref="ContextException">The field is absent, is not the last field of the line, or does not match. The error names the header.</exception>
     private static void CheckHeaderCrc(byte[] line, IReadOnlyList<JsonMember> members)
     {
-        int at = LastIndexOf(line, Encoding.UTF8.GetBytes(HeaderCrcStart));
+        byte[] start = Encoding.UTF8.GetBytes(HeaderCrcStart);
+        int at = LastIndexOf(line, start);
         if (at < 0)
         {
             throw ContentError.Make(HeaderName, HeaderCrcName, "is absent, and each header of format version 2 ends with the CRC-32 of its other fields (D-637)");
+        }
+
+        // The field ends the line: its digits and the closing brace follow it, and nothing else. A field after it lies
+        // outside the CRC, so a changed seed there read as a valid header (PR #109 review P2-1).
+        int digits = at + start.Length;
+        int close = line.Length - 1;
+        bool endsTheLine = close > digits && line[close] == (byte)'}';
+        for (int index = digits; index < close && endsTheLine; index++)
+        {
+            endsTheLine = line[index] >= (byte)'0' && line[index] <= (byte)'9';
+        }
+
+        if (!endsTheLine)
+        {
+            throw ContentError.Make(HeaderName, HeaderCrcName, "is not the last field of the line, and the CRC-32 covers every other field only when it ends the line (D-637)");
         }
 
         long stored = Number(members, HeaderCrcName);

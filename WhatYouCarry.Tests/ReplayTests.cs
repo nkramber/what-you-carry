@@ -290,6 +290,33 @@ public sealed class ReplayTests
         Assert.Contains("format version 1", old.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// PR #109 review P2-1. A CRC field before a later field is an error, even when its value is the CRC of the bytes before
+    /// it. The reader checked the bytes before the field alone, so a changed seed after it read as a valid header. A CRC
+    /// field with a byte other than a digit before the closing brace is an error too.
+    /// </summary>
+    [Theory]
+    [InlineData("\"seed\":1,", "\"seed\":3,")]
+    [InlineData("\"seed\":1,", "\"seed\":1,")]
+    public void ACrcFieldBeforeAnotherFieldIsAnError(string from, string to)
+    {
+        const string CrcStart = ",\"headerCrc\":";
+        string whole = Encoding.UTF8.GetString(RunRecord.WriteHeader(RunRecord.NewHeader(Hash, 1UL)));
+        int seed = whole.IndexOf(",\"seed\":", StringComparison.Ordinal);
+        string before = whole[..seed];
+        byte[] covered = Encoding.UTF8.GetBytes(before);
+        string crc = Crc32.Of(covered, 0, covered.Length).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string rest = whole[(seed + 1)..whole.IndexOf(CrcStart, StringComparison.Ordinal)].Replace(from, to, StringComparison.Ordinal);
+        string moved = before + CrcStart + crc + "," + rest + "}\n";
+
+        ContextException error = Assert.Throws<ContextException>(() => RunRecord.ReadHeader(Encoding.UTF8.GetBytes(moved)));
+        Assert.Contains($"'{RunRecord.HeaderCrcName}'", error.Message, StringComparison.Ordinal);
+        Assert.Contains("last field", error.Message, StringComparison.Ordinal);
+
+        string spaced = whole.Replace("}\n", " }\n", StringComparison.Ordinal);
+        Assert.Throws<ContextException>(() => RunRecord.ReadHeader(Encoding.UTF8.GetBytes(spaced)));
+    }
+
     /// <summary>Answers whether the read of a header throws the error of a record.</summary>
     private static bool Throws(byte[] record)
     {
