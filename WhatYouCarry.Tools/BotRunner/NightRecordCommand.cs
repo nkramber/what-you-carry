@@ -233,11 +233,97 @@ public static class NightRecordCommand
     }
 
     /// <summary>
-    /// The lines of the summary text. A blank line is skipped. A line of an older night holds no cause word and no
-    /// ascend word, and it reads as a policy with no cause and no ascend count (D-177).
+    /// The lines of the summary text, one for each policy. A blank line is skipped. A line of an older night holds no
+    /// cause word and no ascend word, and it reads as a policy with no cause and no ascend count (D-177). The lines of
+    /// the shards of one policy join into one line at the place of the first of them (D-655): the sum of the deaths, the
+    /// sum of the ascends, and the sum of each cause, in the ordinal order of the causes. A policy with no line of one
+    /// of its shards gets no line, so the record states no count that the night did not measure. Its job failed, and
+    /// the status of the night says so.
+    /// </summary>
+    /// <exception cref="FormatException">A line is not one name, one equals sign, and one whole number, with cause words after it, a shard label is wrong, or a line of one policy or one shard repeats (T-2).</exception>
+    private static List<SummaryLine> ReadSummary(string summary)
+    {
+        List<string> order = [];
+        Dictionary<string, SummaryLine> whole = new(StringComparer.Ordinal);
+        Dictionary<string, SortedDictionary<int, SummaryLine>> shards = new(StringComparer.Ordinal);
+        foreach (SummaryLine line in ReadSummaryLines(summary))
+        {
+            (string policy, int? shard) = NightSeeds.ReadLabel(line.Policy, "the bot summary");
+            bool hasWhole = whole.ContainsKey(policy);
+            bool hasShards = shards.TryGetValue(policy, out SortedDictionary<int, SummaryLine>? lines);
+            bool repeatsShard = shard is not null && lines is not null && lines.ContainsKey(shard.Value);
+            if (hasWhole || (shard is null && hasShards) || repeatsShard)
+            {
+                throw new FormatException($"The bot summary holds two lines of the label '{line.Policy}', or a whole line and a shard line of the policy '{policy}' (D-403, D-655).");
+            }
+
+            if (!hasShards)
+            {
+                order.Add(policy);
+            }
+
+            if (shard is null)
+            {
+                whole[policy] = line;
+                continue;
+            }
+
+            if (lines is null)
+            {
+                lines = [];
+                shards[policy] = lines;
+            }
+
+            lines[shard.Value] = line with { Policy = policy };
+        }
+
+        List<SummaryLine> merged = [];
+        foreach (string policy in order)
+        {
+            if (whole.TryGetValue(policy, out SummaryLine? line))
+            {
+                merged.Add(line);
+            }
+            else if (shards[policy].Count == NightSeeds.ShardCount(policy))
+            {
+                merged.Add(JoinShards(policy, shards[policy].Values));
+            }
+        }
+
+        return merged;
+    }
+
+    /// <summary>One line for the lines of all shards of one policy: the sum of each count (D-655). The ascends stay null when a line holds none.</summary>
+    private static SummaryLine JoinShards(string policy, IEnumerable<SummaryLine> lines)
+    {
+        long deaths = 0;
+        long? ascends = 0;
+        SortedDictionary<string, long> causes = new(StringComparer.Ordinal);
+        foreach (SummaryLine line in lines)
+        {
+            deaths += line.Deaths;
+            ascends = ascends is null || line.Ascends is null ? null : ascends + line.Ascends;
+            foreach (CauseCount cause in line.Causes)
+            {
+                causes[cause.Cause] = causes.TryGetValue(cause.Cause, out long earlier) ? earlier + cause.Count : cause.Count;
+            }
+        }
+
+        List<CauseCount> joined = [];
+        foreach (KeyValuePair<string, long> cause in causes)
+        {
+            joined.Add(new CauseCount(cause.Key, cause.Value));
+        }
+
+        return new SummaryLine(policy, deaths, ascends, joined);
+    }
+
+    /// <summary>
+    /// Each line of the summary text as it is written, with its label in <see cref="SummaryLine.Policy"/>. A blank
+    /// line is skipped.
     /// </summary>
     /// <exception cref="FormatException">A line is not one name, one equals sign, and one whole number, with cause words after it (T-2).</exception>
-    private static List<SummaryLine> ReadSummary(string summary)
+    private static List<SummaryLine> ReadSummaryLines(string summary)
     {
         List<SummaryLine> lines = [];
         foreach (string raw in summary.Split('\n'))

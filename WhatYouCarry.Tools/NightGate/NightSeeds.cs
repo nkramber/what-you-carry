@@ -66,6 +66,9 @@ public static class NightSeeds
     /// <summary>The form of a date in the command options and the record.</summary>
     public const string DateFormat = "yyyy-MM-dd";
 
+    /// <summary>The mark between the sweep and the shard in the label of a line of one shard, as in <c>full-clearer#1/2</c> (D-655).</summary>
+    public const string ShardMark = "#";
+
     /// <summary>The fixed range of a sweep: seeds 1 to its fixed top.</summary>
     /// <exception cref="ArgumentException">The sweep is not one of <see cref="Sweeps"/>.</exception>
     public static SeedRange FixedRange(string sweep)
@@ -122,6 +125,126 @@ public static class NightSeeds
         }
 
         return plan;
+    }
+
+    /// <summary>
+    /// The count of shards of a sweep, each one job of the night (D-655). The two longest sweeps, full-clearer and
+    /// reachability, run as two shards. Each other sweep runs as one.
+    /// </summary>
+    /// <exception cref="ArgumentException">The sweep is not one of <see cref="Sweeps"/>.</exception>
+    public static int ShardCount(string sweep)
+    {
+        CheckSweep(sweep);
+        return sweep == FullClearer.PolicyName || sweep == ReachabilitySweep ? 2 : 1;
+    }
+
+    /// <summary>
+    /// The seed list of one shard of a sweep on a date (D-655). Shard k of n runs part k of n of the fixed range and
+    /// part k of n of the slice. Shard 1 also runs each extra seed and each carried seed of <see cref="Plan"/>. The
+    /// lists of all shards of a sweep hold the seeds of <see cref="Plan"/>, each seed in one shard. A sweep of one
+    /// shard gives <see cref="Plan"/> itself.
+    /// </summary>
+    /// <param name="shard">The shard, from 1 to <see cref="ShardCount"/>.</param>
+    /// <exception cref="ArgumentException">The sweep is not one of <see cref="Sweeps"/>, the date comes before <see cref="DayZero"/>, or the shard is out of range.</exception>
+    public static List<SeedRange> ShardPlan(string sweep, DateOnly date, IReadOnlyList<ulong> extra, IReadOnlyList<ulong> carried, int shard)
+    {
+        int shards = ShardCount(sweep);
+        if (shard < 1 || shard > shards)
+        {
+            throw new ArgumentException($"The sweep '{sweep}' runs as {shards} shard(s), numbered from 1, and the shard {shard} is not one of them (D-655).", nameof(shard));
+        }
+
+        List<SeedRange> whole = Plan(sweep, date, extra, carried);
+        List<SeedRange> plan = [ShardPart(whole[0], shard, shards), ShardPart(whole[1], shard, shards)];
+        if (shard == 1)
+        {
+            for (int index = 2; index < whole.Count; index++)
+            {
+                plan.Add(whole[index]);
+            }
+        }
+
+        return plan;
+    }
+
+    /// <summary>
+    /// Part k of n of a range. Part k holds the seeds from From + (k − 1) × size / n to From + k × size / n − 1, with
+    /// whole-number division, so the parts follow each other with no gap and no overlap. For two parts of an odd
+    /// size, the upper part holds the one seed more.
+    /// </summary>
+    /// <exception cref="ArgumentException">The part is out of range, or the range is too small to give each part one seed.</exception>
+    public static SeedRange ShardPart(SeedRange range, int shard, int shards)
+    {
+        if (shards < 1 || shard < 1 || shard > shards)
+        {
+            throw new ArgumentException($"The part {shard} of {shards} is not a part of a range: a part is from 1 to the count of parts.", nameof(shard));
+        }
+
+        ulong size = range.To - range.From + 1;
+        if (size < (ulong)shards)
+        {
+            throw new ArgumentException($"The range {range} holds {size} seed(s), fewer than the {shards} parts, so a part would be empty.", nameof(range));
+        }
+
+        ulong start = range.From + (size * (ulong)(shard - 1) / (ulong)shards);
+        ulong end = range.From + (size * (ulong)shard / (ulong)shards) - 1;
+        return new SeedRange(start, end);
+    }
+
+    /// <summary>
+    /// The label of a failure line or a summary line of one night job (D-655): the sweep name for a sweep of one shard,
+    /// or for a run of the whole sweep with no shard, and <c>sweep#k/n</c> for shard k of a sweep of n shards.
+    /// </summary>
+    /// <param name="shard">The shard of the job, or null for a run of the whole sweep. A null shard gives the name as it is.</param>
+    /// <exception cref="ArgumentException">With a shard, the sweep is not one of <see cref="Sweeps"/>, or the shard is out of range.</exception>
+    public static string ShardLabel(string sweep, int? shard)
+    {
+        if (shard is null)
+        {
+            return sweep;
+        }
+
+        int shards = ShardCount(sweep);
+        if (shard < 1 || shard > shards)
+        {
+            throw new ArgumentException($"The sweep '{sweep}' runs as {shards} shard(s), numbered from 1, and the shard {shard} is not one of them (D-655).", nameof(shard));
+        }
+
+        return shards == 1 ? sweep : $"{sweep}{ShardMark}{shard.Value.ToString(CultureInfo.InvariantCulture)}/{shards.ToString(CultureInfo.InvariantCulture)}";
+    }
+
+    /// <summary>
+    /// Reads the label of a failure line or a summary line (D-655). A label with no <see cref="ShardMark"/> is the name
+    /// alone, with no shard, and the caller checks the name. A label with the mark is <c>sweep#k/n</c>: a sweep of
+    /// <see cref="Sweeps"/>, its count of shards n, which is more than one, and a shard k from 1 to n.
+    /// </summary>
+    /// <exception cref="FormatException">A label with the mark breaks one of these rules. The message names the label and the source (T-2).</exception>
+    public static (string Name, int? Shard) ReadLabel(string label, string source)
+    {
+        int mark = label.IndexOf(ShardMark, StringComparison.Ordinal);
+        if (mark < 0)
+        {
+            return (label, null);
+        }
+
+        string name = label[..mark];
+        string[] parts = label[(mark + 1)..].Split('/');
+        bool known = Array.IndexOf(Sweeps, name) >= 0;
+        int shards = known ? ShardCount(name) : 0;
+        if (!known
+            || shards < 2
+            || parts.Length != 2
+            || !int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int shard)
+            || !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int count)
+            || count != shards
+            || shard < 1
+            || shard > shards)
+        {
+            string expected = known && shards > 1 ? $"the sweep '{name}' runs as {shards} shards, so the label is '{name}{ShardMark}k/{shards}' with k from 1 to {shards}" : $"a shard label names a sweep of more than one shard, and the sweeps of two shards are {string.Join(", ", ShardedSweeps())}";
+            throw new FormatException($"The label '{label}' of {source} is not a shard label: {expected} (D-655).");
+        }
+
+        return (name, shard);
     }
 
     /// <summary>A seed list in the form of the <c>--seeds</c> option: ranges and single seeds, with a comma between them.</summary>
@@ -338,7 +461,18 @@ public static class NightSeeds
     /// </summary>
     public static string FailureLine(string sweep, IReadOnlyList<ulong> failed)
     {
-        StringBuilder line = new(sweep);
+        return FailureLine(sweep, null, failed);
+    }
+
+    /// <summary>
+    /// The failure line of one shard of a sweep that ran to its end (D-655): the label of <see cref="ShardLabel"/>, a
+    /// colon, and each failed seed with a space before it. A null shard, or a sweep of one shard, gives the line of
+    /// <see cref="FailureLine(string, IReadOnlyList{ulong})"/>.
+    /// </summary>
+    /// <exception cref="ArgumentException">With a shard, the sweep is not one of <see cref="Sweeps"/>, or the shard is out of range.</exception>
+    public static string FailureLine(string sweep, int? shard, IReadOnlyList<ulong> failed)
+    {
+        StringBuilder line = new(ShardLabel(sweep, shard));
         line.Append(':');
         foreach (ulong seed in failed)
         {
@@ -350,12 +484,15 @@ public static class NightSeeds
 
     /// <summary>
     /// Reads the failure lines of a night: the failed seeds of each sweep that ran to its end. A sweep with no line did
-    /// not end. A blank line is skipped.
+    /// not end. A blank line is skipped. A sweep of more than one shard ends when one line of each of its shards is
+    /// present, and its failed seeds are the seeds of all its shards, in ascending order (D-655). A sweep with a line of
+    /// some shards alone did not end. A line with no shard stands for the whole sweep, as a run by hand writes it.
     /// </summary>
-    /// <exception cref="FormatException">A line names no sweep of <see cref="Sweeps"/>, repeats a sweep, or holds a word that is not a seed (T-2).</exception>
+    /// <exception cref="FormatException">A line names no sweep of <see cref="Sweeps"/>, repeats a sweep or a shard, mixes a whole line and a shard line of one sweep, or holds a word that is not a seed (T-2).</exception>
     public static Dictionary<string, List<ulong>> ReadFailures(string text, string source)
     {
         Dictionary<string, List<ulong>> failures = new(StringComparer.Ordinal);
+        Dictionary<string, SortedDictionary<int, List<ulong>>> shardLines = new(StringComparer.Ordinal);
         foreach (string raw in text.Split('\n'))
         {
             string line = raw.Trim();
@@ -365,15 +502,26 @@ public static class NightSeeds
             }
 
             int colon = line.IndexOf(':', StringComparison.Ordinal);
-            string sweep = colon < 0 ? line : line[..colon];
-            if (colon < 0 || Array.IndexOf(Sweeps, sweep) < 0)
+            if (colon < 0)
             {
                 throw new FormatException($"The failure line '{line}' of {source} is not one sweep of {string.Join(", ", Sweeps)}, a colon, and the failed seeds.");
             }
 
-            if (failures.ContainsKey(sweep))
+            (string sweep, int? shard) = ReadLabel(line[..colon], source);
+            if (Array.IndexOf(Sweeps, sweep) < 0)
+            {
+                throw new FormatException($"The failure line '{line}' of {source} is not one sweep of {string.Join(", ", Sweeps)}, a colon, and the failed seeds.");
+            }
+
+            bool hasShards = shardLines.TryGetValue(sweep, out SortedDictionary<int, List<ulong>>? shards);
+            if (failures.ContainsKey(sweep) || (shard is null && hasShards))
             {
                 throw new FormatException($"The failures of {source} hold two lines of the sweep '{sweep}'.");
+            }
+
+            if (shard is not null && shards is not null && shards.ContainsKey(shard.Value))
+            {
+                throw new FormatException($"The failures of {source} hold two lines of the shard {shard} of the sweep '{sweep}' (D-655).");
             }
 
             List<ulong> seeds = [];
@@ -387,10 +535,43 @@ public static class NightSeeds
                 seeds.Add(seed);
             }
 
-            failures[sweep] = seeds;
+            if (shard is null)
+            {
+                failures[sweep] = seeds;
+                continue;
+            }
+
+            if (shards is null)
+            {
+                shards = [];
+                shardLines[sweep] = shards;
+            }
+
+            shards[shard.Value] = seeds;
+        }
+
+        // A sweep of shards ends when each of its shards wrote its line (D-655).
+        foreach (string sweep in Sweeps)
+        {
+            if (shardLines.TryGetValue(sweep, out SortedDictionary<int, List<ulong>>? shards) && shards.Count == ShardCount(sweep))
+            {
+                failures[sweep] = UnionOfShards(shards.Values);
+            }
         }
 
         return failures;
+    }
+
+    /// <summary>The seeds of the lines of all shards of one sweep, once each, in ascending order (D-655).</summary>
+    private static List<ulong> UnionOfShards(IEnumerable<List<ulong>> shardSeeds)
+    {
+        SortedSet<ulong> union = [];
+        foreach (List<ulong> seeds in shardSeeds)
+        {
+            union.UnionWith(seeds);
+        }
+
+        return [.. union];
     }
 
     /// <summary>
@@ -472,6 +653,21 @@ public static class NightSeeds
     {
         CheckSweep(sweep);
         return sweep == ReachabilitySweep ? ReachabilitySliceSize : BotSliceSize;
+    }
+
+    /// <summary>The sweeps of more than one shard, in the order of <see cref="Sweeps"/>, for an error message.</summary>
+    private static List<string> ShardedSweeps()
+    {
+        List<string> sharded = [];
+        foreach (string sweep in Sweeps)
+        {
+            if (ShardCount(sweep) > 1)
+            {
+                sharded.Add(sweep);
+            }
+        }
+
+        return sharded;
     }
 
     /// <exception cref="ArgumentException">The sweep is not one of <see cref="Sweeps"/>.</exception>

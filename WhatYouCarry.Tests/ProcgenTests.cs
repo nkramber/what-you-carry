@@ -34,6 +34,12 @@ public sealed class ProcgenTests
     /// <summary>The environment variable that names the failures file of the night, which takes the failure line of the sweep (D-567).</summary>
     public const string NightFailuresVariable = "WYC_NIGHT_FAILURES";
 
+    /// <summary>
+    /// The environment variable that names the shard of the night reachability sweep, from 1 to its count of shards
+    /// (D-655). The failure line names the shard, so the night record joins the lines of both shards.
+    /// </summary>
+    public const string NightShardVariable = "WYC_NIGHT_SHARD";
+
     /// <summary>The seeds of the reachability sweep on main (PR-9 exit test 1, D-277). A pull request runs one fifth (D-480).</summary>
     public const int ReachabilitySeeds = 5000;
 
@@ -207,14 +213,32 @@ public sealed class ProcgenTests
     private static SweepReport RunReachabilitySweep()
     {
         List<int> seeds = ReachabilitySeedList(Environment.GetEnvironmentVariable(NightVariable), ReadSeedFile(Environment.GetEnvironmentVariable(NightSeedsFileVariable)));
-        return Sweep(seeds, TestWorld.Content, Environment.GetEnvironmentVariable(NightFailuresVariable));
+        return Sweep(seeds, TestWorld.Content, Environment.GetEnvironmentVariable(NightFailuresVariable), ReadShard(Environment.GetEnvironmentVariable(NightShardVariable)));
+    }
+
+    /// <summary>The shard of the night reachability sweep in the text of <see cref="NightShardVariable"/>, or null when the variable is not set (D-655).</summary>
+    /// <exception cref="InvalidOperationException">The text is not a shard of the sweep. The error names the variable and the text.</exception>
+    internal static int? ReadShard(string? text)
+    {
+        if (text is null)
+        {
+            return null;
+        }
+
+        int shards = NightSeeds.ShardCount(NightSeeds.ReachabilitySweep);
+        if (!int.TryParse(text, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int shard) || shard < 1 || shard > shards)
+        {
+            throw new InvalidOperationException($"The variable {NightShardVariable} holds '{text}', and the reachability sweep runs as {shards} shards, numbered from 1 to {shards} (D-655).");
+        }
+
+        return shard;
     }
 
     /// <summary>
     /// Digs one floor for each seed with one content set, and reads every check of the sweep. With a failures file,
-    /// it appends the failure line of the sweep to the file (D-567).
+    /// it appends the failure line of the sweep to the file (D-567). The line names the shard, when the night gives one (D-655).
     /// </summary>
-    private static SweepReport Sweep(IReadOnlyList<int> seeds, ContentSet content, string? failuresFile)
+    private static SweepReport Sweep(IReadOnlyList<int> seeds, ContentSet content, string? failuresFile, int? shard)
     {
         List<ulong> failedSeeds = [];
         List<string> chamberFailures = [];
@@ -363,7 +387,7 @@ public sealed class ProcgenTests
 
         if (failuresFile is not null)
         {
-            File.AppendAllText(failuresFile, NightSeeds.FailureLine(NightSeeds.ReachabilitySweep, failedSeeds), new UTF8Encoding(false));
+            File.AppendAllText(failuresFile, NightSeeds.FailureLine(NightSeeds.ReachabilitySweep, shard, failedSeeds), new UTF8Encoding(false));
         }
 
         return new SweepReport(chamberFailures, detailFailures, rampFailures, tierFailures, pillars, pools, collapses, rampRuns, tierShapes, tiersByKind, seeds.Count, floorsWithATier, rampWidths, shaftCount, floorsWithAShaft, shaftFailures);
@@ -527,12 +551,17 @@ public sealed class ProcgenTests
         string failures = Path.Combine(Path.GetTempPath(), "wyc-sweep-failures-" + Guid.NewGuid().ToString("N") + ".txt");
         try
         {
-            SweepReport report = Sweep(seeds, shallow, failures);
+            SweepReport report = Sweep(seeds, shallow, failures, null);
 
             Assert.Equal(seeds.Count, report.Floors);
             Assert.Equal(NightSeeds.FailureLine(NightSeeds.ReachabilitySweep, deepest), File.ReadAllText(failures));
             Assert.Equal(2, report.ChamberFailures.Count(failure => failure.Contains("the dig threw", StringComparison.Ordinal)));
             Assert.Contains(report.ChamberFailures, failure => failure.StartsWith("Seed 100019, floor 15: the dig threw.", StringComparison.Ordinal));
+
+            // D-655: the sweep of one shard names the shard in its failure line, so the record joins both shards.
+            File.Delete(failures);
+            Sweep(seeds, shallow, failures, ReadShard("2"));
+            Assert.Equal("reachability#2/2: 100004 100019\n", File.ReadAllText(failures));
         }
         finally
         {

@@ -8,9 +8,12 @@
 # (D-564, D-566). The seeds of each sweep also hold the extra fixed seeds of the checkout, and the failed seeds that the
 # record of main carries until a night passes them (D-567). A failed seed of a slice fails the night (D-565).
 # The plan job takes the date and the record of main one time, so each sweep reads the same pair. The sweep job runs
-# one sweep of NightSeeds.Sweeps on each leg, and a hosted job stops at 6 hours (D-572). Each leg keeps its summary line
-# and its failure line as a run artifact. The record job writes night.json with the commit, the end time, the status,
-# and the death and ascend counts of each bot policy, to the orphan branch night-results, which holds that one file
+# one shard of one sweep of NightSeeds.Sweeps on each leg, and a hosted job stops at 6 hours (D-572). The sweeps
+# full-clearer and reachability each run as two shards, and each other sweep as one (D-655). Each leg keeps its summary
+# line and its failure line as a run artifact, and the lines of a shard name the shard. The record job writes
+# night.json with the commit, the end time, the status, and the death and ascend counts of each bot policy, and the
+# publish step reads the record of main at publish time, so no failed seed of it is lost (D-648). The record goes to
+# the orphan branch night-results, which holds that one file
 # (D-273). When the build itself fails, the publish step writes the failure record in shell, so the branch never keeps
 # a stale success. PR-58 adds the gate that reads it. Of the nights, only a night on main writes night-results (D-373).
 # A night on another branch writes its record to the orphan branch night-branch/<branch>, so it cannot replace the
@@ -27,6 +30,14 @@ on:
   schedule:
     - cron: "7 7 * * *"
   workflow_dispatch:
+
+# D-648: a new night on a ref waits for the night in progress on that ref, so two nights never publish at once, and
+# neither loses a failed seed of the other. No run is cancelled in progress, because the night gate fails a cancelled
+# night record (D-274, D-356). GitHub keeps one waiting run in a group, so a third night replaces the waiting one
+# before it starts, and a night that never started writes no record.
+concurrency:
+  group: night-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -67,12 +78,23 @@ jobs:
       # One failed sweep does not stop the others, so the record names the failed seeds of each sweep (D-567).
       fail-fast: false
       matrix:
-        # The sweeps of NightSeeds.Sweeps, in its order. The timer tester waits through each expiry, so every run
-        # lasts at least three minutes of simulated time (D-426). The coward ascends at the first stairwell, so each
-        # run lasts one floor (D-434).
-        sweep: [random-walker, greedy-descender, full-clearer, timer-tester, coward, reachability]
+        # The sweeps of NightSeeds.Sweeps, in its order, with each shard of NightSeeds.ShardCount (D-655). The timer
+        # tester waits through each expiry, so every run lasts at least three minutes of simulated time (D-426). The
+        # coward ascends at the first stairwell, so each run lasts one floor (D-434). On 2026-09-26 and 2026-09-27 the
+        # reachability job took 149 and 150 minutes, and the full-clearer job 82 and 131 minutes, so each runs as two
+        # shards, and a sweep ends when both of its shards end.
+        include:
+          - {sweep: random-walker, shard: 1}
+          - {sweep: greedy-descender, shard: 1}
+          - {sweep: full-clearer, shard: 1}
+          - {sweep: full-clearer, shard: 2}
+          - {sweep: timer-tester, shard: 1}
+          - {sweep: coward, shard: 1}
+          - {sweep: reachability, shard: 1}
+          - {sweep: reachability, shard: 2}
     env:
       SWEEP: ${{ matrix.sweep }}
+      SHARD: ${{ matrix.shard }}
       NIGHT_DATE: ${{ needs.plan.outputs.date }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -97,24 +119,26 @@ jobs:
           path: ${{ runner.temp }}
       - name: List the seeds of the sweep
         # The list goes to a file, and each sweep reads the file. Linux caps one argument or one variable at 131072
-        # bytes, and a list of many carried seeds passes that (F-162).
+        # bytes, and a list of many carried seeds passes that (F-162). The list is the part of the shard of this leg,
+        # and shard 1 also runs each extra seed and each carried seed (D-655).
         shell: bash
         run: |
           set -euo pipefail
-          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep "$SWEEP" --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json" > "${RUNNER_TEMP}/night-seeds.txt"
+          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-seeds --sweep "$SWEEP" --shard "$SHARD" --date "$NIGHT_DATE" --root . --carry "${RUNNER_TEMP}/main-night.json" > "${RUNNER_TEMP}/night-seeds.txt"
           echo "NIGHT_SEEDS_FILE=${RUNNER_TEMP}/night-seeds.txt" >> "$GITHUB_ENV"
       - name: Bot sweep, the fixed seeds and the slice
         if: matrix.sweep != 'reachability'
         shell: bash
         run: |
           set -euo pipefail
-          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy "$SWEEP" --seeds-file "$NIGHT_SEEDS_FILE" --output bot-logs --root . --summary "${RUNNER_TEMP}/sweep/bot-deaths.txt" --failures "${RUNNER_TEMP}/sweep/seed-failures.txt"
+          dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- bot-run --policy "$SWEEP" --seeds-file "$NIGHT_SEEDS_FILE" --output bot-logs --root . --summary "${RUNNER_TEMP}/sweep/bot-deaths.txt" --failures "${RUNNER_TEMP}/sweep/seed-failures.txt" --shard "$SHARD"
       - name: Seed sweep, the fixed seeds and the slice
         if: matrix.sweep == 'reachability'
         shell: bash
         env:
           WYC_NIGHT_SWEEP: "1"
           WYC_NIGHT_FAILURES: ${{ runner.temp }}/sweep/seed-failures.txt
+          WYC_NIGHT_SHARD: ${{ matrix.shard }}
         run: |
           set -euo pipefail
           WYC_NIGHT_SEEDS_FILE="$NIGHT_SEEDS_FILE"
@@ -126,17 +150,17 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: bot-logs-${{ matrix.sweep }}
+          name: bot-logs-${{ matrix.sweep }}-${{ matrix.shard }}
           path: bot-logs
           if-no-files-found: warn
           overwrite: true
       - name: Keep the sweep result for the record
-        # A re-run of the failed jobs of a night runs this sweep again, and its result replaces the result of the
-        # earlier attempt, so the record reads the newest attempt.
+        # A re-run of the failed jobs of a night runs this shard again, and its result replaces the result of the
+        # earlier attempt, so the record reads the newest attempt. Each shard has an artifact name of its own (D-655).
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: night-sweep-${{ matrix.sweep }}
+          name: night-sweep-${{ matrix.sweep }}-${{ matrix.shard }}
           path: ${{ runner.temp }}/sweep/
           if-no-files-found: error
           overwrite: true
@@ -177,8 +201,8 @@ jobs:
           pattern: night-sweep-*
           path: ${{ runner.temp }}/sweeps
       - name: Gather the sweep results
-        # Each sweep result adds its summary line and its failure line. The status reads the plan, every sweep, and
-        # the steps of this job before it (D-177).
+        # Each shard result adds its summary line and its failure line, and night-record joins the lines of the shards
+        # of one sweep (D-655). The status reads the plan, every sweep, and the steps of this job before it (D-177).
         id: gather
         if: always()
         shell: bash
@@ -210,21 +234,33 @@ jobs:
           else
             target="night-branch/${GITHUB_REF_NAME}"
           fi
+          # The lease: the record of main as this step reads it, taken before any read of the record itself. Each read
+          # below reads the commit of the lease, and the push takes the lease, so a promotion or a night that writes in
+          # between fails the push, and no failed seed of its record is lost (D-648).
+          lease=""
+          if [ "$target" = "night-results" ]; then
+            lease=$(git ls-remote origin refs/heads/night-results | cut -f1)
+          fi
           # A broken build leaves no binary for night-record. A script writes the failure record, and it keeps the
-          # failed seeds of the record of main, so the carry survives (D-567, PR #100 review P1-1).
+          # failed seeds of the record of main at publish time, so the carry survives (D-567, D-648, PR #100 review P1-1).
           if [ ! -f "${RUNNER_TEMP}/night.json" ]; then
             git fetch --quiet origin refs/heads/night-results
+            if [ "$target" = "night-results" ] && [ "$(git rev-parse FETCH_HEAD)" != "$lease" ]; then
+              echo "The record of main moved from the lease '${lease}' while this step read it. A re-run of this job reads the new record (D-648)."
+              exit 1
+            fi
             git show FETCH_HEAD:night.json > "${RUNNER_TEMP}/main-night-now.json"
             bash .github/scripts/night-failure-record.sh "${GITHUB_SHA}" "${RUNNER_TEMP}/main-night-now.json" "${RUNNER_TEMP}/night.json"
           fi
+          publish="${RUNNER_TEMP}/night.json"
           if [ "$target" = "night-results" ]; then
-            # The lease: the record of main as this step reads it. A promotion that writes in between fails the push.
-            lease=$(git ls-remote origin refs/heads/night-results | cut -f1)
-            # A promotion can write a record at a later merge commit while the night runs, and that record stays (D-562).
+            # The record of main at publish time decides the record that this night writes (D-562, D-648). A record at
+            # a later commit stays, unless this night failed a seed that it does not name. Each failed seed of the
+            # record of main that this night did not run stays in the record that the step writes.
             if [ "$BUILD_OUTCOME" = "success" ]; then
               git fetch --quiet origin main
               set +e
-              dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-publish-check --root . --remote origin --commit "${GITHUB_SHA}"
+              dotnet run --project WhatYouCarry.Tools/WhatYouCarry.Tools.csproj --no-build -- night-publish-check --root . --remote origin --commit "${GITHUB_SHA}" --lease "$lease" --night "${RUNNER_TEMP}/night.json" --failures "${RUNNER_TEMP}/seed-failures.txt" --output "${RUNNER_TEMP}/night-publish.json"
               rc=$?
               set -e
               if [ "$rc" -eq 1 ]; then
@@ -235,19 +271,20 @@ jobs:
                 echo "The night-publish-check command exited ${rc}."
                 exit "$rc"
               fi
+              publish="${RUNNER_TEMP}/night-publish.json"
             else
-              echo "The build left no binary for the order check, so the failure record of this night replaces the record of main."
+              echo "The build left no binary for the publish check, so the failure record of this night replaces the record of main."
             fi
           fi
           # The commit names the status of the file that it writes, which the failure record script can set.
-          status=$(jq -r '.status' "${RUNNER_TEMP}/night.json")
+          status=$(jq -r '.status' "$publish")
           work="${RUNNER_TEMP}/night-results"
           rm -rf "$work"
           git worktree add --detach "$work" HEAD
           cd "$work"
           git checkout --orphan "$target"
           git rm -rfq .
-          cp "${RUNNER_TEMP}/night.json" night.json
+          cp "$publish" night.json
           git config user.name "night job"
           git config user.email "night-job@users.noreply.github.com"
           git add night.json
