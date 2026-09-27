@@ -19,10 +19,10 @@ public static class SceneLight
     public const float AmbientEnergy = 4.0f;
 
     /// <summary>The brightness of the lantern at its middle.</summary>
-    public const float LanternEnergy = 1.6f;
+    public const float LanternEnergy = 2.2f;
 
     /// <summary>The distance in meters at which the lantern light ends.</summary>
-    public const float LanternRange = 7.0f;
+    public const float LanternRange = 9.0f;
 
     /// <summary>The height of the lantern above the root of the player model, in meters: above the head (D-680).</summary>
     public const float LanternHeight = 2.1f;

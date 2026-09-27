@@ -80,7 +80,7 @@ public sealed class ContactSheetTests
         Assert.Equal(0.0f, SceneLight.LanternOffset.X);
         Assert.Equal(new Vector3(0.0f, 2.1f, 0.5f), SceneLight.LanternOffset);
         Assert.Equal(4.0f, SceneLight.AmbientEnergy);
-        Assert.InRange(SceneLight.LanternRange, 1.0f, 10.0f);
+        Assert.InRange(SceneLight.LanternRange, 1.0f, 12.0f);
     }
 
     /// <summary>A texel on the sheet has the size of a texel in play on the Deck: about 2.7 pixels at the boom length (D-306, D-603).</summary>

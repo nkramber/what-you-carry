@@ -73,8 +73,8 @@ public static class ContactSheet
     /// <summary>The height of the camera over the subject, in degrees, so the up faces show.</summary>
     public const float CameraPitchDegrees = 25.0f;
 
-    /// <summary>The meters between two subjects along X, so no cell shows a neighbor.</summary>
-    public const float SubjectSpacing = 10.0f;
+    /// <summary>The meters between two subjects along X, so no cell shows a neighbor, and the lantern of one shot does not reach the next subject.</summary>
+    public const float SubjectSpacing = 12.0f;
 
     /// <summary>The part of the way from the target to the camera where the lantern of a shot stands.</summary>
     public const float LanternShare = 0.5f;
