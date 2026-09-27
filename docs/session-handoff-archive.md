@@ -1,5 +1,37 @@
 # Session handoff archive
 
+## Session 278: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Review round 1 (session 277) gave `Changes required` at `6b327c9` with P2-1: the run record reader accepted a CRC field before later fields (D-637).
+- Correction `69c946a` requires the CRC field to end the line. `docs/reviews/pr-109-response.md` records the disposition and the regression check.
+- The gitar pass of `6b327c9` approved with no finding. One reply answered the CI note of the red review gate (D-251).
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The code head is `69c946a`.
+- At `6b327c9`, every check passed except `evaluate` and `review-gate`, which wait for an approving record.
+
+### In flight
+
+- The gitar pass of `69c946a`, the CI of that head, and review round 2 with `make codex-review PR=109`.
+
+### Traps and gotchas
+
+- Session 276 lists the traps of this PR: the smoke cache miss, Dependabot, the lock files of D-641, and the abort at exit of one macOS smoke session.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+Push, finish the gitar pass, wait for CI, and run review round 2.
+
 ## Session 277: 2026-09-26, Codex
 
 Author: Codex

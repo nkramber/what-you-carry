@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 288: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-116, reviewer. Branch `fix/pr-92-review-fixes`. PR #116, pending merge. Base `e9a89aa`.
+
+### What this session did, and why
+
+- Reviewed all 60 changed paths of PR #116 against its roadmap, decisions, questions, and PR comments.
+- Found no blocking defect. The review record approves effective head `a09b9f9`.
+- The author entries name Claude Code. The Codex review passes the provider gate (T-4, D-101).
+
+### State of the build
+
+- Remote `main` is `e9a89aa`. The remote PR head before this metadata commit is `a09b9f9`.
+- The local build passed with zero warnings. The focused review tests passed, 426 of 426.
+- CI passed the build and test jobs on all three platforms, Smoke, bit identity, bots, the night gate, and the document and asset checks. `evaluate` and `review-gate` await this metadata commit.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit on `fix/pr-92-review-fixes`.
+- The first night on `main` after merge must run eight sweep jobs. Exit test 3 assigns its record check to a later session.
+
+### Traps and gotchas
+
+- The PR comment says the missing review record caused the expected pre-review gate failure. The Gitar provider-gate finding is fixed and resolved.
+- The owner accepted the review trust-boundary risk (D-647) and the night-gate window risk (D-654).
+- The measured frame-cost fixes remain with M-3 and PR-77 (G-17).
+
+### Open questions that block progress
+
+None for PR-116.
+
+### Next concrete action
+
+Push the review record and this entry together. Verify the remote head and wait for the metadata checks. The owner can then review the merge summary.
+
 ## Session 287: 2026-09-27, Claude Code
 
 Author: Claude Code
@@ -302,35 +338,3 @@ Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending mer
 ### Next concrete action
 
 Answer the Gitar comment, then read the new pass and gate results for PR #109.
-
-## Session 278: 2026-09-26, Claude Code
-
-Author: Claude Code
-Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
-
-### What this session did, and why
-
-- Review round 1 (session 277) gave `Changes required` at `6b327c9` with P2-1: the run record reader accepted a CRC field before later fields (D-637).
-- Correction `69c946a` requires the CRC field to end the line. `docs/reviews/pr-109-response.md` records the disposition and the regression check.
-- The gitar pass of `6b327c9` approved with no finding. One reply answered the CI note of the red review gate (D-251).
-
-### State of the build
-
-- Remote `main` is `4a20b82`. The code head is `69c946a`.
-- At `6b327c9`, every check passed except `evaluate` and `review-gate`, which wait for an approving record.
-
-### In flight
-
-- The gitar pass of `69c946a`, the CI of that head, and review round 2 with `make codex-review PR=109`.
-
-### Traps and gotchas
-
-- Session 276 lists the traps of this PR: the smoke cache miss, Dependabot, the lock files of D-641, and the abort at exit of one macOS smoke session.
-
-### Open questions that block progress
-
-None for PR-91.
-
-### Next concrete action
-
-Push, finish the gitar pass, wait for CI, and run review round 2.
