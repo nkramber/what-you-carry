@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 273: 2026-09-26, Claude Code
+
+Author: Claude Code
+Session: PR-90, author, review response. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
+
+### What this session did, and why
+
+- Answered round 1 of the review in `docs/reviews/pr-108-response.md`. P2-1 has full merit. `e4d3543` rejects a header chunk that is not 13 bytes, and a regression case failed on the old reader.
+- Ran exit test 2 at the PR head `e4d3543` on the Deck over SSH, on X11, after the owner said the Deck was ready (D-606). After the first 10 s, no frame is over 11111 µs (D-295). In the first 10 s, 67 frames were over, and the worst was 27270 µs.
+- The owner asked for a fix of the exit hang now (F-147). Under gdb, the main thread waits in `pthread_join`, and the thread "Wayland Events" waits in `poll`. On the Wayland fallback of an SSH session, 5 of 14 runs hung, `main` too. With `XAUTHORITY` set, 0 of 9 runs hung.
+- `docs/runbooks/commands.md` holds the Deck run procedure with `XAUTHORITY`, and the agent files name it.
+- The gitar pass of `e4d3543` approved with no finding.
+
+### State of the build
+
+- Effective head `e4d3543`. Each check of `e4d3543` passed except `evaluate` and `review-gate`, which wait for the review record (D-251). The local full suite passed 1867 of 1867.
+- The documents commit of this entry, the response, the runbook, and F-147 comes after `e4d3543`.
+
+### In flight
+
+- The gitar pass of the documents commit, then round 2 of `make codex-review PR=108`.
+
+### Traps and gotchas
+
+- The Deck checkout is on the PR-90 branch at `e4d3543`, and its build is current.
+- The probe `~/hang-probe2.sh <driver> <runs>` on the Deck runs the session under gdb, because `ptrace_scope` is 1. It stops at the first hang.
+- The official Godot binary has no symbols. The libc frames map to a symbol through `readelf -S` and `nm -D` on the Deck.
+
+### Open questions that block progress
+
+None for PR-90.
+
+### Next concrete action
+
+Run `make codex-review PR=108` when each check but the Review gate workflow is green. After a `Ready for owner merge` verdict, give the owner the merge summary (D-533).
+
 ## Session 272: 2026-09-26, Codex
 
 Author: Codex

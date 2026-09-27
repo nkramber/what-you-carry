@@ -2,6 +2,38 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 283: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Review round 4 checked the effective head `d32da6b` and the new night fixer, its notice path, tests, and runbooks.
+- The setup failure finding from Gitar is fixed. Two findings remain: the poll can count a notice dispatch as delivery, and concurrent polls can remove a lock before its PID exists.
+- The focused night fixer tests passed 15 of 15 on macOS.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The effective head is `d32da6b`. GitHub CI, Smoke, bit identity, bots, asset QA, document gates, and Gitar passed. `evaluate` and `review-gate` fail because the review record requires changes.
+
+### In flight
+
+- The review record and this handoff entry are ready for one metadata commit and push to `feat/pr-91-review-fixes`.
+
+### Traps and gotchas
+
+- `gh workflow run notify.yml` starts a workflow. It does not confirm that Pushover sent the notice.
+- A lock directory without a PID can belong to a poll that has not finished startup.
+
+### Open questions that block progress
+
+None for this review.
+
+### Next concrete action
+
+Correct P2-2 and P2-3, then request another review round.
+
 ## Session 282: 2026-09-27, Claude Code
 
 Author: Claude Code
@@ -300,39 +332,3 @@ None. OQ-208 is resolved by D-603 to D-608.
 ### Next concrete action
 
 Commit this entry with `docs/reviews/pr-108.md`, push to the PR branch, and verify the remote head.
-
-## Session 273: 2026-09-26, Claude Code
-
-Author: Claude Code
-Session: PR-90, author, review response. Branch `feat/pr-90-texture-resolution`. PR #108, pending merge. Base `60a23ec`.
-
-### What this session did, and why
-
-- Answered round 1 of the review in `docs/reviews/pr-108-response.md`. P2-1 has full merit. `e4d3543` rejects a header chunk that is not 13 bytes, and a regression case failed on the old reader.
-- Ran exit test 2 at the PR head `e4d3543` on the Deck over SSH, on X11, after the owner said the Deck was ready (D-606). After the first 10 s, no frame is over 11111 µs (D-295). In the first 10 s, 67 frames were over, and the worst was 27270 µs.
-- The owner asked for a fix of the exit hang now (F-147). Under gdb, the main thread waits in `pthread_join`, and the thread "Wayland Events" waits in `poll`. On the Wayland fallback of an SSH session, 5 of 14 runs hung, `main` too. With `XAUTHORITY` set, 0 of 9 runs hung.
-- `docs/runbooks/commands.md` holds the Deck run procedure with `XAUTHORITY`, and the agent files name it.
-- The gitar pass of `e4d3543` approved with no finding.
-
-### State of the build
-
-- Effective head `e4d3543`. Each check of `e4d3543` passed except `evaluate` and `review-gate`, which wait for the review record (D-251). The local full suite passed 1867 of 1867.
-- The documents commit of this entry, the response, the runbook, and F-147 comes after `e4d3543`.
-
-### In flight
-
-- The gitar pass of the documents commit, then round 2 of `make codex-review PR=108`.
-
-### Traps and gotchas
-
-- The Deck checkout is on the PR-90 branch at `e4d3543`, and its build is current.
-- The probe `~/hang-probe2.sh <driver> <runs>` on the Deck runs the session under gdb, because `ptrace_scope` is 1. It stops at the first hang.
-- The official Godot binary has no symbols. The libc frames map to a symbol through `readelf -S` and `nm -D` on the Deck.
-
-### Open questions that block progress
-
-None for PR-90.
-
-### Next concrete action
-
-Run `make codex-review PR=108` when each check but the Review gate workflow is green. After a `Ready for owner merge` verdict, give the owner the merge summary (D-533).
