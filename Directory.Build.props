@@ -6,6 +6,8 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
+    <!-- Every configuration runs the optimized code of the shipped export. Godot builds the Debug configuration, and the Deck measures it (D-685). -->
+    <Optimize>true</Optimize>
     <!-- A low or moderate NuGet advisory stays a warning. A high or critical one, NU1903 or NU1904, stays an error (D-639). -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902</WarningsNotAsErrors>
   </PropertyGroup>

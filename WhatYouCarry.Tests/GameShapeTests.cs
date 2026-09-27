@@ -254,6 +254,18 @@ public sealed class GameShapeTests
     }
 
     /// <summary>
+    /// PR-77 regression: every configuration builds optimized code (D-685). Godot builds the Debug configuration, so
+    /// with no optimization the Deck frame log measured a path search of 18 ms, where the shipped code takes about 2.
+    /// </summary>
+    [Fact]
+    public void EveryConfigurationBuildsOptimizedCode()
+    {
+        string props = RepositoryRoot.ReadFile("Directory.Build.props");
+        Assert.Contains("<Optimize>true</Optimize>", props, StringComparison.Ordinal);
+        Assert.DoesNotContain("Condition", props, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// PR-77: the window renders the world with MSAA at 4x (D-677). The project file and each viewport that renders
     /// the world read the one constant.
     /// </summary>
