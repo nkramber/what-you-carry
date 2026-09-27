@@ -1,3 +1,41 @@
+## Session 295: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-77, reviewer. Branch `feat/pr-77-light-and-edges`. PR #118, ready for owner merge. Effective head `ce02802`.
+
+### What this session did, and why
+
+- Re-reviewed PR #118 after session 294 added the raw Deck frame logs and the response file.
+- Verified the exit test 2 frame threshold and transition in all three logs. The measurements pass D-683.
+- Read the code diff, tests, project contracts, documents, and PR comments. No code defect remains.
+- Updated `docs/reviews/pr-118.md` to approve the effective head.
+
+### State of the build
+
+- Effective head: `ce02802`. The five later commits change only paths in the skip set of D-475.
+- The code checks passed on `9acf45d`, including CI, Smoke, Bit identity, Bots, Asset QA, determinism lint, doc gate, night gate, and STE check.
+- At `6e00a68`, the metadata checks passed, and Gitar approved the code. `evaluate` and `review-gate` still read the earlier `Blocked` verdict.
+- Remote head: the metadata commit of this entry on `feat/pr-77-light-and-edges`.
+
+### In flight
+
+- The review record and this handoff need fresh `evaluate` and `review-gate` results after publication.
+- The owner reads the review and confirms the merge summary before the merge.
+
+### Traps and gotchas
+
+- The effective head stays `ce02802`, because later commits changed only review metadata.
+- The code, smoke, bot, and bit-identity checks skip a documents-only tip. Their result at `9acf45d` covers the unchanged code.
+- Each Deck frame log holds microseconds, one frame per line. The exit test drops frames at 10 seconds or earlier.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner reads the review, confirms the merge summary of D-533, and then merges PR #118.
+
 # Session handoff
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
@@ -320,35 +358,3 @@ None for PR-91.
 ### Next concrete action
 
 After the merge, the next session continues the open findings of D-596, which wait for OQ-195, OQ-196, OQ-199 to OQ-201, a PR-31 decision, or the Deck.
-
-## Session 285: 2026-09-27, Codex
-
-Author: Codex
-Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
-
-### What this session did, and why
-
-- Completed review round 5 at effective head `db8b3c8`. P2-2 and P2-3 are fixed, and their focused tests pass.
-- Reviewed the mesh wrapper correction F-177 and the PR comments. Updated `docs/reviews/pr-109.md` to `Ready for owner merge`.
-- The 20 focused `NightFixerTests` passed. Two hundred headless smoke sessions under eight busy processes also passed.
-
-### State of the build
-
-- Remote metadata head: `e97c381`. The reviewed code head is `db8b3c8`. Fresh checks passed for Gitar, evaluate, review-gate, asset-qa, det-lint, ste-check, documents, doc-gate, and night-gate. CI, Smoke, bit identity, and bot jobs skipped under the documents-only rule.
-
-### In flight
-
-- A metadata update records the push result. Fresh document checks and the Gitar wait follow that push.
-
-### Traps and gotchas
-
-- The worktree is detached. Compare its pushed commit with the PR head; the local status has no branch or ahead count.
-- The reviewer does not answer comments or merge the PR.
-
-### Open questions that block progress
-
-None for PR-109.
-
-### Next concrete action
-
-Push the metadata update, wait for fresh checks and Gitar, then give the owner the merge summary and request merge confirmation.

@@ -1,5 +1,37 @@
 # Session handoff archive
 
+## Session 285: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Completed review round 5 at effective head `db8b3c8`. P2-2 and P2-3 are fixed, and their focused tests pass.
+- Reviewed the mesh wrapper correction F-177 and the PR comments. Updated `docs/reviews/pr-109.md` to `Ready for owner merge`.
+- The 20 focused `NightFixerTests` passed. Two hundred headless smoke sessions under eight busy processes also passed.
+
+### State of the build
+
+- Remote metadata head: `e97c381`. The reviewed code head is `db8b3c8`. Fresh checks passed for Gitar, evaluate, review-gate, asset-qa, det-lint, ste-check, documents, doc-gate, and night-gate. CI, Smoke, bit identity, and bot jobs skipped under the documents-only rule.
+
+### In flight
+
+- A metadata update records the push result. Fresh document checks and the Gitar wait follow that push.
+
+### Traps and gotchas
+
+- The worktree is detached. Compare its pushed commit with the PR head; the local status has no branch or ahead count.
+- The reviewer does not answer comments or merge the PR.
+
+### Open questions that block progress
+
+None for PR-109.
+
+### Next concrete action
+
+Push the metadata update, wait for fresh checks and Gitar, then give the owner the merge summary and request merge confirmation.
+
 ## Session 284: 2026-09-27, Claude Code
 
 Author: Claude Code
