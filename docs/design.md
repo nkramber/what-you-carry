@@ -413,9 +413,9 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-187 | Three process rules disagreed: who applies the override label, a session that changes nothing, and the unit of the three-strike count (RR-P3-23(a), (c), (d)) | 2026-09-24 | ✅ PR #116 (PR-92): D-652, D-650, and D-651, and the markers on D-146, D-188, D-190, D-513, and D-514 |
 | F-188 | Dependabot security updates and secret scanning were off on the public repository (RR-P3-14) | 2026-09-24 | ✅ PR #116 (PR-92): each setting is on (D-657) |
 | F-189 | `AGENTS.md` held 14980 of its 15000 bytes, so a rule change had no room (RR-P3-26) | 2026-09-24 | ✅ PR #116 (PR-92): the Godot sessions move to `docs/runbooks/commands.md`, and the file holds about 14600 bytes |
-| F-190 | On the Deck in desktop mode, over SSH, a frame of 18 to 19 ms comes every 2.245 seconds, also in an empty scene, so the game code does not cause it | 2026-09-27 | ⚠ PR-77: exit test 2 excludes it (D-683). A check in Game Mode is open |
-| F-191 | The bot run on the Deck has frames of 26 to 30 ms after the first 10 seconds, on `main` too. The Godot build compiled no optimization, and a path search took 18 ms | 2026-09-27 | ✅ PR-77: every configuration builds optimized code (D-683, D-685). After the first 10 seconds, the Deck p99 is 11.7 to 11.9 ms |
-| F-192 | The floor transition takes 31 to 40 ms on the Deck, over the budget of 22222 microseconds of D-635. The meshes of the enemies of the new floor took 16.7 ms in one tick | 2026-09-27 | ✅ PR-77: each enemy tree shares the meshes of a template, and the transition takes 19.9 to 20.3 ms (D-683) |
+| F-190 | On the Deck in desktop mode, over SSH, a frame of 18 to 19 ms comes every 2.245 seconds, also in an empty scene, so the game code does not cause it | 2026-09-27 | ⚠ PR #118 (PR-77): exit test 2 excludes it (D-683). A check in Game Mode is open |
+| F-191 | The bot run on the Deck has frames of 26 to 30 ms after the first 10 seconds, on `main` too. The Godot build compiled no optimization, and a path search took 18 ms | 2026-09-27 | ✅ PR #118 (PR-77): every configuration builds optimized code (D-683, D-685). After the first 10 seconds, the Deck p99 is 11.7 to 11.9 ms |
+| F-192 | The floor transition takes 31 to 40 ms on the Deck, over the budget of 22222 microseconds of D-635. The meshes of the enemies of the new floor took 16.7 ms in one tick | 2026-09-27 | ✅ PR #118 (PR-77): each enemy tree shares the meshes of a template, and the transition takes 19.9 to 20.3 ms (D-683) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -747,9 +747,10 @@ The scavenger of PR-16 gains its own model, traced texel maps, and recipes, and 
 Gate: the clip check and the smoke session pass, and the owner approves a contact sheet of the enemies.
 > *In plain English:* the enemies borrow a first-pass look. This change gives them their own bodies and colors.
 
-**PR-77: Scene light and edge smoothing.** 🔧
-The scene light moves toward the torchlight of D-59, inside the budget of D-81: a lantern that the player carries above and behind the head, and a dark ambient light, with no directional light (D-678, D-680, D-681). The world uses MSAA at 4x, with 2x as the fallback, and nearest filtering with mipmaps (D-677). A frame log on the Deck measures the mode against D-295 (D-504).
-Gate: a frame log on the Deck meets D-295, and the owner approves a contact sheet with the new light.
+**PR-77: Scene light and edge smoothing.** ✅ Done in PR #118.
+The scene light moves toward the torchlight of D-59, inside the budget of D-81: a lantern that the player carries above and behind the head, and a dark ambient light, with no directional light (D-678, D-680, D-681). The world uses MSAA at 4x, and nearest filtering with mipmaps (D-677, D-684). A frame log on the Deck measures the mode against D-295 (D-504).
+The Godot build compiles optimized code (D-685), and each enemy tree shares the meshes of a template, so a descent builds no mesh (F-191, F-192).
+Gate: a frame log on the Deck meets D-683, and the owner approves a contact sheet with the new light.
 > *In plain English:* the light is one flat setting, and block edges look jagged on the Deck. This change adds torchlight and smooth edges inside the frame budget.
 
 **PR-93: Overseer model.** 🔧
@@ -926,7 +927,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 9. ✅ **← GATE 1 (foundation).** Signed 2026-09-11 (D-288). Nothing below starts until the bit-identity job, `dotnet test`, and the night sweep are green. Gate 1 signs after the first scheduled night passes on its own (D-283).
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80. ✅ PR-70 done in PR #81. ✅ PR-66 done in PR #82. ✅ PR-16 done in PR #83. ✅ PR-17 done in PR #84. ✅ PR-18 done in PR #85.
-12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117.
+12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118.
 13. M-3.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.

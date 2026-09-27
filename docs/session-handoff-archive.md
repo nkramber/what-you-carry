@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 282: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-91, author. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- The owner asked for a Pushover notice of a failed night (D-642) and a night fixer on the Mac Mini (D-643 to D-645). Both joined PR #109.
+- The repository secrets `PUSHOVER_USER_KEY` and `PUSHOVER_API_TOKEN` hold the keys, and a test send returned HTTP 200.
+- The auto mode of the harness blocked the fixer build as an unsafe agent. The owner added allow rules to `.claude/settings.local.json` and moved the session to manual mode, then approved each step.
+- This session installed the launchd job `com.whatyoucarry.night-fixer` on the Mac Mini. It runs the poll of `origin/main`, so it does nothing before the merge. A dry run against GitHub read the newest night on `main` as passed.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The code head is `fa435b2`. The full suite passed 1931 of 1931 at `fa435b2` on macOS.
+- Review round 3 approved `69c946a`. The notice and the fixer moved the effective head, so review round 4 is due.
+
+### In flight
+
+- The push of `fa435b2`, the gitar pass, CI, and review round 4.
+
+### Traps and gotchas
+
+- `gh workflow run notify.yml` works only after the merge, because a dispatch needs the workflow on `main`.
+- The night fixer runs `claude -p` with no permission prompts under the account of the owner (D-643). `docs/runbooks/night-fixer.md` holds the stop and the removal.
+
+### Open questions that block progress
+
+None for PR-91.
+
+### Next concrete action
+
+Push, finish the gitar pass and CI, run review round 4, then ask the owner to confirm the merge.
+
 ## Session 281: 2026-09-26, Claude Code
 
 Author: Claude Code

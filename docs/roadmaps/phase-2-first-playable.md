@@ -1467,6 +1467,8 @@ Gate: exit tests 1 to 3 pass.
 
 ### PR-77: Scene light and edge smoothing
 
+✅ Done in PR #118.
+
 Scope:
 
 - The scene light of play and of the contact sheet moves toward the torchlight of D-59, inside the budget of D-81: a lantern that the player carries above and behind the head, and a dark ambient light, with no directional light (D-678, D-680, D-681).
@@ -1572,7 +1574,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ PR-91 done in PR #109. ✅ The owner answers of 2026-09-26: D-618 to D-645. PR-92 holds the second part, with more than one concern (D-646). ✅ PR-92 done in PR #116. ✅ The owner answers of 2026-09-27: D-646 to D-659.
 50. PR-76. ✅ Done in PR #117. The scavenger model, its traced maps, and the model field of its family: D-660 to D-676.
 51. ✅ Owner: answer OQ-181. Resolved 2026-09-27: D-677.
-52. PR-77.
+52. PR-77. ✅ Done in PR #118. The light, the edges, and the frame cost of the Deck: D-677 to D-685.
 53. PR-93. The Overseer model (D-660).
 54. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
 55. Tier 4 pass on the screenshot fixture (D-133).
