@@ -1403,6 +1403,8 @@ Gate: exit tests 1 to 24 pass.
 
 ### PR-92: Repository review fixes, part 3
 
+✅ Done in PR #116.
+
 Scope:
 
 - `NightPublishCheckCommand` and `night.yml`: the publish step reads the record of `main` inside its lease. Each failed seed of that record that this night did not run stays in the record that it writes. A later record takes each new failed seed that its own night did not run (D-648, F-179). Bad inputs of a night write the failure record, and the job fails. The workflow runs in one concurrency group.
@@ -1542,7 +1544,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 46. PR-75. ✅ Done in PR #106. ✅ The owner answers of 2026-09-25: D-586 to D-597.
 47. PR-89. ✅ Done in PR #107. The truecolor atlas (D-595). ✅ The owner answers of 2026-09-25 to OQ-207: D-598 to D-602.
 48. PR-90. ✅ Done in PR #108. The texture resolution (D-595). ✅ The owner answers of 2026-09-26 to OQ-208: D-603 to D-608. The traced maps and the approved sheet: D-612 to D-617.
-49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ PR-91 done in PR #109. ✅ The owner answers of 2026-09-26: D-618 to D-645. PR-92 holds the second part, with more than one concern (D-646). ✅ The owner answers of 2026-09-27: D-646 to D-659.
+49. The open findings of the repository review of 2026-09-24, split into PRs of one concern each (D-596). PR-91 holds the first part, with more than one concern (D-618). ✅ PR-91 done in PR #109. ✅ The owner answers of 2026-09-26: D-618 to D-645. PR-92 holds the second part, with more than one concern (D-646). ✅ PR-92 done in PR #116. ✅ The owner answers of 2026-09-27: D-646 to D-659.
 50. PR-76.
 51. Owner: answer OQ-181.
 52. PR-77.

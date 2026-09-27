@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 277: 2026-09-26, Codex
+
+Author: Codex
+Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
+
+### What this session did, and why
+
+- Reviewed PR #109 at effective head `6b327c9` as the cross-provider reviewer.
+- Found that the run-record reader accepts a CRC field before later header fields, which leaves those fields outside the checksum (D-637).
+- Recorded finding P2-1 and the verdict `Changes required` in `docs/reviews/pr-109.md`.
+
+### State of the build
+
+- Remote `main` is `4a20b82`. The PR code head is `6b327c9`; the review metadata commit is the head of `origin/feat/pr-91-review-fixes` and `gh pr view` confirmed it.
+- Every code check on `6b327c9` passed. After the metadata push, `Gitar`, `asset-qa`, `det-lint`, `doc-gate`, `documents`, `night-gate`, and `ste-check` passed. `evaluate` and `review-gate` failed because P2-1 gives the verdict `Changes required`.
+
+### In flight
+
+- P2-1 needs a correction and a repeat review.
+
+### Traps and gotchas
+
+- `CheckHeaderCrc` checks the bytes before `headerCrc`, but does not check that the CRC is the final field.
+- The existing bit-flip test covers the canonical writer order. Add a reader case with a CRC before a changed trailing field.
+
+### Open questions that block progress
+
+None for this review. OQ-195, OQ-196, and OQ-199 to OQ-201 concern other open findings.
+
+### Next concrete action
+
+Correct P2-1, add its regression test, and request a repeat review of PR #109.
+
 ## Session 276: 2026-09-26, Claude Code
 
 Author: Claude Code

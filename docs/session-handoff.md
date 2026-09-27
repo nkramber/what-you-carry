@@ -2,6 +2,44 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 287: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-92, author. Branch `fix/pr-92-review-fixes`. PR #116, pending merge. Base `e9a89aa`.
+
+### What this session did, and why
+
+- The night fixer log printed "the night 36320653722 passed" at the first poll after the merge of PR #109. No night on `main` failed yet, so exit test 23 of PR-91 still waits for the Pushover notice and a fixer session.
+- The owner report `/Volumes/SSD-1TB/what-you-carry-repository-review.md` was gone from the disk. The session rebuilt it from the full read of session 285 and the marks of PR #109, and restored it at the same path.
+- The owner answered each open question of D-596: D-646 to D-659. PR-92 holds more than one concern (D-646).
+- Code: the night keeps each failed seed and runs two shards of the two long sweeps (D-648, D-655). The override label reads the push time (D-653). The replay cuts a torn tail (D-656). `make claude-review` reviews a PR that Codex writes (D-649). The bot session takes `--policy`.
+- The Deck found F-178: the move stick had no dead zone, and an idle player died at tick 310. D-658 fixes it. The owner read the HUD on the Deck (D-659).
+- The Deck measured, two runs each with the enemies: a transition at 33.1 milliseconds, and the timer expiry at 56.5 and 56.7 (F-184).
+- The session turned on Dependabot alerts, Dependabot security updates, secret scanning, and push protection (D-657).
+
+### State of the build
+
+- Remote `main` is `e9a89aa`. The local suite outside `Smoke` passed 2035 of 2036 tests, and the one STE failure has its fix. `ste-check` is clean.
+
+### In flight
+
+- The CI of PR #116, the gitar pass, then `make codex-review PR=116`.
+- The first night on `main` after the merge runs eight sweep jobs (exit test 3). A later session records it.
+
+### Traps and gotchas
+
+- `pkill -f` over SSH matches its own command line when the pattern is in it. Run a Deck script from a file.
+- GitHub makes a check suite for the last commit of each push alone, so D-653 reads the suites from the work head to the PR head.
+- Each review command now refuses a PR whose author entries do not name the other provider.
+
+### Open questions that block progress
+
+None for PR-92.
+
+### Next concrete action
+
+Finish the review loop of PR #116. The frame costs of F-184 wait for M-3 and PR-77.
+
 ## Session 286: 2026-09-27, Claude Code
 
 Author: Claude Code
@@ -296,36 +334,3 @@ None for PR-91.
 ### Next concrete action
 
 Push, finish the gitar pass, wait for CI, and run review round 2.
-
-## Session 277: 2026-09-26, Codex
-
-Author: Codex
-Session: PR-91, reviewer. Branch `feat/pr-91-review-fixes`. PR #109, pending merge. Base `4a20b82`.
-
-### What this session did, and why
-
-- Reviewed PR #109 at effective head `6b327c9` as the cross-provider reviewer.
-- Found that the run-record reader accepts a CRC field before later header fields, which leaves those fields outside the checksum (D-637).
-- Recorded finding P2-1 and the verdict `Changes required` in `docs/reviews/pr-109.md`.
-
-### State of the build
-
-- Remote `main` is `4a20b82`. The PR code head is `6b327c9`; the review metadata commit is the head of `origin/feat/pr-91-review-fixes` and `gh pr view` confirmed it.
-- Every code check on `6b327c9` passed. After the metadata push, `Gitar`, `asset-qa`, `det-lint`, `doc-gate`, `documents`, `night-gate`, and `ste-check` passed. `evaluate` and `review-gate` failed because P2-1 gives the verdict `Changes required`.
-
-### In flight
-
-- P2-1 needs a correction and a repeat review.
-
-### Traps and gotchas
-
-- `CheckHeaderCrc` checks the bytes before `headerCrc`, but does not check that the CRC is the final field.
-- The existing bit-flip test covers the canonical writer order. Add a reader case with a CRC before a changed trailing field.
-
-### Open questions that block progress
-
-None for this review. OQ-195, OQ-196, and OQ-199 to OQ-201 concern other open findings.
-
-### Next concrete action
-
-Correct P2-1, add its regression test, and request a repeat review of PR #109.
