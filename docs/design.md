@@ -745,7 +745,7 @@ Gate: the clip check and the smoke session pass, and the owner approves a contac
 > *In plain English:* the enemies borrow a first-pass look. This change gives them their own bodies and colors.
 
 **PR-77: Scene light and edge smoothing.** 🔧
-The scene light moves toward the torchlight of D-59, inside the budget of D-81: a lantern that the player carries, and a dark ambient light, with no directional light (D-678, D-679). The world uses MSAA at 4x, with 2x as the fallback, and nearest filtering with mipmaps (D-677). A frame log on the Deck measures the mode against D-295 (D-504).
+The scene light moves toward the torchlight of D-59, inside the budget of D-81: a lantern that the player carries above and behind the head, and a dark ambient light, with no directional light (D-678, D-680, D-681). The world uses MSAA at 4x, with 2x as the fallback, and nearest filtering with mipmaps (D-677). A frame log on the Deck measures the mode against D-295 (D-504).
 Gate: a frame log on the Deck meets D-295, and the owner approves a contact sheet with the new light.
 > *In plain English:* the light is one flat setting, and block edges look jagged on the Deck. This change adds torchlight and smooth edges inside the frame budget.
 
