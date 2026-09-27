@@ -52,9 +52,15 @@ public static class CodexReviewSettings
     /// <summary>The prompt that the owner typed in the desktop app, with the two facts of an automated start (D-511).</summary>
     public static string ReviewPrompt(int pullRequestNumber, string branch)
     {
+        return ReviewPromptOf(pullRequestNumber, branch, "codex-review");
+    }
+
+    /// <summary>The review prompt of a review command. The make target that started the review is the one difference (D-649).</summary>
+    public static string ReviewPromptOf(int pullRequestNumber, string branch, string makeTarget)
+    {
         return $"Review PR #{pullRequestNumber}.\n"
             + $"Load and follow `{ReviewSkillPath}`.\n"
-            + "The command `make codex-review` started this review in a detached worktree at the PR head.\n"
+            + $"The command `make {makeTarget}` started this review in a detached worktree at the PR head.\n"
             + $"Push the review record and your session handoff entry as one metadata commit (D-182) with `git push origin HEAD:{branch}`.\n";
     }
 

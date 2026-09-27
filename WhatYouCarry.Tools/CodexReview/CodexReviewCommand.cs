@@ -10,51 +10,61 @@ namespace WhatYouCarry.Tools.CodexReview;
 /// <summary>The facts of a PR that <c>gh pr view</c> gives.</summary>
 public sealed record PullRequestView(string State, string Branch, string Head, string BaseBranch);
 
-/// <summary>The options of one run. <see cref="SkipGitarReview"/> drops the Gitar start checks alone (D-543).</summary>
-public sealed record CodexReviewOptions(string Root, int PullRequest, string Codex, bool SkipGitarReview);
+/// <summary>
+/// The options of one run. <see cref="Cli"/> is the path of the reviewer CLI. <see cref="SkipGitarReview"/> drops
+/// the Gitar start checks alone (D-543).
+/// </summary>
+public sealed record CodexReviewOptions(string Root, int PullRequest, string Cli, bool SkipGitarReview);
 
 /// <summary>
-/// <c>codex-review --root . --pr &lt;n&gt; --codex &lt;path&gt;</c> (D-511). The command checks the start conditions,
-/// probes the model, runs one Codex review round in a detached worktree at the PR head, and judges the review
-/// record that the round pushed. The exit code names the outcome (<see cref="CodexReviewExit"/>).
+/// <c>codex-review --root . --pr &lt;n&gt; --codex &lt;path&gt;</c> (D-511) and
+/// <c>claude-review --root . --pr &lt;n&gt; --claude &lt;path&gt;</c> (D-649). The command checks the start
+/// conditions, probes the model, runs one review round of the reviewer CLI (<see cref="IReviewer"/>) in a detached
+/// worktree at the PR head, and judges the review record that the round pushed. The exit code names the outcome
+/// (<see cref="CodexReviewExit"/>).
 /// </summary>
 public static class CodexReviewCommand
 {
     public const string SkipGitarReviewFlag = "--skip-gitar-review";
-    public const string Usage = "Options: --root <path> --pr <number> --codex <path> [--skip-gitar-review].";
     public const string GitarApp = "gitar-bot";
     public const string GitarLogin = "gitar-bot[bot]";
     public const string DashboardMarker = "<b>Code Review</b>";
 
-    public static int Run(string[] args)
+    public static string Usage(IReviewer reviewer)
     {
-        CodexReviewOptions? options = ParseOptions(args, out string usageProblem);
+        return $"Options: --root <path> --pr <number> {reviewer.CliOption} <path> [{SkipGitarReviewFlag}].";
+    }
+
+    public static int Run(string[] args, IReviewer reviewer)
+    {
+        CodexReviewOptions? options = ParseOptions(args, reviewer, out string usageProblem);
         if (options is null)
         {
-            Console.Error.WriteLine($"{usageProblem} {Usage}");
+            Console.Error.WriteLine($"{usageProblem} {Usage(reviewer)}");
             return 2;
         }
 
         try
         {
-            return (int)Review(Path.GetFullPath(options.Root), options.PullRequest, options.Codex, options.SkipGitarReview);
+            return (int)Review(reviewer, Path.GetFullPath(options.Root), options.PullRequest, options.Cli, options.SkipGitarReview);
         }
         catch (Exception exception) when (exception is InvalidOperationException or FormatException or IOException or JsonException)
         {
-            Console.Error.WriteLine($"codex-review: {CodexReviewExit.Fault} (exit {(int)CodexReviewExit.Fault}). {exception.Message}");
+            Console.Error.WriteLine($"{reviewer.CommandName}: {CodexReviewExit.Fault} (exit {(int)CodexReviewExit.Fault}). {exception.Message}");
             return (int)CodexReviewExit.Fault;
         }
     }
 
     /// <summary>
     /// Reads the options. Each option takes one value, except the flag <see cref="SkipGitarReviewFlag"/>, which takes
-    /// none. Returns null, with the problem, on an unknown option, a missing value, or a PR that is not a whole number.
+    /// none. The option of the CLI is the one of the reviewer, such as <c>--codex</c>. Returns null, with the problem,
+    /// on an unknown option, a missing value, or a PR that is not a whole number.
     /// </summary>
-    public static CodexReviewOptions? ParseOptions(IReadOnlyList<string> args, out string problem)
+    public static CodexReviewOptions? ParseOptions(IReadOnlyList<string> args, IReviewer reviewer, out string problem)
     {
         string? root = null;
         string? pullRequestText = null;
-        string? codex = null;
+        string? cli = null;
         bool skipGitarReview = false;
         int i = 0;
         while (i < args.Count)
@@ -67,7 +77,7 @@ public static class CodexReviewCommand
                 continue;
             }
 
-            if (option is not ("--root" or "--pr" or "--codex"))
+            if (option != "--root" && option != "--pr" && option != reviewer.CliOption)
             {
                 problem = $"Unknown option '{option}'.";
                 return null;
@@ -80,59 +90,67 @@ public static class CodexReviewCommand
             }
 
             string value = args[i + 1];
-            switch (option)
+            if (option == "--root")
             {
-                case "--root":
-                    root = value;
-                    break;
-                case "--pr":
-                    pullRequestText = value;
-                    break;
-                case "--codex":
-                    codex = value;
-                    break;
+                root = value;
+            }
+            else if (option == "--pr")
+            {
+                pullRequestText = value;
+            }
+            else
+            {
+                cli = value;
             }
 
             i += 2;
         }
 
-        if (root is null || codex is null || !int.TryParse(pullRequestText, NumberStyles.None, CultureInfo.InvariantCulture, out int pullRequest))
+        if (root is null || cli is null || !int.TryParse(pullRequestText, NumberStyles.None, CultureInfo.InvariantCulture, out int pullRequest))
         {
-            problem = $"Each of --root, --pr, and --codex needs a value, and --pr needs a whole number. Found --pr '{pullRequestText}'.";
+            problem = $"Each of --root, --pr, and {reviewer.CliOption} needs a value, and --pr needs a whole number. Found --pr '{pullRequestText}'.";
             return null;
         }
 
         problem = string.Empty;
-        return new CodexReviewOptions(root, pullRequest, codex, skipGitarReview);
+        return new CodexReviewOptions(root, pullRequest, cli, skipGitarReview);
     }
 
-    private static CodexReviewExit Review(string root, int pullRequest, string codex, bool skipGitarReview)
+    private static CodexReviewExit Review(IReviewer reviewer, string root, int pullRequest, string cli, bool skipGitarReview)
     {
         var git = new GitRepository(root);
         ProcessResult versionResult;
         try
         {
-            versionResult = ExternalProcess.Run(codex, ["--version"], root, CodexReviewSettings.ApiCredentialVariables);
+            versionResult = ExternalProcess.Run(cli, ["--version"], root, reviewer.CredentialVariables);
         }
         catch (InvalidOperationException exception)
         {
-            return Refuse(pullRequest, [$"The Codex CLI is missing. {exception.Message}. Run `npm install -g @openai/codex@latest` (D-512)."]);
+            return Refuse(reviewer, pullRequest, [reviewer.MissingCliProblem(exception.Message)]);
         }
 
-        CodexVersion version = CodexVersion.Parse(versionResult.RequireSuccess());
+        string versionOutput = versionResult.RequireSuccess();
+        string version = reviewer.VersionText(versionOutput);
         PullRequestView view = ReadPullRequest(root, pullRequest);
         if (view.State != StartChecks.OpenState)
         {
             // GitHub can delete the branch of a closed PR, so the refusal comes before the fetch.
-            return Refuse(pullRequest, [StartChecks.NotOpenProblem(pullRequest, view.State)]);
+            return Refuse(reviewer, pullRequest, [StartChecks.NotOpenProblem(pullRequest, view.State)]);
         }
 
-        string loginStatus = CodexReviewSettings.LoginStatusText(ExternalProcess.Run(codex, CodexReviewSettings.LoginStatusArguments, root, CodexReviewSettings.ApiCredentialVariables));
-        StartFacts facts = GatherStartFacts(root, git, pullRequest, view, version, loginStatus, skipGitarReview);
-        var problems = new List<string>(StartChecks.Problems(facts, skipGitarReview));
+        ProcessResult loginStatus = ExternalProcess.Run(cli, reviewer.LoginStatusArguments, root, reviewer.CredentialVariables);
+        StartFacts facts = GatherStartFacts(root, git, pullRequest, view, skipGitarReview);
+        var problems = new List<string>(reviewer.CliProblems(versionOutput, loginStatus));
+        problems.AddRange(StartChecks.Problems(facts, skipGitarReview));
+        string? providerProblem = ProviderGate.Problem(git.ReadFileOrNull(facts.OriginHead, ProviderGate.HandoffPath), view.Branch, reviewer.PullRequestAuthor);
+        if (providerProblem is not null)
+        {
+            problems.Add(providerProblem);
+        }
+
         if (problems.Count == 0)
         {
-            string? probeProblem = ProbeModel(codex);
+            string? probeProblem = ProbeModel(reviewer, cli);
             if (probeProblem is not null)
             {
                 problems.Add(probeProblem);
@@ -141,32 +159,43 @@ public static class CodexReviewCommand
 
         if (problems.Count > 0)
         {
-            return Refuse(pullRequest, problems);
+            return Refuse(reviewer, pullRequest, problems);
         }
 
         // The start checks refuse a PR with no effective head, and a PR with an effective head has a work head too.
         string effectiveBefore = facts.EffectiveHead ?? throw new InvalidOperationException($"PR #{pullRequest} passed the start checks with no effective head.");
         string workBefore = facts.WorkHead ?? throw new InvalidOperationException($"PR #{pullRequest} passed the start checks with no work head.");
-        string workDirectory = Path.Combine(Path.GetTempPath(), "wyc-codex-review", $"pr-{pullRequest}-{DateTimeOffset.UtcNow:yyyyMMddTHHmmssZ}");
+        string workDirectory = Path.Combine(Path.GetTempPath(), $"wyc-{reviewer.CommandName}", $"pr-{pullRequest}-{DateTimeOffset.UtcNow:yyyyMMddTHHmmssZ}");
         Directory.CreateDirectory(workDirectory);
         string worktree = Path.Combine(workDirectory, "worktree");
         string transcript = Path.Combine(workDirectory, "transcript.jsonl");
-        string errorLog = Path.Combine(workDirectory, "codex-stderr.txt");
+        string errorLog = Path.Combine(workDirectory, $"{reviewer.CliName}-stderr.txt");
         string lastMessage = Path.Combine(workDirectory, "last-message.md");
         git.Run(["worktree", "add", "--detach", worktree, facts.OriginHead]);
-        Console.WriteLine($"codex-review: PR #{pullRequest}, effective head {effectiveBefore}, model {CodexReviewSettings.Model} at effort {CodexReviewSettings.ReasoningEffort}, CLI {version}.");
+        Console.WriteLine($"{reviewer.CommandName}: PR #{pullRequest}, effective head {effectiveBefore}, {reviewer.ModelText}, CLI {version}.");
         if (skipGitarReview)
         {
-            Console.WriteLine($"codex-review: {SkipGitarReviewFlag} skipped the Gitar check run and the dashboard. The unresolved thread check ran (D-543).");
+            Console.WriteLine($"{reviewer.CommandName}: {SkipGitarReviewFlag} skipped the Gitar check run and the dashboard. The unresolved thread check ran (D-543).");
         }
 
         Console.WriteLine($"Transcript: {transcript}");
 
-        IReadOnlyList<string> arguments = CodexReviewSettings.ReviewArguments(worktree, lastMessage, CodexReviewSettings.ReviewPrompt(pullRequest, view.Branch));
-        int codexExit = ExternalProcess.RunToFiles(codex, arguments, worktree, transcript, errorLog, CodexReviewSettings.ApiCredentialVariables, ProcessLimit.Review);
-        if (codexExit != 0)
+        IReadOnlyList<string> arguments = reviewer.ReviewArguments(worktree, lastMessage, pullRequest, view.Branch);
+        int reviewExit = ExternalProcess.RunToFiles(cli, arguments, worktree, transcript, errorLog, reviewer.CredentialVariables, ProcessLimit.Review);
+        if (reviewExit != 0)
         {
-            Console.Error.WriteLine($"codex-review: {CodexReviewExit.Fault} (exit {(int)CodexReviewExit.Fault}). Codex exited {codexExit}. Read the transcript {transcript} and the log {errorLog}. The worktree stays at {worktree}.");
+            Console.Error.WriteLine($"{reviewer.CommandName}: {CodexReviewExit.Fault} (exit {(int)CodexReviewExit.Fault}). {reviewer.ProviderName} exited {reviewExit}. Read the transcript {transcript} and the log {errorLog}. The worktree stays at {worktree}.");
+            return CodexReviewExit.Fault;
+        }
+
+        try
+        {
+            reviewer.SaveLastMessage(transcript, lastMessage);
+        }
+        catch (FormatException exception)
+        {
+            // A transcript with no last message is a fault, and the worktree stays for the diagnosis (D-649).
+            Console.Error.WriteLine($"{reviewer.CommandName}: {CodexReviewExit.Fault} (exit {(int)CodexReviewExit.Fault}). {exception.Message} The worktree stays at {worktree}.");
             return CodexReviewExit.Fault;
         }
 
@@ -174,7 +203,7 @@ public static class CodexReviewCommand
         FetchBranch(git, view.Branch);
         FetchBranch(git, view.BaseBranch);
         ReviewOutcome outcome = JudgeRound(git, pullRequest, view, facts.OriginHead, workBefore);
-        Print(outcome, effectiveBefore, transcript, lastMessage);
+        Print(reviewer, outcome, effectiveBefore, transcript, lastMessage);
         return outcome.Exit;
     }
 
@@ -240,7 +269,7 @@ public static class CodexReviewCommand
     /// Reads the start facts once. <paramref name="skipGitarReview"/> leaves the Gitar check runs and the dashboard
     /// unread, because the start checks then do not judge them (D-543, F-125).
     /// </summary>
-    private static StartFacts GatherStartFacts(string root, GitRepository git, int pullRequest, PullRequestView view, CodexVersion version, string loginStatus, bool skipGitarReview)
+    private static StartFacts GatherStartFacts(string root, GitRepository git, int pullRequest, PullRequestView view, bool skipGitarReview)
     {
         FetchBranch(git, view.Branch);
         FetchBranch(git, view.BaseBranch);
@@ -266,8 +295,6 @@ public static class CodexReviewCommand
         return new StartFacts
         {
             PullRequestNumber = pullRequest,
-            Version = version,
-            LoginStatus = loginStatus,
             PullRequestState = view.State,
             PullRequestBranch = view.Branch,
             PullRequestHead = view.Head,
@@ -366,24 +393,22 @@ public static class CodexReviewCommand
         return unresolved;
     }
 
-    /// <summary>One short call with the model of the review. Returns null when the model answers, or the problem with the output.</summary>
-    private static string? ProbeModel(string codex)
+    /// <summary>
+    /// One short call with the model of the review, in a new directory outside any repository. Returns null when the
+    /// model answers, or the problem with the output.
+    /// </summary>
+    private static string? ProbeModel(IReviewer reviewer, string cli)
     {
-        string directory = Path.Combine(Path.GetTempPath(), "wyc-codex-probe-" + Guid.NewGuid().ToString("N"));
+        string directory = Path.Combine(Path.GetTempPath(), $"wyc-{reviewer.CliName}-probe-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
-        ProcessResult result = ExternalProcess.Run(codex, CodexReviewSettings.ProbeArguments(directory), directory, CodexReviewSettings.ApiCredentialVariables);
+        ProcessResult result = ExternalProcess.Run(cli, reviewer.ProbeArguments(directory), directory, reviewer.CredentialVariables);
         Directory.Delete(directory, recursive: true);
-        if (result.ExitCode == 0 && result.StandardOutput.Contains("agent_message", StringComparison.Ordinal))
-        {
-            return null;
-        }
-
-        return $"The model probe of '{CodexReviewSettings.Model}' failed with exit {result.ExitCode} (D-512). stdout: {result.StandardOutput.Trim()} stderr: {result.StandardError.Trim()}";
+        return reviewer.ProbeProblem(result);
     }
 
-    private static CodexReviewExit Refuse(int pullRequest, IReadOnlyList<string> problems)
+    private static CodexReviewExit Refuse(IReviewer reviewer, int pullRequest, IReadOnlyList<string> problems)
     {
-        Console.Error.WriteLine($"codex-review: {CodexReviewExit.Refused} (exit {(int)CodexReviewExit.Refused}). PR #{pullRequest} does not meet the start conditions:");
+        Console.Error.WriteLine($"{reviewer.CommandName}: {CodexReviewExit.Refused} (exit {(int)CodexReviewExit.Refused}). PR #{pullRequest} does not meet the start conditions:");
         foreach (string problem in problems)
         {
             Console.Error.WriteLine($"- {problem}");
@@ -407,9 +432,9 @@ public static class CodexReviewCommand
         return value.GetString() ?? throw new FormatException($"gh pr view {pullRequest} gave a null '{property}'.");
     }
 
-    private static void Print(ReviewOutcome outcome, string effectiveHead, string transcript, string lastMessage)
+    private static void Print(IReviewer reviewer, ReviewOutcome outcome, string effectiveHead, string transcript, string lastMessage)
     {
-        Console.WriteLine($"codex-review: {outcome.Exit} (exit {(int)outcome.Exit}).");
+        Console.WriteLine($"{reviewer.CommandName}: {outcome.Exit} (exit {(int)outcome.Exit}).");
         Console.WriteLine($"Verdict: {outcome.Verdict}");
         Console.WriteLine($"Effective head: {effectiveHead}");
         Console.WriteLine($"Open findings: {JoinOrNone(outcome.OpenFindingIds)}");

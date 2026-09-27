@@ -334,9 +334,6 @@ public sealed class CodexReviewTests
     {
         return new TheoryData<string, string>
         {
-            { "old-cli", "minimum is 0.156.1" },
-            { "api-login", "never uses API pricing" },
-            { "no-login", "never uses API pricing" },
             { "closed", "is MERGED" },
             { "other-branch", "The checkout is on 'main'" },
             { "local-ahead", "differs from origin" },
@@ -358,9 +355,6 @@ public sealed class CodexReviewTests
         DateTimeOffset started = GitarStart;
         StartFacts facts = change switch
         {
-            "old-cli" => With(good, version: CodexVersion.Parse("codex-cli 0.155.0-alpha.9.2")),
-            "api-login" => With(good, loginStatus: "Logged in using an API key - sk-proj-***\n"),
-            "no-login" => With(good, loginStatus: "Not logged in\n"),
             "closed" => With(good, state: "MERGED"),
             "other-branch" => With(good, localBranch: "main"),
             "local-ahead" => With(good, localHead: "3333333333333333333333333333333333333333"),
@@ -375,6 +369,25 @@ public sealed class CodexReviewTests
         };
 
         IReadOnlyList<string> problems = StartChecks.Problems(facts, skipGitarReview: false);
+
+        string problem = Assert.Single(problems);
+        Assert.Contains(expected, problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheCodexCliChecksPassForTheMinimumAndAChatGptLogin()
+    {
+        Assert.Empty(new CodexReviewer().CliProblems("codex-cli 0.156.1\n", StderrResult("Logged in using ChatGPT\n")));
+    }
+
+    [Theory]
+    [InlineData("codex-cli 0.155.0-alpha.9.2", "Logged in using ChatGPT\n", "minimum is 0.156.1")]
+    [InlineData("codex-cli 0.156.1", "Logged in using an API key - sk-proj-***\n", "never uses API pricing")]
+    [InlineData("codex-cli 0.156.1", "Not logged in\n", "never uses API pricing")]
+    public void TheCodexCliChecksRefuseAnOldCliOrAnotherLogin(string versionOutput, string loginStatus, string expected)
+    {
+        // D-512, D-523: the CLI checks moved from the shared start checks to the Codex reviewer (D-649).
+        IReadOnlyList<string> problems = new CodexReviewer().CliProblems(versionOutput, StderrResult(loginStatus));
 
         string problem = Assert.Single(problems);
         Assert.Contains(expected, problem, StringComparison.Ordinal);
@@ -418,7 +431,13 @@ public sealed class CodexReviewTests
 
         Assert.Equal(string.Empty, result.StandardOutput);
         Assert.StartsWith(CodexReviewSettings.ChatGptLoginStatus, CodexReviewSettings.LoginStatusText(result), StringComparison.Ordinal);
-        Assert.Empty(StartChecks.Problems(With(GoodFacts(), loginStatus: CodexReviewSettings.LoginStatusText(result)), skipGitarReview: false));
+        Assert.Empty(new CodexReviewer().CliProblems("codex-cli 0.156.1", result));
+    }
+
+    /// <summary>The result of <c>codex login status</c>, which writes its status line to stderr.</summary>
+    private static ProcessResult StderrResult(string standardError)
+    {
+        return new ProcessResult("codex login status", "/tmp", 0, string.Empty, standardError);
     }
 
     /// <summary>The environment that a child process prints, with the removed variables.</summary>
@@ -557,13 +576,14 @@ public sealed class CodexReviewTests
     [Fact]
     public void TheSkipFlagKeepsEveryOtherCheck()
     {
-        // D-543: the flag drops the Gitar checks alone. A dirty tree and an old CLI still refuse the round.
-        StartFacts facts = With(GoodFacts(), version: CodexVersion.Parse("codex-cli 0.155.0"), status: " M Makefile\n", gitarChecks: []);
+        // D-543: the flag drops the Gitar checks alone. A dirty tree and an open thread still refuse the round. The
+        // CLI checks do not read the flag at all (D-649).
+        StartFacts facts = With(GoodFacts(), status: " M Makefile\n", gitarChecks: [], unresolved: 1);
 
         IReadOnlyList<string> problems = StartChecks.Problems(facts, skipGitarReview: true);
 
         Assert.Equal(2, problems.Count);
-        Assert.Contains(problems, problem => problem.Contains("minimum is 0.156.1", StringComparison.Ordinal));
+        Assert.Contains(problems, problem => problem.Contains("1 unresolved review thread(s)", StringComparison.Ordinal));
         Assert.Contains(problems, problem => problem.Contains("The working tree is dirty", StringComparison.Ordinal));
     }
 
@@ -575,7 +595,7 @@ public sealed class CodexReviewTests
     public void TheOptionsReadTheSkipFlagInAnyPlace(string[] args, bool skip)
     {
         // D-543: `make codex-review PR=<n> -- --skip-gitar-review` puts the flag after the three options.
-        CodexReviewOptions? options = CodexReviewCommand.ParseOptions(args, out string problem);
+        CodexReviewOptions? options = CodexReviewCommand.ParseOptions(args, new CodexReviewer(), out string problem);
 
         Assert.NotNull(options);
         Assert.Equal(string.Empty, problem);
@@ -589,7 +609,7 @@ public sealed class CodexReviewTests
     [InlineData(new[] { "--root", ".", "--codex", "codex", "--skip-gitar-review" }, "Found --pr ''.")]
     public void TheOptionsRefuseAnUnknownOrIncompleteForm(string[] args, string expected)
     {
-        CodexReviewOptions? options = CodexReviewCommand.ParseOptions(args, out string problem);
+        CodexReviewOptions? options = CodexReviewCommand.ParseOptions(args, new CodexReviewer(), out string problem);
 
         Assert.Null(options);
         Assert.Contains(expected, problem, StringComparison.Ordinal);
@@ -636,8 +656,6 @@ public sealed class CodexReviewTests
         return new StartFacts
         {
             PullRequestNumber = 93,
-            Version = CodexVersion.Parse("codex-cli 0.156.1"),
-            LoginStatus = "Logged in using ChatGPT\n",
             PullRequestState = "OPEN",
             PullRequestBranch = "feat/pr-78-codex-review",
             PullRequestHead = Head,
@@ -655,8 +673,6 @@ public sealed class CodexReviewTests
 
     private static StartFacts With(
         StartFacts facts,
-        CodexVersion? version = null,
-        string? loginStatus = null,
         string? state = null,
         string? localBranch = null,
         string? localHead = null,
@@ -674,8 +690,6 @@ public sealed class CodexReviewTests
         return new StartFacts
         {
             PullRequestNumber = facts.PullRequestNumber,
-            Version = version ?? facts.Version,
-            LoginStatus = loginStatus ?? facts.LoginStatus,
             PullRequestState = state ?? facts.PullRequestState,
             PullRequestBranch = facts.PullRequestBranch,
             PullRequestHead = pullRequestHead ?? facts.PullRequestHead,
