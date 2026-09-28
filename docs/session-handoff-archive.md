@@ -1,5 +1,44 @@
 # Session handoff archive
 
+## Session 303: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-95, author. Branch `fix/pr-95-seed-2-transition`. PR #122, pending merge. Base `5ca1e1e`.
+
+### What this session did, and why
+
+- Traced the seed 2 transition on the Deck over SSH, after the owner said that the Deck was ready (D-606, G-17). The timing patch stayed out of the branch.
+- The trace named two costs in the tick of the descent (F-193). The dig task of floor 3 started in that tick, and its allocations started a full collection of 4.1 to 5.0 ms there. The enemy trees of floor 2 took 3.2 to 3.5 ms.
+- `e538dd9`: the next call of `ChunkSwap.UploadSome` starts the dig, after the frame log reads the frame. One run in three still missed (24823), with a gen 0 collection inside the tree build.
+- `34c2ddf`: `EnemyNodes` builds the trees of the next floor hidden, one each frame, from the plan that the worker offers. The descent shows them. The swap line gains `digging`, `stagedTrees`, and `builtTrees`.
+- Tests: a source test of the dig start in `TransitionTests`, and the stairwell smoke test asserts `digging:false` and `builtTrees:0`. Both fail on the code of `main`.
+- The M-3 table at `34c2ddf`: seeds 1, 2, 2, 2, 3 meet D-709 and D-635. The transition frame takes 15.7 to 16.4 ms. M-3 and PR-95 are marked done, and PR-13 exit test 7 passes.
+- The raw logs, the traces before and after, and an index are in `docs/reviews/pr-122-deck/`.
+
+### State of the build
+
+- `main` is `5ca1e1e`. The code head is `34c2ddf`. The full suite passed locally, 2110 tests, with `det-lint`, `asset-qa`, and `ste-check` clean.
+
+### In flight
+
+- PR #122: CI, the automated pass, then `make codex-review`.
+- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start by 14:05 UTC. Its record on `night-results` must name each sweep once, over eight sweep jobs.
+
+### Traps and gotchas
+
+- A timing patch that writes lines or makes strings in the frames moves the collector, and the first console write cost 3.3 ms. Keep the numbers in fixed arrays, and write them later (runbook, "The Deck runs").
+- On seed 2 the end line `transitionMicrosMax` is the F-190 stall at frame 2019, inside the window. Read the transition frame in the frame log.
+- The Deck went to sleep once during the session. `systemd-inhibit` over SSH needs interactive authentication.
+- `timeout` does not exist on the Mac. zsh does not split `set -- $p`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
+
 ## Session 302: 2026-09-28, Claude Code
 
 Author: Claude Code
