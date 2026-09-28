@@ -76,6 +76,24 @@ public sealed class ModelFadeTests
     }
 
     /// <summary>
+    /// PR-97 regression: the reach is the straight distance to the nearest point of the body box, and not the distance on
+    /// each axis. A box 0.9 meters off the camera on X and on Z, and 0.4 under it, is 1.33 meters away at its corner, so it stays whole. A box
+    /// grown by the reach on each axis holds the camera, and fades it.
+    /// </summary>
+    [Fact]
+    public void TheReachIsAStraightDistance()
+    {
+        // The box spans x = 1.8 to 2.4 and z = 3.9 to 4.5: 0.9 past the camera on each axis, and away from the segment.
+        Aabb corner = ModelFade.BodyBox(new Vector3(2.1f, 0.0f, 4.2f));
+        Assert.True(corner.Grow(ModelFade.CameraReach).HasPoint(Camera));
+        Assert.False(ModelFade.Fades(Camera, FadeEnd, corner));
+
+        // At 0.6 on X and on Z the corner is 0.94 away, inside the reach.
+        Aabb near = ModelFade.BodyBox(new Vector3(1.8f, 0.0f, 3.9f));
+        Assert.True(ModelFade.Fades(Camera, FadeEnd, near));
+    }
+
+    /// <summary>
     /// The fade shader keeps the pixels of the Bayer pattern of the wall fade at or under the kept part, and samples the
     /// model atlas as the model material does (D-85, D-632, D-677, D-721).
     /// </summary>

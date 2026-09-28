@@ -29,7 +29,7 @@ public static class ModelFade
     // The name pattern of the node search that matches every node. The type filter selects the meshes.
     private const string EveryName = "*";
 
-    /// <summary>The distance from the drawn camera to a body box at which the model fades, in meters (D-721).</summary>
+    /// <summary>The straight distance from the drawn camera to the nearest point of a body box at which the model fades, in meters (D-721).</summary>
     public const float CameraReach = 1.0f;
 
     /// <summary>The material of a faded model: the fade shader with the model atlas, nearest filtering, and mipmaps (D-85, D-677).</summary>
@@ -59,7 +59,10 @@ public static class ModelFade
     /// <param name="box">The body box of the model.</param>
     public static bool Fades(Vector3 camera, Vector3 fadeEnd, Aabb box)
     {
-        if (box.Grow(CameraReach).HasPoint(camera))
+        // The straight distance from the camera to the nearest point of the box, and not the distance on each axis, so
+        // a camera off a corner of the box fades the model at 1.0 meter and not at up to 1.73.
+        Vector3 nearest = camera.Clamp(box.Position, box.End);
+        if (nearest.DistanceSquaredTo(camera) <= CameraReach * CameraReach)
         {
             return true;
         }
