@@ -1,5 +1,36 @@
 # Session handoff archive
 
+## Session 301: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-94, author. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- Completed the gitar pass of the work head `f12021b`: an approval with no finding. The CI note on the absent review record got one reply with D-251.
+- Ran `make codex-review PR=120`. The record gives `Ready for owner merge` for the effective head `f8d06f5`, with no finding (session 300).
+
+### State of the build
+
+- Each check of PR #120 is green, `evaluate` and `review-gate` included, after the metadata commits of the review. Effective head `f8d06f5`, work head `f12021b`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #120 (D-524, D-533).
+- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not run before this entry. The first night after `d5f7e00` runs eight sweep jobs, and its record names each sweep once.
+
+### Traps and gotchas
+
+- A reviewer entry lands above the entry of the author. Add a new entry at the top, and never edit the older one.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`. The next PR is M-3 on seeds 1, 2, and 3 over SSH on the Deck (D-606, D-706).
+
 ## Session 300: 2026-09-28, Codex
 
 Author: Codex

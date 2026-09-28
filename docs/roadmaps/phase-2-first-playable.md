@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-98, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. PR-77 applies D-677 to D-685. PR-94 applies D-703 to D-705. M-3 applies D-706 to D-710, and PR-95 applies D-708 to D-710. PR-96 applies D-711 to D-714. PR-97 applies D-715 and D-719 to D-722, and PR-98 applies D-716. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-99, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. PR-77 applies D-677 to D-685. PR-94 applies D-703 to D-705. M-3 applies D-706 to D-710, and PR-95 applies D-708 to D-710. PR-96 applies D-711 to D-714. PR-97 applies D-715 and D-719 to D-723, PR-98 applies D-716, and PR-99 applies D-724. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -36,6 +36,7 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-195 | The player body hides the scavenger in front at melee range | PR-97 |
 | F-196 | A scavenger between the camera and the player fills the screen | PR-97 |
 | F-197 | Near a wall the camera presses into the body | PR-97 |
+| F-202 | A turn in one tick draws the camera from near the head | PR-99 |
 | F-198 | The Overseer attacks from outside the view | Gate 2 (D-717) |
 | F-199 | The damage numbers are small and low in contrast, and a number stays with a hidden owner | PR-98 |
 | F-201 | The stairwell prompt covers the body | PR-98 |
@@ -1676,7 +1677,11 @@ The first timer-tester capture wrote 204 copies of one frame, because a second w
 
 The owner gave each finding its disposition (D-713): PR-97 for F-195 to F-197 (D-715), PR-98 for F-199 and F-201 (D-716), the Gate 2 play for F-198 (D-717), and OQ-61 for F-200 (D-718).
 
+The frames of PR-97 are in `docs/reviews/pr-124-frames/`, with the names of the frames of PR-96. They show no F-196 and no F-197, and less of F-195 (D-723). The frames of PR-97 found F-202, which PR-99 holds (D-724).
+
 ### PR-97: Camera and model occlusion
+
+✅ Done in PR #124.
 
 Scope: the camera keeps the fight in view (D-715, F-195, F-196, F-197).
 
@@ -1725,6 +1730,28 @@ Check clause: none.
 Gate: exit tests 1 to 3 pass.
 
 > *In plain English:* the damage numbers are hard to read on the Deck. This change makes them larger and clearer, and keeps the prompt off the player.
+
+### PR-99: Camera turn frames
+
+Scope: the view stays on the boom circle on a fast turn (D-724, F-202).
+
+- `WhatYouCarry.Game/Main.cs` and `Render/RenderInterpolation.cs`: the frame interpolates the yaw and the pitch between two ticks, and not the positions of the pose. The drawn camera of the frame comes from the interpolated look (D-720).
+
+Out of scope: the camera rules of D-719 to D-722, which PR-97 holds.
+
+Exit tests:
+
+1. A test pins the pose of a frame between two ticks with a turn of 180 degrees: the drawn camera stays at the distance of the tick poses from the shoulder point. It fails on `main`.
+2. `SmokeSessionPasses` passes on the three platforms.
+3. The frame shots of D-714 at the PR head show no frame drawn from near the head. The owner confirms it, recorded as a decision.
+
+Review focus: the interpolation against the frames, and the frame cost of a camera placement in each frame.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* when the view turns fast, one frame can show the camera inside the player's head. This change turns the camera around the player instead.
 
 ## 5. Sequence
 
@@ -1785,7 +1812,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 53. PR-93. ✅ Done in PR #119. The Overseer model, its traced maps, and the model field of the hunter: D-686 to D-702.
 54. PR-94. ✅ Done in PR #120. The seed flag of the bot session: D-703 to D-705.
 55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296. The table of 2026-09-28 at `5c3310e` missed D-635 on seed 2 (F-193). PR-95 fixes the transition and measures the table again (D-707 to D-710). ✅ PR-95 and M-3 done in PR #122.
-56. Tier 4 pass on the screenshot fixture (D-133). ✅ OQ-62 answered in part 2026-09-28, for Gate 2: D-711 to D-714. PR-96. Then PR-97 and PR-98 for the findings of the pass (D-715, D-716). ✅ PR-96 done in PR #123.
+56. Tier 4 pass on the screenshot fixture (D-133). ✅ OQ-62 answered in part 2026-09-28, for Gate 2: D-711 to D-714. PR-96. Then PR-97 and PR-98 for the findings of the pass (D-715, D-716), and PR-99 for F-202 (D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124.
 57. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
