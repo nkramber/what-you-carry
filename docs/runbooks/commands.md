@@ -6,7 +6,7 @@ Status: reference, written 2026-09-23. Written in ASD-STE100. The byte ceiling o
 
 ## The Game arguments
 
-The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, `--smoke` and `--bot` exclude each other, and `--transitions` needs `--bot` and `--frame-log`. A Game flag before `--` also ends the boot with exit code 1, because the engine ignores it there (D-624).
+The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, and `--smoke` and `--bot` exclude each other. `--transitions` needs `--bot` and `--frame-log`, and `--seed` needs `--bot`. A Game flag before `--` also ends the boot with exit code 1, because the engine ignores it there (D-624).
 
 A close of the window ends the session like the test exit: one end line, the frame log, and exit code 0 when the log holds no error (F-161).
 
@@ -15,12 +15,15 @@ A close of the window ends the session like the test exit: one end line, the fra
 `AGENTS.md` names this section. Each command needs a window, and `Godot` is not on the command path of the Mac, so each command uses the full path.
 
 - Bot session with a frame log, for M-3: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt`
+- Bot session on one seed of the M-3 table, seed 2 here (D-704, D-706): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --seed 2 --frame-log frames.txt`
 - Transition test, PR-18 exit test 6 on the Deck (D-428, D-435): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt --transitions 10`
 - Policy session, the frame cost of a timer expiry with the enemies (D-646, RR-P3-16): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --policy timer-tester --frame-log frames.txt`
 - Contact sheet, a local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
 - HUD shot, the Deck frame of the HUD fixture (D-133): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --hud-shot hud.png`
 
 The policy flag names one bot policy of Core: `random-walker`, `greedy-descender`, `full-clearer`, `timer-tester`, or `coward`. Without the flag, the bot session drives the greedy descender. The flag needs `--bot`, and the transition test takes no policy, because it loads no enemy (D-437). The end line of a session with a timer expiry holds `expiries` and `expiryMicrosMax`, the slowest frame near each expiry.
+
+The seed flag sets the seed of the bot session: a whole number from 1 to 18446744073709551615, in digits alone (D-705). Without the flag, the session runs seed 1, the first seed of `Main`. The flag needs `--bot`, and the end line of the session names the seed.
 
 ## The generated files
 

@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-92, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. PR-77 applies D-677 to D-685. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-94, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. PR-77 applies D-677 to D-685. PR-94 applies D-703 to D-705, and M-3 applies D-706. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -1521,11 +1521,35 @@ Gate: exit tests 1 to 3 pass.
 
 > *In plain English:* the Overseer looks like the player today. This change gives it the tall coat and the lamp helmet that the owner chose.
 
+### PR-94: Bot seed flag
+
+Scope: the bot session takes the seed of its run from a flag, so the M-3 table measures three seeds before the hub of PR-30 (D-703).
+
+- `BotSession` and `UserArguments`: the flag `--seed <n>` takes one word, and it needs `--bot` (D-317, D-704). The seed is a whole number from 1 to the top of `ulong`, in digits alone (D-705). With no flag, the session runs the first seed of `Main`.
+- `Main`: the loop starts on the seed of the flag. The boot failure line and the callback failure line before the loop carry that seed, and not the first seed.
+- `docs/runbooks/commands.md`: the bot session on one seed of the M-3 table, and the rules of the flag.
+
+Out of scope: a seed for the play session, which the hub of PR-30 picks, and the Deck runs of M-3.
+
+Exit tests:
+
+1. `SeedNeedsTheBot` and `SeedFlagSetsTheSeedOfTheBotSession` pass. Each fails on the parser of `main`, which has no seed flag.
+2. `ABotSessionRunsTheSeedOfTheSeedFlag` and `ABadSeedEndsTheBootAndALaterFailureNamesTheSeed` pass on the three platforms. Each fails on `main`, where the boot stops on the flag.
+3. `SessionCommandsParse` reads the seed command of the runbook.
+
+Review focus: the flag rules against D-313 and D-317, the seed of the boot failure line, and the value check.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* the bot always plays the same floor, so the Deck measurement sees one map. This change lets a test pick the map by its number, and nothing else changes.
+
 ### M-3: Steam Deck frame time
 
 Procedure: on the Steam Deck OLED of the owner (D-296), run the PR-13 build and then the PR-18 build over one full floor. The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target comes from D-295. A miss files a question that binds the next render PR (F-3).
 
-The bot session and the frame log come from PR-13 (OQ-161). The command in `CLAUDE.md` starts the game with the two flags `--bot` and `--frame-log <path>`. The session ends one second after the first descent (PR-18). The build reaches the Deck as the checkout in desktop mode (D-428). The file holds one frame time per line, in microseconds. The end line of the log carries the count of frames and the 99th percentile. The seed of the session is the first seed of `Main` until the hub of PR-30 picks one per run. The three seeds of the table wait for a seed flag or for PR-30.
+The bot session and the frame log come from PR-13 (OQ-161). The command in `docs/runbooks/commands.md` starts the game with the two flags `--bot` and `--frame-log <path>`. The session ends one second after the first descent (PR-18). The build reaches the Deck as the checkout in desktop mode (D-428). The file holds one frame time per line, in microseconds. The end line of the log carries the count of frames and the 99th percentile. The flag `--seed <n>` of PR-94 sets the seed of the session, and the table measures seeds 1, 2, and 3 (D-703, D-706). Without the flag, the session runs the first seed of `Main`.
 
 ## 5. Sequence
 
@@ -1584,9 +1608,10 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 51. ✅ Owner: answer OQ-181. Resolved 2026-09-27: D-677.
 52. PR-77. ✅ Done in PR #118. The light, the edges, and the frame cost of the Deck: D-677 to D-685.
 53. PR-93. ✅ Done in PR #119. The Overseer model, its traced maps, and the model field of the hunter: D-686 to D-702.
-54. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
-55. Tier 4 pass on the screenshot fixture (D-133).
-56. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
+54. PR-94. The seed flag of the bot session: D-703 to D-705.
+55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+56. Tier 4 pass on the screenshot fixture (D-133).
+57. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
 

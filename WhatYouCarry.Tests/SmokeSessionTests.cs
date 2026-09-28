@@ -378,6 +378,58 @@ public sealed class SmokeSessionTests
     }
 
     /// <summary>
+    /// D-704. The bot session runs the seed of the seed flag: the start line and the test exit line carry seed 2, and
+    /// the session quits with exit code 0 and no error line. The old boot stopped on the flag as a flag outside the table.
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task ABotSessionRunsTheSeedOfTheSeedFlag()
+    {
+        EngineRun run = await RunEngine(
+            "bot session on seed 2",
+            ["--headless", "--fixed-fps", "60"],
+            [BotSession.Flag, BotSession.SeedFlag, "2", TestExit.PressFlag, TestExit.EscapeName, PressTick.ToString(CultureInfo.InvariantCulture)]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitSuccess, $"The bot session on seed 2 ended with exit code {run.ExitCode}.{Environment.NewLine}{run.Output}");
+        Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
+        string startLine = Assert.Single(lines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal));
+        string endLine = Assert.Single(lines, line => line.Contains($"\"message\":\"{Main.TestExitMessage}\"", StringComparison.Ordinal));
+        Assert.Contains("\"seed\":2,", startLine, StringComparison.Ordinal);
+        Assert.Contains("\"seed\":2,", endLine, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// D-705. Seed 0 stops the boot with exit code 1 and an error line that names the word, before the run starts. A
+    /// boot failure after the boot reads the seed flag carries that seed, and not the first seed: a transitions count of
+    /// zero stops the boot after the content loads (T-2).
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task ABadSeedEndsTheBootAndALaterFailureNamesTheSeed()
+    {
+        EngineRun zero = await RunEngine("bot session on seed 0", ["--headless", "--fixed-fps", "60"], [BotSession.Flag, BotSession.SeedFlag, "0"]);
+        string[] zeroLines = zero.Output.Split('\n');
+
+        Assert.True(zero.ExitCode == Main.ExitFailure, $"The bot session on seed 0 ended with exit code {zero.ExitCode}.{Environment.NewLine}{zero.Output}");
+        Assert.Contains(zeroLines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal)
+            && line.Contains(Main.BootFailedMessage, StringComparison.Ordinal)
+            && line.Contains(BotSession.BadSeedMessage, StringComparison.Ordinal));
+        Assert.DoesNotContain(zeroLines, line => line.Contains($"\"message\":\"{Main.StartMessage}\"", StringComparison.Ordinal));
+
+        string path = Path.Combine(Path.GetTempPath(), "wyc-seed-frames-" + Guid.NewGuid().ToString("N") + ".txt");
+        EngineRun late = await RunEngine(
+            "boot failure session on seed 3",
+            ["--headless", "--fixed-fps", "60"],
+            [BotSession.Flag, BotSession.SeedFlag, "3", FrameLog.Flag, path, BotSession.TransitionsFlag, "0"]);
+        string[] lateLines = late.Output.Split('\n');
+
+        Assert.True(late.ExitCode == Main.ExitFailure, $"The boot failure session on seed 3 ended with exit code {late.ExitCode}.{Environment.NewLine}{late.Output}");
+        string failureLine = Assert.Single(lateLines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal) && line.Contains(Main.BootFailedMessage, StringComparison.Ordinal));
+        Assert.Contains("\"seed\":3,", failureLine, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Runs the smoke session with one scripted press at <see cref="PressTick"/>, and asserts the test exit line at a
     /// tick past the press and before the end of the script, exit code 0, no error line, and no smoke end line.
     /// </summary>

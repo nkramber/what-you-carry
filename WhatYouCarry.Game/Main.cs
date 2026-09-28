@@ -43,8 +43,8 @@ namespace WhatYouCarry.Game;
 /// A boot failure, a step failure, a pose failure, and a failure anywhere else in an engine callback each write an
 /// error line and quit with exit code 1 (T-2). The smoke session quits with exit code 0 only when the log holds no
 /// error line (D-114). The bot session of M-3 drives
-/// the loop with the greedy descender over one floor, or with the bot policy of the policy flag (D-646), and the
-/// frame log flag writes every frame time to a file at the end of any session (D-295, D-296). The frame log marks
+/// the loop with the greedy descender over one floor, or with the bot policy of the policy flag (D-646), on the seed
+/// of the seed flag or the first seed (D-704), and the frame log flag writes every frame time to a file at the end of any session (D-295, D-296). The frame log marks
 /// each floor transition and each expiry of the floor timer. The content, the models, the clips, and the atlas come from the directory
 /// next to the project directory, which is the content directory of the checkout (D-219, D-305).
 /// </para>
@@ -84,7 +84,7 @@ namespace WhatYouCarry.Game;
 /// </remarks>
 public partial class Main : Node3D
 {
-    /// <summary>The seed of the first run. The hub of PR-30 picks a seed per run.</summary>
+    /// <summary>The seed of a run with no seed flag. The seed flag of the bot session sets another (D-704). The hub of PR-30 picks a seed per run.</summary>
     public const ulong FirstSeed = 1;
 
     /// <summary>The exit code of a session with no error line.</summary>
@@ -263,6 +263,7 @@ public partial class Main : Node3D
     private readonly InputReader reader;
 
     private SimulationLoop? loop;
+    private ulong seed = FirstSeed;
     private ModelNodeTree? playerNodes;
     private BlockbenchModel? playerModel;
     private PlayerClips? clips;
@@ -324,9 +325,10 @@ public partial class Main : Node3D
         }
         catch (Exception error)
         {
-            // The boot has no loop yet, so the line carries the first seed, the first floor, and tick zero. The boot
-            // measured no frame, so the session writes no frame log, and never an empty one (F-122).
-            this.LogFailure(BootFailedMessage, RunFields(FirstSeed, SimulationLoop.FirstFloor, 0), error);
+            // The boot has no loop yet, so the line carries the seed of the session, the first floor, and tick zero. The
+            // seed is the first seed until the boot reads the seed flag. The boot measured no frame, so the session
+            // writes no frame log, and never an empty one (F-122).
+            this.LogFailure(BootFailedMessage, RunFields(this.seed, SimulationLoop.FirstFloor, 0), error);
             this.frames = null;
             this.Quit(ExitFailure);
         }
@@ -840,6 +842,9 @@ public partial class Main : Node3D
 
         // A bad policy name stops the boot before the content loads. With no policy flag, the name is the greedy descender (D-646).
         string policyName = BotSession.PolicyNameOf(arguments);
+
+        // A bad seed stops the boot before the content loads. With no seed flag, the seed is the first seed (D-704, D-705).
+        this.seed = BotSession.SeedOf(arguments);
         if (TestExit.IsPressRequested(arguments))
         {
             this.press = TestExit.PressOf(arguments);
@@ -876,7 +881,7 @@ public partial class Main : Node3D
         }
 
         PlayerClips playerClips = PlayerClips.Load(contentDirectory, weapon);
-        SimulationLoop loop = new(FirstSeed, content);
+        SimulationLoop loop = new(this.seed, content);
         this.loop = loop;
         if (BotSession.IsRequested(arguments))
         {
@@ -1109,11 +1114,11 @@ public partial class Main : Node3D
         this.Quit(ExitFailure);
     }
 
-    /// <summary>The run fields of the loop, or of the boot when no loop exists yet: the first seed, the first floor, and tick zero.</summary>
+    /// <summary>The run fields of the loop, or of the boot when no loop exists yet: the seed of the session, the first floor, and tick zero.</summary>
     private LogFields SessionFields()
     {
         return this.loop is null
-            ? RunFields(FirstSeed, SimulationLoop.FirstFloor, 0)
+            ? RunFields(this.seed, SimulationLoop.FirstFloor, 0)
             : RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
     }
 

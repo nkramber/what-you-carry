@@ -65,6 +65,9 @@ public sealed class UserArguments
     /// <summary>The message of the error for the policy flag with the transitions flag (D-317, D-437, D-646).</summary>
     public const string TransitionsTakeNoPolicyMessage = "The transitions test counts the descents of the greedy descender on floors with no enemy, so the transitions flag takes no policy flag.";
 
+    /// <summary>The message of the error for the seed flag with no bot flag (D-317, D-704).</summary>
+    public const string SeedNeedsBotMessage = "The seed flag sets the seed of the bot session, so it needs the bot flag.";
+
     /// <summary>The message of the error for a flag of the Game layer before the separator, where the engine ignores it (D-624).</summary>
     public const string FlagBeforeSeparatorMessage = "A flag of the Game layer stands before the separator --, where the engine ignores it. Put it after the separator.";
 
@@ -89,6 +92,7 @@ public sealed class UserArguments
         [BotSession.Flag] = 0,
         [BotSession.TransitionsFlag] = 1,
         [BotSession.PolicyFlag] = 1,
+        [BotSession.SeedFlag] = 1,
         [FrameLog.Flag] = 1,
         [ContactSheet.Flag] = 1,
         [HudShot.Flag] = 1,
@@ -233,9 +237,10 @@ public sealed class UserArguments
     /// The transitions flag counts the descents of the bot session into the frame log, so it needs both (D-435).
     /// The policy flag names the bot of the bot session, so it needs the bot flag, and the transitions test walks the
     /// greedy descender alone on floors with no enemy (D-437), so it takes no policy flag (D-646).
+    /// The seed flag sets the seed of the bot session, so it needs the bot flag (D-704).
     /// The error names both flags.
     /// </summary>
-    /// <exception cref="ContextException">The contact sheet flag or the HUD shot flag with another flag, the smoke flag with the bot flag, the transitions flag with no bot flag or no frame log flag, or the policy flag with no bot flag or with the transitions flag.</exception>
+    /// <exception cref="ContextException">The contact sheet flag or the HUD shot flag with another flag, the smoke flag with the bot flag, the transitions flag with no bot flag or no frame log flag, the policy flag with no bot flag or with the transitions flag, or the seed flag with no bot flag.</exception>
     private static void RejectIgnoredFlags(Dictionary<string, string[]> flags)
     {
         RejectCompanions(flags, ContactSheet.Flag, SheetTakesNoFlagMessage);
@@ -271,6 +276,14 @@ public sealed class UserArguments
             withTransitions.AddContext(FlagField, BotSession.TransitionsFlag);
             withTransitions.AddContext(OtherField, BotSession.PolicyFlag);
             throw withTransitions;
+        }
+
+        if (flags.ContainsKey(BotSession.SeedFlag) && !flags.ContainsKey(BotSession.Flag))
+        {
+            ContextException seedWithoutBot = new(SeedNeedsBotMessage);
+            seedWithoutBot.AddContext(FlagField, BotSession.SeedFlag);
+            seedWithoutBot.AddContext(OtherField, BotSession.Flag);
+            throw seedWithoutBot;
         }
     }
 
