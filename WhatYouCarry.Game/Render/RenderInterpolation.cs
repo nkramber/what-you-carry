@@ -26,7 +26,8 @@ public static class RenderInterpolation
             Between(previous.Forward, current.Forward, fraction),
             Between(previous.Right, current.Right, fraction),
             Between(previous.Up, current.Up, fraction),
-            Between(previous.Shoulder, current.Shoulder, fraction));
+            Between(previous.Shoulder, current.Shoulder, fraction),
+            Between(previous.View, current.View, fraction));
     }
 
     /// <summary>A Core vector as an engine vector. The two share one frame, so no component changes (D-234).</summary>

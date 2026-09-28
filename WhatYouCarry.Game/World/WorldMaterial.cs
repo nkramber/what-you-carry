@@ -46,16 +46,21 @@ public static class WorldMaterial
         return material;
     }
 
-    /// <summary>
-    /// Sets the fade segment for one frame. The player end pulls back by the radius, so the capsule ends at the
-    /// player and the floor under the feet stays.
-    /// </summary>
+    /// <summary>Sets the fade segment for one frame, from the drawn camera to the end that <see cref="FadeEnd"/> gives.</summary>
     public static void SetFade(ShaderMaterial material, Vector3 camera, Vector3 player)
+    {
+        material.SetShaderParameter(FadeStartName, camera);
+        material.SetShaderParameter(FadeEndName, FadeEnd(camera, player));
+    }
+
+    /// <summary>
+    /// The player end of the fade segment. It pulls back from the player by the radius, so the capsule ends at the
+    /// player and the floor under the feet stays. The model fade reads the same segment (D-721).
+    /// </summary>
+    public static Vector3 FadeEnd(Vector3 camera, Vector3 player)
     {
         Vector3 toPlayer = player - camera;
         float length = toPlayer.Length();
-        Vector3 end = length > FadeRadius ? player - (toPlayer * (FadeRadius / length)) : camera;
-        material.SetShaderParameter(FadeStartName, camera);
-        material.SetShaderParameter(FadeEndName, end);
+        return length > FadeRadius ? player - (toPlayer * (FadeRadius / length)) : camera;
     }
 }

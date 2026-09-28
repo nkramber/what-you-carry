@@ -653,17 +653,18 @@ public partial class Main : Node3D
         // seen from above, as a positive rotation about Y does (D-234).
         this.playerNodes.Root.RotationDegrees = new Vector3(0.0f, this.loop.Yaw / 100.0f, 0.0f);
 
-        this.enemyNodes?.Draw(this.loop.Enemies, this.loop.Hunter, fraction);
-
+        // The camera draws from the view of the pose, which stands on the boom line and can be inside rock (D-720). The
+        // wall fade and the model fade start there (D-292, D-721).
         CameraPose pose = RenderInterpolation.Between(this.previousPose, this.currentPose, fraction);
-        Vector3 cameraPosition = RenderInterpolation.ToGodot(pose.Position);
+        Vector3 cameraPosition = RenderInterpolation.ToGodot(pose.View);
         this.camera.LookAtFromPosition(
             cameraPosition,
-            RenderInterpolation.ToGodot(pose.Position + pose.Forward),
+            RenderInterpolation.ToGodot(pose.View + pose.Forward),
             RenderInterpolation.ToGodot(pose.Up));
 
         Vector3 playerCenter = feetPoint + new Vector3(0.0f, PlayerBody.Height / 2.0f, 0.0f);
         WorldMaterial.SetFade(this.worldMaterial, cameraPosition, playerCenter);
+        this.enemyNodes?.Draw(this.loop.Enemies, this.loop.Hunter, fraction, cameraPosition, WorldMaterial.FadeEnd(cameraPosition, playerCenter));
 
         if (this.hud is not null && this.hudCamera is not null)
         {
@@ -991,7 +992,7 @@ public partial class Main : Node3D
         // D-698). The rest pose stands on the feet, so the root offset reads the lowest corner of each model.
         IReadOnlyDictionary<string, EnemyModel> familyModels = EnemyModels.Load(contentDirectory, content.Enemies);
         EnemyModel hunterModel = EnemyModels.Read(contentDirectory, content.Hunter.Model);
-        EnemyNodes enemies = new(this, familyModels, hunterModel, swordModel, modelMaterial, layout);
+        EnemyNodes enemies = new(this, familyModels, hunterModel, swordModel, modelMaterial, ModelFade.CreateMaterial(atlas), layout);
         enemies.Rebuild(loop.Plan, loop.Enemies);
         this.enemyNodes = enemies;
         this.drawnFloor = loop.Floor;

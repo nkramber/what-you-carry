@@ -141,12 +141,12 @@ public sealed class SimulationTests
         Assert.Throws<ContextException>(() => Intent.StoredChecksum(record, -1));
     }
 
-    /// <summary>The loop runs at 60 Hz, and the simulation version is 17 since a death on the tick of a stairwell press stayed a death and a descend on the deepest floor did nothing (D-73, D-151, D-322, D-579, G-20).</summary>
+    /// <summary>The loop runs at 60 Hz, and the simulation version is 19 since the shoulder offsets of D-719 and the drawn camera of D-720 changed the camera pose (D-73, D-151, G-20).</summary>
     [Fact]
     public void TheConstantsHold()
     {
         Assert.Equal(60, SimulationLoop.TicksPerSecond);
-        Assert.Equal(18, SimulationVersion.Value);
+        Assert.Equal(19, SimulationVersion.Value);
     }
 
     /// <summary>One intent is one tick, and the loop starts at tick zero.</summary>

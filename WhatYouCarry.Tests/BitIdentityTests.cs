@@ -71,9 +71,11 @@ public sealed class BitIdentityTests
     /// falls on the last tick of a roll. The Debug and the Release builds give the new answer. The same PR then moved it
     /// from `11d803d4eb8c52a0` when the run record header gained its CRC-32 and the format version rose to 2 (D-637,
     /// F-172). The sweep folds the header of each recorded run, so the header bytes alone moved the hash, and the
-    /// simulation version stayed at 18.
+    /// simulation version stayed at 18. PR-97 moved it from `e202e84e0f5c188a` when the shoulder offsets of D-719 and the
+    /// drawn camera of D-720 changed the camera pose, the ramp part of the sweep folded the drawn view, and the simulation
+    /// version rose to 19 (G-20). The camera change with the version at 18 gave `e080d012334a49d2`.
     /// </remarks>
-    private const string ExpectedHash = "e202e84e0f5c188a";
+    private const string ExpectedHash = "1023ce079eb0af50";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]

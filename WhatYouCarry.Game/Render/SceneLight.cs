@@ -36,8 +36,12 @@ public static class SceneLight
     /// <summary>The color of the ambient light: a dark, cool gray blue (D-678).</summary>
     public static readonly Color AmbientColor = new(0.16f, 0.18f, 0.24f);
 
-    /// <summary>The color behind every face: near black, so the mine has no sky.</summary>
-    public static readonly Color BackgroundColor = new(0.01f, 0.01f, 0.015f);
+    /// <summary>
+    /// The color behind every face: the dark stone of the rock that no light reaches, so the mine has no sky (D-722). The
+    /// drawn camera can stand inside rock, and a view line that meets no face there shows this color (D-720). The frames of
+    /// PR-97 read unlit rock at about 14, 13, and 17 of 255, and the black of the color before read as a pit.
+    /// </summary>
+    public static readonly Color BackgroundColor = new(0.055f, 0.05f, 0.065f);
 
     /// <summary>The color of the lantern: a warm flame orange (D-59).</summary>
     public static readonly Color LanternColor = new(1.0f, 0.72f, 0.45f);
