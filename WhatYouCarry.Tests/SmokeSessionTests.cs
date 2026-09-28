@@ -204,7 +204,9 @@ public sealed class SmokeSessionTests
     /// <summary>
     /// PR-18 exit test 7. The engine boots headless, the walk opens the stairwell prompt on floor 1 and descends, the
     /// chunk swap shows floor 2, and the session quits with exit code 0, no error line, and no engine error (D-431,
-    /// D-436, F-115).
+    /// D-436, F-115). F-193: in the tick of the descent no dig task runs, and every enemy tree of floor 2 was built
+    /// hidden before it. The old swap started the dig of floor 3 and built the trees in that tick, and on the Deck the
+    /// collection and the trees put the transition of seed 2 over the budget of D-635.
     /// </summary>
     [Fact]
     [Trait("Category", SmokeCategory)]
@@ -217,7 +219,13 @@ public sealed class SmokeSessionTests
         Assert.DoesNotContain(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal));
         Assert.DoesNotContain(lines, line => line.Contains("ERROR:", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.PromptOpenMessage}\"", StringComparison.Ordinal) && line.Contains("\"floor\":1,", StringComparison.Ordinal));
-        Assert.Contains(lines, line => line.Contains($"\"message\":\"{Main.SwapMessage}\"", StringComparison.Ordinal) && line.Contains("\"floor\":2,", StringComparison.Ordinal) && line.Contains($"\"{Main.FromWorkerField}\":true", StringComparison.Ordinal));
+        string swap = Assert.Single(lines, line => line.Contains($"\"message\":\"{Main.SwapMessage}\"", StringComparison.Ordinal));
+        Assert.Contains("\"floor\":2,", swap, StringComparison.Ordinal);
+        Assert.Contains($"\"{Main.FromWorkerField}\":true", swap, StringComparison.Ordinal);
+        Assert.Contains($"\"{Main.DiggingField}\":false", swap, StringComparison.Ordinal);
+        Assert.Contains($"\"{Main.BuiltTreesField}\":0", swap, StringComparison.Ordinal);
+        Assert.Contains($"\"{Main.StagedTreesField}\":", swap, StringComparison.Ordinal);
+        Assert.DoesNotContain($"\"{Main.StagedTreesField}\":0", swap, StringComparison.Ordinal);
         AssertCleanEnd(lines, run.Output);
     }
 

@@ -1,0 +1,38 @@
+PR-95 Deck runs, 2026-09-28. Steam Deck OLED over SSH (D-606), desktop mode, the bot command of
+docs/runbooks/commands.md with --seed <n> and --frame-log. The probe patch stayed out of the branch (G-17).
+
+Table at the code head 34c2ddf (clean checkout, no patch):
+  seed-1-run-1.txt, seed-2-run-1.txt, seed-2-run-2.txt, seed-2-run-3.txt, seed-3-run-1.txt
+  end-lines.txt    the end line of each session
+  swap-lines.txt   the swap line of each session (34c2ddf adds digging, stagedTrees, builtTrees)
+
+Control at main 5ca1e1e (clean checkout, no patch):
+  main-5ca1e1e-seed-2-run-1.txt to run-3.txt   transition 24742, 26903, 24591 us
+
+The first change alone, e538dd9 (clean checkout, no patch):
+  e538dd9-seed-2-run-1.txt to run-3.txt        transition 18938, 24823, 19088 us
+
+Traces with the probe patch (stdout lines "PROBE"):
+  trace-5ca1e1e-with-timing-patch.txt          before: a full collection in the tick of the descent
+  trace-5ca1e1e-dig-after-90-frames.txt        the experiment: the probe starts the next dig 90 frames
+                                               after the swap, and the collection leaves the tick
+  trace-e538dd9-with-timing-patch.txt          the dig moved: run 4 has a gen 0 collection in the tree build
+  trace-34c2ddf-with-timing-patch.txt          after: no collection and no tree build in the tick
+
+PROBE SWAP line: the tick of the descent and the time in microseconds of each part of it.
+  step       SimulationLoop.Step of the descent tick
+  rebuild    EnemyNodes.Rebuild (rfree: the free of the old trees, rgrow: the build of the new trees,
+             tree1: the first tree, treerest: the other trees). 34c2ddf has rebuild alone.
+  swap       ChunkSwap.AfterTick. startdig: StartDig inside it (5ca1e1e only)
+  enemies    the count of enemies of the new floor
+  A field that reads 0 had no timer in that build.
+
+PROBE FT line: one frame, from the ring of 8 frames before the descent and the 12 frames from it on.
+  <frame index> tick <tick> frame <frame us> ticks <us of Tick() in the frame> upload <us of the upload
+  call> gc <collector pause us since the last frame> g <collections since the last frame: gen 0 x 100
+  + gen 1 x 10 + gen 2> jit <JIT us of the main thread> jitn <methods> proc <us of _Process>
+  g 111 is a full blocking collection. g 100 is a gen 0 collection.
+
+The patch kept every number in fixed arrays and wrote the lines 12 frames after the descent. Two earlier
+patches wrote lines in the frames and allocated a string each frame. They moved the collector to other
+frames, and the first Console write cost 3.3 ms in the tick of the descent, so their numbers are not here.

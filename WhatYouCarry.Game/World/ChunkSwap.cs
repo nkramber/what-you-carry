@@ -35,6 +35,12 @@ namespace WhatYouCarry.Game.World;
 /// the seed and the floor. A task that such a descent passed goes to <see cref="DroppedDigs"/>, and its failure
 /// throws before a later tick, so no failure of the worker is lost (T-2, F-152).
 /// </para>
+/// <para>
+/// The swap does not start the task of the floor after the new one. The next call of <see cref="UploadSome"/>
+/// starts it. The task allocates the grid and the meshes of a floor, and the Deck trace of seed 2 found a full
+/// collection of 4 to 5 milliseconds in the frame of the swap, while that frame built the enemy trees of the new
+/// floor. The collection pauses the main thread too, so the transition took 24.6 to 26.9 milliseconds (F-193).
+/// </para>
 /// </remarks>
 public sealed class ChunkSwap
 {
@@ -64,6 +70,7 @@ public sealed class ChunkSwap
     private IReadOnlyList<MeshData> stagedMeshes = [];
     private List<MeshInstance3D> stagedNodes = [];
     private int stagedChunk;
+    private int? pendingDig;
 
     /// <summary>A swap that adds its nodes under the parent, with the world material on each, and meshes with the block canvases of the layout.</summary>
     public ChunkSwap(Node parent, Material material, BlockTiles tiles, NextFloorWorker worker, ulong seed)
@@ -89,6 +96,9 @@ public sealed class ChunkSwap
 
     /// <summary>Answers whether the last swap showed the plan of the worker, and not a floor that the loop dug at the descent.</summary>
     public bool LastSwapFromWorker { get; private set; }
+
+    /// <summary>The plan of the next floor that the last call of <see cref="BeforeTick"/> offered to the loop, until the swap. Null when no plan is on offer.</summary>
+    public FloorPlan? StagedPlan => this.staged;
 
     /// <summary>Answers whether every chunk of the next floor is uploaded and waits in hidden nodes.</summary>
     public bool NextFloorReady => this.staged is not null && this.stagedChunk == this.stagedMeshes.Count;
@@ -126,9 +136,18 @@ public sealed class ChunkSwap
         return true;
     }
 
-    /// <summary>Uploads up to <see cref="ChunksPerFrame"/> meshes of the next floor into hidden nodes. Call it once each frame.</summary>
+    /// <summary>
+    /// Starts the task of the floor that a swap left pending, and uploads up to <see cref="ChunksPerFrame"/> meshes
+    /// of the next floor into hidden nodes. Call it once each frame, after the frame log reads the time of the frame.
+    /// </summary>
     public void UploadSome()
     {
+        if (this.pendingDig is int floor)
+        {
+            this.pendingDig = null;
+            this.StartDig(floor);
+        }
+
         if (this.staged is null)
         {
             return;
@@ -173,7 +192,8 @@ public sealed class ChunkSwap
 
     /// <summary>
     /// Swaps the nodes when the loop descended on the last tick: the old nodes go, and the nodes of the new floor
-    /// show. The chunks that the upload did not reach are built in this frame. The task of the floor after it starts.
+    /// show. The chunks that the upload did not reach are built in this frame. The task of the floor after it starts
+    /// at the next call of <see cref="UploadSome"/>, so its collection stays out of this frame (F-193).
     /// </summary>
     /// <returns>True when the tick descended and the swap ran.</returns>
     public bool AfterTick(SimulationLoop loop)
@@ -224,7 +244,7 @@ public sealed class ChunkSwap
         this.stagedNodes = [];
         this.stagedChunk = 0;
         this.digging = null;
-        this.StartDig(loop.Floor + 1);
+        this.pendingDig = loop.Floor + 1;
         return true;
     }
 
