@@ -56,7 +56,9 @@ public static class NumberSight
             start = camera + (toward * ((exit.Distance + PastFace) / toward.Length()));
 
             // An open cell of a ramp that the segment enters under the slope holds the first solid part after the rock.
-            if (UnderSlope(grid, start))
+            // A segment that enters the open cell near an edge can leave it within the step past the face, and the
+            // start then stands in the next block: the segment meets rock there.
+            if (UnderSlope(grid, start) || IsBlock(grid, start))
             {
                 return true;
             }

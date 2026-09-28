@@ -53,6 +53,34 @@ public sealed class NumberSightTests
         Assert.True(NumberSight.WallHides(grid, camera, new CoreVector3(6.9f, 2.5f, 5.5f)));
     }
 
+    /// <summary>
+    /// A segment that enters the first open cell near an edge leaves it again within <see cref="NumberSight.PastFace"/>,
+    /// so the step past the face lands in the next block. The segment meets rock there, and the owner hides. The march
+    /// from a start in rock threw before this rule.
+    /// </summary>
+    [Fact]
+    public void AStepPastAnEdgeIntoRockHides()
+    {
+        VoxelGrid grid = TestWorld.FlatFloor(16, 8);
+        for (int x = 2; x <= 6; x++)
+        {
+            for (int y = 1; y <= 5; y++)
+            {
+                for (int z = 2; z <= 9; z++)
+                {
+                    grid.Set(x, y, z, BlockId.RawStone);
+                }
+            }
+        }
+
+        grid.Set(5, 3, 5, BlockId.Air);
+        CoreVector3 camera = new(4.5f, 3.5f, 5.5f);
+        CoreVector3 target = new(7.5f, 6.4985f, 5.5f);
+
+        // The segment enters the open cell at x = 5, y = 3.99975, and it crosses y = 4 into rock 0.35 mm later.
+        Assert.True(NumberSight.WallHides(grid, camera, target));
+    }
+
     /// <summary>A drawn camera under the slope of a ramp stands in a solid part, so no open cell shows the owner.</summary>
     [Fact]
     public void ACameraUnderASlopeSeesNoOwner()
