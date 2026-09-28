@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 298: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-93, reviewer. Branch `feat/pr-93-overseer-model`. PR #119, pending merge. Base `b4615c0`.
+
+### What this session did, and why
+
+- Reviewed the PR-93 code head `5faf3b7` as the cross-provider reviewer.
+- Checked the model, the hunter model field, the texture mappings, the focused tests, the roadmap, and the PR comments.
+- Wrote `docs/reviews/pr-119.md`. The review found no in-scope defect. The owner approval of the contact sheet is recorded in D-700.
+
+### State of the build
+
+- Local focused tests passed: 290 passed, none failed or skipped. Local asset QA found zero findings across four models and three animations.
+- Remote CI passed the build and test jobs, bit identity on three platforms, bot checks, asset QA, determinism lint, documents, doc gate, night gate, smoke on three platforms, and STE checks.
+- Remote `evaluate` and `review-gate` failed because the review record was not yet on the branch. Remote branch head before this metadata push: `e2eea3e`.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and a push to `feat/pr-93-overseer-model`.
+- PR #119 is pending owner merge.
+
+### Traps and gotchas
+
+- The review applies to effective head `5faf3b7`. The later code tip `e2eea3e` changes documents only (D-534).
+- The contact-sheet image named by D-700 was not in the referenced folder. The owner approval remains recorded in D-700.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+- Push the review record and this entry together. Verify the remote head and the review-gate result.
+
 ## Session 297: 2026-09-27, Claude Code
 
 Author: Claude Code
@@ -318,39 +353,3 @@ None for PR-92.
 ### Next concrete action
 
 After the merge, the next session records exit test 3: the first night on `main` runs eight sweep jobs. The frame costs of F-184 wait for M-3 and PR-77.
-
-## Session 288: 2026-09-27, Codex
-
-Author: Codex
-Session: PR-116, reviewer. Branch `fix/pr-92-review-fixes`. PR #116, pending merge. Base `e9a89aa`.
-
-### What this session did, and why
-
-- Reviewed all 60 changed paths of PR #116 against its roadmap, decisions, questions, and PR comments.
-- Found no blocking defect. The review record approves effective head `a09b9f9`.
-- The author entries name Claude Code. The Codex review passes the provider gate (T-4, D-101).
-
-### State of the build
-
-- Remote `main` is `e9a89aa`. The remote PR head before this metadata commit is `a09b9f9`.
-- The local build passed with zero warnings. The focused review tests passed, 426 of 426.
-- CI passed the build and test jobs on all three platforms, Smoke, bit identity, bots, the night gate, and the document and asset checks. `evaluate` and `review-gate` await this metadata commit.
-
-### In flight
-
-- The review record and this handoff entry need one metadata commit on `fix/pr-92-review-fixes`.
-- The first night on `main` after merge must run eight sweep jobs. Exit test 3 assigns its record check to a later session.
-
-### Traps and gotchas
-
-- The PR comment says the missing review record caused the expected pre-review gate failure. The Gitar provider-gate finding is fixed and resolved.
-- The owner accepted the review trust-boundary risk (D-647) and the night-gate window risk (D-654).
-- The measured frame-cost fixes remain with M-3 and PR-77 (G-17).
-
-### Open questions that block progress
-
-None for PR-116.
-
-### Next concrete action
-
-Push the review record and this entry together. Verify the remote head and wait for the metadata checks. The owner can then review the merge summary.
