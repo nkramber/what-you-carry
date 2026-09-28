@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 309: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-96, reviewer. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
+
+### What this session did, and why
+
+- Reviewed effective head `4236f2d` of PR #123 against the PR-96 exit tests and the Tier 4 evidence.
+- The provider gate passed. The review found no in-scope defect.
+- Added `docs/reviews/pr-123.md` and this handoff entry in one metadata commit.
+
+### State of the build
+
+- The remote code head before the metadata push was `77ab1d1`. Build and test jobs, bit identity, bots, asset QA, determinism lint, smoke, night gate, documents, doc gate, and STE passed.
+- The PR checks `evaluate` and `review-gate` failed because the review record did not yet exist. The review record and this entry are now on the PR branch.
+
+### In flight
+
+- PR #123 awaits the owner merge.
+
+### Traps and gotchas
+
+- The review inspected supplied capture artifacts but did not rerun the interactive Mac capture sessions.
+- The frame set follows the Gate 2 scope of D-714. The Gate 4 Tier 4 protocol stays open under OQ-62.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can review the record and merge PR #123 when its checks pass.
+
 ## Session 308: 2026-09-28, Claude Code
 
 Author: Claude Code
