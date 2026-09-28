@@ -159,6 +159,109 @@ public static class GridRay
         }
     }
 
+    /// <summary>
+    /// The first open cell that the segment from <paramref name="start"/> to <paramref name="end"/> enters after it
+    /// met a block (D-720). An open cell is air or a ramp. A hit carries the distance from the start to the point where
+    /// the line enters that open cell. No hit means that the segment ends in rock, or meets no block.
+    /// </summary>
+    /// <remarks>
+    /// The drawn camera reads it to stop before a second air pocket behind a wall. The march steps as
+    /// <see cref="FirstSolid"/> does, and it reads no slope: a ramp counts as open, so the drawn camera never stands in
+    /// the cell of a ramp. The start can be in any cell.
+    /// </remarks>
+    /// <exception cref="ContextException">A coordinate is not finite.</exception>
+    public static RayHit FirstOpenPastRock(VoxelGrid grid, Vector3 start, Vector3 end)
+    {
+        CheckFinite("start", start);
+        CheckFinite("end", end);
+
+        int x = (int)DetMath.Floor(start.X);
+        int y = (int)DetMath.Floor(start.Y);
+        int z = (int)DetMath.Floor(start.Z);
+        bool metBlock = IsBlock(grid, x, y, z);
+
+        Vector3 delta = end - start;
+        float length = delta.Length();
+        if (length == 0.0f)
+        {
+            return new RayHit(false, 0.0f);
+        }
+
+        int stepX = delta.X > 0.0f ? 1 : delta.X < 0.0f ? -1 : 0;
+        int stepY = delta.Y > 0.0f ? 1 : delta.Y < 0.0f ? -1 : 0;
+        int stepZ = delta.Z > 0.0f ? 1 : delta.Z < 0.0f ? -1 : 0;
+        float nextX = stepX == 0 ? Beyond : ((stepX > 0 ? x + 1 : x) - start.X) / delta.X;
+        float nextY = stepY == 0 ? Beyond : ((stepY > 0 ? y + 1 : y) - start.Y) / delta.Y;
+        float nextZ = stepZ == 0 ? Beyond : ((stepZ > 0 ? z + 1 : z) - start.Z) / delta.Z;
+        float stepParameterX = stepX == 0 ? 0.0f : stepX / delta.X;
+        float stepParameterY = stepY == 0 ? 0.0f : stepY / delta.Y;
+        float stepParameterZ = stepZ == 0 ? 0.0f : stepZ / delta.Z;
+
+        // The segment crosses one cell boundary on each pass. The cap is a guard against a defect in this method (T-2).
+        int remaining = grid.SizeX + grid.SizeY + grid.SizeZ + 3;
+        while (true)
+        {
+            float parameter = nextX;
+            Axis axis = Axis.X;
+            if (nextY < parameter)
+            {
+                parameter = nextY;
+                axis = Axis.Y;
+            }
+
+            if (nextZ < parameter)
+            {
+                parameter = nextZ;
+                axis = Axis.Z;
+            }
+
+            if (parameter > 1.0f)
+            {
+                return new RayHit(false, length);
+            }
+
+            if (axis == Axis.X)
+            {
+                x += stepX;
+                nextX += stepParameterX;
+            }
+            else if (axis == Axis.Y)
+            {
+                y += stepY;
+                nextY += stepParameterY;
+            }
+            else
+            {
+                z += stepZ;
+                nextZ += stepParameterZ;
+            }
+
+            if (IsBlock(grid, x, y, z))
+            {
+                metBlock = true;
+            }
+            else if (metBlock)
+            {
+                return new RayHit(true, parameter * length);
+            }
+
+            remaining--;
+            if (remaining < 0)
+            {
+                ContextException runaway = new($"The rock march from {start} to {end} visited more cells than the grid holds, which is a defect of the march.");
+                runaway.AddContext("start", start.ToString());
+                runaway.AddContext("end", end.ToString());
+                throw runaway;
+            }
+        }
+    }
+
+    /// <summary>Answers whether a cell is a block: solid, and not a ramp. A cell outside the grid is a block (D-237).</summary>
+    private static bool IsBlock(VoxelGrid grid, int x, int y, int z)
+    {
+        return !grid.TryGetRamp(x, y, z, out _) && grid.IsSolid(x, y, z);
+    }
+
     /// <summary>Stops a coordinate that is not a number, because no march can read it (T-2).</summary>
     private static void CheckFinite(string name, Vector3 value)
     {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using WhatYouCarry.Core.Camera;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Replay;
@@ -93,27 +94,34 @@ public sealed class CameraTests
         hash.Add(aim.Direction.Z);
     }
 
-    /// <summary>The constants of D-241, D-242, D-244, and D-246 hold.</summary>
+    /// <summary>The constants of D-241, D-242, D-244, D-246, D-719, and D-720 hold. PR-97 regression: the shoulder offsets of D-242 fail it.</summary>
     [Fact]
     public void TheConstantsHold()
     {
         Assert.Equal(8000, SimulationLoop.PitchLimit);
         Assert.Equal(1.5f, OrbitCamera.PivotHeight);
-        Assert.Equal(0.6f, OrbitCamera.ShoulderRight);
-        Assert.Equal(0.3f, OrbitCamera.ShoulderUp);
+        Assert.Equal(0.9f, OrbitCamera.ShoulderRight);
+        Assert.Equal(0.7f, OrbitCamera.ShoulderUp);
         Assert.Equal(3.0f, OrbitCamera.BoomLength);
         Assert.Equal(0.25f, OrbitCamera.CameraRadius);
+        Assert.Equal(2.0f, OrbitCamera.ClosestView);
         Assert.Equal(5.0f, AimAssist.ConeDegrees);
         Assert.Equal(0.5f, AimAssist.Strength);
     }
 
-    /// <summary>At rest the camera sits behind the right shoulder: 0.6 right, 0.3 up, and 3 back from the pivot 1.5 over the feet (D-242).</summary>
+    /// <summary>
+    /// At rest the camera sits behind the right shoulder: 0.9 right, 0.7 up, and 3 back from the pivot 1.5 over the feet
+    /// (D-242, D-719). The camera sits 0.4 over the head of the body of 1.8 (F-195). With no wall the drawn camera is the
+    /// end of the boom (D-720).
+    /// </summary>
     [Fact]
     public void TheCameraSitsBehindTheRightShoulder()
     {
         CameraPose pose = OrbitCamera.Place(TestWorld.FlatFloor(16, 8), Feet, 0, 0);
 
-        Assert.Equal(new Vector3(8.6f, 2.8f, 11.0f), pose.Position);
+        Assert.Equal(new Vector3(8.9f, 3.2f, 11.0f), pose.Position);
+        Assert.Equal(pose.Position, pose.View);
+        Assert.InRange(pose.Position.Y - Feet.Y - PlayerBody.Height, 0.4f - 1e-5f, 0.4f + 1e-5f);
         Assert.Equal(new Vector3(0.0f, 0.0f, -1.0f), pose.Forward);
         Assert.Equal(new Vector3(1.0f, 0.0f, 0.0f), pose.Right);
         Assert.Equal(new Vector3(0.0f, 1.0f, 0.0f), pose.Up);
@@ -129,8 +137,8 @@ public sealed class CameraTests
         Assert.InRange(pose.Forward.Z, -1e-5f, 1e-5f);
         Assert.InRange(pose.Right.Z, -1.0f - 1e-5f, -1.0f + 1e-5f);
         Assert.InRange(pose.Position.X, 11.0f - 1e-4f, 11.0f + 1e-4f);
-        Assert.InRange(pose.Position.Y, 2.8f - 1e-4f, 2.8f + 1e-4f);
-        Assert.InRange(pose.Position.Z, 7.4f - 1e-4f, 7.4f + 1e-4f);
+        Assert.InRange(pose.Position.Y, 3.2f - 1e-4f, 3.2f + 1e-4f);
+        Assert.InRange(pose.Position.Z, 7.1f - 1e-4f, 7.1f + 1e-4f);
     }
 
     /// <summary>A positive pitch looks up, so forward gains a positive Y and the camera drops below the pivot (D-248).</summary>
@@ -164,7 +172,10 @@ public sealed class CameraTests
         Assert.InRange(loop.Camera().Forward.Z, -Cos80 - 1e-5f, -Cos80 + 1e-5f);
     }
 
-    /// <summary>A wall behind the player pulls the camera in to one camera radius before the wall (D-246).</summary>
+    /// <summary>
+    /// A wall behind the player pulls the camera in to one camera radius before the wall (D-246). The drawn camera stays
+    /// 2.0 behind the shoulder point, inside the wall, because the air past the wall is 3.0 behind it (D-720, F-197).
+    /// </summary>
     [Fact]
     public void AWallBehindPullsTheCameraIn()
     {
@@ -179,9 +190,50 @@ public sealed class CameraTests
 
         CameraPose pose = OrbitCamera.Place(grid, Feet, 0, 0);
         Assert.InRange(pose.Position.Z, 9.75f - 1e-5f, 9.75f + 1e-5f);
-        Assert.Equal(8.6f, pose.Position.X);
-        Assert.Equal(2.8f, pose.Position.Y);
-        Assert.False(grid.IsSolid(8, 2, 9));
+        Assert.Equal(8.9f, pose.Position.X);
+        Assert.Equal(3.2f, pose.Position.Y);
+        Assert.False(grid.IsSolid(8, 3, 9));
+
+        Assert.Equal(new Vector3(8.9f, 3.2f, 10.0f), pose.View);
+        Assert.Equal(OrbitCamera.ClosestView, (pose.View - pose.Shoulder).Length());
+    }
+
+    /// <summary>
+    /// PR-97: the drawn camera goes into the rock of a wall, and stops one camera radius before the air past it, so it
+    /// never enters a second air pocket (D-720). The aim ray still starts at the end of the boom march (D-247).
+    /// </summary>
+    [Fact]
+    public void TheDrawnCameraStopsBeforeASecondAirPocket()
+    {
+        VoxelGrid grid = TestWorld.FlatFloor(16, 8);
+        for (int y = 1; y < 8; y++)
+        {
+            for (int x = 0; x < 16; x++)
+            {
+                grid.Set(x, y, 9, BlockId.RawStone);
+            }
+        }
+
+        // The shoulder point sits at z = 8.85. The wall fills z = 9 to 10, and the air past it starts 1.15 behind the
+        // shoulder point, so the drawn camera stops at 0.9 behind it.
+        CameraPose pose = OrbitCamera.Place(grid, new Vector3(8.0f, 1.0f, 8.85f), 0, 0);
+        Assert.Equal(new Vector3(8.9f, 3.2f, 8.85f), pose.Position);
+        Assert.InRange(pose.View.Z, 9.75f - 1e-5f, 9.75f + 1e-5f);
+        Assert.Equal(8.9f, pose.View.X);
+        Assert.Equal(3.2f, pose.View.Y);
+        Assert.True(grid.IsSolid(8, 3, 9));
+    }
+
+    /// <summary>PR-97: a look up sends the drawn camera into the floor, 2.0 behind the shoulder point along the boom line (D-720).</summary>
+    [Fact]
+    public void ALookUpSendsTheDrawnCameraIntoTheFloor()
+    {
+        VoxelGrid grid = TestWorld.FlatFloor(16, 8);
+        CameraPose pose = OrbitCamera.Place(grid, Feet, 0, 8000);
+
+        Vector3 expected = pose.Shoulder - (pose.Forward * OrbitCamera.ClosestView);
+        Assert.Equal(expected, pose.View);
+        Assert.True(pose.View.Y < 1.0f, $"The drawn camera at {pose.View} is not inside the floor.");
     }
 
     /// <summary>A player who hugs a right wall gets a shoulder point pulled in along the offset, and never a camera inside rock (D-249).</summary>
@@ -197,15 +249,15 @@ public sealed class CameraTests
             }
         }
 
-        // The feet at 8.65 put the box face at 8.95, and the shoulder target at 9.25 sits inside the wall.
+        // The feet at 8.65 put the box face at 8.95, and the shoulder target at 9.55 sits inside the wall.
         Vector3 feet = new(8.65f, 1.0f, 8.0f);
         CameraPose pose = OrbitCamera.Place(grid, feet, 0, 0);
 
-        // The offset march of 0.6 right and 0.3 up meets the wall 0.35 along X, and it keeps 0.25 of room.
-        float along = (0.35f / 0.6f * MathF.Sqrt(0.45f)) - OrbitCamera.CameraRadius;
-        float fraction = along / MathF.Sqrt(0.45f);
-        Assert.InRange(pose.Position.X, 8.65f + (0.6f * fraction) - 1e-3f, 8.65f + (0.6f * fraction) + 1e-3f);
-        Assert.InRange(pose.Position.Y, 2.5f + (0.3f * fraction) - 1e-3f, 2.5f + (0.3f * fraction) + 1e-3f);
+        // The offset march of 0.9 right and 0.7 up meets the wall 0.35 along X, and it keeps 0.25 of room.
+        float along = (0.35f / 0.9f * MathF.Sqrt(1.3f)) - OrbitCamera.CameraRadius;
+        float fraction = along / MathF.Sqrt(1.3f);
+        Assert.InRange(pose.Position.X, 8.65f + (0.9f * fraction) - 1e-3f, 8.65f + (0.9f * fraction) + 1e-3f);
+        Assert.InRange(pose.Position.Y, 2.5f + (0.7f * fraction) - 1e-3f, 2.5f + (0.7f * fraction) + 1e-3f);
         Assert.InRange(pose.Position.Z, 11.0f - 1e-4f, 11.0f + 1e-4f);
         Assert.False(grid.IsSolid((int)MathF.Floor(pose.Position.X), (int)MathF.Floor(pose.Position.Y), (int)MathF.Floor(pose.Position.Z)));
     }
@@ -225,7 +277,7 @@ public sealed class CameraTests
 
         // The shoulder point sits at z = 8.85, 0.15 before the wall at 9, which is less than the radius.
         CameraPose pose = OrbitCamera.Place(grid, new Vector3(8.0f, 1.0f, 8.85f), 0, 0);
-        Assert.Equal(new Vector3(8.6f, 2.8f, 8.85f), pose.Position);
+        Assert.Equal(new Vector3(8.9f, 3.2f, 8.85f), pose.Position);
     }
 
     /// <summary>A look straight up sends the boom down, and the floor stops it one radius short (D-241, D-246).</summary>
@@ -295,6 +347,58 @@ public sealed class CameraTests
                 CameraPose pose = loop.Camera();
                 Assert.False(InsideMaterial(loop.Grid, pose.Position), $"Seed {seed}, tick {tick}: the camera at {pose.Position} is inside a solid block.");
                 Assert.Equal(pose.Position, loop.Aim(NoTargets).Origin);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Answers whether a cell is a block for the rock march of D-720: solid, and not a ramp. The outside of the grid is a
+    /// block (D-237).
+    /// </summary>
+    private static bool IsBlock(VoxelGrid grid, Vector3 point)
+    {
+        int x = (int)MathF.Floor(point.X);
+        int y = (int)MathF.Floor(point.Y);
+        int z = (int)MathF.Floor(point.Z);
+        return !grid.TryGetRamp(x, y, z, out _) && grid.IsSolid(x, y, z);
+    }
+
+    /// <summary>
+    /// PR-97 (D-720). Over one thousand seeds on dug floors, one fifth on a pull request (D-480), with random look deltas
+    /// and movement, the drawn camera stands on the boom line, never nearer the shoulder point than the end of the boom
+    /// march. It is the end of the boom march, or it stands at most 2.0 behind the shoulder point. Samples every
+    /// centimeter from the end of the boom march to the drawn camera meet no open cell after a block. A failure names
+    /// its seed (D-66).
+    /// </summary>
+    [Fact]
+    public void DrawnCameraStandsOnTheBoomLine()
+    {
+        int seeds = SweepScope.Seeds(1000);
+        for (int seed = 1; seed <= seeds; seed++)
+        {
+            Random random = new(seed);
+            SimulationLoop loop = TestWorld.NewLoop((ulong)seed);
+            for (uint tick = 0; tick < 200; tick++)
+            {
+                loop.Step(SimulationTests.RandomIntent(random, tick));
+                CameraPose pose = loop.Camera();
+                string where = $"Seed {seed}, tick {tick}: the drawn camera at {pose.View}, with the boom end at {pose.Position}";
+                float boom = (pose.Position - pose.Shoulder).Length();
+                float drawn = (pose.View - pose.Shoulder).Length();
+                Vector3 expected = pose.Shoulder - (pose.Forward * drawn);
+                Assert.True((pose.View - expected).Length() < 1e-4f, $"{where}, is off the boom line.");
+                Assert.True(drawn >= boom - 1e-4f, $"{where}, is nearer the shoulder point than the boom end.");
+                Assert.True(pose.View == pose.Position || drawn <= OrbitCamera.ClosestView + 1e-4f, $"{where}, is farther than the closest view.");
+
+                bool metBlock = false;
+                int samples = (int)MathF.Ceiling((drawn - boom) * 100.0f);
+                for (int sample = 0; sample <= samples; sample++)
+                {
+                    float distance = boom + ((drawn - boom) * sample / Math.Max(samples, 1));
+                    bool block = IsBlock(loop.Grid, pose.Shoulder - (pose.Forward * distance));
+                    Assert.False(metBlock && !block, $"{where}, passes into an open cell after the rock at {distance} behind the shoulder point.");
+                    metBlock |= block;
+                }
             }
         }
     }

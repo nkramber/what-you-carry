@@ -41,6 +41,10 @@ namespace WhatYouCarry.Game.Render;
 /// and the sword. Every tree after it shares the meshes of its template, so a descent builds nodes and no
 /// mesh. The Deck trace measured 16.7 ms for the meshes of eight enemies in the tick of a descent (F-192).
 /// </para>
+/// <para>
+/// A model between the camera and the player, or near the camera, draws with the fade material (D-721). Each tree
+/// keeps its fade state, so a tree changes its material only on the frame that its fade changes.
+/// </para>
 /// </remarks>
 public sealed class EnemyNodes
 {
@@ -62,6 +66,7 @@ public sealed class EnemyNodes
     private readonly EnemyModel hunterModel;
     private readonly BlockbenchModel sword;
     private readonly Material material;
+    private readonly Material fadedMaterial;
     private readonly Dictionary<string, ModelNodeTree> familyTemplates = new(System.StringComparer.Ordinal);
     private readonly ModelNodeTree hunterTemplate;
     private readonly ModelNodeTree swordTemplate;
@@ -69,7 +74,9 @@ public sealed class EnemyNodes
     private readonly List<CoreVector3> previous = [];
     private readonly List<CoreVector3> current = [];
     private readonly List<float> lowests = [];
+    private readonly List<bool> faded = [];
     private ModelNodeTree? hunterTree;
+    private bool hunterFaded;
     private CoreVector3 hunterPrevious;
     private CoreVector3 hunterCurrent;
     private FloorPlan? stagedPlan;
@@ -81,14 +88,16 @@ public sealed class EnemyNodes
     /// <param name="hunterModel">The model that the hunter file names, which the Overseer draws with (D-698).</param>
     /// <param name="sword">The weapon model of PR-15, which every enemy holds (D-397).</param>
     /// <param name="material">The one model material of the scene (D-85).</param>
+    /// <param name="fadedMaterial">The material of a faded model (D-721).</param>
     /// <param name="layout">The texture layout, which places each face of every model (D-505).</param>
-    public EnemyNodes(Node parent, IReadOnlyDictionary<string, EnemyModel> familyModels, EnemyModel hunterModel, BlockbenchModel sword, Material material, TextureLayout layout)
+    public EnemyNodes(Node parent, IReadOnlyDictionary<string, EnemyModel> familyModels, EnemyModel hunterModel, BlockbenchModel sword, Material material, Material fadedMaterial, TextureLayout layout)
     {
         this.parent = parent;
         this.familyModels = familyModels;
         this.hunterModel = hunterModel;
         this.sword = sword;
         this.material = material;
+        this.fadedMaterial = fadedMaterial;
 
         // The templates hang from one hidden node under the parent, so they never draw, and the engine frees them
         // with the scene at the exit.
@@ -166,11 +175,13 @@ public sealed class EnemyNodes
         this.previous.Clear();
         this.current.Clear();
         this.lowests.Clear();
+        this.faded.Clear();
         if (this.hunterTree is not null)
         {
             this.parent.RemoveChild(this.hunterTree.Root);
             this.hunterTree.Root.QueueFree();
             this.hunterTree = null;
+            this.hunterFaded = false;
         }
 
         if (ReferenceEquals(plan, this.stagedPlan))
@@ -220,6 +231,7 @@ public sealed class EnemyNodes
             EnemyModel model = EnemyModels.Of(this.familyModels, enemies[index].Definition);
             this.trees.Add(this.BuildTree(this.familyTemplates[model.Path], model.Model));
             this.lowests.Add(model.Lowest);
+            this.faded.Add(false);
             this.previous.Add(enemies[index].Body.Position);
             this.current.Add(enemies[index].Body.Position);
         }
@@ -252,6 +264,7 @@ public sealed class EnemyNodes
             EnemyModel model = EnemyModels.Of(this.familyModels, enemies[index].Definition);
             this.trees.Add(this.stagedTrees[index]);
             this.lowests.Add(model.Lowest);
+            this.faded.Add(false);
             this.previous.Add(enemies[index].Body.Position);
             this.current.Add(enemies[index].Body.Position);
         }
@@ -281,17 +294,28 @@ public sealed class EnemyNodes
         return tree;
     }
 
-    /// <summary>Places every tree for one frame: the position between the two newest ticks, the yaw of the enemy, and a hidden node for a dead one.</summary>
+    /// <summary>
+    /// Places every tree for one frame: the position between the two newest ticks, the yaw of the enemy, the fade of
+    /// D-721, and a hidden node for a dead one.
+    /// </summary>
     /// <param name="enemies">The enemies of the floor, in the order that <see cref="Rebuild"/> read.</param>
     /// <param name="hunter">The Overseer of the floor, or null before expiry.</param>
     /// <param name="fraction">The part of the tick that the frame stands at, from zero to one.</param>
-    public void Draw(IReadOnlyList<Enemy> enemies, Hunter? hunter, float fraction)
+    /// <param name="camera">The drawn camera of the frame (D-720).</param>
+    /// <param name="fadeEnd">The player end of the segment of the wall fade (D-292).</param>
+    public void Draw(IReadOnlyList<Enemy> enemies, Hunter? hunter, float fraction, Vector3 camera, Vector3 fadeEnd)
     {
         if (this.hunterTree is not null && hunter is not null)
         {
-            CoreVector3 hunterFeet = RenderInterpolation.Between(this.hunterPrevious, this.hunterCurrent, fraction);
-            this.hunterTree.Root.Position = RenderInterpolation.ToGodot(hunterFeet) + new Vector3(0.0f, -this.hunterModel.Lowest, 0.0f);
+            Vector3 hunterFeet = RenderInterpolation.ToGodot(RenderInterpolation.Between(this.hunterPrevious, this.hunterCurrent, fraction));
+            this.hunterTree.Root.Position = hunterFeet + new Vector3(0.0f, -this.hunterModel.Lowest, 0.0f);
             this.hunterTree.Root.RotationDegrees = new Vector3(0.0f, hunter.Yaw / 100.0f, 0.0f);
+            bool hunterFades = ModelFade.Fades(camera, fadeEnd, ModelFade.BodyBox(hunterFeet));
+            if (hunterFades != this.hunterFaded)
+            {
+                ModelFade.SetMaterial(this.hunterTree.Root, hunterFades ? this.fadedMaterial : this.material);
+                this.hunterFaded = hunterFades;
+            }
         }
 
         for (int index = 0; index < this.trees.Count && index < enemies.Count; index++)
@@ -305,11 +329,18 @@ public sealed class EnemyNodes
             }
 
             tree.Root.Visible = true;
-            CoreVector3 feet = RenderInterpolation.Between(this.previous[index], this.current[index], fraction);
-            tree.Root.Position = RenderInterpolation.ToGodot(feet) + new Vector3(0.0f, -this.lowests[index], 0.0f);
+            Vector3 feet = RenderInterpolation.ToGodot(RenderInterpolation.Between(this.previous[index], this.current[index], fraction));
+            tree.Root.Position = feet + new Vector3(0.0f, -this.lowests[index], 0.0f);
 
             // The yaw turns counterclockwise seen from above, as a positive rotation about Y does (D-234).
             tree.Root.RotationDegrees = new Vector3(0.0f, enemy.Yaw / 100.0f, 0.0f);
+
+            bool fades = ModelFade.Fades(camera, fadeEnd, ModelFade.BodyBox(feet));
+            if (fades != this.faded[index])
+            {
+                ModelFade.SetMaterial(tree.Root, fades ? this.fadedMaterial : this.material);
+                this.faded[index] = fades;
+            }
         }
     }
 }

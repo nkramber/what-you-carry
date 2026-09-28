@@ -187,4 +187,49 @@ public sealed class GridRayTests
         Assert.Equal(new Vector3(0.0f, 0.0f, 1.0f), Vector3.Cross(new Vector3(1.0f, 0.0f, 0.0f), new Vector3(0.0f, 1.0f, 0.0f)));
         Assert.Equal(5.0f, new Vector3(3.0f, 0.0f, 4.0f).Length());
     }
+
+    /// <summary>PR-97: the rock march finds the air past a wall, where the drawn camera stops (D-720).</summary>
+    [Fact]
+    public void TheRockMarchFindsTheAirPastAWall()
+    {
+        RayHit hit = GridRay.FirstOpenPastRock(WalledRoom(), new Vector3(3.5f, 2.5f, 4.5f), new Vector3(9.5f, 2.5f, 4.5f));
+        Assert.True(hit.Hit);
+        Assert.InRange(hit.Distance, 3.5f - 1e-5f, 3.5f + 1e-5f);
+    }
+
+    /// <summary>PR-97: a segment that ends in the rock, or meets no block, has no hit (D-720).</summary>
+    [Fact]
+    public void TheRockMarchWithNoAirPastTheRockHasNoHit()
+    {
+        RayHit inRock = GridRay.FirstOpenPastRock(WalledRoom(), new Vector3(3.5f, 2.5f, 4.5f), new Vector3(6.5f, 2.5f, 4.5f));
+        Assert.False(inRock.Hit);
+        Assert.InRange(inRock.Distance, 3.0f - 1e-5f, 3.0f + 1e-5f);
+
+        RayHit inAir = GridRay.FirstOpenPastRock(WalledRoom(), new Vector3(1.5f, 2.5f, 4.5f), new Vector3(4.5f, 2.5f, 4.5f));
+        Assert.False(inAir.Hit);
+
+        // The outside of the grid is rock (D-237), so a segment past the edge stays in the rock.
+        RayHit pastTheEdge = GridRay.FirstOpenPastRock(WalledRoom(), new Vector3(14.5f, 2.5f, 4.5f), new Vector3(18.5f, 2.5f, 4.5f));
+        Assert.False(pastTheEdge.Hit);
+    }
+
+    /// <summary>PR-97: a ramp past a wall counts as open, so the drawn camera never stands in the cell of a ramp (D-720).</summary>
+    [Fact]
+    public void TheRockMarchCountsARampAsOpen()
+    {
+        VoxelGrid grid = WalledRoom();
+        grid.Set(7, 2, 4, new Ramp(RampRise.PlusX, 2, 0).Id);
+
+        RayHit hit = GridRay.FirstOpenPastRock(grid, new Vector3(3.5f, 2.5f, 4.5f), new Vector3(9.5f, 2.5f, 4.5f));
+        Assert.True(hit.Hit);
+        Assert.InRange(hit.Distance, 3.5f - 1e-5f, 3.5f + 1e-5f);
+    }
+
+    /// <summary>PR-97: a rock march with a coordinate that is not finite is an error that names it (T-2).</summary>
+    [Fact]
+    public void TheRockMarchNeedsFiniteCoordinates()
+    {
+        ContextException error = Assert.Throws<ContextException>(() => GridRay.FirstOpenPastRock(WalledRoom(), new Vector3(float.NaN, 2.5f, 4.5f), new Vector3(9.5f, 2.5f, 4.5f)));
+        Assert.Contains("name=start", error.Message, StringComparison.Ordinal);
+    }
 }

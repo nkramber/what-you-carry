@@ -211,7 +211,7 @@ public static class BitIdentitySweep
     /// <summary>
     /// Builds a course along one rise: a stone floor, a ramp of the run across the whole width, and a high floor one
     /// block up. A body walks up the slope on a diagonal with a jump on the slope, rolls down, and sprints down, and
-    /// the sweep folds its position, its vertical velocity, and the camera on every tick. Rays down onto the slope and
+    /// the sweep folds its position, its vertical velocity, and the camera with its drawn view on every tick (D-720). Rays down onto the slope and
     /// along the rise fold too, with the reachability search in both directions (PR-64 exit test 6). No dug floor
     /// holds a ramp before PR-66, so this run keeps the ramp collision, the ray march, and the search in the
     /// three-platform comparison.
@@ -275,6 +275,9 @@ public static class BitIdentitySweep
             hash.Add(pose.Position.X);
             hash.Add(pose.Position.Y);
             hash.Add(pose.Position.Z);
+            hash.Add(pose.View.X);
+            hash.Add(pose.View.Y);
+            hash.Add(pose.View.Z);
         }
 
         Vector3 up = new(0.0f, 1.0f, 0.0f);

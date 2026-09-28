@@ -24,8 +24,8 @@ public sealed class RenderInterpolationTests
     [Fact]
     public void PoseInterpolatesEveryField()
     {
-        CameraPose previous = new(new CoreVector3(0.0f, 0.0f, 0.0f), new CoreVector3(0.0f, 0.0f, -1.0f), new CoreVector3(1.0f, 0.0f, 0.0f), new CoreVector3(0.0f, 1.0f, 0.0f), new CoreVector3(0.0f, 2.0f, 0.0f));
-        CameraPose current = new(new CoreVector3(2.0f, 0.0f, 0.0f), new CoreVector3(0.0f, 0.0f, 1.0f), new CoreVector3(-1.0f, 0.0f, 0.0f), new CoreVector3(0.0f, 1.0f, 0.0f), new CoreVector3(2.0f, 2.0f, 0.0f));
+        CameraPose previous = new(new CoreVector3(0.0f, 0.0f, 0.0f), new CoreVector3(0.0f, 0.0f, -1.0f), new CoreVector3(1.0f, 0.0f, 0.0f), new CoreVector3(0.0f, 1.0f, 0.0f), new CoreVector3(0.0f, 2.0f, 0.0f), new CoreVector3(0.0f, 0.0f, 4.0f));
+        CameraPose current = new(new CoreVector3(2.0f, 0.0f, 0.0f), new CoreVector3(0.0f, 0.0f, 1.0f), new CoreVector3(-1.0f, 0.0f, 0.0f), new CoreVector3(0.0f, 1.0f, 0.0f), new CoreVector3(2.0f, 2.0f, 0.0f), new CoreVector3(2.0f, 0.0f, 6.0f));
 
         CameraPose middle = RenderInterpolation.Between(previous, current, 0.5f);
 
@@ -34,6 +34,7 @@ public sealed class RenderInterpolationTests
         Assert.Equal(new CoreVector3(0.0f, 0.0f, 0.0f), middle.Right);
         Assert.Equal(new CoreVector3(0.0f, 1.0f, 0.0f), middle.Up);
         Assert.Equal(new CoreVector3(1.0f, 2.0f, 0.0f), middle.Shoulder);
+        Assert.Equal(new CoreVector3(1.0f, 0.0f, 5.0f), middle.View);
     }
 
     /// <summary>A Core vector becomes an engine vector with no conversion, because the two share one frame (D-234).</summary>
