@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 317: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR pending, pending merge. Base `ec383bf`.
+
+### What this session did, and why
+
+- F-202 (D-724): the frame interpolated the two tick poses in a straight line, so a turn of 180 degrees drew the camera from the head. The Game now interpolates the look (`TickLook`), the yaw the short way, and places the pose of each frame with `OrbitCamera.Place`.
+- Exit test 1 fails on the pose interpolation of `main`: 1.5 meters in place of 3.0 at the fraction 0.25.
+- One placement costs about 0.7 microseconds on the spawn of seed 1, in a Release build on the Mac.
+- The shots of D-714 draw each frame at the fraction 0, so they cannot show F-202. The owner chose pairs of frames at a fraction of 0.5 as the evidence, and accepted the close frames of D-720 at the interpolated yaw (D-733).
+
+### State of the build
+
+- Local: the full suite (2144 tests, Smoke included), `det-lint`, `ste-check`, and the Godot build pass. The remote head of `main` is `ec383bf`.
+
+### In flight
+
+- The PR, the gitar pass, and the owner confirmation of exit test 3 on the committed frames.
+
+### Traps and gotchas
+
+- The Game bot session ends one second after the first descent (PR-18), so the full-clearer capture ends at tick 3821 on floor 2. The death at tick 7140 of D-714 comes from `bot-run`.
+- A frame shot never shows a frame between two ticks (D-733). For a turn frame, patch `FrameShots.IsShotTick` in a scratch worktree, and run with `--fixed-fps 120`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Open the PR, commit the frames, and ask the owner to confirm exit test 3.
+
 ## Session 316: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -300,34 +333,3 @@ None. The protocol of Gate 4 stays open under OQ-62, and it blocks nothing befor
 ### Next concrete action
 
 After the merge of PR #123, start PR-97 (D-715).
-
-## Session 307: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-95, author. Branch `fix/pr-95-seed-2-transition`. PR #122, pending merge. Base `5ca1e1e`.
-
-### What this session did, and why
-
-- Read the second review round of session 306. The record gives `Ready for owner merge` for the effective head `34c2ddf`, and P2-1 is withdrawn.
-- Wrote the merge summary of D-533, and asked the owner to confirm the merge (D-524).
-
-### State of the build
-
-- The remote head before this commit is `742fa6b`. Each check passes there, `review-gate` included. The work head of the automated pass stays `3e01603`.
-
-### In flight
-
-- The owner confirmation of the merge of PR #122.
-- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start by 14:47 UTC.
-
-### Traps and gotchas
-
-- None new. Session 303 lists the traps of the Deck trace.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.

@@ -798,7 +798,7 @@ Gate: the frame shots of D-714 and the HUD shot at the PR head show none of the 
 
 **PR-99: Camera turn frames.** 🔧
 The Game interpolates the look angles between two ticks, and places the drawn camera from them (D-724, F-202). A fast turn then keeps the view on the boom circle.
-Gate: the frame shots of D-714 at the PR head show no frame drawn from near the head.
+Gate: the frame shots of D-714 at the PR head match main, and the pairs of D-733 show no turn frame drawn from near the head.
 > *In plain English:* when the view turns fast, one frame can show the camera inside the player's head. This change turns the camera around the player instead.
 
 ### Phase 3: Full loop (gate: hub, loadout, death loss, bank, tree, saves, and replay resume work, and friends play)

@@ -1,5 +1,36 @@
 # Session handoff archive
 
+## Session 307: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-95, author. Branch `fix/pr-95-seed-2-transition`. PR #122, pending merge. Base `5ca1e1e`.
+
+### What this session did, and why
+
+- Read the second review round of session 306. The record gives `Ready for owner merge` for the effective head `34c2ddf`, and P2-1 is withdrawn.
+- Wrote the merge summary of D-533, and asked the owner to confirm the merge (D-524).
+
+### State of the build
+
+- The remote head before this commit is `742fa6b`. Each check passes there, `review-gate` included. The work head of the automated pass stays `3e01603`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #122.
+- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start by 14:47 UTC.
+
+### Traps and gotchas
+
+- None new. Session 303 lists the traps of the Deck trace.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
+
 ## Session 306: 2026-09-28, Codex
 
 Author: Codex
