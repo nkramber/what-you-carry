@@ -6,7 +6,7 @@ namespace WhatYouCarry.Game.Ui;
 /// <summary>
 /// The place and the size of each fixed element of the HUD, in layout pixels on the base of <see cref="UiScale"/>
 /// (D-446). The health display stands at the bottom left (D-442), the timer and its paused mark at the top center
-/// (D-443), the boss bar under them (D-445), and the stairwell prompt at the lower center (D-447).
+/// (D-443), the boss bar under them (D-445), and the stairwell prompt at the bottom right, clear of the body (D-728).
 /// </summary>
 /// <remarks>
 /// Each element keeps a margin from the screen edge, and no two elements overlap, so a wide screen moves the
@@ -73,9 +73,6 @@ public sealed record HudLayout(
     /// <summary>The font size of the stairwell prompt.</summary>
     public const int PromptFontPixels = 22;
 
-    /// <summary>The space from the bottom edge to the stairwell prompt, above the health display.</summary>
-    public const float PromptBottom = 120.0f;
-
     /// <summary>The layout of one layout size (D-446).</summary>
     public static HudLayout For(Vector2 size)
     {
@@ -91,7 +88,7 @@ public sealed record HudLayout(
         Rect2 bossName = new(bossLeft, paused.End.Y + Gap, BossWide, TextHigh);
         Rect2 bossBar = new(bossLeft, bossName.End.Y, BossWide, BossBarHigh);
 
-        Rect2 prompt = new((size.X - PromptWide) / 2.0f, size.Y - PromptBottom - PromptHigh, PromptWide, PromptHigh);
+        Rect2 prompt = new(size.X - Margin - PromptWide, size.Y - Margin - PromptHigh, PromptWide, PromptHigh);
         return new HudLayout(healthText, healthBar, timer, paused, bossName, bossBar, prompt);
     }
 

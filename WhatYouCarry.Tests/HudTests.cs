@@ -6,15 +6,21 @@ using Godot;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using WhatYouCarry.Core.Camera;
 using WhatYouCarry.Core.Content;
+using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Core.World;
+using WhatYouCarry.Game.Render;
 using WhatYouCarry.Game.Ui;
 using WhatYouCarry.Tools.DetLint;
 using Xunit;
+using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 
 namespace WhatYouCarry.Tests;
 
-/// <summary>The HUD, its layout, the damage numbers, and the navigation (PR-19, D-441 to D-447).</summary>
+/// <summary>The HUD, its layout, the damage numbers, and the navigation (PR-19, D-441 to D-447, PR-98, D-725 to D-728).</summary>
 public sealed class HudTests
 {
     private const string UiDirectory = "WhatYouCarry.Game/Ui";
@@ -122,7 +128,7 @@ public sealed class HudTests
         Assert.Null(DamageNumbers.Place(new Rect2(600.0f, 0.0f, 80.0f, 800.0f), Deck, 25, 0.0f, 0));
     }
 
-    /// <summary>A number lives 0.8 seconds, fades, and a number of no health is an error (D-444, T-2).</summary>
+    /// <summary>A number lives 0.8 seconds, holds full opacity for 0.5 seconds then fades (D-444, D-731), and a number of no health is an error (T-2).</summary>
     [Fact]
     public void DamageNumbersLiveTheirLifetime()
     {
@@ -136,7 +142,7 @@ public sealed class HudTests
 
         numbers.Advance(0.5f);
         Assert.Equal(3, numbers.Live.Count);
-        Assert.Equal(1.0f - (0.5f / DamageNumbers.LifetimeSeconds), DamageNumbers.Opacity(numbers.Live[0].Age), 4);
+        Assert.Equal(1.0f, DamageNumbers.Opacity(numbers.Live[0].Age), 4);
         numbers.Advance(0.3f);
         Assert.Empty(numbers.Live);
 
@@ -144,6 +150,86 @@ public sealed class HudTests
         Assert.Contains(DamageNumbers.EmptyHitMessage, empty.Message, StringComparison.Ordinal);
         Assert.Throws<ContextException>(() => DamageNumbers.BoxOf([]));
         Assert.Equal(new Rect2(1.0f, 2.0f, 4.0f, 6.0f), DamageNumbers.BoxOf([new Vector2(5.0f, 2.0f), new Vector2(1.0f, 8.0f)]));
+    }
+
+    /// <summary>
+    /// PR-98 exit test 1. A damage number has a font of 28 pixels at 800p (D-725), and a black outline of 3 pixels that
+    /// the engine size 10 draws (D-726). The box of a number holds one line of the font with the outline on each side.
+    /// </summary>
+    [Fact]
+    public void DamageNumberSizeAndOutline()
+    {
+        Assert.Equal(28, DamageNumbers.FontPixels);
+        Assert.Equal(3, DamageNumbers.OutlineWide);
+        Assert.Equal(10, DamageNumbers.EngineOutlineSize);
+        Assert.True(DamageNumbers.High >= DamageNumbers.FontPixels + (2 * DamageNumbers.OutlineWide), $"The box height {DamageNumbers.High} does not hold the font and the outline.");
+        Assert.True(DamageNumbers.Padding >= DamageNumbers.OutlineWide, $"The padding {DamageNumbers.Padding} does not hold the outline.");
+    }
+
+    /// <summary>
+    /// PR-98 exit test 1. A number holds full opacity for 0.5 seconds, then fades linearly to zero at 0.8 seconds
+    /// (D-731).
+    /// </summary>
+    [Fact]
+    public void DamageNumberHoldsThenFades()
+    {
+        Assert.Equal(1.0f, DamageNumbers.Opacity(0.0f), 4);
+        Assert.Equal(1.0f, DamageNumbers.Opacity(0.3f), 4);
+        Assert.Equal(1.0f, DamageNumbers.Opacity(0.5f), 4);
+        Assert.Equal(0.5f, DamageNumbers.Opacity(0.65f), 4);
+        Assert.Equal(0.0f, DamageNumbers.Opacity(0.8f), 4);
+    }
+
+    /// <summary>
+    /// PR-98 exit test 1. A dead enemy has no entity box, so its numbers hide with its model, the kill blow included
+    /// (D-730). The player and each living enemy keep a box.
+    /// </summary>
+    [Fact]
+    public void ADeadOwnerHasNoBox()
+    {
+        SimulationLoop loop = new(1, TestWorld.Content);
+        Assert.True(loop.Enemies.Count >= 2, $"Floor 1 of seed 1 holds {loop.Enemies.Count} enemies, and the test needs two.");
+        Enemy dead = loop.Enemies[0];
+        dead.TakeHit(dead.Health);
+        Assert.True(dead.IsDead);
+
+        Dictionary<int, WhatYouCarry.Core.Physics.Aabb> boxes = Hud.EntityBoxes(loop);
+        Assert.False(boxes.ContainsKey(dead.Owner), $"The dead enemy {dead.Owner} keeps a box.");
+        Assert.True(boxes.ContainsKey(SimulationLoop.PlayerOwner));
+        Assert.True(boxes.ContainsKey(loop.Enemies[1].Owner));
+    }
+
+    /// <summary>
+    /// PR-98 exit test 1. The stairwell prompt stands at the bottom right of the Deck (D-728). The body box never
+    /// overlaps it over the whole pitch range: with the full boom, at the nearest drawn camera of D-720, and with a
+    /// wall on the right that pulls the shoulder point in (F-201). With the shoulder point in its place, the body box
+    /// grown by the margin of the model also stays clear.
+    /// </summary>
+    [Fact]
+    public void PromptClearsTheBody()
+    {
+        Rect2 prompt = HudLayout.For(Deck).Prompt;
+        Assert.Equal(Deck.X - HudLayout.Margin, prompt.End.X, 3);
+        Assert.Equal(Deck.Y - HudLayout.Margin, prompt.End.Y, 3);
+
+        CoreVector3 feet = new(12.5f, TestWorld.FloorTop, 12.5f);
+        CameraPose near = OrbitCamera.Place(PromptRoom(true, false), feet, 0, 0);
+        Assert.Equal(OrbitCamera.ClosestView, (near.View - near.Shoulder).Length(), 3);
+
+        (bool BackWall, bool RightWall, float Margin)[] cases =
+        [
+            (false, false, 0.0f), (true, false, 0.0f), (true, true, 0.0f),
+            (false, false, Hud.SilhouetteMargin), (true, false, Hud.SilhouetteMargin),
+        ];
+        foreach ((bool backWall, bool rightWall, float margin) in cases)
+        {
+            VoxelGrid grid = PromptRoom(backWall, rightWall);
+            for (int pitch = -SimulationLoop.PitchLimit; pitch <= SimulationLoop.PitchLimit; pitch += 250)
+            {
+                Rect2 body = BodyOnDeck(OrbitCamera.Place(grid, feet, 0, pitch), feet, margin);
+                Assert.False(body.Intersects(prompt), $"Back wall {backWall}, right wall {rightWall}, margin {margin}, pitch {pitch}: the body box {body} overlaps the prompt {prompt}.");
+            }
+        }
     }
 
     /// <summary>
@@ -389,5 +475,55 @@ public sealed class HudTests
 
         Assert.True(constants.TryGetValue(name, out string? id), $"{path} gives Strings.Get '{argument}', which is no const string of the HUD.");
         return [id!];
+    }
+    /// <summary>
+    /// A room of 24 by 12 by 24 over a stone floor. At yaw zero the camera looks toward minus Z, so a back wall fills
+    /// z = 14 and past it, 1.5 meters behind the feet at z = 12.5. A right wall fills x = 13 and past it.
+    /// </summary>
+    private static VoxelGrid PromptRoom(bool backWall, bool rightWall)
+    {
+        VoxelGrid grid = TestWorld.FlatFloor(24, 12);
+        for (int x = 0; x < 24; x++)
+        {
+            for (int y = 1; y < 12; y++)
+            {
+                for (int z = 0; z < 24; z++)
+                {
+                    if ((backWall && z >= 14) || (rightWall && x >= 13))
+                    {
+                        grid.Set(x, y, z, BlockId.RawStone);
+                    }
+                }
+            }
+        }
+
+        return grid;
+    }
+
+    /// <summary>
+    /// The screen box on the Deck of the body box on its feet, grown by a margin on each side, from the drawn camera of
+    /// a pose. The engine camera keeps the height of the view, so one focal length in pixels serves
+    /// both axes. The box stops at the screen edge.
+    /// </summary>
+    private static Rect2 BodyOnDeck(CameraPose pose, CoreVector3 feet, float margin)
+    {
+        float focal = (Deck.Y / 2.0f) / MathF.Tan(PlaceholderScene.ViewDegrees * MathF.PI / 360.0f);
+        float side = PlayerBody.HalfWidth + margin;
+        List<Vector2> points = [];
+        for (int corner = 0; corner < 8; corner++)
+        {
+            CoreVector3 point = new(
+                feet.X + ((corner & 1) == 0 ? -side : side),
+                feet.Y + ((corner & 2) == 0 ? -margin : PlayerBody.Height + margin),
+                feet.Z + ((corner & 4) == 0 ? -side : side));
+            CoreVector3 fromView = point - pose.View;
+            float depth = CoreVector3.Dot(fromView, pose.Forward);
+            Assert.True(depth > 0.0f, $"The body corner {point} stands behind the drawn camera {pose.View}.");
+            points.Add(new Vector2(
+                (Deck.X / 2.0f) + (CoreVector3.Dot(fromView, pose.Right) / depth * focal),
+                (Deck.Y / 2.0f) - (CoreVector3.Dot(fromView, pose.Up) / depth * focal)));
+        }
+
+        return DamageNumbers.BoxOf(points).Intersection(new Rect2(Vector2.Zero, Deck));
     }
 }

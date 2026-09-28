@@ -6,6 +6,7 @@ using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Core.World;
 using WhatYouCarry.Game.Render;
 using Aabb = WhatYouCarry.Core.Physics.Aabb;
 using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
@@ -21,14 +22,19 @@ namespace WhatYouCarry.Game.Ui;
 /// <para>
 /// <see cref="HudLayout"/> places each element on the base of 1280 by 800, and the canvas layer takes the one scale
 /// of <see cref="UiScale"/> (D-446). The health shows at the bottom left (D-442), the timer at the top center with a
-/// paused mark while the stairwell pauses it (D-443), and the prompt at the lower center with the buttons of the last
-/// device (D-447, D-448). The boss bar hides until a boss exists, and the screenshot fixture shows it (D-445).
+/// paused mark while the stairwell pauses it (D-443), and the prompt at the bottom right with the buttons of the last
+/// device (D-447, D-448, D-728). The boss bar hides until a boss exists, and the screenshot fixture shows it (D-445).
 /// </para>
 /// <para>
 /// After each tick, the HUD reads the drop of health of the player and of each enemy, and each drop gets a damage
 /// number (D-444). The box of a number reads the entity box of the last two ticks, grown by a margin for the arms
 /// and the weapon of the model, so it holds the silhouette at each point between the two ticks (F-24). A descent
 /// clears the numbers, because the enemies of the old floor go.
+/// </para>
+/// <para>
+/// A number of an enemy hides on each frame that a wall or the body hides its owner from the drawn camera
+/// (<see cref="NumberSight"/>, D-727, D-729), and on each frame after its death (D-730). A number of the player hides
+/// only off the screen.
 /// </para>
 /// </remarks>
 public sealed class Hud
@@ -39,8 +45,11 @@ public sealed class Hud
     /// <summary>The opacity of the timer while the stairwell pauses the countdown (D-443).</summary>
     public const float PausedOpacity = 0.5f;
 
-    /// <summary>The thickness of the dark outline of each text, so a text reads on a bright floor.</summary>
+    /// <summary>The engine outline size of the dark outline of each text but the damage numbers, so a text reads on a bright floor.</summary>
     public const int OutlinePixels = 4;
+
+    /// <summary>The message of the error for a number of an enemy before the HUD read a tick, so no grid shows the wall between.</summary>
+    public const string NoGridMessage = "The HUD reads the grid of a tick before it hides a damage number behind a wall.";
 
     /// <summary>The message of the error for a bar whose most health is below one.</summary>
     public const string NoMostHealthMessage = "A health bar has a most health of one or more.";
@@ -73,6 +82,7 @@ public sealed class Hud
     private readonly Dictionary<int, Aabb> lastBoxes = [];
     private readonly Dictionary<int, Aabb> boxes = [];
     private readonly List<int> enemyHealth = [];
+    private VoxelGrid? grid;
     private int playerHealth = -1;
     private int floor = -1;
     private float bossFraction;
@@ -81,22 +91,22 @@ public sealed class Hud
     {
         this.strings = strings;
         this.Layer = layer;
-        LabelSettings text = Font(HudLayout.TextFontPixels, TextColor);
+        LabelSettings text = Font(HudLayout.TextFontPixels, TextColor, OutlinePixels);
         this.healthText = this.AddLabel(text, HorizontalAlignment.Left);
         this.healthBack = this.AddRect(BarBackColor);
         this.healthFill = this.AddRect(HealthFillColor);
-        this.timer = this.AddLabel(Font(HudLayout.TimerFontPixels, TextColor), HorizontalAlignment.Center);
-        this.paused = this.AddLabel(Font(HudLayout.PausedFontPixels, TextColor), HorizontalAlignment.Center);
+        this.timer = this.AddLabel(Font(HudLayout.TimerFontPixels, TextColor, OutlinePixels), HorizontalAlignment.Center);
+        this.paused = this.AddLabel(Font(HudLayout.PausedFontPixels, TextColor, OutlinePixels), HorizontalAlignment.Center);
         this.paused.Text = strings.Get(HudText.PausedId);
         this.bossName = this.AddLabel(text, HorizontalAlignment.Left);
         this.bossNumber = this.AddLabel(text, HorizontalAlignment.Right);
         this.bossBack = this.AddRect(BarBackColor);
         this.bossFill = this.AddRect(BossFillColor);
-        LabelSettings prompt = Font(HudLayout.PromptFontPixels, TextColor);
-        this.descend = this.AddLabel(prompt, HorizontalAlignment.Center);
-        this.ascend = this.AddLabel(prompt, HorizontalAlignment.Center);
-        this.dealtFont = Font(DamageNumbers.FontPixels, TextColor);
-        this.takenFont = Font(DamageNumbers.FontPixels, TakenColor);
+        LabelSettings prompt = Font(HudLayout.PromptFontPixels, TextColor, OutlinePixels);
+        this.descend = this.AddLabel(prompt, HorizontalAlignment.Right);
+        this.ascend = this.AddLabel(prompt, HorizontalAlignment.Right);
+        this.dealtFont = Font(DamageNumbers.FontPixels, TextColor, DamageNumbers.EngineOutlineSize);
+        this.takenFont = Font(DamageNumbers.FontPixels, TakenColor, DamageNumbers.EngineOutlineSize);
         this.ShowBoss(false);
     }
 
@@ -144,6 +154,7 @@ public sealed class Hud
     {
         bool newFloor = loop.Floor != this.floor;
         this.floor = loop.Floor;
+        this.grid = loop.Grid;
         if (newFloor)
         {
             this.numbers.Clear();
@@ -180,11 +191,28 @@ public sealed class Hud
         }
 
         this.boxes.Clear();
-        this.boxes[SimulationLoop.PlayerOwner] = loop.Body.Box;
+        foreach (KeyValuePair<int, Aabb> box in EntityBoxes(loop))
+        {
+            this.boxes[box.Key] = box.Value;
+        }
+    }
+
+    /// <summary>
+    /// The entity box of the player and of each living enemy after one tick, by owner. A dead enemy has no box, so its
+    /// numbers hide on the frame that its model hides, the kill blow included (D-322, D-730).
+    /// </summary>
+    public static Dictionary<int, Aabb> EntityBoxes(SimulationLoop loop)
+    {
+        Dictionary<int, Aabb> boxes = new() { [SimulationLoop.PlayerOwner] = loop.Body.Box };
         foreach (Enemy enemy in loop.Enemies)
         {
-            this.boxes[enemy.Owner] = enemy.Body.Box;
+            if (!enemy.IsDead)
+            {
+                boxes[enemy.Owner] = enemy.Body.Box;
+            }
         }
+
+        return boxes;
     }
 
     /// <summary>Adds one damage number with no tick, for the screenshot fixture.</summary>
@@ -262,16 +290,59 @@ public sealed class Hud
         }
     }
 
-    /// <summary>The box of one damage number on the layout, or null when its entity has no box or stands behind the camera.</summary>
+    /// <summary>
+    /// The box of one damage number on the layout, or null when its entity has no box, stands behind the camera, or
+    /// is an enemy that a wall or the body hides (D-727, D-729).
+    /// </summary>
+    /// <exception cref="ContextException">A number of an enemy has a box before the HUD read the grid of a tick.</exception>
     private Rect2? PlaceNumber(Camera3D camera, float scale, Vector2 size, int index)
     {
         DamageNumber number = this.numbers.Live[index];
-        if (!this.boxes.TryGetValue(number.Owner, out Aabb now))
+        if (this.ScreenBox(camera, scale, number.Owner) is not Rect2 entity)
         {
             return null;
         }
 
-        Aabb before = this.lastBoxes.TryGetValue(number.Owner, out Aabb last) ? last : now;
+        if (number.Owner != SimulationLoop.PlayerOwner)
+        {
+            VoxelGrid grid = this.grid ?? throw new ContextException(NoGridMessage);
+
+            // The engine frame and the Core frame are one, so no component changes (D-234).
+            Vector3 eye = camera.GlobalPosition;
+            CoreVector3 drawn = new(eye.X, eye.Y, eye.Z);
+            CoreVector3 center = Center(this.boxes[number.Owner]);
+            if (NumberSight.WallHides(grid, drawn, center))
+            {
+                return null;
+            }
+
+            if (this.ScreenBox(camera, scale, SimulationLoop.PlayerOwner) is Rect2 body)
+            {
+                Vector2 point = camera.UnprojectPosition(RenderInterpolation.ToGodot(center)) / scale;
+                float ownerDistance = (center - drawn).Length();
+                float bodyDistance = (Center(this.boxes[SimulationLoop.PlayerOwner]) - drawn).Length();
+                if (NumberSight.BodyHides(point, body, ownerDistance, bodyDistance))
+                {
+                    return null;
+                }
+            }
+        }
+
+        return DamageNumbers.Place(entity, size, number.Amount, number.Age, this.numbers.NewerOnOwner(index));
+    }
+
+    /// <summary>
+    /// The screen box of one entity on the layout: the entity box of the last two ticks, grown by
+    /// <see cref="SilhouetteMargin"/>. Null when the entity has no box, or when a corner stands behind the camera.
+    /// </summary>
+    private Rect2? ScreenBox(Camera3D camera, float scale, int owner)
+    {
+        if (!this.boxes.TryGetValue(owner, out Aabb now))
+        {
+            return null;
+        }
+
+        Aabb before = this.lastBoxes.TryGetValue(owner, out Aabb last) ? last : now;
         CoreVector3 min = new(
             MathF.Min(now.Min.X, before.Min.X) - SilhouetteMargin,
             MathF.Min(now.Min.Y, before.Min.Y) - SilhouetteMargin,
@@ -297,7 +368,7 @@ public sealed class Hud
             points.Add(camera.UnprojectPosition(world) / scale);
         }
 
-        return DamageNumbers.Place(DamageNumbers.BoxOf(points), size, number.Amount, number.Age, this.numbers.NewerOnOwner(index));
+        return DamageNumbers.BoxOf(points);
     }
 
     /// <summary>Shows or hides every node of the boss bar.</summary>
@@ -331,10 +402,16 @@ public sealed class Hud
         return rect;
     }
 
-    /// <summary>The font of one size and one color, with the dark outline, in the default font of the engine (D-441).</summary>
-    private static LabelSettings Font(int pixels, Color color)
+    /// <summary>The font of one size and one color, with the dark outline of one engine size, in the default font of the engine (D-441).</summary>
+    private static LabelSettings Font(int pixels, Color color, int outline)
     {
-        return new LabelSettings { FontSize = pixels, FontColor = color, OutlineSize = OutlinePixels, OutlineColor = OutlineColor };
+        return new LabelSettings { FontSize = pixels, FontColor = color, OutlineSize = outline, OutlineColor = OutlineColor };
+    }
+
+    /// <summary>The center of an entity box.</summary>
+    private static CoreVector3 Center(Aabb box)
+    {
+        return (box.Min + box.Max) * 0.5f;
     }
 
     /// <summary>The part of the most health that the health is, from zero to one.</summary>

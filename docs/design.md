@@ -792,7 +792,7 @@ Gate: the frame shots of D-714 at the PR head show none of the three findings.
 > *In plain English:* in a fight the camera shows the player's back and not the enemy. This change moves the camera so the fight stays in view.
 
 **PR-98: Damage numbers and prompt.** 🔧
-The damage numbers grow and get a dark outline. An owner that the camera cannot see shows no number, and the stairwell prompt moves clear of the body (D-716, F-199, F-201, F-24).
+The damage numbers grow to 28 pixels with a black outline of 3 pixels, and hold full opacity before the fade (D-725, D-726, D-731). A wall or the body that hides an enemy from the drawn camera hides its number, and so does its death (D-727, D-729, D-730). The stairwell prompt moves to the bottom right, clear of the body (D-728). These changes answer D-716, F-199, F-201, and F-24.
 Gate: the frame shots of D-714 and the HUD shot at the PR head show none of the findings.
 > *In plain English:* the damage numbers are hard to read on the Deck. This change makes them larger and clearer, and keeps the prompt off the player.
 
