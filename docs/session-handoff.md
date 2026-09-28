@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 318: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-99, reviewer. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
+
+### What this session did, and why
+
+- Reviewed the camera interpolation change, its tests, its frame evidence, and the PR contracts.
+- Added the review record for effective head `552874d`. The provider gate passed. The review found no blocking defect.
+
+### State of the build
+
+- Local focused tests passed, 6 tests. The full suite passed, 2144 tests, on macOS arm64 with .NET 10.
+- GitHub run `36492529592` passed the three-platform CI and smoke checks on the same code. The later PR commits changed documents and frame evidence only.
+- The remote PR branch head at review start was `1dd704b`. The review record and this handoff are in the metadata commit pushed to the PR branch.
+
+### In flight
+
+- The owner can review and merge PR #126.
+
+### Traps and gotchas
+
+- Gitar's approval summary named no specific item. D-550 classifies it as a notice.
+- The frame pairs show the accepted camera position inside rock after tick 2800. D-733 and D-734 record this result.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Review the merge summary, then merge PR #126 when ready.
+
 ## Session 317: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -299,37 +332,3 @@ None.
 ### Next concrete action
 
 The owner can review the record and merge PR #123 when its checks pass.
-
-## Session 308: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-96, author. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
-
-### What this session did, and why
-
-- PR-92 exit test 3 passes. The scheduled night of 15:18 UTC on 2026-09-28 on `main` at `5ca1e1e` (run 36442573875) succeeded with eight sweep jobs. Full-clearer and reachability ran as two shards each. The record on `night-results` names each of the six sweeps once in each section. No night failed, so the Pushover check of PR-91 exit test 23 did not apply. The sweeps took 2 to 9 minutes each, where the night of 2026-09-27 took up to 2.5 hours.
-- The owner answered OQ-62 in part, for Gate 2: D-711 to D-714. Sequence item 56 got its roadmap entry, PR-96.
-- `--frame-shots <directory>` writes one Deck frame with the HUD each second of a bot session. The flag needs `--bot`. A headless run, a failed write, and a shot with no new frame are each an error line and exit code 1.
-- The Tier 4 pass ran on the full-clearer and the timer-tester on seed 1, and on the HUD shot. It found F-195 to F-201. The owner gave each its disposition: D-715 (PR-97, the camera), D-716 (PR-98, the numbers and the prompt, F-24), D-717 (F-198 in the Gate 2 play), and D-718 (F-200 to OQ-61).
-
-### State of the build
-
-- The remote head of `main` is `7bab7cf`. The local suite, `det-lint`, `asset-qa`, and `ste-check` pass on the branch.
-
-### In flight
-
-- PR #123: the automated pass, then `make codex-review`.
-
-### Traps and gotchas
-
-- A Godot window that another window covers draws no frame, and the ticks go on. The first timer-tester capture wrote 204 copies of one frame, because a HUD shot window opened over it. Keep the capture window clear. The capture now stops with an error line.
-- Readers of 30 or more frames can end on a connection reset. Split the frames into smaller sets.
-- The timer-tester stands still, so 212 of its frames differ only in the timer. A pixel comparison proves it faster than a read of each frame.
-
-### Open questions that block progress
-
-None. The protocol of Gate 4 stays open under OQ-62, and it blocks nothing before Phase 4.
-
-### Next concrete action
-
-After the merge of PR #123, start PR-97 (D-715).

@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 308: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-96, author. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
+
+### What this session did, and why
+
+- PR-92 exit test 3 passes. The scheduled night of 15:18 UTC on 2026-09-28 on `main` at `5ca1e1e` (run 36442573875) succeeded with eight sweep jobs. Full-clearer and reachability ran as two shards each. The record on `night-results` names each of the six sweeps once in each section. No night failed, so the Pushover check of PR-91 exit test 23 did not apply. The sweeps took 2 to 9 minutes each, where the night of 2026-09-27 took up to 2.5 hours.
+- The owner answered OQ-62 in part, for Gate 2: D-711 to D-714. Sequence item 56 got its roadmap entry, PR-96.
+- `--frame-shots <directory>` writes one Deck frame with the HUD each second of a bot session. The flag needs `--bot`. A headless run, a failed write, and a shot with no new frame are each an error line and exit code 1.
+- The Tier 4 pass ran on the full-clearer and the timer-tester on seed 1, and on the HUD shot. It found F-195 to F-201. The owner gave each its disposition: D-715 (PR-97, the camera), D-716 (PR-98, the numbers and the prompt, F-24), D-717 (F-198 in the Gate 2 play), and D-718 (F-200 to OQ-61).
+
+### State of the build
+
+- The remote head of `main` is `7bab7cf`. The local suite, `det-lint`, `asset-qa`, and `ste-check` pass on the branch.
+
+### In flight
+
+- PR #123: the automated pass, then `make codex-review`.
+
+### Traps and gotchas
+
+- A Godot window that another window covers draws no frame, and the ticks go on. The first timer-tester capture wrote 204 copies of one frame, because a HUD shot window opened over it. Keep the capture window clear. The capture now stops with an error line.
+- Readers of 30 or more frames can end on a connection reset. Split the frames into smaller sets.
+- The timer-tester stands still, so 212 of its frames differ only in the timer. A pixel comparison proves it faster than a read of each frame.
+
+### Open questions that block progress
+
+None. The protocol of Gate 4 stays open under OQ-62, and it blocks nothing before Phase 4.
+
+### Next concrete action
+
+After the merge of PR #123, start PR-97 (D-715).
+
 ## Session 307: 2026-09-28, Claude Code
 
 Author: Claude Code
