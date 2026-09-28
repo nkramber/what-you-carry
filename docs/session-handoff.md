@@ -2,6 +2,45 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 303: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-95, author. Branch `fix/pr-95-seed-2-transition`. PR #122, pending merge. Base `5ca1e1e`.
+
+### What this session did, and why
+
+- Traced the seed 2 transition on the Deck over SSH, after the owner said that the Deck was ready (D-606, G-17). The timing patch stayed out of the branch.
+- The trace named two costs in the tick of the descent (F-193). The dig task of floor 3 started in that tick, and its allocations started a full collection of 4.1 to 5.0 ms there. The enemy trees of floor 2 took 3.2 to 3.5 ms.
+- `e538dd9`: the next call of `ChunkSwap.UploadSome` starts the dig, after the frame log reads the frame. One run in three still missed (24823), with a gen 0 collection inside the tree build.
+- `34c2ddf`: `EnemyNodes` builds the trees of the next floor hidden, one each frame, from the plan that the worker offers. The descent shows them. The swap line gains `digging`, `stagedTrees`, and `builtTrees`.
+- Tests: a source test of the dig start in `TransitionTests`, and the stairwell smoke test asserts `digging:false` and `builtTrees:0`. Both fail on the code of `main`.
+- The M-3 table at `34c2ddf`: seeds 1, 2, 2, 2, 3 meet D-709 and D-635. The transition frame takes 15.7 to 16.4 ms. M-3 and PR-95 are marked done, and PR-13 exit test 7 passes.
+- The raw logs, the traces before and after, and an index are in `docs/reviews/pr-122-deck/`.
+
+### State of the build
+
+- `main` is `5ca1e1e`. The code head is `34c2ddf`. The full suite passed locally, 2110 tests, with `det-lint`, `asset-qa`, and `ste-check` clean.
+
+### In flight
+
+- PR #122: CI, the automated pass, then `make codex-review`.
+- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start by 14:05 UTC. Its record on `night-results` must name each sweep once, over eight sweep jobs.
+
+### Traps and gotchas
+
+- A timing patch that writes lines or makes strings in the frames moves the collector, and the first console write cost 3.3 ms. Keep the numbers in fixed arrays, and write them later (runbook, "The Deck runs").
+- On seed 2 the end line `transitionMicrosMax` is the F-190 stall at frame 2019, inside the window. Read the transition frame in the frame log.
+- The Deck went to sleep once during the session. `systemd-inhibit` over SSH needs interactive authentication.
+- `timeout` does not exist on the Mac. zsh does not split `set -- $p`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
+
 ## Session 302: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -306,36 +345,3 @@ None.
 ### Next concrete action
 
 Read the second review. When it approves `ce02802`, check the night of PR-92 exit test 3, and give the owner the merge summary.
-
-## Session 293: 2026-09-27, Codex
-
-Author: Codex
-Session: PR-77, reviewer. Branch `feat/pr-77-light-and-edges`. PR #118, review blocked. Effective head `ce02802`.
-
-### What this session did, and why
-
-- Reviewed the complete PR-77 diff, its contracts, tests, documents, and comments.
-- The code review found no defect. The review record is blocked because exit test 2 lacks the raw Deck frame logs.
-
-### State of the build
-
-- The remote head before publication was `0679715`. The first review publication reached `9449f83`, verified with `gh pr view`. The implementation head is `ce02802`.
-- The focused contact sheet, atlas mesher, and game-shape tests passed: 112 of 112 on macOS arm64 with .NET 10.0.400.
-- CI, three smoke jobs, bit identity, asset QA, determinism lint, STE, documents, doc gate, night gate, and Gitar passed on `0679715`. On `9449f83`, Gitar and the document checks passed. Code, smoke, and bit-identity jobs skipped because the push changed documents only. `evaluate` and `review-gate` failed because the review verdict is blocked.
-
-### In flight
-
-- The review record needs the Deck frame logs for exit test 2 before it can approve PR #118.
-
-### Traps and gotchas
-
-- The handoff of session 292 reports the Deck measurements, but the logs and their artifact path are not in this checkout.
-- The approved contact sheet of D-682 is outside this checkout.
-
-### Open questions that block progress
-
-None. Required evidence is missing for exit test 2.
-
-### Next concrete action
-
-Add the three Deck frame logs to the review evidence, then reassess exit test 2 and update the review record.

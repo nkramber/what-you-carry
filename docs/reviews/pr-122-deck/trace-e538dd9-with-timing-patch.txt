@@ -1,0 +1,110 @@
+# run 1
+PROBE SWAP tick 1343 pre 5 log 77 jitstep 0 jitswap 0 jitrebuild 59 rfree 510 rgrow 3344 tree1 602 treerest 2736 step 19 swap 0 free 0 build 0 show 0 startdig 0 fromworker 0 shown 0 rebuild 3857 enemies 7 hud 1 sounds 5 enemyafter 0
+PROBE FT 1986 tick 1338 frame 11061 ticks 36 upload 0 gc 0 g 0 jit 0 jitn 0 proc 120
+PROBE FT 1987 tick 1338 frame 11071 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 113
+PROBE FT 1988 tick 1339 frame 11046 ticks 32 upload 0 gc 0 g 0 jit 0 jitn 0 proc 109
+PROBE FT 1989 tick 1340 frame 11228 ticks 33 upload 0 gc 0 g 0 jit 0 jitn 0 proc 106
+PROBE FT 1990 tick 1340 frame 11007 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 101
+PROBE FT 1991 tick 1341 frame 11369 ticks 37 upload 0 gc 0 g 0 jit 0 jitn 0 proc 102
+PROBE FT 1992 tick 1342 frame 11052 ticks 37 upload 0 gc 0 g 0 jit 0 jitn 0 proc 134
+PROBE FT 1993 tick 1342 frame 10940 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 145
+PROBE FT 1994 tick 1343 frame 18984 ticks 5488 upload 729 gc 0 g 0 jit 1249 jitn 8 proc 151
+PROBE FT 1995 tick 1344 frame 9131 ticks 5508 upload 0 gc 4883 g 111 jit 0 jitn 0 proc 1010
+PROBE FT 1996 tick 1344 frame 5354 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 167
+PROBE FT 1997 tick 1345 frame 11011 ticks 36 upload 0 gc 0 g 0 jit 0 jitn 0 proc 132
+PROBE FT 1998 tick 1346 frame 11085 ticks 37 upload 0 gc 0 g 0 jit 0 jitn 0 proc 132
+PROBE FT 1999 tick 1346 frame 10934 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 131
+PROBE FT 2000 tick 1347 frame 11308 ticks 37 upload 0 gc 1433 g 110 jit 0 jitn 0 proc 141
+PROBE FT 2001 tick 1348 frame 11055 ticks 39 upload 0 gc 0 g 0 jit 0 jitn 0 proc 129
+PROBE FT 2002 tick 1348 frame 11207 ticks 0 upload 0 gc 354 g 100 jit 0 jitn 0 proc 129
+PROBE FT 2003 tick 1349 frame 11164 ticks 45 upload 0 gc 326 g 100 jit 0 jitn 0 proc 181
+PROBE FT 2004 tick 1350 frame 10922 ticks 38 upload 0 gc 331 g 100 jit 0 jitn 0 proc 147
+PROBE FT 2005 tick 1350 frame 11630 ticks 0 upload 0 gc 339 g 100 jit 0 jitn 0 proc 129
+# run 2
+PROBE SWAP tick 1343 pre 5 log 95 jitstep 0 jitswap 0 jitrebuild 64 rfree 501 rgrow 3436 tree1 628 treerest 2803 step 21 swap 0 free 0 build 0 show 0 startdig 0 fromworker 0 shown 0 rebuild 3939 enemies 7 hud 2 sounds 4 enemyafter 0
+PROBE FT 1989 tick 1338 frame 11245 ticks 37 upload 0 gc 0 g 0 jit 0 jitn 0 proc 121
+PROBE FT 1990 tick 1338 frame 11021 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 103
+PROBE FT 1991 tick 1339 frame 11158 ticks 33 upload 0 gc 0 g 0 jit 0 jitn 0 proc 109
+PROBE FT 1992 tick 1340 frame 11083 ticks 33 upload 0 gc 0 g 0 jit 0 jitn 0 proc 105
+PROBE FT 1993 tick 1340 frame 10900 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 102
+PROBE FT 1994 tick 1341 frame 11213 ticks 38 upload 0 gc 0 g 0 jit 0 jitn 0 proc 110
+PROBE FT 1995 tick 1342 frame 11221 ticks 37 upload 0 gc 0 g 0 jit 0 jitn 0 proc 124
+PROBE FT 1996 tick 1342 frame 11147 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 142
+PROBE FT 1997 tick 1343 frame 18853 ticks 5535 upload 737 gc 0 g 0 jit 1158 jitn 8 proc 136
+PROBE FT 1998 tick 1344 frame 8612 ticks 5053 upload 0 gc 4777 g 111 jit 0 jitn 0 proc 1020
+PROBE FT 1999 tick 1344 frame 5897 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 145
+PROBE FT 2000 tick 1345 frame 11069 ticks 41 upload 0 gc 0 g 0 jit 0 jitn 0 proc 130
+PROBE FT 2001 tick 1346 frame 11052 ticks 35 upload 0 gc 0 g 0 jit 0 jitn 0 proc 129
+PROBE FT 2002 tick 1346 frame 10950 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 131
+PROBE FT 2003 tick 1347 frame 11301 ticks 44 upload 0 gc 1425 g 110 jit 0 jitn 0 proc 169
+PROBE FT 2004 tick 1348 frame 11180 ticks 42 upload 0 gc 0 g 0 jit 0 jitn 0 proc 157
+PROBE FT 2005 tick 1348 frame 11029 ticks 0 upload 0 gc 344 g 100 jit 0 jitn 0 proc 174
+PROBE FT 2006 tick 1349 frame 11167 ticks 42 upload 0 gc 325 g 100 jit 0 jitn 0 proc 185
+PROBE FT 2007 tick 1350 frame 11079 ticks 41 upload 0 gc 350 g 100 jit 0 jitn 0 proc 158
+PROBE FT 2008 tick 1350 frame 10998 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 159
+# run 3
+PROBE SWAP tick 1343 pre 6 log 76 jitstep 0 jitswap 0 jitrebuild 93 rfree 529 rgrow 3230 tree1 629 treerest 2597 step 20 swap 0 free 0 build 0 show 0 startdig 0 fromworker 0 shown 0 rebuild 3761 enemies 7 hud 2 sounds 4 enemyafter 0
+PROBE FT 1988 tick 1337 frame 11140 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 108
+PROBE FT 1989 tick 1338 frame 11146 ticks 36 upload 0 gc 0 g 0 jit 0 jitn 0 proc 131
+PROBE FT 1990 tick 1339 frame 11040 ticks 33 upload 0 gc 0 g 0 jit 0 jitn 0 proc 120
+PROBE FT 1991 tick 1339 frame 10919 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 103
+PROBE FT 1992 tick 1340 frame 11297 ticks 36 upload 0 gc 0 g 0 jit 0 jitn 0 proc 114
+PROBE FT 1993 tick 1341 frame 11030 ticks 37 upload 0 gc 0 g 0 jit 0 jitn 0 proc 119
+PROBE FT 1994 tick 1341 frame 11170 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 121
+PROBE FT 1995 tick 1342 frame 11176 ticks 37 upload 0 gc 0 g 0 jit 0 jitn 0 proc 128
+PROBE FT 1996 tick 1343 frame 18681 ticks 5304 upload 800 gc 0 g 0 jit 1142 jitn 8 proc 101
+PROBE FT 1997 tick 1343 frame 3488 ticks 0 upload 0 gc 966 g 111 jit 0 jitn 0 proc 1094
+PROBE FT 1998 tick 1344 frame 12040 ticks 870 upload 0 gc 3875 g 0 jit 0 jitn 0 proc 151
+PROBE FT 1999 tick 1345 frame 10227 ticks 34 upload 0 gc 0 g 0 jit 0 jitn 0 proc 152
+PROBE FT 2000 tick 1345 frame 10922 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 130
+PROBE FT 2001 tick 1346 frame 11265 ticks 45 upload 0 gc 0 g 0 jit 0 jitn 0 proc 136
+PROBE FT 2002 tick 1347 frame 11225 ticks 42 upload 0 gc 1272 g 110 jit 0 jitn 0 proc 160
+PROBE FT 2003 tick 1347 frame 10974 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 148
+PROBE FT 2004 tick 1348 frame 11176 ticks 38 upload 0 gc 390 g 100 jit 0 jitn 0 proc 157
+PROBE FT 2005 tick 1349 frame 11073 ticks 36 upload 0 gc 338 g 100 jit 0 jitn 0 proc 130
+PROBE FT 2006 tick 1349 frame 11059 ticks 0 upload 0 gc 719 g 100 jit 0 jitn 0 proc 128
+PROBE FT 2007 tick 1350 frame 11243 ticks 39 upload 0 gc 0 g 0 jit 0 jitn 0 proc 154
+# run 4
+PROBE SWAP tick 1343 pre 5 log 75 jitstep 0 jitswap 0 jitrebuild 75 rfree 524 rgrow 6536 tree1 620 treerest 5909 step 23 swap 0 free 0 build 0 show 0 startdig 0 fromworker 0 shown 0 rebuild 7062 enemies 7 hud 2 sounds 5 enemyafter 0
+PROBE FT 1987 tick 1337 frame 11118 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 124
+PROBE FT 1988 tick 1338 frame 10995 ticks 44 upload 0 gc 0 g 0 jit 0 jitn 0 proc 123
+PROBE FT 1989 tick 1339 frame 11261 ticks 36 upload 0 gc 0 g 0 jit 0 jitn 0 proc 135
+PROBE FT 1990 tick 1339 frame 10954 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 117
+PROBE FT 1991 tick 1340 frame 11249 ticks 36 upload 0 gc 0 g 0 jit 0 jitn 0 proc 124
+PROBE FT 1992 tick 1341 frame 11108 ticks 36 upload 0 gc 0 g 0 jit 0 jitn 0 proc 130
+PROBE FT 1993 tick 1341 frame 11063 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 106
+PROBE FT 1994 tick 1342 frame 11281 ticks 43 upload 0 gc 0 g 0 jit 0 jitn 0 proc 108
+PROBE FT 1995 tick 1343 frame 22963 ticks 8561 upload 698 gc 2735 g 100 jit 1078 jitn 8 proc 172
+PROBE FT 1996 tick 1343 frame 3440 ticks 0 upload 0 gc 677 g 111 jit 0 jitn 0 proc 976
+PROBE FT 1997 tick 1344 frame 8047 ticks 1308 upload 0 gc 3481 g 0 jit 0 jitn 0 proc 139
+PROBE FT 1998 tick 1345 frame 9754 ticks 42 upload 0 gc 0 g 0 jit 0 jitn 0 proc 225
+PROBE FT 1999 tick 1345 frame 11057 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 159
+PROBE FT 2000 tick 1346 frame 11267 ticks 42 upload 0 gc 0 g 0 jit 0 jitn 0 proc 164
+PROBE FT 2001 tick 1347 frame 11150 ticks 38 upload 0 gc 0 g 0 jit 0 jitn 0 proc 149
+PROBE FT 2002 tick 1347 frame 11071 ticks 0 upload 0 gc 1052 g 110 jit 0 jitn 0 proc 139
+PROBE FT 2003 tick 1348 frame 11106 ticks 35 upload 0 gc 348 g 100 jit 0 jitn 0 proc 137
+PROBE FT 2004 tick 1349 frame 11164 ticks 36 upload 0 gc 317 g 100 jit 0 jitn 0 proc 132
+PROBE FT 2005 tick 1349 frame 10869 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 160
+PROBE FT 2006 tick 1350 frame 11319 ticks 42 upload 0 gc 363 g 100 jit 0 jitn 0 proc 137
+# run 5
+PROBE SWAP tick 1343 pre 6 log 119 jitstep 0 jitswap 0 jitrebuild 68 rfree 527 rgrow 3354 tree1 626 treerest 2723 step 24 swap 0 free 0 build 0 show 0 startdig 0 fromworker 0 shown 0 rebuild 3883 enemies 7 hud 2 sounds 4 enemyafter 0
+PROBE FT 1985 tick 1338 frame 11079 ticks 38 upload 0 gc 0 g 0 jit 0 jitn 0 proc 146
+PROBE FT 1986 tick 1338 frame 11086 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 116
+PROBE FT 1987 tick 1339 frame 10992 ticks 36 upload 0 gc 0 g 0 jit 0 jitn 0 proc 128
+PROBE FT 1988 tick 1340 frame 11000 ticks 35 upload 0 gc 0 g 0 jit 0 jitn 0 proc 100
+PROBE FT 1989 tick 1340 frame 11134 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 102
+PROBE FT 1990 tick 1341 frame 11143 ticks 39 upload 0 gc 0 g 0 jit 0 jitn 0 proc 112
+PROBE FT 1991 tick 1342 frame 11126 ticks 34 upload 0 gc 0 g 0 jit 0 jitn 0 proc 99
+PROBE FT 1992 tick 1342 frame 11180 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 105
+PROBE FT 1993 tick 1343 frame 19287 ticks 5523 upload 436 gc 0 g 0 jit 1165 jitn 8 proc 105
+PROBE FT 1994 tick 1344 frame 8972 ticks 5639 upload 0 gc 5350 g 111 jit 0 jitn 0 proc 729
+PROBE FT 1995 tick 1344 frame 5399 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 249
+PROBE FT 1996 tick 1345 frame 10897 ticks 43 upload 0 gc 0 g 0 jit 0 jitn 0 proc 130
+PROBE FT 1997 tick 1346 frame 11137 ticks 43 upload 0 gc 0 g 0 jit 0 jitn 0 proc 147
+PROBE FT 1998 tick 1346 frame 11764 ticks 0 upload 0 gc 1591 g 110 jit 0 jitn 0 proc 133
+PROBE FT 1999 tick 1347 frame 10408 ticks 38 upload 0 gc 0 g 0 jit 0 jitn 0 proc 157
+PROBE FT 2000 tick 1348 frame 11120 ticks 51 upload 0 gc 0 g 0 jit 0 jitn 0 proc 154
+PROBE FT 2001 tick 1348 frame 10939 ticks 0 upload 0 gc 351 g 100 jit 0 jitn 0 proc 141
+PROBE FT 2002 tick 1349 frame 11285 ticks 50 upload 0 gc 433 g 100 jit 0 jitn 0 proc 160
+PROBE FT 2003 tick 1350 frame 11062 ticks 44 upload 0 gc 325 g 100 jit 0 jitn 0 proc 154
+PROBE FT 2004 tick 1350 frame 10950 ticks 0 upload 0 gc 0 g 0 jit 0 jitn 0 proc 157

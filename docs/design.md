@@ -416,7 +416,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-190 | On the Deck in desktop mode, over SSH, a frame of 18 to 19 ms comes every 2.245 seconds, also in an empty scene, so the game code does not cause it | 2026-09-27 | ⚠ PR #118 (PR-77): exit test 2 excludes it (D-683). A check in Game Mode is open |
 | F-191 | The bot run on the Deck has frames of 26 to 30 ms after the first 10 seconds, on `main` too. The Godot build compiled no optimization, and a path search took 18 ms | 2026-09-27 | ✅ PR #118 (PR-77): every configuration builds optimized code (D-683, D-685). After the first 10 seconds, the Deck p99 is 11.7 to 11.9 ms |
 | F-192 | The floor transition takes 31 to 40 ms on the Deck, over the budget of 22222 microseconds of D-635. The meshes of the enemies of the new floor took 16.7 ms in one tick | 2026-09-27 | ✅ PR #118 (PR-77): each enemy tree shares the meshes of a template, and the transition takes 19.9 to 20.3 ms (D-683) |
-| F-193 | The floor transition of seed 2 takes 25.1 to 27.7 ms in three Deck runs at `5c3310e`, over the budget of 22222 microseconds of D-635. Seeds 1 and 3 take 20.8 and 19.2 ms | 2026-09-28 | 🔧 PR-95 fixes it, and M-3 stays open until then (D-710) |
+| F-193 | The floor transition of seed 2 takes 25.1 to 27.7 ms in three Deck runs at `5c3310e`, over the budget of 22222 microseconds of D-635. Seeds 1 and 3 take 20.8 and 19.2 ms | 2026-09-28 | ✅ PR #122 (PR-95): the trace found a full collection of 4.1 to 5.0 ms in the tick of the descent, which the dig of the next floor started, and 3.2 to 3.5 ms of enemy trees. The dig now starts after that tick, and the trees build hidden during the floor. The transition frame takes 15.7 to 16.4 ms on seeds 1, 2, and 3 (D-710) |
 | F-194 | At the 90 Hz vsync of the Deck, the real frame time sits on the two sides of 11111 microseconds. An empty scene has a p99 of 11366, so no p99 can reach 11.1 ms | 2026-09-28 | ✅ D-709: the M-3 p99 passes under 16667 microseconds, 1.5 vsync intervals |
 
 ## 6. Guardrails (the safety contract for every PR)
@@ -765,13 +765,13 @@ The bot session takes the seed of its run from the flag `--seed <n>`, so M-3 mea
 Gate: the parser tests pass, and the smoke job runs a bot session on seed 2 on the three platforms.
 > *In plain English:* the bot always plays the same floor, so the Deck measurement sees one map. This change lets a test pick the map by its number.
 
-**PR-95: Seed 2 transition cost.** 🔧
-Profile the floor transition of seed 2 on the Deck before a change (G-17). Fix the cost that the profile names, so the transition stays under the hitch budget of D-635 (F-193). Then measure the M-3 table again on seeds 1, 2, and 3, and mark M-3 done (D-710).
+**PR-95: Seed 2 transition cost.** ✅ Done in PR #122.
+Profile the floor transition of seed 2 on the Deck before a change (G-17). Fix the cost that the profile names, so the transition stays under the hitch budget of D-635 (F-193). Then measure the M-3 table again on seeds 1, 2, and 3, and mark M-3 done (D-710). The profile named two costs in the tick of the descent: a collection that the dig of the next floor started, and the enemy trees of the new floor. The dig now starts after that tick, and the trees build hidden during the floor.
 Gate: three Deck runs of seed 2 have a transition under 22222 microseconds, and the new M-3 table meets D-709 and D-635.
 > *In plain English:* on one of the three test maps, the change to the next floor stutters on the Deck. This change finds the cause, removes it, and measures the three maps again.
 
-**M-3: Steam Deck frame time.** 🔧
-Measure the 99th percentile frame time of the current `main` on the Steam Deck OLED of D-296, over one full floor (D-707). D-295 gives the target. The table holds seeds 1, 2, and 3 (D-706). Each row gives a raw and a filtered p99, and D-709 gives the pass rule (D-708). The run of 2026-09-28 meets D-709 on each seed, but the transition of seed 2 misses D-635 (F-193). M-3 stays open until PR-95 measures again (D-710). Binds every render PR (F-3).
+**M-3: Steam Deck frame time.** ✅ Done in PR #122.
+Measure the 99th percentile frame time of the current `main` on the Steam Deck OLED of D-296, over one full floor (D-707). D-295 gives the target. The table holds seeds 1, 2, and 3 (D-706). Each row gives a raw and a filtered p99, and D-709 gives the pass rule (D-708). The run of 2026-09-28 at `5c3310e` met D-709 on each seed, but the transition of seed 2 missed D-635 (F-193). The run of 2026-09-28 at `34c2ddf`, the code head of PR #122, meets D-709 and D-635 on each seed (D-710). Binds every render PR (F-3).
 
 ### Phase 3: Full loop (gate: hub, loadout, death loss, bank, tree, saves, and replay resume work, and friends play)
 
@@ -940,7 +940,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80. ✅ PR-70 done in PR #81. ✅ PR-66 done in PR #82. ✅ PR-16 done in PR #83. ✅ PR-17 done in PR #84. ✅ PR-18 done in PR #85.
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
-13. M-3.
+13. M-3, then PR-95 (D-710). ✅ PR-95 and M-3 done in PR #122.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.
 16. PR-24, PR-25, PR-26.

@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 293: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-77, reviewer. Branch `feat/pr-77-light-and-edges`. PR #118, review blocked. Effective head `ce02802`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-77 diff, its contracts, tests, documents, and comments.
+- The code review found no defect. The review record is blocked because exit test 2 lacks the raw Deck frame logs.
+
+### State of the build
+
+- The remote head before publication was `0679715`. The first review publication reached `9449f83`, verified with `gh pr view`. The implementation head is `ce02802`.
+- The focused contact sheet, atlas mesher, and game-shape tests passed: 112 of 112 on macOS arm64 with .NET 10.0.400.
+- CI, three smoke jobs, bit identity, asset QA, determinism lint, STE, documents, doc gate, night gate, and Gitar passed on `0679715`. On `9449f83`, Gitar and the document checks passed. Code, smoke, and bit-identity jobs skipped because the push changed documents only. `evaluate` and `review-gate` failed because the review verdict is blocked.
+
+### In flight
+
+- The review record needs the Deck frame logs for exit test 2 before it can approve PR #118.
+
+### Traps and gotchas
+
+- The handoff of session 292 reports the Deck measurements, but the logs and their artifact path are not in this checkout.
+- The approved contact sheet of D-682 is outside this checkout.
+
+### Open questions that block progress
+
+None. Required evidence is missing for exit test 2.
+
+### Next concrete action
+
+Add the three Deck frame logs to the review evidence, then reassess exit test 2 and update the review record.
+
 ## Session 292: 2026-09-27, Claude Code
 
 Author: Claude Code

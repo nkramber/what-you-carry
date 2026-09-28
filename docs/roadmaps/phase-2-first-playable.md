@@ -87,7 +87,7 @@ Gate: exit tests 1 to 6 pass.
 
 ### PR-13: Model loader and mesher
 
-Status: merged 2026-09-12 as PR #52, commit `9749581`. Exit tests 1 to 6 passed before the merge, and CI, smoke, bit identity, bots, det-lint, and STE check passed on the merge commit. Exit test 7 waits for the M-3 run on the Steam Deck of D-296 (OQ-161). OQ-159, OQ-160, and OQ-161 stayed open at the merge. The first two bind the constants of the loader, the mesher, and the shader, and D-631 and D-632 record them as built.
+Status: merged 2026-09-12 as PR #52, commit `9749581`. Exit tests 1 to 6 passed before the merge, and CI, smoke, bit identity, bots, det-lint, and STE check passed on the merge commit. Exit test 7 waited for the M-3 run on the Steam Deck of D-296 (OQ-161), and it passes with the M-3 table of PR #122. OQ-159, OQ-160, and OQ-161 stayed open at the merge. The first two bind the constants of the loader, the mesher, and the shader, and D-631 and D-632 record them as built.
 
 Scope:
 
@@ -1551,10 +1551,15 @@ Gate: exit tests 1 to 3 pass.
 
 ### PR-95: Seed 2 transition cost
 
+✅ Done in PR #122.
+
 Scope: the floor transition of seed 2 stays under the hitch budget of D-635, and the M-3 table closes (F-193, D-710).
 
 - The profile: a timing patch on the Deck traces the transition of seed 2 before a change, as the traces of PR-77 did (G-17). The patch stays out of the branch.
-- The system that the profile names: the change removes the cost over the budget.
+- The system that the profile names: the change removes the cost over the budget. The profile named two costs in the tick of the descent: a full collection of 4.1 to 5.0 milliseconds, and the enemy trees of the new floor, 3.2 to 3.5 milliseconds.
+- `WhatYouCarry.Game/World/ChunkSwap.cs`: the next call of the upload starts the dig of the floor after the new one. The collection that the dig starts then stays out of the tick of the descent.
+- `WhatYouCarry.Game/Render/EnemyNodes.cs` and `WhatYouCarry.Game/Main.cs`: the enemy trees of the next floor build hidden, one each frame, from the plan that the worker offers. The descent shows them. The swap line names the dig and the trees.
+- `docs/runbooks/commands.md`: the fields of the swap line, and the rule of a timing patch that does not move the collector.
 - The M-3 table in this file: the Deck runs of seeds 1, 2, and 3 at the PR head, with three runs of seed 2. The raw logs go in `docs/reviews/` (D-708, D-709).
 
 Out of scope: the frames of the first 10 seconds, and the stall of F-190, which the filtered p99 drops (D-708).
@@ -1575,7 +1580,7 @@ Gate: exit tests 1 to 3 pass.
 
 ### M-3: Steam Deck frame time
 
-Status: open. The run of 2026-09-28 at `5c3310e` meets D-709 on the three seeds. The transition of seed 2 misses the hitch budget of D-635 in three runs (F-193). PR-95 measures the table again and marks M-3 done (D-710).
+✅ Done in PR #122. The run of 2026-09-28 at `34c2ddf`, the code head of PR #122, meets D-709 and D-635 on seeds 1, 2, and 3 (D-710). The run of 2026-09-28 at `5c3310e` met D-709 on the three seeds, and the transition of seed 2 missed D-635 in three runs (F-193).
 
 Procedure: on the Steam Deck OLED of the owner (D-296), run the current `main` over one full floor (D-707). The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target comes from D-295, and D-709 gives the pass rule. A miss files a question that binds the next render PR (F-3).
 
@@ -1589,7 +1594,19 @@ Each row gives two p99 values (D-708). The p99 is the nearest rank, as the end l
 
 A seed meets D-709 when its filtered p99 is under 16667 microseconds. Its transition meets D-635 under 22222 microseconds, from `transitionMicrosMax` in the end line of the session.
 
-The table of 2026-09-28, at `5c3310e`, with the bot command of `docs/runbooks/commands.md` over SSH (D-606). The raw logs and the end lines are in `docs/reviews/pr-121-deck/`.
+The table of 2026-09-28, at `34c2ddf`, with the bot command of `docs/runbooks/commands.md` over SSH (D-606). The raw logs, the end lines, and the swap lines are in `docs/reviews/pr-122-deck/`.
+
+| Seed | Run | Frames | Raw p99 µs | Frames after 10 s | F-190 stalls | Filtered p99 µs | Transition µs | D-709 | D-635 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 1 | 3884 | 13462 | 2990 | 15 | 11469 | 16415 | Pass | Pass |
+| 2 | 1 | 2087 | 12099 | 1189 | 6 | 11486 | 19235 | Pass | Pass |
+| 2 | 2 | 2080 | 12603 | 1185 | 6 | 11529 | 18431 | Pass | Pass |
+| 2 | 3 | 2081 | 12792 | 1186 | 6 | 11459 | 18504 | Pass | Pass |
+| 3 | 1 | 2828 | 12163 | 1931 | 10 | 11431 | 16395 | Pass | Pass |
+
+On seed 2, the `transitionMicrosMax` of each run is the stall of F-190 at frame 2019, inside the window of 30 frames. The transition frame itself takes 15680 to 15816 microseconds. On seeds 1 and 3, the transition frame is the slowest frame of the window.
+
+The table of 2026-09-28, at `5c3310e`, before PR-95. The raw logs and the end lines are in `docs/reviews/pr-121-deck/`.
 
 | Seed | Run | Frames | Raw p99 µs | Frames after 10 s | F-190 stalls | Filtered p99 µs | Transition µs | D-709 | D-635 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -1659,7 +1676,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 52. PR-77. ✅ Done in PR #118. The light, the edges, and the frame cost of the Deck: D-677 to D-685.
 53. PR-93. ✅ Done in PR #119. The Overseer model, its traced maps, and the model field of the hunter: D-686 to D-702.
 54. PR-94. ✅ Done in PR #120. The seed flag of the bot session: D-703 to D-705.
-55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296. ⚠ The table of 2026-09-28 misses D-635 on seed 2 (F-193). PR-95 fixes the transition and measures the table again (D-707 to D-710).
+55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296. The table of 2026-09-28 at `5c3310e` missed D-635 on seed 2 (F-193). PR-95 fixes the transition and measures the table again (D-707 to D-710). ✅ PR-95 and M-3 done in PR #122.
 56. Tier 4 pass on the screenshot fixture (D-133).
 57. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
