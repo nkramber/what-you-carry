@@ -16,11 +16,11 @@ Session: PR-94, reviewer. Branch `feat/pr-94-seed-flag`. PR #120, pending merge.
 ### State of the build
 
 - Local: five focused tests passed at `f12021b`. GitHub code checks passed at the same head.
-- Remote: review record and this entry await the metadata commit and push to `feat/pr-94-seed-flag`.
+- Remote: review record and this entry are on `feat/pr-94-seed-flag` at metadata head `7e06e2e`. The required remote hash comparison passed.
 
 ### In flight
 
-- After the push, GitHub must rerun `evaluate` and `review-gate` with the review record.
+- The metadata-tip `evaluate` and `review-gate` checks passed. The heavy code workflows skipped by the documents-only rule, and their required jobs passed at code head `f12021b`.
 
 ### Traps and gotchas
 
@@ -32,7 +32,7 @@ None.
 
 ### Next concrete action
 
-Push the review record and this entry to `feat/pr-94-seed-flag`, then verify the remote head.
+The review is complete for effective head `f8d06f5`. The owner can read the review record and the check results before merge.
 
 ## Session 299: 2026-09-28, Claude Code
 
