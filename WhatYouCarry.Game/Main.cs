@@ -186,8 +186,20 @@ public partial class Main : Node3D
     /// <summary>The name of the field of the swap line that tells whether the loop took the plan of the worker (D-429).</summary>
     public const string FromWorkerField = "fromWorker";
 
+    /// <summary>The name of the field of the swap line that tells whether a dig task runs in the tick of the descent (F-193).</summary>
+    public const string DiggingField = "digging";
+
+    /// <summary>The name of the field of the swap line that holds the count of enemy trees that the descent took hidden from the plan of the worker (F-193).</summary>
+    public const string StagedTreesField = "stagedTrees";
+
+    /// <summary>The name of the field of the swap line that holds the count of enemy trees that the tick of the descent built (F-193).</summary>
+    public const string BuiltTreesField = "builtTrees";
+
     /// <summary>The message of the line of the tick whose loop took the plan of the worker, with the time of the dig (D-429).</summary>
     public const string DigMessage = "The worker dug the next floor.";
+
+    /// <summary>The message of the error of a swap that offered the plan of the next floor to the loop and holds no plan.</summary>
+    private const string NoStagedPlanMessage = "The chunk swap offered the plan of the next floor and holds no plan.";
 
     /// <summary>The message of the line that closes the trace window of one transition (D-435).</summary>
     public const string TraceMessage = "The trace of a floor transition closes.";
@@ -421,12 +433,17 @@ public partial class Main : Node3D
 
         try
         {
-            if (this.chunks is not null && this.chunks.BeforeTick(this.loop) && this.trace is not null)
+            if (this.chunks is not null && this.chunks.BeforeTick(this.loop))
             {
-                LogFields dug = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
-                dug.Add(DigMicrosField, this.chunks.LastDigMicros);
-                dug.Add(MeshMicrosField, this.chunks.LastMeshMicros);
-                this.logger.Write(LogContextKind.Run, LogLevel.Info, DigMessage, dug);
+                // The plan names the enemies of the next floor, so their trees build hidden during this floor (F-193).
+                this.enemyNodes?.Stage(this.chunks.StagedPlan ?? throw new InvalidOperationException(NoStagedPlanMessage));
+                if (this.trace is not null)
+                {
+                    LogFields dug = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+                    dug.Add(DigMicrosField, this.chunks.LastDigMicros);
+                    dug.Add(MeshMicrosField, this.chunks.LastMeshMicros);
+                    this.logger.Write(LogContextKind.Run, LogLevel.Info, DigMessage, dug);
+                }
             }
 
             this.loop.Step(intent);
@@ -443,7 +460,8 @@ public partial class Main : Node3D
         this.previousPose = this.currentPose;
         this.currentPose = this.loop.Camera();
 
-        if (this.chunks is not null && this.chunks.AfterTick(this.loop))
+        bool swapped = this.chunks is not null && this.chunks.AfterTick(this.loop);
+        if (swapped)
         {
             // The body stands at the spawn of the new floor, so no frame draws it between two floors.
             this.previousFeet = this.currentFeet;
@@ -451,9 +469,6 @@ public partial class Main : Node3D
             this.floorStartTick = this.loop.Tick;
             this.frames?.MarkTransition();
             this.trace?.MarkTransition();
-            LogFields swap = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
-            swap.Add(FromWorkerField, this.chunks.LastSwapFromWorker);
-            this.logger.Write(LogContextKind.Run, LogLevel.Info, SwapMessage, swap);
         }
 
         // The Overseer spawns on the tick of the expiry and scans the floor for a cell, so the frame log marks that
@@ -491,11 +506,27 @@ public partial class Main : Node3D
         {
             if (this.loop.Floor != this.drawnFloor)
             {
-                this.enemyNodes.Rebuild(this.loop.Enemies);
+                this.enemyNodes.Rebuild(this.loop.Plan, this.loop.Enemies);
                 this.drawnFloor = this.loop.Floor;
             }
 
             this.enemyNodes.AfterTick(this.loop.Enemies, this.loop.Hunter);
+        }
+
+        // The swap line comes after the trees of the new floor, so it tells what the tick of the descent did: a dig
+        // task that runs, and the trees that it took hidden or built (F-193).
+        if (swapped && this.chunks is not null)
+        {
+            LogFields swap = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+            swap.Add(FromWorkerField, this.chunks.LastSwapFromWorker);
+            swap.Add(DiggingField, this.chunks.IsDigging);
+            if (this.enemyNodes is not null)
+            {
+                swap.Add(StagedTreesField, (long)this.enemyNodes.LastStagedTrees);
+                swap.Add(BuiltTreesField, (long)this.enemyNodes.LastBuiltTrees);
+            }
+
+            this.logger.Write(LogContextKind.Run, LogLevel.Info, SwapMessage, swap);
         }
 
         // The walk reads the horizontal distance of the tick, and its amount follows the speed (D-333).
@@ -558,6 +589,7 @@ public partial class Main : Node3D
 
         long uploadStarted = Stopwatch.GetTimestamp();
         this.chunks?.UploadSome();
+        this.enemyNodes?.BuildSome();
         long uploadMicros = (long)Stopwatch.GetElapsedTime(uploadStarted).TotalMicroseconds;
         if (frameMicros is long traced)
         {
@@ -923,7 +955,7 @@ public partial class Main : Node3D
         IReadOnlyDictionary<string, EnemyModel> familyModels = EnemyModels.Load(contentDirectory, content.Enemies);
         EnemyModel hunterModel = EnemyModels.Read(contentDirectory, content.Hunter.Model);
         EnemyNodes enemies = new(this, familyModels, hunterModel, swordModel, modelMaterial, layout);
-        enemies.Rebuild(loop.Enemies);
+        enemies.Rebuild(loop.Plan, loop.Enemies);
         this.enemyNodes = enemies;
         this.drawnFloor = loop.Floor;
         this.AddChild(this.camera);

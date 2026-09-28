@@ -97,6 +97,9 @@ public sealed class ChunkSwap
     /// <summary>Answers whether the last swap showed the plan of the worker, and not a floor that the loop dug at the descent.</summary>
     public bool LastSwapFromWorker { get; private set; }
 
+    /// <summary>The plan of the next floor that the last call of <see cref="BeforeTick"/> offered to the loop, until the swap. Null when no plan is on offer.</summary>
+    public FloorPlan? StagedPlan => this.staged;
+
     /// <summary>Answers whether every chunk of the next floor is uploaded and waits in hidden nodes.</summary>
     public bool NextFloorReady => this.staged is not null && this.stagedChunk == this.stagedMeshes.Count;
 
