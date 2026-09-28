@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 314: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-98, author. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Asked the owner the four questions of PR-98 and two more that the frames raised. The answers are D-725 to D-731: numbers of 28 pixels, a black outline of 3 pixels, a hidden owner rule, a ray that skips the rock of the drawn camera, the prompt at the bottom right, no number for a dead owner, and a hold of 0.5 seconds before the fade.
+- The code: `DamageNumbers.cs`, `Hud.cs`, `HudLayout.cs`, and the new `NumberSight.cs`, with tests in `HudTests.cs` and `NumberSightTests.cs`.
+- Captured the HUD shot and the two runs of D-714 at the PR head. The owner confirmed that F-199 and F-201 are gone, and F-24 closes (D-732). The frames are in `docs/reviews/pr-125-frames/`.
+
+### State of the build
+
+- The full suite passed locally, 2140 tests, at 3248bae. `det-lint` and `ste-check` have no finding. The effective head is 3248bae, because it adds D-732.
+- The captures end as at PR-96: 63 and 214 frames, and the timer-tester dies at tick 12873.
+
+### In flight
+
+- CI and the gitar pass of PR #125, then `make codex-review PR=125`.
+
+### Traps and gotchas
+
+- The HUD outline of the engine size 4 draws a band of 1.0 pixel, which does not read on the dark stone. An enlarged crop hid it: count the pixels, and do not judge by eye.
+- A dead enemy keeps its place and its body box (D-322). A rule that reads the enemy boxes must skip the dead ones.
+- `GridRay.FirstSolid` throws on a start in rock, and the drawn camera can stand in rock (D-720). `NumberSight` skips that rock first (D-729).
+- The prompt test checks the body box. With the model margin of 0.3 meters and a wall on the right, the box reaches the left edge of the prompt box at a pitch up. The prompt text stands about 280 pixels farther right.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Answer the gitar pass of PR #125, then start `make codex-review PR=125` when each check but the Review gate workflow is green. After the merge, PR-99 (D-724).
+
 ## Session 313: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -298,36 +333,3 @@ None.
 ### Next concrete action
 
 Read the outcome of the second review round. On approval, write the merge summary, and ask the owner to confirm the merge.
-
-## Session 304: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-95, reviewer. Branch `fix/pr-95-seed-2-transition`. PR #122, changes required. Effective head `34c2ddf`.
-
-### What this session did, and why
-
-- Reviewed PR #122 against its tests, roadmap, guardrails, comments, and Deck evidence.
-- Found P2-1: a plan that arrives on the descent tick leaves no frame to stage its enemy trees.
-- The focused transition and smoke tests passed, and the required CI checks passed.
-
-### State of the build
-
-- The remote head before review publication was `3e01603`. The implementation head is `34c2ddf`.
-- The focused tests passed, 2 of 2, on macOS arm64 with .NET 10.0.12. Required CI passed except the expected pre-publication review gate and evaluate check.
-
-### In flight
-
-- PR #122 needs a correction and a regression test for P2-1.
-
-### Traps and gotchas
-
-- When the worker offers a plan on the same physics tick as descent, `BuildSome` has not run before `Rebuild`.
-- The Deck logs cover a plan that arrived before descent. They do not cover this timing race.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Load `review-response` and correct P2-1 with a regression test.

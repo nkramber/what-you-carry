@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 304: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-95, reviewer. Branch `fix/pr-95-seed-2-transition`. PR #122, changes required. Effective head `34c2ddf`.
+
+### What this session did, and why
+
+- Reviewed PR #122 against its tests, roadmap, guardrails, comments, and Deck evidence.
+- Found P2-1: a plan that arrives on the descent tick leaves no frame to stage its enemy trees.
+- The focused transition and smoke tests passed, and the required CI checks passed.
+
+### State of the build
+
+- The remote head before review publication was `3e01603`. The implementation head is `34c2ddf`.
+- The focused tests passed, 2 of 2, on macOS arm64 with .NET 10.0.12. Required CI passed except the expected pre-publication review gate and evaluate check.
+
+### In flight
+
+- PR #122 needs a correction and a regression test for P2-1.
+
+### Traps and gotchas
+
+- When the worker offers a plan on the same physics tick as descent, `BuildSome` has not run before `Rebuild`.
+- The Deck logs cover a plan that arrived before descent. They do not cover this timing race.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Load `review-response` and correct P2-1 with a regression test.
+
 ## Session 303: 2026-09-28, Claude Code
 
 Author: Claude Code
