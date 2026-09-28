@@ -9,7 +9,7 @@ namespace WhatYouCarry.Game.Render;
 
 /// <summary>
 /// The model of every enemy of a floor and of the Overseer. Each enemy draws with the model that its family names
-/// (D-673), and the Overseer with the body model of PR-13 until PR-93 (D-660). Each one holds the sword of PR-15 (D-397),
+/// (D-673), and the Overseer with the model that the hunter file names (D-698). Each one holds the sword of PR-15 (D-397),
 /// at the position of the simulation.
 /// </summary>
 /// <remarks>
@@ -26,8 +26,8 @@ namespace WhatYouCarry.Game.Render;
 /// every tree and builds the trees of the next floor.
 /// </para>
 /// <para>
-/// The constructor builds one hidden template tree of each model: each family model, the body model of the
-/// Overseer, and the sword. Every tree after it shares the meshes of its template, so a descent builds nodes and no
+/// The constructor builds one hidden template tree of each model: each family model, the model of the Overseer,
+/// and the sword. Every tree after it shares the meshes of its template, so a descent builds nodes and no
 /// mesh. The Deck trace measured 16.7 ms for the meshes of eight enemies in the tick of a descent (F-192).
 /// </para>
 /// </remarks>
@@ -52,7 +52,7 @@ public sealed class EnemyNodes
     /// <summary>The trees of the enemies of one floor, under one parent node.</summary>
     /// <param name="parent">The node that holds every enemy tree.</param>
     /// <param name="familyModels">The model of each family, by the model path that the family names (D-673).</param>
-    /// <param name="hunterModel">The body model of PR-13, which the Overseer draws with until PR-93 (D-660).</param>
+    /// <param name="hunterModel">The model that the hunter file names, which the Overseer draws with (D-698).</param>
     /// <param name="sword">The weapon model of PR-15, which every enemy holds (D-397).</param>
     /// <param name="material">The one model material of the scene (D-85).</param>
     /// <param name="layout">The texture layout, which places each face of every model (D-505).</param>

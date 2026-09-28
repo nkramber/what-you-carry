@@ -15,8 +15,8 @@ namespace WhatYouCarry.Game.Render;
 public sealed record EnemyModel(string Path, BlockbenchModel Model, float Lowest);
 
 /// <summary>
-/// The models that the enemies draw with (D-673): the model that each family names, and the body model of the player
-/// for the Overseer until PR-93 (D-660). An enemy of PR-16 plays no clip, so each model stands in its rest pose (D-401).
+/// The models that the enemies draw with: the model that each family names (D-673), and the model that the hunter file
+/// names for the Overseer (D-698). An enemy of PR-16 plays no clip, so each model stands in its rest pose (D-401).
 /// </summary>
 public static class EnemyModels
 {

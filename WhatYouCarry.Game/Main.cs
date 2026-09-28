@@ -871,7 +871,7 @@ public partial class Main : Node3D
         ImageTexture blockAtlas = BlockAtlas.Build(atlasImage, tiles, contentDirectory);
         if (ContactSheet.IsRequested(arguments))
         {
-            this.RenderContactSheet(ContactSheet.PathOf(arguments), contentDirectory, content.Enemies, atlas, blockAtlas, layout, swordModel);
+            this.RenderContactSheet(ContactSheet.PathOf(arguments), contentDirectory, content.Enemies, content.Hunter, atlas, blockAtlas, layout, swordModel);
             return;
         }
 
@@ -913,10 +913,10 @@ public partial class Main : Node3D
         this.camera = PlaceholderScene.Camera();
         this.AddChild(nodes.Root);
 
-        // Each enemy draws with the model of its family, and the Overseer with the body model until PR-93 (D-660,
-        // D-673). The rest pose stands on the feet, so the root offset reads the lowest corner of each model.
+        // Each enemy draws with the model of its family, and the Overseer with the model of the hunter file (D-673,
+        // D-698). The rest pose stands on the feet, so the root offset reads the lowest corner of each model.
         IReadOnlyDictionary<string, EnemyModel> familyModels = EnemyModels.Load(contentDirectory, content.Enemies);
-        EnemyModel hunterModel = EnemyModels.Read(contentDirectory, AssetPaths.BodyModel);
+        EnemyModel hunterModel = EnemyModels.Read(contentDirectory, content.Hunter.Model);
         EnemyNodes enemies = new(this, familyModels, hunterModel, swordModel, modelMaterial, layout);
         enemies.Rebuild(loop.Enemies);
         this.enemyNodes = enemies;
@@ -980,7 +980,7 @@ public partial class Main : Node3D
     /// camera moves. The headless display, a shot with no image, and a write failure are each an error line and
     /// exit code 1 (T-2).
     /// </summary>
-    private async void RenderContactSheet(string path, string contentDirectory, IReadOnlyList<EnemyDefinition> families, Texture2D atlas, Texture2D blockAtlas, TextureLayout layout, BlockbenchModel swordModel)
+    private async void RenderContactSheet(string path, string contentDirectory, IReadOnlyList<EnemyDefinition> families, HunterDefinition hunter, Texture2D atlas, Texture2D blockAtlas, TextureLayout layout, BlockbenchModel swordModel)
     {
         LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
         fields.Add(FileField, path);
@@ -991,7 +991,7 @@ public partial class Main : Node3D
                 throw new ContextException(ContactSheetNeedsWindow);
             }
 
-            IReadOnlyList<string> modelPaths = ContactSheet.Models(families);
+            IReadOnlyList<string> modelPaths = ContactSheet.Models(families, hunter);
             Dictionary<string, BlockbenchModel> models = [];
             foreach (string modelPath in modelPaths)
             {

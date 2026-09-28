@@ -1495,7 +1495,13 @@ Gate: exit tests 1 to 3 pass.
 
 ### PR-93: Overseer model
 
-Scope: the Overseer gains its own model, recipes, and paint file through the steps of `asset-texture-creation`: a tall, faceless figure in a company coat and a lamp helmet (D-409, D-660). Until this PR, the Overseer draws with the body model of the player and the box of D-165 (D-401, D-423).
+Scope: the Overseer gains its own model, traced texel maps, recipes, and paint file through the steps of `asset-texture-creation`: a tall, faceless figure in a company coat and a lamp helmet (D-409, D-660, D-686 to D-700). Until this PR, the Overseer draws with the body model of the player and the box of D-165 (D-401, D-423).
+
+- `content/models/overseer.bbmodel` is 37 units tall, about 2.3 meters, and the body box of D-165 stays (D-686, D-691). A respirator, goggles, and filter cans hide the face (D-689, D-693). The upper legs carry the long coat (D-692), and the arms are 13 units (D-694).
+- The hunter file names its model with a `model` field, and the Game layer draws the Overseer with it (D-698).
+- Each visible face takes a traced map from the unlit views (D-612, D-690). The coat and the cowl paint a grain of cell 2, and the other parts a grain of cell 8 (D-699).
+- The contact sheet shows the Overseer from both sides, in cells of 600 pixels (D-700).
+- The Step 1 template of `asset-texture-creation` fits the limits of Meshy, and it names square cells with no count (D-701, D-702).
 
 Out of scope: the lamp as a light source in the world, and the families of PR-36 to PR-42.
 

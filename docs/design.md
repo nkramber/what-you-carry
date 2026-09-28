@@ -754,7 +754,7 @@ Gate: a frame log on the Deck meets D-683, and the owner approves a contact shee
 > *In plain English:* the light is one flat setting, and block edges look jagged on the Deck. This change adds torchlight and smooth edges inside the frame budget.
 
 **PR-93: Overseer model.** 🔧
-The Overseer gains its own model, recipes, and paint file: a tall, faceless figure in a company coat and a lamp helmet (D-409, D-660).
+The Overseer gains its own model, traced texel maps, recipes, and paint file: a tall, faceless figure in a company coat and a lamp helmet (D-409, D-660, D-686 to D-700). The model is about 2.3 meters tall over the body box of D-165, and the hunter file names it (D-691, D-698).
 Gate: the clip check and the smoke session pass, and the owner approves a contact sheet of the Overseer.
 > *In plain English:* the Overseer looks like the player today. This change gives it the tall coat and the lamp helmet that the owner chose.
 

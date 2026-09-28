@@ -358,8 +358,9 @@ public sealed class AssetQaTests
     }
 
     /// <summary>
-    /// PR-57 exit test 4, and PR-76 exit test 1. Every model, overlay, and animation of the checkout passes, and the
-    /// checkout holds the body and the model of each enemy family (D-673).
+    /// PR-57 exit test 4, PR-76 exit test 1, and PR-93 exit test 1. Every model, overlay, and animation of the checkout
+    /// passes, and the checkout holds the body, the model of each enemy family, and the model of the Overseer (D-673,
+    /// D-698).
     /// </summary>
     [Fact]
     public void RepositoryModelsPass()
@@ -376,6 +377,22 @@ public sealed class AssetQaTests
         {
             Assert.Contains(set.Bodies, body => body.Path == family.Model);
         }
+
+        Assert.Contains(set.Bodies, body => body.Path == TestWorld.Content.Hunter.Model);
+    }
+
+    /// <summary>A hunter file that names an absent model file is a finding on the hunter file (D-302, D-698).</summary>
+    [Fact]
+    public void AnAbsentHunterModelIsAFinding()
+    {
+        using TemporaryContentDirectory content = new();
+        content.Write(AssetPaths.BodyModel, ModelJson.TorsoBody());
+        content.Write("hunter/overseer.json", "{\"id\": \"overseer\", \"model\": \"models/gone.bbmodel\"}");
+
+        AssetFinding finding = Assert.Single(Findings(content));
+
+        Assert.Equal("hunter/overseer.json", finding.Path);
+        Assert.Contains("'models/gone.bbmodel'", finding.Message, StringComparison.Ordinal);
     }
 
     /// <summary>An enemy family that names an absent model file is a finding on the family file (D-302, D-673).</summary>

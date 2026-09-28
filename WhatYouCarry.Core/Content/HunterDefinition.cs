@@ -17,6 +17,10 @@ namespace WhatYouCarry.Core.Content;
 /// The speed on a tick is the start speed plus the gain for each <c>speedGainTicks</c> ticks after expiry, and it
 /// rises on every tick with no cap (D-408, D-423). One content set holds exactly one hunter (D-56).
 /// </para>
+/// <para>
+/// The hunter names its model, and the Game layer draws the Overseer with it (D-698). Core never reads the model file
+/// (D-631).
+/// </para>
 /// </remarks>
 /// <param name="Id">The hunter id. The cause of a death that the hunter deals carries it (D-411).</param>
 /// <param name="Weapon">The weapon id that the hunter swings (D-413).</param>
@@ -25,6 +29,7 @@ namespace WhatYouCarry.Core.Content;
 /// <param name="StartSpeedCentimetresPerSecond">The speed on the tick of the spawn (D-408).</param>
 /// <param name="SpeedGainCentimetresPerSecond">The speed that each <paramref name="SpeedGainTicks"/> ticks after expiry add (D-408).</param>
 /// <param name="SpeedGainTicks">The ticks over which the speed rises by one gain (D-408).</param>
+/// <param name="Model">The path of the model of the hunter under the model directory (D-698).</param>
 public sealed record HunterDefinition(
     string Id,
     string Weapon,
@@ -32,7 +37,8 @@ public sealed record HunterDefinition(
     long AttackCooldownTicks,
     long StartSpeedCentimetresPerSecond,
     long SpeedGainCentimetresPerSecond,
-    long SpeedGainTicks)
+    long SpeedGainTicks,
+    string Model)
 {
     /// <summary>The names that a hunter must carry.</summary>
     public static readonly IReadOnlyList<string> Required =
@@ -44,6 +50,7 @@ public sealed record HunterDefinition(
         "startSpeedCentimetresPerSecond",
         "speedGainCentimetresPerSecond",
         "speedGainTicks",
+        "model",
     ];
 
     /// <summary>A hunter carries no optional name.</summary>
@@ -82,7 +89,8 @@ public sealed record HunterDefinition(
             CooldownTicks(path, members),
             AtLeastOne(path, members, "startSpeedCentimetresPerSecond"),
             gain,
-            AtLeastOne(path, members, "speedGainTicks"));
+            AtLeastOne(path, members, "speedGainTicks"),
+            ContentValidator.AssetPath(path, members, "model", ContentLoader.ModelExtension));
     }
 
     /// <summary>
