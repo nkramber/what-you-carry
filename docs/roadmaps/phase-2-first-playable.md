@@ -1681,7 +1681,7 @@ The frames of PR-97 are in `docs/reviews/pr-124-frames/`, with the names of the 
 
 The frames of PR-98 are in `docs/reviews/pr-125-frames/`, with the same names. They show no F-199 and no F-201, and F-24 closes (D-732).
 
-The frame shots of D-714 draw each frame at the fraction 0, so no shot shows a frame between two ticks. PR-99 reads F-202 on pairs of frames at a fraction of 0.5 (D-733).
+The frame shots of D-714 draw each frame at the fraction 0, so no shot shows a frame between two ticks. PR-99 reads F-202 on pairs of frames at a fraction of 0.5 (D-733). The pairs and the D-714 shot of tick 2880 are in `docs/reviews/pr-126-frames/`. The name of each pair ends in `-half-main` or `-half-pr-99`.
 
 ### PR-97: Camera and model occlusion
 
@@ -1739,6 +1739,8 @@ Gate: exit tests 1 to 3 pass.
 > *In plain English:* the damage numbers are hard to read on the Deck. This change makes them larger and clearer, and keeps the prompt off the player.
 
 ### PR-99: Camera turn frames
+
+✅ Done in PR #126.
 
 Scope: the view stays on the boom circle on a fast turn (D-724, F-202).
 
@@ -1819,7 +1821,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 53. PR-93. ✅ Done in PR #119. The Overseer model, its traced maps, and the model field of the hunter: D-686 to D-702.
 54. PR-94. ✅ Done in PR #120. The seed flag of the bot session: D-703 to D-705.
 55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296. The table of 2026-09-28 at `5c3310e` missed D-635 on seed 2 (F-193). PR-95 fixes the transition and measures the table again (D-707 to D-710). ✅ PR-95 and M-3 done in PR #122.
-56. Tier 4 pass on the screenshot fixture (D-133). ✅ OQ-62 answered in part 2026-09-28, for Gate 2: D-711 to D-714. PR-96. Then PR-97 and PR-98 for the findings of the pass (D-715, D-716), and PR-99 for F-202 (D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125.
+56. Tier 4 pass on the screenshot fixture (D-133). ✅ OQ-62 answered in part 2026-09-28, for Gate 2: D-711 to D-714. PR-96. Then PR-97 and PR-98 for the findings of the pass (D-715, D-716), and PR-99 for F-202 (D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125. ✅ PR-99 done in PR #126.
 57. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions

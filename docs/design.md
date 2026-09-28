@@ -425,7 +425,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-199 | Tier 4 at Gate 2: the damage numbers of 18 pixels read grey or dark on the stone and the orange blocks. A number stays with a hidden owner, and it goes to the screen edge when the camera is close | 2026-09-28 | ✅ PR #125 (PR-98): 28 pixels, a black outline of 3 pixels, a hold before the fade, and no number for a hidden or dead owner (D-725 to D-727, D-729 to D-732) |
 | F-200 | Tier 4 at Gate 2: the scavenger head reads as a near-black block with no features in the dark, seen from behind | 2026-09-28 | ⚠ D-718. Binds OQ-61 and PR-36 to PR-42 |
 | F-201 | Tier 4 at Gate 2: the stairwell prompt at the lower center covers the body in the HUD shot | 2026-09-28 | ✅ PR #125 (PR-98): the prompt stands at the bottom right, clear of the body (D-728, D-732) |
-| F-202 | The frame shots of PR-97: on a turn of the bot in one tick, the Game interpolates the camera positions in a straight line, and the frame draws from a point near the head. The full-clearer turns 180 degrees at tick 2880 of seed 1. Main has the same effect with the old boom | 2026-09-28 | 🔧 D-724. Binds PR-99 |
+| F-202 | The frame shots of PR-97: on a turn of the bot in one tick, the Game interpolates the camera positions in a straight line, and the frame draws from a point near the head. The full-clearer turns 180 degrees at tick 2880 of seed 1. Main has the same effect with the old boom | 2026-09-28 | ✅ PR #126 (PR-99): each frame places the camera from the interpolated look (D-724, D-733) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -796,7 +796,7 @@ The damage numbers grow to 28 pixels with a black outline of 3 pixels, and hold 
 Gate: the frame shots of D-714 and the HUD shot at the PR head show none of the findings.
 > *In plain English:* the damage numbers are hard to read on the Deck. This change makes them larger and clearer, and keeps the prompt off the player.
 
-**PR-99: Camera turn frames.** 🔧
+**PR-99: Camera turn frames.** ✅ Done in PR #126.
 The Game interpolates the look angles between two ticks, and places the drawn camera from them (D-724, F-202). A fast turn then keeps the view on the boom circle.
 Gate: the frame shots of D-714 at the PR head match main, and the pairs of D-733 show no turn frame drawn from near the head.
 > *In plain English:* when the view turns fast, one frame can show the camera inside the player's head. This change turns the camera around the player instead.
@@ -968,7 +968,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80. ✅ PR-70 done in PR #81. ✅ PR-66 done in PR #82. ✅ PR-16 done in PR #83. ✅ PR-17 done in PR #84. ✅ PR-18 done in PR #85.
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
-13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97, PR-98, and PR-99 (D-715, D-716, D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125. ✅ PR-95 and M-3 done in PR #122.
+13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97, PR-98, and PR-99 (D-715, D-716, D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125. ✅ PR-99 done in PR #126. ✅ PR-95 and M-3 done in PR #122.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.
 16. PR-24, PR-25, PR-26.

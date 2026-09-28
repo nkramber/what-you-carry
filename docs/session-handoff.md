@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 317: 2026-09-28, Claude Code
 
 Author: Claude Code
-Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR pending, pending merge. Base `ec383bf`.
+Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
 
 ### What this session did, and why
 
@@ -20,7 +20,7 @@ Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR pending, pend
 
 ### In flight
 
-- The PR, the gitar pass, and the owner confirmation of exit test 3 on the committed frames.
+- The gitar pass, and the owner confirmation of exit test 3 on the frames in `docs/reviews/pr-126-frames/`.
 
 ### Traps and gotchas
 
@@ -33,7 +33,7 @@ None.
 
 ### Next concrete action
 
-Open the PR, commit the frames, and ask the owner to confirm exit test 3.
+Ask the owner to confirm exit test 3, and record the answer as D-734. Then run `make codex-review PR=126` when each check but the Review gate workflow is green.
 
 ## Session 316: 2026-09-28, Claude Code
 
