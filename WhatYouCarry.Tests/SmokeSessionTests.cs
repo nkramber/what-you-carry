@@ -489,6 +489,29 @@ public sealed class SmokeSessionTests
     }
 
     /// <summary>
+    /// D-711. The frame shots on the headless display stop the boot with exit code 1 and an error line that names the
+    /// directory, and never a session of blank frames (T-2). The boot finds no window before it makes the directory.
+    /// </summary>
+    [Fact]
+    [Trait("Category", SmokeCategory)]
+    public async Task FrameShotsFailHeadless()
+    {
+        // The JSON line escapes each backslash of a Windows path, so the check reads the unique leaf name alone.
+        string leaf = "wyc-frame-shots-" + Guid.NewGuid().ToString("N");
+        string directory = Path.Combine(Path.GetTempPath(), leaf);
+
+        EngineRun run = await RunEngine("frame shots", ["--headless", "--fixed-fps", "60"], [BotSession.Flag, WhatYouCarry.Game.Review.FrameShots.Flag, directory]);
+        string[] lines = run.Output.Split('\n');
+
+        Assert.True(run.ExitCode == Main.ExitFailure, $"The frame shots ended with exit code {run.ExitCode} on the headless display.{Environment.NewLine}{run.Output}");
+        Assert.Contains(lines, line => line.StartsWith(PrintLogSink.ErrorPrefix, StringComparison.Ordinal)
+            && line.Contains(Main.BootFailedMessage, StringComparison.Ordinal)
+            && line.Contains(Main.FrameShotsNeedWindow, StringComparison.Ordinal)
+            && line.Contains(leaf, StringComparison.Ordinal));
+        Assert.False(Directory.Exists(directory), $"The headless frame shots made the directory '{directory}'.");
+    }
+
+    /// <summary>
     /// Runs the engine on the Game project with its own arguments and the user arguments after the separator, and
     /// waits for the end. An engine that never quits is a failure with its output, and never a test that hangs (T-2).
     /// </summary>

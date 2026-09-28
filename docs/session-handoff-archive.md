@@ -1,5 +1,106 @@
 # Session handoff archive
 
+## Session 300: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-94, reviewer. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- Reviewed PR #120 at effective head `f8d06f5`. The author provider is Claude Code, so the Codex review passes the provider gate.
+- The seed flag, its parser rules, boot path, tests, and PR-94 documents match D-703 to D-706. The review record gives `Ready for owner merge` with no findings.
+- Five focused tests passed. GitHub code checks passed. `evaluate` and `review-gate` failed because the review record was not on the PR yet.
+
+### State of the build
+
+- Local: five focused tests passed at `f12021b`. GitHub code checks passed at the same head.
+- Remote: review record and this entry are on `feat/pr-94-seed-flag` at metadata head `7e06e2e`. The required remote hash comparison passed.
+
+### In flight
+
+- The metadata-tip `evaluate` and `review-gate` checks passed. The heavy code workflows skipped by the documents-only rule, and their required jobs passed at code head `f12021b`.
+
+### Traps and gotchas
+
+- The checkout is detached. Compare its final commit with the head that `gh pr view 120` reports.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The review is complete for effective head `f8d06f5`. The owner can read the review record and the check results before merge.
+
+## Session 299: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-94, author. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- The session started as the M-3 author. The M-3 table needs three seeds, and the bot session ran the first seed alone. The owner chose a seed flag in its own PR first (D-703). The session did no work before that answer, so it binds to PR-94.
+- Added `--seed <n>` to the bot session: it needs `--bot`, and it takes a whole number from 1 up in digits alone (D-704, D-705). The loop starts on the seed, and a boot failure line carries it.
+- Recorded the M-3 seeds: 1, 2, and 3 (D-706). A headless bot session on the Mac reaches floor 2 on seeds 2 and 3.
+
+### State of the build
+
+- Local: the first full run passed 2108 of 2109 tests. The STE test failed on two long sentences, and `f8d06f5` holds the fix. After it, `ste-check` and `det-lint` found zero findings, and the STE and parser tests passed.
+- Remote head of the work: `f8d06f5`, plus the metadata and status commit of this entry.
+
+### In flight
+
+- The gitar pass, CI, and `make codex-review` of PR #120.
+- PR-92 exit test 3: the first scheduled night on `main` after `d5f7e00` is the 07:07 UTC cron of 2026-09-28. It did not run before this entry.
+
+### Traps and gotchas
+
+- The Mac has no `timeout` command. Run a Godot session under the time limit of the tool.
+- The engine tests of the seed flag take about one second, because a headless session at fixed 60 frames per second runs faster than real time.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge of PR #120, start M-3 in a new session: run seeds 1, 2, and 3 on the Deck over SSH (D-606, D-706), and record the table. Check the night of PR-92 exit test 3 on `night-results`.
+
+## Session 298: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-93, reviewer. Branch `feat/pr-93-overseer-model`. PR #119, pending merge. Base `b4615c0`.
+
+### What this session did, and why
+
+- Reviewed the PR-93 code head `5faf3b7` as the cross-provider reviewer.
+- Checked the model, the hunter model field, the texture mappings, the focused tests, the roadmap, and the PR comments.
+- Wrote `docs/reviews/pr-119.md`. The review found no in-scope defect. The owner approval of the contact sheet is recorded in D-700.
+
+### State of the build
+
+- Local focused tests passed: 290 passed, none failed or skipped. Local asset QA found zero findings across four models and three animations.
+- Remote CI passed the build and test jobs, bit identity on three platforms, bot checks, asset QA, determinism lint, documents, doc gate, night gate, smoke on three platforms, and STE checks.
+- Remote `evaluate` and `review-gate` failed because the review record was not yet on the branch. Remote branch head before this metadata push: `e2eea3e`.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and a push to `feat/pr-93-overseer-model`.
+- PR #119 is pending owner merge.
+
+### Traps and gotchas
+
+- The review applies to effective head `5faf3b7`. The later code tip `e2eea3e` changes documents only (D-534).
+- The contact-sheet image named by D-700 was not in the referenced folder. The owner approval remains recorded in D-700.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+- Push the review record and this entry together. Verify the remote head and the review-gate result.
+
 ## Session 297: 2026-09-27, Claude Code
 
 Author: Claude Code

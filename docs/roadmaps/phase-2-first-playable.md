@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-95, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. PR-77 applies D-677 to D-685. PR-94 applies D-703 to D-705. M-3 applies D-706 to D-710, and PR-95 applies D-708 to D-710. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-98, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. PR-77 applies D-677 to D-685. PR-94 applies D-703 to D-705. M-3 applies D-706 to D-710, and PR-95 applies D-708 to D-710. PR-96 applies D-711 to D-714. PR-97 applies D-715, and PR-98 applies D-716. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -24,7 +24,7 @@ This phase holds the first balance numbers of the project. Each number that a fr
 |---|---|---|
 | F-3 | The Steam Deck is the performance floor | PR-13, PR-18, M-3 |
 | F-22 | The v1 order put procgen before any render layer for weeks | PR-12 |
-| F-24 | Always-on numbers and Deck 800p strain readability | PR-19 |
+| F-24 | Always-on numbers and Deck 800p strain readability | PR-19, PR-96, PR-98 |
 | F-29 | Four gates preceded their prerequisites | PR-12, PR-16, PR-17, PR-18, PR-57 |
 | F-40 | D-88's effect note put wall fade in the mesher. A shader test needs no mesher change | PR-13 |
 | F-41 | No item said whether a Steam Deck unit exists for M-3 | M-3 |
@@ -33,6 +33,12 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-192 | The floor transition on the Deck is over the budget of D-635 | PR-77 |
 | F-193 | The floor transition of seed 2 on the Deck is over the budget of D-635 | PR-95, M-3 |
 | F-194 | At the 90 Hz vsync, no p99 of the real frame time reaches 11.1 ms | M-3 |
+| F-195 | The player body hides the scavenger in front at melee range | PR-97 |
+| F-196 | A scavenger between the camera and the player fills the screen | PR-97 |
+| F-197 | Near a wall the camera presses into the body | PR-97 |
+| F-198 | The Overseer attacks from outside the view | Gate 2 (D-717) |
+| F-199 | The damage numbers are small and low in contrast, and a number stays with a hidden owner | PR-98 |
+| F-201 | The stairwell prompt covers the body | PR-98 |
 | F-97 | The tunnels felt cramped in play, and every rise in a tunnel needed a jump | PR-63, PR-64, PR-65, PR-66, PR-16 |
 | F-98 | On the wide sizes, about one floor in 96000 ran the dig job cap with a chamber still in rock | PR-63, PR-67, PR-66 |
 | F-101 | The night of 2026-09-15 found a shaft that lands on an unreachable floor on the wide sizes: seed 79146, floor 7 | PR-68, PR-66 |
@@ -1618,6 +1624,104 @@ The table of 2026-09-28, at `5c3310e`, before PR-95. The raw logs and the end li
 
 After the first 10 seconds, the transition is the one frame over 16700 microseconds in each run that is not a stall of F-190. The first 10 seconds hold 7 to 11 frames over 16700 microseconds in each run. The session of seed 2 ends at 23 seconds, so its filtered p99 reads about 1190 frames.
 
+### PR-96: Tier 4 frame capture
+
+✅ Done in PR #123.
+
+Scope: the Tier 4 pass of Gate 2 on the frames of two bot sessions and the HUD shot (D-133, D-711 to D-714).
+
+- `WhatYouCarry.Game/Review/FrameShots.cs`: the flag `--frame-shots <directory>`, the tick of each shot, and the file name of each frame (D-711). A shot falls on each second of game time. The file name holds the floor and the tick.
+- `UserArguments`: the flag takes one word, and it needs `--bot` (D-317, D-714).
+- `Main`: the HUD and a camera draw into a viewport of 1280 by 800 pixels that shares the world, as in the HUD shot. Each shot tick writes the last frame of the viewport to a PNG file. A headless display and a failed write are each an error line and exit code 1 (T-2). The end line gives the count of shots.
+- `docs/runbooks/commands.md`: the two capture commands of D-714, and the rules of the flag.
+- The Tier 4 pass: the author session reads each frame, and answers the checklist of D-711 in the section "Tier 4 pass at Gate 2" of this file (D-712). The frames that a finding cites go in `docs/reviews/pr-<number>-tier-4/`. Each finding gets an F-# row in section 5 of `docs/design.md`, with a disposition (D-713).
+
+Out of scope: the socket, the hub session, and the boss session, which the Tier 4 pass of Phase 4 holds (OQ-62). The fix of each finding, which its disposition names.
+
+Exit tests:
+
+1. `FrameShotsNeedTheBot` passes. It fails on the parser of `main`, which has no frame shots flag.
+2. `AShotFallsOnEachSecondOfGameTime`, `TheNamesSortInTheOrderOfTheRun`, and `AShotWithNoNewFrameStopsTheCapture` pass. A shot with no new frame since the last shot is an error line and exit code 1 (T-2).
+3. `FrameShotsFailHeadless` passes on the three platforms. It fails on `main`, where the error line names an unknown flag and no window.
+4. `SessionCommandsParse` reads the capture commands of the runbook.
+5. The two captures of D-714 and the HUD shot run at the PR head on the Mac. The author session reads each frame, and the section "Tier 4 pass at Gate 2" gives the answer of each checklist item for each capture.
+6. Each finding of the pass has an F-# row in section 5 of `docs/design.md` with a disposition (D-713). F-24 has the result of the pass.
+
+Review focus: the frames against the answers of the checklist, the disposition of each finding, and the error paths of the capture.
+
+Check clause: none.
+
+Gate: exit tests 1 to 6 pass.
+
+> *In plain English:* a model looks at pictures of the game to find what a player cannot read. This change takes one picture each second of two bot runs, and the model reads them.
+
+### Tier 4 pass at Gate 2
+
+The pass of 2026-09-28, at the head of PR-96, on the Mac, with the commands of `docs/runbooks/commands.md` (D-711 to D-714). The frames that the findings cite are in `docs/reviews/pr-123-tier-4/`.
+
+- Full-clearer, seed 1: 63 frames, ticks 60 to 3780. The run clears floor 1 and ends one second into floor 2. The author session read each frame.
+- Timer-tester, seed 1: 214 frames, ticks 60 to 12840. The run dies to the Overseer at tick 12873, the tick of `bot-run`. A pixel comparison shows that 212 frames differ from the frame of tick 60 only in the timer. The last two frames differ only in the health and one damage number. The author session read the frames of ticks 11400, 12780, and 12840.
+- HUD shot: one frame, read by the author session.
+
+The first timer-tester capture wrote 204 copies of one frame, because a second window covered the capture window. The capture now stops on a shot with no new frame, and the second capture ran with the window clear.
+
+| Checklist item | Full-clearer | Timer-tester | HUD shot |
+|---|---|---|---|
+| Telegraphs that a player misses | F-195, F-196 | F-198 | No enemy in the frame |
+| Projectiles that a player cannot tell apart | No projectile in the content (D-714) | No projectile in the content | No projectile in the content |
+| UI over the fight | None | None | F-201 |
+| Camera clips | F-196, F-197 | F-197 | F-197 |
+| Damage numbers (F-24) | F-199 | F-199 | F-199 |
+| Other | F-200 | None | None |
+
+The owner gave each finding its disposition (D-713): PR-97 for F-195 to F-197 (D-715), PR-98 for F-199 and F-201 (D-716), the Gate 2 play for F-198 (D-717), and OQ-61 for F-200 (D-718).
+
+### PR-97: Camera and model occlusion
+
+Scope: the camera keeps the fight in view (D-715, F-195, F-196, F-197).
+
+- The camera: an offset or a pitch that keeps a target in front of the body in view. Near a wall, a closest distance to the body.
+- The models: a model between the camera and the body fades, as the wall fade of D-292 does for a block.
+
+Out of scope: the damage numbers and the prompt (PR-98), and a mark toward an attacker outside the view (D-717).
+
+Exit tests:
+
+1. A test pins each rule of the camera and of the model fade. Each fails on `main`.
+2. `SmokeSessionPasses` passes on the three platforms.
+3. The frame shots of D-714 at the PR head show none of F-195, F-196, and F-197. The owner confirms it on the cited frames, recorded as a decision.
+
+Review focus: the camera rules against the frames, and the frame cost of the fade.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* in a fight the camera shows the player's back and not the enemy. This change moves the camera so the fight stays in view.
+
+### PR-98: Damage numbers and prompt
+
+Scope: the damage numbers and the stairwell prompt read on the Deck (D-716, F-199, F-201, F-24).
+
+- `WhatYouCarry.Game/Ui/DamageNumbers.cs` and `Hud.cs`: larger numbers with a dark outline, and no number for an owner that the camera cannot see.
+- The stairwell prompt: a place clear of the body.
+
+Out of scope: the camera (PR-97).
+
+Exit tests:
+
+1. A test pins the size, the outline, the rule of a hidden owner, and the place of the prompt. Each fails on `main`.
+2. `HudFitsDeck` and `DamageNumberAvoidsSilhouette` pass.
+3. The frame shots of D-714 and the HUD shot at the PR head show none of F-199 and F-201. The owner confirms it, recorded as a decision, and F-24 closes.
+
+Review focus: the readability of the numbers against the frames, and the prompt place.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* the damage numbers are hard to read on the Deck. This change makes them larger and clearer, and keeps the prompt off the player.
+
 ## 5. Sequence
 
 One person owns the program. Items run one at a time in this order. Gate 1 signed 2026-09-11 (D-288).
@@ -1677,7 +1781,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 53. PR-93. ✅ Done in PR #119. The Overseer model, its traced maps, and the model field of the hunter: D-686 to D-702.
 54. PR-94. ✅ Done in PR #120. The seed flag of the bot session: D-703 to D-705.
 55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296. The table of 2026-09-28 at `5c3310e` missed D-635 on seed 2 (F-193). PR-95 fixes the transition and measures the table again (D-707 to D-710). ✅ PR-95 and M-3 done in PR #122.
-56. Tier 4 pass on the screenshot fixture (D-133).
+56. Tier 4 pass on the screenshot fixture (D-133). ✅ OQ-62 answered in part 2026-09-28, for Gate 2: D-711 to D-714. PR-96. Then PR-97 and PR-98 for the findings of the pass (D-715, D-716). ✅ PR-96 done in PR #123.
 57. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions
@@ -1687,6 +1791,10 @@ The register is `docs/questions.md` (D-144). These questions bind Phase 2. Each 
 Open:
 
 - OQ-206: the held sword in the roll. Blocks nothing.
+
+Resolved in part 2026-09-28:
+
+- OQ-62 (D-711 to D-714): the Tier 4 protocol at Gate 2. PR-96. The protocol of Gate 4 stays open.
 
 Resolved 2026-09-27:
 

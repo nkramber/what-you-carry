@@ -252,7 +252,7 @@ Gate: exit tests 1 to 4 pass.
 
 ### Tier 4 pass
 
-Procedure: the protocol of OQ-62 (D-133). The owner runs a vision-capable model through the socket with screenshots at one to two frames per second. The sessions cover a full floor, a boss fight, and the hub. The model reports unreadable telegraphs, projectiles it cannot tell apart, UI over the fight, and camera clips. Findings go to `docs/questions.md`. Each finding either changes content in a PR or gets an owner decision.
+Procedure: the protocol of OQ-62 (D-133). The owner runs a vision-capable model through the socket with screenshots at one to two frames per second. The sessions cover a full floor, a boss fight, and the hub. The model reports unreadable telegraphs, projectiles it cannot tell apart, UI over the fight, and camera clips. Each finding gets an F-# row in section 5 of `docs/design.md` (D-713). Each finding either changes content in a PR or gets an owner decision.
 
 ## 5. Sequence
 

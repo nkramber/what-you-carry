@@ -2,6 +2,104 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 310: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-96, author. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
+
+### What this session did, and why
+
+- Read the review of session 309. The record gives `Ready for owner merge` for the effective head `4236f2d`, with no finding.
+- Answered the review-gate note of the gitar dashboard with D-251. The gitar pass approved the work head `77ab1d1` with no thread.
+- Wrote the merge summary of D-533, and asked the owner to confirm the merge (D-524).
+
+### State of the build
+
+- Each check of PR #123 passed at `77ab1d1`, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays `4236f2d`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #123.
+
+### Traps and gotchas
+
+- None new. Session 308 lists the traps of the frame capture.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, start PR-97 (D-715).
+
+## Session 309: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-96, reviewer. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
+
+### What this session did, and why
+
+- Reviewed effective head `4236f2d` of PR #123 against the PR-96 exit tests and the Tier 4 evidence.
+- The provider gate passed. The review found no in-scope defect.
+- Added `docs/reviews/pr-123.md` and this handoff entry in one metadata commit.
+
+### State of the build
+
+- The remote code head before the metadata push was `77ab1d1`. Build and test jobs, bit identity, bots, asset QA, determinism lint, smoke, night gate, documents, doc gate, and STE passed.
+- The PR checks `evaluate` and `review-gate` failed because the review record did not yet exist. The review record and this entry are now on the PR branch.
+
+### In flight
+
+- PR #123 awaits the owner merge.
+
+### Traps and gotchas
+
+- The review inspected supplied capture artifacts but did not rerun the interactive Mac capture sessions.
+- The frame set follows the Gate 2 scope of D-714. The Gate 4 Tier 4 protocol stays open under OQ-62.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can review the record and merge PR #123 when its checks pass.
+
+## Session 308: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-96, author. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
+
+### What this session did, and why
+
+- PR-92 exit test 3 passes. The scheduled night of 15:18 UTC on 2026-09-28 on `main` at `5ca1e1e` (run 36442573875) succeeded with eight sweep jobs. Full-clearer and reachability ran as two shards each. The record on `night-results` names each of the six sweeps once in each section. No night failed, so the Pushover check of PR-91 exit test 23 did not apply. The sweeps took 2 to 9 minutes each, where the night of 2026-09-27 took up to 2.5 hours.
+- The owner answered OQ-62 in part, for Gate 2: D-711 to D-714. Sequence item 56 got its roadmap entry, PR-96.
+- `--frame-shots <directory>` writes one Deck frame with the HUD each second of a bot session. The flag needs `--bot`. A headless run, a failed write, and a shot with no new frame are each an error line and exit code 1.
+- The Tier 4 pass ran on the full-clearer and the timer-tester on seed 1, and on the HUD shot. It found F-195 to F-201. The owner gave each its disposition: D-715 (PR-97, the camera), D-716 (PR-98, the numbers and the prompt, F-24), D-717 (F-198 in the Gate 2 play), and D-718 (F-200 to OQ-61).
+
+### State of the build
+
+- The remote head of `main` is `7bab7cf`. The local suite, `det-lint`, `asset-qa`, and `ste-check` pass on the branch.
+
+### In flight
+
+- PR #123: the automated pass, then `make codex-review`.
+
+### Traps and gotchas
+
+- A Godot window that another window covers draws no frame, and the ticks go on. The first timer-tester capture wrote 204 copies of one frame, because a HUD shot window opened over it. Keep the capture window clear. The capture now stops with an error line.
+- Readers of 30 or more frames can end on a connection reset. Split the frames into smaller sets.
+- The timer-tester stands still, so 212 of its frames differ only in the timer. A pixel comparison proves it faster than a read of each frame.
+
+### Open questions that block progress
+
+None. The protocol of Gate 4 stays open under OQ-62, and it blocks nothing before Phase 4.
+
+### Next concrete action
+
+After the merge of PR #123, start PR-97 (D-715).
+
 ## Session 307: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -234,104 +332,3 @@ None.
 ### Next concrete action
 
 After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`. The next PR is M-3 on seeds 1, 2, and 3 over SSH on the Deck (D-606, D-706).
-
-## Session 300: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-94, reviewer. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
-
-### What this session did, and why
-
-- Reviewed PR #120 at effective head `f8d06f5`. The author provider is Claude Code, so the Codex review passes the provider gate.
-- The seed flag, its parser rules, boot path, tests, and PR-94 documents match D-703 to D-706. The review record gives `Ready for owner merge` with no findings.
-- Five focused tests passed. GitHub code checks passed. `evaluate` and `review-gate` failed because the review record was not on the PR yet.
-
-### State of the build
-
-- Local: five focused tests passed at `f12021b`. GitHub code checks passed at the same head.
-- Remote: review record and this entry are on `feat/pr-94-seed-flag` at metadata head `7e06e2e`. The required remote hash comparison passed.
-
-### In flight
-
-- The metadata-tip `evaluate` and `review-gate` checks passed. The heavy code workflows skipped by the documents-only rule, and their required jobs passed at code head `f12021b`.
-
-### Traps and gotchas
-
-- The checkout is detached. Compare its final commit with the head that `gh pr view 120` reports.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The review is complete for effective head `f8d06f5`. The owner can read the review record and the check results before merge.
-
-## Session 299: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-94, author. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
-
-### What this session did, and why
-
-- The session started as the M-3 author. The M-3 table needs three seeds, and the bot session ran the first seed alone. The owner chose a seed flag in its own PR first (D-703). The session did no work before that answer, so it binds to PR-94.
-- Added `--seed <n>` to the bot session: it needs `--bot`, and it takes a whole number from 1 up in digits alone (D-704, D-705). The loop starts on the seed, and a boot failure line carries it.
-- Recorded the M-3 seeds: 1, 2, and 3 (D-706). A headless bot session on the Mac reaches floor 2 on seeds 2 and 3.
-
-### State of the build
-
-- Local: the first full run passed 2108 of 2109 tests. The STE test failed on two long sentences, and `f8d06f5` holds the fix. After it, `ste-check` and `det-lint` found zero findings, and the STE and parser tests passed.
-- Remote head of the work: `f8d06f5`, plus the metadata and status commit of this entry.
-
-### In flight
-
-- The gitar pass, CI, and `make codex-review` of PR #120.
-- PR-92 exit test 3: the first scheduled night on `main` after `d5f7e00` is the 07:07 UTC cron of 2026-09-28. It did not run before this entry.
-
-### Traps and gotchas
-
-- The Mac has no `timeout` command. Run a Godot session under the time limit of the tool.
-- The engine tests of the seed flag take about one second, because a headless session at fixed 60 frames per second runs faster than real time.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge of PR #120, start M-3 in a new session: run seeds 1, 2, and 3 on the Deck over SSH (D-606, D-706), and record the table. Check the night of PR-92 exit test 3 on `night-results`.
-
-## Session 298: 2026-09-27, Codex
-
-Author: Codex
-Session: PR-93, reviewer. Branch `feat/pr-93-overseer-model`. PR #119, pending merge. Base `b4615c0`.
-
-### What this session did, and why
-
-- Reviewed the PR-93 code head `5faf3b7` as the cross-provider reviewer.
-- Checked the model, the hunter model field, the texture mappings, the focused tests, the roadmap, and the PR comments.
-- Wrote `docs/reviews/pr-119.md`. The review found no in-scope defect. The owner approval of the contact sheet is recorded in D-700.
-
-### State of the build
-
-- Local focused tests passed: 290 passed, none failed or skipped. Local asset QA found zero findings across four models and three animations.
-- Remote CI passed the build and test jobs, bit identity on three platforms, bot checks, asset QA, determinism lint, documents, doc gate, night gate, smoke on three platforms, and STE checks.
-- Remote `evaluate` and `review-gate` failed because the review record was not yet on the branch. Remote branch head before this metadata push: `e2eea3e`.
-
-### In flight
-
-- The review record and this handoff entry need one metadata commit and a push to `feat/pr-93-overseer-model`.
-- PR #119 is pending owner merge.
-
-### Traps and gotchas
-
-- The review applies to effective head `5faf3b7`. The later code tip `e2eea3e` changes documents only (D-534).
-- The contact-sheet image named by D-700 was not in the referenced folder. The owner approval remains recorded in D-700.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-- Push the review record and this entry together. Verify the remote head and the review-gate result.
