@@ -2,6 +2,104 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 316: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-98, author. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Read the review of session 315: `Ready for owner merge` for the effective head b446cdd, with no finding.
+- Gitar approved b446cdd, and its one thread is resolved. The D-251 note for the review-gate line of the dashboard is posted.
+
+### State of the build
+
+- Each check of PR #125 passed at 8e29146, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays b446cdd.
+
+### In flight
+
+- The owner confirmation of the merge of PR #125 (D-524, D-533).
+
+### Traps and gotchas
+
+- macOS has no `timeout` command. A CI wait that starts with it ends at once with exit code 8, and every check reads pending.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, start PR-99 (D-724), the last PR before Gate 2.
+
+## Session 315: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Reviewed the code, tests, documents, comments, and frames of PR #125. No in-scope finding remains.
+- Added the review record for effective head `b446cdd` and this entry in one metadata commit (D-182).
+
+### State of the build
+
+- The local HUD and number-sight tests passed, 28 tests. The remote CI checks for work head `b446cdd` passed through documents-only tip `8e29146` (D-357).
+- The `review-gate` and dependent `evaluate` checks failed because the review record did not yet exist. They need a fresh run after this push.
+
+### In flight
+
+- The review record and this entry await the metadata commit and push to the PR branch.
+
+### Traps and gotchas
+
+- `GridRay.FirstSolid` throws when a march starts in rock. The grazing-edge test checks the step past the first open cell.
+- The PR tip includes documents after the effective work head. The review applies to `b446cdd`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Wait for the review-gate checks, then give the owner the merge summary for PR #125.
+
+## Session 314: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-98, author. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Asked the owner the four questions of PR-98 and two more that the frames raised. The answers are D-725 to D-731: numbers of 28 pixels, a black outline of 3 pixels, a hidden owner rule, a ray that skips the rock of the drawn camera, the prompt at the bottom right, no number for a dead owner, and a hold of 0.5 seconds before the fade.
+- The code: `DamageNumbers.cs`, `Hud.cs`, `HudLayout.cs`, and the new `NumberSight.cs`, with tests in `HudTests.cs` and `NumberSightTests.cs`.
+- Captured the HUD shot and the two runs of D-714 at the PR head. The owner confirmed that F-199 and F-201 are gone, and F-24 closes (D-732). The frames are in `docs/reviews/pr-125-frames/`.
+- Answered the one gitar finding with b446cdd: a step past the rock can land in the next block, and the march from there threw. The number now hides there. The test `AStepPastAnEdgeIntoRockHides` fails on 3248bae.
+
+### State of the build
+
+- The full suite passed locally, 2141 tests, at b446cdd. `det-lint` and `ste-check` have no finding. The effective head is b446cdd.
+- The captures end as at PR-96: 63 and 214 frames, and the timer-tester dies at tick 12873.
+
+### In flight
+
+- CI and the gitar pass of PR #125, then `make codex-review PR=125`.
+
+### Traps and gotchas
+
+- The HUD outline of the engine size 4 draws a band of 1.0 pixel, which does not read on the dark stone. An enlarged crop hid it: count the pixels, and do not judge by eye.
+- A dead enemy keeps its place and its body box (D-322). A rule that reads the enemy boxes must skip the dead ones.
+- `GridRay.FirstSolid` throws on a start in rock, and the drawn camera can stand in rock (D-720). `NumberSight` skips that rock first (D-729), and a start that lands in a block after the step past the face hides the number.
+- The prompt test checks the body box. With the model margin of 0.3 meters and a wall on the right, the box reaches the left edge of the prompt box at a pitch up. The prompt text stands about 280 pixels farther right.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Answer the gitar pass of PR #125, then start `make codex-review PR=125` when each check but the Review gate workflow is green. After the merge, PR-99 (D-724).
+
 ## Session 313: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -233,101 +331,3 @@ None.
 ### Next concrete action
 
 After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
-
-## Session 306: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-95, reviewer. Branch `fix/pr-95-seed-2-transition`. PR #122, ready for owner merge. Effective head `34c2ddf`.
-
-### What this session did, and why
-
-- Re-reviewed P2-1 against the author response, the source before and after the change, and the PR-95 exit tests.
-- Withdrew P2-1 because the same-tick tree build existed before this PR, and the roadmap does not include that fallback case.
-- Updated `docs/reviews/pr-122.md` with the result and preserved the earlier verdict.
-
-### State of the build
-
-- The remote tip before this commit is `e8f4e9b`; the code head and effective head remain `34c2ddf`.
-- Required code checks passed at `3e01603`. The document checks pass. Review gate and evaluate await this review record.
-
-### In flight
-
-- The review record and this handoff entry need one metadata commit and a push to `fix/pr-95-seed-2-transition`.
-
-### Traps and gotchas
-
-- The same-tick fallback builds unfinished chunk meshes and enemy trees on descent. This pre-existing behavior is outside the PR-95 exit tests.
-- The Deck logs cover the measured seed 2 transitions. This session did not repeat the Deck run.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the push, confirm the remote head and report the review result to the owner.
-
-## Session 305: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-95, author. Branch `fix/pr-95-seed-2-transition`. PR #122, pending merge. Base `5ca1e1e`.
-
-### What this session did, and why
-
-- Answered the review of session 304 in `docs/reviews/pr-122-response.md`. P2-1 has no merit: a plan offered on the descent tick also makes `ChunkSwap.AfterTick` build every chunk in that tick, since PR-18. A trees-only fix cannot meet D-635 there, and trees shown late draw enemies with no model.
-- Measured the race on the Mac, because the Deck slept: a `--transitions 6` session offered each plan 1 to 5 ticks after its swap, and the floors lasted 344 to 2118 ticks.
-- The automated pass approved `3e01603` with no thread. One reply to its review-gate note cites D-251. No `Gitar review` comment.
-
-### State of the build
-
-- The remote head before this commit is `c7cbad4`, the review record. The code head stays `34c2ddf`. Each check but the Review gate workflow is green at `3e01603`.
-
-### In flight
-
-- The second round of `make codex-review PR=122` on the same effective head.
-- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start by 14:32 UTC.
-
-### Traps and gotchas
-
-- The Deck sleeps after some idle minutes. Ask the owner to wake it before each Deck run.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the outcome of the second review round. On approval, write the merge summary, and ask the owner to confirm the merge.
-
-## Session 304: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-95, reviewer. Branch `fix/pr-95-seed-2-transition`. PR #122, changes required. Effective head `34c2ddf`.
-
-### What this session did, and why
-
-- Reviewed PR #122 against its tests, roadmap, guardrails, comments, and Deck evidence.
-- Found P2-1: a plan that arrives on the descent tick leaves no frame to stage its enemy trees.
-- The focused transition and smoke tests passed, and the required CI checks passed.
-
-### State of the build
-
-- The remote head before review publication was `3e01603`. The implementation head is `34c2ddf`.
-- The focused tests passed, 2 of 2, on macOS arm64 with .NET 10.0.12. Required CI passed except the expected pre-publication review gate and evaluate check.
-
-### In flight
-
-- PR #122 needs a correction and a regression test for P2-1.
-
-### Traps and gotchas
-
-- When the worker offers a plan on the same physics tick as descent, `BuildSome` has not run before `Rebuild`.
-- The Deck logs cover a plan that arrived before descent. They do not cover this timing race.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Load `review-response` and correct P2-1 with a regression test.

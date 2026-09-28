@@ -1,5 +1,103 @@
 # Session handoff archive
 
+## Session 306: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-95, reviewer. Branch `fix/pr-95-seed-2-transition`. PR #122, ready for owner merge. Effective head `34c2ddf`.
+
+### What this session did, and why
+
+- Re-reviewed P2-1 against the author response, the source before and after the change, and the PR-95 exit tests.
+- Withdrew P2-1 because the same-tick tree build existed before this PR, and the roadmap does not include that fallback case.
+- Updated `docs/reviews/pr-122.md` with the result and preserved the earlier verdict.
+
+### State of the build
+
+- The remote tip before this commit is `e8f4e9b`; the code head and effective head remain `34c2ddf`.
+- Required code checks passed at `3e01603`. The document checks pass. Review gate and evaluate await this review record.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and a push to `fix/pr-95-seed-2-transition`.
+
+### Traps and gotchas
+
+- The same-tick fallback builds unfinished chunk meshes and enemy trees on descent. This pre-existing behavior is outside the PR-95 exit tests.
+- The Deck logs cover the measured seed 2 transitions. This session did not repeat the Deck run.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the push, confirm the remote head and report the review result to the owner.
+
+## Session 305: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-95, author. Branch `fix/pr-95-seed-2-transition`. PR #122, pending merge. Base `5ca1e1e`.
+
+### What this session did, and why
+
+- Answered the review of session 304 in `docs/reviews/pr-122-response.md`. P2-1 has no merit: a plan offered on the descent tick also makes `ChunkSwap.AfterTick` build every chunk in that tick, since PR-18. A trees-only fix cannot meet D-635 there, and trees shown late draw enemies with no model.
+- Measured the race on the Mac, because the Deck slept: a `--transitions 6` session offered each plan 1 to 5 ticks after its swap, and the floors lasted 344 to 2118 ticks.
+- The automated pass approved `3e01603` with no thread. One reply to its review-gate note cites D-251. No `Gitar review` comment.
+
+### State of the build
+
+- The remote head before this commit is `c7cbad4`, the review record. The code head stays `34c2ddf`. Each check but the Review gate workflow is green at `3e01603`.
+
+### In flight
+
+- The second round of `make codex-review PR=122` on the same effective head.
+- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start by 14:32 UTC.
+
+### Traps and gotchas
+
+- The Deck sleeps after some idle minutes. Ask the owner to wake it before each Deck run.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the outcome of the second review round. On approval, write the merge summary, and ask the owner to confirm the merge.
+
+## Session 304: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-95, reviewer. Branch `fix/pr-95-seed-2-transition`. PR #122, changes required. Effective head `34c2ddf`.
+
+### What this session did, and why
+
+- Reviewed PR #122 against its tests, roadmap, guardrails, comments, and Deck evidence.
+- Found P2-1: a plan that arrives on the descent tick leaves no frame to stage its enemy trees.
+- The focused transition and smoke tests passed, and the required CI checks passed.
+
+### State of the build
+
+- The remote head before review publication was `3e01603`. The implementation head is `34c2ddf`.
+- The focused tests passed, 2 of 2, on macOS arm64 with .NET 10.0.12. Required CI passed except the expected pre-publication review gate and evaluate check.
+
+### In flight
+
+- PR #122 needs a correction and a regression test for P2-1.
+
+### Traps and gotchas
+
+- When the worker offers a plan on the same physics tick as descent, `BuildSome` has not run before `Rebuild`.
+- The Deck logs cover a plan that arrived before descent. They do not cover this timing race.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Load `review-response` and correct P2-1 with a regression test.
+
 ## Session 303: 2026-09-28, Claude Code
 
 Author: Claude Code
