@@ -42,7 +42,7 @@ public sealed class ContentTests
         """;
 
     private const string HunterText = """
-        {"id":"h","weapon":"w","attackRangeCentimetres":180,"attackCooldownTicks":60,"startSpeedCentimetresPerSecond":350,"speedGainCentimetresPerSecond":100,"speedGainTicks":1200}
+        {"id":"h","weapon":"w","attackRangeCentimetres":180,"attackCooldownTicks":60,"startSpeedCentimetresPerSecond":350,"speedGainCentimetresPerSecond":100,"speedGainTicks":1200,"model":"models/h.bbmodel"}
         """;
 
     /// <summary>The main weapon of D-422: the test weapon under the id that the attack bit swings.</summary>
@@ -129,6 +129,7 @@ public sealed class ContentTests
         Assert.Equal("sword-basic", set.Weapons[1].Id);
         Assert.Equal("overseer", set.Hunter.Id);
         Assert.Equal("overseer-pick", set.Hunter.Weapon);
+        Assert.Equal("models/overseer.bbmodel", set.Hunter.Model);
         Assert.True(set.Strings.Count > 0);
         Assert.Equal(64, set.Hash.Length);
 
@@ -929,7 +930,7 @@ public sealed class ContentTests
     public void TheSetHoldsOneHunterWithAWeapon()
     {
         ContentSet set = new ContentLoader(Valid()).Load();
-        Assert.Equal(new HunterDefinition("h", "w", 180, 60, 350, 100, 1200), set.Hunter);
+        Assert.Equal(new HunterDefinition("h", "w", 180, 60, 350, 100, 1200, "models/h.bbmodel"), set.Hunter);
 
         MemorySource none = new MemorySource()
             .Add("floors/a.json", Floor)
@@ -949,7 +950,8 @@ public sealed class ContentTests
     }
 
     /// <summary>
-    /// Every field of the hunter is required, and each number is one or more (D-92, D-408). The cooldown fits the int
+    /// Every field of the hunter is required, and each number is one or more (D-92, D-408). The model path stays under
+    /// the model directory and names a model file (D-698). The cooldown fits the int
     /// that the hunter counts it in: the loader took 2^31, one past <see cref="int.MaxValue"/>, and the cast wrapped it
     /// to a negative cooldown, which never ends (F-120).
     /// </summary>
@@ -961,6 +963,11 @@ public sealed class ContentTests
     [InlineData("\"speedGainTicks\":1200", "\"speedGainTicks\":0", "speedGainTicks")]
     [InlineData(",\"speedGainTicks\":1200", "", "speedGainTicks")]
     [InlineData("\"attackCooldownTicks\":60", "\"attackCooldownTicks\":2147483648", "attackCooldownTicks")]
+    [InlineData(",\"model\":\"models/h.bbmodel\"", "", "model")]
+    [InlineData("\"model\":\"models/h.bbmodel\"", "\"model\":\"h.bbmodel\"", "model")]
+    [InlineData("\"model\":\"models/h.bbmodel\"", "\"model\":\"models/../floors/a.json\"", "model")]
+    [InlineData("\"model\":\"models/h.bbmodel\"", "\"model\":\"models/player.h.json\"", "model")]
+    [InlineData("\"model\":\"models/h.bbmodel\"", "\"model\":1", "model")]
     public void ABadHunterFieldFails(string from, string to, string field)
     {
         string text = HunterText.Replace(from, to, StringComparison.Ordinal);

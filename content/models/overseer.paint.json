@@ -1,0 +1,25 @@
+{
+  "model": "models/overseer.bbmodel",
+  "boxes": {
+    "head_box": {"recipe": "overseer-coat", "faces": {"east": "overseer-head-east", "south": "overseer-head-south", "west": "overseer-head-west"}},
+    "brim_box": {"recipe": "overseer-helmet", "faces": {"north": "overseer-brim-north", "east": "overseer-brim-east", "south": "overseer-brim-south", "west": "overseer-brim-west"}},
+    "crown_box": {"recipe": "overseer-helmet", "faces": {"north": "overseer-crown-north", "east": "overseer-crown-east", "south": "overseer-crown-south", "west": "overseer-crown-west"}},
+    "lamp_box": {"recipe": "overseer-helmet", "faces": {"north": "overseer-lamp-north"}},
+    "goggle_left_box": {"recipe": "overseer-steel", "faces": {"north": "overseer-goggle-left-north"}},
+    "goggle_right_box": {"recipe": "overseer-steel", "faces": {"north": "overseer-goggle-right-north"}},
+    "mask_box": {"recipe": "overseer-linen", "faces": {"north": "overseer-mask-north"}},
+    "can_left_box": {"recipe": "overseer-steel", "faces": {"north": "overseer-can-left-north"}},
+    "can_right_box": {"recipe": "overseer-steel", "faces": {"north": "overseer-can-right-north"}},
+    "torso_box": {"recipe": "overseer-coat", "faces": {"north": "overseer-torso-north", "east": "overseer-torso-side", "south": "overseer-torso-south", "west": "overseer-torso-side"}},
+    "arm_left_upper_box": {"recipe": "overseer-coat", "faces": {"north": "overseer-arm-left-upper-north", "east": "overseer-arm-right-upper-east", "south": "overseer-arm-left-upper-south", "west": "overseer-arm-left-upper-west"}},
+    "arm_left_lower_box": {"recipe": "overseer-coat", "faces": {"north": "overseer-arm-left-lower-north", "east": "overseer-arm-right-lower-east", "south": "overseer-arm-left-lower-south", "west": "overseer-arm-left-lower-west", "down": "overseer-leather"}},
+    "arm_right_upper_box": {"recipe": "overseer-coat", "faces": {"north": "overseer-arm-right-upper-north", "east": "overseer-arm-right-upper-east", "south": "overseer-arm-right-upper-south", "west": "overseer-arm-left-upper-west"}},
+    "arm_right_lower_box": {"recipe": "overseer-coat", "faces": {"north": "overseer-arm-right-lower-north", "east": "overseer-arm-right-lower-east", "south": "overseer-arm-right-lower-south", "west": "overseer-arm-left-lower-west", "down": "overseer-leather"}},
+    "leg_left_upper_box": {"recipe": "overseer-coat", "faces": {"north": "overseer-leg-left-upper-north", "south": "overseer-leg-left-upper-south"}},
+    "leg_left_lower_box": {"recipe": "overseer-leather", "faces": {"north": "overseer-leg-left-lower-north", "east": "overseer-leg-right-lower-east", "south": "overseer-leg-left-lower-south", "west": "overseer-leg-left-lower-west", "down": "overseer-sole"}},
+    "toe_left_box": {"recipe": "overseer-leather", "faces": {"north": "overseer-toe-left-north", "east": "overseer-toe-right-east", "west": "overseer-toe-left-west", "down": "overseer-sole"}},
+    "leg_right_upper_box": {"recipe": "overseer-coat", "faces": {"north": "overseer-leg-right-upper-north", "south": "overseer-leg-right-upper-south"}},
+    "leg_right_lower_box": {"recipe": "overseer-leather", "faces": {"north": "overseer-leg-right-lower-north", "east": "overseer-leg-right-lower-east", "south": "overseer-leg-right-lower-south", "west": "overseer-leg-left-lower-west", "down": "overseer-sole"}},
+    "toe_right_box": {"recipe": "overseer-leather", "faces": {"north": "overseer-toe-right-north", "east": "overseer-toe-right-east", "west": "overseer-toe-left-west", "down": "overseer-sole"}}
+  }
+}

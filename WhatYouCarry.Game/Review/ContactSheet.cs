@@ -55,8 +55,11 @@ public static class ContactSheet
     /// <summary>The rows of the Steam Deck screen, and the side of each render (D-15).</summary>
     public const int RenderPixels = 800;
 
-    /// <summary>The side of the cell of a block or a body: the middle square of a render.</summary>
-    public const int CellPixels = 400;
+    /// <summary>
+    /// The side of the cell of a block or a body: the middle square of a render. The Overseer of 2.3 meters spans about
+    /// 1.07 of the view height at the boom length, so the cell holds three quarters of the render (D-691).
+    /// </summary>
+    public const int CellPixels = 600;
 
     /// <summary>The side of the cell of a ramp: the whole render.</summary>
     public const int RampCellPixels = RenderPixels;
@@ -141,9 +144,9 @@ public static class ContactSheet
 
     /// <summary>
     /// The models of the sheet: the body of the player, then each model that an enemy family names, once, in family
-    /// order (D-673).
+    /// order (D-673), then the model of the hunter (D-698).
     /// </summary>
-    public static IReadOnlyList<string> Models(IReadOnlyList<EnemyDefinition> families)
+    public static IReadOnlyList<string> Models(IReadOnlyList<EnemyDefinition> families, HunterDefinition hunter)
     {
         List<string> models = [AssetPaths.BodyModel];
         foreach (EnemyDefinition family in families)
@@ -152,6 +155,11 @@ public static class ContactSheet
             {
                 models.Add(family.Model);
             }
+        }
+
+        if (!models.Contains(hunter.Model))
+        {
+            models.Add(hunter.Model);
         }
 
         return models;

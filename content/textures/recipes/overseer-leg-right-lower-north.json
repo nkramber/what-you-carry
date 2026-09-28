@@ -1,0 +1,43 @@
+{
+  "layers": [
+    {
+      "kind": "map",
+      "legend": {
+        "0": {"color": 77, "shade": 0},
+        "b": {"color": 32, "shade": 3},
+        "e": {"color": 32, "shade": 0}
+      },
+      "rows": [
+        "0000000000000000",
+        "0000000000000000",
+        "0000000000000000",
+        "0000000000000000",
+        "0000000000000000",
+        "0000000000000000",
+        "0000000000000000",
+        "0000000000000000",
+        "b000000000000000",
+        "b00000000000000b",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbbb",
+        "bbbbbbbbbbbbbbb0",
+        "eeeeeeeeeeeeeee0",
+        "eeeeeeeeeeeeeee0"
+      ]
+    },
+    {"kind": "grain", "cell": 8, "amount": 1, "seed": 2035}
+  ]
+}

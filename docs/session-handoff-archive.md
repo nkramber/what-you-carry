@@ -1,5 +1,79 @@
 # Session handoff archive
 
+## Session 288: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-116, reviewer. Branch `fix/pr-92-review-fixes`. PR #116, pending merge. Base `e9a89aa`.
+
+### What this session did, and why
+
+- Reviewed all 60 changed paths of PR #116 against its roadmap, decisions, questions, and PR comments.
+- Found no blocking defect. The review record approves effective head `a09b9f9`.
+- The author entries name Claude Code. The Codex review passes the provider gate (T-4, D-101).
+
+### State of the build
+
+- Remote `main` is `e9a89aa`. The remote PR head before this metadata commit is `a09b9f9`.
+- The local build passed with zero warnings. The focused review tests passed, 426 of 426.
+- CI passed the build and test jobs on all three platforms, Smoke, bit identity, bots, the night gate, and the document and asset checks. `evaluate` and `review-gate` await this metadata commit.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit on `fix/pr-92-review-fixes`.
+- The first night on `main` after merge must run eight sweep jobs. Exit test 3 assigns its record check to a later session.
+
+### Traps and gotchas
+
+- The PR comment says the missing review record caused the expected pre-review gate failure. The Gitar provider-gate finding is fixed and resolved.
+- The owner accepted the review trust-boundary risk (D-647) and the night-gate window risk (D-654).
+- The measured frame-cost fixes remain with M-3 and PR-77 (G-17).
+
+### Open questions that block progress
+
+None for PR-116.
+
+### Next concrete action
+
+Push the review record and this entry together. Verify the remote head and wait for the metadata checks. The owner can then review the merge summary.
+
+## Session 287: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-92, author. Branch `fix/pr-92-review-fixes`. PR #116, pending merge. Base `e9a89aa`.
+
+### What this session did, and why
+
+- The night fixer log printed "the night 36320653722 passed" at the first poll after the merge of PR #109. No night on `main` failed yet, so exit test 23 of PR-91 still waits for the Pushover notice and a fixer session.
+- The owner report `/Volumes/SSD-1TB/what-you-carry-repository-review.md` was gone from the disk. The session rebuilt it from the full read of session 285 and the marks of PR #109, and restored it at the same path.
+- The owner answered each open question of D-596: D-646 to D-659. PR-92 holds more than one concern (D-646).
+- Code: the night keeps each failed seed and runs two shards of the two long sweeps (D-648, D-655). The override label reads the push time (D-653). The replay cuts a torn tail (D-656). `make claude-review` reviews a PR that Codex writes (D-649). The bot session takes `--policy`.
+- The Deck found F-178: the move stick had no dead zone, and an idle player died at tick 310. D-658 fixes it. The owner read the HUD on the Deck (D-659).
+- The Deck measured, two runs each with the enemies: a transition at 33.1 milliseconds, and the timer expiry at 56.5 and 56.7 (F-184).
+- The session turned on Dependabot alerts, Dependabot security updates, secret scanning, and push protection (D-657).
+
+### State of the build
+
+- Remote `main` is `e9a89aa`. The local suite outside `Smoke` passed 2035 of 2036 tests, and the one STE failure has its fix. `ste-check` is clean.
+
+### In flight
+
+- The CI of PR #116, the gitar pass, then `make codex-review PR=116`.
+- The first night on `main` after the merge runs eight sweep jobs (exit test 3). A later session records it.
+
+### Traps and gotchas
+
+- `pkill -f` over SSH matches its own command line when the pattern is in it. Run a Deck script from a file.
+- GitHub makes a check suite for the last commit of each push alone, so D-653 reads the suites from the work head to the PR head.
+- Each review command now refuses a PR whose author entries do not name the other provider.
+
+### Open questions that block progress
+
+None for PR-92.
+
+### Next concrete action
+
+Finish the review loop of PR #116. The frame costs of F-184 wait for M-3 and PR-77.
+
 ## Session 286: 2026-09-27, Claude Code
 
 Author: Claude Code

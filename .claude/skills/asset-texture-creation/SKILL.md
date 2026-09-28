@@ -37,36 +37,31 @@ The body of PR-74 is the first asset of this procedure. Its owner answers, D-496
 
 ### Step 1: The prompt for the concept image
 
+Meshy text to image takes 800 characters at most, and it has no negative prompt field (D-702). The avoid words go at the end of the prompt.
+
 1. Read the roadmap entry of the asset, and the decisions that it cites.
 2. Fill the template below with the subject, the proportions, and the colors.
-3. Give the prompt to the owner in one fenced block, ready to paste into Meshy text to image.
-4. State the reason for each choice in the prompt in one short line.
+3. Count the characters of the prompt with `tr -d '\n' < <file> | wc -c`. Cut the color names before the hex values.
+4. Give the prompt to the owner in one fenced block, ready to paste into Meshy text to image.
+5. State the reason for each choice in the prompt in one short line.
 
 Template for a body or an enemy:
 
 ```
-Front view of a single [SUBJECT], full body, centered, standing straight,
-arms straight down with a small gap from the torso, feet apart.
-Blocky cuboid character: every part is a rectangular box with hard square
-edges. Head [H] units, torso [W] wide by [H] high, arms [W] thick, legs [W]
-thick, total height [H] units, [N] heads tall.
-[FEATURES: for example a heavy brow bar, small dark eyes with no whites, a
-dark beard block on the lower third of the face.]
-Each color area is flat, with hard straight edges. Colors: [PART] [color name]
-[hex], [PART] [color name] [hex].
-Dark fantasy mine setting. Even flat light, no cast shadows, no shading
-painted into the texture. Plain light grey background. No props, no ground,
-no text.
-Avoid: detail smaller than one texel, soft or brushed edges, gradients, blur,
-fine grain, eye whites, a flat pixel face, rounded shapes, bevels, smooth curves,
-glossy materials.
+Front view of a single [SUBJECT], full body, centered, arms down clear of the
+torso, feet apart. Blocky figure, every part a box with hard edges. Head [H]
+units, torso [W] wide by [H] high, arms [W] thick, legs [W] thick, [H] units
+tall. [FEATURES: for example a heavy brow bar, a dark beard block.] Flat
+colors: [PART] [name] [hex], [PART] [name] [hex]. Square cells of equal size,
+each one flat color, no blending. Even flat light, plain grey background. No
+shading, gradients, blur, glow, eye whites, curves, gloss, props.
 ```
 
 A concept shows its detail at the texel level of the model, and nothing finer (D-664). The head front of 8 units is 32 texels wide at 64 texels per meter (D-603).
 
-The prompt names no texel grid and no texel count. An image model cannot count texels. In the scavenger concept 03, the words "texel grid" with a count gave texels 4 times too big, in a checkerboard.
+The prompt names square cells of equal size, and no count (D-701). An image model cannot count texels. In the scavenger concept 03, the words "texel grid" with a count gave texels 4 times too big, in a checkerboard. In the Overseer concept 01, "32 cells across the head front" gave about 16 cells.
 
-For an item, a weapon, or a prop, replace the first two lines with "Three-quarter view from slightly above of a single [SUBJECT], centered". Keep the other lines. If the Meshy form has a separate negative prompt field, put the avoid list there.
+For an item, a weapon, or a prop, replace the first sentence with "Three-quarter view from slightly above of a single [SUBJECT], centered". Keep the other sentences.
 
 ### Step 2: The review of the concept image
 

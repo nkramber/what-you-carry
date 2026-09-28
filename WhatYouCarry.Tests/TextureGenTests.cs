@@ -26,11 +26,11 @@ public sealed class TextureGenTests
 {
     private const float UvTolerance = 0.0001f;
 
-    /// <summary>The faces of the trace specs: 40 of the body and 28 of the sword (D-612).</summary>
-    private const int TracedFaceCount = 120;
+    /// <summary>The faces of the trace specs: 40 of the body, 28 of the sword, 52 of the scavenger, and 45 of the Overseer (D-612).</summary>
+    private const int TracedFaceCount = 165;
 
     /// <summary>The trace specs of the repository (D-612).</summary>
-    private static readonly string[] TraceSpecs = ["miner", "sword", "scavenger"];
+    private static readonly string[] TraceSpecs = ["miner", "sword", "scavenger", "overseer"];
 
     /// <summary>The side of a block tile in the atlas of PR-14 and in the palette preview, at 32 texels per meter (D-85).</summary>
     private const int TilePixelsOfPr14 = 32;
@@ -328,6 +328,7 @@ public sealed class TextureGenTests
         const string Player = "models/player.bbmodel:";
         const string Sword = "models/sword-basic.bbmodel:";
         const string Scavenger = "models/scavenger.bbmodel:";
+        const string Overseer = "models/overseer.bbmodel:";
         Dictionary<string, string> boxRecipe = new()
         {
             [Player + "head_box"] = "hair",
@@ -371,6 +372,26 @@ public sealed class TextureGenTests
             [Scavenger + "leg_right_upper_box"] = "trousers",
             [Scavenger + "leg_right_lower_box"] = "boot",
             [Scavenger + "toe_right_box"] = "boot-toe",
+            [Overseer + "head_box"] = "overseer-coat",
+            [Overseer + "brim_box"] = "overseer-helmet",
+            [Overseer + "crown_box"] = "overseer-helmet",
+            [Overseer + "lamp_box"] = "overseer-helmet",
+            [Overseer + "goggle_left_box"] = "overseer-steel",
+            [Overseer + "goggle_right_box"] = "overseer-steel",
+            [Overseer + "mask_box"] = "overseer-linen",
+            [Overseer + "can_left_box"] = "overseer-steel",
+            [Overseer + "can_right_box"] = "overseer-steel",
+            [Overseer + "torso_box"] = "overseer-coat",
+            [Overseer + "arm_left_upper_box"] = "overseer-coat",
+            [Overseer + "arm_left_lower_box"] = "overseer-coat",
+            [Overseer + "arm_right_upper_box"] = "overseer-coat",
+            [Overseer + "arm_right_lower_box"] = "overseer-coat",
+            [Overseer + "leg_left_upper_box"] = "overseer-coat",
+            [Overseer + "leg_left_lower_box"] = "overseer-leather",
+            [Overseer + "toe_left_box"] = "overseer-leather",
+            [Overseer + "leg_right_upper_box"] = "overseer-coat",
+            [Overseer + "leg_right_lower_box"] = "overseer-leather",
+            [Overseer + "toe_right_box"] = "overseer-leather",
         };
         Dictionary<string, string> faceRecipe = new()
         {
@@ -392,6 +413,24 @@ public sealed class TextureGenTests
             [Scavenger + "leg_left_lower_box:down"] = "boot-toe",
             [Scavenger + "leg_right_lower_box:up"] = "boot-toe",
             [Scavenger + "leg_right_lower_box:down"] = "boot-toe",
+
+            // The torso sides paint the belt of D-697. An inner face of a limb reads the traced outer face of the other limb.
+            [Overseer + "torso_box:east"] = "overseer-torso-side",
+            [Overseer + "torso_box:west"] = "overseer-torso-side",
+            [Overseer + "arm_left_upper_box:east"] = "overseer-arm-right-upper-east",
+            [Overseer + "arm_left_lower_box:east"] = "overseer-arm-right-lower-east",
+            [Overseer + "arm_right_upper_box:west"] = "overseer-arm-left-upper-west",
+            [Overseer + "arm_right_lower_box:west"] = "overseer-arm-left-lower-west",
+            [Overseer + "arm_left_lower_box:down"] = "overseer-leather",
+            [Overseer + "arm_right_lower_box:down"] = "overseer-leather",
+            [Overseer + "leg_left_lower_box:east"] = "overseer-leg-right-lower-east",
+            [Overseer + "leg_right_lower_box:west"] = "overseer-leg-left-lower-west",
+            [Overseer + "leg_left_lower_box:down"] = "overseer-sole",
+            [Overseer + "leg_right_lower_box:down"] = "overseer-sole",
+            [Overseer + "toe_left_box:east"] = "overseer-toe-right-east",
+            [Overseer + "toe_right_box:west"] = "overseer-toe-left-west",
+            [Overseer + "toe_left_box:down"] = "overseer-sole",
+            [Overseer + "toe_right_box:down"] = "overseer-sole",
         };
 
         IReadOnlyList<TraceFace> traced = RepositoryTraceFaces();

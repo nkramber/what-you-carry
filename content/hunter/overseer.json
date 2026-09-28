@@ -5,5 +5,6 @@
   "attackCooldownTicks": 60,
   "startSpeedCentimetresPerSecond": 350,
   "speedGainCentimetresPerSecond": 100,
-  "speedGainTicks": 1200
+  "speedGainTicks": 1200,
+  "model": "models/overseer.bbmodel"
 }

@@ -26,8 +26,8 @@ public sealed class ContactSheetTests
     /// <summary>The radius of a sphere around a block, in meters, for the neighbor test.</summary>
     private const double NeighborRadius = 1.0;
 
-    /// <summary>The models of the sheet of the repository content: the body, then the model of each enemy family (D-673).</summary>
-    private static readonly IReadOnlyList<string> Models = ContactSheet.Models(TestWorld.Content.Enemies);
+    /// <summary>The models of the sheet of the repository content: the body, the model of each enemy family, and the Overseer (D-673, D-698).</summary>
+    private static readonly IReadOnlyList<string> Models = ContactSheet.Models(TestWorld.Content.Enemies, TestWorld.Content.Hunter);
 
     /// <summary>The flag starts the sheet, and nothing else does.</summary>
     [Fact]
@@ -102,14 +102,14 @@ public sealed class ContactSheetTests
     {
         IReadOnlyList<SheetShot> shots = ContactSheet.Shots(Models);
 
-        Assert.Equal(new[] { AssetPaths.BodyModel, "models/scavenger.bbmodel" }, Models);
-        Assert.Equal(14, shots.Count);
+        Assert.Equal(new[] { AssetPaths.BodyModel, "models/scavenger.bbmodel", "models/overseer.bbmodel" }, Models);
+        Assert.Equal(16, shots.Count);
         BlockId[] blocks = shots.Where(shot => !shot.IsBody && !Ramp.IsRamp(shot.Block)).Select(shot => shot.Block).ToArray();
         Assert.Equal(new[] { BlockId.RawStone, BlockId.HewnStone, BlockId.TimberBeam, BlockId.OreVein, BlockId.StillWater, BlockId.Rubble, BlockId.Plank }, blocks);
         float[] yaws = shots.Where(shot => shot.IsBody).Select(shot => shot.BodyYawDegrees).ToArray();
-        Assert.Equal(new[] { 0.0f, 180.0f, 0.0f, 180.0f }, yaws);
+        Assert.Equal(new[] { 0.0f, 180.0f, 0.0f, 180.0f, 0.0f, 180.0f }, yaws);
         string?[] models = shots.Where(shot => shot.IsBody).Select(shot => shot.Model).ToArray();
-        Assert.Equal(new[] { AssetPaths.BodyModel, AssetPaths.BodyModel, "models/scavenger.bbmodel", "models/scavenger.bbmodel" }, models);
+        Assert.Equal(new[] { AssetPaths.BodyModel, AssetPaths.BodyModel, "models/scavenger.bbmodel", "models/scavenger.bbmodel", "models/overseer.bbmodel", "models/overseer.bbmodel" }, models);
         Ramp[] ramps = shots.Where(shot => Ramp.IsRamp(shot.Block)).Select(shot => Ramp.FromId(shot.Block)).ToArray();
         Assert.Equal(new[] { new Ramp(RampRise.MinusZ, 2, 0), new Ramp(RampRise.MinusZ, 3, 0), new Ramp(RampRise.MinusZ, 4, 0) }, ramps);
 
@@ -131,7 +131,7 @@ public sealed class ContactSheetTests
             cells.Add(cell);
         }
 
-        Assert.Equal(new Rect2I(200, 200, 400, 400), ContactSheet.CropRect(shots[0]));
+        Assert.Equal(new Rect2I(100, 100, 600, 600), ContactSheet.CropRect(shots[0]));
         Assert.Equal(render, ContactSheet.CropRect(shots[^1]));
     }
 
