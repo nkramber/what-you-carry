@@ -335,4 +335,37 @@ public sealed class TransitionTests
         int clear = swap.IndexOf("this.digging = null;", afterTick, StringComparison.Ordinal);
         Assert.True(add > afterTick && add < clear, "AfterTick keeps the task before it forgets it.");
     }
+
+    /// <summary>
+    /// F-193. The swap leaves the task of the floor after the new one pending, and the next upload starts it, after the
+    /// frame log reads the time of the frame. The collection that the task starts then stays out of the frame of the
+    /// swap. The old swap started the task in that frame, and on the Deck the collection made the transition of seed 2
+    /// take 24.6 to 26.9 milliseconds, over the budget of D-635.
+    /// </summary>
+    [Fact]
+    public void TheSwapLeavesTheNextDigToTheUpload()
+    {
+        string swap = RepositoryRoot.ReadFile("WhatYouCarry.Game/World/ChunkSwap.cs");
+        string afterTick = MethodBody(swap, "public bool AfterTick(");
+        Assert.DoesNotContain("this.StartDig(", afterTick, StringComparison.Ordinal);
+        Assert.Contains("this.pendingDig = loop.Floor + 1;", afterTick, StringComparison.Ordinal);
+        string upload = MethodBody(swap, "public void UploadSome(");
+        Assert.Contains("this.StartDig(floor);", upload, StringComparison.Ordinal);
+
+        string main = RepositoryRoot.ReadFile("WhatYouCarry.Game/Main.cs");
+        string drawFrame = MethodBody(main, "private void DrawFrame(");
+        int clock = drawFrame.IndexOf("this.frameClock.Next(", StringComparison.Ordinal);
+        int uploadCall = drawFrame.IndexOf("this.chunks?.UploadSome();", StringComparison.Ordinal);
+        Assert.True(clock > 0 && uploadCall > clock, "DrawFrame reads the time of the frame, and then calls UploadSome.");
+    }
+
+    /// <summary>The text of one method, from its signature to the first closing brace at the indent of a member.</summary>
+    private static string MethodBody(string source, string signature)
+    {
+        int start = source.IndexOf(signature, StringComparison.Ordinal);
+        Assert.True(start > 0, $"The source holds the method '{signature}'.");
+        int end = source.IndexOf("\n    }\n", start, StringComparison.Ordinal);
+        Assert.True(end > start, $"The method '{signature}' has a closing brace at the indent of a member.");
+        return source.Substring(start, end - start);
+    }
 }
