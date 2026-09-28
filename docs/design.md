@@ -416,6 +416,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-190 | On the Deck in desktop mode, over SSH, a frame of 18 to 19 ms comes every 2.245 seconds, also in an empty scene, so the game code does not cause it | 2026-09-27 | ⚠ PR #118 (PR-77): exit test 2 excludes it (D-683). A check in Game Mode is open |
 | F-191 | The bot run on the Deck has frames of 26 to 30 ms after the first 10 seconds, on `main` too. The Godot build compiled no optimization, and a path search took 18 ms | 2026-09-27 | ✅ PR #118 (PR-77): every configuration builds optimized code (D-683, D-685). After the first 10 seconds, the Deck p99 is 11.7 to 11.9 ms |
 | F-192 | The floor transition takes 31 to 40 ms on the Deck, over the budget of 22222 microseconds of D-635. The meshes of the enemies of the new floor took 16.7 ms in one tick | 2026-09-27 | ✅ PR #118 (PR-77): each enemy tree shares the meshes of a template, and the transition takes 19.9 to 20.3 ms (D-683) |
+| F-193 | The floor transition of seed 2 takes 25.1 to 27.7 ms in three Deck runs at `5c3310e`, over the budget of 22222 microseconds of D-635. Seeds 1 and 3 take 20.8 and 19.2 ms | 2026-09-28 | 🔧 PR-95 fixes it, and M-3 stays open until then (D-710) |
+| F-194 | At the 90 Hz vsync of the Deck, the real frame time sits on the two sides of 11111 microseconds. An empty scene has a p99 of 11366, so no p99 can reach 11.1 ms | 2026-09-28 | ✅ D-709: the M-3 p99 passes under 16667 microseconds, 1.5 vsync intervals |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -763,8 +765,13 @@ The bot session takes the seed of its run from the flag `--seed <n>`, so M-3 mea
 Gate: the parser tests pass, and the smoke job runs a bot session on seed 2 on the three platforms.
 > *In plain English:* the bot always plays the same floor, so the Deck measurement sees one map. This change lets a test pick the map by its number.
 
+**PR-95: Seed 2 transition cost.** 🔧
+Profile the floor transition of seed 2 on the Deck before a change (G-17). Fix the cost that the profile names, so the transition stays under the hitch budget of D-635 (F-193). Then measure the M-3 table again on seeds 1, 2, and 3, and mark M-3 done (D-710).
+Gate: three Deck runs of seed 2 have a transition under 22222 microseconds, and the new M-3 table meets D-709 and D-635.
+> *In plain English:* on one of the three test maps, the change to the next floor stutters on the Deck. This change finds the cause, removes it, and measures the three maps again.
+
 **M-3: Steam Deck frame time.** 🔧
-Measure the 99th percentile frame time on the Steam Deck OLED of D-296 over one full floor, with the target of D-295. The table holds seeds 1, 2, and 3 (D-706). Binds every render PR (F-3).
+Measure the 99th percentile frame time of the current `main` on the Steam Deck OLED of D-296, over one full floor (D-707). D-295 gives the target. The table holds seeds 1, 2, and 3 (D-706). Each row gives a raw and a filtered p99, and D-709 gives the pass rule (D-708). The run of 2026-09-28 meets D-709 on each seed, but the transition of seed 2 misses D-635 (F-193). M-3 stays open until PR-95 measures again (D-710). Binds every render PR (F-3).
 
 ### Phase 3: Full loop (gate: hub, loadout, death loss, bank, tree, saves, and replay resume work, and friends play)
 

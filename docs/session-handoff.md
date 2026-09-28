@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 302: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: M-3, author. Branch `docs/m-3-deck-frame-time`. PR #121, pending merge. Base `5c3310e`.
+
+### What this session did, and why
+
+- Asked the owner answers that the roadmap names: the builds of the table, the p99 reading, and the pass rule. The strict p99 of 11111 µs was not reachable at the 90 Hz vsync (F-194). D-707 to D-709 record the answers.
+- Ran the bot session on the Deck over SSH at `5c3310e`, on seeds 1, 2, and 3 (D-606, D-706). Each seed meets D-709, with a filtered p99 of 11437 to 11492 µs.
+- The transition of seed 2 took 27725, 25948, and 25110 µs in three runs, over the 22222 µs of D-635 (F-193). The owner held M-3 open, and PR-95 fixes the transition and closes M-3 (D-710).
+- Wrote the table and the method in the M-3 entry, the PR-95 entry, F-193, and F-194. The raw logs and the end lines are in `docs/reviews/pr-121-deck/`.
+
+### State of the build
+
+- `main` is `5c3310e`. This PR changes documents alone, so the checks of D-491 apply.
+
+### In flight
+
+- PR #121: the automated pass, then the `review-override` label (D-652).
+- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start before this entry. Its record on `night-results` names each sweep once, over eight sweep jobs.
+
+### Traps and gotchas
+
+- The end line of a frame log gives the raw p99. The filtered p99 of D-708 needs the method in the M-3 entry.
+- The session of seed 2 ends at 23 seconds, so its filtered p99 reads about 1190 frames.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the night of PR-92 exit test 3 on `night-results`. Then start PR-95: a trace of the seed 2 transition on the Deck before a change (G-17).
+
 ## Session 301: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -305,43 +339,3 @@ None. Required evidence is missing for exit test 2.
 ### Next concrete action
 
 Add the three Deck frame logs to the review evidence, then reassess exit test 2 and update the review record.
-
-## Session 292: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-77, author. Branch `feat/pr-77-light-and-edges`. PR #118, pending merge. Base `3fdefef`.
-
-### What this session did, and why
-
-- Asked OQ-181, and recorded D-677: MSAA at 4x and nearest filtering with mipmaps. The owner then chose the light: a warm lantern that the player carries, a dark ambient light, and no directional light (D-678, D-679).
-- The first HUD shot showed the player as a black shape, because the camera stands behind the lantern. The owner moved the lantern above and behind the head (D-680) and took the ambient energy 4 (D-681). The owner approved the contact sheet with a brighter lantern (D-682, exit test 3).
-- The block canvases sit on a pitch of 66 pixels, so atlas mipmaps mixed two canvases at block edges. `BlockTiles` and `BlockAtlas` copy each canvas to a slot of 64 pixels, and the world shader measures the level before `fract()`.
-- Deck frame logs over SSH (D-606) showed that `main` and PR-77 missed D-295 alike, with MSAA off, 2x, and 4x. The owner chose to fix the frame costs of the game in this PR (OQ-209, D-683, D-684).
-- A trace found three causes. An empty scene has a stall of 18 to 19 ms every 2.245 s (F-190). The Godot build compiled no optimization, so a path search took 18 ms (D-685, F-191). The rebuild of the enemy meshes took 16.7 ms at a descent (F-192). Each enemy tree now shares the meshes of a template.
-
-### State of the build
-
-- Remote head: the metadata commit of this entry on `feat/pr-77-light-and-edges`. The code head is `ce02802`.
-- Local: the build, 2074 of 2075 tests, `det-lint`, `asset-qa`, the Godot build, and the smoke session pass. The one failure is `RepositoryDocumentsPass`, from the ignored local file `artifacts/reference/scavenger-2026-09-27/resume-prompt.md` of another session. CI has no such file.
-- Exit test 2 at `ce02802`, three Deck runs: after the first 10 s, p99 11.7 to 11.9 ms, 15 frames over 16.7 ms on the F-190 cadence, and the transition at 19.9 to 20.3 ms.
-- The bit-identity answer `e202e84e0f5c188a` stands with the optimization.
-
-### In flight
-
-- PR #118 waits for CI, the gitar pass, and the cross-provider review through `make codex-review PR=118`.
-- PR-92 exit test 3 waits for the first scheduled night on `main` after `d5f7e00`, the cron of 07:07 UTC on 2026-09-28. Its record on `night-results` names each sweep once, and it runs eight sweep jobs.
-
-### Traps and gotchas
-
-- `--build-solutions` builds the Debug configuration. Before D-685, each Deck frame log measured code with no optimization.
-- The stall of F-190 comes from the Deck desktop over SSH. A check in Game Mode is open.
-- The Deck checkout stays on `feat/pr-77-light-and-edges` at `ce02802`. The scripts `pr77-*.sh`, `diag*.patch`, and `~/frameprobe` on the Deck are throwaway.
-- `ModelNodes.Share` needs a template of the same model. `ShareInto` disposes each mesh wrapper at once, as F-177 asks.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Run `make gitar-wait PR=118`, answer each gitar item, wait for green CI, and run `make codex-review PR=118`. Then check the night of PR-92 exit test 3, and give the owner the merge summary.

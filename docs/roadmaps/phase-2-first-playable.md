@@ -1,6 +1,6 @@
 # Phase 2 roadmap: First playable
 
-Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-94, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. PR-77 applies D-677 to D-685. PR-94 applies D-703 to D-705, and M-3 applies D-706. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 2 of `docs/design.md` section 7: PR-12 to PR-20, PR-57, PR-60 to PR-95, and M-3. It applies D-149, D-150, D-157 (which D-572 supersedes), D-159 to D-168, D-288, D-289, D-291 to D-296, D-298 to D-302, D-304 to D-354, and D-359 to D-371. PR-72 applies D-483 to D-489. PR-73 applies D-490 to D-495. PR-62 and PR-74 to PR-77 apply D-496 to D-509. PR-74 also applies D-525 to D-532. PR-78 applies D-511 to D-524. PR-79 applies D-533, D-534, and D-539 to D-541. PR-80 applies D-542 to D-544, and D-574 supersedes D-542. PR-81 applies D-538 and D-545 to D-552. PR-82 applies D-550, D-551, D-553, and D-554. PR-83 applies D-555 to D-563. PR-84 applies D-564 to D-569. PR-85 and PR-86 apply D-571 to D-573. PR-86 also applies D-581 and D-583 to D-585. PR-87 applies D-574 to D-577. PR-88 applies D-578 to D-580. PR-75 also applies D-586 to D-597. PR-89 and PR-90 apply D-595. PR-90 also applies D-603 to D-617. PR-91 applies D-596 and D-618 to D-645. PR-92 applies D-646 to D-659. PR-77 applies D-677 to D-685. PR-94 applies D-703 to D-705. M-3 applies D-706 to D-710, and PR-95 applies D-708 to D-710. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 1 is `phase-1-foundations.md`. Gate 1 must pass before PR-12 starts.
 
@@ -31,6 +31,8 @@ This phase holds the first balance numbers of the project. Each number that a fr
 | F-96 | The art stayed a first pass, and no item raised it to finished quality | PR-62, PR-74 to PR-77 |
 | F-191 | The bot run on the Deck has frames of 26 to 30 ms after the first 10 seconds | PR-77 |
 | F-192 | The floor transition on the Deck is over the budget of D-635 | PR-77 |
+| F-193 | The floor transition of seed 2 on the Deck is over the budget of D-635 | PR-95, M-3 |
+| F-194 | At the 90 Hz vsync, no p99 of the real frame time reaches 11.1 ms | M-3 |
 | F-97 | The tunnels felt cramped in play, and every rise in a tunnel needed a jump | PR-63, PR-64, PR-65, PR-66, PR-16 |
 | F-98 | On the wide sizes, about one floor in 96000 ran the dig job cap with a chamber still in rock | PR-63, PR-67, PR-66 |
 | F-101 | The night of 2026-09-15 found a shaft that lands on an unreachable floor on the wide sizes: seed 79146, floor 7 | PR-68, PR-66 |
@@ -1547,11 +1549,57 @@ Gate: exit tests 1 to 3 pass.
 
 > *In plain English:* the bot always plays the same floor, so the Deck measurement sees one map. This change lets a test pick the map by its number, and nothing else changes.
 
+### PR-95: Seed 2 transition cost
+
+Scope: the floor transition of seed 2 stays under the hitch budget of D-635, and the M-3 table closes (F-193, D-710).
+
+- The profile: a timing patch on the Deck traces the transition of seed 2 before a change, as the traces of PR-77 did (G-17). The patch stays out of the branch.
+- The system that the profile names: the change removes the cost over the budget.
+- The M-3 table in this file: the Deck runs of seeds 1, 2, and 3 at the PR head, with three runs of seed 2. The raw logs go in `docs/reviews/` (D-708, D-709).
+
+Out of scope: the frames of the first 10 seconds, and the stall of F-190, which the filtered p99 drops (D-708).
+
+Exit tests:
+
+1. A test pins the cause that the profile names, and it fails on `main`.
+2. Three Deck runs of seed 2 at the PR head have a transition under 22222 microseconds.
+3. The new M-3 table meets D-709 and D-635 on seeds 1, 2, and 3. M-3 then gets the status line of this PR (D-710).
+
+Review focus: the trace before and after the change, the cause that the test pins, and the rows of the table against the raw logs.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass.
+
+> *In plain English:* on one of the three test maps, the change to the next floor stutters on the Deck. This change finds the cause, removes it, and measures the three maps again.
+
 ### M-3: Steam Deck frame time
 
-Procedure: on the Steam Deck OLED of the owner (D-296), run the PR-13 build and then the PR-18 build over one full floor. The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target comes from D-295. A miss files a question that binds the next render PR (F-3).
+Status: open. The run of 2026-09-28 at `5c3310e` meets D-709 on the three seeds. The transition of seed 2 misses the hitch budget of D-635 in three runs (F-193). PR-95 measures the table again and marks M-3 done (D-710).
+
+Procedure: on the Steam Deck OLED of the owner (D-296), run the current `main` over one full floor (D-707). The bot policy `GreedyDescender` drives the Game layer. Record the 99th percentile frame time from a frame log. Repeat for three seeds. Record the table in this file. The target comes from D-295, and D-709 gives the pass rule. A miss files a question that binds the next render PR (F-3).
 
 The bot session and the frame log come from PR-13 (OQ-161). The command in `docs/runbooks/commands.md` starts the game with the two flags `--bot` and `--frame-log <path>`. The session ends one second after the first descent (PR-18). The build reaches the Deck as the checkout in desktop mode (D-428). The file holds one frame time per line, in microseconds. The end line of the log carries the count of frames and the 99th percentile. The flag `--seed <n>` of PR-94 sets the seed of the session, and the table measures seeds 1, 2, and 3 (D-703, D-706). Without the flag, the session runs the first seed of `Main`.
+
+Each row gives two p99 values (D-708). The p99 is the nearest rank, as the end line of the log gives it. The raw p99 reads each frame of the log. The filtered p99 applies the method of D-683 in `docs/reviews/pr-118-response.md`:
+
+- Drop each frame at 10 seconds or earlier. The time of a frame is the sum of the frame times up to and including it.
+- Drop each stall frame of F-190: a frame over 16700 microseconds within 0.15 seconds of a grid of 2.245 seconds. The phase of the grid is the median of the frame time modulo 2.245 over those frames of 20500 microseconds or less.
+- Read the p99 of the frames that stay.
+
+A seed meets D-709 when its filtered p99 is under 16667 microseconds. Its transition meets D-635 under 22222 microseconds, from `transitionMicrosMax` in the end line of the session.
+
+The table of 2026-09-28, at `5c3310e`, with the bot command of `docs/runbooks/commands.md` over SSH (D-606). The raw logs and the end lines are in `docs/reviews/pr-121-deck/`.
+
+| Seed | Run | Frames | Raw p99 µs | Frames after 10 s | F-190 stalls | Filtered p99 µs | Transition µs | D-709 | D-635 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 1 | 3886 | 13294 | 2992 | 15 | 11458 | 20762 | Pass | Pass |
+| 2 | 1 | 2082 | 12434 | 1187 | 6 | 11466 | 27725 | Pass | Miss |
+| 2 | 2 | 2084 | 12230 | 1186 | 6 | 11492 | 25948 | Pass | Miss |
+| 2 | 3 | 2085 | 12261 | 1187 | 6 | 11485 | 25110 | Pass | Miss |
+| 3 | 1 | 2826 | 12090 | 1931 | 9 | 11437 | 19185 | Pass | Pass |
+
+After the first 10 seconds, the transition is the one frame over 16700 microseconds in each run that is not a stall of F-190. The first 10 seconds hold 7 to 11 frames over 16700 microseconds in each run. The session of seed 2 ends at 23 seconds, so its filtered p99 reads about 1190 frames.
 
 ## 5. Sequence
 
@@ -1611,7 +1659,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 52. PR-77. ✅ Done in PR #118. The light, the edges, and the frame cost of the Deck: D-677 to D-685.
 53. PR-93. ✅ Done in PR #119. The Overseer model, its traced maps, and the model field of the hunter: D-686 to D-702.
 54. PR-94. ✅ Done in PR #120. The seed flag of the bot session: D-703 to D-705.
-55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
+55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296. ⚠ The table of 2026-09-28 misses D-635 on seed 2 (F-193). PR-95 fixes the transition and measures the table again (D-707 to D-710).
 56. Tier 4 pass on the screenshot fixture (D-133).
 57. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
