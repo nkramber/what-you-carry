@@ -1495,6 +1495,8 @@ Gate: exit tests 1 to 3 pass.
 
 ### PR-93: Overseer model
 
+✅ Done in PR #119.
+
 Scope: the Overseer gains its own model, traced texel maps, recipes, and paint file through the steps of `asset-texture-creation`: a tall, faceless figure in a company coat and a lamp helmet (D-409, D-660, D-686 to D-700). Until this PR, the Overseer draws with the body model of the player and the box of D-165 (D-401, D-423).
 
 - `content/models/overseer.bbmodel` is 37 units tall, about 2.3 meters, and the body box of D-165 stays (D-686, D-691). A respirator, goggles, and filter cans hide the face (D-689, D-693). The upper legs carry the long coat (D-692), and the arms are 13 units (D-694).
@@ -1581,7 +1583,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 50. PR-76. ✅ Done in PR #117. The scavenger model, its traced maps, and the model field of its family: D-660 to D-676.
 51. ✅ Owner: answer OQ-181. Resolved 2026-09-27: D-677.
 52. PR-77. ✅ Done in PR #118. The light, the edges, and the frame cost of the Deck: D-677 to D-685.
-53. PR-93. The Overseer model (D-660).
+53. PR-93. ✅ Done in PR #119. The Overseer model, its traced maps, and the model field of the hunter: D-686 to D-702.
 54. M-3 table complete. The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
 55. Tier 4 pass on the screenshot fixture (D-133).
 56. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.

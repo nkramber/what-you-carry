@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 297: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-93, author. Branch `feat/pr-93-overseer-model`. PR #119, pending merge. Base `b4615c0`.
+
+### What this session did, and why
+
+- Built the Overseer model through the five steps of `asset-texture-creation`. The owner reviewed the Meshy prompt, concept 01, the edit to concept 02, the eleven Meshy views, the build questions, and the contact sheet. The answers are D-686 to D-702.
+- The model is 37 units tall over the body box of D-165. A respirator, goggles, and cans hide the face, and the coat rides on wide upper legs (D-686 to D-697).
+- The hunter file names its model (D-698). The Game layer draws the Overseer with it, and the contact sheet shows it in cells of 600 pixels (D-700).
+- 45 faces trace from the unlit views, with the hand corrections of D-700. The coat and the cowl grain at cell 2, and the rest at cell 8 (D-699).
+- Step 1 of `asset-texture-creation` fits the Meshy limits: 800 characters, and no negative prompt field (D-701, D-702).
+
+### State of the build
+
+- Local: build, the full suite with Smoke (2105), `asset-qa`, `det-lint`, `ste-check`, and the Godot build check are green. Remote `main` is `b4615c0`.
+
+### In flight
+
+- The CI, the gitar pass, and the cross-provider review of PR #119.
+- PR-92 exit test 3: no scheduled night on `main` ran after `d5f7e00` by 03:35 UTC on 2026-09-28. The recent nights started from 12:00 to 13:00 UTC.
+
+### Traps and gotchas
+
+- Meshy text to image takes 800 characters, and it has no negative prompt field (D-702).
+- Each grain layer dithers each pixel by up to 1.5 fine steps, whatever its cell (D-599). Only a larger cell softens the patches.
+- The reference folder of this PR is `artifacts/reference/overseer-2026-09-27/` in the main checkout, with a copy in the worktree `/Volumes/SSD-1TB/wyc-pr93`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Answer the gitar pass, then run `make codex-review PR=119` when every check but the Review gate is green. Check the night of PR-92 exit test 3 on `night-results`.
+
 ## Session 296: 2026-09-27, Claude Code
 
 Author: Claude Code
@@ -318,41 +354,3 @@ None for PR-116.
 ### Next concrete action
 
 Push the review record and this entry together. Verify the remote head and wait for the metadata checks. The owner can then review the merge summary.
-
-## Session 287: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-92, author. Branch `fix/pr-92-review-fixes`. PR #116, pending merge. Base `e9a89aa`.
-
-### What this session did, and why
-
-- The night fixer log printed "the night 36320653722 passed" at the first poll after the merge of PR #109. No night on `main` failed yet, so exit test 23 of PR-91 still waits for the Pushover notice and a fixer session.
-- The owner report `/Volumes/SSD-1TB/what-you-carry-repository-review.md` was gone from the disk. The session rebuilt it from the full read of session 285 and the marks of PR #109, and restored it at the same path.
-- The owner answered each open question of D-596: D-646 to D-659. PR-92 holds more than one concern (D-646).
-- Code: the night keeps each failed seed and runs two shards of the two long sweeps (D-648, D-655). The override label reads the push time (D-653). The replay cuts a torn tail (D-656). `make claude-review` reviews a PR that Codex writes (D-649). The bot session takes `--policy`.
-- The Deck found F-178: the move stick had no dead zone, and an idle player died at tick 310. D-658 fixes it. The owner read the HUD on the Deck (D-659).
-- The Deck measured, two runs each with the enemies: a transition at 33.1 milliseconds, and the timer expiry at 56.5 and 56.7 (F-184).
-- The session turned on Dependabot alerts, Dependabot security updates, secret scanning, and push protection (D-657).
-
-### State of the build
-
-- Remote `main` is `e9a89aa`. The local suite outside `Smoke` passed 2035 of 2036 tests, and the one STE failure has its fix. `ste-check` is clean.
-
-### In flight
-
-- The CI of PR #116, the gitar pass, then `make codex-review PR=116`.
-- The first night on `main` after the merge runs eight sweep jobs (exit test 3). A later session records it.
-
-### Traps and gotchas
-
-- `pkill -f` over SSH matches its own command line when the pattern is in it. Run a Deck script from a file.
-- GitHub makes a check suite for the last commit of each push alone, so D-653 reads the suites from the work head to the PR head.
-- Each review command now refuses a PR whose author entries do not name the other provider.
-
-### Open questions that block progress
-
-None for PR-92.
-
-### Next concrete action
-
-Finish the review loop of PR #116. The frame costs of F-184 wait for M-3 and PR-77.
