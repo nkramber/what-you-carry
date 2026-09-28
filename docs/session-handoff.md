@@ -53,10 +53,11 @@ Session: PR-93, author. Branch `feat/pr-93-overseer-model`. PR #119, pending mer
 ### State of the build
 
 - Local: build, the full suite with Smoke (2105), `asset-qa`, `det-lint`, `ste-check`, and the Godot build check are green. Remote `main` is `b4615c0`.
+- PR #119: each check of the effective head `5faf3b7` is green but the Review gate workflow. The gitar pass approves the head `e2eea3e` with no finding. The review record gives `Ready for owner merge` for `5faf3b7`.
 
 ### In flight
 
-- The CI, the gitar pass, and the cross-provider review of PR #119.
+- The owner confirmation of the merge of PR #119 (D-524, D-533).
 - PR-92 exit test 3: no scheduled night on `main` ran after `d5f7e00` by 03:35 UTC on 2026-09-28. The recent nights started from 12:00 to 13:00 UTC.
 
 ### Traps and gotchas
@@ -71,7 +72,7 @@ None.
 
 ### Next concrete action
 
-Answer the gitar pass, then run `make codex-review PR=119` when every check but the Review gate is green. Check the night of PR-92 exit test 3 on `night-results`.
+After the merge, check the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
 
 ## Session 296: 2026-09-27, Claude Code
 
