@@ -2,6 +2,38 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 300: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-94, reviewer. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- Reviewed PR #120 at effective head `f8d06f5`. The author provider is Claude Code, so the Codex review passes the provider gate.
+- The seed flag, its parser rules, boot path, tests, and PR-94 documents match D-703 to D-706. The review record gives `Ready for owner merge` with no findings.
+- Five focused tests passed. GitHub code checks passed. `evaluate` and `review-gate` failed because the review record was not on the PR yet.
+
+### State of the build
+
+- Local: five focused tests passed at `f12021b`. GitHub code checks passed at the same head.
+- Remote: review record and this entry await the metadata commit and push to `feat/pr-94-seed-flag`.
+
+### In flight
+
+- After the push, GitHub must rerun `evaluate` and `review-gate` with the review record.
+
+### Traps and gotchas
+
+- The checkout is detached. Compare its final commit with the head that `gh pr view 120` reports.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Push the review record and this entry to `feat/pr-94-seed-flag`, then verify the remote head.
+
 ## Session 299: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -318,40 +350,3 @@ None.
 ### Next concrete action
 
 Give the owner the merge summary and wait for the owner to decide whether to merge.
-
-## Session 290: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-76, author. Branch `feat/pr-76-enemy-models`. PR #117, pending merge. Base `d5f7e00`.
-
-### What this session did, and why
-
-- The session continued the PR-76 author session in a new context, from the resume prompt in the reference folder.
-- The Step 1 template of `asset-texture-creation` names no texel grid and no texel count. In concept 03, a count gave texels 4 times too big. An edit of the earlier image is the fix path (D-664).
-- `content/models/scavenger.bbmodel`: the base body without the brow, the nose, and the beard. Four hood plates of 1 unit (D-666, D-674), the scarf (D-670), and the sack of 9.5 by 2.5 by 3.5 (D-675). The owner chose the sack size because the D-667 sack shared its back and side planes with the hood back plate.
-- `traces/scavenger.json` traces 52 faces. The hand corrections: soot up one step (D-666), clay down one shade (D-669), the grey hood band and the background texels removed, the eyes (D-671), and the belt, knot, and ends (D-672). The torso front names umber for the trousers in the coat opening.
-- Hidden faces extend miner recipes with the swap of D-507. The family file names its model (D-673). `EnemyNodes` draws each enemy with its family model, and the contact sheet shows each model.
-- The owner approved the contact sheet (D-676, exit test 3).
-
-### State of the build
-
-- Remote `main` is `d5f7e00`. The PR head carries the code and the done marks. Locally: the build, the full suite (2066 of 2067, and the one failure was the STE check of the ignored resume prompt, clean on a worktree), `asset-qa`, `det-lint`, and the Godot build check pass.
-
-### In flight
-
-- CI, the gitar pass, and the cross-provider review of PR #117.
-- PR-92 exit test 3: the first night on `main` after `d5f7e00` is the 07:07 UTC cron of 2026-09-28, and it can lag hours. Check that it runs eight sweep jobs and that the `night-results` record names each sweep once.
-
-### Traps and gotchas
-
-- The hand corrections are not idempotent. To trace a scavenger face again, delete its recipe, run `texture-trace`, and apply each correction of this entry once.
-- The top view `10` has the model front at the image right, so the up face corners turn by a quarter.
-- The STE check reads the ignored reference folder on a local run. The resume prompt there has findings, and CI never sees them.
-
-### Open questions that block progress
-
-None for PR-76.
-
-### Next concrete action
-
-Answer the gitar pass of PR #117, then run `make codex-review PR=117` when every check but the Review gate workflow is green.
