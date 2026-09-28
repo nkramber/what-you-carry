@@ -27,7 +27,7 @@ The policy flag names one bot policy of Core: `random-walker`, `greedy-descender
 
 The seed flag sets the seed of the bot session: a whole number from 1 to 18446744073709551615, in digits alone (D-705). Without the flag, the session runs seed 1, the first seed of `Main`. The flag needs `--bot`, and the end line of the session names the seed.
 
-The frame shots flag writes one frame of 1280 by 800 pixels, with the HUD, to its directory each second of game time (D-711). The file name holds the floor and the tick, for example `floor-01-tick-000060.png`. The flag needs `--bot`, and the capture needs a window, so a headless run exits 1. The engine flag `--fixed-fps 60` gives one render frame to each tick, so each frame shows the tick before its shot. The end line of the session gives the count of shots in `frameShots`.
+The frame shots flag writes one frame of 1280 by 800 pixels, with the HUD, to its directory each second of game time (D-711). The file name holds the floor and the tick, for example `floor-01-tick-000060.png`. The flag needs `--bot`, and the capture needs a window, so a headless run exits 1. The engine flag `--fixed-fps 60` gives one render frame to each tick, so each frame shows the tick before its shot. The interpolation fraction of each frame is 0, so a shot draws the pose of a tick, and never a frame between two ticks (D-733). The end line of the session gives the count of shots in `frameShots`.
 
 ## The generated files
 

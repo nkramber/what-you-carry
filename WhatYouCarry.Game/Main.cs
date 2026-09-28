@@ -326,8 +326,8 @@ public partial class Main : Node3D
     private bool ended;
     private CoreVector3 previousFeet;
     private CoreVector3 currentFeet;
-    private CameraPose previousPose;
-    private CameraPose currentPose;
+    private TickLook previousLook;
+    private TickLook currentLook;
     private float walked;
     private float walkAmount;
 
@@ -473,15 +473,15 @@ public partial class Main : Node3D
 
         this.previousFeet = this.currentFeet;
         this.currentFeet = this.loop.Body.Position;
-        this.previousPose = this.currentPose;
-        this.currentPose = this.loop.Camera();
+        this.previousLook = this.currentLook;
+        this.currentLook = new TickLook(this.loop.Yaw, this.loop.Pitch);
 
         bool swapped = this.chunks is not null && this.chunks.AfterTick(this.loop);
         if (swapped)
         {
             // The body stands at the spawn of the new floor, so no frame draws it between two floors.
             this.previousFeet = this.currentFeet;
-            this.previousPose = this.currentPose;
+            this.previousLook = this.currentLook;
             this.floorStartTick = this.loop.Tick;
             this.frames?.MarkTransition();
             this.trace?.MarkTransition();
@@ -654,8 +654,9 @@ public partial class Main : Node3D
         this.playerNodes.Root.RotationDegrees = new Vector3(0.0f, this.loop.Yaw / 100.0f, 0.0f);
 
         // The camera draws from the view of the pose, which stands on the boom line and can be inside rock (D-720). The
-        // wall fade and the model fade start there (D-292, D-721).
-        CameraPose pose = RenderInterpolation.Between(this.previousPose, this.currentPose, fraction);
+        // wall fade and the model fade start there (D-292, D-721). The frame places the pose from the interpolated feet
+        // and look, so a fast turn keeps the view on the boom circle (D-724).
+        CameraPose pose = RenderInterpolation.Camera(this.loop.Grid, feet, this.previousLook, this.currentLook, fraction);
         Vector3 cameraPosition = RenderInterpolation.ToGodot(pose.View);
         this.camera.LookAtFromPosition(
             cameraPosition,
@@ -967,8 +968,8 @@ public partial class Main : Node3D
 
         this.currentFeet = loop.Body.Position;
         this.previousFeet = this.currentFeet;
-        this.currentPose = loop.Camera();
-        this.previousPose = this.currentPose;
+        this.currentLook = new TickLook(loop.Yaw, loop.Pitch);
+        this.previousLook = this.currentLook;
 
         this.worldMaterial = WorldMaterial.Create(blockAtlas);
         this.chunks = new ChunkSwap(this, this.worldMaterial, tiles, new NextFloorWorker(content), loop.Seed);
