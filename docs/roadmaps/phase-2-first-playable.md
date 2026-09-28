@@ -1626,6 +1626,8 @@ After the first 10 seconds, the transition is the one frame over 16700 microseco
 
 ### PR-96: Tier 4 frame capture
 
+✅ Done in PR #123.
+
 Scope: the Tier 4 pass of Gate 2 on the frames of two bot sessions and the HUD shot (D-133, D-711 to D-714).
 
 - `WhatYouCarry.Game/Review/FrameShots.cs`: the flag `--frame-shots <directory>`, the tick of each shot, and the file name of each frame (D-711). A shot falls on each second of game time. The file name holds the floor and the tick.
@@ -1779,7 +1781,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 53. PR-93. ✅ Done in PR #119. The Overseer model, its traced maps, and the model field of the hunter: D-686 to D-702.
 54. PR-94. ✅ Done in PR #120. The seed flag of the bot session: D-703 to D-705.
 55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296. The table of 2026-09-28 at `5c3310e` missed D-635 on seed 2 (F-193). PR-95 fixes the transition and measures the table again (D-707 to D-710). ✅ PR-95 and M-3 done in PR #122.
-56. Tier 4 pass on the screenshot fixture (D-133). ✅ OQ-62 answered in part 2026-09-28, for Gate 2: D-711 to D-714. PR-96. Then PR-97 and PR-98 for the findings of the pass (D-715, D-716).
+56. Tier 4 pass on the screenshot fixture (D-133). ✅ OQ-62 answered in part 2026-09-28, for Gate 2: D-711 to D-714. PR-96. Then PR-97 and PR-98 for the findings of the pass (D-715, D-716). ✅ PR-96 done in PR #123.
 57. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.
 
 ## 6. Open questions

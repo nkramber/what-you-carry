@@ -780,7 +780,7 @@ Gate: three Deck runs of seed 2 have a transition under 22222 microseconds, and 
 **M-3: Steam Deck frame time.** ✅ Done in PR #122.
 Measure the 99th percentile frame time of the current `main` on the Steam Deck OLED of D-296, over one full floor (D-707). D-295 gives the target. The table holds seeds 1, 2, and 3 (D-706). Each row gives a raw and a filtered p99, and D-709 gives the pass rule (D-708). The run of 2026-09-28 at `5c3310e` met D-709 on each seed, but the transition of seed 2 missed D-635 (F-193). The run of 2026-09-28 at `34c2ddf`, the code head of PR #122, meets D-709 and D-635 on each seed (D-710). Binds every render PR (F-3).
 
-**PR-96: Tier 4 frame capture.**
+**PR-96: Tier 4 frame capture.** ✅ Done in PR #123.
 The bot session writes one Deck frame of 1280 by 800 pixels, with the HUD, to a directory each second of game time: the flag `--frame-shots <directory>` (D-711). The captures run the full-clearer and the timer-tester on seed 1 (D-714). The author session reads each frame and the HUD shot, and answers the checklist of OQ-62 without the hub and the boss (D-711, D-712). Each finding gets an F-# row in section 5 (D-713).
 Gate: the parser tests and the headless smoke test pass, and each finding of the pass has a disposition.
 > *In plain English:* a model looks at pictures of the game to find what a player cannot read. This change takes one picture each second of two bot runs, and the model reads them.
@@ -962,7 +962,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80. ✅ PR-70 done in PR #81. ✅ PR-66 done in PR #82. ✅ PR-16 done in PR #83. ✅ PR-17 done in PR #84. ✅ PR-18 done in PR #85.
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
-13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97 and PR-98 (D-715, D-716). ✅ PR-95 and M-3 done in PR #122.
+13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97 and PR-98 (D-715, D-716). ✅ PR-96 done in PR #123. ✅ PR-95 and M-3 done in PR #122.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.
 16. PR-24, PR-25, PR-26.
