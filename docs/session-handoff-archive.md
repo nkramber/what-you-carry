@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 297: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-93, author. Branch `feat/pr-93-overseer-model`. PR #119, pending merge. Base `b4615c0`.
+
+### What this session did, and why
+
+- Built the Overseer model through the five steps of `asset-texture-creation`. The owner reviewed the Meshy prompt, concept 01, the edit to concept 02, the eleven Meshy views, the build questions, and the contact sheet. The answers are D-686 to D-702.
+- The model is 37 units tall over the body box of D-165. A respirator, goggles, and cans hide the face, and the coat rides on wide upper legs (D-686 to D-697).
+- The hunter file names its model (D-698). The Game layer draws the Overseer with it, and the contact sheet shows it in cells of 600 pixels (D-700).
+- 45 faces trace from the unlit views, with the hand corrections of D-700. The coat and the cowl grain at cell 2, and the rest at cell 8 (D-699).
+- Step 1 of `asset-texture-creation` fits the Meshy limits: 800 characters, and no negative prompt field (D-701, D-702).
+
+### State of the build
+
+- Local: build, the full suite with Smoke (2105), `asset-qa`, `det-lint`, `ste-check`, and the Godot build check are green. Remote `main` is `b4615c0`.
+- PR #119: each check of the effective head `5faf3b7` is green but the Review gate workflow. The gitar pass approves the head `e2eea3e` with no finding. The review record gives `Ready for owner merge` for `5faf3b7`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #119 (D-524, D-533).
+- PR-92 exit test 3: no scheduled night on `main` ran after `d5f7e00` by 03:35 UTC on 2026-09-28. The recent nights started from 12:00 to 13:00 UTC.
+
+### Traps and gotchas
+
+- Meshy text to image takes 800 characters, and it has no negative prompt field (D-702).
+- Each grain layer dithers each pixel by up to 1.5 fine steps, whatever its cell (D-599). Only a larger cell softens the patches.
+- The reference folder of this PR is `artifacts/reference/overseer-2026-09-27/` in the main checkout, with a copy in the worktree `/Volumes/SSD-1TB/wyc-pr93`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, check the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
+
 ## Session 296: 2026-09-27, Claude Code
 
 Author: Claude Code
