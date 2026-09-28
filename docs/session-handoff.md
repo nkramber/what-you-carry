@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 299: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-94, author. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- The session started as the M-3 author. The M-3 table needs three seeds, and the bot session ran the first seed alone. The owner chose a seed flag in its own PR first (D-703). The session did no work before that answer, so it binds to PR-94.
+- Added `--seed <n>` to the bot session: it needs `--bot`, and it takes a whole number from 1 up in digits alone (D-704, D-705). The loop starts on the seed, and a boot failure line carries it.
+- Recorded the M-3 seeds: 1, 2, and 3 (D-706). A headless bot session on the Mac reaches floor 2 on seeds 2 and 3.
+
+### State of the build
+
+- Local: the first full run passed 2108 of 2109 tests. The STE test failed on two long sentences, and `f8d06f5` holds the fix. After it, `ste-check` and `det-lint` found zero findings, and the STE and parser tests passed.
+- Remote head of the work: `f8d06f5`, plus the metadata and status commit of this entry.
+
+### In flight
+
+- The gitar pass, CI, and `make codex-review` of PR #120.
+- PR-92 exit test 3: the first scheduled night on `main` after `d5f7e00` is the 07:07 UTC cron of 2026-09-28. It did not run before this entry.
+
+### Traps and gotchas
+
+- The Mac has no `timeout` command. Run a Godot session under the time limit of the tool.
+- The engine tests of the seed flag take about one second, because a headless session at fixed 60 frames per second runs faster than real time.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge of PR #120, start M-3 in a new session: run seeds 1, 2, and 3 on the Deck over SSH (D-606, D-706), and record the table. Check the night of PR-92 exit test 3 on `night-results`.
+
 ## Session 298: 2026-09-27, Codex
 
 Author: Codex
@@ -321,36 +355,3 @@ None for PR-76.
 ### Next concrete action
 
 Answer the gitar pass of PR #117, then run `make codex-review PR=117` when every check but the Review gate workflow is green.
-
-## Session 289: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-92, author, merge. Branch `fix/pr-92-review-fixes`. PR #116, pending merge. Base `e9a89aa`.
-
-### What this session did, and why
-
-- The gitar pass of `0f1242e` found one edge case with full merit: the provider gate did not read the handoff archive. `37fca06` fixes it, and the thread is resolved.
-- `ci-windows-x64` failed at `37fca06` on a test that split the command output on a bare newline. `a09b9f9` splits it on the newline of the platform.
-- Gitar approved `a09b9f9` with no open thread. A PR comment answers its CI note with D-251.
-- Review round 1 (session 288) gave `Ready for owner merge` at the effective head `a09b9f9`, with no finding.
-- The session asks the owner to confirm the merge with the merge summary (D-533).
-
-### State of the build
-
-- Remote `main` is `e9a89aa`. The effective head is `a09b9f9`. Each check but `review-gate` and `evaluate` passed at `a09b9f9`, and those two read the record of this commit.
-
-### In flight
-
-- The owner confirmation, then `gh pr merge 116 --auto --squash` (D-516).
-
-### Traps and gotchas
-
-- A test that reads console output splits on `Environment.NewLine`, because the Windows leg writes CR LF.
-
-### Open questions that block progress
-
-None for PR-92.
-
-### Next concrete action
-
-After the merge, the next session records exit test 3: the first night on `main` runs eight sweep jobs. The frame costs of F-184 wait for M-3 and PR-77.

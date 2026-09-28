@@ -1523,6 +1523,8 @@ Gate: exit tests 1 to 3 pass.
 
 ### PR-94: Bot seed flag
 
+✅ Done in PR #120.
+
 Scope: the bot session takes the seed of its run from a flag, so the M-3 table measures three seeds before the hub of PR-30 (D-703).
 
 - `BotSession` and `UserArguments`: the flag `--seed <n>` takes one word, and it needs `--bot` (D-317, D-704). The seed is a whole number from 1 to the top of `ulong`, in digits alone (D-705). With no flag, the session runs the first seed of `Main`.
@@ -1608,7 +1610,7 @@ One person owns the program. Items run one at a time in this order. Gate 1 signe
 51. ✅ Owner: answer OQ-181. Resolved 2026-09-27: D-677.
 52. PR-77. ✅ Done in PR #118. The light, the edges, and the frame cost of the Deck: D-677 to D-685.
 53. PR-93. ✅ Done in PR #119. The Overseer model, its traced maps, and the model field of the hunter: D-686 to D-702.
-54. PR-94. The seed flag of the bot session: D-703 to D-705.
+54. PR-94. ✅ Done in PR #120. The seed flag of the bot session: D-703 to D-705.
 55. M-3 table complete, on seeds 1, 2, and 3 (D-706). The OQ-15 and OQ-50 answers came early, on 2026-09-11: D-295 and D-296.
 56. Tier 4 pass on the screenshot fixture (D-133).
 57. **← GATE 2 (first playable).** Every exit test in this file passes. The owner plays one floor and signs off on feel in `docs/decisions.md`.

@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 289: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-92, author, merge. Branch `fix/pr-92-review-fixes`. PR #116, pending merge. Base `e9a89aa`.
+
+### What this session did, and why
+
+- The gitar pass of `0f1242e` found one edge case with full merit: the provider gate did not read the handoff archive. `37fca06` fixes it, and the thread is resolved.
+- `ci-windows-x64` failed at `37fca06` on a test that split the command output on a bare newline. `a09b9f9` splits it on the newline of the platform.
+- Gitar approved `a09b9f9` with no open thread. A PR comment answers its CI note with D-251.
+- Review round 1 (session 288) gave `Ready for owner merge` at the effective head `a09b9f9`, with no finding.
+- The session asks the owner to confirm the merge with the merge summary (D-533).
+
+### State of the build
+
+- Remote `main` is `e9a89aa`. The effective head is `a09b9f9`. Each check but `review-gate` and `evaluate` passed at `a09b9f9`, and those two read the record of this commit.
+
+### In flight
+
+- The owner confirmation, then `gh pr merge 116 --auto --squash` (D-516).
+
+### Traps and gotchas
+
+- A test that reads console output splits on `Environment.NewLine`, because the Windows leg writes CR LF.
+
+### Open questions that block progress
+
+None for PR-92.
+
+### Next concrete action
+
+After the merge, the next session records exit test 3: the first night on `main` runs eight sweep jobs. The frame costs of F-184 wait for M-3 and PR-77.
+
 ## Session 288: 2026-09-27, Codex
 
 Author: Codex
