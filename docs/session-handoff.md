@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 306: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-95, reviewer. Branch `fix/pr-95-seed-2-transition`. PR #122, ready for owner merge. Effective head `34c2ddf`.
+
+### What this session did, and why
+
+- Re-reviewed P2-1 against the author response, the source before and after the change, and the PR-95 exit tests.
+- Withdrew P2-1 because the same-tick tree build existed before this PR, and the roadmap does not include that fallback case.
+- Updated `docs/reviews/pr-122.md` with the result and preserved the earlier verdict.
+
+### State of the build
+
+- The remote tip before this commit is `e8f4e9b`; the code head and effective head remain `34c2ddf`.
+- Required code checks passed at `3e01603`. The document checks pass. Review gate and evaluate await this review record.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and a push to `fix/pr-95-seed-2-transition`.
+
+### Traps and gotchas
+
+- The same-tick fallback builds unfinished chunk meshes and enemy trees on descent. This pre-existing behavior is outside the PR-95 exit tests.
+- The Deck logs cover the measured seed 2 transitions. This session did not repeat the Deck run.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the push, confirm the remote head and report the review result to the owner.
+
 ## Session 305: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -300,37 +333,6 @@ Session: PR-93, author. Branch `feat/pr-93-overseer-model`. PR #119, pending mer
 - Meshy text to image takes 800 characters, and it has no negative prompt field (D-702).
 - Each grain layer dithers each pixel by up to 1.5 fine steps, whatever its cell (D-599). Only a larger cell softens the patches.
 - The reference folder of this PR is `artifacts/reference/overseer-2026-09-27/` in the main checkout, with a copy in the worktree `/Volumes/SSD-1TB/wyc-pr93`.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, check the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
-
-## Session 296: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-77, author. Branch `feat/pr-77-light-and-edges`. PR #118, pending merge. Base `3fdefef`.
-
-### What this session did, and why
-
-- Read the second review of session 295. The record gives `Ready for owner merge` for the effective head `ce02802`, with no finding.
-- Moved the title and the rule line of this file back above the newest entry, where session 295 had put its entry.
-
-### State of the build
-
-- Each check of PR #118 is green at `fc85d96`, `review-gate` and `evaluate` included. The effective head stays `ce02802`.
-
-### In flight
-
-- The owner confirmation of the merge of PR #118 (D-524, D-533).
-- PR-92 exit test 3 waits for the scheduled night of 07:07 UTC on 2026-09-28.
-
-### Traps and gotchas
-
-- A review entry can land above the title line of this file. Put the title and the rule line back on top, and keep the entry text as it is.
 
 ### Open questions that block progress
 

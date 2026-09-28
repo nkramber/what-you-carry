@@ -1,5 +1,36 @@
 # Session handoff archive
 
+## Session 296: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-77, author. Branch `feat/pr-77-light-and-edges`. PR #118, pending merge. Base `3fdefef`.
+
+### What this session did, and why
+
+- Read the second review of session 295. The record gives `Ready for owner merge` for the effective head `ce02802`, with no finding.
+- Moved the title and the rule line of this file back above the newest entry, where session 295 had put its entry.
+
+### State of the build
+
+- Each check of PR #118 is green at `fc85d96`, `review-gate` and `evaluate` included. The effective head stays `ce02802`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #118 (D-524, D-533).
+- PR-92 exit test 3 waits for the scheduled night of 07:07 UTC on 2026-09-28.
+
+### Traps and gotchas
+
+- A review entry can land above the title line of this file. Put the title and the rule line back on top, and keep the entry text as it is.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, check the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
+
 ## Session 295: 2026-09-27, Codex
 
 Author: Codex
