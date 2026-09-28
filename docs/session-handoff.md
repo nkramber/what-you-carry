@@ -2,6 +2,103 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 301: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-94, author. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- Completed the gitar pass of the work head `f12021b`: an approval with no finding. The CI note on the absent review record got one reply with D-251.
+- Ran `make codex-review PR=120`. The record gives `Ready for owner merge` for the effective head `f8d06f5`, with no finding (session 300).
+
+### State of the build
+
+- Each check of PR #120 is green, `evaluate` and `review-gate` included, after the metadata commits of the review. Effective head `f8d06f5`, work head `f12021b`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #120 (D-524, D-533).
+- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not run before this entry. The first night after `d5f7e00` runs eight sweep jobs, and its record names each sweep once.
+
+### Traps and gotchas
+
+- A reviewer entry lands above the entry of the author. Add a new entry at the top, and never edit the older one.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`. The next PR is M-3 on seeds 1, 2, and 3 over SSH on the Deck (D-606, D-706).
+
+## Session 300: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-94, reviewer. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- Reviewed PR #120 at effective head `f8d06f5`. The author provider is Claude Code, so the Codex review passes the provider gate.
+- The seed flag, its parser rules, boot path, tests, and PR-94 documents match D-703 to D-706. The review record gives `Ready for owner merge` with no findings.
+- Five focused tests passed. GitHub code checks passed. `evaluate` and `review-gate` failed because the review record was not on the PR yet.
+
+### State of the build
+
+- Local: five focused tests passed at `f12021b`. GitHub code checks passed at the same head.
+- Remote: review record and this entry are on `feat/pr-94-seed-flag` at metadata head `7e06e2e`. The required remote hash comparison passed.
+
+### In flight
+
+- The metadata-tip `evaluate` and `review-gate` checks passed. The heavy code workflows skipped by the documents-only rule, and their required jobs passed at code head `f12021b`.
+
+### Traps and gotchas
+
+- The checkout is detached. Compare its final commit with the head that `gh pr view 120` reports.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The review is complete for effective head `f8d06f5`. The owner can read the review record and the check results before merge.
+
+## Session 299: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-94, author. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- The session started as the M-3 author. The M-3 table needs three seeds, and the bot session ran the first seed alone. The owner chose a seed flag in its own PR first (D-703). The session did no work before that answer, so it binds to PR-94.
+- Added `--seed <n>` to the bot session: it needs `--bot`, and it takes a whole number from 1 up in digits alone (D-704, D-705). The loop starts on the seed, and a boot failure line carries it.
+- Recorded the M-3 seeds: 1, 2, and 3 (D-706). A headless bot session on the Mac reaches floor 2 on seeds 2 and 3.
+
+### State of the build
+
+- Local: the first full run passed 2108 of 2109 tests. The STE test failed on two long sentences, and `f8d06f5` holds the fix. After it, `ste-check` and `det-lint` found zero findings, and the STE and parser tests passed.
+- Remote head of the work: `f8d06f5`, plus the metadata and status commit of this entry.
+
+### In flight
+
+- The gitar pass, CI, and `make codex-review` of PR #120.
+- PR-92 exit test 3: the first scheduled night on `main` after `d5f7e00` is the 07:07 UTC cron of 2026-09-28. It did not run before this entry.
+
+### Traps and gotchas
+
+- The Mac has no `timeout` command. Run a Godot session under the time limit of the tool.
+- The engine tests of the seed flag take about one second, because a headless session at fixed 60 frames per second runs faster than real time.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge of PR #120, start M-3 in a new session: run seeds 1, 2, and 3 on the Deck over SSH (D-606, D-706), and record the table. Check the night of PR-92 exit test 3 on `night-results`.
+
 ## Session 298: 2026-09-27, Codex
 
 Author: Codex
@@ -248,109 +345,3 @@ None.
 ### Next concrete action
 
 Run `make gitar-wait PR=118`, answer each gitar item, wait for green CI, and run `make codex-review PR=118`. Then check the night of PR-92 exit test 3, and give the owner the merge summary.
-
-## Session 291: 2026-09-27, Codex
-
-Author: Codex
-Session: PR-76, reviewer. Branch `feat/pr-76-enemy-models`. PR #117, pending merge. Base `d5f7e00`.
-
-### What this session did, and why
-
-- Reviewed PR #117 at effective head `9a0f932`, as the cross-provider review required by T-4 and D-101.
-- Checked the family model field, scavenger model and recipes, model rendering, contact sheet, content errors, and PR-76 exit tests. No in-scope finding remains.
-- Added `docs/reviews/pr-117.md` with the verdict and verification record.
-
-### State of the build
-
-- The PR head `fdfee53` passed `asset-qa`, `det-lint`, `doc-gate`, `documents`, `evaluate`, Gitar, `night-gate`, `review-gate`, and `ste-check`. The documents-only rule skipped the bit-identity, bot, CI, and smoke jobs on this metadata head.
-- The earlier implementation tip `e1316ca` passed CI on all three platforms, bit identity on all three platforms, smoke on all three platforms, asset QA, determinism lint, STE, doc gate, documents, night gate, bots, and Gitar.
-- The focused local test filter passed 304 tests. Local asset QA reported zero findings. The Documents category passed 254 tests, and local STE check reported zero findings.
-- `evaluate` and `review-gate` first failed because the review record was absent. Both passed after the review metadata was published.
-- Local STE check passed with zero findings. The Documents category passed 254 tests.
-
-### In flight
-
-- The review record and Session 291 handoff are published to `feat/pr-76-enemy-models`.
-
-### Traps and gotchas
-
-- The PR tip `e1316ca` is metadata after effective head `9a0f932`. The review applies to `9a0f932`.
-- The local full suite did not run. The focused suite passed, and the full CI suite passed on the PR tip.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Give the owner the merge summary and wait for the owner to decide whether to merge.
-
-## Session 290: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-76, author. Branch `feat/pr-76-enemy-models`. PR #117, pending merge. Base `d5f7e00`.
-
-### What this session did, and why
-
-- The session continued the PR-76 author session in a new context, from the resume prompt in the reference folder.
-- The Step 1 template of `asset-texture-creation` names no texel grid and no texel count. In concept 03, a count gave texels 4 times too big. An edit of the earlier image is the fix path (D-664).
-- `content/models/scavenger.bbmodel`: the base body without the brow, the nose, and the beard. Four hood plates of 1 unit (D-666, D-674), the scarf (D-670), and the sack of 9.5 by 2.5 by 3.5 (D-675). The owner chose the sack size because the D-667 sack shared its back and side planes with the hood back plate.
-- `traces/scavenger.json` traces 52 faces. The hand corrections: soot up one step (D-666), clay down one shade (D-669), the grey hood band and the background texels removed, the eyes (D-671), and the belt, knot, and ends (D-672). The torso front names umber for the trousers in the coat opening.
-- Hidden faces extend miner recipes with the swap of D-507. The family file names its model (D-673). `EnemyNodes` draws each enemy with its family model, and the contact sheet shows each model.
-- The owner approved the contact sheet (D-676, exit test 3).
-
-### State of the build
-
-- Remote `main` is `d5f7e00`. The PR head carries the code and the done marks. Locally: the build, the full suite (2066 of 2067, and the one failure was the STE check of the ignored resume prompt, clean on a worktree), `asset-qa`, `det-lint`, and the Godot build check pass.
-
-### In flight
-
-- CI, the gitar pass, and the cross-provider review of PR #117.
-- PR-92 exit test 3: the first night on `main` after `d5f7e00` is the 07:07 UTC cron of 2026-09-28, and it can lag hours. Check that it runs eight sweep jobs and that the `night-results` record names each sweep once.
-
-### Traps and gotchas
-
-- The hand corrections are not idempotent. To trace a scavenger face again, delete its recipe, run `texture-trace`, and apply each correction of this entry once.
-- The top view `10` has the model front at the image right, so the up face corners turn by a quarter.
-- The STE check reads the ignored reference folder on a local run. The resume prompt there has findings, and CI never sees them.
-
-### Open questions that block progress
-
-None for PR-76.
-
-### Next concrete action
-
-Answer the gitar pass of PR #117, then run `make codex-review PR=117` when every check but the Review gate workflow is green.
-
-## Session 289: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-92, author, merge. Branch `fix/pr-92-review-fixes`. PR #116, pending merge. Base `e9a89aa`.
-
-### What this session did, and why
-
-- The gitar pass of `0f1242e` found one edge case with full merit: the provider gate did not read the handoff archive. `37fca06` fixes it, and the thread is resolved.
-- `ci-windows-x64` failed at `37fca06` on a test that split the command output on a bare newline. `a09b9f9` splits it on the newline of the platform.
-- Gitar approved `a09b9f9` with no open thread. A PR comment answers its CI note with D-251.
-- Review round 1 (session 288) gave `Ready for owner merge` at the effective head `a09b9f9`, with no finding.
-- The session asks the owner to confirm the merge with the merge summary (D-533).
-
-### State of the build
-
-- Remote `main` is `e9a89aa`. The effective head is `a09b9f9`. Each check but `review-gate` and `evaluate` passed at `a09b9f9`, and those two read the record of this commit.
-
-### In flight
-
-- The owner confirmation, then `gh pr merge 116 --auto --squash` (D-516).
-
-### Traps and gotchas
-
-- A test that reads console output splits on `Environment.NewLine`, because the Windows leg writes CR LF.
-
-### Open questions that block progress
-
-None for PR-92.
-
-### Next concrete action
-
-After the merge, the next session records exit test 3: the first night on `main` runs eight sweep jobs. The frame costs of F-184 wait for M-3 and PR-77.

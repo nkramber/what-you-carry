@@ -165,6 +165,7 @@ public sealed class UserArgumentsTests
         Assert.Contains("--bot --frame-log frames.txt --transitions 10", commands);
         Assert.Contains("--bot --policy timer-tester --frame-log frames.txt", commands);
         Assert.Contains("--hud-shot hud.png", commands);
+        Assert.Contains("--bot --seed 2 --frame-log frames.txt", commands);
         foreach (string command in commands)
         {
             Exception? error = Record.Exception(() => UserArguments.Parse(command.Split(' ')));
@@ -274,6 +275,53 @@ public sealed class UserArgumentsTests
             Assert.StartsWith(BotSession.UnknownPolicyMessage, error.Message, StringComparison.Ordinal);
             Assert.Contains(error.Context, field => field.Name == "policy" && field.Value == bad);
             Assert.Contains(error.Context, field => field.Name == "policies" && field.Value == string.Join(", ", names));
+        }
+    }
+
+    /// <summary>
+    /// The seed flag sets the seed of the bot session, so it stops the boot with no bot flag, and the error names both
+    /// flags (D-317, D-704). The flag takes one word, and parses with the bot flag, the frame log, the policy flag, and
+    /// the transitions flag.
+    /// </summary>
+    [Fact]
+    public void SeedNeedsTheBot()
+    {
+        AssertStops(UserArguments.SeedNeedsBotMessage, [BotSession.SeedFlag, "2"], BotSession.SeedFlag, BotSession.Flag);
+        AssertStops(UserArguments.SeedNeedsBotMessage, [FrameLog.Flag, "frames.txt", BotSession.SeedFlag, "2"], BotSession.SeedFlag, BotSession.Flag);
+        AssertStops(UserArguments.SeedNeedsBotMessage, [SmokeSession.Flag, BotSession.SeedFlag, "2"], BotSession.SeedFlag, BotSession.Flag);
+        AssertStops(UserArguments.SheetTakesNoFlagMessage, [ContactSheet.Flag, "sheet.png", BotSession.SeedFlag, "2"], ContactSheet.Flag, BotSession.SeedFlag);
+        AssertStops(UserArguments.ShotTakesNoFlagMessage, [HudShot.Flag, "hud.png", BotSession.SeedFlag, "2"], HudShot.Flag, BotSession.SeedFlag);
+        AssertStops(UserArguments.ShortFlagMessage, [BotSession.Flag, BotSession.SeedFlag], BotSession.SeedFlag, "1");
+        AssertStops(UserArguments.ShortFlagMessage, [BotSession.SeedFlag, BotSession.Flag], BotSession.SeedFlag, "1");
+        AssertStops(UserArguments.RepeatedFlagMessage, [BotSession.Flag, BotSession.SeedFlag, "2", BotSession.SeedFlag, "3"], BotSession.SeedFlag);
+
+        UserArguments policy = UserArguments.Parse([BotSession.SeedFlag, "3", BotSession.Flag, BotSession.PolicyFlag, TimerTester.PolicyName, FrameLog.Flag, "frames.txt"]);
+        Assert.Equal(["3"], policy.WordsOf(BotSession.SeedFlag));
+        UserArguments transitions = UserArguments.Parse([BotSession.Flag, FrameLog.Flag, "frames.txt", BotSession.TransitionsFlag, "10", BotSession.SeedFlag, "2"]);
+        Assert.Equal(["2"], transitions.WordsOf(BotSession.SeedFlag));
+    }
+
+    /// <summary>
+    /// The seed flag takes each whole number from 1 to the top of <see cref="ulong"/>, in digits alone, and no flag gives
+    /// the first seed, so every command before the flag runs the same floor (D-704, D-705). Seed 0, a sign, a space, a
+    /// fraction, a word, hexadecimal, and a number past the top stop the boot, and the error names the word (T-2).
+    /// </summary>
+    [Fact]
+    public void SeedFlagSetsTheSeedOfTheBotSession()
+    {
+        Assert.Equal(Main.FirstSeed, BotSession.SeedOf(UserArguments.Parse([BotSession.Flag])));
+        Assert.Equal(Main.FirstSeed, BotSession.SeedOf(UserArguments.Parse([])));
+        Assert.Equal(1UL, BotSession.SeedOf(UserArguments.Parse([BotSession.Flag, BotSession.SeedFlag, "1"])));
+        Assert.Equal(2UL, BotSession.SeedOf(UserArguments.Parse([BotSession.Flag, BotSession.SeedFlag, "2"])));
+        Assert.Equal(3UL, BotSession.SeedOf(UserArguments.Parse([BotSession.Flag, BotSession.SeedFlag, "003"])));
+        Assert.Equal(ulong.MaxValue, BotSession.SeedOf(UserArguments.Parse([BotSession.Flag, BotSession.SeedFlag, "18446744073709551615"])));
+
+        foreach (string bad in new[] { "0", "000", "-1", "+2", " 2", "2 ", "1.5", "1e3", "two", "0x2", "1,000", "18446744073709551616" })
+        {
+            UserArguments arguments = UserArguments.Parse([BotSession.Flag, BotSession.SeedFlag, bad]);
+            ContextException error = Assert.Throws<ContextException>(() => BotSession.SeedOf(arguments));
+            Assert.StartsWith(BotSession.BadSeedMessage, error.Message, StringComparison.Ordinal);
+            Assert.Contains(error.Context, field => field.Name == "seed" && field.Value == bad);
         }
     }
 

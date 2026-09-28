@@ -27,6 +27,10 @@ namespace WhatYouCarry.Game.Measure;
 /// descender on floors with no enemy (D-437), so the policy flag needs the bot flag and takes no transitions flag
 /// (D-317).
 /// </para>
+/// <para>
+/// The seed flag sets the seed of the run, so the M-3 table measures more than one floor (D-703, D-704). With no seed
+/// flag, the session runs <see cref="Main.FirstSeed"/>. The flag needs the bot flag (D-317).
+/// </para>
 /// </remarks>
 public static class BotSession
 {
@@ -39,8 +43,14 @@ public static class BotSession
     /// <summary>The user argument that names the bot policy of the session. Its one word is the name of a policy of Core (D-646).</summary>
     public const string PolicyFlag = "--policy";
 
+    /// <summary>The user argument that sets the seed of the run of the session. Its one word is the seed (D-704, D-705).</summary>
+    public const string SeedFlag = "--seed";
+
     /// <summary>The message of the error for a policy flag whose word names no bot policy of Core.</summary>
     public const string UnknownPolicyMessage = "The policy flag names no bot policy of Core.";
+
+    /// <summary>The message of the error for a seed flag whose word is not a seed that the session takes (D-705).</summary>
+    public const string BadSeedMessage = "The seed is not a whole number from 1 to 18446744073709551615, in digits alone.";
 
     /// <summary>The largest count of transitions: floor 1 to floor 15 holds fourteen descents (D-3).</summary>
     public const int MaxTransitions = 14;
@@ -63,6 +73,7 @@ public static class BotSession
 
     private const string BadCountMessage = "The count of transitions is not a whole number from 1 to 14.";
     private const string CountField = "count";
+    private const string SeedField = "seed";
     private const string PolicyField = "policy";
     private const string PoliciesField = "policies";
     private const string NameListSeparator = ", ";
@@ -101,6 +112,30 @@ public static class BotSession
         }
 
         return count;
+    }
+
+    /// <summary>
+    /// The seed of the run of the session: the word of the seed flag, or <see cref="Main.FirstSeed"/> with no flag. The
+    /// boot reads it before the content loads, so a bad seed stops the boot early. The night sweeps run the seeds from 1
+    /// up, so seed 0 is an error, and the word holds digits alone: no sign, no space, and no hexadecimal (D-705).
+    /// </summary>
+    /// <exception cref="ContextException">The word is not a whole number from 1 to <see cref="ulong.MaxValue"/> in digits alone. The error names the word.</exception>
+    public static ulong SeedOf(UserArguments userArguments)
+    {
+        if (!userArguments.Has(SeedFlag))
+        {
+            return Main.FirstSeed;
+        }
+
+        string word = userArguments.WordsOf(SeedFlag)[0];
+        if (!ulong.TryParse(word, NumberStyles.None, CultureInfo.InvariantCulture, out ulong seed) || seed == 0)
+        {
+            ContextException error = new(BadSeedMessage);
+            error.AddContext(SeedField, word);
+            throw error;
+        }
+
+        return seed;
     }
 
     /// <summary>
