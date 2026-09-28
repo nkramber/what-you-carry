@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 304: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-95, reviewer. Branch `fix/pr-95-seed-2-transition`. PR #122, changes required. Effective head `34c2ddf`.
+
+### What this session did, and why
+
+- Reviewed PR #122 against its tests, roadmap, guardrails, comments, and Deck evidence.
+- Found P2-1: a plan that arrives on the descent tick leaves no frame to stage its enemy trees.
+- The focused transition and smoke tests passed, and the required CI checks passed.
+
+### State of the build
+
+- The remote head before review publication was `3e01603`. The implementation head is `34c2ddf`.
+- The focused tests passed, 2 of 2, on macOS arm64 with .NET 10.0.12. Required CI passed except the expected pre-publication review gate and evaluate check.
+
+### In flight
+
+- PR #122 needs a correction and a regression test for P2-1.
+
+### Traps and gotchas
+
+- When the worker offers a plan on the same physics tick as descent, `BuildSome` has not run before `Rebuild`.
+- The Deck logs cover a plan that arrived before descent. They do not cover this timing race.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Load `review-response` and correct P2-1 with a regression test.
+
 ## Session 303: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -312,36 +345,3 @@ None.
 ### Next concrete action
 
 The owner reads the review, confirms the merge summary of D-533, and then merges PR #118.
-
-## Session 294: 2026-09-27, Claude Code
-
-Author: Claude Code
-Session: PR-77, author. Branch `feat/pr-77-light-and-edges`. PR #118, pending merge. Base `3fdefef`.
-
-### What this session did, and why
-
-- Answered the review of session 293. The review found no defect in the code, and it blocked exit test 2, because the raw Deck frame logs were not in the checkout.
-- Committed the raw logs in `docs/reviews/pr-118-deck/`: three runs at `ce02802`, the base, the three MSAA modes, the empty scene of F-190, and two traces with a timing patch.
-- Wrote `docs/reviews/pr-118-response.md` with the method of D-683 and the numbers that the logs give.
-
-### State of the build
-
-- Effective head: `ce02802`. The logs and the response are in the metadata set of D-184, so they do not move it.
-- CI, smoke, bit identity, bots, and the other checks passed for `ce02802`. `evaluate` and `review-gate` wait for an approving review.
-
-### In flight
-
-- The second round of `make codex-review PR=118`.
-- PR-92 exit test 3 waits for the scheduled night of 07:07 UTC on 2026-09-28.
-
-### Traps and gotchas
-
-- A frame log holds one frame per line in microseconds. The stall of F-190 comes every 2.245 s, so a check of exit test 2 reads the grid of step 4 of the response file.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the second review. When it approves `ce02802`, check the night of PR-92 exit test 3, and give the owner the merge summary.

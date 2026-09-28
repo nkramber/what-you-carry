@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 294: 2026-09-27, Claude Code
+
+Author: Claude Code
+Session: PR-77, author. Branch `feat/pr-77-light-and-edges`. PR #118, pending merge. Base `3fdefef`.
+
+### What this session did, and why
+
+- Answered the review of session 293. The review found no defect in the code, and it blocked exit test 2, because the raw Deck frame logs were not in the checkout.
+- Committed the raw logs in `docs/reviews/pr-118-deck/`: three runs at `ce02802`, the base, the three MSAA modes, the empty scene of F-190, and two traces with a timing patch.
+- Wrote `docs/reviews/pr-118-response.md` with the method of D-683 and the numbers that the logs give.
+
+### State of the build
+
+- Effective head: `ce02802`. The logs and the response are in the metadata set of D-184, so they do not move it.
+- CI, smoke, bit identity, bots, and the other checks passed for `ce02802`. `evaluate` and `review-gate` wait for an approving review.
+
+### In flight
+
+- The second round of `make codex-review PR=118`.
+- PR-92 exit test 3 waits for the scheduled night of 07:07 UTC on 2026-09-28.
+
+### Traps and gotchas
+
+- A frame log holds one frame per line in microseconds. The stall of F-190 comes every 2.245 s, so a check of exit test 2 reads the grid of step 4 of the response file.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the second review. When it approves `ce02802`, check the night of PR-92 exit test 3, and give the owner the merge summary.
+
 ## Session 293: 2026-09-27, Codex
 
 Author: Codex
