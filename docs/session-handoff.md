@@ -2,6 +2,36 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 316: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-98, author. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Read the review of session 315: `Ready for owner merge` for the effective head b446cdd, with no finding.
+- Gitar approved b446cdd, and its one thread is resolved. The D-251 note for the review-gate line of the dashboard is posted.
+
+### State of the build
+
+- Each check of PR #125 passed at 8e29146, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays b446cdd.
+
+### In flight
+
+- The owner confirmation of the merge of PR #125 (D-524, D-533).
+
+### Traps and gotchas
+
+- macOS has no `timeout` command. A CI wait that starts with it ends at once with exit code 8, and every check reads pending.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, start PR-99 (D-724), the last PR before Gate 2.
+
 ## Session 315: 2026-09-28, Codex
 
 Author: Codex
@@ -301,36 +331,3 @@ None.
 ### Next concrete action
 
 After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
-
-## Session 306: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-95, reviewer. Branch `fix/pr-95-seed-2-transition`. PR #122, ready for owner merge. Effective head `34c2ddf`.
-
-### What this session did, and why
-
-- Re-reviewed P2-1 against the author response, the source before and after the change, and the PR-95 exit tests.
-- Withdrew P2-1 because the same-tick tree build existed before this PR, and the roadmap does not include that fallback case.
-- Updated `docs/reviews/pr-122.md` with the result and preserved the earlier verdict.
-
-### State of the build
-
-- The remote tip before this commit is `e8f4e9b`; the code head and effective head remain `34c2ddf`.
-- Required code checks passed at `3e01603`. The document checks pass. Review gate and evaluate await this review record.
-
-### In flight
-
-- The review record and this handoff entry need one metadata commit and a push to `fix/pr-95-seed-2-transition`.
-
-### Traps and gotchas
-
-- The same-tick fallback builds unfinished chunk meshes and enemy trees on descent. This pre-existing behavior is outside the PR-95 exit tests.
-- The Deck logs cover the measured seed 2 transitions. This session did not repeat the Deck run.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the push, confirm the remote head and report the review result to the owner.
