@@ -1,5 +1,37 @@
 # Session handoff archive
 
+## Session 305: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-95, author. Branch `fix/pr-95-seed-2-transition`. PR #122, pending merge. Base `5ca1e1e`.
+
+### What this session did, and why
+
+- Answered the review of session 304 in `docs/reviews/pr-122-response.md`. P2-1 has no merit: a plan offered on the descent tick also makes `ChunkSwap.AfterTick` build every chunk in that tick, since PR-18. A trees-only fix cannot meet D-635 there, and trees shown late draw enemies with no model.
+- Measured the race on the Mac, because the Deck slept: a `--transitions 6` session offered each plan 1 to 5 ticks after its swap, and the floors lasted 344 to 2118 ticks.
+- The automated pass approved `3e01603` with no thread. One reply to its review-gate note cites D-251. No `Gitar review` comment.
+
+### State of the build
+
+- The remote head before this commit is `c7cbad4`, the review record. The code head stays `34c2ddf`. Each check but the Review gate workflow is green at `3e01603`.
+
+### In flight
+
+- The second round of `make codex-review PR=122` on the same effective head.
+- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start by 14:32 UTC.
+
+### Traps and gotchas
+
+- The Deck sleeps after some idle minutes. Ask the owner to wake it before each Deck run.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the outcome of the second review round. On approval, write the merge summary, and ask the owner to confirm the merge.
+
 ## Session 304: 2026-09-28, Codex
 
 Author: Codex

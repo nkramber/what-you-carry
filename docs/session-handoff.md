@@ -2,6 +2,38 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 315: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Reviewed the code, tests, documents, comments, and frames of PR #125. No in-scope finding remains.
+- Added the review record for effective head `b446cdd` and this entry in one metadata commit (D-182).
+
+### State of the build
+
+- The local HUD and number-sight tests passed, 28 tests. The remote CI checks for work head `b446cdd` passed through documents-only tip `8e29146` (D-357).
+- The `review-gate` and dependent `evaluate` checks failed because the review record did not yet exist. They need a fresh run after this push.
+
+### In flight
+
+- The review record and this entry await the metadata commit and push to the PR branch.
+
+### Traps and gotchas
+
+- `GridRay.FirstSolid` throws when a march starts in rock. The grazing-edge test checks the step past the first open cell.
+- The PR tip includes documents after the effective work head. The review applies to `b446cdd`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Wait for the review-gate checks, then give the owner the merge summary for PR #125.
+
 ## Session 314: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -302,35 +334,3 @@ None.
 ### Next concrete action
 
 After the push, confirm the remote head and report the review result to the owner.
-
-## Session 305: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-95, author. Branch `fix/pr-95-seed-2-transition`. PR #122, pending merge. Base `5ca1e1e`.
-
-### What this session did, and why
-
-- Answered the review of session 304 in `docs/reviews/pr-122-response.md`. P2-1 has no merit: a plan offered on the descent tick also makes `ChunkSwap.AfterTick` build every chunk in that tick, since PR-18. A trees-only fix cannot meet D-635 there, and trees shown late draw enemies with no model.
-- Measured the race on the Mac, because the Deck slept: a `--transitions 6` session offered each plan 1 to 5 ticks after its swap, and the floors lasted 344 to 2118 ticks.
-- The automated pass approved `3e01603` with no thread. One reply to its review-gate note cites D-251. No `Gitar review` comment.
-
-### State of the build
-
-- The remote head before this commit is `c7cbad4`, the review record. The code head stays `34c2ddf`. Each check but the Review gate workflow is green at `3e01603`.
-
-### In flight
-
-- The second round of `make codex-review PR=122` on the same effective head.
-- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start by 14:32 UTC.
-
-### Traps and gotchas
-
-- The Deck sleeps after some idle minutes. Ask the owner to wake it before each Deck run.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the outcome of the second review round. On approval, write the merge summary, and ask the owner to confirm the merge.
