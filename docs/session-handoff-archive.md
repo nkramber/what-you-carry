@@ -1,5 +1,43 @@
 # Session handoff archive
 
+## Session 295: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-77, reviewer. Branch `feat/pr-77-light-and-edges`. PR #118, ready for owner merge. Effective head `ce02802`.
+
+### What this session did, and why
+
+- Re-reviewed PR #118 after session 294 added the raw Deck frame logs and the response file.
+- Verified the exit test 2 frame threshold and transition in all three logs. The measurements pass D-683.
+- Read the code diff, tests, project contracts, documents, and PR comments. No code defect remains.
+- Updated `docs/reviews/pr-118.md` to approve the effective head.
+
+### State of the build
+
+- Effective head: `ce02802`. The five later commits change only paths in the skip set of D-475.
+- The code checks passed on `9acf45d`, including CI, Smoke, Bit identity, Bots, Asset QA, determinism lint, doc gate, night gate, and STE check.
+- At `6e00a68`, the metadata checks passed, and Gitar approved the code. `evaluate` and `review-gate` still read the earlier `Blocked` verdict.
+- Remote head: the metadata commit of this entry on `feat/pr-77-light-and-edges`.
+
+### In flight
+
+- The review record and this handoff need fresh `evaluate` and `review-gate` results after publication.
+- The owner reads the review and confirms the merge summary before the merge.
+
+### Traps and gotchas
+
+- The effective head stays `ce02802`, because later commits changed only review metadata.
+- The code, smoke, bot, and bit-identity checks skip a documents-only tip. Their result at `9acf45d` covers the unchanged code.
+- Each Deck frame log holds microseconds, one frame per line. The exit test drops frames at 10 seconds or earlier.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner reads the review, confirms the merge summary of D-533, and then merges PR #118.
+
 ## Session 294: 2026-09-27, Claude Code
 
 Author: Claude Code

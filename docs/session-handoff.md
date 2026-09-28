@@ -2,6 +2,38 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 305: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-95, author. Branch `fix/pr-95-seed-2-transition`. PR #122, pending merge. Base `5ca1e1e`.
+
+### What this session did, and why
+
+- Answered the review of session 304 in `docs/reviews/pr-122-response.md`. P2-1 has no merit: a plan offered on the descent tick also makes `ChunkSwap.AfterTick` build every chunk in that tick, since PR-18. A trees-only fix cannot meet D-635 there, and trees shown late draw enemies with no model.
+- Measured the race on the Mac, because the Deck slept: a `--transitions 6` session offered each plan 1 to 5 ticks after its swap, and the floors lasted 344 to 2118 ticks.
+- The automated pass approved `3e01603` with no thread. One reply to its review-gate note cites D-251. No `Gitar review` comment.
+
+### State of the build
+
+- The remote head before this commit is `c7cbad4`, the review record. The code head stays `34c2ddf`. Each check but the Review gate workflow is green at `3e01603`.
+
+### In flight
+
+- The second round of `make codex-review PR=122` on the same effective head.
+- PR-92 exit test 3: the 07:07 UTC night of 2026-09-28 on `main` did not start by 14:32 UTC.
+
+### Traps and gotchas
+
+- The Deck sleeps after some idle minutes. Ask the owner to wake it before each Deck run.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the outcome of the second review round. On approval, write the merge summary, and ask the owner to confirm the merge.
+
 ## Session 304: 2026-09-28, Codex
 
 Author: Codex
@@ -307,41 +339,3 @@ None.
 ### Next concrete action
 
 After the merge, check the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`.
-
-## Session 295: 2026-09-27, Codex
-
-Author: Codex
-Session: PR-77, reviewer. Branch `feat/pr-77-light-and-edges`. PR #118, ready for owner merge. Effective head `ce02802`.
-
-### What this session did, and why
-
-- Re-reviewed PR #118 after session 294 added the raw Deck frame logs and the response file.
-- Verified the exit test 2 frame threshold and transition in all three logs. The measurements pass D-683.
-- Read the code diff, tests, project contracts, documents, and PR comments. No code defect remains.
-- Updated `docs/reviews/pr-118.md` to approve the effective head.
-
-### State of the build
-
-- Effective head: `ce02802`. The five later commits change only paths in the skip set of D-475.
-- The code checks passed on `9acf45d`, including CI, Smoke, Bit identity, Bots, Asset QA, determinism lint, doc gate, night gate, and STE check.
-- At `6e00a68`, the metadata checks passed, and Gitar approved the code. `evaluate` and `review-gate` still read the earlier `Blocked` verdict.
-- Remote head: the metadata commit of this entry on `feat/pr-77-light-and-edges`.
-
-### In flight
-
-- The review record and this handoff need fresh `evaluate` and `review-gate` results after publication.
-- The owner reads the review and confirms the merge summary before the merge.
-
-### Traps and gotchas
-
-- The effective head stays `ce02802`, because later commits changed only review metadata.
-- The code, smoke, bot, and bit-identity checks skip a documents-only tip. Their result at `9acf45d` covers the unchanged code.
-- Each Deck frame log holds microseconds, one frame per line. The exit test drops frames at 10 seconds or earlier.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner reads the review, confirms the merge summary of D-533, and then merges PR #118.
