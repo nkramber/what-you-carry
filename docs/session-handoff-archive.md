@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 291: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-76, reviewer. Branch `feat/pr-76-enemy-models`. PR #117, pending merge. Base `d5f7e00`.
+
+### What this session did, and why
+
+- Reviewed PR #117 at effective head `9a0f932`, as the cross-provider review required by T-4 and D-101.
+- Checked the family model field, scavenger model and recipes, model rendering, contact sheet, content errors, and PR-76 exit tests. No in-scope finding remains.
+- Added `docs/reviews/pr-117.md` with the verdict and verification record.
+
+### State of the build
+
+- The PR head `fdfee53` passed `asset-qa`, `det-lint`, `doc-gate`, `documents`, `evaluate`, Gitar, `night-gate`, `review-gate`, and `ste-check`. The documents-only rule skipped the bit-identity, bot, CI, and smoke jobs on this metadata head.
+- The earlier implementation tip `e1316ca` passed CI on all three platforms, bit identity on all three platforms, smoke on all three platforms, asset QA, determinism lint, STE, doc gate, documents, night gate, bots, and Gitar.
+- The focused local test filter passed 304 tests. Local asset QA reported zero findings. The Documents category passed 254 tests, and local STE check reported zero findings.
+- `evaluate` and `review-gate` first failed because the review record was absent. Both passed after the review metadata was published.
+- Local STE check passed with zero findings. The Documents category passed 254 tests.
+
+### In flight
+
+- The review record and Session 291 handoff are published to `feat/pr-76-enemy-models`.
+
+### Traps and gotchas
+
+- The PR tip `e1316ca` is metadata after effective head `9a0f932`. The review applies to `9a0f932`.
+- The local full suite did not run. The focused suite passed, and the full CI suite passed on the PR tip.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Give the owner the merge summary and wait for the owner to decide whether to merge.
+
 ## Session 290: 2026-09-27, Claude Code
 
 Author: Claude Code
