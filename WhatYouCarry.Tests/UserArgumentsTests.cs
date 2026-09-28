@@ -302,6 +302,31 @@ public sealed class UserArgumentsTests
     }
 
     /// <summary>
+    /// D-714. The frame shots flag takes the directory of the frames, and it needs the bot flag, because only a bot
+    /// session plays the same run each time. The HUD shot and the contact sheet take no frame shots flag, and the error
+    /// names both flags (D-317).
+    /// </summary>
+    [Fact]
+    public void FrameShotsNeedTheBot()
+    {
+        AssertStops(UserArguments.FrameShotsNeedBotMessage, [FrameShots.Flag, "shots"], FrameShots.Flag, BotSession.Flag);
+        AssertStops(UserArguments.FrameShotsNeedBotMessage, [FrameLog.Flag, "frames.txt", FrameShots.Flag, "shots"], FrameShots.Flag, BotSession.Flag);
+        AssertStops(UserArguments.SmokeTakesNoBotMessage, [SmokeSession.Flag, BotSession.Flag, FrameShots.Flag, "shots"], SmokeSession.Flag, BotSession.Flag);
+        AssertStops(UserArguments.FrameShotsNeedBotMessage, [SmokeSession.Flag, FrameShots.Flag, "shots"], FrameShots.Flag, BotSession.Flag);
+        AssertStops(UserArguments.ShotTakesNoFlagMessage, [HudShot.Flag, "hud.png", FrameShots.Flag, "shots"], HudShot.Flag, FrameShots.Flag);
+        AssertStops(UserArguments.SheetTakesNoFlagMessage, [ContactSheet.Flag, "sheet.png", FrameShots.Flag, "shots"], ContactSheet.Flag, FrameShots.Flag);
+        AssertStops(UserArguments.ShortFlagMessage, [BotSession.Flag, FrameShots.Flag], FrameShots.Flag, "1");
+        AssertStops(UserArguments.RepeatedFlagMessage, [BotSession.Flag, FrameShots.Flag, "a", FrameShots.Flag, "b"], FrameShots.Flag);
+
+        Assert.False(FrameShots.IsRequested(UserArguments.Parse([BotSession.Flag])));
+        UserArguments capture = UserArguments.Parse([BotSession.Flag, BotSession.PolicyFlag, FullClearer.PolicyName, BotSession.SeedFlag, "1", FrameShots.Flag, "shots/full-clearer"]);
+        Assert.True(FrameShots.IsRequested(capture));
+        Assert.Equal("shots/full-clearer", FrameShots.DirectoryOf(capture));
+        ContextException absent = Assert.Throws<ContextException>(() => FrameShots.DirectoryOf(UserArguments.Parse([BotSession.Flag])));
+        Assert.StartsWith(UserArguments.AbsentFlagMessage, absent.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// The seed flag takes each whole number from 1 to the top of <see cref="ulong"/>, in digits alone, and no flag gives
     /// the first seed, so every command before the flag runs the same floor (D-704, D-705). Seed 0, a sign, a space, a
     /// fraction, a word, hexadecimal, and a number past the top stop the boot, and the error names the word (T-2).

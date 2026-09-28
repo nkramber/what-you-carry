@@ -173,7 +173,7 @@ Stack rules (D-61 to D-68, D-90 to D-92, D-98):
 - Tier 2: scripted bots. A few hundred runs per PR. Each night runs seeds 1 to 5000 and a slice of 500 for each of five policies (D-115, D-127, D-564, D-566).
 - Tier 3: LLM play over a socket. Weekly on main, plus every economy PR (D-128).
 - Tier 3b: an LLM reads the outlier run logs.
-- Tier 4: vision play from screenshots. Milestone only (D-133).
+- Tier 4: vision play from screenshots. Milestone only (D-133). At Gate 2 it reads the still frames of two bot sessions and the HUD shot (D-711).
 - Game layer: a headless smoke session per PR, plus contract tests for content (D-114).
 - Asset QA: budgets, pivots, UV coverage, box interpenetration at keyframe extremes, and file name case (D-135).
 - Humans: the owner from the first playable, friends from the hub loop (D-134).
@@ -247,7 +247,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-21 | Hyper-armor (D-29) needs a stagger system. The effect of armor weight on stagger is undecided | 2026-09-06 | ⚠ D-314 and D-316, 2026-09-12. Binds PR-15 and PR-22 |
 | F-22 | The v1 build order put procgen before any render layer for weeks. D-57 wants a playable floor early | 2026-09-06 | 🔧 Phase 2 places the Game skeleton right after the Core foundations |
 | F-23 | The name "Descent" had a trademark risk. "What You Carry" (D-11) has no trademark search yet | 2026-09-06 | ❓ OQ-17 |
-| F-24 | Always-on numbers (D-36) and Deck 800p (D-15) strain Pillar 5 readability | 2026-09-06 | ⚠ Binds PR-19. Tier 4 checks it |
+| F-24 | Always-on numbers (D-36) and Deck 800p (D-15) strain Pillar 5 readability | 2026-09-06 | 🔧 The Tier 4 pass of PR-96 found F-199. D-716. Binds PR-98 |
 | F-25 | The SSD, the Apple account, and the Steam account do not exist (D-142) | 2026-09-07 | ⚠ The SSD arrived 2026-09-07 (D-192, which D-584 supersedes). Accounts bind PR-51, PR-52 |
 | F-26 | v1 named `HANDOFF.md`, `DECISIONS.md`, and a five-file set in uppercase | 2026-09-07 | ✅ doc. D-129 lowercase, D-132 one design file |
 | F-27 | v1 listed the harness as one unnamed system. Two providers exist | 2026-09-07 | ✅ doc. D-137 names both. Binds the review file format in PR-1 |
@@ -418,6 +418,13 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-192 | The floor transition takes 31 to 40 ms on the Deck, over the budget of 22222 microseconds of D-635. The meshes of the enemies of the new floor took 16.7 ms in one tick | 2026-09-27 | ✅ PR #118 (PR-77): each enemy tree shares the meshes of a template, and the transition takes 19.9 to 20.3 ms (D-683) |
 | F-193 | The floor transition of seed 2 takes 25.1 to 27.7 ms in three Deck runs at `5c3310e`, over the budget of 22222 microseconds of D-635. Seeds 1 and 3 take 20.8 and 19.2 ms | 2026-09-28 | ✅ PR #122 (PR-95): the trace found a full collection of 4.1 to 5.0 ms in the tick of the descent, which the dig of the next floor started, and 3.2 to 3.5 ms of enemy trees. The dig now starts after that tick, and the trees build hidden during the floor. The transition frame takes 15.7 to 16.4 ms on seeds 1, 2, and 3 (D-710) |
 | F-194 | At the 90 Hz vsync of the Deck, the real frame time sits on the two sides of 11111 microseconds. An empty scene has a p99 of 11366, so no p99 can reach 11.1 ms | 2026-09-28 | ✅ D-709: the M-3 p99 passes under 16667 microseconds, 1.5 vsync intervals |
+| F-195 | Tier 4 at Gate 2: at melee range the player body hides the scavenger in front, so its wind-up is hidden. 12 of 63 full-clearer frames. Frames in `docs/reviews/pr-123-tier-4/` | 2026-09-28 | 🔧 D-715. Binds PR-97 |
+| F-196 | Tier 4 at Gate 2: a scavenger between the camera and the player fills 40 to 45 percent of the screen, the near plane cuts it, and it hides the player. The wall fade does not fade a model | 2026-09-28 | 🔧 D-715. Binds PR-97 |
+| F-197 | Tier 4 at Gate 2: near a wall the camera presses into the body, and the head fills a third of the screen or more. Each timer-tester frame and the HUD shot show it at the spawn of seed 1 | 2026-09-28 | 🔧 D-715. Binds PR-97 |
+| F-198 | Tier 4 at Gate 2: the Overseer kills the timer-tester in two hits and never enters a frame. The wave of tick 12599 never enters one either. The bot never turns the camera | 2026-09-28 | ⚠ D-717. Binds the Gate 2 play |
+| F-199 | Tier 4 at Gate 2: the damage numbers of 18 pixels read grey or dark on the stone and the orange blocks. A number stays with a hidden owner, and it goes to the screen edge when the camera is close | 2026-09-28 | 🔧 D-716. Binds PR-98 |
+| F-200 | Tier 4 at Gate 2: the scavenger head reads as a near-black block with no features in the dark, seen from behind | 2026-09-28 | ⚠ D-718. Binds OQ-61 and PR-36 to PR-42 |
+| F-201 | Tier 4 at Gate 2: the stairwell prompt at the lower center covers the body in the HUD shot | 2026-09-28 | 🔧 D-716. Binds PR-98 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -773,6 +780,21 @@ Gate: three Deck runs of seed 2 have a transition under 22222 microseconds, and 
 **M-3: Steam Deck frame time.** ✅ Done in PR #122.
 Measure the 99th percentile frame time of the current `main` on the Steam Deck OLED of D-296, over one full floor (D-707). D-295 gives the target. The table holds seeds 1, 2, and 3 (D-706). Each row gives a raw and a filtered p99, and D-709 gives the pass rule (D-708). The run of 2026-09-28 at `5c3310e` met D-709 on each seed, but the transition of seed 2 missed D-635 (F-193). The run of 2026-09-28 at `34c2ddf`, the code head of PR #122, meets D-709 and D-635 on each seed (D-710). Binds every render PR (F-3).
 
+**PR-96: Tier 4 frame capture.**
+The bot session writes one Deck frame of 1280 by 800 pixels, with the HUD, to a directory each second of game time: the flag `--frame-shots <directory>` (D-711). The captures run the full-clearer and the timer-tester on seed 1 (D-714). The author session reads each frame and the HUD shot, and answers the checklist of OQ-62 without the hub and the boss (D-711, D-712). Each finding gets an F-# row in section 5 (D-713).
+Gate: the parser tests and the headless smoke test pass, and each finding of the pass has a disposition.
+> *In plain English:* a model looks at pictures of the game to find what a player cannot read. This change takes one picture each second of two bot runs, and the model reads them.
+
+**PR-97: Camera and model occlusion.** 🔧
+The body hides no target in front of the player, and a model near the camera fades as a wall does. The camera keeps a closest distance to the body (D-715, F-195, F-196, F-197).
+Gate: the frame shots of D-714 at the PR head show none of the three findings.
+> *In plain English:* in a fight the camera shows the player's back and not the enemy. This change moves the camera so the fight stays in view.
+
+**PR-98: Damage numbers and prompt.** 🔧
+The damage numbers grow and get a dark outline. An owner that the camera cannot see shows no number, and the stairwell prompt moves clear of the body (D-716, F-199, F-201, F-24).
+Gate: the frame shots of D-714 and the HUD shot at the PR head show none of the findings.
+> *In plain English:* the damage numbers are hard to read on the Deck. This change makes them larger and clearer, and keeps the prompt off the player.
+
 ### Phase 3: Full loop (gate: hub, loadout, death loss, bank, tree, saves, and replay resume work, and friends play)
 
 **PR-21: Items, tiers, and affixes.** 🔧
@@ -940,7 +962,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 10. PR-12, PR-13, PR-57, PR-14. ✅ PR-12 merged 2026-09-11 as PR #49. ✅ PR-13 merged 2026-09-12 as PR #52. ✅ PR-57 merged 2026-09-12 as PR #54. ✅ PR-14 merged 2026-09-12 as PR #56.
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80. ✅ PR-70 done in PR #81. ✅ PR-66 done in PR #82. ✅ PR-16 done in PR #83. ✅ PR-17 done in PR #84. ✅ PR-18 done in PR #85.
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
-13. M-3, then PR-95 (D-710). ✅ PR-95 and M-3 done in PR #122.
+13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97 and PR-98 (D-715, D-716). ✅ PR-95 and M-3 done in PR #122.
 14. **← GATE 2.** The owner plays one floor and signs off on feel.
 15. PR-21, PR-22, PR-23.
 16. PR-24, PR-25, PR-26.

@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 298: 2026-09-27, Codex
+
+Author: Codex
+Session: PR-93, reviewer. Branch `feat/pr-93-overseer-model`. PR #119, pending merge. Base `b4615c0`.
+
+### What this session did, and why
+
+- Reviewed the PR-93 code head `5faf3b7` as the cross-provider reviewer.
+- Checked the model, the hunter model field, the texture mappings, the focused tests, the roadmap, and the PR comments.
+- Wrote `docs/reviews/pr-119.md`. The review found no in-scope defect. The owner approval of the contact sheet is recorded in D-700.
+
+### State of the build
+
+- Local focused tests passed: 290 passed, none failed or skipped. Local asset QA found zero findings across four models and three animations.
+- Remote CI passed the build and test jobs, bit identity on three platforms, bot checks, asset QA, determinism lint, documents, doc gate, night gate, smoke on three platforms, and STE checks.
+- Remote `evaluate` and `review-gate` failed because the review record was not yet on the branch. Remote branch head before this metadata push: `e2eea3e`.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and a push to `feat/pr-93-overseer-model`.
+- PR #119 is pending owner merge.
+
+### Traps and gotchas
+
+- The review applies to effective head `5faf3b7`. The later code tip `e2eea3e` changes documents only (D-534).
+- The contact-sheet image named by D-700 was not in the referenced folder. The owner approval remains recorded in D-700.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+- Push the review record and this entry together. Verify the remote head and the review-gate result.
+
 ## Session 297: 2026-09-27, Claude Code
 
 Author: Claude Code

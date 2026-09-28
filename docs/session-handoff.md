@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 308: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-96, author. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
+
+### What this session did, and why
+
+- PR-92 exit test 3 passes. The scheduled night of 15:18 UTC on 2026-09-28 on `main` at `5ca1e1e` (run 36442573875) succeeded with eight sweep jobs. Full-clearer and reachability ran as two shards each. The record on `night-results` names each of the six sweeps once in each section. No night failed, so the Pushover check of PR-91 exit test 23 did not apply. The sweeps took 2 to 9 minutes each, where the night of 2026-09-27 took up to 2.5 hours.
+- The owner answered OQ-62 in part, for Gate 2: D-711 to D-714. Sequence item 56 got its roadmap entry, PR-96.
+- `--frame-shots <directory>` writes one Deck frame with the HUD each second of a bot session. The flag needs `--bot`. A headless run, a failed write, and a shot with no new frame are each an error line and exit code 1.
+- The Tier 4 pass ran on the full-clearer and the timer-tester on seed 1, and on the HUD shot. It found F-195 to F-201. The owner gave each its disposition: D-715 (PR-97, the camera), D-716 (PR-98, the numbers and the prompt, F-24), D-717 (F-198 in the Gate 2 play), and D-718 (F-200 to OQ-61).
+
+### State of the build
+
+- The remote head of `main` is `7bab7cf`. The local suite, `det-lint`, `asset-qa`, and `ste-check` pass on the branch.
+
+### In flight
+
+- PR #123: the automated pass, then `make codex-review`.
+
+### Traps and gotchas
+
+- A Godot window that another window covers draws no frame, and the ticks go on. The first timer-tester capture wrote 204 copies of one frame, because a HUD shot window opened over it. Keep the capture window clear. The capture now stops with an error line.
+- Readers of 30 or more frames can end on a connection reset. Split the frames into smaller sets.
+- The timer-tester stands still, so 212 of its frames differ only in the timer. A pixel comparison proves it faster than a read of each frame.
+
+### Open questions that block progress
+
+None. The protocol of Gate 4 stays open under OQ-62, and it blocks nothing before Phase 4.
+
+### Next concrete action
+
+After the merge of PR #123, start PR-97 (D-715).
+
 ## Session 307: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -300,38 +334,3 @@ None.
 ### Next concrete action
 
 After the merge of PR #120, start M-3 in a new session: run seeds 1, 2, and 3 on the Deck over SSH (D-606, D-706), and record the table. Check the night of PR-92 exit test 3 on `night-results`.
-
-## Session 298: 2026-09-27, Codex
-
-Author: Codex
-Session: PR-93, reviewer. Branch `feat/pr-93-overseer-model`. PR #119, pending merge. Base `b4615c0`.
-
-### What this session did, and why
-
-- Reviewed the PR-93 code head `5faf3b7` as the cross-provider reviewer.
-- Checked the model, the hunter model field, the texture mappings, the focused tests, the roadmap, and the PR comments.
-- Wrote `docs/reviews/pr-119.md`. The review found no in-scope defect. The owner approval of the contact sheet is recorded in D-700.
-
-### State of the build
-
-- Local focused tests passed: 290 passed, none failed or skipped. Local asset QA found zero findings across four models and three animations.
-- Remote CI passed the build and test jobs, bit identity on three platforms, bot checks, asset QA, determinism lint, documents, doc gate, night gate, smoke on three platforms, and STE checks.
-- Remote `evaluate` and `review-gate` failed because the review record was not yet on the branch. Remote branch head before this metadata push: `e2eea3e`.
-
-### In flight
-
-- The review record and this handoff entry need one metadata commit and a push to `feat/pr-93-overseer-model`.
-- PR #119 is pending owner merge.
-
-### Traps and gotchas
-
-- The review applies to effective head `5faf3b7`. The later code tip `e2eea3e` changes documents only (D-534).
-- The contact-sheet image named by D-700 was not in the referenced folder. The owner approval remains recorded in D-700.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-- Push the review record and this entry together. Verify the remote head and the review-gate result.

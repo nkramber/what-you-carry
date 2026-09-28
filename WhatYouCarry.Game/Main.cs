@@ -79,7 +79,9 @@ namespace WhatYouCarry.Game;
 /// <para>
 /// The contact sheet flag starts no loop. It renders every block material and the body with the sword at game zoom
 /// to one PNG file for the review of the owner, and quits (D-306, D-336). The HUD shot flag builds the scene of play at
-/// the spawn, takes no tick, renders one frame of the Deck size with the HUD fixture, and quits (D-133).
+/// the spawn, takes no tick, renders one frame of the Deck size with the HUD fixture, and quits (D-133). The frame shots
+/// flag of the bot session draws the HUD into a viewport of the Deck size, and writes one frame of it to a directory
+/// each second of game time for the Tier 4 pass (D-711).
 /// </para>
 /// </remarks>
 public partial class Main : Node3D
@@ -164,6 +166,15 @@ public partial class Main : Node3D
 
     /// <summary>The message of the error when the HUD shot starts on the headless display.</summary>
     public const string HudShotNeedsWindow = "The HUD shot needs a window, and the headless display renders no image.";
+
+    /// <summary>The message of the error line of a frame shot that failed (D-711).</summary>
+    public const string FrameShotFailedMessage = "A frame shot failed, and the game quits.";
+
+    /// <summary>The message of the error when the frame shots start on the headless display (D-711).</summary>
+    public const string FrameShotsNeedWindow = "The frame shots need a window, and the headless display renders no image.";
+
+    /// <summary>The name of the field of the end line that holds the count of frame shots of the session (D-711).</summary>
+    public const string FrameShotsField = "frameShots";
 
     /// <summary>The name of the field of the fixture line that holds the count of its controls.</summary>
     public const string ControlsField = "controls";
@@ -265,6 +276,7 @@ public partial class Main : Node3D
     private const string HeadlessDisplay = "headless";
     private const string NoShotImage = "The viewport of the contact sheet gave no image for a shot.";
     private const string NoHudImage = "The viewport of the HUD shot gave no image.";
+    private const string NoFrameShotImage = "The viewport of the frame shots gave no image.";
 
     private static readonly long[] NoEntities = [];
 
@@ -290,6 +302,10 @@ public partial class Main : Node3D
     private SoundDirector? director;
     private Camera3D? hudCamera;
     private HudState? shotState;
+    private SubViewport? frameShotViewport;
+    private string frameShotDirectory = string.Empty;
+    private int frameShotCount;
+    private long frameShotFramesDrawn;
     private bool promptOpen;
     private int transitions = 1;
     private bool transitionTest;
@@ -487,6 +503,22 @@ public partial class Main : Node3D
 
         this.promptOpen = open;
         this.hud?.AfterTick(this.loop);
+        if (this.frameShotViewport is not null && FrameShots.IsShotTick(this.loop.Tick))
+        {
+            string shotPath = Path.Combine(this.frameShotDirectory, FrameShots.FileName(this.loop.Floor, this.loop.Tick));
+            try
+            {
+                this.WriteFrameShot(this.frameShotViewport, shotPath);
+            }
+            catch (Exception error)
+            {
+                LogFields fields = RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick);
+                fields.Add(FileField, shotPath);
+                this.LogFailure(FrameShotFailedMessage, fields, error);
+                this.Quit(ExitFailure);
+                return;
+            }
+        }
         if (this.sounds is not null && this.director is not null)
         {
             try
@@ -750,6 +782,11 @@ public partial class Main : Node3D
             fields.Add(PolicyField, this.bot.Name);
         }
 
+        if (this.frameShotViewport is not null)
+        {
+            fields.Add(FrameShotsField, (long)this.frameShotCount);
+        }
+
         if (this.frames is not null && this.frames.Frames.Count > 0)
         {
             fields.Add(FramesField, (long)this.frames.Frames.Count);
@@ -969,8 +1006,16 @@ public partial class Main : Node3D
 
         // The accept action of the engine has no controller input, so every session binds the A button (D-449).
         Navigation.BindAccept();
-        this.hud = Hud.Build(content.Strings, this);
-        this.hudCamera = this.camera;
+        if (FrameShots.IsRequested(arguments))
+        {
+            this.StartFrameShots(FrameShots.DirectoryOf(arguments), content.Strings);
+        }
+        else
+        {
+            this.hud = Hud.Build(content.Strings, this);
+            this.hudCamera = this.camera;
+        }
+
         this.logger.Write(LogContextKind.Run, LogLevel.Info, HudBuiltMessage, RunFields(loop.Seed, loop.Floor, loop.Tick));
 
         // The sounds of each tick follow its Core events and the stride of each body (D-453, D-454).
@@ -1122,6 +1167,59 @@ public partial class Main : Node3D
             this.LogFailure(HudShotFailedMessage, fields, error);
             this.Quit(ExitFailure);
         }
+    }
+
+    /// <summary>
+    /// Starts the frame shots of the bot session (D-711). The HUD and a camera go into a viewport of the Deck size that
+    /// shares the world of the scene, as in the HUD shot, and the directory of the frames comes into existence. The
+    /// headless display is an error, and the boot writes its error line and quits with exit code 1 (T-2).
+    /// </summary>
+    /// <exception cref="ContextException">The display is the headless display.</exception>
+    private void StartFrameShots(string directory, Strings strings)
+    {
+        if (DisplayServer.GetName() == HeadlessDisplay)
+        {
+            ContextException error = new(FrameShotsNeedWindow);
+            error.AddContext(FileField, directory);
+            throw error;
+        }
+
+        Directory.CreateDirectory(directory);
+        SubViewport viewport = new()
+        {
+            Size = new Vector2I(HudShot.PixelsWide, HudShot.PixelsHigh),
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
+            Msaa3D = PlaceholderScene.EdgeSmoothing,
+        };
+        this.AddChild(viewport);
+        Camera3D shotCamera = PlaceholderScene.Camera();
+        viewport.AddChild(shotCamera);
+        this.hud = Hud.Build(strings, viewport);
+        this.hudCamera = shotCamera;
+        this.frameShotViewport = viewport;
+        this.frameShotDirectory = directory;
+        this.frameShotFramesDrawn = Engine.GetFramesDrawn();
+    }
+
+    /// <summary>
+    /// Writes the image that the viewport of the frame shots drew last to a PNG file, and counts the shot (D-711). A
+    /// shot with no new frame since the last shot is an error, because the image is old (T-2).
+    /// </summary>
+    /// <exception cref="ContextException">The engine drew no frame since the last shot, or the viewport gave no image.</exception>
+    private void WriteFrameShot(SubViewport viewport, string path)
+    {
+        long framesDrawn = Engine.GetFramesDrawn();
+        FrameShots.RequireNewFrame(framesDrawn, this.frameShotFramesDrawn);
+        this.frameShotFramesDrawn = framesDrawn;
+        Image frame = viewport.GetTexture().GetImage();
+        if (frame is null || frame.IsEmpty())
+        {
+            throw new ContextException(NoFrameShotImage);
+        }
+
+        frame.Convert(Image.Format.Rgb8);
+        File.WriteAllBytes(path, frame.SavePngToBuffer());
+        this.frameShotCount++;
     }
 
     /// <summary>Waits until the engine draws the given count of frames.</summary>

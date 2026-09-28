@@ -6,7 +6,7 @@ Status: reference, written 2026-09-23. Written in ASD-STE100. The byte ceiling o
 
 ## The Game arguments
 
-The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, and `--smoke` and `--bot` exclude each other. `--transitions` needs `--bot` and `--frame-log`, and `--seed` needs `--bot`. A Game flag before `--` also ends the boot with exit code 1, because the engine ignores it there (D-624).
+The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, and `--smoke` and `--bot` exclude each other. `--transitions` needs `--bot` and `--frame-log`, and `--seed` and `--frame-shots` need `--bot`. A Game flag before `--` also ends the boot with exit code 1, because the engine ignores it there (D-624).
 
 A close of the window ends the session like the test exit: one end line, the frame log, and exit code 0 when the log holds no error (F-161).
 
@@ -20,10 +20,14 @@ A close of the window ends the session like the test exit: one end line, the fra
 - Policy session, the frame cost of a timer expiry with the enemies (D-646, RR-P3-16): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --policy timer-tester --frame-log frames.txt`
 - Contact sheet, a local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
 - HUD shot, the Deck frame of the HUD fixture (D-133): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --hud-shot hud.png`
+- Tier 4 capture of the full-clearer on seed 1 (D-711, D-714): `/Applications/Godot_mono.app/Contents/MacOS/Godot --windowed --fixed-fps 60 --path WhatYouCarry.Game -- --bot --policy full-clearer --seed 1 --frame-shots shots/full-clearer`
+- Tier 4 capture of the timer-tester on seed 1 (D-711, D-714): `/Applications/Godot_mono.app/Contents/MacOS/Godot --windowed --fixed-fps 60 --path WhatYouCarry.Game -- --bot --policy timer-tester --seed 1 --frame-shots shots/timer-tester`
 
 The policy flag names one bot policy of Core: `random-walker`, `greedy-descender`, `full-clearer`, `timer-tester`, or `coward`. Without the flag, the bot session drives the greedy descender. The flag needs `--bot`, and the transition test takes no policy, because it loads no enemy (D-437). The end line of a session with a timer expiry holds `expiries` and `expiryMicrosMax`, the slowest frame near each expiry.
 
 The seed flag sets the seed of the bot session: a whole number from 1 to 18446744073709551615, in digits alone (D-705). Without the flag, the session runs seed 1, the first seed of `Main`. The flag needs `--bot`, and the end line of the session names the seed.
+
+The frame shots flag writes one frame of 1280 by 800 pixels, with the HUD, to its directory each second of game time (D-711). The file name holds the floor and the tick, for example `floor-01-tick-000060.png`. The flag needs `--bot`, and the capture needs a window, so a headless run exits 1. The engine flag `--fixed-fps 60` gives one render frame to each tick, so each frame shows the tick before its shot. The end line of the session gives the count of shots in `frameShots`.
 
 ## The generated files
 
