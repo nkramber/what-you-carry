@@ -425,7 +425,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-199 | Tier 4 at Gate 2: the damage numbers of 18 pixels read grey or dark on the stone and the orange blocks. A number stays with a hidden owner, and it goes to the screen edge when the camera is close | 2026-09-28 | ✅ PR #125 (PR-98): 28 pixels, a black outline of 3 pixels, a hold before the fade, and no number for a hidden or dead owner (D-725 to D-727, D-729 to D-732) |
 | F-200 | Tier 4 at Gate 2: the scavenger head reads as a near-black block with no features in the dark, seen from behind | 2026-09-28 | ⚠ D-718. Binds OQ-61 and PR-36 to PR-42 |
 | F-201 | Tier 4 at Gate 2: the stairwell prompt at the lower center covers the body in the HUD shot | 2026-09-28 | ✅ PR #125 (PR-98): the prompt stands at the bottom right, clear of the body (D-728, D-732) |
-| F-202 | The frame shots of PR-97: on a turn of the bot in one tick, the Game interpolates the camera positions in a straight line, and the frame draws from a point near the head. The full-clearer turns 180 degrees at tick 2880 of seed 1. Main has the same effect with the old boom | 2026-09-28 | ✅ PR #126 (PR-99): each frame places the camera from the interpolated look (D-724, D-733) |
+| F-202 | The frame shots of PR-97: on a turn of the bot in one tick, the Game interpolates the camera positions in a straight line, and the frame draws from a point near the head. The full-clearer turns 180 degrees at tick 2880 of seed 1. Main has the same effect with the old boom | 2026-09-28 | ✅ PR #126 (PR-99): each frame places the camera from the interpolated look (D-724, D-733, D-734) |
 
 ## 6. Guardrails (the safety contract for every PR)
 

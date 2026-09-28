@@ -12,7 +12,7 @@ Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending
 - F-202 (D-724): the frame interpolated the two tick poses in a straight line, so a turn of 180 degrees drew the camera from the head. The Game now interpolates the look (`TickLook`), the yaw the short way, and places the pose of each frame with `OrbitCamera.Place`.
 - Exit test 1 fails on the pose interpolation of `main`: 1.5 meters in place of 3.0 at the fraction 0.25.
 - One placement costs about 0.7 microseconds on the spawn of seed 1, in a Release build on the Mac.
-- The shots of D-714 draw each frame at the fraction 0, so they cannot show F-202. The owner chose pairs of frames at a fraction of 0.5 as the evidence, and accepted the close frames of D-720 at the interpolated yaw (D-733).
+- The shots of D-714 draw each frame at the fraction 0, so they cannot show F-202. The owner chose pairs of frames at a fraction of 0.5 as the evidence, and accepted the close frames of D-720 at the interpolated yaw (D-733). The owner confirmed exit test 3 (D-734), after a correction: the halfway frames with no turn differ in up to 1.1 percent of the pixels.
 
 ### State of the build
 
@@ -20,7 +20,7 @@ Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending
 
 ### In flight
 
-- The gitar pass, and the owner confirmation of exit test 3 on the frames in `docs/reviews/pr-126-frames/`.
+- The gitar pass and the cross-provider review. The owner confirmed exit test 3 on the frames in `docs/reviews/pr-126-frames/` (D-734).
 
 ### Traps and gotchas
 
@@ -33,7 +33,7 @@ None.
 
 ### Next concrete action
 
-Ask the owner to confirm exit test 3, and record the answer as D-734. Then run `make codex-review PR=126` when each check but the Review gate workflow is green.
+Answer the gitar pass. Then run `make codex-review PR=126` when each check but the Review gate workflow is green.
 
 ## Session 316: 2026-09-28, Claude Code
 
