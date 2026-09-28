@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 309: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-96, reviewer. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
+
+### What this session did, and why
+
+- Reviewed effective head `4236f2d` of PR #123 against the PR-96 exit tests and the Tier 4 evidence.
+- The provider gate passed. The review found no in-scope defect.
+- Added `docs/reviews/pr-123.md` and this handoff entry in one metadata commit.
+
+### State of the build
+
+- The remote code head before the metadata push was `77ab1d1`. Build and test jobs, bit identity, bots, asset QA, determinism lint, smoke, night gate, documents, doc gate, and STE passed.
+- The PR checks `evaluate` and `review-gate` failed because the review record did not yet exist. The review record and this entry are now on the PR branch.
+
+### In flight
+
+- PR #123 awaits the owner merge.
+
+### Traps and gotchas
+
+- The review inspected supplied capture artifacts but did not rerun the interactive Mac capture sessions.
+- The frame set follows the Gate 2 scope of D-714. The Gate 4 Tier 4 protocol stays open under OQ-62.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can review the record and merge PR #123 when its checks pass.
+
 ## Session 308: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -300,37 +333,3 @@ None.
 ### Next concrete action
 
 The review is complete for effective head `f8d06f5`. The owner can read the review record and the check results before merge.
-
-## Session 299: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-94, author. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
-
-### What this session did, and why
-
-- The session started as the M-3 author. The M-3 table needs three seeds, and the bot session ran the first seed alone. The owner chose a seed flag in its own PR first (D-703). The session did no work before that answer, so it binds to PR-94.
-- Added `--seed <n>` to the bot session: it needs `--bot`, and it takes a whole number from 1 up in digits alone (D-704, D-705). The loop starts on the seed, and a boot failure line carries it.
-- Recorded the M-3 seeds: 1, 2, and 3 (D-706). A headless bot session on the Mac reaches floor 2 on seeds 2 and 3.
-
-### State of the build
-
-- Local: the first full run passed 2108 of 2109 tests. The STE test failed on two long sentences, and `f8d06f5` holds the fix. After it, `ste-check` and `det-lint` found zero findings, and the STE and parser tests passed.
-- Remote head of the work: `f8d06f5`, plus the metadata and status commit of this entry.
-
-### In flight
-
-- The gitar pass, CI, and `make codex-review` of PR #120.
-- PR-92 exit test 3: the first scheduled night on `main` after `d5f7e00` is the 07:07 UTC cron of 2026-09-28. It did not run before this entry.
-
-### Traps and gotchas
-
-- The Mac has no `timeout` command. Run a Godot session under the time limit of the tool.
-- The engine tests of the seed flag take about one second, because a headless session at fixed 60 frames per second runs faster than real time.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge of PR #120, start M-3 in a new session: run seeds 1, 2, and 3 on the Deck over SSH (D-606, D-706), and record the table. Check the night of PR-92 exit test 3 on `night-results`.

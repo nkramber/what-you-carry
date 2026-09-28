@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 299: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-94, author. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- The session started as the M-3 author. The M-3 table needs three seeds, and the bot session ran the first seed alone. The owner chose a seed flag in its own PR first (D-703). The session did no work before that answer, so it binds to PR-94.
+- Added `--seed <n>` to the bot session: it needs `--bot`, and it takes a whole number from 1 up in digits alone (D-704, D-705). The loop starts on the seed, and a boot failure line carries it.
+- Recorded the M-3 seeds: 1, 2, and 3 (D-706). A headless bot session on the Mac reaches floor 2 on seeds 2 and 3.
+
+### State of the build
+
+- Local: the first full run passed 2108 of 2109 tests. The STE test failed on two long sentences, and `f8d06f5` holds the fix. After it, `ste-check` and `det-lint` found zero findings, and the STE and parser tests passed.
+- Remote head of the work: `f8d06f5`, plus the metadata and status commit of this entry.
+
+### In flight
+
+- The gitar pass, CI, and `make codex-review` of PR #120.
+- PR-92 exit test 3: the first scheduled night on `main` after `d5f7e00` is the 07:07 UTC cron of 2026-09-28. It did not run before this entry.
+
+### Traps and gotchas
+
+- The Mac has no `timeout` command. Run a Godot session under the time limit of the tool.
+- The engine tests of the seed flag take about one second, because a headless session at fixed 60 frames per second runs faster than real time.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge of PR #120, start M-3 in a new session: run seeds 1, 2, and 3 on the Deck over SSH (D-606, D-706), and record the table. Check the night of PR-92 exit test 3 on `night-results`.
+
 ## Session 298: 2026-09-27, Codex
 
 Author: Codex
