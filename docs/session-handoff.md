@@ -2,6 +2,37 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 310: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-96, author. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
+
+### What this session did, and why
+
+- Read the review of session 309. The record gives `Ready for owner merge` for the effective head `4236f2d`, with no finding.
+- Answered the review-gate note of the gitar dashboard with D-251. The gitar pass approved the work head `77ab1d1` with no thread.
+- Wrote the merge summary of D-533, and asked the owner to confirm the merge (D-524).
+
+### State of the build
+
+- Each check of PR #123 passed at `77ab1d1`, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays `4236f2d`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #123.
+
+### Traps and gotchas
+
+- None new. Session 308 lists the traps of the frame capture.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, start PR-97 (D-715).
+
 ## Session 309: 2026-09-28, Codex
 
 Author: Codex
@@ -301,35 +332,3 @@ None.
 ### Next concrete action
 
 After the merge, read the night of PR-92 exit test 3 on `night-results`, and write the merge prompt of `one-pr-one-session`. The next PR is M-3 on seeds 1, 2, and 3 over SSH on the Deck (D-606, D-706).
-
-## Session 300: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-94, reviewer. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
-
-### What this session did, and why
-
-- Reviewed PR #120 at effective head `f8d06f5`. The author provider is Claude Code, so the Codex review passes the provider gate.
-- The seed flag, its parser rules, boot path, tests, and PR-94 documents match D-703 to D-706. The review record gives `Ready for owner merge` with no findings.
-- Five focused tests passed. GitHub code checks passed. `evaluate` and `review-gate` failed because the review record was not on the PR yet.
-
-### State of the build
-
-- Local: five focused tests passed at `f12021b`. GitHub code checks passed at the same head.
-- Remote: review record and this entry are on `feat/pr-94-seed-flag` at metadata head `7e06e2e`. The required remote hash comparison passed.
-
-### In flight
-
-- The metadata-tip `evaluate` and `review-gate` checks passed. The heavy code workflows skipped by the documents-only rule, and their required jobs passed at code head `f12021b`.
-
-### Traps and gotchas
-
-- The checkout is detached. Compare its final commit with the head that `gh pr view 120` reports.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The review is complete for effective head `f8d06f5`. The owner can read the review record and the check results before merge.

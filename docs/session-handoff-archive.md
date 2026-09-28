@@ -1,5 +1,37 @@
 # Session handoff archive
 
+## Session 300: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-94, reviewer. Branch `feat/pr-94-seed-flag`. PR #120, pending merge. Base `d566bda`.
+
+### What this session did, and why
+
+- Reviewed PR #120 at effective head `f8d06f5`. The author provider is Claude Code, so the Codex review passes the provider gate.
+- The seed flag, its parser rules, boot path, tests, and PR-94 documents match D-703 to D-706. The review record gives `Ready for owner merge` with no findings.
+- Five focused tests passed. GitHub code checks passed. `evaluate` and `review-gate` failed because the review record was not on the PR yet.
+
+### State of the build
+
+- Local: five focused tests passed at `f12021b`. GitHub code checks passed at the same head.
+- Remote: review record and this entry are on `feat/pr-94-seed-flag` at metadata head `7e06e2e`. The required remote hash comparison passed.
+
+### In flight
+
+- The metadata-tip `evaluate` and `review-gate` checks passed. The heavy code workflows skipped by the documents-only rule, and their required jobs passed at code head `f12021b`.
+
+### Traps and gotchas
+
+- The checkout is detached. Compare its final commit with the head that `gh pr view 120` reports.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The review is complete for effective head `f8d06f5`. The owner can read the review record and the check results before merge.
+
 ## Session 299: 2026-09-28, Claude Code
 
 Author: Claude Code
