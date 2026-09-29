@@ -78,6 +78,8 @@ Gate: exit tests 1 to 4 pass.
 
 ### PR-21: Items, tiers, and affixes
 
+✅ Done in PR #129.
+
 Scope:
 
 - `content/items/*.json`: the five first items of D-749, the sword at tiers 0 to 3 and one plain ring, with the `item` validator (D-47, D-168). A weapon item names a weapon file, which holds the tier, the base stats, and the model (D-334).
@@ -442,7 +444,7 @@ Procedure: the PR-27 harness runs on every PR that touches points, loot, the tim
 One person owns the program. Items run one at a time in this order. Gate 2 must pass first. ✅ Gate 2 signed 2026-09-28 (D-740).
 
 1. Owner: answer OQ-22, OQ-51, OQ-52. ✅ Answered 2026-09-28: D-745 to D-752.
-2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21. ✅ OQ-211 answered 2026-09-28: D-741. ✅ PR-100 done in PR #128.
+2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21. ✅ OQ-211 answered 2026-09-28: D-741. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129.
 3. Owner: answer the first three armor sets from OQ-10, with the two weight numbers of D-316. ✅ OQ-5 answered 2026-09-12: D-314.
 4. PR-22.
 5. Owner: answer OQ-3 and OQ-53.

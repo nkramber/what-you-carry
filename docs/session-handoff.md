@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 323: 2026-09-28, Claude Code
 
 Author: Claude Code
-Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR number follows at the open, pending merge. Base `bc41332`.
+Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
 
 ### What this session did, and why
 
@@ -21,7 +21,7 @@ Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR number follo
 
 ### In flight
 
-- The CI of the PR, the gitar pass, and then `make codex-review`.
+- The CI of PR #129, the gitar pass, and then `make codex-review`.
 
 ### Traps and gotchas
 
@@ -35,7 +35,7 @@ None.
 
 ### Next concrete action
 
-Wait for CI and the gitar pass of the PR, answer each gitar item, and start `make codex-review`.
+Wait for CI and the gitar pass of PR #129, answer each gitar item, and start `make codex-review`.
 
 ## Session 322: 2026-09-28, Codex
 
