@@ -421,11 +421,12 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-195 | Tier 4 at Gate 2: at melee range the player body hides the scavenger in front, so its wind-up is hidden. 12 of 63 full-clearer frames. Frames in `docs/reviews/pr-123-tier-4/` | 2026-09-28 | ✅ PR #124 (PR-97): the shoulder over the head reduces it, and the head and a shoulder of the target show (D-719, D-723) |
 | F-196 | Tier 4 at Gate 2: a scavenger between the camera and the player fills 40 to 45 percent of the screen, the near plane cuts it, and it hides the player. The wall fade does not fade a model | 2026-09-28 | ✅ PR #124 (PR-97): a model between the camera and the player, or near the camera, dithers (D-721, D-723) |
 | F-197 | Tier 4 at Gate 2: near a wall the camera presses into the body, and the head fills a third of the screen or more. Each timer-tester frame and the HUD shot show it at the spawn of seed 1 | 2026-09-28 | ✅ PR #124 (PR-97): the drawn camera stays 2.0 meters behind the shoulder point, also in rock (D-720, D-722, D-723) |
-| F-198 | Tier 4 at Gate 2: the Overseer kills the timer-tester in two hits and never enters a frame. The wave of tick 12599 never enters one either. The bot never turns the camera | 2026-09-28 | ⚠ D-717. Binds the Gate 2 play |
+| F-198 | Tier 4 at Gate 2: the Overseer kills the timer-tester in two hits and never enters a frame. The wave of tick 12599 never enters one either. The bot never turns the camera | 2026-09-28 | ✅ D-738: in the Gate 2 play the steps of the Overseer warn of an attack from outside the view (D-717) |
 | F-199 | Tier 4 at Gate 2: the damage numbers of 18 pixels read grey or dark on the stone and the orange blocks. A number stays with a hidden owner, and it goes to the screen edge when the camera is close | 2026-09-28 | ✅ PR #125 (PR-98): 28 pixels, a black outline of 3 pixels, a hold before the fade, and no number for a hidden or dead owner (D-725 to D-727, D-729 to D-732) |
 | F-200 | Tier 4 at Gate 2: the scavenger head reads as a near-black block with no features in the dark, seen from behind | 2026-09-28 | ⚠ D-718. Binds OQ-61 and PR-36 to PR-42 |
 | F-201 | Tier 4 at Gate 2: the stairwell prompt at the lower center covers the body in the HUD shot | 2026-09-28 | ✅ PR #125 (PR-98): the prompt stands at the bottom right, clear of the body (D-728, D-732) |
 | F-202 | The frame shots of PR-97: on a turn of the bot in one tick, the Game interpolates the camera positions in a straight line, and the frame draws from a point near the head. The full-clearer turns 180 degrees at tick 2880 of seed 1. Main has the same effect with the old boom | 2026-09-28 | ✅ PR #126 (PR-99): each frame places the camera from the interpolated look (D-724, D-733, D-734) |
+| F-203 | The Gate 2 play: the scavenger and the Overseer attack from the rest pose, with no swing clip, so no windup shows (D-401) | 2026-09-28 | 🔧 D-739. Binds PR-100 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -542,7 +543,7 @@ Record the wall time of each CI job per platform for ten PRs. Binds the seed cou
 **M-2: Night sweep wall time.** ✅ Table complete 2026-09-11 in the Phase 1 roadmap, seven nights (D-283). The longest night took 68 minutes against the six-hour bound.
 Record the night sweep duration for seven nights: the six hand runs of 2026-09-10 and the first scheduled night of 2026-09-11 (D-283). Binds the night run counts in D-115 and D-116.
 
-### Phase 2: First playable (gate: the owner plays one floor with the timer, the hunter, and a stairwell, D-57)
+### Phase 2: First playable (gate: the owner plays one floor with the timer, the hunter, and a stairwell, D-57) ✅ Signed 2026-09-28 (D-740)
 
 **PR-12: Game skeleton and input.** ✅ Merged 2026-09-11 as PR #49.
 Create the Godot project with scenes built in C# (D-63). Bind the Core loop at 60 Hz with render interpolation (D-73). Map keyboard, mouse, and controller to the intent, with sensitivity and curves applied before quantization (D-15, D-77, D-289). Add the headless smoke session to CI: boot, start a run, move for one thousand ticks, quit, with no log errors (D-114, D-149). PR-18 extends it to the stairwell.
@@ -803,6 +804,11 @@ Gate: the frame shots of D-714 at the PR head match main, and the pairs of D-733
 
 ### Phase 3: Full loop (gate: hub, loadout, death loss, bank, tree, saves, and replay resume work, and friends play)
 
+**PR-100: Enemy swing clip.** 🔧
+Give the scavenger and the Overseer a swing clip. The Game plays it at the swing tick of Core, so the windup of D-315 shows (D-401, D-739, F-203). OQ-211 names the source of the clip. Core does not change.
+Gate: the frame shots of D-714 show the windup, and the owner confirms that it reads (D-723).
+> *In plain English:* today an enemy hits you with no move of its body. After this change, each enemy raises its sword first, so you can see the hit come.
+
 **PR-21: Items, tiers, and affixes.** 🔧
 Implement item definitions in JSON with tiers by depth band and a rare higher-tier chance (D-48, OQ-22). Implement rarity and random affixes as a fixed set of behaviors that any wielder gets (D-47, D-49). Property tests assert the band distribution.
 Gate: the affix set has one test per behavior, for the player and for an enemy.
@@ -887,7 +893,7 @@ Gate: a full 15-floor run ends with the ending, and the run time is inside 30 to
 > *In plain English:* the last fight and the end of a full descent, at the length the design promised.
 
 **PR-36 to PR-42: Enemy families two to eight.** 🔧
-One PR per family, humanoid or monster (D-31, D-56, OQ-9). Each family has a silhouette specification before its model, a contact sheet at game zoom, and bot coverage.
+One PR per family, humanoid or monster (D-31, D-56, OQ-9). Each family has a silhouette specification before its model, a contact sheet at game zoom, its own swing clip (D-739), and bot coverage.
 Gate per PR: the family reads as distinct on the contact sheet.
 > *In plain English:* seven more kinds of enemy, each added alone, so the owner can judge its shape and its behavior on their own.
 
@@ -969,8 +975,8 @@ One person owns the program. Items run one at a time in this order. The list cha
 11. PR-60, PR-61, PR-15, PR-63, PR-67, PR-64, PR-65, PR-68, PR-69, PR-70, PR-66, PR-16, PR-17, PR-18. ✅ PR-60 merged 2026-09-13 as PR #58. ✅ PR-61 merged 2026-09-13 as PR #60. ✅ PR-15 merged 2026-09-14 as PR #62. ✅ PR-63 merged 2026-09-14 as PR #65. ✅ PR-67 merged 2026-09-14 as PR #69. ✅ PR-64 merged 2026-09-15 as PR #71. ✅ PR-65 merged 2026-09-15 as PR #73. ✅ PR-68 merged 2026-09-16 as PR #75. ✅ PR-69 done in PR #80. ✅ PR-70 done in PR #81. ✅ PR-66 done in PR #82. ✅ PR-16 done in PR #83. ✅ PR-17 done in PR #84. ✅ PR-18 done in PR #85.
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
 13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97, PR-98, and PR-99 (D-715, D-716, D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125. ✅ PR-99 done in PR #126. ✅ PR-95 and M-3 done in PR #122.
-14. **← GATE 2.** The owner plays one floor and signs off on feel.
-15. PR-21, PR-22, PR-23.
+14. ✅ **← GATE 2.** Signed 2026-09-28 (D-740). The owner plays one floor and signs off on feel.
+15. PR-100 (D-739), PR-21, PR-22, PR-23.
 16. PR-24, PR-25, PR-26.
 17. PR-32.
 18. PR-27, PR-28, PR-29.

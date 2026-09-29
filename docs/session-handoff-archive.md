@@ -1,5 +1,36 @@
 # Session handoff archive
 
+## Session 310: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-96, author. Branch `feat/tier-4-pass`. PR #123, pending merge. Base `7bab7cf`.
+
+### What this session did, and why
+
+- Read the review of session 309. The record gives `Ready for owner merge` for the effective head `4236f2d`, with no finding.
+- Answered the review-gate note of the gitar dashboard with D-251. The gitar pass approved the work head `77ab1d1` with no thread.
+- Wrote the merge summary of D-533, and asked the owner to confirm the merge (D-524).
+
+### State of the build
+
+- Each check of PR #123 passed at `77ab1d1`, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays `4236f2d`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #123.
+
+### Traps and gotchas
+
+- None new. Session 308 lists the traps of the frame capture.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, start PR-97 (D-715).
+
 ## Session 309: 2026-09-28, Codex
 
 Author: Codex

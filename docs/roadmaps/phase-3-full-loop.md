@@ -1,6 +1,6 @@
 # Phase 3 roadmap: Full loop
 
-Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, PR-100, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. PR-100 applies D-739. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 2 is `phase-2-first-playable.md`. Gate 2 must pass before PR-21 starts.
 
@@ -19,6 +19,7 @@ This phase carries the sensitive number of the design: the death payout curve (D
 | # | Finding | Binds |
 |---|---|---|
 | F-5 | The v1 doc never said whether banked gear enters the dungeon | PR-30 |
+| F-203 | The scavenger and the Overseer attack from the rest pose, so no windup shows | PR-100 |
 | F-9 | Resume at floor start made a quit a free heal | PR-31 |
 | F-10 | Random affixes cannot show on an enemy | PR-21, PR-26 |
 | F-11 | Free ascension reversed a v1 position on a changed premise | M-5 |
@@ -45,6 +46,31 @@ All guardrails in `docs/design.md` section 6.2 apply. These five matter most in 
 ## 4. Roadmap
 
 Each entry has: scope, out of scope, exit tests, review focus, the check clause, the gate, and a plain-English paragraph. The review skill is `.claude/skills/pr-review/SKILL.md`.
+
+### PR-100: Enemy swing clip
+
+Scope:
+
+- `WhatYouCarry.Game/Render/EnemyModels.cs`: each enemy model plays its swing clip at the swing tick of Core, and stands in the rest pose between swings (D-401, D-739).
+- `content/models/`: the swing clip of the scavenger and of the Overseer, from the source that OQ-211 names (D-298).
+- `WhatYouCarry.Tests/`: the tests of exit tests 1 and 2.
+
+Out of scope: a change to the swing timing of Core (D-315, D-402, D-423). A walk clip. The clips of the families of PR-36 to PR-42 (D-739).
+
+Exit tests:
+
+1. A test pins the pose of an enemy on each tick of a swing to its clip at that tick. It fails on `main`, where each enemy stands in the rest pose.
+2. The `asset-qa` clip check passes on the swing clip of each enemy model (D-301).
+3. The frame shots of D-714 at the PR head show the windup of the scavenger in front at melee range. The owner confirms that the windup reads, recorded as a decision (D-723, D-739).
+4. The bit-identity job passes on the three platforms with the known answer of `main`, because Core does not change (G-3).
+
+Review focus: presentation, the Core boundary, content, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 4 pass.
+
+> *In plain English:* today an enemy hits you with no move of its body, so you cannot see a hit come. After this change, each enemy raises its sword first, so you can read the hit and dodge it.
 
 ### PR-21: Items, tiers, and affixes
 
@@ -407,10 +433,10 @@ Procedure: the PR-27 harness runs on every PR that touches points, loot, the tim
 
 ## 5. Sequence
 
-One person owns the program. Items run one at a time in this order. Gate 2 must pass first.
+One person owns the program. Items run one at a time in this order. Gate 2 must pass first. ✅ Gate 2 signed 2026-09-28 (D-740).
 
 1. Owner: answer OQ-22, OQ-51, OQ-52.
-2. PR-21.
+2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21.
 3. Owner: answer the first three armor sets from OQ-10, with the two weight numbers of D-316. ✅ OQ-5 answered 2026-09-12: D-314.
 4. PR-22.
 5. Owner: answer OQ-3 and OQ-53.
@@ -461,6 +487,8 @@ Open:
 - OQ-57: the profile path. Blocks PR-31.
 - OQ-58: the Tier 3 model and budget. Blocks PR-32.
 - OQ-59: the hub layout. Blocks PR-30.
+- OQ-210: the overhaul of the world generation. Blocks no PR (D-737).
+- OQ-211: the source of the enemy swing clip. Blocks PR-100 (D-739).
 
 Resolved 2026-09-12:
 
