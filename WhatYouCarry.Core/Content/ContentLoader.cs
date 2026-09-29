@@ -38,6 +38,12 @@ public sealed class ContentLoader
     /// <summary>The directory that holds the one hunter of the timer (D-45, D-409).</summary>
     public const string HunterDirectory = "hunter/";
 
+    /// <summary>The directory that holds every item definition (D-749).</summary>
+    public const string ItemDirectory = "items/";
+
+    /// <summary>The directory that holds every affix definition (D-747).</summary>
+    public const string AffixDirectory = "affixes/";
+
     /// <summary>The id of the weapon that the attack bit swings, until the loadout of PR-30. A content set without it fails to load (D-422).</summary>
     public const string MainWeaponId = "sword-basic";
 
@@ -101,6 +107,9 @@ public sealed class ContentLoader
         List<EnemyDefinition> enemies = [];
         List<string> enemyPaths = [];
         List<HunterDefinition> hunters = [];
+        List<ItemDefinition> items = [];
+        List<string> itemPaths = [];
+        List<AffixDefinition> affixes = [];
         List<string> hunterPaths = [];
         List<RecordId> ids = [];
         Strings? strings = null;
@@ -149,6 +158,19 @@ public sealed class ContentLoader
                 hunters.Add(HunterDefinition.FromMembers(file.Path, members));
                 hunterPaths.Add(file.Path);
             }
+            else if (file.Path.StartsWith(ItemDirectory, System.StringComparison.Ordinal))
+            {
+                ItemDefinition item = ItemDefinition.FromMembers(file.Path, members);
+                items.Add(item);
+                itemPaths.Add(file.Path);
+                ids.Add(new RecordId("item definitions", file.Path, item.Id));
+            }
+            else if (file.Path.StartsWith(AffixDirectory, System.StringComparison.Ordinal))
+            {
+                AffixDefinition affix = AffixDefinition.FromMembers(file.Path, members);
+                affixes.Add(affix);
+                ids.Add(new RecordId("affix definitions", file.Path, affix.Id));
+            }
             else
             {
                 // A file that no type claims is a defect of the content set, and never a file to step over.
@@ -165,9 +187,10 @@ public sealed class ContentLoader
 
         CheckUniqueIds(ids);
         CheckEnemyWeapons(enemies, enemyPaths, weapons);
+        CheckItemWeapons(items, itemPaths, weapons);
         HunterDefinition hunter = OneHunter(hunters, hunterPaths, weapons);
         CheckMainWeapon(weapons);
-        return new ContentSet(hash, floors, chambers, projectiles, weapons, enemies, hunter, strings);
+        return new ContentSet(hash, floors, chambers, projectiles, weapons, enemies, hunter, items, affixes, strings);
     }
 
     /// <summary>
@@ -260,10 +283,41 @@ public sealed class ContentLoader
             }
         }
     }
+
+    /// <summary>
+    /// Every weapon item names a weapon of the set, which holds its tier and its numbers (D-749, D-752). An id that no
+    /// weapon carries is a fault of the content set, and a roll of the item would find no tier (T-2).
+    /// </summary>
+    private static void CheckItemWeapons(List<ItemDefinition> items, List<string> itemPaths, List<WeaponDefinition> weapons)
+    {
+        for (int index = 0; index < items.Count; index++)
+        {
+            ItemDefinition item = items[index];
+            if (item.Weapon is null)
+            {
+                continue;
+            }
+
+            bool found = false;
+            foreach (WeaponDefinition weapon in weapons)
+            {
+                if (weapon.Id == item.Weapon)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                throw ContentError.Make(itemPaths[index], "weapon", $"names '{item.Weapon}', and the content set holds no weapon of that id (D-749)");
+            }
+        }
+    }
 }
 
 /// <summary>The id of one loaded record, the file that holds it, and the plural name of its type for the error text.</summary>
 internal sealed record RecordId(string Plural, string Path, string Id);
 
 /// <summary>Every record of one content set, and the hash that the run record header carries (D-151, D-163).</summary>
-public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, IReadOnlyList<EnemyDefinition> Enemies, HunterDefinition Hunter, Strings Strings);
+public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, IReadOnlyList<EnemyDefinition> Enemies, HunterDefinition Hunter, IReadOnlyList<ItemDefinition> Items, IReadOnlyList<AffixDefinition> Affixes, Strings Strings);

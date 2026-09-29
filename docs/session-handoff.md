@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 323: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR number follows at the open, pending merge. Base `bc41332`.
+
+### What this session did, and why
+
+- Asked the owner OQ-22, OQ-51, and OQ-52, and the first item definitions that the roadmap needs (D-123). The answers are D-745 to D-752.
+- Added the `item` and `affix` content types, five items, three swords of tiers 1 to 3, and three affixes: lifesteal, burning, and swift. The owner left out sturdy.
+- Added `Core/Items/`: the rarities, the loot roller on the loot stream, and the affix behaviors. The player and the enemy implement `IWielder`.
+- Changed exit test 6 to `AffixValidatorRejectsUnknownBehavior`, because no item file names an affix (D-752).
+
+### State of the build
+
+- `main` is `bc41332`. The local build, `det-lint`, `asset-qa`, and `ste-check` are clean. The full local suite passed after the fix of one content count test.
+- The loop calls no affix, so the simulation version and the bit-identity answer stay as they are.
+
+### In flight
+
+- The CI of the PR, the gitar pass, and then `make codex-review`.
+
+### Traps and gotchas
+
+- The item files sort by path, so `ring-plain` comes before `sword-basic` in `ContentSet.Items`.
+- The Overseer does not implement `IWielder`. PR-22 decides if burning reaches it, as a foe of the player.
+- `AffixBehaviors.Swift` returns the weapon with a shorter `WindupTicks`. The Game layer must play the clip windup at that length (PR-22).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Wait for CI and the gitar pass of the PR, answer each gitar item, and start `make codex-review`.
+
 ## Session 322: 2026-09-28, Codex
 
 Author: Codex
@@ -300,35 +335,3 @@ None.
 ### Next concrete action
 
 Answer the gitar pass of PR #125, then start `make codex-review PR=125` when each check but the Review gate workflow is green. After the merge, PR-99 (D-724).
-
-## Session 313: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-97, author. Branch `feat/pr-97-camera-occlusion`. PR #124, pending merge. Base `91dbaa2`.
-
-### What this session did, and why
-
-- Answered the one gitar finding with d6589d9: the camera reach of the model fade is the straight distance to the body box, as D-721 says, and not the distance on each axis. The test `TheReachIsAStraightDistance` fails on 55a5b99. Gitar approved d6589d9, and the thread is resolved.
-- Posted the D-251 note for the review-gate line of the gitar dashboard.
-- Captured the frames of D-714 again at d6589d9. The ten camera frames of `docs/reviews/pr-124-frames/` are identical to the pixel. The HUD shot differs in one box of 21 by 40 pixels at the damage numbers alone, so D-723 stands.
-- Read the review of session 312: `Ready for owner merge` for the effective head d6589d9, with no finding.
-
-### State of the build
-
-- Each check of PR #124 passed at d6589d9, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays d6589d9.
-
-### In flight
-
-- The owner confirmation of the merge of PR #124 (D-524, D-533).
-
-### Traps and gotchas
-
-- The HUD shot is not identical to the pixel from run to run at the damage numbers. Compare the camera frames, and not that box.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, start PR-98 (D-716). PR-99 follows it before Gate 2 (D-724).

@@ -1,5 +1,37 @@
 # Session handoff archive
 
+## Session 313: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-97, author. Branch `feat/pr-97-camera-occlusion`. PR #124, pending merge. Base `91dbaa2`.
+
+### What this session did, and why
+
+- Answered the one gitar finding with d6589d9: the camera reach of the model fade is the straight distance to the body box, as D-721 says, and not the distance on each axis. The test `TheReachIsAStraightDistance` fails on 55a5b99. Gitar approved d6589d9, and the thread is resolved.
+- Posted the D-251 note for the review-gate line of the gitar dashboard.
+- Captured the frames of D-714 again at d6589d9. The ten camera frames of `docs/reviews/pr-124-frames/` are identical to the pixel. The HUD shot differs in one box of 21 by 40 pixels at the damage numbers alone, so D-723 stands.
+- Read the review of session 312: `Ready for owner merge` for the effective head d6589d9, with no finding.
+
+### State of the build
+
+- Each check of PR #124 passed at d6589d9, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays d6589d9.
+
+### In flight
+
+- The owner confirmation of the merge of PR #124 (D-524, D-533).
+
+### Traps and gotchas
+
+- The HUD shot is not identical to the pixel from run to run at the damage numbers. Compare the camera frames, and not that box.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, start PR-98 (D-716). PR-99 follows it before Gate 2 (D-724).
+
 ## Session 312: 2026-09-28, Codex
 
 Author: Codex

@@ -124,9 +124,12 @@ public sealed class ContentTests
         Assert.Equal(3, set.Floors.Count);
         Assert.Equal(8, set.Chambers.Count);
         Assert.Equal(6, set.Projectiles.Count);
-        Assert.Equal(2, set.Weapons.Count);
+        Assert.Equal(5, set.Weapons.Count);
         Assert.Equal("overseer-pick", set.Weapons[0].Id);
         Assert.Equal("sword-basic", set.Weapons[1].Id);
+        Assert.Equal("sword-tier-3", set.Weapons[4].Id);
+        Assert.Equal(5, set.Items.Count);
+        Assert.Equal(3, set.Affixes.Count);
         Assert.Equal("overseer", set.Hunter.Id);
         Assert.Equal("overseer-pick", set.Hunter.Weapon);
         Assert.Equal("models/overseer.bbmodel", set.Hunter.Model);

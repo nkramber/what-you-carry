@@ -1,0 +1,6 @@
+{
+  "id": "burning",
+  "behavior": "burning",
+  "damage": 8,
+  "radiusCentimetres": 150
+}

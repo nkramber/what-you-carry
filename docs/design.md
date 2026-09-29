@@ -265,7 +265,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | ✅ D-157. The owner registered the runner `mac-mini-m4` on 2026-09-07 (D-192). PR-86 retired it: D-572 supersedes D-157, and D-584 supersedes D-192 |
 | F-40 | D-88's effect note put wall fade in the mesher as per-block visibility. A shader test needs no mesher change | 2026-09-07 | ✅ D-292: the shader test, with no mesher change. Done in PR #52 (PR-13) |
 | F-41 | No item said whether a Steam Deck unit exists for M-3, and D-15 makes the Deck the floor | 2026-09-07 | ✅ D-296: the owner owns a Steam Deck, and M-3 measures on it. Binds M-3 |
-| F-42 | D-49 shows a rarity color on an enemy, but no decision names the rarity tiers | 2026-09-07 | ❓ OQ-52. Binds PR-21, PR-26 |
+| F-42 | D-49 shows a rarity color on an enemy, but no decision names the rarity tiers | 2026-09-07 | 🔧 D-748. Binds PR-21, PR-26 |
 | F-43 | D-128 sets the Tier 3 cadence but not the model or the budget | 2026-09-07 | ❓ OQ-58. Binds PR-32 |
 | F-44 | The Deck verification checklist is an external fact with no source or date in the plan | 2026-09-07 | ❓ OQ-66. Binds PR-54 |
 | F-45 | D-152 changed the save files, and no item names which files cloud saves sync | 2026-09-07 | ❓ OQ-71. Binds PR-52 |
@@ -810,7 +810,7 @@ Gate: the frame shots of D-714 show the windup, and the owner confirms that it r
 > *In plain English:* today an enemy hits you with no move of its body. After this change, each enemy raises its sword first, so you can see the hit come.
 
 **PR-21: Items, tiers, and affixes.** 🔧
-Implement item definitions in JSON with tiers by depth band and a rare higher-tier chance (D-48, OQ-22). Implement rarity and random affixes as a fixed set of behaviors that any wielder gets (D-47, D-49). Property tests assert the band distribution.
+Implement item definitions in JSON with tiers by depth band and a tier jump (D-48, D-745, D-746, D-749). Implement rarity and random affixes as a fixed set of behaviors that any wielder gets (D-47, D-49, D-747, D-748). Property tests assert the band distribution.
 Gate: the affix set has one test per behavior, for the player and for an enemy.
 > *In plain English:* items get random extra powers, and an enemy that carries such an item uses the power against you.
 

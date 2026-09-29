@@ -3,6 +3,7 @@ using System.Globalization;
 using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Items;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Projectiles;
@@ -36,7 +37,7 @@ namespace WhatYouCarry.Core.Entities;
 /// (D-323). The walk, the sprint, and the jump stay free during a swing (D-324).
 /// </para>
 /// </remarks>
-public sealed class Player
+public sealed class Player : IWielder
 {
     /// <summary>The health of a player at the start of a run (D-315).</summary>
     public const int MaxHealth = 100;
@@ -86,6 +87,9 @@ public sealed class Player
 
     /// <summary>The main weapon (D-20, D-320).</summary>
     public WeaponDefinition Weapon => this.swing.Weapon;
+
+    /// <summary>The feet center of the body, in meters (D-235). Burning measures its radius from here (D-751).</summary>
+    public Vector3 Feet => this.Body.Position;
 
     /// <summary>The health, from zero to <see cref="MaxHealth"/> (D-315).</summary>
     public int Health { get; private set; }
@@ -237,6 +241,56 @@ public sealed class Player
             this.swing.Cancel();
         }
 
+        return true;
+    }
+
+    /// <summary>Adds the health of a lifesteal, which stops at <see cref="MaxHealth"/> (D-747).</summary>
+    /// <exception cref="ContextException">The amount is below zero, or the player is dead.</exception>
+    public void Heal(long amount)
+    {
+        if (amount < 0)
+        {
+            ContextException negative = new($"A heal adds zero or more health, and the amount is {amount}.");
+            negative.AddContext("amount", amount.ToString(CultureInfo.InvariantCulture));
+            throw negative;
+        }
+
+        if (this.IsDead)
+        {
+            throw new ContextException("The player has no health, and a dead player takes no heal (D-322).");
+        }
+
+        long health = this.Health + amount;
+        this.Health = health > MaxHealth ? MaxHealth : (int)health;
+    }
+
+    /// <summary>
+    /// Takes the plain damage of a burning, which is not a hit: no stagger, and the swing runs on (D-751). A roll takes
+    /// none on any of its ticks, as it takes no hit (D-328, D-628). The health stops at zero (D-322).
+    /// </summary>
+    /// <returns>True when the damage landed, and false when a roll took it.</returns>
+    /// <exception cref="ContextException">The damage is below zero, or the player is dead.</exception>
+    public bool TakePlainDamage(long damage)
+    {
+        if (damage < 0)
+        {
+            ContextException negative = new($"Plain damage is zero or more, and the damage is {damage}.");
+            negative.AddContext("damage", damage.ToString(CultureInfo.InvariantCulture));
+            throw negative;
+        }
+
+        if (this.IsDead)
+        {
+            throw new ContextException("The player has no health, and a dead player takes no damage (D-322).");
+        }
+
+        if (this.RollRemaining > 0 || this.RolledThisTick)
+        {
+            return false;
+        }
+
+        long health = this.Health - damage;
+        this.Health = health < 0 ? 0 : (int)health;
         return true;
     }
 
