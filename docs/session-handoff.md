@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 324: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-21, reviewer. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
+
+### What this session did, and why
+
+- Reviewed the complete code, content, tests, documents, comments, and exit tests of PR #129 at effective head `240d987`.
+- Found no in-scope defect. Added the review record with `Ready for owner merge` after Gitar replaced its missing-record comment with an approval notice.
+
+### State of the build
+
+- PR head `40cdf97` has passing three-platform CI, smoke, and bit-identity checks, plus passing content, document, night, and Gitar checks. Metadata head `7e84c41` passed Gitar, `evaluate`, and `review-gate`, plus all other required checks.
+- The focused item tests passed 10 tests. Local `det-lint`, `ste-check`, and `asset-qa` each report 0 findings.
+- The review record and this entry are in one metadata commit. The later metadata amendment records the final checks.
+
+### In flight
+
+- The owner can review the record and merge PR #129.
+
+### Traps and gotchas
+
+- The PR tip `40cdf97` changes documents after effective code head `240d987`.
+- PR-22 owns the equipment hooks and swift clip timing. PR-26 owns enemy drops and loadouts.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can review and merge PR #129.
+
 ## Session 323: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -299,39 +332,3 @@ None.
 ### Next concrete action
 
 Wait for the review-gate checks, then give the owner the merge summary for PR #125.
-
-## Session 314: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-98, author. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
-
-### What this session did, and why
-
-- Asked the owner the four questions of PR-98 and two more that the frames raised. The answers are D-725 to D-731: numbers of 28 pixels, a black outline of 3 pixels, a hidden owner rule, a ray that skips the rock of the drawn camera, the prompt at the bottom right, no number for a dead owner, and a hold of 0.5 seconds before the fade.
-- The code: `DamageNumbers.cs`, `Hud.cs`, `HudLayout.cs`, and the new `NumberSight.cs`, with tests in `HudTests.cs` and `NumberSightTests.cs`.
-- Captured the HUD shot and the two runs of D-714 at the PR head. The owner confirmed that F-199 and F-201 are gone, and F-24 closes (D-732). The frames are in `docs/reviews/pr-125-frames/`.
-- Answered the one gitar finding with b446cdd: a step past the rock can land in the next block, and the march from there threw. The number now hides there. The test `AStepPastAnEdgeIntoRockHides` fails on 3248bae.
-
-### State of the build
-
-- The full suite passed locally, 2141 tests, at b446cdd. `det-lint` and `ste-check` have no finding. The effective head is b446cdd.
-- The captures end as at PR-96: 63 and 214 frames, and the timer-tester dies at tick 12873.
-
-### In flight
-
-- CI and the gitar pass of PR #125, then `make codex-review PR=125`.
-
-### Traps and gotchas
-
-- The HUD outline of the engine size 4 draws a band of 1.0 pixel, which does not read on the dark stone. An enlarged crop hid it: count the pixels, and do not judge by eye.
-- A dead enemy keeps its place and its body box (D-322). A rule that reads the enemy boxes must skip the dead ones.
-- `GridRay.FirstSolid` throws on a start in rock, and the drawn camera can stand in rock (D-720). `NumberSight` skips that rock first (D-729), and a start that lands in a block after the step past the face hides the number.
-- The prompt test checks the body box. With the model margin of 0.3 meters and a wall on the right, the box reaches the left edge of the prompt box at a pitch up. The prompt text stands about 280 pixels farther right.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Answer the gitar pass of PR #125, then start `make codex-review PR=125` when each check but the Review gate workflow is green. After the merge, PR-99 (D-724).
