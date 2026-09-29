@@ -51,10 +51,11 @@ Session: PR-100, author. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending
 ### State of the build
 
 - The remote head of `main` is `9da1817`. Locally at the code commit `a03c756`: the full suite passes 2158 of 2158, the Smoke category included. `asset-qa`, `det-lint`, and `ste-check` give 0 findings. The bit-identity sweep gives the known answer `1023ce079eb0af50`, and the Godot build passes.
+- On PR #128 at `fe46148`, each check is green but `evaluate` and `review-gate`, which waited for the record (D-577). The automated pass approved `fe46148` with no finding. The review record gives `Ready for owner merge` for the effective head `a03c756`.
 
 ### In flight
 
-- CI of PR #128, the automated pass, the cross-provider review through `make codex-review`, and the owner confirmation of the merge.
+- The owner confirmation of the merge of PR #128 (D-524, D-533), then the auto-merge.
 
 ### Traps and gotchas
 
@@ -68,7 +69,7 @@ None.
 
 ### Next concrete action
 
-Wait for CI of PR #128, answer the automated pass, then run `make codex-review PR=128`.
+After the merge, write the merge prompt of `one-pr-one-session`.
 
 ## Session 320: 2026-09-28, Claude Code
 
