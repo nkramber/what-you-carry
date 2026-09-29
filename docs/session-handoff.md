@@ -50,11 +50,12 @@ Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pendin
 ### State of the build
 
 - `main` is `bc41332`. The local build, `det-lint`, `asset-qa`, and `ste-check` are clean. The full local suite passed after the fix of one content count test.
+- Each code check of PR #129 is green at the work head `40cdf97`. The gitar pass approved it with no finding. The review record `docs/reviews/pr-129.md` gives `Ready for owner merge` for the effective head `240d987`.
 - The loop calls no affix, so the simulation version and the bit-identity answer stay as they are.
 
 ### In flight
 
-- The CI of PR #129, the gitar pass, and then `make codex-review`.
+- The owner confirmation of the merge of PR #129 (D-524, D-533).
 
 ### Traps and gotchas
 
@@ -68,7 +69,7 @@ None.
 
 ### Next concrete action
 
-Wait for CI and the gitar pass of PR #129, answer each gitar item, and start `make codex-review`.
+After the owner confirms, run `gh pr merge 129 --auto --squash`, wait on the checks, and write the merge prompt of `one-pr-one-session`.
 
 ## Session 322: 2026-09-28, Codex
 
