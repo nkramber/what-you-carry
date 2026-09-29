@@ -3,6 +3,7 @@ using System.Globalization;
 using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Items;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Projectiles;
@@ -34,7 +35,7 @@ namespace WhatYouCarry.Core.Entities;
 /// target (D-322).
 /// </para>
 /// </remarks>
-public sealed class Enemy
+public sealed class Enemy : IWielder
 {
     private readonly EnemyDefinition definition;
     private readonly Swing swing;
@@ -75,6 +76,9 @@ public sealed class Enemy
 
     /// <summary>The weapon that every spawn of the family carries (D-397).</summary>
     public WeaponDefinition Weapon => this.swing.Weapon;
+
+    /// <summary>The feet center of the body, in meters (D-235). Burning measures its radius from here (D-751).</summary>
+    public Vector3 Feet => this.Body.Position;
 
     /// <summary>The health, from zero to the health of the family (D-399).</summary>
     public int Health { get; private set; }
@@ -208,6 +212,59 @@ public sealed class Enemy
             this.swing.Cancel();
             this.AttackCooldown = (int)this.definition.AttackCooldownTicks;
         }
+    }
+
+    /// <summary>Adds the health of a lifesteal, which stops at the health of the family (D-399, D-747).</summary>
+    /// <exception cref="ContextException">The amount is below zero, or the enemy is dead.</exception>
+    public void Heal(long amount)
+    {
+        if (amount < 0)
+        {
+            ContextException negative = new($"A heal adds zero or more health, and the amount is {amount}.");
+            negative.AddContext("amount", amount.ToString(CultureInfo.InvariantCulture));
+            negative.AddContext("owner", ((long)this.Owner).ToString(CultureInfo.InvariantCulture));
+            throw negative;
+        }
+
+        if (this.IsDead)
+        {
+            ContextException dead = new($"The enemy {this.Owner} of the family '{this.definition.Id}' has no health, and a dead enemy takes no heal (D-322).");
+            dead.AddContext("owner", ((long)this.Owner).ToString(CultureInfo.InvariantCulture));
+            dead.AddContext("enemyFamily", this.definition.Id);
+            throw dead;
+        }
+
+        long health = this.Health + amount;
+        this.Health = health > this.definition.Health ? (int)this.definition.Health : (int)health;
+    }
+
+    /// <summary>
+    /// Takes the plain damage of a burning, which is not a hit: no stagger, and the swing runs on (D-751). The enemy
+    /// has no roll, so the damage always lands. The health stops at zero (D-322).
+    /// </summary>
+    /// <returns>True, because no roll can take the damage.</returns>
+    /// <exception cref="ContextException">The damage is below zero, or the enemy is dead.</exception>
+    public bool TakePlainDamage(long damage)
+    {
+        if (damage < 0)
+        {
+            ContextException negative = new($"Plain damage is zero or more, and the damage is {damage}.");
+            negative.AddContext("damage", damage.ToString(CultureInfo.InvariantCulture));
+            negative.AddContext("owner", ((long)this.Owner).ToString(CultureInfo.InvariantCulture));
+            throw negative;
+        }
+
+        if (this.IsDead)
+        {
+            ContextException dead = new($"The enemy {this.Owner} of the family '{this.definition.Id}' has no health, and a dead enemy takes no damage (D-322).");
+            dead.AddContext("owner", ((long)this.Owner).ToString(CultureInfo.InvariantCulture));
+            dead.AddContext("enemyFamily", this.definition.Id);
+            throw dead;
+        }
+
+        long health = this.Health - damage;
+        this.Health = health < 0 ? 0 : (int)health;
+        return true;
     }
 
     /// <summary>

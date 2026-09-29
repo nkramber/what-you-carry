@@ -345,7 +345,8 @@ public static class BitIdentitySweep
             new("sweep-scavenger", 1, 3, 10, 40, "sweep-club", 2000, 300, 140, 30, 500, "models/sweep-scavenger.bbmodel"),
         ];
         HunterDefinition hunter = new("sweep-overseer", "sweep-pick", 180, 60, 350, 100, 1200, "models/sweep-overseer.bbmodel");
-        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, enemies, hunter, Strings.FromMembers(Strings.FilePath, []));
+        // The sweep rolls no loot, so the set holds no item and no affix (PR-21).
+        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, enemies, hunter, [], [], Strings.FromMembers(Strings.FilePath, []));
     }
 
     /// <summary>

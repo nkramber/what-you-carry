@@ -265,7 +265,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-39 | The macOS CI leg needs the Mac Mini registered as a self-hosted runner (D-100). No item listed that action | 2026-09-07 | ✅ D-157. The owner registered the runner `mac-mini-m4` on 2026-09-07 (D-192). PR-86 retired it: D-572 supersedes D-157, and D-584 supersedes D-192 |
 | F-40 | D-88's effect note put wall fade in the mesher as per-block visibility. A shader test needs no mesher change | 2026-09-07 | ✅ D-292: the shader test, with no mesher change. Done in PR #52 (PR-13) |
 | F-41 | No item said whether a Steam Deck unit exists for M-3, and D-15 makes the Deck the floor | 2026-09-07 | ✅ D-296: the owner owns a Steam Deck, and M-3 measures on it. Binds M-3 |
-| F-42 | D-49 shows a rarity color on an enemy, but no decision names the rarity tiers | 2026-09-07 | ❓ OQ-52. Binds PR-21, PR-26 |
+| F-42 | D-49 shows a rarity color on an enemy, but no decision names the rarity tiers | 2026-09-07 | 🔧 D-748. Binds PR-21, PR-26 |
 | F-43 | D-128 sets the Tier 3 cadence but not the model or the budget | 2026-09-07 | ❓ OQ-58. Binds PR-32 |
 | F-44 | The Deck verification checklist is an external fact with no source or date in the plan | 2026-09-07 | ❓ OQ-66. Binds PR-54 |
 | F-45 | D-152 changed the save files, and no item names which files cloud saves sync | 2026-09-07 | ❓ OQ-71. Binds PR-52 |
@@ -809,8 +809,8 @@ Give the scavenger and the Overseer a swing clip. The Game plays it at the swing
 Gate: the frame shots of D-714 show the windup, and the owner confirms that it reads (D-723).
 > *In plain English:* today an enemy hits you with no move of its body. After this change, each enemy raises its sword first, so you can see the hit come.
 
-**PR-21: Items, tiers, and affixes.** 🔧
-Implement item definitions in JSON with tiers by depth band and a rare higher-tier chance (D-48, OQ-22). Implement rarity and random affixes as a fixed set of behaviors that any wielder gets (D-47, D-49). Property tests assert the band distribution.
+**PR-21: Items, tiers, and affixes.** ✅ Done in PR #129.
+Implement item definitions in JSON with tiers by depth band and a tier jump (D-48, D-745, D-746, D-749). Implement rarity and random affixes as a fixed set of behaviors that any wielder gets (D-47, D-49, D-747, D-748). Property tests assert the band distribution.
 Gate: the affix set has one test per behavior, for the player and for an enemy.
 > *In plain English:* items get random extra powers, and an enemy that carries such an item uses the power against you.
 
@@ -976,7 +976,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
 13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97, PR-98, and PR-99 (D-715, D-716, D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125. ✅ PR-99 done in PR #126. ✅ PR-95 and M-3 done in PR #122.
 14. ✅ **← GATE 2.** Signed 2026-09-28 (D-740). The owner plays one floor and signs off on feel.
-15. PR-100 (D-739), PR-21, PR-22, PR-23. ✅ PR-100 done in PR #128.
+15. PR-100 (D-739), PR-21, PR-22, PR-23. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129.
 16. PR-24, PR-25, PR-26.
 17. PR-32.
 18. PR-27, PR-28, PR-29.

@@ -78,24 +78,27 @@ Gate: exit tests 1 to 4 pass.
 
 ### PR-21: Items, tiers, and affixes
 
+✅ Done in PR #129.
+
 Scope:
 
-- `content/items/*.json`: item definitions with a tier, a slot, base stats, and a model reference, with the `item` validator (D-47, D-168).
-- `content/affixes/*.json`: the first affixes from OQ-51, each a reference to one coded behavior with parameters (D-49).
-- `Core/Items/AffixBehaviors.cs`: the fixed set of behaviors. Each takes a wielder, an event, and parameters, and works for the player and for an enemy (D-49).
-- `Core/Items/LootRoller.cs`: rolls a tier from the depth band table of OQ-22, a rarity from OQ-52, and affixes from the RNG stream for loot (D-48, D-159).
-- `Core/Items/Rarity.cs`: the rarity tiers and their colors from OQ-52.
+- `content/items/*.json`: the five first items of D-749, the sword at tiers 0 to 3 and one plain ring, with the `item` validator (D-47, D-168). A weapon item names a weapon file, which holds the tier, the base stats, and the model (D-334).
+- `content/weapons/sword-tier-*.json`: the swords of tiers 1 to 3 (D-749).
+- `content/affixes/*.json`: the first affixes of D-747, lifesteal, burning, and swift, each a reference to one coded behavior with parameters (D-49), with the `affix` validator.
+- `Core/Items/AffixBehaviors.cs`: the fixed set of behaviors. Each takes a wielder, an event, and parameters, and works for the player and for an enemy (D-49, D-750, D-751).
+- `Core/Items/LootRoller.cs`: rolls the tier jump and the band tier of D-745 and D-746, a rarity of D-748, and affixes from the RNG stream for loot (D-48, D-159, D-750).
+- `Core/Items/Rarity.cs`: the rarities, their shares, and their outline colors of D-748.
 
-Out of scope: the models for items (PR-22), drops from enemies (PR-26), rings beyond the definition (PR-22).
+Out of scope: the models for items (PR-22), drops from enemies (PR-26), rings beyond the definition (PR-22). PR-22 also holds the affix hooks of the loop and the clip time of a swift windup.
 
 Exit tests:
 
 1. `EveryAffixWorksForPlayer` triggers each behavior on the player and asserts its effect.
 2. `EveryAffixWorksForEnemy` triggers each behavior on an enemy and asserts the same effect (D-49).
-3. `BandDistributionHolds` rolls one hundred thousand items per floor and asserts each band's tier shares within 2 percent of the OQ-22 table.
-4. `RareHigherTierChance` asserts the higher-tier rate within 0.5 percent of the OQ-22 value at floor 1.
+3. `BandDistributionHolds` rolls one hundred thousand items per floor and asserts each band's tier shares within 2 percent of the table of D-745.
+4. `RareHigherTierChance` asserts the rate of the tier jump within 0.5 percent of the 2 percent of D-746 at floor 1.
 5. `RollIsDeterministic` rolls with one seed twice and asserts equal items.
-6. `ItemValidatorRejectsUnknownAffix` asserts a definition that names an absent affix fails with the name.
+6. `AffixValidatorRejectsUnknownBehavior` asserts that an affix file with an absent behavior fails with the name of the behavior. It also asserts that an item file with an absent weapon fails with the name of the weapon (D-752).
 
 Review focus: determinism, content, gameplay, test quality.
 
@@ -113,6 +116,7 @@ Scope:
 - `Core/Entities/Weight.cs`: the sum of armor weight, and its effect on walk speed, sprint speed, and dodge cooldown (D-23, D-28). The stagger rule against weight follows D-314. This PR sets the growth of the dodge cooldown with weight and the weight at which armor resists stagger (D-316).
 - `content/models/armor/*.json`: overlay boxes per slot on the shared base body (D-82), with the first three armor sets from OQ-10.
 - `WhatYouCarry.Game/Models/OverlayAttach.cs`: attaches an overlay model to its slot bone.
+- The affix hooks of the loop: the affixes of each item that the player wears act on each hit and each swing (D-747, D-750, D-751). The swing clip plays a swift windup at its shorter length.
 
 Out of scope: item stats beyond reduction and weight, the bank (PR-30).
 
@@ -439,8 +443,8 @@ Procedure: the PR-27 harness runs on every PR that touches points, loot, the tim
 
 One person owns the program. Items run one at a time in this order. Gate 2 must pass first. ✅ Gate 2 signed 2026-09-28 (D-740).
 
-1. Owner: answer OQ-22, OQ-51, OQ-52.
-2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21. ✅ OQ-211 answered 2026-09-28: D-741. ✅ PR-100 done in PR #128.
+1. Owner: answer OQ-22, OQ-51, OQ-52. ✅ Answered 2026-09-28: D-745 to D-752.
+2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21. ✅ OQ-211 answered 2026-09-28: D-741. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129.
 3. Owner: answer the first three armor sets from OQ-10, with the two weight numbers of D-316. ✅ OQ-5 answered 2026-09-12: D-314.
 4. PR-22.
 5. Owner: answer OQ-3 and OQ-53.
@@ -480,10 +484,7 @@ Open:
 - OQ-13: arrow area damage. Blocks PR-24.
 - OQ-20: the friend playtest protocol. Blocks Gate 3.
 - OQ-21: the death payout curve. Blocks PR-27.
-- OQ-22: tier bands. Blocks PR-21.
 - OQ-23: monster drops. Blocks PR-26.
-- OQ-51: the first affixes. Blocks PR-21.
-- OQ-52: rarity tiers and colors. Blocks PR-21 and PR-26.
 - OQ-53: satchel and consumable numbers. Blocks PR-23.
 - OQ-54: bow and musket numbers. Blocks PR-24.
 - OQ-55: mana numbers. Blocks PR-25.
@@ -493,6 +494,12 @@ Open:
 - OQ-59: the hub layout. Blocks PR-30.
 - OQ-210: the overhaul of the world generation. Blocks no PR (D-737).
 - OQ-211: the source of the enemy swing clip. ✅ Answered 2026-09-28: D-741.
+
+Resolved 2026-09-28:
+
+- OQ-22 (D-745 and D-746): tier bands and the tier jump. PR-21.
+- OQ-51 in part (D-747): the first affixes. PR-21. PR-47 extends it.
+- OQ-52 (D-748): rarities and colors. PR-21 and PR-26.
 
 Resolved 2026-09-12:
 
