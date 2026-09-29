@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 322: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-100, reviewer. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-100 diff at effective head `a03c756` against the four roadmap exit tests and the affected contracts.
+- Found no in-scope defect. Added `docs/reviews/pr-128.md` with the provider gate, verified comments, findings, checks, and verdict.
+- Inspected the Tier 4 frame for exit test 3. The scavenger windup reads in the supplied frame (D-744).
+
+### State of the build
+
+- `main` is `9da1817`. CI, smoke, bit identity, asset QA, deterministic lint, STE, document gate, documents, night gate, and Gitar passed for PR head `fe46148`. The focused local tests passed 60 of 60. Local `asset-qa` and `det-lint` each report 0 findings.
+- The remote PR head after the metadata push is recorded in the review file and verified with `gh pr view`.
+
+### In flight
+
+- Owner review and merge confirmation for PR #128.
+
+### Traps and gotchas
+
+- The PR checks `review-gate` and `evaluate` failed before this review because the review record did not exist. The pushed record should satisfy those checks.
+- No supplied frame shows the Overseer swing because the timer-tester does not turn the camera (D-738). Exit test 3 checks the scavenger.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the pushed review record and merge summary, then confirm the merge of PR #128.
+
 ## Session 321: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -298,39 +331,3 @@ None.
 ### Next concrete action
 
 After the merge, start PR-98 (D-716). PR-99 follows it before Gate 2 (D-724).
-
-## Session 312: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-97, reviewer. Branch `feat/pr-97-camera-occlusion`. PR #124, pending merge. Reviewed head `d6589d96ca8362d94c69b64d7617c0980fc061ae`.
-
-### What this session did, and why
-
-- Reviewed the camera and model occlusion change, its exit tests, the PR comments, and the supplied frames.
-- Verified the straight-distance correction in `ModelFade` and its corner regression test.
-- Added the cross-provider review record. The review found no blocking defect and records the owner-accepted F-195 reduction (D-723).
-
-### State of the build
-
-- The PR code head was `d6589d96ca8362d94c69b64d7617c0980fc061ae`, based on `91dbaa25091e9da00f4d4ff5acd0a214c39d0dd7`.
-- The build passed with no warnings or errors. The focused camera, grid-ray, model-fade, and render-interpolation tests passed, 45 tests.
-- CI passed on the code head for the three-platform build and test, bit identity, smoke, bots, asset QA, det-lint, STE, documents, doc-gate, and night-gate. The review-gate and evaluate checks failed because the review record did not yet exist.
-- The review record and this handoff were pushed together as a metadata commit. The effective code head remains `d6589d96ca8362d94c69b64d7617c0980fc061ae`.
-
-### In flight
-
-- GitHub must run the review-gate and evaluate checks on the metadata head.
-- The owner can review the merge summary and merge PR #124.
-
-### Traps and gotchas
-
-- The record approves the code head above. The review and handoff commit changes metadata only.
-- F-202 belongs to PR-99 under D-724. The damage numbers and stairwell prompt belong to PR-98 under D-716.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the checks for the metadata head. Then give the owner the merge summary for PR #124.

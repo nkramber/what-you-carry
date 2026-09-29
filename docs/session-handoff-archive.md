@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 312: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-97, reviewer. Branch `feat/pr-97-camera-occlusion`. PR #124, pending merge. Reviewed head `d6589d96ca8362d94c69b64d7617c0980fc061ae`.
+
+### What this session did, and why
+
+- Reviewed the camera and model occlusion change, its exit tests, the PR comments, and the supplied frames.
+- Verified the straight-distance correction in `ModelFade` and its corner regression test.
+- Added the cross-provider review record. The review found no blocking defect and records the owner-accepted F-195 reduction (D-723).
+
+### State of the build
+
+- The PR code head was `d6589d96ca8362d94c69b64d7617c0980fc061ae`, based on `91dbaa25091e9da00f4d4ff5acd0a214c39d0dd7`.
+- The build passed with no warnings or errors. The focused camera, grid-ray, model-fade, and render-interpolation tests passed, 45 tests.
+- CI passed on the code head for the three-platform build and test, bit identity, smoke, bots, asset QA, det-lint, STE, documents, doc-gate, and night-gate. The review-gate and evaluate checks failed because the review record did not yet exist.
+- The review record and this handoff were pushed together as a metadata commit. The effective code head remains `d6589d96ca8362d94c69b64d7617c0980fc061ae`.
+
+### In flight
+
+- GitHub must run the review-gate and evaluate checks on the metadata head.
+- The owner can review the merge summary and merge PR #124.
+
+### Traps and gotchas
+
+- The record approves the code head above. The review and handoff commit changes metadata only.
+- F-202 belongs to PR-99 under D-724. The damage numbers and stairwell prompt belong to PR-98 under D-716.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the checks for the metadata head. Then give the owner the merge summary for PR #124.
+
 ## Session 311: 2026-09-28, Claude Code
 
 Author: Claude Code
