@@ -1,6 +1,6 @@
 # Phase 3 roadmap: Full loop
 
-Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, PR-100, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. PR-100 applies D-739. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, PR-100, PR-101, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. PR-100 applies D-739. PR-101 applies D-761. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 2 is `phase-2-first-playable.md`. Gate 2 must pass before PR-21 starts.
 
@@ -32,6 +32,8 @@ This phase carries the sensitive number of the design: the death payout curve (D
 | F-33 | The economy gate had no reproducible comparison | PR-27, M-5 |
 | F-42 | No decision names the rarity tiers that D-49's colors need | PR-21, PR-26 |
 | F-43 | D-128 needs a model and a budget for Tier 3 that nobody recorded | PR-32 |
+| F-204 | No roadmap PR built the block of D-26 | PR-101 |
+| F-205 | A hit on the Overseer gave lifesteal an endless heal | PR-22 |
 
 ## 3. Guardrails for this phase
 
@@ -112,13 +114,15 @@ Gate: exit tests 1 to 6 pass.
 
 Scope:
 
-- `Core/Entities/Equipment.cs`: the six modeled slots and the two ring slots, with equip and unequip rules (D-18, D-55). A shield needs a one-handed melee weapon (D-26).
-- `Core/Entities/Weight.cs`: the sum of armor weight, and its effect on walk speed, sprint speed, and dodge cooldown (D-23, D-28). The stagger rule against weight follows D-314. This PR sets the growth of the dodge cooldown with weight and the weight at which armor resists stagger (D-316).
-- `content/models/armor/*.json`: overlay boxes per slot on the shared base body (D-82), with the first three armor sets from OQ-10.
+- `Core/Entities/Equipment.cs`: the six modeled slots and the two ring slots, with equip and unequip rules (D-18, D-55). A shield needs a one-handed melee weapon (D-26). The tests use a test-only shield (D-761).
+- `Core/Entities/Weight.cs`: the sum of armor weight, and its effect on walk speed, sprint speed, and dodge cooldown (D-23, D-28, D-755, D-757). A weight of 24 or more resists stagger (D-314, D-316, D-756).
+- `content/armor/*.json` and `content/items/*.json`: the twelve pieces of the three armor sets of D-753, at tier 0, with the reduction and the weight of D-754 (D-760, D-763). The reduction comes off each hit alone (D-759).
+- `content/models/armor/*.bbmodel`: overlay boxes per slot on the shared base body (D-82, D-300) for each piece of D-753. Each set comes from one look reference (D-764).
 - `WhatYouCarry.Game/Models/OverlayAttach.cs`: attaches an overlay model to its slot bone.
-- The affix hooks of the loop: the affixes of each item that the player wears act on each hit and each swing (D-747, D-750, D-751). The swing clip plays a swift windup at its shorter length.
+- The affix hooks of the loop: the affixes of each item that the player wears act on each hit and each swing (D-747, D-750, D-751). The Overseer stays outside the hooks (D-758). The swing clip plays a swift windup at its shorter length.
+- The Game argument `--armor <set>` starts a run in one full set. The `loadout` list of the run record header stores the starting equipment (D-762, D-766).
 
-Out of scope: item stats beyond reduction and weight, the bank (PR-30).
+Out of scope: item stats beyond reduction and weight, armor tiers 1 to 3 (PR-26, OQ-212), the shield item, its model, and the block (PR-101), the bank (PR-30).
 
 Exit tests:
 
@@ -127,7 +131,7 @@ Exit tests:
 3. `ReductionAppliesPerHit` asserts damage taken equals the hit minus the reduction, never below zero.
 4. `RingAffixesApply` asserts a ring's affix triggers for the wearer.
 5. `OverlayEnclosesLimb` runs the PR-57 tool on every armor model and asserts zero findings (D-135).
-6. `EquipmentIsDeterministic` replays a record with equip changes and asserts one state hash.
+6. `EquipmentIsDeterministic` replays records whose header loadout holds each armor set, and a ring with affixes. It asserts one state hash for each record over two replays (D-765).
 7. `HeavyArmorResistsStagger` asserts that a hit staggers a player below the heavy weight and does not stagger a player at or above it (D-314, D-316).
 
 Review focus: gameplay, presentation, content, test quality.
@@ -137,6 +141,32 @@ Check clause: none.
 Gate: exit tests 1 to 7 pass.
 
 > *In plain English:* what you wear shows on your body. Heavy pieces make you slower and harder to stagger. The pieces never clip through each other.
+
+### PR-101: Shield and block
+
+Scope:
+
+- `content/items/*.json`: the first shield item, with the look, the weight, and the reduction of OQ-213 (D-761).
+- `content/models/armor/*.bbmodel`: the shield model on the shield slot of the shared base body (D-82, D-300).
+- `Core/Entities/Player.cs`: the block of D-26, with the input, the arc, the damage, and the stagger of OQ-213. A two-handed swing keeps its hyper-armor (D-29).
+
+Out of scope: a second shield.
+
+Exit tests:
+
+1. `BlockStopsHitInArc` asserts that a block takes the damage of a hit inside the arc by the rule of OQ-213.
+2. `BlockMissesOutsideArc` asserts that a hit from outside the arc of OQ-213 lands in full through a block.
+3. `BlockNeedsShield` asserts that the block input does nothing with an empty shield slot.
+4. `ShieldEnclosesArm` runs the PR-57 tool on the shield model and asserts zero findings (D-135).
+5. `BlockIsDeterministic` replays a record with blocks and asserts one state hash.
+
+Review focus: gameplay, presentation, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 5 pass.
+
+> *In plain English:* you can carry a shield with a one-handed weapon and raise it to stop a hit. A hit from outside the shield still lands.
 
 ### PR-23: Satchel, quick slot, throwables, potions, and weapon swap
 
@@ -445,8 +475,8 @@ One person owns the program. Items run one at a time in this order. Gate 2 must 
 
 1. Owner: answer OQ-22, OQ-51, OQ-52. ✅ Answered 2026-09-28: D-745 to D-752.
 2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21. ✅ OQ-211 answered 2026-09-28: D-741. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129.
-3. Owner: answer the first three armor sets from OQ-10, with the two weight numbers of D-316. ✅ OQ-5 answered 2026-09-12: D-314.
-4. PR-22.
+3. Owner: answer the first three armor sets from OQ-10, with the two weight numbers of D-316. ✅ OQ-5 answered 2026-09-12: D-314. ✅ Answered 2026-09-28 and 2026-09-29: D-753 to D-766.
+4. PR-22. Then the owner answers OQ-213, and PR-101 follows (D-761).
 5. Owner: answer OQ-3 and OQ-53.
 6. PR-23.
 7. Owner: answer OQ-13 and OQ-54.
@@ -480,7 +510,7 @@ Open:
 - OQ-3: satchel slot count. Blocks PR-23.
 - OQ-7: amulet abilities. Blocks PR-28.
 - OQ-8: tree branches. Blocks PR-29.
-- OQ-10: the weapon list, at least the first armor sets. Blocks PR-22.
+- OQ-10: the weapon list. Blocks PR-24 and PR-43 to PR-46. D-753 resolves the first armor sets.
 - OQ-13: arrow area damage. Blocks PR-24.
 - OQ-20: the friend playtest protocol. Blocks Gate 3.
 - OQ-21: the death payout curve. Blocks PR-27.
@@ -494,6 +524,8 @@ Open:
 - OQ-59: the hub layout. Blocks PR-30.
 - OQ-210: the overhaul of the world generation. Blocks no PR (D-737).
 - OQ-211: the source of the enemy swing clip. ✅ Answered 2026-09-28: D-741.
+- OQ-212: the armor tier scale. Blocks PR-26.
+- OQ-213: the block. Blocks PR-101.
 
 Resolved 2026-09-28:
 

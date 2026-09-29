@@ -92,6 +92,8 @@ Modeled slots: head, chest, legs, feet, amulet, shield (D-18). The two ring slot
 
 Armor gives damage reduction plus weight. Weight slows movement and dodge recovery (D-23). A shield needs a one-handed melee weapon (D-26). Only shields block. Nothing interrupts a two-handed melee swing (D-29). A stagger system exists for the player (F-21). Heavy armor resists stagger, and light armor does not (D-314). A stagger lasts 20 ticks, and a guard of 30 ticks after it stops a stunlock (D-326).
 
+The first three armor sets are Miner's leathers, Company brigandine, and Blast plate, at tier 0 (D-753, D-760). Each piece has a flat reduction and a weight (D-754). Each point of worn weight adds 1 tick to the dodge cooldown and slows the walk and the sprint by 0.5 percent (D-755, D-757). A worn weight of 24 or more resists stagger (D-756). The reduction comes off each hit, and plain damage lands in full (D-759). PR-101 builds the shield and the block (D-761).
+
 ### 3.5 Combat
 
 Fights are fast and lethal (D-25). The tier-0 sword sweeps an arc of 90 degrees at a reach of 1.6 meters, and the arc follows the look (D-324, D-325). A swing starts on a press, and the walk stays free during it (D-323). No hitscan exists. Every projectile is a simulated object with travel time, drop, and a lifetime. Enemies fire the same projectiles under the same rules (D-30). The player's own bombs deal full self-damage (D-32).
@@ -427,6 +429,8 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-201 | Tier 4 at Gate 2: the stairwell prompt at the lower center covers the body in the HUD shot | 2026-09-28 | ✅ PR #125 (PR-98): the prompt stands at the bottom right, clear of the body (D-728, D-732) |
 | F-202 | The frame shots of PR-97: on a turn of the bot in one tick, the Game interpolates the camera positions in a straight line, and the frame draws from a point near the head. The full-clearer turns 180 degrees at tick 2880 of seed 1. Main has the same effect with the old boom | 2026-09-28 | ✅ PR #126 (PR-99): each frame places the camera from the interpolated look (D-724, D-733, D-734) |
 | F-203 | The Gate 2 play: the scavenger and the Overseer attack from the rest pose, with no swing clip, so no windup shows (D-401) | 2026-09-28 | ✅ PR #128 (PR-100): each enemy plays the swing clip of its weapon, and the owner confirmed the windup of the scavenger (D-744) |
+| F-204 | D-26 gives the block to the shield, and no roadmap PR built the block | 2026-09-29 | 🔧 D-761. Binds PR-101 and OQ-213 |
+| F-205 | The Overseer holds no health, and lifesteal reads the full damage of a hit (D-751). A hit on the Overseer gave an endless heal | 2026-09-29 | 🔧 D-758. Binds PR-22 |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -815,9 +819,14 @@ Gate: the affix set has one test per behavior, for the player and for an enemy.
 > *In plain English:* items get random extra powers, and an enemy that carries such an item uses the power against you.
 
 **PR-22: Equipment slots, armor overlays, and weight.** 🔧
-Implement the modeled slots and the two ring slots (D-18, D-55). Attach armor overlays and the shield to the shared base body (D-82). Implement damage reduction and weight on movement and dodge (D-23, D-26). Set the growth of the dodge cooldown with weight and the weight at which armor resists stagger (D-314, D-316).
+Implement the modeled slots and the two ring slots (D-18, D-55). Attach the overlays of the first three armor sets to the shared base body (D-82, D-753). Implement damage reduction and weight on movement and dodge (D-23, D-754, D-757, D-759). The dodge cooldown grows 1 tick for each point of weight, and a weight of 24 resists stagger (D-316, D-755, D-756). The shield slot takes the rule of D-26 and no model (D-761). Implement the affix hooks of the loop, with the Overseer outside them (D-758). A Game argument starts a run in one armor set (D-762).
 Gate: the PR-57 pose check passes for every armor piece on every animation (D-135).
 > *In plain English:* what you wear shows on your body. Heavy pieces make you slower and harder to stagger. The pieces never clip through each other.
+
+**PR-101: Shield and block.** 🔧
+Implement the first shield item, its model on the shield slot, and the block of D-26 (D-761). OQ-213 holds the numbers of the block.
+Gate: a block takes the damage of a hit by the rule of OQ-213, and the PR-57 pose check passes for the shield.
+> *In plain English:* today no shield exists. After this change you can carry a shield with a one-handed weapon and raise it to stop a hit.
 
 **PR-23: Satchel, quick slot, throwables, potions, and weapon swap.** 🔧
 Implement the satchel with a slot count from OQ-3 (D-19). Implement the quick slot, bombs with full self-damage, health and mana potions, and the slow uncancelable weapon swap (D-21, D-22, D-24, D-32).
@@ -976,7 +985,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
 13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97, PR-98, and PR-99 (D-715, D-716, D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125. ✅ PR-99 done in PR #126. ✅ PR-95 and M-3 done in PR #122.
 14. ✅ **← GATE 2.** Signed 2026-09-28 (D-740). The owner plays one floor and signs off on feel.
-15. PR-100 (D-739), PR-21, PR-22, PR-23. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129.
+15. PR-100 (D-739), PR-21, PR-22, PR-101 (D-761), PR-23. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129.
 16. PR-24, PR-25, PR-26.
 17. PR-32.
 18. PR-27, PR-28, PR-29.
