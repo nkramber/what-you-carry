@@ -49,6 +49,8 @@ Each entry has: scope, out of scope, exit tests, review focus, the check clause,
 
 ### PR-100: Enemy swing clip
 
+✅ Done in PR #128.
+
 Scope:
 
 - `WhatYouCarry.Game/Render/`: each enemy model plays its swing clip at the swing tick of Core, and stands in the rest pose between swings (D-401, D-739).
@@ -438,7 +440,7 @@ Procedure: the PR-27 harness runs on every PR that touches points, loot, the tim
 One person owns the program. Items run one at a time in this order. Gate 2 must pass first. ✅ Gate 2 signed 2026-09-28 (D-740).
 
 1. Owner: answer OQ-22, OQ-51, OQ-52.
-2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21. ✅ OQ-211 answered 2026-09-28: D-741.
+2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21. ✅ OQ-211 answered 2026-09-28: D-741. ✅ PR-100 done in PR #128.
 3. Owner: answer the first three armor sets from OQ-10, with the two weight numbers of D-316. ✅ OQ-5 answered 2026-09-12: D-314.
 4. PR-22.
 5. Owner: answer OQ-3 and OQ-53.

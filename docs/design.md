@@ -426,7 +426,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-200 | Tier 4 at Gate 2: the scavenger head reads as a near-black block with no features in the dark, seen from behind | 2026-09-28 | ⚠ D-718. Binds OQ-61 and PR-36 to PR-42 |
 | F-201 | Tier 4 at Gate 2: the stairwell prompt at the lower center covers the body in the HUD shot | 2026-09-28 | ✅ PR #125 (PR-98): the prompt stands at the bottom right, clear of the body (D-728, D-732) |
 | F-202 | The frame shots of PR-97: on a turn of the bot in one tick, the Game interpolates the camera positions in a straight line, and the frame draws from a point near the head. The full-clearer turns 180 degrees at tick 2880 of seed 1. Main has the same effect with the old boom | 2026-09-28 | ✅ PR #126 (PR-99): each frame places the camera from the interpolated look (D-724, D-733, D-734) |
-| F-203 | The Gate 2 play: the scavenger and the Overseer attack from the rest pose, with no swing clip, so no windup shows (D-401) | 2026-09-28 | 🔧 D-739. Binds PR-100 |
+| F-203 | The Gate 2 play: the scavenger and the Overseer attack from the rest pose, with no swing clip, so no windup shows (D-401) | 2026-09-28 | ✅ PR #128 (PR-100): each enemy plays the swing clip of its weapon, and the owner confirmed the windup of the scavenger (D-744) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -804,7 +804,7 @@ Gate: the frame shots of D-714 at the PR head match main, and the pairs of D-733
 
 ### Phase 3: Full loop (gate: hub, loadout, death loss, bank, tree, saves, and replay resume work, and friends play)
 
-**PR-100: Enemy swing clip.** 🔧
+**PR-100: Enemy swing clip.** ✅ Done in PR #128.
 Give the scavenger and the Overseer a swing clip. The Game plays it at the swing tick of Core, so the windup of D-315 shows (D-401, D-739, F-203). The scavenger plays the swing clip of the player, and the Overseer a clip of its own for the pick (D-741). The clip check of `asset-qa` poses each enemy with its swing clip (D-742). Core does not change.
 Gate: the frame shots of D-714 show the windup, and the owner confirms that it reads (D-723).
 > *In plain English:* today an enemy hits you with no move of its body. After this change, each enemy raises its sword first, so you can see the hit come.
@@ -976,7 +976,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
 13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97, PR-98, and PR-99 (D-715, D-716, D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125. ✅ PR-99 done in PR #126. ✅ PR-95 and M-3 done in PR #122.
 14. ✅ **← GATE 2.** Signed 2026-09-28 (D-740). The owner plays one floor and signs off on feel.
-15. PR-100 (D-739), PR-21, PR-22, PR-23.
+15. PR-100 (D-739), PR-21, PR-22, PR-23. ✅ PR-100 done in PR #128.
 16. PR-24, PR-25, PR-26.
 17. PR-32.
 18. PR-27, PR-28, PR-29.
