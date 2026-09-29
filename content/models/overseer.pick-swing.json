@@ -1,0 +1,39 @@
+{
+  "model": "models/overseer.bbmodel",
+  "length": 66,
+  "bones": {
+    "arm_right": [
+      { "tick": 0, "rotation": [0, 0, 0] },
+      { "tick": 24, "rotation": [180, 0, 0] },
+      { "tick": 30, "rotation": [195, 0, 0] },
+      { "tick": 36, "rotation": [40, 0, 0] },
+      { "tick": 66, "rotation": [0, 0, 0] }
+    ],
+    "arm_right_lower": [
+      { "tick": 0, "rotation": [0, 0, 0] },
+      { "tick": 24, "rotation": [40, 0, 0] },
+      { "tick": 30, "rotation": [50, 0, 0] },
+      { "tick": 36, "rotation": [0, 0, 0] },
+      { "tick": 66, "rotation": [0, 0, 0] }
+    ],
+    "arm_left": [
+      { "tick": 0, "rotation": [0, 0, 0] },
+      { "tick": 24, "rotation": [180, 0, 0] },
+      { "tick": 30, "rotation": [195, 0, 0] },
+      { "tick": 36, "rotation": [40, 0, 0] },
+      { "tick": 66, "rotation": [0, 0, 0] }
+    ],
+    "arm_left_lower": [
+      { "tick": 0, "rotation": [0, 0, 0] },
+      { "tick": 24, "rotation": [40, 0, 0] },
+      { "tick": 30, "rotation": [50, 0, 0] },
+      { "tick": 36, "rotation": [0, 0, 0] },
+      { "tick": 66, "rotation": [0, 0, 0] }
+    ]
+  },
+  "phases": [
+    { "start": 0, "end": 30, "tag": "windup" },
+    { "start": 30, "end": 36, "tag": "active" },
+    { "start": 36, "end": 66, "tag": "recovery" }
+  ]
+}

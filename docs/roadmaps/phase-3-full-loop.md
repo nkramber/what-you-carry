@@ -51,8 +51,10 @@ Each entry has: scope, out of scope, exit tests, review focus, the check clause,
 
 Scope:
 
-- `WhatYouCarry.Game/Render/EnemyModels.cs`: each enemy model plays its swing clip at the swing tick of Core, and stands in the rest pose between swings (D-401, D-739).
-- `content/models/`: the swing clip of the scavenger and of the Overseer, from the source that OQ-211 names (D-298).
+- `WhatYouCarry.Game/Render/`: each enemy model plays its swing clip at the swing tick of Core, and stands in the rest pose between swings (D-401, D-739).
+- `content/models/`: the scavenger plays `player.sword-swing.json`, and the Overseer plays its own clip `overseer.pick-swing.json` of 66 ticks (D-298, D-741). The right arm of the player clip turns less at tick 18, so the arm of the scavenger clears its hood (D-743).
+- `content/weapons/overseer-pick.json`: the `animation` field names the clip of the Overseer (D-741).
+- `WhatYouCarry.Tools/AssetQa/`: the clip check poses each enemy model with the swing clip of its weapon (D-742).
 - `WhatYouCarry.Tests/`: the tests of exit tests 1 and 2.
 
 Out of scope: a change to the swing timing of Core (D-315, D-402, D-423). A walk clip. The clips of the families of PR-36 to PR-42 (D-739).
@@ -436,7 +438,7 @@ Procedure: the PR-27 harness runs on every PR that touches points, loot, the tim
 One person owns the program. Items run one at a time in this order. Gate 2 must pass first. ✅ Gate 2 signed 2026-09-28 (D-740).
 
 1. Owner: answer OQ-22, OQ-51, OQ-52.
-2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21.
+2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21. ✅ OQ-211 answered 2026-09-28: D-741.
 3. Owner: answer the first three armor sets from OQ-10, with the two weight numbers of D-316. ✅ OQ-5 answered 2026-09-12: D-314.
 4. PR-22.
 5. Owner: answer OQ-3 and OQ-53.
@@ -488,7 +490,7 @@ Open:
 - OQ-58: the Tier 3 model and budget. Blocks PR-32.
 - OQ-59: the hub layout. Blocks PR-30.
 - OQ-210: the overhaul of the world generation. Blocks no PR (D-737).
-- OQ-211: the source of the enemy swing clip. Blocks PR-100 (D-739).
+- OQ-211: the source of the enemy swing clip. ✅ Answered 2026-09-28: D-741.
 
 Resolved 2026-09-12:
 

@@ -134,6 +134,9 @@ public partial class Main : Node3D
     /// <summary>The message of the error line of a frame whose pose of the player failed.</summary>
     public const string PoseFailedMessage = "The pose of the player failed, and the game quits.";
 
+    /// <summary>The message of the error line of a tick whose enemy trees failed: a rebuild, a position, or a pose.</summary>
+    public const string EnemyTreesFailedMessage = "The enemy trees of a tick failed, and the game quits.";
+
     /// <summary>The message of the error line of a bot session whose tick budget passed on the first floor.</summary>
     public const string BotStuckMessage = "The bot session passed its tick budget on the first floor, and the game quits.";
 
@@ -536,13 +539,22 @@ public partial class Main : Node3D
         // A descent digs a new floor with its own enemies, so the trees of the old floor go and the new ones come.
         if (this.enemyNodes is not null)
         {
-            if (this.loop.Floor != this.drawnFloor)
+            try
             {
-                this.enemyNodes.Rebuild(this.loop.Plan, this.loop.Enemies);
-                this.drawnFloor = this.loop.Floor;
-            }
+                if (this.loop.Floor != this.drawnFloor)
+                {
+                    this.enemyNodes.Rebuild(this.loop.Plan, this.loop.Enemies);
+                    this.drawnFloor = this.loop.Floor;
+                }
 
-            this.enemyNodes.AfterTick(this.loop.Enemies, this.loop.Hunter);
+                this.enemyNodes.AfterTick(this.loop.Enemies, this.loop.Hunter);
+            }
+            catch (Exception error)
+            {
+                this.LogFailure(EnemyTreesFailedMessage, RunFields(this.loop.Seed, this.loop.Floor, this.loop.Tick), error);
+                this.Quit(ExitFailure);
+                return;
+            }
         }
 
         // The swap line comes after the trees of the new floor, so it tells what the tick of the descent did: a dig
@@ -990,10 +1002,12 @@ public partial class Main : Node3D
         this.AddChild(nodes.Root);
 
         // Each enemy draws with the model of its family, and the Overseer with the model of the hunter file (D-673,
-        // D-698). The rest pose stands on the feet, so the root offset reads the lowest corner of each model.
+        // D-698). The rest pose stands on the feet, so the root offset reads the lowest corner of each model. Each one
+        // swings with the clip that its weapon names (D-741).
         IReadOnlyDictionary<string, EnemyModel> familyModels = EnemyModels.Load(contentDirectory, content.Enemies);
         EnemyModel hunterModel = EnemyModels.Read(contentDirectory, content.Hunter.Model);
-        EnemyNodes enemies = new(this, familyModels, hunterModel, swordModel, modelMaterial, ModelFade.CreateMaterial(atlas), layout);
+        EnemyClips enemyClips = EnemyClips.Load(contentDirectory, content, familyModels, hunterModel);
+        EnemyNodes enemies = new(this, familyModels, hunterModel, enemyClips, swordModel, modelMaterial, ModelFade.CreateMaterial(atlas), layout);
         enemies.Rebuild(loop.Plan, loop.Enemies);
         this.enemyNodes = enemies;
         this.drawnFloor = loop.Floor;

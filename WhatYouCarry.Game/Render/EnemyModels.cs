@@ -16,7 +16,8 @@ public sealed record EnemyModel(string Path, BlockbenchModel Model, float Lowest
 
 /// <summary>
 /// The models that the enemies draw with: the model that each family names (D-673), and the model that the hunter file
-/// names for the Overseer (D-698). An enemy of PR-16 plays no clip, so each model stands in its rest pose (D-401).
+/// names for the Overseer (D-698). The lowest corner of the rest pose puts the feet on the floor, and the swing clip of
+/// an enemy keeps that corner (D-739, D-741).
 /// </summary>
 public static class EnemyModels
 {

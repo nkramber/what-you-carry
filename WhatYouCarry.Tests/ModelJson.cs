@@ -48,6 +48,19 @@ internal static class ModelJson
             name: "rig");
     }
 
+    /// <summary>
+    /// The arm of <see cref="SiblingRig"/> alone, with the same bone names and no torso, so the turn of minus 90 degrees
+    /// about Z that clips the rig clips nothing here.
+    /// </summary>
+    public static string LoneArm()
+    {
+        return Model(
+            elements: Cube("arm", "e2", from: "[4, 8, -2]", to: "[8, 16, 2]", origin: "[4, 16, 0]"),
+            groups: Group("body", "g1") + ", " + Group("arm_bone", "g3", origin: "[4, 16, 0]"),
+            outliner: "[{\"uuid\": \"g1\", \"children\": [{\"uuid\": \"g3\", \"children\": [\"e2\"]}]}]",
+            name: "arm");
+    }
+
     /// <summary>The same rig with the arm bone under the torso bone, so the two boxes meet at a joint.</summary>
     public static string JointRig()
     {

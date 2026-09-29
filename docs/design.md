@@ -805,7 +805,7 @@ Gate: the frame shots of D-714 at the PR head match main, and the pairs of D-733
 ### Phase 3: Full loop (gate: hub, loadout, death loss, bank, tree, saves, and replay resume work, and friends play)
 
 **PR-100: Enemy swing clip.** 🔧
-Give the scavenger and the Overseer a swing clip. The Game plays it at the swing tick of Core, so the windup of D-315 shows (D-401, D-739, F-203). OQ-211 names the source of the clip. Core does not change.
+Give the scavenger and the Overseer a swing clip. The Game plays it at the swing tick of Core, so the windup of D-315 shows (D-401, D-739, F-203). The scavenger plays the swing clip of the player, and the Overseer a clip of its own for the pick (D-741). The clip check of `asset-qa` poses each enemy with its swing clip (D-742). Core does not change.
 Gate: the frame shots of D-714 show the windup, and the owner confirms that it reads (D-723).
 > *In plain English:* today an enemy hits you with no move of its body. After this change, each enemy raises its sword first, so you can see the hit come.
 
