@@ -381,6 +381,108 @@ public sealed class AssetQaTests
         Assert.Contains(set.Bodies, body => body.Path == TestWorld.Content.Hunter.Model);
     }
 
+    /// <summary>
+    /// PR-100 exit test 2. The check reads the swing clip of each enemy: the scavenger swings the clip of the player on
+    /// its own model, and the Overseer the clip of its pick (D-741, D-742). <see cref="RepositoryModelsPass"/> holds each
+    /// pose free of a clip.
+    /// </summary>
+    [Fact]
+    public void RepositoryEnemiesSwingTheirClips()
+    {
+        AssetSet set = AssetSet.Read(Path.Combine(RepositoryRoot.Find(), "content"));
+
+        Assert.Equal(
+            [
+                new WieldedClip("enemies/scavenger.json", "models/scavenger.bbmodel", "models/player.sword-swing.json"),
+                new WieldedClip("hunter/overseer.json", "models/overseer.bbmodel", "models/overseer.pick-swing.json"),
+            ],
+            set.Wielded);
+    }
+
+    /// <summary>
+    /// D-742 regression. A family swings a clip that names another model with the same bones, and the clip clips the
+    /// model of the family alone. The check posed a clip on the model that its file names, so it gave no finding.
+    /// </summary>
+    [Fact]
+    public void TheSwingClipOfAnEnemyIsCheckedOnItsModel()
+    {
+        using TemporaryContentDirectory content = WieldedContent("models/arm.attack.json");
+        content.Write("models/arm.bbmodel", ModelJson.LoneArm());
+        content.Write("models/arm.attack.json", ModelJson.Animation("models/arm.bbmodel", "arm_bone", 10, "[0, 0, -90]"));
+
+        AssetFinding finding = Assert.Single(Findings(content));
+
+        Assert.Equal(Rig, finding.Path);
+        Assert.Contains("tick 10 of 'models/arm.attack.json', the swing of 'enemies/scavenger.json'", finding.Message, StringComparison.Ordinal);
+        Assert.Contains("D-301", finding.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A swing clip that names the model of the family has its check once, in the loop of the models (D-742).</summary>
+    [Fact]
+    public void AClipOfTheSameModelIsCheckedOnce()
+    {
+        using TemporaryContentDirectory content = WieldedContent(Attack);
+        content.Write(Attack, ModelJson.Animation(Rig, "arm_bone", 10, "[0, 0, -90]"));
+
+        AssetFinding finding = Assert.Single(Findings(content));
+
+        Assert.Contains("tick 10 of 'models/rig.attack.json'", finding.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("the swing of", finding.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A family that names a weapon that no weapon file holds is a finding on the family file, because no pose reads its clip (D-742, T-2).</summary>
+    [Fact]
+    public void AnAbsentWeaponOfAnEnemyIsAFinding()
+    {
+        using TemporaryContentDirectory content = WieldedContent(Attack);
+        content.Write(Attack, ModelJson.Animation(Rig, "arm_bone", 10, "[0, 0, 0]"));
+        File.Delete(Path.Combine(content.Content, "weapons", "sword-basic.json"));
+
+        AssetFinding finding = Assert.Single(Findings(content));
+
+        Assert.Equal("enemies/scavenger.json", finding.Path);
+        Assert.Contains("'sword-basic'", finding.Message, StringComparison.Ordinal);
+        Assert.Contains("D-742", finding.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>A family whose model is not a body of the set is a finding on the family file (D-742, T-2).</summary>
+    [Fact]
+    public void AnEnemyModelThatIsNoBodyIsAFinding()
+    {
+        const string Cap = "models/armor/cap.bbmodel";
+        using TemporaryContentDirectory content = WieldedContent(Attack, Cap);
+        content.Write(Cap, ModelJson.SiblingRig());
+        content.Write(Attack, ModelJson.Animation(Rig, "arm_bone", 10, "[0, 0, 0]"));
+
+        IReadOnlyList<AssetFinding> findings = Findings(content);
+
+        // The overlay check gives its own finding too: the set has no body for the overlay to cover.
+        AssetFinding finding = Assert.Single(findings, finding => finding.Path == "enemies/scavenger.json");
+        Assert.Contains($"'{Cap}'", finding.Message, StringComparison.Ordinal);
+        Assert.Contains("no pose reads its swing clip", finding.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A content directory with the rig of <see cref="ModelJson.SiblingRig"/>, the scavenger family of the checkout on a
+    /// model, and the sword of the checkout, whose swing clip is the path given. The weapon holds the rig as its model.
+    /// </summary>
+    private static TemporaryContentDirectory WieldedContent(string clip, string familyModel = Rig)
+    {
+        string checkout = Path.Combine(RepositoryRoot.Find(), "content");
+        string family = File.ReadAllText(Path.Combine(checkout, "enemies", "scavenger.json")).Replace("models/scavenger.bbmodel", familyModel, StringComparison.Ordinal);
+        string weapon = File.ReadAllText(Path.Combine(checkout, "weapons", "sword-basic.json"))
+            .Replace("models/sword-basic.bbmodel", Rig, StringComparison.Ordinal)
+            .Replace("models/player.sword-swing.json", clip, StringComparison.Ordinal);
+        Assert.Contains(familyModel, family, StringComparison.Ordinal);
+        Assert.Contains(clip, weapon, StringComparison.Ordinal);
+
+        TemporaryContentDirectory content = new();
+        content.Write(Rig, ModelJson.SiblingRig());
+        content.Write("enemies/scavenger.json", family);
+        content.Write("weapons/sword-basic.json", weapon);
+        return content;
+    }
+
     /// <summary>A hunter file that names an absent model file is a finding on the hunter file (D-302, D-698).</summary>
     [Fact]
     public void AnAbsentHunterModelIsAFinding()
@@ -389,7 +491,8 @@ public sealed class AssetQaTests
         content.Write(AssetPaths.BodyModel, ModelJson.TorsoBody());
         content.Write("hunter/overseer.json", "{\"id\": \"overseer\", \"model\": \"models/gone.bbmodel\"}");
 
-        AssetFinding finding = Assert.Single(Findings(content));
+        // The file names no weapon, so the read of the swing clip gives a load finding of its own (D-742).
+        AssetFinding finding = Assert.Single(Findings(content), finding => finding.Message.Contains("'models/gone.bbmodel'", StringComparison.Ordinal));
 
         Assert.Equal("hunter/overseer.json", finding.Path);
         Assert.Contains("'models/gone.bbmodel'", finding.Message, StringComparison.Ordinal);
@@ -403,7 +506,8 @@ public sealed class AssetQaTests
         content.Write(AssetPaths.BodyModel, ModelJson.TorsoBody());
         content.Write("enemies/scavenger.json", "{\"id\": \"scavenger\", \"model\": \"models/gone.bbmodel\"}");
 
-        AssetFinding finding = Assert.Single(Findings(content));
+        // The file names no weapon, so the read of the swing clip gives a load finding of its own (D-742).
+        AssetFinding finding = Assert.Single(Findings(content), finding => finding.Message.Contains("'models/gone.bbmodel'", StringComparison.Ordinal));
 
         Assert.Equal("enemies/scavenger.json", finding.Path);
         Assert.Contains("'models/gone.bbmodel'", finding.Message, StringComparison.Ordinal);

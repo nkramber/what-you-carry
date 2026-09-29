@@ -11,5 +11,5 @@
   "lowCentimetres": 50,
   "highCentimetres": 170,
   "model": "models/sword-basic.bbmodel",
-  "animation": "models/player.sword-swing.json"
+  "animation": "models/overseer.pick-swing.json"
 }

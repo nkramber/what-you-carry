@@ -6,6 +6,7 @@ using WhatYouCarry.Assets;
 using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Procgen;
+using WhatYouCarry.Game.Animation;
 using WhatYouCarry.Game.Models;
 using CoreVector3 = WhatYouCarry.Core.Physics.Vector3;
 
@@ -18,10 +19,12 @@ namespace WhatYouCarry.Game.Render;
 /// </summary>
 /// <remarks>
 /// <para>
-/// PR-16 poses no enemy, so every enemy stands in the rest pose of its model. The position comes from the
-/// simulation between the two newest ticks, like the position of the player, so a frame rate over the tick rate
-/// draws a smooth walk (D-329). The rest pose stands on the feet, so the root of a tree sits at the feet of its
-/// enemy, at the lowest corner of its own model.
+/// Each enemy plays the swing clip of its weapon at the swing tick of Core, and stands in the rest pose between
+/// swings (D-739, D-741). The swing tick changes only on a tick, so <see cref="AfterTick"/> sets the pose. The
+/// position comes from the simulation between the two newest ticks, like the position of the player, so a frame rate
+/// over the tick rate draws a smooth walk (D-329). The rest pose stands on the feet, so the root of a tree sits at the
+/// feet of its enemy, at the lowest corner of its own model. A swing clip turns no bone that lowers that corner, and a
+/// test holds it.
 /// </para>
 /// <para>
 /// A dead enemy holds its place in the list of the loop, so an owner id never moves (D-322). Its node hides
@@ -64,6 +67,7 @@ public sealed class EnemyNodes
     private readonly Node parent;
     private readonly IReadOnlyDictionary<string, EnemyModel> familyModels;
     private readonly EnemyModel hunterModel;
+    private readonly EnemyClips clips;
     private readonly BlockbenchModel sword;
     private readonly Material material;
     private readonly Material fadedMaterial;
@@ -86,15 +90,17 @@ public sealed class EnemyNodes
     /// <param name="parent">The node that holds every enemy tree.</param>
     /// <param name="familyModels">The model of each family, by the model path that the family names (D-673).</param>
     /// <param name="hunterModel">The model that the hunter file names, which the Overseer draws with (D-698).</param>
+    /// <param name="clips">The swing clip of each family and of the Overseer (D-741).</param>
     /// <param name="sword">The weapon model of PR-15, which every enemy holds (D-397).</param>
     /// <param name="material">The one model material of the scene (D-85).</param>
     /// <param name="fadedMaterial">The material of a faded model (D-721).</param>
     /// <param name="layout">The texture layout, which places each face of every model (D-505).</param>
-    public EnemyNodes(Node parent, IReadOnlyDictionary<string, EnemyModel> familyModels, EnemyModel hunterModel, BlockbenchModel sword, Material material, Material fadedMaterial, TextureLayout layout)
+    public EnemyNodes(Node parent, IReadOnlyDictionary<string, EnemyModel> familyModels, EnemyModel hunterModel, EnemyClips clips, BlockbenchModel sword, Material material, Material fadedMaterial, TextureLayout layout)
     {
         this.parent = parent;
         this.familyModels = familyModels;
         this.hunterModel = hunterModel;
+        this.clips = clips;
         this.sword = sword;
         this.material = material;
         this.fadedMaterial = fadedMaterial;
@@ -197,8 +203,10 @@ public sealed class EnemyNodes
 
     /// <summary>
     /// Reads the position of every enemy and of the Overseer after a tick, so the next frames draw between the two
-    /// newest ones. A wave enemy or an Overseer with no tree yet gets one, at its position of this tick.
+    /// newest ones. A wave enemy or an Overseer with no tree yet gets one, at its position of this tick. Each tree then
+    /// takes the pose of the swing tick of its enemy (D-739).
     /// </summary>
+    /// <exception cref="ContextException">The clips hold no swing clip of the family of an enemy.</exception>
     public void AfterTick(IReadOnlyList<Enemy> enemies, Hunter? hunter)
     {
         for (int index = 0; index < this.trees.Count && index < enemies.Count; index++)
@@ -208,6 +216,12 @@ public sealed class EnemyNodes
         }
 
         this.Grow(enemies);
+        for (int index = 0; index < this.trees.Count && index < enemies.Count; index++)
+        {
+            Enemy enemy = enemies[index];
+            ModelNodes.Pose(this.trees[index], EnemyPose.Rotations(enemy.SwingTick, this.clips.Of(enemy.Definition)));
+        }
+
         if (hunter is null)
         {
             return;
@@ -221,6 +235,7 @@ public sealed class EnemyNodes
 
         this.hunterPrevious = this.hunterCurrent;
         this.hunterCurrent = hunter.Body.Position;
+        ModelNodes.Pose(this.hunterTree, EnemyPose.Rotations(hunter.SwingTick, this.clips.Hunter));
     }
 
     /// <summary>Builds one tree for each enemy past the last tree, in list order, at its position now.</summary>

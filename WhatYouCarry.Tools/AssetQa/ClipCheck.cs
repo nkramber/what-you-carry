@@ -7,7 +7,8 @@ namespace WhatYouCarry.Tools.AssetQa;
 
 /// <summary>
 /// The clip check (D-135, D-301): no two boxes of a model, or of a model plus one overlay, penetrate each other
-/// at the rest pose or at any keyframe of any animation of the model.
+/// at the rest pose or at any keyframe of any animation of the model. The swing clip of each enemy counts as an
+/// animation of the enemy model, also when the clip names another model with the same bones (D-742).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -27,7 +28,7 @@ public static class ClipCheck
     private const string RestPose = "the rest pose";
     private const string NotABone = "is not a bone of the model, and every track of an animation names one";
 
-    /// <summary>Every clip finding of the set: first each animation of no body model, then the order of the models, the poses, and the pairs.</summary>
+    /// <summary>Every clip finding of the set: first each animation of no body model, then the order of the models, the poses, and the pairs, then the swing clip of each enemy.</summary>
     public static IReadOnlyList<AssetFinding> Run(AssetSet set)
     {
         List<AssetFinding> findings = [];
@@ -75,7 +76,59 @@ public static class ClipCheck
             }
         }
 
+        foreach (WieldedClip wielded in set.Wielded)
+        {
+            CheckWielded(set, wielded, findings);
+        }
+
         return findings;
+    }
+
+    /// <summary>
+    /// The swing clip of one enemy at each keyframe, on the model of that enemy (D-742). A clip that names the same
+    /// model had its check in the loop of the models, and a file that did not load has its own load finding.
+    /// </summary>
+    private static void CheckWielded(AssetSet set, WieldedClip wielded, List<AssetFinding> findings)
+    {
+        LoadedModel? body = set.Body(wielded.ModelPath);
+        if (body is null)
+        {
+            if (!set.FailedToLoad(wielded.ModelPath))
+            {
+                findings.Add(new AssetFinding(wielded.Source, $"names the model '{wielded.ModelPath}', and the set has no body model at that path, so no pose reads its swing clip (D-742)"));
+            }
+
+            return;
+        }
+
+        LoadedAnimation? animation = set.Animation(wielded.AnimationPath);
+        if (animation is null)
+        {
+            if (!set.FailedToLoad(wielded.AnimationPath))
+            {
+                findings.Add(new AssetFinding(wielded.Source, $"swings the clip '{wielded.AnimationPath}' of its weapon, and the set has no animation at that path (D-742)"));
+            }
+
+            return;
+        }
+
+        if (animation.Clip.Model == body.Path)
+        {
+            return;
+        }
+
+        string? unknown = UnknownBone(body.Model, animation.Clip);
+        if (unknown is not null)
+        {
+            findings.Add(new AssetFinding(animation.Path, $"'{unknown}' {NotABone} '{body.Path}', which '{wielded.Source}' swings it on (D-742)"));
+            return;
+        }
+
+        foreach (int tick in animation.Clip.KeyframeTicks())
+        {
+            string pose = $"tick {tick.ToString(CultureInfo.InvariantCulture)} of '{animation.Path}', the swing of '{wielded.Source}'";
+            CheckPose(body, null, pose, animation.Clip.RotationsAt(tick), findings);
+        }
     }
 
     /// <summary>The first track bone that the model does not have, or null when every track names a bone.</summary>

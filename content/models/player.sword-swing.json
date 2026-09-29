@@ -12,7 +12,7 @@
     "arm_right": [
       { "tick": 0, "rotation": [0, 0, 0] },
       { "tick": 12, "rotation": [60, -80, 0] },
-      { "tick": 18, "rotation": [70, 10, 0] },
+      { "tick": 18, "rotation": [70, 0, 0] },
       { "tick": 26, "rotation": [50, -15, 0] },
       { "tick": 36, "rotation": [0, 0, 0] }
     ]

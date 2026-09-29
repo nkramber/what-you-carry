@@ -1,5 +1,76 @@
 # Session handoff archive
 
+## Session 312: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-97, reviewer. Branch `feat/pr-97-camera-occlusion`. PR #124, pending merge. Reviewed head `d6589d96ca8362d94c69b64d7617c0980fc061ae`.
+
+### What this session did, and why
+
+- Reviewed the camera and model occlusion change, its exit tests, the PR comments, and the supplied frames.
+- Verified the straight-distance correction in `ModelFade` and its corner regression test.
+- Added the cross-provider review record. The review found no blocking defect and records the owner-accepted F-195 reduction (D-723).
+
+### State of the build
+
+- The PR code head was `d6589d96ca8362d94c69b64d7617c0980fc061ae`, based on `91dbaa25091e9da00f4d4ff5acd0a214c39d0dd7`.
+- The build passed with no warnings or errors. The focused camera, grid-ray, model-fade, and render-interpolation tests passed, 45 tests.
+- CI passed on the code head for the three-platform build and test, bit identity, smoke, bots, asset QA, det-lint, STE, documents, doc-gate, and night-gate. The review-gate and evaluate checks failed because the review record did not yet exist.
+- The review record and this handoff were pushed together as a metadata commit. The effective code head remains `d6589d96ca8362d94c69b64d7617c0980fc061ae`.
+
+### In flight
+
+- GitHub must run the review-gate and evaluate checks on the metadata head.
+- The owner can review the merge summary and merge PR #124.
+
+### Traps and gotchas
+
+- The record approves the code head above. The review and handoff commit changes metadata only.
+- F-202 belongs to PR-99 under D-724. The damage numbers and stairwell prompt belong to PR-98 under D-716.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the checks for the metadata head. Then give the owner the merge summary for PR #124.
+
+## Session 311: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-97, author. Branch `feat/pr-97-camera-occlusion`. PR #124, pending merge. Base `91dbaa2`.
+
+### What this session did, and why
+
+- Asked the owner the three camera questions of D-715. The owner took each recommendation: D-719 (the shoulder 0.9 meters right and 0.7 meters up), D-720 (the drawn camera 2.0 meters behind the shoulder point, also in rock), and D-721 (the model dither).
+- Wrote the camera in Core, the rock march in `GridRay`, the model fade in Game, and their tests. The simulation version rose to 19, and the bit-identity known answer moved to `1023ce079eb0af50` (G-20).
+- Ran the captures of D-714 on the Mac. A drawn camera in rock showed the black background in 5 of 63 full-clearer frames. The owner took a background of dark stone (D-722).
+- The owner told the session to check the frames of exit test 3 and confirm. F-196 and F-197 are not in the cited frames, and F-195 is reduced. The owner accepted the reduction (D-723). The frames found F-202, which PR-99 holds before Gate 2 (D-724).
+
+### State of the build
+
+- `main` is `91dbaa2`. The PR head carries the code, the frames in `docs/reviews/pr-124-frames/`, and the documents.
+- Local runs at the code head: the suite outside Smoke passed, 2117 tests. The Smoke category passed with the local Godot, 14 tests. `det-lint` and `ste-check` passed.
+
+### In flight
+
+- CI, the gitar pass, and the cross-provider review through `make codex-review PR=124`.
+
+### Traps and gotchas
+
+- The bot turns up to 180 degrees in one tick, and the Game interpolates the camera positions in a straight line, so a frame shot can draw from the head (F-202). Do not read such a frame as a camera rule defect.
+- A scratch test in `WhatYouCarry.Tests` can run a bot policy on a `SimulationLoop` and print `loop.Camera()` at each shot tick. It gives the camera of a frame shot fast. Delete it before a commit.
+- Two of 62 full-clearer shots stop the drawn camera at 1.2 meters, at a thin wall with air behind it (D-720, D-723).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Wait for the checks, answer the gitar pass, and run `make codex-review PR=124`. After the merge, start PR-98 (D-716).
+
 ## Session 310: 2026-09-28, Claude Code
 
 Author: Claude Code

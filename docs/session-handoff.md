@@ -2,6 +2,75 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 322: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-100, reviewer. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-100 diff at effective head `a03c756` against the four roadmap exit tests and the affected contracts.
+- Found no in-scope defect. Added `docs/reviews/pr-128.md` with the provider gate, verified comments, findings, checks, and verdict.
+- Inspected the Tier 4 frame for exit test 3. The scavenger windup reads in the supplied frame (D-744).
+
+### State of the build
+
+- `main` is `9da1817`. CI, smoke, bit identity, asset QA, deterministic lint, STE, document gate, documents, night gate, and Gitar passed for PR head `fe46148`. The focused local tests passed 60 of 60. Local `asset-qa` and `det-lint` each report 0 findings.
+- The remote PR head after the metadata push is recorded in the review file and verified with `gh pr view`.
+
+### In flight
+
+- Owner review and merge confirmation for PR #128.
+
+### Traps and gotchas
+
+- The PR checks `review-gate` and `evaluate` failed before this review because the review record did not exist. The pushed record should satisfy those checks.
+- No supplied frame shows the Overseer swing because the timer-tester does not turn the camera (D-738). Exit test 3 checks the scavenger.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the pushed review record and merge summary, then confirm the merge of PR #128.
+
+## Session 321: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-100, author. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
+
+### What this session did, and why
+
+- Asked OQ-211. The premise of its option one held for the scavenger alone: the pick swings 30, 6, and 30 ticks, and a clip plays tick for tick. D-741: the scavenger plays `player.sword-swing.json` on its own bones, and the Overseer plays its own clip `overseer.pick-swing.json`, an overhead chop of 66 ticks.
+- The check of `asset-qa` paired a clip with the model that its file names, so it never posed the player clip on the scavenger. D-742: `asset-qa` reads the family, hunter, and weapon files, and it poses each enemy model with the swing clip of its weapon.
+- The first run of that check found a clip of 0.0417 meters between the right upper arm and the hood of the scavenger at tick 18. D-743: the player clip turns the right arm to [70, 0, 0] at that tick.
+- `EnemyNodes.AfterTick` poses each enemy tree and the Overseer from its swing tick through `EnemyPose`. `EnemyClips` checks each clip against its weapon and its model. `Main` logs a failure of the enemy trees and quits (T-2).
+- Ran the Tier 4 captures of D-714 at the PR head. Tick 3060 is the one shot with a scavenger windup in front. The owner confirmed that the windup reads (D-744), and the frames are in `docs/reviews/pr-128-frames/`.
+
+### State of the build
+
+- The remote head of `main` is `9da1817`. Locally at the code commit `a03c756`: the full suite passes 2158 of 2158, the Smoke category included. `asset-qa`, `det-lint`, and `ste-check` give 0 findings. The bit-identity sweep gives the known answer `1023ce079eb0af50`, and the Godot build passes.
+- On PR #128 at `fe46148`, each check is green but `evaluate` and `review-gate`, which waited for the record (D-577). The automated pass approved `fe46148` with no finding. The review record gives `Ready for owner merge` for the effective head `a03c756`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #128 (D-524, D-533), then the auto-merge.
+
+### Traps and gotchas
+
+- A frame shot draws one tick in 60, and the windup of the scavenger lasts 12 ticks. A scan of the full-clearer run in Core found the shot ticks of a windup in advance. The player body or a wall hid most of them.
+- The timer-tester never turns the camera, so no bot frame shows the windup of the Overseer (D-738).
+- A test fixture that writes a partial family or hunter file now gets a load finding of its own from `asset-qa` (D-742).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, write the merge prompt of `one-pr-one-session`.
+
 ## Session 320: 2026-09-28, Claude Code
 
 Author: Claude Code
@@ -263,74 +332,3 @@ None.
 ### Next concrete action
 
 After the merge, start PR-98 (D-716). PR-99 follows it before Gate 2 (D-724).
-
-## Session 312: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-97, reviewer. Branch `feat/pr-97-camera-occlusion`. PR #124, pending merge. Reviewed head `d6589d96ca8362d94c69b64d7617c0980fc061ae`.
-
-### What this session did, and why
-
-- Reviewed the camera and model occlusion change, its exit tests, the PR comments, and the supplied frames.
-- Verified the straight-distance correction in `ModelFade` and its corner regression test.
-- Added the cross-provider review record. The review found no blocking defect and records the owner-accepted F-195 reduction (D-723).
-
-### State of the build
-
-- The PR code head was `d6589d96ca8362d94c69b64d7617c0980fc061ae`, based on `91dbaa25091e9da00f4d4ff5acd0a214c39d0dd7`.
-- The build passed with no warnings or errors. The focused camera, grid-ray, model-fade, and render-interpolation tests passed, 45 tests.
-- CI passed on the code head for the three-platform build and test, bit identity, smoke, bots, asset QA, det-lint, STE, documents, doc-gate, and night-gate. The review-gate and evaluate checks failed because the review record did not yet exist.
-- The review record and this handoff were pushed together as a metadata commit. The effective code head remains `d6589d96ca8362d94c69b64d7617c0980fc061ae`.
-
-### In flight
-
-- GitHub must run the review-gate and evaluate checks on the metadata head.
-- The owner can review the merge summary and merge PR #124.
-
-### Traps and gotchas
-
-- The record approves the code head above. The review and handoff commit changes metadata only.
-- F-202 belongs to PR-99 under D-724. The damage numbers and stairwell prompt belong to PR-98 under D-716.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the checks for the metadata head. Then give the owner the merge summary for PR #124.
-
-## Session 311: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-97, author. Branch `feat/pr-97-camera-occlusion`. PR #124, pending merge. Base `91dbaa2`.
-
-### What this session did, and why
-
-- Asked the owner the three camera questions of D-715. The owner took each recommendation: D-719 (the shoulder 0.9 meters right and 0.7 meters up), D-720 (the drawn camera 2.0 meters behind the shoulder point, also in rock), and D-721 (the model dither).
-- Wrote the camera in Core, the rock march in `GridRay`, the model fade in Game, and their tests. The simulation version rose to 19, and the bit-identity known answer moved to `1023ce079eb0af50` (G-20).
-- Ran the captures of D-714 on the Mac. A drawn camera in rock showed the black background in 5 of 63 full-clearer frames. The owner took a background of dark stone (D-722).
-- The owner told the session to check the frames of exit test 3 and confirm. F-196 and F-197 are not in the cited frames, and F-195 is reduced. The owner accepted the reduction (D-723). The frames found F-202, which PR-99 holds before Gate 2 (D-724).
-
-### State of the build
-
-- `main` is `91dbaa2`. The PR head carries the code, the frames in `docs/reviews/pr-124-frames/`, and the documents.
-- Local runs at the code head: the suite outside Smoke passed, 2117 tests. The Smoke category passed with the local Godot, 14 tests. `det-lint` and `ste-check` passed.
-
-### In flight
-
-- CI, the gitar pass, and the cross-provider review through `make codex-review PR=124`.
-
-### Traps and gotchas
-
-- The bot turns up to 180 degrees in one tick, and the Game interpolates the camera positions in a straight line, so a frame shot can draw from the head (F-202). Do not read such a frame as a camera rule defect.
-- A scratch test in `WhatYouCarry.Tests` can run a bot policy on a `SimulationLoop` and print `loop.Camera()` at each shot tick. It gives the camera of a frame shot fast. Delete it before a commit.
-- Two of 62 full-clearer shots stop the drawn camera at 1.2 meters, at a thin wall with air behind it (D-720, D-723).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Wait for the checks, answer the gitar pass, and run `make codex-review PR=124`. After the merge, start PR-98 (D-716).
