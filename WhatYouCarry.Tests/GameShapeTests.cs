@@ -120,7 +120,8 @@ public sealed class GameShapeTests
             callers += text.Split("ArrayMeshBuilder.BuildInto(").Length - 1;
         }
 
-        Assert.Equal(3, callers);
+        // The model boxes, the two chunk paths, and the armor overlays of PR-22.
+        Assert.Equal(4, callers);
     }
 
     /// <summary>
