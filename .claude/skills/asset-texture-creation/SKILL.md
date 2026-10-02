@@ -173,6 +173,7 @@ Each seed is a whole number from 1 upward. The generator mixes the seed with the
 
 ## Bindings for later PRs
 
-- A new box on the body binds PR-22: every armor overlay of that part must enclose it (D-300). Record the binding in the decision.
+- A new box on the body binds each armor overlay of its part, which must enclose it (D-300). Record the binding in the decision.
+- For an armor piece, load `references/armor-overlays.md` at Step 5.
 - A clip check runs at the rest pose and at every keyframe of every clip of the model (PR-57). For an enemy model, it also runs the swing clip that the weapon of the enemy names (D-742). Check a new box against the other limbs in the swing and the dodge.
 - A new recipe kind needs two users and a decision (D-111, D-507).

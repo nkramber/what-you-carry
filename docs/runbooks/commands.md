@@ -6,7 +6,7 @@ Status: reference, written 2026-09-23. Written in ASD-STE100. The byte ceiling o
 
 ## The Game arguments
 
-The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, and `--smoke` and `--bot` exclude each other. `--transitions` needs `--bot` and `--frame-log`, and `--seed` and `--frame-shots` need `--bot`. A Game flag before `--` also ends the boot with exit code 1, because the engine ignores it there (D-624).
+The Game layer checks the user arguments after `--` at boot. A bad argument ends the boot with exit code 1, and the error line names it (D-313, D-317). The contact sheet and the HUD shot take no other flag, and `--smoke` and `--bot` exclude each other. `--transitions` needs `--bot` and `--frame-log`, and `--seed` and `--frame-shots` need `--bot`. A Game flag before `--` also ends the boot with exit code 1, because the engine ignores it there (D-624). `--armor <set>` starts the run in the four pieces of one armor set: `leathers`, `brigandine`, or `blast` (D-762). A set that the content does not hold ends the boot with exit code 1, and the error names the absent item.
 
 A close of the window ends the session like the test exit: one end line, the frame log, and exit code 0 when the log holds no error (F-161).
 
@@ -18,7 +18,8 @@ A close of the window ends the session like the test exit: one end line, the fra
 - Bot session on one seed of the M-3 table, seed 2 here (D-704, D-706): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --seed 2 --frame-log frames.txt`
 - Transition test, PR-18 exit test 6 on the Deck (D-428, D-435): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --frame-log frames.txt --transitions 10`
 - Policy session, the frame cost of a timer expiry with the enemies (D-646, RR-P3-16): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --bot --policy timer-tester --frame-log frames.txt`
-- Contact sheet, a local run: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
+- Contact sheet, a local run. It shows the body in each armor set too: `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --contact-sheet sheet.png`
+- Play session in one armor set (D-762): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --armor blast`
 - HUD shot, the Deck frame of the HUD fixture (D-133): `/Applications/Godot_mono.app/Contents/MacOS/Godot --path WhatYouCarry.Game -- --hud-shot hud.png`
 - Tier 4 capture of the full-clearer on seed 1 (D-711, D-714): `/Applications/Godot_mono.app/Contents/MacOS/Godot --windowed --fixed-fps 60 --path WhatYouCarry.Game -- --bot --policy full-clearer --seed 1 --frame-shots shots/full-clearer`
 - Tier 4 capture of the timer-tester on seed 1 (D-711, D-714): `/Applications/Godot_mono.app/Contents/MacOS/Godot --windowed --fixed-fps 60 --path WhatYouCarry.Game -- --bot --policy timer-tester --seed 1 --frame-shots shots/timer-tester`
