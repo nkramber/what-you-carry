@@ -33,18 +33,34 @@ public static class BoxGeometry
     ];
 
     /// <summary>
-    /// The mesh of one box: a quad for each drawn side, six for a box with no undrawn side, relative to the pivot of the box. Each face reads the top
-    /// left part of its canvas at 64 texels per meter (D-308, D-603): a face of 43.2 texels reads that much of a canvas of 44.
+    /// The mesh of one box: a quad for each drawn side, six for a box with no undrawn side, relative to the pivot of the
+    /// box. Each face reads the top left part of its canvas at 64 texels per meter (D-308, D-603): a face of 43.2 texels
+    /// reads that much of a canvas of 44.
     /// </summary>
     /// <param name="modelPath">The path of the model file that holds the box, which the layout names each face by.</param>
     /// <param name="box">The box.</param>
     /// <param name="layout">The texture layout of the atlas.</param>
-    /// <exception cref="WhatYouCarry.Core.Logging.ContextException">The layout has no canvas for a face of the box.</exception>
+    /// <exception cref="WhatYouCarry.Core.Logging.ContextException">The layout has no canvas for a drawn face of the box.</exception>
     public static MeshData Build(string modelPath, ModelBox box, TextureLayout layout)
     {
+        return Build(modelPath, box, layout, 0.0f);
+    }
+
+    /// <summary>
+    /// The mesh of one box, grown by an outset on each side. An armor overlay grows, so a face in the plane of a body
+    /// face draws in front of it (D-300). Each face reads the canvas of the box at its own size.
+    /// </summary>
+    /// <param name="modelPath">The path of the model file that holds the box, which the layout names each face by.</param>
+    /// <param name="box">The box.</param>
+    /// <param name="layout">The texture layout of the atlas.</param>
+    /// <param name="outset">The growth of the mesh on each side, in meters, from zero.</param>
+    /// <exception cref="WhatYouCarry.Core.Logging.ContextException">The layout has no canvas for a drawn face of the box.</exception>
+    public static MeshData Build(string modelPath, ModelBox box, TextureLayout layout, float outset)
+    {
         MeshData data = new();
-        Vector3 low = RenderInterpolation.ToGodot(box.From - box.Pivot);
-        Vector3 high = RenderInterpolation.ToGodot(box.To - box.Pivot);
+        Vector3 grow = new(outset, outset, outset);
+        Vector3 low = RenderInterpolation.ToGodot(box.From - box.Pivot) - grow;
+        Vector3 high = RenderInterpolation.ToGodot(box.To - box.Pivot) + grow;
         for (int side = 0; side < Faces; side++)
         {
             // An undrawn face has no quad, so the box under an open head piece shows (D-767).

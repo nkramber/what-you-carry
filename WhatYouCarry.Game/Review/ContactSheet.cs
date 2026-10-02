@@ -14,10 +14,10 @@ namespace WhatYouCarry.Game.Review;
 
 /// <summary>
 /// One shot of the contact sheet: its cell, the model path of a body shot or null for a block shot, the block, the yaw
-/// of the body, the origin of the subject in the scene, and the point that the camera looks at. A ramp shot names the
-/// low end of its ramp as the block.
+/// of the body, the origin of the subject in the scene, the point that the camera looks at, and the armor set that the
+/// body wears or null. A ramp shot names the low end of its ramp as the block.
 /// </summary>
-public readonly record struct SheetShot(int Index, string? Model, BlockId Block, float BodyYawDegrees, Vector3 Origin, Vector3 Target)
+public readonly record struct SheetShot(int Index, string? Model, BlockId Block, float BodyYawDegrees, Vector3 Origin, Vector3 Target, string? ArmorSet = null)
 {
     /// <summary>Answers whether the shot shows a model: the body of the player or the model of an enemy family.</summary>
     public bool IsBody => this.Model is not null;
@@ -25,7 +25,7 @@ public readonly record struct SheetShot(int Index, string? Model, BlockId Block,
 
 /// <summary>
 /// The contact sheet of PR-14 (D-83, D-306): every block material, the body, the model of each enemy family (PR-76),
-/// and a ramp of each slope (PR-65) at game zoom, in one PNG file for the review of the owner. <c>Main</c> starts it on the flag, renders one shot per subject,
+/// the body in each armor set (PR-22), and a ramp of each slope (PR-65) at game zoom, in one PNG file for the review of the owner. <c>Main</c> starts it on the flag, renders one shot per subject,
 /// and quits.
 /// </summary>
 /// <remarks>
@@ -165,8 +165,36 @@ public static class ContactSheet
         return models;
     }
 
-    /// <summary>Every shot, in cell order: one per block, then each model and the same model turned, then one per ramp.</summary>
-    public static IReadOnlyList<SheetShot> Shots(IReadOnlyList<string> models)
+    /// <summary>
+    /// The armor sets of the sheet, in the order of the armor files: the id of each armor piece with its slot taken off,
+    /// once (D-753). A piece of each set carries the id `set-slot`, as `blast-chest`.
+    /// </summary>
+    public static IReadOnlyList<string> ArmorSets(IReadOnlyList<ArmorDefinition> armors)
+    {
+        List<string> sets = [];
+        foreach (ArmorDefinition armor in armors)
+        {
+            string set = SetOf(armor);
+            if (!sets.Contains(set))
+            {
+                sets.Add(set);
+            }
+        }
+
+        return sets;
+    }
+
+    /// <summary>The armor set of one piece: its id with the slot taken off, as `blast` for `blast-chest` (D-753).</summary>
+    public static string SetOf(ArmorDefinition armor)
+    {
+        return armor.Id.Substring(0, armor.Id.Length - armor.Slot.Length - 1);
+    }
+
+    /// <summary>
+    /// Every shot, in cell order: one per block, then each model and the same model turned, then the body in each armor
+    /// set and the same body turned, then one per ramp.
+    /// </summary>
+    public static IReadOnlyList<SheetShot> Shots(IReadOnlyList<string> models, IReadOnlyList<string> armorSets)
     {
         List<SheetShot> shots = [];
         foreach (BlockId block in Blocks)
@@ -182,6 +210,15 @@ public static class ContactSheet
             {
                 Vector3 origin = new(shots.Count * SubjectSpacing, 0.0f, 0.0f);
                 shots.Add(new SheetShot(shots.Count, model, BlockId.Air, yaw, origin, origin + new Vector3(0.0f, PlayerBody.Height / 2.0f, 0.0f)));
+            }
+        }
+
+        foreach (string set in armorSets)
+        {
+            foreach (float yaw in bodyYaws)
+            {
+                Vector3 origin = new(shots.Count * SubjectSpacing, 0.0f, 0.0f);
+                shots.Add(new SheetShot(shots.Count, AssetPaths.BodyModel, BlockId.Air, yaw, origin, origin + new Vector3(0.0f, PlayerBody.Height / 2.0f, 0.0f), set));
             }
         }
 
@@ -279,13 +316,13 @@ public static class ContactSheet
 
     /// <summary>The top left pixel of the cell of one shot on the sheet: the blocks and the models in rows of three, then the ramps in one row under them.</summary>
     /// <param name="shot">The shot.</param>
-    /// <param name="modelCount">The count of models of the sheet.</param>
-    public static Vector2I CellOrigin(SheetShot shot, int modelCount)
+    /// <param name="bodyCount">The count of body subjects of the sheet: each model and each armor set.</param>
+    public static Vector2I CellOrigin(SheetShot shot, int bodyCount)
     {
         if (Ramp.IsRamp(shot.Block))
         {
-            int firstRamp = SquareCells(modelCount);
-            return new Vector2I((shot.Index - firstRamp) * RampCellPixels, SquareRows(modelCount) * CellPixels);
+            int firstRamp = SquareCells(bodyCount);
+            return new Vector2I((shot.Index - firstRamp) * RampCellPixels, SquareRows(bodyCount) * CellPixels);
         }
 
         return new Vector2I((shot.Index % Columns) * CellPixels, (shot.Index / Columns) * CellPixels);
@@ -298,20 +335,20 @@ public static class ContactSheet
     }
 
     /// <summary>The height of the sheet, in pixels: the rows of the blocks and the models, then the row of ramps.</summary>
-    public static int SheetPixelsHigh(int modelCount)
+    public static int SheetPixelsHigh(int bodyCount)
     {
-        return (SquareRows(modelCount) * CellPixels) + RampCellPixels;
+        return (SquareRows(bodyCount) * CellPixels) + RampCellPixels;
     }
 
-    /// <summary>The count of the square cells: one for each block, and two for each model.</summary>
-    private static int SquareCells(int modelCount)
+    /// <summary>The count of the square cells: one for each block, and two for each body subject.</summary>
+    private static int SquareCells(int bodyCount)
     {
-        return Blocks.Length + (modelCount * ShotsPerModel);
+        return Blocks.Length + (bodyCount * ShotsPerModel);
     }
 
     /// <summary>The count of rows that the cells of the blocks and the models fill.</summary>
-    private static int SquareRows(int modelCount)
+    private static int SquareRows(int bodyCount)
     {
-        return (SquareCells(modelCount) + Columns - 1) / Columns;
+        return (SquareCells(bodyCount) + Columns - 1) / Columns;
     }
 }

@@ -4,6 +4,7 @@ using System.Globalization;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Game.Input;
 using WhatYouCarry.Game.Measure;
+using WhatYouCarry.Game.Models;
 using WhatYouCarry.Game.Review;
 using WhatYouCarry.Game.Smoke;
 
@@ -101,6 +102,7 @@ public sealed class UserArguments
         [HudShot.Flag] = 1,
         [FrameShots.Flag] = 1,
         [TestExit.PressFlag] = 2,
+        [StartArmor.Flag] = 1,
     };
 
     /// <summary>The words of each flag that the arguments hold, by flag.</summary>

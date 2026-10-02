@@ -16,6 +16,9 @@ using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Projectiles;
 using WhatYouCarry.Core.Replay;
 using WhatYouCarry.Core.Simulation;
+using WhatYouCarry.Game;
+using WhatYouCarry.Game.Animation;
+using WhatYouCarry.Game.Models;
 using WhatYouCarry.Tools.AssetQa;
 using Xunit;
 
@@ -704,6 +707,41 @@ public sealed class EquipmentTests
             bool openFront = armor.Slot == ArmorDefinition.HeadSlot && armor.Id != "blast-head";
             Assert.Equal(openFront, !model.Boxes[0].IsDrawn(BoxSide.North));
         }
+    }
+
+    /// <summary>
+    /// The swing clip plays a swift windup at its shorter length (D-750): the 9 ticks of a swift windup read the 12 ticks of
+    /// the windup of the clip, and each tick after the windup keeps its distance from the end of the swing. A swing
+    /// with no swift reads the clip tick for tick.
+    /// </summary>
+    [Fact]
+    public void SwiftPlaysTheShorterWindup()
+    {
+        Assert.Equal(0, BodyPose.SwingClipTick(0, 12, 9));
+        Assert.Equal(4, BodyPose.SwingClipTick(3, 12, 9));
+        Assert.Equal(10, BodyPose.SwingClipTick(8, 12, 9));
+        Assert.Equal(12, BodyPose.SwingClipTick(9, 12, 9));
+        Assert.Equal(35, BodyPose.SwingClipTick(32, 12, 9));
+        for (long tick = 0; tick < 36; tick++)
+        {
+            Assert.Equal(tick, BodyPose.SwingClipTick(tick, 12, 12));
+        }
+
+        SimulationLoop loop = new(1UL, Content, [new LoadoutEntry("ring-plain", ["swift"])]);
+        Assert.Equal(Sword.SwingTicks - 3, loop.Player.Weapon.SwingTicks);
+        Assert.Equal(Sword.SwingTicks - 1, BodyPose.SwingClipTick(loop.Player.Weapon.SwingTicks - 1, Sword.WindupTicks, loop.Player.Weapon.WindupTicks));
+    }
+
+    /// <summary>The flag `--armor` starts the run in the four pieces of its set, and the run with no flag wears nothing (D-762).</summary>
+    [Fact]
+    public void TheArmorFlagNamesTheStartSet()
+    {
+        IReadOnlyList<LoadoutEntry> blast = StartArmor.LoadoutOf(UserArguments.Parse(["--armor", "blast"]));
+        Assert.Equal(new[] { "blast-head", "blast-chest", "blast-legs", "blast-feet" }, blast.Select(entry => entry.Item));
+        Assert.All(blast, entry => Assert.Empty(entry.Affixes));
+        Assert.Empty(StartArmor.LoadoutOf(UserArguments.Parse([])));
+        Assert.Contains(UserArguments.ShortFlagMessage, Assert.Throws<ContextException>(() => UserArguments.Parse(["--armor"])).Message, StringComparison.Ordinal);
+        Assert.Equal(30, new SimulationLoop(1UL, Content, blast).Player.Equipment.Weight);
     }
 
     /// <summary>The repository content with one file replaced.</summary>

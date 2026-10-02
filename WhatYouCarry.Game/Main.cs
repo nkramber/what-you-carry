@@ -959,12 +959,12 @@ public partial class Main : Node3D
         ImageTexture blockAtlas = BlockAtlas.Build(atlasImage, tiles, contentDirectory);
         if (ContactSheet.IsRequested(arguments))
         {
-            this.RenderContactSheet(ContactSheet.PathOf(arguments), contentDirectory, content.Enemies, content.Hunter, atlas, blockAtlas, layout, swordModel);
+            this.RenderContactSheet(ContactSheet.PathOf(arguments), contentDirectory, content, atlas, blockAtlas, layout, swordModel);
             return;
         }
 
         PlayerClips playerClips = PlayerClips.Load(contentDirectory, weapon);
-        SimulationLoop loop = new(this.seed, content);
+        SimulationLoop loop = new(this.seed, content, StartArmor.LoadoutOf(arguments));
         this.loop = loop;
         if (BotSession.IsRequested(arguments))
         {
@@ -990,6 +990,17 @@ public partial class Main : Node3D
         StandardMaterial3D modelMaterial = ModelMaterial(atlas);
         ModelNodeTree nodes = ModelNodes.Build(bodyModel, modelMaterial, layout);
         ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(swordModel, modelMaterial, layout).Root);
+
+        // Each worn armor piece hangs its overlay on the body (D-300, D-762).
+        foreach (WornItem worn in loop.Player.Equipment.Worn)
+        {
+            if (worn.Armor is not null)
+            {
+                BlockbenchModel overlay = BlockbenchLoader.Parse(worn.Armor.Model, AssetFile.Read(contentDirectory, worn.Armor.Model));
+                OverlayAttach.Attach(nodes, bodyModel, overlay, modelMaterial, layout);
+            }
+        }
+
         this.playerNodes = nodes;
         this.playerModel = bodyModel;
 
@@ -1078,7 +1089,7 @@ public partial class Main : Node3D
     /// camera moves. The headless display, a shot with no image, and a write failure are each an error line and
     /// exit code 1 (T-2).
     /// </summary>
-    private async void RenderContactSheet(string path, string contentDirectory, IReadOnlyList<EnemyDefinition> families, HunterDefinition hunter, Texture2D atlas, Texture2D blockAtlas, TextureLayout layout, BlockbenchModel swordModel)
+    private async void RenderContactSheet(string path, string contentDirectory, ContentSet content, Texture2D atlas, Texture2D blockAtlas, TextureLayout layout, BlockbenchModel swordModel)
     {
         LogFields fields = RunFields(FirstSeed, SimulationLoop.FirstFloor, 0);
         fields.Add(FileField, path);
@@ -1089,17 +1100,35 @@ public partial class Main : Node3D
                 throw new ContextException(ContactSheetNeedsWindow);
             }
 
-            IReadOnlyList<string> modelPaths = ContactSheet.Models(families, hunter);
+            IReadOnlyList<string> modelPaths = ContactSheet.Models(content.Enemies, content.Hunter);
             Dictionary<string, BlockbenchModel> models = [];
             foreach (string modelPath in modelPaths)
             {
                 models.Add(modelPath, BlockbenchLoader.Parse(modelPath, AssetFile.Read(contentDirectory, modelPath)));
             }
 
-            IReadOnlyList<SheetShot> shots = ContactSheet.Shots(modelPaths);
-            ContactSheetNodes nodes = ContactSheetScene.Build(blockAtlas, layout, shots, models, swordModel, ModelMaterial(atlas));
+            // The overlays of each set, in the order of the armor files (D-300, D-753).
+            IReadOnlyList<string> sets = ContactSheet.ArmorSets(content.Armors);
+            Dictionary<string, IReadOnlyList<BlockbenchModel>> setOverlays = [];
+            foreach (string set in sets)
+            {
+                List<BlockbenchModel> overlays = [];
+                foreach (ArmorDefinition armor in content.Armors)
+                {
+                    if (ContactSheet.SetOf(armor) == set)
+                    {
+                        overlays.Add(BlockbenchLoader.Parse(armor.Model, AssetFile.Read(contentDirectory, armor.Model)));
+                    }
+                }
+
+                setOverlays.Add(set, overlays);
+            }
+
+            int bodyCount = modelPaths.Count + sets.Count;
+            IReadOnlyList<SheetShot> shots = ContactSheet.Shots(modelPaths, sets);
+            ContactSheetNodes nodes = ContactSheetScene.Build(blockAtlas, layout, shots, models, swordModel, ModelMaterial(atlas), setOverlays);
             this.AddChild(nodes.Viewport);
-            Image sheet = Image.CreateEmpty(ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(modelPaths.Count), false, Image.Format.Rgb8);
+            Image sheet = Image.CreateEmpty(ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(bodyCount), false, Image.Format.Rgb8);
             await this.WaitFrames(ContactSheet.WarmUpFrames);
             foreach (SheetShot shot in shots)
             {
@@ -1115,7 +1144,7 @@ public partial class Main : Node3D
                 }
 
                 frame.Convert(Image.Format.Rgb8);
-                sheet.BlitRect(frame, ContactSheet.CropRect(shot), ContactSheet.CellOrigin(shot, modelPaths.Count));
+                sheet.BlitRect(frame, ContactSheet.CropRect(shot), ContactSheet.CellOrigin(shot, bodyCount));
             }
 
             File.WriteAllBytes(path, sheet.SavePngToBuffer());

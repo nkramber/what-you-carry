@@ -29,6 +29,9 @@ public sealed class ContactSheetTests
     /// <summary>The models of the sheet of the repository content: the body, the model of each enemy family, and the Overseer (D-673, D-698).</summary>
     private static readonly IReadOnlyList<string> Models = ContactSheet.Models(TestWorld.Content.Enemies, TestWorld.Content.Hunter);
 
+    /// <summary>The armor sets of the sheet (PR-22).</summary>
+    private static readonly IReadOnlyList<string> Sets = ContactSheet.ArmorSets(TestWorld.Content.Armors);
+
     /// <summary>The flag starts the sheet, and nothing else does.</summary>
     [Fact]
     public void IsRequestedReadsTheFlag()
@@ -55,7 +58,7 @@ public sealed class ContactSheetTests
     [Fact]
     public void LanternOfEachShotLightsItsOwnSubjectAlone()
     {
-        foreach (SheetShot shot in ContactSheet.Shots(Models))
+        foreach (SheetShot shot in ContactSheet.Shots(Models, Sets))
         {
             Vector3 lantern = ContactSheet.LanternPosition(shot);
             Vector3 camera = ContactSheet.CameraPosition(shot);
@@ -94,33 +97,37 @@ public sealed class ContactSheetTests
     }
 
     /// <summary>
-    /// The sheet shows each block once, in id order, the body and the scavenger from both sides, and the low end of a
-    /// ramp of each slope (PR-76 exit test 3). Each shot has a cell of its own inside the sheet, and no two cells overlap.
+    /// The sheet shows each block once, in id order, the body and the scavenger from both sides, the body in each armor
+    /// set from both sides (PR-22), and the low end of a ramp of each slope (PR-76 exit test 3). Each shot has a cell of
+    /// its own inside the sheet, and no two cells overlap.
     /// </summary>
     [Fact]
     public void ShotsCoverEveryBlockBothSidesOfEachModelAndEachSlope()
     {
-        IReadOnlyList<SheetShot> shots = ContactSheet.Shots(Models);
+        IReadOnlyList<SheetShot> shots = ContactSheet.Shots(Models, Sets);
 
         Assert.Equal(new[] { AssetPaths.BodyModel, "models/scavenger.bbmodel", "models/overseer.bbmodel" }, Models);
-        Assert.Equal(16, shots.Count);
+        Assert.Equal(new[] { "blast", "brigandine", "leathers" }, Sets);
+        Assert.Equal(22, shots.Count);
         BlockId[] blocks = shots.Where(shot => !shot.IsBody && !Ramp.IsRamp(shot.Block)).Select(shot => shot.Block).ToArray();
         Assert.Equal(new[] { BlockId.RawStone, BlockId.HewnStone, BlockId.TimberBeam, BlockId.OreVein, BlockId.StillWater, BlockId.Rubble, BlockId.Plank }, blocks);
         float[] yaws = shots.Where(shot => shot.IsBody).Select(shot => shot.BodyYawDegrees).ToArray();
-        Assert.Equal(new[] { 0.0f, 180.0f, 0.0f, 180.0f, 0.0f, 180.0f }, yaws);
+        Assert.Equal(new[] { 0.0f, 180.0f, 0.0f, 180.0f, 0.0f, 180.0f, 0.0f, 180.0f, 0.0f, 180.0f, 0.0f, 180.0f }, yaws);
         string?[] models = shots.Where(shot => shot.IsBody).Select(shot => shot.Model).ToArray();
-        Assert.Equal(new[] { AssetPaths.BodyModel, AssetPaths.BodyModel, "models/scavenger.bbmodel", "models/scavenger.bbmodel", "models/overseer.bbmodel", "models/overseer.bbmodel" }, models);
+        Assert.Equal(new[] { AssetPaths.BodyModel, AssetPaths.BodyModel, "models/scavenger.bbmodel", "models/scavenger.bbmodel", "models/overseer.bbmodel", "models/overseer.bbmodel", AssetPaths.BodyModel, AssetPaths.BodyModel, AssetPaths.BodyModel, AssetPaths.BodyModel, AssetPaths.BodyModel, AssetPaths.BodyModel }, models);
+        string?[] armorSets = shots.Where(shot => shot.IsBody).Select(shot => shot.ArmorSet).ToArray();
+        Assert.Equal(new[] { null, null, null, null, null, null, "blast", "blast", "brigandine", "brigandine", "leathers", "leathers" }, armorSets);
         Ramp[] ramps = shots.Where(shot => Ramp.IsRamp(shot.Block)).Select(shot => Ramp.FromId(shot.Block)).ToArray();
         Assert.Equal(new[] { new Ramp(RampRise.MinusZ, 2, 0), new Ramp(RampRise.MinusZ, 3, 0), new Ramp(RampRise.MinusZ, 4, 0) }, ramps);
 
         Rect2I render = new(0, 0, ContactSheet.RenderPixels, ContactSheet.RenderPixels);
-        Rect2I sheet = new(0, 0, ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(Models.Count));
+        Rect2I sheet = new(0, 0, ContactSheet.SheetPixelsWide(), ContactSheet.SheetPixelsHigh(Models.Count + Sets.Count));
         List<Rect2I> cells = [];
         for (int index = 0; index < shots.Count; index++)
         {
             Assert.Equal(index, shots[index].Index);
             Rect2I crop = ContactSheet.CropRect(shots[index]);
-            Rect2I cell = new(ContactSheet.CellOrigin(shots[index], Models.Count), crop.Size);
+            Rect2I cell = new(ContactSheet.CellOrigin(shots[index], Models.Count + Sets.Count), crop.Size);
             Assert.True(render.Encloses(crop), $"The crop {crop} of the shot {index} leaves the render.");
             Assert.True(sheet.Encloses(cell), $"The cell {cell} of the shot {index} leaves the sheet {sheet}.");
             foreach (Rect2I earlier in cells)
@@ -149,7 +156,7 @@ public sealed class ContactSheetTests
         double bodyRadius = BodyRadius(AssetPaths.BodyModel);
         Assert.True(bodyRadius > 0.9, $"The body radius is {bodyRadius} meters, and the body is 1.8 meters tall.");
         float cellHalf = ContactSheet.CellPixels / (float)ContactSheet.RenderPixels;
-        foreach (SheetShot shot in ContactSheet.Shots(Models).Where(shot => shot.IsBody))
+        foreach (SheetShot shot in ContactSheet.Shots(Models, Sets).Where(shot => shot.IsBody))
         {
             // The scene stands the model at the origin of the shot and turns it about the up axis by the yaw of the shot.
             Basis turn = new(Vector3.Up, Mathf.DegToRad(shot.BodyYawDegrees));
@@ -160,7 +167,7 @@ public sealed class ContactSheetTests
             }
         }
 
-        foreach (SheetShot shot in ContactSheet.Shots(Models).Where(shot => Ramp.IsRamp(shot.Block)))
+        foreach (SheetShot shot in ContactSheet.Shots(Models, Sets).Where(shot => Ramp.IsRamp(shot.Block)))
         {
             int run = Ramp.FromId(shot.Block).Run;
             foreach (float x in new float[] { ContactSheet.RampFirstColumn, ContactSheet.RampFirstColumn + ContactSheet.RampColumns })
@@ -179,7 +186,7 @@ public sealed class ContactSheetTests
     [Fact]
     public void CamerasStandAtTheBoomLength()
     {
-        foreach (SheetShot shot in ContactSheet.Shots(Models))
+        foreach (SheetShot shot in ContactSheet.Shots(Models, Sets))
         {
             Vector3 camera = ContactSheet.CameraPosition(shot);
             Assert.InRange(camera.DistanceTo(shot.Target), ContactSheet.Distance - 0.001f, ContactSheet.Distance + 0.001f);
@@ -191,7 +198,7 @@ public sealed class ContactSheetTests
     [Fact]
     public void NoShotSeesANeighbor()
     {
-        IReadOnlyList<SheetShot> shots = ContactSheet.Shots(Models);
+        IReadOnlyList<SheetShot> shots = ContactSheet.Shots(Models, Sets);
         double halfView = PlaceholderScene.ViewDegrees * Math.PI / 360.0;
         foreach (SheetShot shot in shots)
         {
@@ -294,7 +301,7 @@ public sealed class ContactSheetTests
     /// <summary>The largest distance from the target of a shot of one model to a box corner of the model or of its held sword, in meters (D-336).</summary>
     private static double BodyRadius(string modelPath)
     {
-        SheetShot shot = ContactSheet.Shots(Models).First(candidate => candidate.Model == modelPath);
+        SheetShot shot = ContactSheet.Shots(Models, Sets).First(candidate => candidate.Model == modelPath);
         Vector3 center = shot.Target - shot.Origin;
         return BodyCorners(modelPath).Max(corner => (double)corner.DistanceTo(center));
     }

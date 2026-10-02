@@ -39,13 +39,34 @@ public static class BodyPose
         Dictionary<string, CoreVector3> pose = WalkCycle.Rotations(walked, walkAmount);
         if (player.SwingTick != Player.NoSwing)
         {
-            // A test holds the length of the swing clip equal to the ticks of the swing, so the tick fits the clip (D-87).
-            foreach (KeyValuePair<string, CoreVector3> track in clips.Swing.RotationsAt((int)player.SwingTick))
+            // A test holds the length of the swing clip equal to the ticks of the swing of the weapon file, so the tick fits
+            // the clip (D-87). A swift windup is shorter, and the clip plays its windup in the shorter time (D-750).
+            long clipTick = SwingClipTick(player.SwingTick, player.Equipment.Weapon.WindupTicks, player.Weapon.WindupTicks);
+            foreach (KeyValuePair<string, CoreVector3> track in clips.Swing.RotationsAt((int)clipTick))
             {
                 pose[track.Key] = track.Value;
             }
         }
 
         return pose;
+    }
+
+    /// <summary>
+    /// The tick of the swing clip at a tick of the swing (D-87, D-750). The clip has the windup of the weapon file. A
+    /// swing with a shorter windup reads the windup of the clip at the rate of the two windups, rounded down, and every
+    /// tick after the windup at the same distance from the end of the windup. A swing with no swift reads the clip
+    /// tick for tick.
+    /// </summary>
+    /// <param name="swingTick">The tick of the swing, from zero.</param>
+    /// <param name="clipWindup">The windup ticks of the weapon file, which the clip holds.</param>
+    /// <param name="swingWindup">The windup ticks of the swing, which swift can shorten. It is from 1 to the clip windup.</param>
+    public static long SwingClipTick(long swingTick, long clipWindup, long swingWindup)
+    {
+        if (swingTick < swingWindup)
+        {
+            return swingTick * clipWindup / swingWindup;
+        }
+
+        return swingTick + (clipWindup - swingWindup);
     }
 }

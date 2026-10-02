@@ -14,7 +14,7 @@ public sealed record ContactSheetNodes(SubViewport Viewport, Camera3D Camera, Om
 /// <summary>
 /// Builds the scene of the contact sheet (D-306) in a viewport with a world of its own: each block in a small grid
 /// and each ramp in its ramp scene through the greedy mesher and the world material, the two bodies with the sword in
-/// the hand and the model material (D-336), the scene light of play (D-678), and the camera of play. Every subject stands at the place
+/// the hand and the model material (D-336), the body in each armor set (D-300), the scene light of play (D-678), and the camera of play. Every subject stands at the place
 /// that its shot gives. Each model shot draws the model that it names, with the sword in the hand (D-673).
 /// </summary>
 public static class ContactSheetScene
@@ -24,6 +24,8 @@ public static class ContactSheetScene
 
     private const string NoSceneModel = "A shot of the contact sheet names a model that the scene does not hold.";
     private const string ModelField = "model";
+    private const string NoSceneSet = "A shot of the contact sheet names an armor set that the scene does not hold.";
+    private const string SetField = "armorSet";
 
     /// <summary>A point far from every subject. Both ends of the fade segment sit there, so no fragment of a subject fades (D-292).</summary>
     public static readonly Vector3 FarPoint = new(0.0f, -1000.0f, 0.0f);
@@ -35,8 +37,9 @@ public static class ContactSheetScene
     /// <param name="models">Each model that a shot names, by its path.</param>
     /// <param name="sword">The weapon model that each model holds.</param>
     /// <param name="modelMaterial">The one model material of the scene (D-85).</param>
-    /// <exception cref="Core.Logging.ContextException">A shot names a model that the models do not hold.</exception>
-    public static ContactSheetNodes Build(Texture2D blockAtlas, TextureLayout layout, IReadOnlyList<SheetShot> shots, IReadOnlyDictionary<string, BlockbenchModel> models, BlockbenchModel sword, Material modelMaterial)
+    /// <param name="setOverlays">The overlay models of each armor set, by set (D-300, D-753).</param>
+    /// <exception cref="Core.Logging.ContextException">A shot names a model or an armor set that the scene does not hold.</exception>
+    public static ContactSheetNodes Build(Texture2D blockAtlas, TextureLayout layout, IReadOnlyList<SheetShot> shots, IReadOnlyDictionary<string, BlockbenchModel> models, BlockbenchModel sword, Material modelMaterial, IReadOnlyDictionary<string, IReadOnlyList<BlockbenchModel>> setOverlays)
     {
         SubViewport viewport = new()
         {
@@ -62,6 +65,21 @@ public static class ContactSheetScene
 
                 ModelNodeTree nodes = ModelNodes.Build(model, modelMaterial, layout);
                 ModelNodes.Hold(nodes, EquipmentSlots.Weapon, ModelNodes.Build(sword, modelMaterial, layout).Root);
+                if (shot.ArmorSet is not null)
+                {
+                    if (!setOverlays.TryGetValue(shot.ArmorSet, out IReadOnlyList<BlockbenchModel>? overlays))
+                    {
+                        Core.Logging.ContextException error = new(NoSceneSet);
+                        error.AddContext(SetField, shot.ArmorSet);
+                        throw error;
+                    }
+
+                    foreach (BlockbenchModel overlay in overlays)
+                    {
+                        OverlayAttach.Attach(nodes, model, overlay, modelMaterial, layout);
+                    }
+                }
+
                 nodes.Root.Position = shot.Origin;
                 nodes.Root.RotationDegrees = new Vector3(0.0f, shot.BodyYawDegrees, 0.0f);
                 viewport.AddChild(nodes.Root);
