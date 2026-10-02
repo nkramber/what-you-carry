@@ -1,0 +1,21 @@
+{
+  "model": "models/armor/blast-feet.bbmodel",
+  "boxes": {
+    "leg_left_lower_box": {
+      "recipe": "iron",
+      "faces": {}
+    },
+    "leg_right_lower_box": {
+      "recipe": "iron",
+      "faces": {}
+    },
+    "toe_left_box": {
+      "recipe": "iron",
+      "faces": {}
+    },
+    "toe_right_box": {
+      "recipe": "iron",
+      "faces": {}
+    }
+  }
+}

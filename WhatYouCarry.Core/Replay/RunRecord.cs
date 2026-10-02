@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
+using WhatYouCarry.Core.Items;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Simulation;
 
@@ -14,13 +15,18 @@ namespace WhatYouCarry.Core.Replay;
 /// </summary>
 /// <remarks>
 /// The initial state of D-151 holds the loadout items with their rolls, the tree state, and the amulet
-/// assignment. None of those types exists in Phase 1, so the header writes an empty loadout, an empty tree, and
-/// no amulet, and this type carries no field for them yet. The schema is complete: a Phase 3 record adds items to
-/// the same names, and an older reader then fails on a list with an item, and never on an absent name (D-229).
-/// The line ends with a CRC-32 of the bytes before it, so a changed bit of the header is an error and never another
-/// seed (D-637).
+/// assignment. The loadout holds one entry for each worn item: the item id and its affix ids (D-766). The tree and
+/// the amulet have no type yet, so the header writes an empty tree and no amulet, and this type carries no field for
+/// them. The schema is complete: a later record adds items to the same names, and an older reader then fails on a
+/// list with an item, and never on an absent name (D-229). The line ends with a CRC-32 of the bytes before it, so a
+/// changed bit of the header is an error and never another seed (D-637).
 /// </remarks>
-public sealed record RunRecordHeader(int FormatVersion, int SimulationVersion, string ContentHash, ulong Seed);
+/// <param name="FormatVersion">The version of the record layout.</param>
+/// <param name="SimulationVersion">The simulation version of the build that wrote the record (G-20).</param>
+/// <param name="ContentHash">The hash of the content set (D-163).</param>
+/// <param name="Seed">The run seed (D-159).</param>
+/// <param name="Loadout">The worn items at the start of the run, in equip order (D-762, D-766).</param>
+public sealed record RunRecordHeader(int FormatVersion, int SimulationVersion, string ContentHash, ulong Seed, IReadOnlyList<LoadoutEntry> Loadout);
 
 /// <summary>
 /// Writes and reads the header line of a run record (D-151, D-163). The frames after it are the work of
@@ -69,9 +75,16 @@ public static class RunRecord
     /// <summary>The names that a header can carry beyond the required ones. There are none.</summary>
     public static readonly IReadOnlyList<string> Optional = [];
 
-    /// <summary>A header for a new run of this build.</summary>
+    /// <summary>A header for a new run of this build, with no worn item.</summary>
     /// <exception cref="ContextException">The content hash is not 64 lowercase hexadecimal digits.</exception>
     public static RunRecordHeader NewHeader(string contentHash, ulong seed)
+    {
+        return NewHeader(contentHash, seed, []);
+    }
+
+    /// <summary>A header for a new run of this build, with the worn items of a loadout (D-762, D-766).</summary>
+    /// <exception cref="ContextException">The content hash is not 64 lowercase hexadecimal digits.</exception>
+    public static RunRecordHeader NewHeader(string contentHash, ulong seed, IReadOnlyList<LoadoutEntry> loadout)
     {
         if (!IsContentHash(contentHash))
         {
@@ -80,11 +93,11 @@ public static class RunRecord
             throw error;
         }
 
-        return new RunRecordHeader(FormatVersion, Simulation.SimulationVersion.Value, contentHash, seed);
+        return new RunRecordHeader(FormatVersion, Simulation.SimulationVersion.Value, contentHash, seed, loadout);
     }
 
     /// <summary>The header as one UTF-8 JSON line, with its line break.</summary>
-    /// <exception cref="ContextException">The content hash is not 64 lowercase hexadecimal digits.</exception>
+    /// <exception cref="ContextException">The content hash is not 64 lowercase hexadecimal digits, or a loadout id holds a letter outside its form.</exception>
     public static byte[] WriteHeader(RunRecordHeader header)
     {
         // The hash goes inside quotation marks with no escape pass, so it must hold nothing that JSON reserves.
@@ -114,7 +127,9 @@ public static class RunRecord
         text.Append(header.Seed.ToString(CultureInfo.InvariantCulture));
         text.Append(",\"");
         text.Append(LoadoutName);
-        text.Append("\":[],\"");
+        text.Append("\":");
+        AppendLoadout(text, header.Loadout);
+        text.Append(",\"");
         text.Append(TreeName);
         text.Append("\":[],\"");
         text.Append(AmuletName);
@@ -195,13 +210,13 @@ public static class RunRecord
             throw ContentError.Make(HeaderName, SeedName, "holds a number that does not fit an unsigned 64-bit seed");
         }
 
-        // Phase 1 has no item, no tree node, and no amulet. A value of another kind here comes from a later
-        // format, and the reader must say so and never step over it (D-229).
-        ContentValidator.Value(HeaderName, members, LoadoutName, JsonMemberKind.EmptyList);
+        // This build has no tree node and no amulet. A value of another kind here comes from a later format, and the
+        // reader must say so and never step over it (D-229).
+        IReadOnlyList<LoadoutEntry> loadout = ReadLoadout(members);
         ContentValidator.Value(HeaderName, members, TreeName, JsonMemberKind.EmptyList);
         ContentValidator.Value(HeaderName, members, AmuletName, JsonMemberKind.Null);
 
-        return (new RunRecordHeader((int)formatVersion, (int)simulationVersion, contentHash, seed), lineEnd + 1);
+        return (new RunRecordHeader((int)formatVersion, (int)simulationVersion, contentHash, seed, loadout), lineEnd + 1);
     }
 
     /// <summary>
@@ -262,6 +277,146 @@ public static class RunRecord
         }
 
         return -1;
+    }
+
+    /// <summary>The names of the fields of one loadout entry (D-766).</summary>
+    public const string ItemName = "item";
+    public const string AffixesName = "affixes";
+
+    /// <summary>The names that a loadout entry must carry (D-766).</summary>
+    private static readonly IReadOnlyList<string> EntryRequired =
+    [
+        ItemName,
+        AffixesName,
+    ];
+
+    /// <summary>The names that a loadout entry can carry beyond the required ones. There are none.</summary>
+    private static readonly IReadOnlyList<string> EntryOptional = [];
+
+    /// <summary>
+    /// The loadout as a JSON list: one object for each entry, with the item id and the list of affix ids (D-766). The ids
+    /// go inside quotation marks with no escape pass, so each one holds lowercase letters, digits, and hyphens alone.
+    /// </summary>
+    /// <exception cref="ContextException">An id is empty or holds another letter.</exception>
+    private static void AppendLoadout(StringBuilder text, IReadOnlyList<LoadoutEntry> loadout)
+    {
+        text.Append('[');
+        for (int index = 0; index < loadout.Count; index++)
+        {
+            LoadoutEntry entry = loadout[index];
+            if (index > 0)
+            {
+                text.Append(',');
+            }
+
+            text.Append("{\"");
+            text.Append(ItemName);
+            text.Append("\":\"");
+            text.Append(LoadoutId(entry.Item));
+            text.Append("\",\"");
+            text.Append(AffixesName);
+            text.Append("\":[");
+            for (int affix = 0; affix < entry.Affixes.Count; affix++)
+            {
+                if (affix > 0)
+                {
+                    text.Append(',');
+                }
+
+                text.Append('"');
+                text.Append(LoadoutId(entry.Affixes[affix]));
+                text.Append('"');
+            }
+
+            text.Append("]}");
+        }
+
+        text.Append(']');
+    }
+
+    /// <summary>An id of the loadout, which holds lowercase letters, digits, and hyphens alone, and at least one letter.</summary>
+    /// <exception cref="ContextException">The id is empty or holds another letter.</exception>
+    private static string LoadoutId(string id)
+    {
+        bool valid = id.Length > 0;
+        for (int index = 0; index < id.Length && valid; index++)
+        {
+            char letter = id[index];
+            valid = (letter >= 'a' && letter <= 'z') || (letter >= '0' && letter <= '9') || letter == '-';
+        }
+
+        if (!valid)
+        {
+            ContextException error = new($"A loadout id holds lowercase letters, digits, and hyphens, and this one is '{id}'. The header writes it with no escape pass (D-766).");
+            error.AddContext("id", id);
+            throw error;
+        }
+
+        return id;
+    }
+
+    /// <summary>The loadout of the header: an empty list, or a list of entries of D-766.</summary>
+    /// <exception cref="ContextException">The loadout is of another kind, or an entry is absent a field, holds an unknown one, or holds one of another kind.</exception>
+    private static IReadOnlyList<LoadoutEntry> ReadLoadout(IReadOnlyList<JsonMember> members)
+    {
+        foreach (JsonMember member in members)
+        {
+            if (member.Name != LoadoutName)
+            {
+                continue;
+            }
+
+            if (member.Kind == JsonMemberKind.EmptyList)
+            {
+                return [];
+            }
+
+            if (member.Kind != JsonMemberKind.ObjectList || member.Objects is null)
+            {
+                throw ContentError.Make(HeaderName, LoadoutName, "holds a value that is not a list of loadout entries (D-766)");
+            }
+
+            List<LoadoutEntry> loadout = [];
+            for (int index = 0; index < member.Objects.Count; index++)
+            {
+                string field = LoadoutName + "[" + ((long)index).ToString(CultureInfo.InvariantCulture) + "]";
+                IReadOnlyList<JsonMember> entry = member.Objects[index];
+                ContentValidator.Check(HeaderName, entry, EntryRequired, EntryOptional);
+                string item = ContentValidator.Value(HeaderName, entry, ItemName, JsonMemberKind.Text);
+                loadout.Add(new LoadoutEntry(item, ReadAffixes(field, entry)));
+            }
+
+            return loadout;
+        }
+
+        throw ContentError.Make(HeaderName, LoadoutName, "is absent, and this type requires it");
+    }
+
+    /// <summary>The affix ids of one loadout entry: an empty list, or a list of text.</summary>
+    /// <exception cref="ContextException">The affixes are of another kind.</exception>
+    private static IReadOnlyList<string> ReadAffixes(string field, IReadOnlyList<JsonMember> entry)
+    {
+        foreach (JsonMember member in entry)
+        {
+            if (member.Name != AffixesName)
+            {
+                continue;
+            }
+
+            if (member.Kind == JsonMemberKind.EmptyList)
+            {
+                return [];
+            }
+
+            if (member.Kind != JsonMemberKind.TextList)
+            {
+                throw ContentError.Make(HeaderName, field, $"holds '{AffixesName}' that is not a list of affix ids (D-766)");
+            }
+
+            return ContentValidator.Texts(member.Value);
+        }
+
+        throw ContentError.Make(HeaderName, field, $"holds no '{AffixesName}', and each loadout entry holds one (D-766)");
     }
 
     /// <summary>Answers whether the text is 64 lowercase hexadecimal digits, which is the form of D-221.</summary>

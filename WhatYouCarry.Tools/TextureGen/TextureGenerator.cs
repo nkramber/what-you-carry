@@ -43,6 +43,12 @@ public static class TextureGenerator
                 ModelBox box = paint.Model.Boxes[boxIndex];
                 for (int side = 0; side < BoxFaces.Names.Count; side++)
                 {
+                    // An undrawn face takes no canvas and no place (D-767).
+                    if (!box.IsDrawn((BoxSide)side))
+                    {
+                        continue;
+                    }
+
                     string name = TextureLayout.FaceName(paint.Model.Path, box.Name, (BoxSide)side);
                     (int width, int height) = BoxFaces.CanvasTexels(box, (BoxSide)side);
                     if (width <= 0 || height <= 0)
@@ -86,7 +92,7 @@ public static class TextureGenerator
         }
     }
 
-    /// <summary>The layout of the places, in the order that the canvases took: the blocks, then the faces by model, box, and side.</summary>
+    /// <summary>The layout of the places, in the order that the canvases took: the blocks, then the drawn faces by model, box, and side.</summary>
     private static TextureLayout Layout(IReadOnlyList<BlockPaint> blocks, IReadOnlyList<ModelPaint> models, IReadOnlyList<AtlasRect> places)
     {
         List<BlockPlace> blockPlaces = [];
@@ -104,6 +110,11 @@ public static class TextureGenerator
             {
                 for (int side = 0; side < BoxFaces.Names.Count; side++)
                 {
+                    if (!paint.Model.Boxes[boxIndex].IsDrawn((BoxSide)side))
+                    {
+                        continue;
+                    }
+
                     string recipe = paint.Recipes[boxIndex][side];
                     facePlaces.Add(new FacePlace(paint.Model.Path, paint.Model.Boxes[boxIndex].Name, (BoxSide)side, recipe, places[index]));
                     index++;

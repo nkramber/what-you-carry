@@ -1,0 +1,13 @@
+{
+  "model": "models/armor/brigandine-legs.bbmodel",
+  "boxes": {
+    "leg_left_upper_box": {
+      "recipe": "cloth",
+      "faces": {}
+    },
+    "leg_right_upper_box": {
+      "recipe": "cloth",
+      "faces": {}
+    }
+  }
+}

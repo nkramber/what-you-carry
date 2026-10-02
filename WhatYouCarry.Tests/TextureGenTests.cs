@@ -440,8 +440,18 @@ public sealed class TextureGenTests
             faceRecipe.Add(face.Model + ":" + face.Box + ":" + BoxFaces.Name(face.Side), face.Recipe);
         }
 
-        Assert.Equal(boxRecipe.Count * BoxFaces.Names.Count, RepositoryTextures.Layout.Faces.Count);
+        // The armor overlays of PR-22 have a test of their own, because an undrawn face takes no place (D-767).
+        List<FacePlace> places = [];
         foreach (FacePlace place in RepositoryTextures.Layout.Faces)
+        {
+            if (!place.Model.StartsWith(AssetPaths.ArmorDirectory, StringComparison.Ordinal))
+            {
+                places.Add(place);
+            }
+        }
+
+        Assert.Equal(boxRecipe.Count * BoxFaces.Names.Count, places.Count);
+        foreach (FacePlace place in places)
         {
             string box = place.Model + ":" + place.Box;
             string face = box + ":" + BoxFaces.Name(place.Side);

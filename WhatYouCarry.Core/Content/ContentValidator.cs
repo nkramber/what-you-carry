@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using WhatYouCarry.Core.Logging;
 
 namespace WhatYouCarry.Core.Content;
@@ -140,6 +141,30 @@ public static class ContentValidator
         return numbers;
     }
 
+    /// <summary>
+    /// The items of a list of text, which the reader gives as the item texts with a comma between them. No item holds a
+    /// comma, because the reader rejects one (D-766). The scan reads the text letter by letter, because Core holds no
+    /// string member that splits one (G-21).
+    /// </summary>
+    public static IReadOnlyList<string> Texts(string text)
+    {
+        List<string> items = [];
+        StringBuilder item = new();
+        for (int index = 0; index <= text.Length; index++)
+        {
+            if (index == text.Length || text[index] == ',')
+            {
+                items.Add(item.ToString());
+                item = new StringBuilder();
+                continue;
+            }
+
+            item.Append(text[index]);
+        }
+
+        return items;
+    }
+
     /// <summary>The largest whole number that a list value takes. No field of a list needs a larger one.</summary>
     public const long LargestListNumber = 9999;
 
@@ -167,6 +192,8 @@ public static class ContentValidator
             case JsonMemberKind.EmptyList: return "empty list";
             case JsonMemberKind.Null: return "null";
             case JsonMemberKind.NumberList: return "list of numbers";
+            case JsonMemberKind.TextList: return "list of text";
+            case JsonMemberKind.ObjectList: return "list of objects";
             default: return "unknown";
         }
     }

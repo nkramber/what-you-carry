@@ -6,6 +6,7 @@ using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Entities;
+using WhatYouCarry.Core.Items;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Physics;
 using WhatYouCarry.Core.Procgen;
@@ -132,7 +133,18 @@ public static class BitIdentitySweep
         AddFloor(ref hash, FloorGenerator.Generate(DescendSeed, SimulationLoop.FirstFloor, repository));
         AddStairwellRecord(ref hash, RecordStairwellRun(new GreedyDescender(repository), DescendSeed, repository), repository, RunEnd.Death, SimulationLoop.FirstFloor + 1);
         AddStairwellRecord(ref hash, RecordStairwellRun(new Coward(), AscendSeed, repository), repository, RunEnd.Ascend, SimulationLoop.FirstFloor);
+
+        AddArmoredRecord(ref hash, repository);
         return hash;
+    }
+
+    /// <summary>The loadout of the armored stairwell record: the full Blast plate set, a ring of burning and lifesteal, and a ring of swift.</summary>
+    public static IReadOnlyList<LoadoutEntry> ArmoredLoadout()
+    {
+        List<LoadoutEntry> loadout = [.. ArmorSets.FullSet("blast")];
+        loadout.Add(new LoadoutEntry("ring-plain", ["burning", "lifesteal"]));
+        loadout.Add(new LoadoutEntry("ring-plain", ["swift"]));
+        return loadout;
     }
 
     /// <summary>The content set of the checkout, from the JSON files that the build put into the tool (F-133).</summary>
@@ -151,14 +163,32 @@ public static class BitIdentitySweep
     /// <exception cref="InvalidOperationException">The run does not end inside <see cref="StairwellTickLimit"/> ticks (T-2).</exception>
     public static StairwellRecord RecordStairwellRun(IBotPolicy policy, ulong seed, ContentSet content)
     {
+        return Play(policy, seed, content, [], mustEnd: true).Record;
+    }
+
+    /// <summary>
+    /// Plays one bot policy as <see cref="RecordStairwellRun(IBotPolicy, ulong, ContentSet)"/> does, with the worn items of
+    /// a loadout in the header and on the player (D-762, D-766). A run that must end fails at the tick limit, and any
+    /// other run stops there. It also counts the hits of the blade and the hits that landed on the player.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">A run that must end does not end inside <see cref="StairwellTickLimit"/> ticks (T-2).</exception>
+    private static (StairwellRecord Record, int BladeHits, int PlayerHits) Play(IBotPolicy policy, ulong seed, ContentSet content, IReadOnlyList<LoadoutEntry> loadout, bool mustEnd)
+    {
         MemorySink sink = new();
-        RunRecorder recorder = new(sink, RunRecord.NewHeader(content.Hash, seed));
-        SimulationLoop live = new(seed, content);
+        RunRecorder recorder = new(sink, RunRecord.NewHeader(content.Hash, seed, loadout));
+        SimulationLoop live = new(seed, content, loadout);
         NextFloorWorker worker = new(content);
         int offeredOn = 0;
         int offers = 0;
+        int bladeHits = 0;
+        int playerHits = 0;
         while (!live.Ended)
         {
+            if (live.Tick >= StairwellTickLimit && !mustEnd)
+            {
+                break;
+            }
+
             if (live.Tick >= StairwellTickLimit)
             {
                 throw new InvalidOperationException($"The {policy.Name} record of seed {seed} did not end in {StairwellTickLimit} ticks. It is on floor {live.Floor} (F-133).");
@@ -174,9 +204,32 @@ public static class BitIdentitySweep
             Intent intent = policy.Next(live);
             recorder.Record(intent);
             live.Step(intent);
+            bladeHits += live.Player.LastHits.Count;
+            foreach (ActionEvent action in live.LastActions)
+            {
+                playerHits += action.Kind == ActionEventKind.PlayerHit ? 1 : 0;
+            }
         }
 
-        return new StairwellRecord(sink.Bytes, live, offers);
+        return (new StairwellRecord(sink.Bytes, live, offers), bladeHits, playerHits);
+    }
+
+    /// <summary>
+    /// The armored record of PR-22: the greedy descender on the descend seed for <see cref="StairwellTickLimit"/> ticks, in
+    /// the loadout of <see cref="ArmoredLoadout"/>, replayed and folded as a stairwell record is. The weight, the
+    /// reduction, the stagger rule, swift, and the affix hooks then enter the three-platform comparison (D-754 to
+    /// D-759). The heavy set outlives the limit on every seed, so the record ends at the limit and not at a death.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The record holds no hit of the blade or no hit on the player, so it would compare less (T-2).</exception>
+    private static void AddArmoredRecord(ref StateHash hash, ContentSet content)
+    {
+        (StairwellRecord record, int bladeHits, int playerHits) = Play(new GreedyDescender(content), DescendSeed, content, ArmoredLoadout(), mustEnd: false);
+        if (bladeHits == 0 || playerHits == 0)
+        {
+            throw new InvalidOperationException($"The armored record of seed {DescendSeed} holds {bladeHits} hits of the blade and {playerHits} hits on the player, and the sweep needs both (PR-22).");
+        }
+
+        FoldReplay(ref hash, record, content);
     }
 
     /// <summary>
@@ -194,6 +247,16 @@ public static class BitIdentitySweep
             throw new InvalidOperationException($"The stairwell record of seed {record.Live.Seed} ended as {RunEnds.TextOf(record.Live.End)} on floor {record.Live.Floor} at tick {record.Live.Tick}, and the sweep needs {RunEnds.TextOf(end)} on floor {floor} (F-133).");
         }
 
+        FoldReplay(ref hash, record, content);
+    }
+
+    /// <summary>
+    /// Replays one record, and folds the camera and the aim ray of every replayed tick, the end state, the count of
+    /// frames, the end, and the floor. The replay must end on the hash of the live loop, or the sweep stops (T-2).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The replay does not give the live state.</exception>
+    private static void FoldReplay(ref StateHash hash, StairwellRecord record, ContentSet content)
+    {
         CameraFold cameras = new();
         ReplayResult result = RunReplayer.Replay(record.Bytes, content, new JsonlLogger(new RejectingLogSink()), cameras);
         if (!result.Loop.Hash().Equals(record.Live.Hash()))
@@ -345,8 +408,8 @@ public static class BitIdentitySweep
             new("sweep-scavenger", 1, 3, 10, 40, "sweep-club", 2000, 300, 140, 30, 500, "models/sweep-scavenger.bbmodel"),
         ];
         HunterDefinition hunter = new("sweep-overseer", "sweep-pick", 180, 60, 350, 100, 1200, "models/sweep-overseer.bbmodel");
-        // The sweep rolls no loot, so the set holds no item and no affix (PR-21).
-        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, enemies, hunter, [], [], Strings.FromMembers(Strings.FilePath, []));
+        // The sweep rolls no loot and wears no armor, so the set holds no armor, no item, and no affix (PR-21, PR-22).
+        return new ContentSet(ReplayContentHash, floors, kinds, projectiles, weapons, [], enemies, hunter, [], [], Strings.FromMembers(Strings.FilePath, []));
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ using WhatYouCarry.Core.Combat;
 using WhatYouCarry.Core.Content;
 using WhatYouCarry.Core.Determinism;
 using WhatYouCarry.Core.Entities;
+using WhatYouCarry.Core.Items;
 using WhatYouCarry.Core.Logging;
 using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Physics;
@@ -33,7 +34,9 @@ namespace WhatYouCarry.Core.Simulation;
 /// <para>
 /// The attack bit swings the main weapon: the weapon with the id `sword-basic`, until the loadout of
 /// PR-30 (D-320, D-422). No intent fires a projectile before PR-24, and the projectiles of a floor end with the floor.
-/// The blade of the player takes the box of every living enemy as a target (D-325).
+/// The blade of the player takes the box of every living enemy as a target (D-325). The player wears the items of the
+/// loadout from the start of the run to its end (D-762, D-766). Each hit of the blade on an enemy runs the affixes of
+/// those items, and a hit on the Overseer runs none, and no burning reaches it (D-747, D-751, D-758).
 /// </para>
 /// <para>
 /// The enemies of a floor come from the spawns of its plan (D-398). Each one carries a brain of PR-16, and the
@@ -98,16 +101,24 @@ public sealed class SimulationLoop
     private List<ActionEvent> lastActions = [];
     private FloorPlan? offeredFloor;
 
-    /// <summary>A loop at tick zero for one run, on floor 1 of the seed, with the player at rest at the spawn point.</summary>
+    /// <summary>A loop at tick zero for one run with no worn item, on floor 1 of the seed, with the player at rest at the spawn point.</summary>
     /// <exception cref="ContextException">The content set holds no weapon definition, or it cannot dig floor 1.</exception>
     public SimulationLoop(ulong seed, ContentSet content)
+        : this(seed, content, [])
+    {
+    }
+
+    /// <summary>A loop at tick zero for one run that wears a loadout (D-762, D-766), on floor 1 of the seed, with the player at rest at the spawn point.</summary>
+    /// <exception cref="ContextException">The content set holds no weapon definition, a loadout entry does not resolve or breaks an equip rule, or the content cannot dig floor 1.</exception>
+    public SimulationLoop(ulong seed, ContentSet content, IReadOnlyList<LoadoutEntry> loadout)
     {
         this.Seed = seed;
         this.content = content;
         this.Weapon = MainWeapon(content);
+        Equipment equipment = Equipment.FromLoadout(this.Weapon, loadout, content);
         this.DeepestFloor = FloorGenerator.DeepestFloor(content);
         this.Plan = FloorGenerator.Generate(seed, FirstFloor, content);
-        this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, this.Weapon, Player.MaxHealth);
+        this.Player = new Player(this.Plan.Grid, this.Plan.Spawn, equipment, Player.MaxHealth);
         this.Projectiles = new ProjectileSimulation(this.Plan.Grid, content.Projectiles);
         this.pathfinder = new GridPathfinder(this.Plan.Grid);
         this.Timer = FloorTimer.For(this.Plan.Template, FirstFloor);
@@ -525,7 +536,9 @@ public sealed class SimulationLoop
     /// <summary>
     /// Deals the hits of the blade of the player on this tick to the enemies that it met, in hit order. An enemy
     /// that the same swing already hit takes no second hit, because the swing holds the owner ids that it hit
-    /// (D-325).
+    /// (D-325). Each hit on an enemy then runs the affixes of the worn items: lifesteal, and then burning on each
+    /// enemy in its radius (D-747, D-751). A target that the burning of an earlier hit of the tick killed takes no hit.
+    /// A hit on the Overseer runs no affix, and burning never reaches it (D-758).
     /// </summary>
     /// <exception cref="ContextException">A hit names an owner id that no enemy of this floor carries (T-2).</exception>
     private void StrikeEnemies()
@@ -538,7 +551,17 @@ public sealed class SimulationLoop
                 continue;
             }
 
-            this.EnemyOf(hit.Owner).TakeHit(hit.Damage);
+            Enemy struck = this.EnemyOf(hit.Owner);
+
+            // The burning of an earlier hit of this tick can kill a target of the same swing. A dead enemy takes no hit,
+            // so the hit does not land and runs no affix (D-322, D-751).
+            if (struck.IsDead)
+            {
+                continue;
+            }
+
+            struck.TakeHit(hit.Damage);
+            AffixBehaviors.OnHit(this.Player, this.Player.Equipment.Affixes, hit.Damage, struck.Feet, this.enemies);
         }
     }
 
@@ -602,7 +625,7 @@ public sealed class SimulationLoop
 
     /// <summary>
     /// Deals one hit to the player, and records the cause when the hit takes the last health (D-411). A hit that lands
-    /// gives an action event (D-454). A player of a dead run takes no more hits (D-322).
+    /// gives an action event with the damage after the worn reduction (D-454, D-754). A player of a dead run takes no more hits (D-322).
     /// </summary>
     private void HitPlayer(long damage, string cause)
     {
@@ -611,9 +634,11 @@ public sealed class SimulationLoop
             return;
         }
 
+        // The event carries the damage after the worn reduction, which is the health that the hit takes (D-754).
+        long dealt = this.Player.Equipment.AfterReduction(damage);
         if (this.Player.TakeHit(damage))
         {
-            this.lastActions.Add(new ActionEvent(ActionEventKind.PlayerHit, this.Tick, damage));
+            this.lastActions.Add(new ActionEvent(ActionEventKind.PlayerHit, this.Tick, dealt));
         }
 
         if (this.Player.IsDead)
@@ -778,7 +803,7 @@ public sealed class SimulationLoop
     {
         int next = this.Floor + 1;
         FloorPlan plan = this.offeredFloor ?? FloorGenerator.Generate(this.Seed, next, this.content);
-        Player player = new(plan.Grid, plan.Spawn, this.Weapon, this.Player.Health);
+        Player player = new(plan.Grid, plan.Spawn, this.Player.Equipment, this.Player.Health);
         ProjectileSimulation projectiles = new(plan.Grid, this.content.Projectiles);
         GridPathfinder floorPathfinder = new(plan.Grid);
         FloorTimer timer = FloorTimer.For(plan.Template, next);

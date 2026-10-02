@@ -55,6 +55,8 @@ public static class BlockbenchLoader
     private const string RotationKey = "rotation";
     private const string PositionKey = "position";
     private const string ChildrenKey = "children";
+    private const string FacesKey = "faces";
+    private const string TextureKey = "texture";
 
     private const string NotOneObject = "the file must hold one JSON object";
     private const string NotAList = "is not a list";
@@ -275,7 +277,8 @@ public static class BlockbenchLoader
 
     /// <summary>
     /// One box from one cube element. The loader does not read the face rectangles of the file: the texture layout
-    /// of the generator places each face (D-505).
+    /// of the generator places each face (D-505). It reads one thing of each face: a texture of null marks the face
+    /// undrawn (D-767).
     /// </summary>
     private static ModelBox ReadBox(string path, JsonElement element, string name, int bone)
     {
@@ -288,7 +291,32 @@ public static class BlockbenchLoader
             throw ContentError.Make(path, FromKey, $"on '{name}' {FromAboveTo}");
         }
 
-        return new ModelBox(name, bone, ToMeters(from), ToMeters(to), ToMeters(pivot));
+        return new ModelBox(name, bone, ToMeters(from), ToMeters(to), ToMeters(pivot), UndrawnSides(element));
+    }
+
+    /// <summary>
+    /// The bits of the sides whose face holds a texture of null, which Blockbench writes for a face with no texture
+    /// (D-767). A face with no texture field, or a side with no face, stays drawn.
+    /// </summary>
+    private static int UndrawnSides(JsonElement element)
+    {
+        if (!element.TryGetProperty(FacesKey, out JsonElement faces) || faces.ValueKind != JsonValueKind.Object)
+        {
+            return 0;
+        }
+
+        int undrawn = 0;
+        for (int side = 0; side < BoxFaces.Names.Count; side++)
+        {
+            bool hasFace = faces.TryGetProperty(BoxFaces.Name((BoxSide)side), out JsonElement face);
+            if (hasFace && face.ValueKind == JsonValueKind.Object
+                && face.TryGetProperty(TextureKey, out JsonElement texture) && texture.ValueKind == JsonValueKind.Null)
+            {
+                undrawn |= 1 << side;
+            }
+        }
+
+        return undrawn;
     }
 
     /// <summary>One attachment point from one locator element. The name is a slot, and each slot has one point.</summary>

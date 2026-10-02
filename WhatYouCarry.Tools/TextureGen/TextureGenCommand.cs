@@ -127,36 +127,21 @@ public static class TextureGenCommand
     }
 
     /// <summary>
-    /// The paint of each model file at the top of the model directory, in ordinal order of the path. Each model has a
-    /// paint file, and each paint file has a model (D-508).
+    /// The paint of each model file at the top of the model directory and of each armor overlay, in ordinal order of the
+    /// path (D-300, D-508). Each model has a paint file, and each paint file has a model.
     /// </summary>
     /// <exception cref="ContextException">A model has no paint file, a paint file has no model, or a file is absent, unreadable, or not valid.</exception>
     public static IReadOnlyList<ModelPaint> ReadModelPaints(string contentRoot, IReadOnlyDictionary<string, Recipe> recipes)
     {
-        string directory = Path.Combine(contentRoot, AssetPaths.ModelDirectory);
-        string[] models;
-        string[] paints;
-        try
-        {
-            models = Directory.Exists(directory) ? Directory.GetFiles(directory, "*" + AssetPaths.ModelExtension) : [];
-            paints = Directory.Exists(directory) ? Directory.GetFiles(directory, "*" + AssetPaths.PaintExtension) : [];
-        }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-        {
-            throw new ContextException($"The model directory '{directory}' could not be read. {error.Message}", error);
-        }
-
-        Array.Sort(models, StringComparer.Ordinal);
+        List<string> modelPaths = [];
         HashSet<string> paintPaths = [];
-        foreach (string paint in paints)
-        {
-            paintPaths.Add(AssetPaths.ModelDirectory + Path.GetFileName(paint));
-        }
+        AddModelFiles(contentRoot, AssetPaths.ModelDirectory, modelPaths, paintPaths);
+        AddModelFiles(contentRoot, AssetPaths.ArmorDirectory, modelPaths, paintPaths);
+        modelPaths.Sort(StringComparer.Ordinal);
 
         List<ModelPaint> read = [];
-        foreach (string file in models)
+        foreach (string modelPath in modelPaths)
         {
-            string modelPath = AssetPaths.ModelDirectory + Path.GetFileName(file);
             string paintPath = AssetPaths.PaintPath(modelPath);
             if (!paintPaths.Remove(paintPath))
             {
@@ -175,6 +160,34 @@ public static class TextureGenCommand
         }
 
         return read;
+    }
+
+    /// <summary>The content paths of the model files and of the paint files at the top of one model directory.</summary>
+    /// <exception cref="ContextException">The directory could not be read.</exception>
+    private static void AddModelFiles(string contentRoot, string modelDirectory, List<string> modelPaths, HashSet<string> paintPaths)
+    {
+        string directory = Path.Combine(contentRoot, modelDirectory);
+        string[] models;
+        string[] paints;
+        try
+        {
+            models = Directory.Exists(directory) ? Directory.GetFiles(directory, "*" + AssetPaths.ModelExtension) : [];
+            paints = Directory.Exists(directory) ? Directory.GetFiles(directory, "*" + AssetPaths.PaintExtension) : [];
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            throw new ContextException($"The model directory '{directory}' could not be read. {error.Message}", error);
+        }
+
+        foreach (string model in models)
+        {
+            modelPaths.Add(modelDirectory + Path.GetFileName(model));
+        }
+
+        foreach (string paint in paints)
+        {
+            paintPaths.Add(modelDirectory + Path.GetFileName(paint));
+        }
     }
 
     /// <summary>The bytes of one file under the content directory. An absent file, and a file that the user cannot read, are each an error that names the path (T-2).</summary>

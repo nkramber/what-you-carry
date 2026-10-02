@@ -33,7 +33,7 @@ public static class BoxGeometry
     ];
 
     /// <summary>
-    /// The mesh of one box: six quads, twenty-four vertices, relative to the pivot of the box. Each face reads the top
+    /// The mesh of one box: a quad for each drawn side, six for a box with no undrawn side, relative to the pivot of the box. Each face reads the top
     /// left part of its canvas at 64 texels per meter (D-308, D-603): a face of 43.2 texels reads that much of a canvas of 44.
     /// </summary>
     /// <param name="modelPath">The path of the model file that holds the box, which the layout names each face by.</param>
@@ -47,6 +47,12 @@ public static class BoxGeometry
         Vector3 high = RenderInterpolation.ToGodot(box.To - box.Pivot);
         for (int side = 0; side < Faces; side++)
         {
+            // An undrawn face has no quad, so the box under an open head piece shows (D-767).
+            if (!box.IsDrawn((BoxSide)side))
+            {
+                continue;
+            }
+
             Vector3[] corners = Corners((BoxSide)side, low, high);
             AtlasRect canvas = layout.Face(modelPath, box.Name, (BoxSide)side);
             (float width, float height) = BoxFaces.Texels(box, (BoxSide)side);

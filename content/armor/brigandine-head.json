@@ -1,0 +1,8 @@
+{
+  "id": "brigandine-head",
+  "tier": 0,
+  "slot": "head",
+  "reduction": 2,
+  "weight": 3,
+  "model": "models/armor/brigandine-head.bbmodel"
+}

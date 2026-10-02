@@ -1,0 +1,8 @@
+{
+  "id": "leathers-legs",
+  "tier": 0,
+  "slot": "legs",
+  "reduction": 1,
+  "weight": 2,
+  "model": "models/armor/leathers-legs.bbmodel"
+}

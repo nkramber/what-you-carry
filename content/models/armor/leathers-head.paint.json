@@ -1,0 +1,9 @@
+{
+  "model": "models/armor/leathers-head.bbmodel",
+  "boxes": {
+    "head_box": {
+      "recipe": "leather",
+      "faces": {}
+    }
+  }
+}

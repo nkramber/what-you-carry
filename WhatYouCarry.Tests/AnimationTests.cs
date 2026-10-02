@@ -51,7 +51,7 @@ public sealed class AnimationTests
 
     private static Player NewPlayer()
     {
-        return new Player(TestWorld.FlatFloor(16, 6), new Vector3(8.5f, 1.0f, 8.5f), Sword, Player.MaxHealth);
+        return new Player(TestWorld.FlatFloor(16, 6), new Vector3(8.5f, 1.0f, 8.5f), new Equipment(Sword), Player.MaxHealth);
     }
 
     /// <summary>The id of every weapon of the checkout.</summary>

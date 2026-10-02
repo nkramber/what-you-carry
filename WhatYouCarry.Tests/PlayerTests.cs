@@ -33,7 +33,7 @@ public sealed class PlayerTests
     /// <summary>A player at rest in the middle of a flat floor of 16 blocks, with full health.</summary>
     private static Player NewPlayer(WeaponDefinition? weapon = null)
     {
-        return new Player(TestWorld.FlatFloor(16, 6), Feet, weapon ?? Sword, Player.MaxHealth);
+        return new Player(TestWorld.FlatFloor(16, 6), Feet, new Equipment(weapon ?? Sword), Player.MaxHealth);
     }
 
     /// <summary>A box of the size of the player body, standing at a point.</summary>
@@ -213,7 +213,7 @@ public sealed class PlayerTests
         Assert.Equal(0, air.Player.DodgeCooldown);
 
         VoxelGrid pool = PoolFloor();
-        Driver wet = new(new Player(pool, new Vector3(9.5f, 1.0f, 8.5f), Sword, Player.MaxHealth));
+        Driver wet = new(new Player(pool, new Vector3(9.5f, 1.0f, 8.5f), new Equipment(Sword), Player.MaxHealth));
         wet.Tick(0);
         wet.Tick(Button.Dodge);
         Assert.True(wet.Player.Body.IsInWater());
@@ -221,7 +221,7 @@ public sealed class PlayerTests
         Assert.Equal(0, wet.Player.RollRemaining);
         Assert.Equal(0, wet.Player.DodgeCooldown);
 
-        Driver dry = new(new Player(pool, new Vector3(3.5f, 2.0f, 8.5f), Sword, Player.MaxHealth));
+        Driver dry = new(new Player(pool, new Vector3(3.5f, 2.0f, 8.5f), new Equipment(Sword), Player.MaxHealth));
         dry.Tick(Button.Dodge, 127, 0);
         dry.Ticks(Player.RollTicks + 30);
         Assert.True(dry.Player.Body.IsInWater());
@@ -232,7 +232,7 @@ public sealed class PlayerTests
     [Fact]
     public void ASprintInWaterIsHalfTheSprint()
     {
-        Driver wet = new(new Player(PoolFloor(), new Vector3(9.5f, 1.0f, 8.5f), Sword, Player.MaxHealth));
+        Driver wet = new(new Player(PoolFloor(), new Vector3(9.5f, 1.0f, 8.5f), new Equipment(Sword), Player.MaxHealth));
         wet.Tick(Button.Sprint, 127, 0);
 
         float expected = 3.5f * PlayerBody.TickSeconds;
@@ -604,7 +604,7 @@ public sealed class PlayerTests
 
         ContextException negative = Assert.Throws<ContextException>(() => NewPlayer().TakeHit(-1));
         Assert.Contains("damage=-1", negative.Message, StringComparison.Ordinal);
-        ContextException spawnDead = Assert.Throws<ContextException>(() => new Player(TestWorld.FlatFloor(), TestWorld.Spawn, Sword, 0));
+        ContextException spawnDead = Assert.Throws<ContextException>(() => new Player(TestWorld.FlatFloor(), TestWorld.Spawn, new Equipment(Sword), 0));
         Assert.Contains("health=0", spawnDead.Message, StringComparison.Ordinal);
     }
 

@@ -1,0 +1,8 @@
+{
+  "id": "blast-feet",
+  "tier": 0,
+  "slot": "feet",
+  "reduction": 2,
+  "weight": 5,
+  "model": "models/armor/blast-feet.bbmodel"
+}

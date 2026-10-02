@@ -307,7 +307,7 @@ public sealed class ReplayTests
     [Fact]
     public void VersionMismatchReports()
     {
-        byte[] record = RunRecord.WriteHeader(new RunRecordHeader(RunRecord.FormatVersion, SimulationVersion.Value + 1, Hash, 1UL));
+        byte[] record = RunRecord.WriteHeader(new RunRecordHeader(RunRecord.FormatVersion, SimulationVersion.Value + 1, Hash, 1UL, []));
 
         ContextException error = Assert.Throws<ContextException>(() => RunReplayer.Replay(record, TestWorld.PeacefulContent, new JsonlLogger(new CollectingSink())));
         Assert.Contains($"recordSimulationVersion={SimulationVersion.Value + 1}", error.Message, StringComparison.Ordinal);
@@ -508,7 +508,7 @@ public sealed class ReplayTests
     public void ABadContentHashIsAnError(string hash)
     {
         Assert.Throws<ContextException>(() => RunRecord.NewHeader(hash, 1UL));
-        Assert.Throws<ContextException>(() => RunRecord.WriteHeader(new RunRecordHeader(1, 1, hash, 1UL)));
+        Assert.Throws<ContextException>(() => RunRecord.WriteHeader(new RunRecordHeader(1, 1, hash, 1UL, [])));
     }
 
     /// <summary>The recorder writes the header before any frame, and each frame is one append (G-5).</summary>

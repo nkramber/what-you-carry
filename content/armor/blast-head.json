@@ -1,0 +1,8 @@
+{
+  "id": "blast-head",
+  "tier": 0,
+  "slot": "head",
+  "reduction": 3,
+  "weight": 6,
+  "model": "models/armor/blast-head.bbmodel"
+}

@@ -1,0 +1,17 @@
+{
+  "model": "models/armor/blast-chest.bbmodel",
+  "boxes": {
+    "torso_box": {
+      "recipe": "metal",
+      "faces": {}
+    },
+    "arm_left_upper_box": {
+      "recipe": "metal",
+      "faces": {}
+    },
+    "arm_right_upper_box": {
+      "recipe": "metal",
+      "faces": {}
+    }
+  }
+}

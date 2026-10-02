@@ -1,0 +1,8 @@
+{
+  "id": "brigandine-legs",
+  "tier": 0,
+  "slot": "legs",
+  "reduction": 3,
+  "weight": 4,
+  "model": "models/armor/brigandine-legs.bbmodel"
+}

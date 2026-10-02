@@ -452,7 +452,7 @@ public sealed class AudioTests
     [Fact]
     public void ARollTakesNoHit()
     {
-        Player player = new(TestWorld.FlatFloor(16, 6), new CoreVector3(8.5f, TestWorld.FloorTop, 8.5f), SimulationLoop.MainWeapon(TestWorld.Content), Player.MaxHealth);
+        Player player = new(TestWorld.FlatFloor(16, 6), new CoreVector3(8.5f, TestWorld.FloorTop, 8.5f), new Equipment(SimulationLoop.MainWeapon(TestWorld.Content)), Player.MaxHealth);
         player.Step(new Intent(0, 0, 0, 0, 0, Button.Dodge), 0, 0, []);
         Assert.True(player.StartedRoll);
 

@@ -41,6 +41,9 @@ public sealed class ContentLoader
     /// <summary>The directory that holds every item definition (D-749).</summary>
     public const string ItemDirectory = "items/";
 
+    /// <summary>The directory that holds every armor definition (D-763).</summary>
+    public const string ArmorDirectory = "armor/";
+
     /// <summary>The directory that holds every affix definition (D-747).</summary>
     public const string AffixDirectory = "affixes/";
 
@@ -104,6 +107,7 @@ public sealed class ContentLoader
         List<ChamberKind> chambers = [];
         List<ProjectileDefinition> projectiles = [];
         List<WeaponDefinition> weapons = [];
+        List<ArmorDefinition> armors = [];
         List<EnemyDefinition> enemies = [];
         List<string> enemyPaths = [];
         List<HunterDefinition> hunters = [];
@@ -145,6 +149,12 @@ public sealed class ContentLoader
                 WeaponDefinition weapon = WeaponDefinition.FromMembers(file.Path, members);
                 weapons.Add(weapon);
                 ids.Add(new RecordId("weapon definitions", file.Path, weapon.Id));
+            }
+            else if (file.Path.StartsWith(ArmorDirectory, System.StringComparison.Ordinal))
+            {
+                ArmorDefinition armor = ArmorDefinition.FromMembers(file.Path, members);
+                armors.Add(armor);
+                ids.Add(new RecordId("armor definitions", file.Path, armor.Id));
             }
             else if (file.Path.StartsWith(EnemyDirectory, System.StringComparison.Ordinal))
             {
@@ -188,9 +198,10 @@ public sealed class ContentLoader
         CheckUniqueIds(ids);
         CheckEnemyWeapons(enemies, enemyPaths, weapons);
         CheckItemWeapons(items, itemPaths, weapons);
+        CheckItemArmors(items, itemPaths, armors);
         HunterDefinition hunter = OneHunter(hunters, hunterPaths, weapons);
         CheckMainWeapon(weapons);
-        return new ContentSet(hash, floors, chambers, projectiles, weapons, enemies, hunter, items, affixes, strings);
+        return new ContentSet(hash, floors, chambers, projectiles, weapons, armors, enemies, hunter, items, affixes, strings);
     }
 
     /// <summary>
@@ -314,10 +325,46 @@ public sealed class ContentLoader
             }
         }
     }
+
+    /// <summary>
+    /// Every armor item names an armor file of the set, and the two name one slot (D-763). An id that no armor carries
+    /// is a fault of the content set, and a slot that differs would hang an overlay on the wrong limb (T-2).
+    /// </summary>
+    private static void CheckItemArmors(List<ItemDefinition> items, List<string> itemPaths, List<ArmorDefinition> armors)
+    {
+        for (int index = 0; index < items.Count; index++)
+        {
+            ItemDefinition item = items[index];
+            if (item.Armor is null)
+            {
+                continue;
+            }
+
+            ArmorDefinition? found = null;
+            foreach (ArmorDefinition armor in armors)
+            {
+                if (armor.Id == item.Armor)
+                {
+                    found = armor;
+                    break;
+                }
+            }
+
+            if (found is null)
+            {
+                throw ContentError.Make(itemPaths[index], "armor", $"names '{item.Armor}', and the content set holds no armor of that id (D-763)");
+            }
+
+            if (found.Slot != item.Slot)
+            {
+                throw ContentError.Make(itemPaths[index], "slot", $"is '{item.Slot}', and its armor '{found.Id}' is of the slot '{found.Slot}'. The two slots match (D-763)");
+            }
+        }
+    }
 }
 
 /// <summary>The id of one loaded record, the file that holds it, and the plural name of its type for the error text.</summary>
 internal sealed record RecordId(string Plural, string Path, string Id);
 
 /// <summary>Every record of one content set, and the hash that the run record header carries (D-151, D-163).</summary>
-public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, IReadOnlyList<EnemyDefinition> Enemies, HunterDefinition Hunter, IReadOnlyList<ItemDefinition> Items, IReadOnlyList<AffixDefinition> Affixes, Strings Strings);
+public sealed record ContentSet(string Hash, IReadOnlyList<FloorTemplate> Floors, IReadOnlyList<ChamberKind> Chambers, IReadOnlyList<ProjectileDefinition> Projectiles, IReadOnlyList<WeaponDefinition> Weapons, IReadOnlyList<ArmorDefinition> Armors, IReadOnlyList<EnemyDefinition> Enemies, HunterDefinition Hunter, IReadOnlyList<ItemDefinition> Items, IReadOnlyList<AffixDefinition> Affixes, Strings Strings);

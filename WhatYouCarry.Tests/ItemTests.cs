@@ -62,7 +62,7 @@ public sealed class ItemTests
 
     private static Player NewPlayer(WeaponDefinition weapon)
     {
-        return new Player(TestWorld.FlatFloor(16, 6), Feet, weapon, Player.MaxHealth);
+        return new Player(TestWorld.FlatFloor(16, 6), Feet, new Equipment(weapon), Player.MaxHealth);
     }
 
     private static Enemy NewEnemy(VoxelGrid grid, Vector3 feet, int owner, WeaponDefinition? weapon = null)
@@ -122,13 +122,13 @@ public sealed class ItemTests
         VoxelGrid grid = TestWorld.FlatFloor(16, 6);
 
         // Lifesteal: 34 x 15 / 100 is 5.1, so the heal is 5. It reads the full hit, also on a nearly dead target.
-        Player wielder = new(grid, Feet, Sword, 50);
+        Player wielder = new(grid, Feet, new Equipment(Sword), 50);
         Enemy struck = NewEnemy(grid, Feet + new Vector3(0.0f, 0.0f, -1.0f), 1);
         AffixBehaviors.OnHit(wielder, [lifesteal], Sword.Damage, struck.Feet, [struck]);
         Assert.Equal(55, wielder.Health);
         Assert.Equal((int)Scavenger.Health, struck.Health);
 
-        Player nearlyFull = new(grid, Feet, Sword, Player.MaxHealth - 2);
+        Player nearlyFull = new(grid, Feet, new Equipment(Sword), Player.MaxHealth - 2);
         AffixBehaviors.OnHit(nearlyFull, [lifesteal, lifesteal], Sword.Damage, struck.Feet, [struck]);
         Assert.Equal(Player.MaxHealth, nearlyFull.Health);
 
@@ -220,7 +220,7 @@ public sealed class ItemTests
             long[] counts = new long[LootRoller.TopTier + 1];
             for (int roll = 0; roll < RollsPerFloor; roll++)
             {
-                RolledItem item = LootRoller.Roll(rng, floor, Content.Items, Content.Weapons, Content.Affixes);
+                RolledItem item = LootRoller.Roll(rng, floor, Content.Items, Content.Weapons, Content.Armors, Content.Affixes);
                 counts[item.Tier]++;
             }
 
@@ -269,8 +269,8 @@ public sealed class ItemTests
             Rng second = Rng.ForStream(seed, RngStream.Loot, 3);
             for (int roll = 0; roll < 200; roll++)
             {
-                RolledItem one = LootRoller.Roll(first, 3, Content.Items, Content.Weapons, Content.Affixes);
-                RolledItem two = LootRoller.Roll(second, 3, Content.Items, Content.Weapons, Content.Affixes);
+                RolledItem one = LootRoller.Roll(first, 3, Content.Items, Content.Weapons, Content.Armors, Content.Affixes);
+                RolledItem two = LootRoller.Roll(second, 3, Content.Items, Content.Weapons, Content.Armors, Content.Affixes);
                 Assert.True(one.Item == two.Item && one.Tier == two.Tier && one.Rarity == two.Rarity, $"Seed {seed}, roll {roll}: the two rolls differ.");
                 Assert.Equal(AffixIds(one), AffixIds(two));
             }
@@ -307,11 +307,14 @@ public sealed class ItemTests
         Assert.Contains("'head'", Assert.Throws<ContextException>(() => ReadItem("""{ "id": "h", "slot": "head" }""")).Message, StringComparison.Ordinal);
     }
 
-    /// <summary>The repository holds the five items and the three affixes of D-747 and D-749, and the sword of each tier has its damage.</summary>
+    /// <summary>
+    /// The repository holds the five items of D-749, the twelve armor items of D-753, and the three affixes of D-747, and
+    /// the sword of each tier has its damage. The armor items have their own test.
+    /// </summary>
     [Fact]
     public void RepositoryHoldsTheFirstItemsAndAffixes()
     {
-        Assert.Equal(5, Content.Items.Count);
+        Assert.Equal(17, Content.Items.Count);
         Assert.Equal(new[] { "burning", "lifesteal", "swift" }, AffixIds(Content.Affixes));
         Assert.Equal(15, Affix(AffixDefinition.Lifesteal).Parameter(AffixDefinition.PercentName));
         Assert.Equal(8, Affix(AffixDefinition.Burning).Parameter(AffixDefinition.DamageName));
@@ -324,6 +327,13 @@ public sealed class ItemTests
             if (item.Slot == ItemDefinition.RingSlot)
             {
                 Assert.Equal("ring-plain", item.Id);
+                Assert.Null(item.Weapon);
+                Assert.Null(item.Armor);
+                continue;
+            }
+
+            if (item.Armor is not null)
+            {
                 Assert.Null(item.Weapon);
                 continue;
             }
@@ -361,7 +371,7 @@ public sealed class ItemTests
 
         for (int roll = 0; roll < RollsPerFloor; roll++)
         {
-            RolledItem item = LootRoller.Roll(rng, 12, rings, Content.Weapons, Content.Affixes);
+            RolledItem item = LootRoller.Roll(rng, 12, rings, Content.Weapons, Content.Armors, Content.Affixes);
             counts[(int)item.Rarity]++;
             Assert.Equal(Rarities.AffixCount(item.Rarity), item.Affixes.Count);
             Assert.Equal(item.Affixes.Count, new HashSet<string>(AffixIds(item.Affixes)).Count);
@@ -388,7 +398,7 @@ public sealed class ItemTests
             Rng draws = Rng.ForStream(Seed, RngStream.Loot, 15);
             for (int roll = 0; roll < 100; roll++)
             {
-                LootRoller.Roll(draws, 15, baseSword, Content.Weapons, Content.Affixes);
+                LootRoller.Roll(draws, 15, baseSword, Content.Weapons, Content.Armors, Content.Affixes);
             }
         });
         Assert.Contains("tier", missing.Message, StringComparison.Ordinal);

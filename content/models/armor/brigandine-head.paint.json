@@ -1,0 +1,9 @@
+{
+  "model": "models/armor/brigandine-head.bbmodel",
+  "boxes": {
+    "head_box": {
+      "recipe": "iron",
+      "faces": {}
+    }
+  }
+}

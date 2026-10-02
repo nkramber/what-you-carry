@@ -110,15 +110,16 @@ public static class LootRoller
     /// <param name="floor">The floor, from 1 to <see cref="LastFloor"/>.</param>
     /// <param name="pool">The items that the roll can give.</param>
     /// <param name="weapons">The weapon files, which hold the tier of each weapon item (D-749).</param>
+    /// <param name="armors">The armor files, which hold the tier of each armor item (D-763).</param>
     /// <param name="affixes">The affixes that the roll can give, each with the same weight (D-750).</param>
-    /// <exception cref="ContextException">The floor is outside its bounds, no item of the pool fits the rolled tier, a weapon item names an absent weapon, or the rarity needs more affixes than exist.</exception>
-    public static RolledItem Roll(Rng rng, int floor, IReadOnlyList<ItemDefinition> pool, IReadOnlyList<WeaponDefinition> weapons, IReadOnlyList<AffixDefinition> affixes)
+    /// <exception cref="ContextException">The floor is outside its bounds, no item of the pool fits the rolled tier, an item names an absent weapon or armor, or the rarity needs more affixes than exist.</exception>
+    public static RolledItem Roll(Rng rng, int floor, IReadOnlyList<ItemDefinition> pool, IReadOnlyList<WeaponDefinition> weapons, IReadOnlyList<ArmorDefinition> armors, IReadOnlyList<AffixDefinition> affixes)
     {
         long tier = RollTier(rng, floor);
         List<ItemDefinition> fits = [];
         foreach (ItemDefinition item in pool)
         {
-            if (item.Slot == ItemDefinition.RingSlot || WeaponOf(item, weapons).Tier == tier)
+            if (item.Slot == ItemDefinition.RingSlot || TierOf(item, weapons, armors) == tier)
             {
                 fits.Add(item);
             }
@@ -166,21 +167,30 @@ public static class LootRoller
         return new RolledItem(chosen, tier, rarity, drawn);
     }
 
-    /// <summary>The weapon file that a weapon item names (D-749).</summary>
-    /// <exception cref="ContextException">The item is no weapon item, or no weapon carries the id.</exception>
-    private static WeaponDefinition WeaponOf(ItemDefinition item, IReadOnlyList<WeaponDefinition> weapons)
+    /// <summary>The tier of a weapon item or an armor item: the tier of the file that it names (D-749, D-763).</summary>
+    /// <exception cref="ContextException">The item is a ring, or no weapon or armor carries the id that it names.</exception>
+    private static long TierOf(ItemDefinition item, IReadOnlyList<WeaponDefinition> weapons, IReadOnlyList<ArmorDefinition> armors)
     {
         foreach (WeaponDefinition weapon in weapons)
         {
-            if (weapon.Id == item.Weapon)
+            if (item.Weapon is not null && weapon.Id == item.Weapon)
             {
-                return weapon;
+                return weapon.Tier;
             }
         }
 
-        ContextException error = new($"The item '{item.Id}' of the slot '{item.Slot}' names the weapon '{item.Weapon}', and no weapon carries that id (D-749).");
+        foreach (ArmorDefinition armor in armors)
+        {
+            if (item.Armor is not null && armor.Id == item.Armor)
+            {
+                return armor.Tier;
+            }
+        }
+
+        ContextException error = new($"The item '{item.Id}' of the slot '{item.Slot}' names the weapon '{item.Weapon ?? "none"}' and the armor '{item.Armor ?? "none"}', and no file carries that id (D-749, D-763).");
         error.AddContext("item", item.Id);
         error.AddContext("weapon", item.Weapon ?? "none");
+        error.AddContext("armor", item.Armor ?? "none");
         throw error;
     }
 }

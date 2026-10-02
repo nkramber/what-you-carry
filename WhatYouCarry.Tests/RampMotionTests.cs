@@ -158,7 +158,7 @@ public sealed class RampMotionTests
     public void ARollClimbsARamp(RampRise rise, int run)
     {
         RampCourse course = new(rise, run);
-        Player player = new(course.Grid, course.Point(RampCourse.RampStart - 0.5f, RampCourse.LowTop, RampCourse.Middle), Sword, Player.MaxHealth);
+        Player player = new(course.Grid, course.Point(RampCourse.RampStart - 0.5f, RampCourse.LowTop, RampCourse.Middle), new Equipment(Sword), Player.MaxHealth);
         int yaw = YawUphill(rise);
         ushort previous = 0;
         for (uint tick = 0; tick < Player.RollTicks; tick++)
@@ -179,7 +179,7 @@ public sealed class RampMotionTests
     public void ARollLeavesARampOnTheWayDown(RampRise rise, int run)
     {
         RampCourse course = new(rise, run);
-        Player player = new(course.Grid, course.Point(course.HighStart + 0.5f, RampCourse.HighTop, RampCourse.Middle), Sword, Player.MaxHealth);
+        Player player = new(course.Grid, course.Point(course.HighStart + 0.5f, RampCourse.HighTop, RampCourse.Middle), new Equipment(Sword), Player.MaxHealth);
         int yaw = (YawUphill(rise) + 18000) % SimulationLoop.FullTurn;
         ushort previous = 0;
         bool airborne = false;
@@ -200,7 +200,7 @@ public sealed class RampMotionTests
     public void AStaggerStaysOnARamp(RampRise rise, int run)
     {
         RampCourse course = new(rise, run);
-        Player player = new(course.Grid, course.Point(RampCourse.RampStart + (run / 2.0f), RampCourse.HighTop + 0.05f, RampCourse.Middle), Sword, Player.MaxHealth);
+        Player player = new(course.Grid, course.Point(RampCourse.RampStart + (run / 2.0f), RampCourse.HighTop + 0.05f, RampCourse.Middle), new Equipment(Sword), Player.MaxHealth);
         for (uint tick = 0; tick < 60; tick++)
         {
             player.Step(new Intent(tick, 0, 0, 0, 0, 0), 0, 0, NoTargets);

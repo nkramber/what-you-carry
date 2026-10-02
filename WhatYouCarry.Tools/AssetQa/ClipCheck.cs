@@ -14,8 +14,9 @@ namespace WhatYouCarry.Tools.AssetQa;
 /// <para>
 /// A shared face is not a clip, and an overlap under the float noise of <see cref="BoxOverlap.TouchEpsilon"/>
 /// is not one either. Two pairs are exempt. A box under a bone and a box under the parent of that bone may
-/// overlap, because that overlap is the joint. An overlay box and the body box that it encloses overlap by
-/// design (D-300).
+/// overlap, because that overlap is the joint. An overlay box and the body box that it covers overlap by
+/// design: the body box of its name (D-300), and each other body box of its bone that it fully encloses at the rest
+/// pose, such as the brow, the nose, and the beard under a head piece (D-767).
 /// </para>
 /// <para>
 /// The check poses the body with each overlay alone, and never two overlays together, because two pieces
@@ -162,7 +163,7 @@ public static class ClipCheck
         List<CheckedBox> boxes = [];
         foreach (ModelBox box in body.Model.Boxes)
         {
-            boxes.Add(new CheckedBox(body.Path, ModelPose.Place(box, transforms[box.Bone]), IsOverlay: false));
+            boxes.Add(new CheckedBox(body.Path, ModelPose.Place(box, transforms[box.Bone]), IsOverlay: false, []));
         }
 
         if (overlay is not null)
@@ -177,7 +178,7 @@ public static class ClipCheck
                 }
 
                 ModelBox onBodyBone = box with { Bone = covered.Bone };
-                boxes.Add(new CheckedBox(overlay.Path, ModelPose.Place(onBodyBone, transforms[covered.Bone]), IsOverlay: true));
+                boxes.Add(new CheckedBox(overlay.Path, ModelPose.Place(onBodyBone, transforms[covered.Bone]), IsOverlay: true, CoveredNames(body.Model, onBodyBone)));
             }
         }
 
@@ -222,10 +223,47 @@ public static class ClipCheck
         return body.Bones[firstBone].Parent == secondBone || body.Bones[secondBone].Parent == firstBone;
     }
 
-    /// <summary>An overlay box and the body box of the same name overlap by design (D-300).</summary>
+    /// <summary>An overlay box and a body box that it covers overlap by design (D-300, D-767).</summary>
     private static bool IsCover(CheckedBox first, CheckedBox second)
     {
-        return first.IsOverlay != second.IsOverlay && first.Box.Name == second.Box.Name;
+        if (first.IsOverlay == second.IsOverlay)
+        {
+            return false;
+        }
+
+        CheckedBox overlay = first.IsOverlay ? first : second;
+        CheckedBox covered = first.IsOverlay ? second : first;
+        foreach (string name in overlay.Covers)
+        {
+            if (name == covered.Box.Name)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// The names of the body boxes that one overlay box covers, at the rest pose: the box of its name, and each other box
+    /// of the same bone that it fully encloses on every axis (D-300, D-767). A box of one bone moves with the overlay, so
+    /// the rest pose decides the cover for every pose.
+    /// </summary>
+    private static IReadOnlyList<string> CoveredNames(BlockbenchModel body, ModelBox overlay)
+    {
+        List<string> names = [overlay.Name];
+        foreach (ModelBox box in body.Boxes)
+        {
+            bool sameBone = box.Bone == overlay.Bone && box.Name != overlay.Name;
+            bool encloses = overlay.From.X <= box.From.X && overlay.From.Y <= box.From.Y && overlay.From.Z <= box.From.Z
+                && overlay.To.X >= box.To.X && overlay.To.Y >= box.To.Y && overlay.To.Z >= box.To.Z;
+            if (sameBone && encloses)
+            {
+                names.Add(box.Name);
+            }
+        }
+
+        return names;
     }
 
     private static string Describe(BlockbenchModel body, CheckedBox box)
@@ -234,6 +272,6 @@ public static class ClipCheck
         return $"{kind} '{box.Box.Name}' of bone '{body.Bones[box.Box.Bone].Name}'";
     }
 
-    /// <summary>One posed box in a check: the file it came from, and whether it is an overlay box.</summary>
-    private readonly record struct CheckedBox(string Path, PosedBox Box, bool IsOverlay);
+    /// <summary>One posed box in a check: the file it came from, whether it is an overlay box, and the names of the body boxes that an overlay box covers.</summary>
+    private readonly record struct CheckedBox(string Path, PosedBox Box, bool IsOverlay, IReadOnlyList<string> Covers);
 }

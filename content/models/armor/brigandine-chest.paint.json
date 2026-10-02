@@ -1,0 +1,17 @@
+{
+  "model": "models/armor/brigandine-chest.bbmodel",
+  "boxes": {
+    "torso_box": {
+      "recipe": "cloth",
+      "faces": {}
+    },
+    "arm_left_upper_box": {
+      "recipe": "cloth",
+      "faces": {}
+    },
+    "arm_right_upper_box": {
+      "recipe": "cloth",
+      "faces": {}
+    }
+  }
+}

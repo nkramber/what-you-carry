@@ -59,14 +59,23 @@ public sealed record ModelBone(string Name, Vector3 Pivot, int Parent)
 
 /// <summary>
 /// One box: a cube element of the file. Its six faces take the sides of <see cref="BoxSide"/>. The texture layout
-/// places each face (D-505).
+/// places each drawn face (D-505). A face with no texture in the file is undrawn: it takes no place in the atlas and
+/// no mesh, so an open head piece shows the face under it (D-767).
 /// </summary>
 /// <param name="Name">The box name, unique in the model.</param>
 /// <param name="Bone">The index of the bone that holds the box.</param>
 /// <param name="From">The low corner, in meters in model space.</param>
 /// <param name="To">The high corner, in meters in model space.</param>
 /// <param name="Pivot">The pivot of the box, in meters in model space. The box mesh sits at it.</param>
-public sealed record ModelBox(string Name, int Bone, Vector3 From, Vector3 To, Vector3 Pivot);
+/// <param name="UndrawnSides">One bit for each undrawn side, at the bit of its number in <see cref="BoxSide"/>. Zero draws every side.</param>
+public sealed record ModelBox(string Name, int Bone, Vector3 From, Vector3 To, Vector3 Pivot, int UndrawnSides)
+{
+    /// <summary>Answers whether the box draws a side.</summary>
+    public bool IsDrawn(BoxSide side)
+    {
+        return (this.UndrawnSides & (1 << (int)side)) == 0;
+    }
+}
 
 /// <summary>The six sides of a box, in the names of Blockbench. The frame is the frame of D-234.</summary>
 public enum BoxSide

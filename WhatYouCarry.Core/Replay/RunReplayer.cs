@@ -79,7 +79,7 @@ public static class RunReplayer
         int frameCount = FramesBeforeTornTail(record, bodyStart, header.Seed);
         int tornBytes = bodyLength - (frameCount * Intent.FrameSize);
 
-        SimulationLoop loop = new(header.Seed, content);
+        SimulationLoop loop = new(header.Seed, content, header.Loadout);
         for (int frame = 0; frame < frameCount; frame++)
         {
             uint tick = loop.Tick;

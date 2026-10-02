@@ -1,0 +1,8 @@
+{
+  "id": "brigandine-feet",
+  "tier": 0,
+  "slot": "feet",
+  "reduction": 1,
+  "weight": 3,
+  "model": "models/armor/brigandine-feet.bbmodel"
+}

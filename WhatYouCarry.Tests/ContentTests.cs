@@ -128,7 +128,9 @@ public sealed class ContentTests
         Assert.Equal("overseer-pick", set.Weapons[0].Id);
         Assert.Equal("sword-basic", set.Weapons[1].Id);
         Assert.Equal("sword-tier-3", set.Weapons[4].Id);
-        Assert.Equal(5, set.Items.Count);
+        Assert.Equal(12, set.Armors.Count);
+        Assert.Equal("blast-chest", set.Armors[0].Id);
+        Assert.Equal(17, set.Items.Count);
         Assert.Equal(3, set.Affixes.Count);
         Assert.Equal("overseer", set.Hunter.Id);
         Assert.Equal("overseer-pick", set.Hunter.Weapon);
@@ -444,11 +446,40 @@ public sealed class ContentTests
         Assert.Equal(new JsonMember("rampSlopeRuns", "2,3,4", JsonMemberKind.NumberList), Assert.Single(members));
     }
 
-    /// <summary>A list of another kind, a nested object, and a list that the file ends inside are each an error that names the field (D-229, D-346).</summary>
+    /// <summary>A list of text reads as one member with the item texts, which a loadout entry reads for its affixes (D-766).</summary>
+    [Fact]
+    public void AListOfTextReads()
+    {
+        IReadOnlyList<JsonMember> members = JsonObjectReader.Read("header", Encoding.UTF8.GetBytes("{\"affixes\":[\"burning\",\"swift\"]}"));
+        Assert.Equal(new JsonMember("affixes", "burning,swift", JsonMemberKind.TextList), Assert.Single(members));
+    }
+
+    /// <summary>A list of objects reads as one member with the members of each object, in file order (D-766).</summary>
+    [Fact]
+    public void AListOfObjectsReads()
+    {
+        string text = "{\"loadout\":[{\"item\":\"ring-plain\",\"affixes\":[\"swift\"]},{\"item\":\"miner-cap\",\"affixes\":[]}]}";
+        JsonMember loadout = Assert.Single(JsonObjectReader.Read("header", Encoding.UTF8.GetBytes(text)));
+
+        Assert.Equal(JsonMemberKind.ObjectList, loadout.Kind);
+        Assert.NotNull(loadout.Objects);
+        Assert.Equal(2, loadout.Objects.Count);
+        Assert.Equal(new JsonMember("item", "ring-plain", JsonMemberKind.Text), loadout.Objects[0][0]);
+        Assert.Equal(new JsonMember("affixes", "swift", JsonMemberKind.TextList), loadout.Objects[0][1]);
+        Assert.Equal(new JsonMember("item", "miner-cap", JsonMemberKind.Text), loadout.Objects[1][0]);
+        Assert.Equal(new JsonMember("affixes", string.Empty, JsonMemberKind.EmptyList), loadout.Objects[1][1]);
+    }
+
+    /// <summary>
+    /// A list of lists, a list of two kinds, a text item with a comma, an object list inside an object of a list, a
+    /// nested object, and a list that the file ends inside are each an error that names the field (D-229, D-346, D-766).
+    /// </summary>
     [Theory]
-    [InlineData("{\"loadout\":[[]]}", "not a number")]
-    [InlineData("{\"loadout\":[\"a\"]}", "not a number")]
-    [InlineData("{\"loadout\":{}}", "no Phase 1 type uses")]
+    [InlineData("{\"loadout\":[[]]}", "not a number, a text, or an object")]
+    [InlineData("{\"loadout\":[1,\"a\"]}", "two kinds")]
+    [InlineData("{\"loadout\":[\"a,b\"]}", "with a comma")]
+    [InlineData("{\"loadout\":[{\"inner\":[{}]}]}", "one level deep")]
+    [InlineData("{\"loadout\":{}}", "no type uses")]
     [InlineData("{\"loadout\":[", "not valid JSON")]
     public void AListOfAnotherKindIsAnError(string text, string reason)
     {

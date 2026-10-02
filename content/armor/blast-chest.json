@@ -1,0 +1,8 @@
+{
+  "id": "blast-chest",
+  "tier": 0,
+  "slot": "chest",
+  "reduction": 6,
+  "weight": 12,
+  "model": "models/armor/blast-chest.bbmodel"
+}

@@ -73,9 +73,13 @@ public sealed class BitIdentityTests
     /// F-172). The sweep folds the header of each recorded run, so the header bytes alone moved the hash, and the
     /// simulation version stayed at 18. PR-97 moved it from `e202e84e0f5c188a` when the shoulder offsets of D-719 and the
     /// drawn camera of D-720 changed the camera pose, the ramp part of the sweep folded the drawn view, and the simulation
-    /// version rose to 19 (G-20). The camera change with the version at 18 gave `e080d012334a49d2`.
+    /// version rose to 19 (G-20). The camera change with the version at 18 gave `e080d012334a49d2`. PR-22 moved it from
+    /// `1023ce079eb0af50` when the simulation version rose to 20 and the sweep gained the armored record: the greedy
+    /// descender in the Blast plate set with two rings of affixes, for 3000 ticks (D-754 to D-759, G-20). The version
+    /// alone gave `d7733c4f302a863a`, and the armor content alone moved nothing. The Debug and the Release builds give
+    /// the new answer.
     /// </remarks>
-    private const string ExpectedHash = "1023ce079eb0af50";
+    private const string ExpectedHash = "7c3246724f203b5e";
 
     /// <summary>The sweep gives the recorded hash on this platform.</summary>
     [Fact]
@@ -166,13 +170,14 @@ public sealed class BitIdentityTests
 
         // PR-8 exit test 5: the sweep folds in the camera pose and the aim ray of every replayed tick, through
         // the replay observer (PR #23 review P2-1). The one live loop plays a bot policy to write the intents of a
-        // stairwell record, and the sweep folds the replay of that record and never the live states (F-133).
+        // stairwell record or of the armored record, with the loadout of the record, and the sweep folds the replay of
+        // that record and never the live states (F-133, D-766).
         Assert.Contains("loop.Camera()", sweep, StringComparison.Ordinal);
         Assert.Contains("loop.Aim(", sweep, StringComparison.Ordinal);
         Assert.Contains(": IReplayObserver", sweep, StringComparison.Ordinal);
-        int liveLoops = sweep.Split("new(seed, content)").Length - 1;
+        int liveLoops = sweep.Split("new(seed, content").Length - 1;
         Assert.Equal(1, liveLoops);
-        Assert.Contains("SimulationLoop live = new(seed, content);", sweep, StringComparison.Ordinal);
+        Assert.Contains("SimulationLoop live = new(seed, content, loadout);", sweep, StringComparison.Ordinal);
         Assert.DoesNotContain("new SimulationLoop(", sweep, StringComparison.Ordinal);
 
         // PR-9 exit test 7: the sweep digs floors and folds every block, so the three platforms compare the generator.

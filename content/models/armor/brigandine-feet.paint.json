@@ -1,0 +1,21 @@
+{
+  "model": "models/armor/brigandine-feet.bbmodel",
+  "boxes": {
+    "leg_left_lower_box": {
+      "recipe": "boot",
+      "faces": {}
+    },
+    "leg_right_lower_box": {
+      "recipe": "boot",
+      "faces": {}
+    },
+    "toe_left_box": {
+      "recipe": "boot",
+      "faces": {}
+    },
+    "toe_right_box": {
+      "recipe": "boot",
+      "faces": {}
+    }
+  }
+}

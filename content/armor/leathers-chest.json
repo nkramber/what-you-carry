@@ -1,0 +1,8 @@
+{
+  "id": "leathers-chest",
+  "tier": 0,
+  "slot": "chest",
+  "reduction": 2,
+  "weight": 2,
+  "model": "models/armor/leathers-chest.bbmodel"
+}
