@@ -23,7 +23,8 @@ Session: PR #112, author. Branch `dependabot/github_actions/actions/setup-dotnet
 ### In flight
 
 - The owner tests the Windows command on a Windows PC.
-- The automated pass, then `make codex-review PR=112`.
+- The automated pass, then `make codex-review PR=112`. CI is green at `78d02b1` outside `night-gate`, `evaluate`, and `review-gate`. PR #112 merges over the red night gate alone (D-771).
+- The merge order of D-772: PR #112, PR #130, the chore branch with the Dependabot group alone, then PR-22.
 
 ### Traps and gotchas
 
@@ -31,6 +32,7 @@ Session: PR #112, author. Branch `dependabot/github_actions/actions/setup-dotnet
 - The play shortcut on the Deck and the SSH test runs share `~/what-you-carry`. Each start of the shortcut checks out `main`.
 - The old desktop shortcut "The Thing Below" starts the repository `nkramber/the-thing-below`, not this game.
 - The PowerShell tests run on the Windows leg alone. No `pwsh` is on the Mac.
+- PR #130 must move D-753 and D-754 to D-769 and D-770 before its merge. The chore branch holds session 326 too, and it renumbers its entry (D-772).
 
 ### Open questions that block progress
 
