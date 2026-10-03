@@ -1,6 +1,6 @@
 # PR-133 response
 
-Date: 2026-10-03. The author of PR #133 answers the review record `docs/reviews/pr-133.md` of round 1, at the effective head `5cb1b0c`.
+Date: 2026-10-03. The author of PR #133 answers the review record `docs/reviews/pr-133.md`: round 1 at the effective head `5cb1b0c`, and round 2 at the effective head `86d9b99`.
 
 ## P2-1: A nearby enemy can hold the clearer at the stairwell
 
@@ -13,6 +13,16 @@ Correction: `WhatYouCarry.Core/Bots/FullClearer.cs`. A strike that takes no heal
 Regression check: `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` plays seed 6 with a content set whose every weapon deals no damage. On the correction it ends at the bottom with 15 floors. On the policy of `5cb1b0c` it fails with "Seed 6 with harmless weapons: the full clearer ended as Softlock on floor 1 after 10800 ticks". The test of the reviewer, an enemy inside the reach and outside the band on a hand-built floor, has no route through the loop: `SimulationLoop` digs its floor from the seed, and no test places an enemy. The harmless weapons reproduce the same hold with no geometry.
 
 Other checks: the full suite passed 2191 tests. `det-lint`, `asset-qa`, and `ste-check` report 0 findings. The local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000 read 1703 bottoms, 4297 deaths, 0 softlocks, and 0 crashes, the same counts as before the correction. `FullClearerStrikesTheEnemyInReachWhileItLeaves` still passes.
+
+## P2-2: A hit on another target has no regression test
+
+Disposition: full merit.
+
+Evidence: the six focused full-clearer tests passed at `5e26c7f` and at `86d9b99`, so the change of the count to the health sum had no test that failed on the count that read the selected enemy alone (T-3). In natural play that count never reaches ten seconds, because a hit on the selected enemy ends it within a few swings. A probe of 80 seeds with weapons of one damage point read no drop on floor 1 at either head. The property that tells the two counts apart is a hit on an enemy that the strike does not select.
+
+Correction: `WhatYouCarry.Tests/BotTests.cs`, `FullClearerCountsAHitOnAnotherEnemy`. The test plays floor 1 of seed 6 with harmless weapons, so no swing takes health, and every 120 ticks it takes one point of health off the living enemy farthest from the body through `Enemy.TakeHit`, which the strike never selects. It asserts on each tick that the policy dropped no enemy, that two enemies live at each hit, and that the run reads 3000 ticks. The hit stands in for the hit on the other enemy of a pair that trades the nearest place, because the loop places its enemies from the seed, and no test moves one.
+
+Regression check: the test passes at `86d9b99` and on the head of this response. On the policy of `5e26c7f` it fails: the count never read the hit on the other enemy, and the policy dropped an enemy on floor 1. The full suite and the focused full-clearer tests pass on the head of this response.
 
 ## The gitar thread on `5e26c7f`
 
@@ -29,4 +39,4 @@ The record asks the owner to confirm D-774 and D-775 before approval. Under D-64
 
 ## Final PR head
 
-The commit that carries this file and the correction, on `fix/night-37122879232`. The handoff entry of Session 333 names the push.
+The commit that carries this file and the test of P2-2, on `fix/night-37122879232`. The handoff entry of Session 335 names the push.

@@ -825,7 +825,7 @@ Gate: `ASessionWithNoEndMarkResumesThreeTimesAndThenNotifiesTheOwner` passes, an
 
 **PR-102: Night fix of seed 9153.** ✅ Done in PR #133.
 The full clearer strikes an enemy in reach also while it leaves (D-774, F-208). The nights of 2026-10-02 and 2026-10-03 read a softlock on floor 4 of seed 9153, a slice seed. Seed 9153 joins the extra fixed seeds (D-567). A strike that takes no health off an enemy for ten seconds drops that enemy from the strike and the hunt (D-776, F-209).
-Gate: `FullClearerStrikesTheEnemyInReachWhileItLeaves` and `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` pass, and a branch night passes with seed 9153 in the list.
+Gate: `FullClearerStrikesTheEnemyInReachWhileItLeaves`, `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt`, and `FullClearerCountsAHitOnAnotherEnemy` pass, and a branch night passes with seed 9153 in the list.
 > *In plain English:* the test bot that clears each floor stood still beside a door, with an enemy at its side. It now kills the enemy and walks on.
 
 **PR-22: Equipment slots, armor overlays, and weight.** 🔧

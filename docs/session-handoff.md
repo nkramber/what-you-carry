@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 335: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR-102, correction author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Answered review round 2 of PR #133 (Session 334). P2-2 has full merit: the change of the stall count to the health sum had no test that failed on the count that read the selected enemy alone (T-3).
+- `FullClearerCountsAHitOnAnotherEnemy` plays floor 1 of seed 6 with harmless weapons, and every 120 ticks it takes one point of health off the living enemy farthest from the body. The policy drops no enemy. On the count of `5e26c7f` it dropped enemy 3 at tick 744.
+- A probe of 80 seeds with weapons of one damage point read no drop at either count, so natural play tells the two counts apart on no seed. The hit through `Enemy.TakeHit` stands in for the hit on the other enemy of a pair.
+- The response file holds P2-2. The same session wrote rounds 0 and 1 (Sessions 331 and 333).
+- The gitar pass of `86d9b99` approved, and gitar confirmed the health sum in its thread, which is resolved. The branch night 37144818723 passed at `86d9b99` with seed 9153 in the list.
+
+### State of the build
+
+- Remote head: see the PR. Local: the full suite passed 2192 tests, and `det-lint`, `asset-qa`, and `ste-check` report 0 findings. Core did not change in this round, so the sweep of Session 333 stands.
+- The test commit moves the effective head, so the branch night runs again at the new head (D-547).
+
+### In flight
+
+- The gitar pass of the test commit, the fourth branch night, and review round 3 (D-643).
+
+### Traps and gotchas
+
+- A regression test of the count needs a hit that the strike does not select. `Enemy.TakeHit` is public, and the test calls it on the farthest living enemy between two ticks of the loop.
+- The policy drops an enemy at tick 744 of seed 6 with harmless weapons when no hit lands, so a test of the count needs a hit at least every 600 strike ticks.
+
+### Open questions that block progress
+
+None. D-774, D-775, and D-776 wait for the confirmation of the owner under D-644.
+
+### Next concrete action
+
+Review round 3 reads the test. Then the owner confirms D-774 to D-776, reads the review record, and merges PR #133.
+
 ## Session 334: 2026-10-03, Codex
 
 Author: Codex
@@ -327,40 +362,3 @@ None.
 ### Next concrete action
 
 After the merge, run `git -C ~/what-you-carry pull --ff-only origin main` on the Deck over SSH, so that the shortcut finds its script.
-
-## Session 325: 2026-10-02, Claude Code
-
-Author: Claude Code
-Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `4043785`.
-
-### What this session did, and why
-
-- The night 37015330351 on `main` failed at the carried seed 9153 of the full clearer. The night notice of D-642 came: the job `notify` passed. This is the first part of PR-91 exit test 24 (D-736).
-- The fixer session of that night found the cause and wrote a fix, but it stopped before a commit. It started the sweep and the full suite in the background, and its reply then ended `claude -p` with exit 0. The poll sent no notice. The fixer part of PR-91 exit test 24 failed.
-- The fix: no background tasks, a command limit of 6 hours, an end mark, and up to 3 resumes of the same session, then a stop notice (D-769).
-- The owner leaves the night fix for the next failed night, as a test of the fixer, and merges this PR over the red night gate (D-770).
-
-### State of the build
-
-- Remote head: see the PR. The 23 `NightFixerTests` pass. The new test of the missing end mark fails on the poll of `main`.
-- The night record of `main` reads failure, so `night-gate` stays red (D-770).
-
-### In flight
-
-- The CI of PR #130 waits for a fix of `main`. The five Dependabot merges #110, #111, #113, #114, and #115 at 04:39 to 04:40 UTC on 2026-10-03 left `main` red at `b58a68b`, with six failed Documents tests. The owner chose a new PR that keeps the bumps. After it merges, merge `main` into this branch, wait for green CI, and run `make codex-review PR=130`.
-- Gitar approved the work head `b1a56c1` with no finding.
-- The fixer draft of the night 37015330351 stays uncommitted in `~/Library/Application Support/wyc-night-fixer/work-37015330351` on the Mac Mini, on the local branch `fix/night-37015330351`. Its handoff text names a PR #130 that never opened.
-
-### Traps and gotchas
-
-- A branch of this kind must not start with `fix/night-`. The poll counts each open PR from such a branch as a fix PR, and it queues the night.
-- The auto mode of the harness blocked an edit and a live test of the poll as an unsafe agent. The owner moved the session to the accept-edits mode.
-- The live behavior of `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` and `BASH_MAX_TIMEOUT_MS` comes from the code of the CLI 2.1.283, not from a live run. The next failed night tests it.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.

@@ -145,7 +145,7 @@ Scope:
 
 - `WhatYouCarry.Core/Bots/FullClearer.cs`: the strike of an enemy in reach comes before the walk out (D-774, F-208). A clearer that leaves still strikes an enemy inside the reach of its weapon. A strike that takes no health off an enemy for ten seconds drops that enemy from the strike and the hunt (D-776, F-209).
 - `WhatYouCarry.Tools/NightGate/extra-seeds.json`: seed 9153 joins the extra fixed seeds of the full clearer (D-567).
-- `WhatYouCarry.Tests/BotTests.cs`: `FullClearerStrikesTheEnemyInReachWhileItLeaves` plays seed 9153 past floor 4, to the bottom or to a death. `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` plays seed 6 with harmless weapons to the bottom.
+- `WhatYouCarry.Tests/BotTests.cs`: `FullClearerStrikesTheEnemyInReachWhileItLeaves` plays seed 9153 past floor 4, to the bottom or to a death. `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` plays seed 6 with harmless weapons to the bottom. `FullClearerCountsAHitOnAnotherEnemy` takes health off an enemy that the strike does not select, and the policy drops none.
 - `WhatYouCarry.Tests/NightSeedsTests.cs`: the two tests of the `night-seeds` command read an extra seeds file of their own in a temporary root. A fix PR that adds a seed then changes no expected list.
 - `docs/design.md`: F-208, F-209, and the entry of this PR in section 7.
 
@@ -160,12 +160,13 @@ Exit tests:
 5. A branch night on `fix/night-37122879232` passes with seed 9153 in the list, and writes `night-branch/fix/night-37122879232` (D-538, D-567).
 6. `BitIdentityKnownAnswer` passes with no change of the answer (G-9).
 7. `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` passes. It fails on the policy with no stall drop, which softlocked on floor 1 at tick 10800.
+8. `FullClearerCountsAHitOnAnotherEnemy` passes. It fails on the count that read the selected enemy alone, which dropped an enemy after a hit on another enemy.
 
 Review focus: the order of the strike and the walk out against D-439. Also the stall drop of a strike that hurts nothing, and the test root of the seed command tests.
 
 Check clause: none.
 
-Gate: exit tests 1 to 7 pass.
+Gate: exit tests 1 to 8 pass.
 
 > *In plain English:* the test bot that clears each floor stood still beside a door, with an enemy at its side. It now kills the enemy and walks on.
 

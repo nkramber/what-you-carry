@@ -1,5 +1,42 @@
 # Session handoff archive
 
+## Session 325: 2026-10-02, Claude Code
+
+Author: Claude Code
+Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `4043785`.
+
+### What this session did, and why
+
+- The night 37015330351 on `main` failed at the carried seed 9153 of the full clearer. The night notice of D-642 came: the job `notify` passed. This is the first part of PR-91 exit test 24 (D-736).
+- The fixer session of that night found the cause and wrote a fix, but it stopped before a commit. It started the sweep and the full suite in the background, and its reply then ended `claude -p` with exit 0. The poll sent no notice. The fixer part of PR-91 exit test 24 failed.
+- The fix: no background tasks, a command limit of 6 hours, an end mark, and up to 3 resumes of the same session, then a stop notice (D-769).
+- The owner leaves the night fix for the next failed night, as a test of the fixer, and merges this PR over the red night gate (D-770).
+
+### State of the build
+
+- Remote head: see the PR. The 23 `NightFixerTests` pass. The new test of the missing end mark fails on the poll of `main`.
+- The night record of `main` reads failure, so `night-gate` stays red (D-770).
+
+### In flight
+
+- The CI of PR #130 waits for a fix of `main`. The five Dependabot merges #110, #111, #113, #114, and #115 at 04:39 to 04:40 UTC on 2026-10-03 left `main` red at `b58a68b`, with six failed Documents tests. The owner chose a new PR that keeps the bumps. After it merges, merge `main` into this branch, wait for green CI, and run `make codex-review PR=130`.
+- Gitar approved the work head `b1a56c1` with no finding.
+- The fixer draft of the night 37015330351 stays uncommitted in `~/Library/Application Support/wyc-night-fixer/work-37015330351` on the Mac Mini, on the local branch `fix/night-37015330351`. Its handoff text names a PR #130 that never opened.
+
+### Traps and gotchas
+
+- A branch of this kind must not start with `fix/night-`. The poll counts each open PR from such a branch as a fix PR, and it queues the night.
+- The auto mode of the harness blocked an edit and a live test of the poll as an unsafe agent. The owner moved the session to the accept-edits mode.
+- The live behavior of `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` and `BASH_MAX_TIMEOUT_MS` comes from the code of the CLI 2.1.283, not from a live run. The next failed night tests it.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.
+
 ## Session 324: 2026-09-28, Codex
 
 Author: Codex
