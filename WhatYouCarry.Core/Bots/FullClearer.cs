@@ -62,10 +62,10 @@ namespace WhatYouCarry.Core.Bots;
 /// back took the ticks until the next swing, so the floor ran out (F-208).
 /// </para>
 /// <para>
-/// A strike that takes no health off its enemy for <see cref="StalledTicks"/> ticks drops that enemy from the
-/// strike and from the hunt (D-776). The blade meets a box inside a height band over the feet alone, so an enemy
-/// inside the reach can stand where no swing lands, above a ledge or below one. Without the drop, such an enemy
-/// holds the policy in place until the floor runs out, in the hunt and in the walk out alike (F-209).
+/// A strike that takes no health off any enemy for <see cref="StalledTicks"/> ticks of strikes drops the enemy in
+/// reach from the strike and from the hunt (D-776). The blade meets a box inside a height band over the feet alone,
+/// so an enemy inside the reach can stand where no swing lands, above a ledge or below one. Without the drop, such
+/// an enemy holds the policy in place until the floor runs out, in the hunt and in the walk out alike (F-209).
 /// </para>
 /// </remarks>
 public sealed class FullClearer : IBotPolicy
@@ -110,8 +110,7 @@ public sealed class FullClearer : IBotPolicy
     private int targetHealth;
     private bool attackHeld;
     private bool leaving;
-    private int struck = NoTarget;
-    private int struckHealth;
+    private long struckHealth;
     private int struckTicks;
 
     /// <summary>The owner id that no enemy carries, which marks a policy with no target.</summary>
@@ -184,15 +183,15 @@ public sealed class FullClearer : IBotPolicy
         // The strike comes before the walk out. An enemy in reach holds a walk out: each of its swings rolls the
         // body back from the stairwell, and the walk back takes the ticks until its next swing (F-208).
         Enemy? inReach = this.NearestLiving(loop, loop.Weapon.ReachCentimetres / 100.0f);
-        if (inReach is not null && !this.StrikeStalled(inReach))
+        if (inReach is not null && !this.StrikeStalled(loop))
         {
             return this.Strike(loop, inReach);
         }
 
         if (inReach is not null)
         {
-            // Ten seconds of swings took no health off an enemy in reach, so no swing lands from here (F-209). The
-            // strike and the hunt both drop this enemy, and the walk goes on. The count starts again for the next one.
+            // Ten seconds of swings took no health off any enemy, so no swing lands from here (F-209). The strike and
+            // the hunt both drop the enemy in reach, and the walk goes on. The count starts again for the next one.
             this.unhurt.Add(inReach.Owner);
             this.unreachable.Add(inReach.Owner);
             this.Forget();
@@ -404,19 +403,26 @@ public sealed class FullClearer : IBotPolicy
     }
 
     /// <summary>
-    /// Answers whether the strikes took no health off an enemy for <see cref="StalledTicks"/> ticks (D-776). A hit
-    /// that lands starts the count again. The nearest enemy in reach changes from tick to tick when two stand near,
-    /// so the count runs on across that change, and a change alone never starts it again.
+    /// Answers whether <see cref="StalledTicks"/> ticks of strikes took no health off any enemy (D-776). A hit that
+    /// lands lowers the sum of the health of the enemies, and a lower sum starts the count again. The count reads the
+    /// sum and not one enemy, because the nearest enemy in reach changes from tick to tick when two stand near, and a
+    /// hit on the other one counts too. The count runs across the encounters of the floor: ten seconds of strikes
+    /// with no hit that lands is the stall, in one encounter or in several.
     /// </summary>
-    private bool StrikeStalled(Enemy prey)
+    private bool StrikeStalled(SimulationLoop loop)
     {
-        if (prey.Owner == this.struck && prey.Health < this.struckHealth)
+        long health = 0;
+        foreach (Enemy enemy in loop.Enemies)
+        {
+            health += enemy.Health;
+        }
+
+        if (health < this.struckHealth)
         {
             this.struckTicks = 0;
         }
 
-        this.struck = prey.Owner;
-        this.struckHealth = prey.Health;
+        this.struckHealth = health;
         this.struckTicks++;
         return this.struckTicks >= StalledTicks;
     }
@@ -442,7 +448,6 @@ public sealed class FullClearer : IBotPolicy
         this.failed = 0;
         this.stalled = 0;
         this.attackHeld = false;
-        this.struck = NoTarget;
         this.struckHealth = 0;
         this.struckTicks = 0;
     }

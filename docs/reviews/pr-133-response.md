@@ -14,6 +14,10 @@ Regression check: `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` plays seed 6 
 
 Other checks: the full suite passed 2191 tests. `det-lint`, `asset-qa`, and `ste-check` report 0 findings. The local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000 read 1703 bottoms, 4297 deaths, 0 softlocks, and 0 crashes, the same counts as before the correction. `FullClearerStrikesTheEnemyInReachWhileItLeaves` still passes.
 
+## The gitar thread on `5e26c7f`
+
+The automated pass of the correction opened one thread on `StrikeStalled`: a hit on one enemy while the count read the other one never ended the count, and the count ran across encounters. The first part has merit, and the count now reads the sum of the health of the enemies, which any hit that lands lowers. The second part stands by design: ten seconds of strikes with no hit that lands is the stall, in one encounter or in several, and a count that ends on a tick with no enemy in reach lets an enemy that steps out every few seconds hold the policy. The local sweep of 6000 seeds and the full suite read the same counts after the change.
+
 ## The verdict note on D-774 and D-775
 
 The record asks the owner to confirm D-774 and D-775 before approval. Under D-644 the night fixer answers each owner question itself, records it with the mark "Session answer under D-644, for the owner to confirm", and lists each such decision in the notice at the end. The owner confirms at the merge. D-776 takes the same mark.

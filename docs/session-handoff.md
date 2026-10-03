@@ -14,16 +14,17 @@ Session: PR-102, correction author, the night fixer of the night 37122879232 (D-
 - `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` plays seed 6 with harmless weapons to the bottom. On the policy with no stall drop it softlocks on floor 1 at tick 10800.
 - The response file is `docs/reviews/pr-133-response.md`. The same session wrote the fix of round 0 (Session 331).
 - The gitar pass of the first head `b384bae` approved with no finding and no thread. The branch night 37140330448 passed at that head with seed 9153 in the list.
+- The gitar pass of the correction `5e26c7f` approved with one finding, which has merit: a hit on one enemy while the count read the other one never ended the count. The count now reads the sum of the health of the enemies, which any hit that lands lowers, and the commit that carries this entry answers the thread. The branch night 37143136198 passed at `5e26c7f` with seed 9153 in the list.
 
 ### State of the build
 
 - Remote head: see the PR. Local: the full suite passed 2191 tests, and `det-lint`, `asset-qa`, and `ste-check` report 0 findings.
-- The local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000 on the correction: 1703 bottoms, 4297 deaths, 0 softlocks, 0 crashes, the same counts as before the correction, in 8 min 18 s.
+- The local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000 on the health sum rule: 1703 bottoms, 4297 deaths, 0 softlocks, 0 crashes, the same counts as before the correction, in 8 min 48 s.
 - The correction moves the effective head, so the branch night runs again at the new head (D-547).
 
 ### In flight
 
-- The gitar pass of the correction, the second branch night, and review round 2 (D-643).
+- The gitar pass of the health sum commit, the third branch night, and review round 2 (D-643).
 
 ### Traps and gotchas
 
