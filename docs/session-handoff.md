@@ -14,13 +14,13 @@ Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pendin
 
 ### State of the build
 
-- The effective code head was `93dea9b`. Metadata commit `f8d3217` was pushed, and its remote head was verified.
+- The effective code head was `93dea9b`. The review and handoff were pushed in metadata commit `f8d3217`; commit `42cf24c` records the post-push check results. The current remote head was verified as `42cf24c`.
 - Launcher tests passed, 15 tests. STE check passed with 0 findings.
 - Hosted build and test, bit identity, bots, asset, lint, document, and smoke checks passed at the code head. After publication, Gitar, `review-gate`, `evaluate`, asset, lint, document, and STE checks passed. Metadata-tip code checks skipped. `night-gate` failed as allowed by D-771.
 
 ### In flight
 
-- The review record and handoff were pushed together in metadata commit `f8d3217`. This entry and the final check update need one follow-up metadata commit.
+- The review record and handoff are published. The final check update is also published.
 
 ### Traps and gotchas
 
@@ -33,7 +33,7 @@ None.
 
 ### Next concrete action
 
-Commit and push this final metadata update. The review is ready for the owner merge decision; D-771 allows the known `night-gate` failure.
+The review is ready for the owner merge decision; D-771 allows the known `night-gate` failure.
 
 ## Session 327: 2026-10-03, Codex
 
