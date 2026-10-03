@@ -1,6 +1,6 @@
 # Phase 3 roadmap: Full loop
 
-Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, PR-100, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. PR-100 applies D-739. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, PR-100, PR-101, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. PR-100 applies D-739. PR-101 applies D-769 and D-770. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 2 is `phase-2-first-playable.md`. Gate 2 must pass before PR-21 starts.
 
@@ -107,6 +107,34 @@ Check clause: none.
 Gate: exit tests 1 to 6 pass.
 
 > *In plain English:* items get random extra powers from a short list. Each power works the same for you and for an enemy that carries the item.
+
+### PR-101: Night fixer end mark
+
+✅ Done in PR #130.
+
+Scope:
+
+- `.github/scripts/night-fixer.sh`: the poll starts the session with no background tasks, a command limit of 6 hours, and a session id from the run id. It resumes a session that exits 0 with no end mark up to 3 times, and then sends a stop notice (D-769).
+- `docs/runbooks/night-fixer-prompt.md`: the session runs each command in the foreground, and it writes the end mark after its last notice (D-769).
+- `docs/runbooks/night-fixer.md`: the end mark, the resume, the stop of a session, and the manual continuation.
+- `WhatYouCarry.Tests/NightFixerTests.cs`: the tests of exit tests 1 to 3, with a fake session and a test checkout.
+
+Out of scope: the night fix of seed 9153 of the night 37015330351. The next failed night on `main` gives it to the fixer (D-770).
+
+Exit tests:
+
+1. `ASessionWithNoEndMarkResumesThreeTimesAndThenNotifiesTheOwner` passes, and it fails on the poll of `main`.
+2. `ASessionThatWritesTheEndMarkEndsThePoll` passes, and it asserts the three settings of each call.
+3. `ASessionThatFailsNotifiesTheOwnerWithNoResume` and `ThePromptHoldsTheRulesOfTheFixer` pass.
+4. After the merge, the next failed night on `main` starts a session that ends with an end mark or a stop notice. The session after that night states the result in its handoff entry.
+
+Review focus: the shell logic of the poll, the safety of the unattended session, test quality.
+
+Check clause: none.
+
+Gate: exit tests 1 to 3 pass. The `night-gate` check stays red, and the owner merges over it (D-770).
+
+> *In plain English:* the night repair helper stopped halfway and told nobody. Now it waits for each long step, picks up again when it stops early, and alerts the owner if it still cannot finish.
 
 ### PR-22: Equipment slots, armor overlays, and weight
 
