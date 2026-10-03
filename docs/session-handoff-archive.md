@@ -1,5 +1,68 @@
 # Session handoff archive
 
+## Session 319: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
+
+### What this session did, and why
+
+- Read the review of session 318: `Ready for owner merge` for the effective head 552874d, with no finding.
+- Gitar approved 1dd704b with no finding and no thread.
+
+### State of the build
+
+- The full CI, smoke, bit identity, and bots passed at 4cd4f67, which holds the code of 552874d. The later commits change documents alone, so their heavy jobs skip (D-357, D-474). Before the review record, only `evaluate` and `review-gate` were red. The remote head of `main` is `ec383bf`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #126 (D-524, D-533).
+
+### Traps and gotchas
+
+- The shots of D-714 match main to the pixel for any change between two ticks, because each frame of that capture has the fraction 0 (D-733).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, Gate 2 is next: PR-99 was the last PR before it (D-724).
+
+## Session 318: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-99, reviewer. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
+
+### What this session did, and why
+
+- Reviewed the camera interpolation change, its tests, its frame evidence, and the PR contracts.
+- Added the review record for effective head `552874d`. The provider gate passed. The review found no blocking defect.
+
+### State of the build
+
+- Local focused tests passed, 6 tests. The full suite passed, 2144 tests, on macOS arm64 with .NET 10.
+- GitHub run `36492529592` passed the three-platform CI and smoke checks on the same code. The later PR commits changed documents and frame evidence only.
+- The remote PR branch head at review start was `1dd704b`. The review record and this handoff are in the metadata commit pushed to the PR branch.
+
+### In flight
+
+- The owner can review and merge PR #126.
+
+### Traps and gotchas
+
+- Gitar's approval summary named no specific item. D-550 classifies it as a notice.
+- The frame pairs show the accepted camera position inside rock after tick 2800. D-733 and D-734 record this result.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Review the merge summary, then merge PR #126 when ready.
+
 ## Session 317: 2026-09-28, Claude Code
 
 Author: Claude Code

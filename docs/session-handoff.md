@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 329: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `0034e16`.
+
+### What this session did, and why
+
+- CI on `main` at `0034e16` passed: CI, smoke, bit identity, bots, `det-lint`, `asset-qa`, `ste-check`, and night promotion.
+- The Deck pulled `main` to `0034e16` over SSH (D-606). The command link `~/.local/bin/what-you-carry` now finds `launch/what-you-carry.sh`.
+- Merged `main` into this branch. D-753 and D-754 of this branch moved to D-769 and D-770 in each file, because PR-22 holds D-753 to D-767 (D-772).
+- D-771 cited D-754 as the same rule for PR #130. That citation now names D-770. D-772 and Session 326 keep the old ids, because they name the move.
+- Session 325 went back in its place under Session 326. `handoff-rotate` moved Sessions 318 and 319 to the archive.
+
+### State of the build
+
+- Remote head: see the PR. Locally, the full suite passed, 2,189 tests, after the rotation. `det-lint`, `asset-qa`, and `ste-check` each report 0 findings.
+- The night record of `main` reads failure, so `night-gate` stays red, and the owner merges over it (D-770).
+
+### In flight
+
+- The CI of the push, then the automated pass, then `make codex-review PR=130`.
+
+### Traps and gotchas
+
+- D-768 to D-773 are now in id order, but D-769 and D-770 carry the date 2026-10-02 under D-768 of 2026-10-03.
+- The chore branch `chore/action-pins-after-bumps` holds Session 326 too, and it renumbers its entry (D-772).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.
+
 ## Session 328: 2026-10-03, Codex
 
 Author: Codex
@@ -323,66 +358,3 @@ Session: Gate 2, author. Branch `docs/gate-2-first-playable`. PR #127, pending m
 ### Next concrete action
 
 After the merge, Phase 3 starts. Ask the owner OQ-211, then start PR-100 (D-739). The session after the first failed night on `main` states the result of the proof of D-736.
-
-## Session 319: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
-
-### What this session did, and why
-
-- Read the review of session 318: `Ready for owner merge` for the effective head 552874d, with no finding.
-- Gitar approved 1dd704b with no finding and no thread.
-
-### State of the build
-
-- The full CI, smoke, bit identity, and bots passed at 4cd4f67, which holds the code of 552874d. The later commits change documents alone, so their heavy jobs skip (D-357, D-474). Before the review record, only `evaluate` and `review-gate` were red. The remote head of `main` is `ec383bf`.
-
-### In flight
-
-- The owner confirmation of the merge of PR #126 (D-524, D-533).
-
-### Traps and gotchas
-
-- The shots of D-714 match main to the pixel for any change between two ticks, because each frame of that capture has the fraction 0 (D-733).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, Gate 2 is next: PR-99 was the last PR before it (D-724).
-
-## Session 318: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-99, reviewer. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
-
-### What this session did, and why
-
-- Reviewed the camera interpolation change, its tests, its frame evidence, and the PR contracts.
-- Added the review record for effective head `552874d`. The provider gate passed. The review found no blocking defect.
-
-### State of the build
-
-- Local focused tests passed, 6 tests. The full suite passed, 2144 tests, on macOS arm64 with .NET 10.
-- GitHub run `36492529592` passed the three-platform CI and smoke checks on the same code. The later PR commits changed documents and frame evidence only.
-- The remote PR branch head at review start was `1dd704b`. The review record and this handoff are in the metadata commit pushed to the PR branch.
-
-### In flight
-
-- The owner can review and merge PR #126.
-
-### Traps and gotchas
-
-- Gitar's approval summary named no specific item. D-550 classifies it as a notice.
-- The frame pairs show the accepted camera position inside rock after tick 2800. D-733 and D-734 record this result.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Review the merge summary, then merge PR #126 when ready.
