@@ -33,12 +33,14 @@ The Mac commands start the checkout as it is. They do not update it, because the
 
 ### Procedure on Windows
 
-1. Install Git and the .NET SDK 10.0.400.
+1. Install Git and the .NET SDK 10.0.400: `winget install --id Microsoft.DotNet.SDK.10 --version 10.0.400 --exact`
 2. Clone the repository: `git clone https://github.com/nkramber/what-you-carry.git`
 3. In PowerShell, go to the root directory of the repository.
 4. Run the install one time: `powershell -ExecutionPolicy Bypass -File launch\what-you-carry.ps1 -Install`
 5. Open a new PowerShell window.
 6. Start the game from any directory: `what-you-carry`
+
+When a newer SDK 10.0 is on the PC, winget installs nothing and reports no upgrade. Add `--force` to the command. The two SDKs then stand side by side, and the build uses the version of `global.json`.
 
 The install downloads the Windows zip of Godot 4.7.2 to `godot` in your home directory, and it checks the SHA-512 of the zip. It then writes `what-you-carry.cmd` to the directory `%LOCALAPPDATA%\Microsoft\WindowsApps`, which is on the command path of each new window. The command needs no change to the execution policy.
 
@@ -59,8 +61,7 @@ The command `what-you-carry`, on Windows and on the Deck, does these steps:
 
 1. It updates the checkout to the newest `main`.
 2. It builds the solution.
-3. It runs the Godot import and the C# build.
-4. It starts the game.
+3. It starts the game.
 
 The update stops before it changes the checkout when a tracked file has a change, so it never discards work. To start the checkout as it is, add `-NoUpdate` on Windows or `--no-update` on the Deck. The environment variable `WYC_GODOT` names another Godot binary.
 

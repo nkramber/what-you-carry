@@ -55,10 +55,11 @@ Session: PR #131, author. Branch `fix/action-pins-and-launch`. PR #131, pending 
 
 - The remote head is the branch tip of this PR. Locally, the full suite, `det-lint`, `asset-qa`, and `ste-check` are green.
 - The Deck ran the script over SSH: from the detached `34c2ddf` to `main` at `b58a68b`, the build, the import, and a play session that the test exit ended with code 0.
+- The owner ran the Windows test. The install, the Godot hash, and the command on the path passed. The PC had SDK 10.0.401 alone, and the build named the cause. After the winget install of 10.0.400, the Godot step `--build-solutions` failed with no build log (F-207). The game then started with `dotnet build` alone, so both scripts now skip the Godot step.
 
 ### In flight
 
-- The owner tests the Windows command on a Windows PC.
+- The owner runs `what-you-carry -NoUpdate` on Windows again, with no Godot step. The review of Session 327 waits for that result.
 - The automated pass, then `make codex-review PR=131`. CI was green at `78d02b1` on PR #112 outside `night-gate`, `evaluate`, and `review-gate`. PR #131 merges over the red night gate alone (D-771).
 - The merge order of D-772: PR #131, PR #130, the chore branch with the Dependabot group alone, then PR-22.
 

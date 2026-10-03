@@ -95,11 +95,10 @@ if (-not $NoUpdate) {
     Update-Checkout
 }
 
+# The build writes the Game assembly where Godot reads it, so the game needs no Godot import step. The smoke
+# workflow starts the game the same way on each platform. The Godot step --build-solutions failed on Windows (F-207).
 Write-Host '== build: dotnet build'
 Invoke-Step 'build' 'dotnet' @('build', (Join-Path $Repo 'WhatYouCarry.slnx'))
-
-Write-Host '== import: the Godot import and the C# build'
-Invoke-Step 'import' $godot @('--headless', '--editor', '--path', $GameDirectory, '--build-solutions', '--quit')
 
 Write-Host '== play: Escape or Start ends the session (D-311)'
 Invoke-Step 'play' $godot @('--path', $GameDirectory)

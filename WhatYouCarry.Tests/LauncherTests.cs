@@ -9,8 +9,8 @@ namespace WhatYouCarry.Tests;
 
 /// <summary>
 /// The launch scripts of README, "Launch the game": <c>launch/what-you-carry.sh</c> on the Steam Deck and
-/// <c>launch/what-you-carry.ps1</c> on Windows. Each script updates the checkout to the newest main, builds, imports,
-/// and starts the game, and it stops at the first step that fails. Each behavior test copies the script into a temporary
+/// <c>launch/what-you-carry.ps1</c> on Windows. Each script updates the checkout to the newest main, builds, and starts
+/// the game, and it stops at the first step that fails. Each behavior test copies the script into a temporary
 /// checkout and puts fakes of git, dotnet, and Godot first on the path. The bash tests run on Linux and macOS, and
 /// the PowerShell tests run on the Windows leg alone, because each fake set needs its own shell.
 /// </summary>
@@ -21,8 +21,7 @@ public sealed class LauncherTests
 
     // Each fake writes its name and its arguments to calls.log. The fake git prints status.txt for a status read, and
     // exits with code 4 from the fetch when the file fetch-fails exists, and with code 5 from the status read when the
-    // file status-fails exists. The fake Godot exits with code 3 from the
-    // import when the file import-fails exists.
+    // file status-fails exists. The fake dotnet exits with code 3 from the build when the file build-fails exists.
     private const string FakeShell = """
         #!/usr/bin/env bash
         dir="$(dirname "$0")"
@@ -30,7 +29,7 @@ public sealed class LauncherTests
         if [ "$(basename "$0")" = git ] && [ "$3" = status ] && [ -f "$dir/status.txt" ]; then cat "$dir/status.txt"; fi
         if [ "$(basename "$0")" = git ] && [ "$3" = fetch ] && [ -f "$dir/fetch-fails" ]; then exit 4; fi
         if [ "$(basename "$0")" = git ] && [ "$3" = status ] && [ -f "$dir/status-fails" ]; then exit 5; fi
-        if [ "$(basename "$0")" = godot ] && [ "$1" = --headless ] && [ -f "$dir/import-fails" ]; then exit 3; fi
+        if [ "$(basename "$0")" = dotnet ] && [ "$1" = build ] && [ -f "$dir/build-fails" ]; then exit 3; fi
         exit 0
         """;
 
@@ -38,7 +37,7 @@ public sealed class LauncherTests
         @echo off
         echo %~n0 %*>>"%~dp0calls.log"
         if "%~n0"=="git" if "%3"=="status" if exist "%~dp0status.txt" type "%~dp0status.txt"
-        if "%~n0"=="godot" if "%1"=="--headless" if exist "%~dp0import-fails" exit /b 3
+        if "%~n0"=="dotnet" if "%1"=="build" if exist "%~dp0build-fails" exit /b 3
         exit /b 0
         """;
 
@@ -65,7 +64,7 @@ public sealed class LauncherTests
     }
 
     [Fact]
-    public void TheShellScriptUpdatesBuildsImportsAndPlays()
+    public void TheShellScriptUpdatesBuildsAndPlays()
     {
         RunShellCase([], new Dictionary<string, string>(), (result, repo, fakes, home) =>
         {
@@ -97,13 +96,13 @@ public sealed class LauncherTests
     }
 
     [Fact]
-    public void TheShellScriptStopsWithTheCodeOfAFailedImport()
+    public void TheShellScriptStopsWithTheCodeOfAFailedBuild()
     {
-        RunShellCase(["--no-update"], new Dictionary<string, string> { ["import-fails"] = "" }, (result, repo, fakes, home) =>
+        RunShellCase(["--no-update"], new Dictionary<string, string> { ["build-fails"] = "" }, (result, repo, fakes, home) =>
         {
             Assert.Equal(3, result.Exit);
-            Assert.Contains("the step 'import' failed with exit code 3", result.Errors, StringComparison.Ordinal);
-            Assert.Equal(BuildCalls(repo).Take(2), Calls(fakes));
+            Assert.Contains("the step 'build' failed with exit code 3", result.Errors, StringComparison.Ordinal);
+            Assert.Equal(BuildCalls(repo).Take(1), Calls(fakes));
         });
     }
 
@@ -174,7 +173,7 @@ public sealed class LauncherTests
     }
 
     [Fact]
-    public void ThePowerShellScriptUpdatesBuildsImportsAndPlays()
+    public void ThePowerShellScriptUpdatesBuildsAndPlays()
     {
         RunPowerShellCase([], new Dictionary<string, string>(), (result, repo, fakes) =>
         {
@@ -205,13 +204,13 @@ public sealed class LauncherTests
     }
 
     [Fact]
-    public void ThePowerShellScriptStopsAtAFailedImport()
+    public void ThePowerShellScriptStopsAtAFailedBuild()
     {
-        RunPowerShellCase(["-NoUpdate"], new Dictionary<string, string> { ["import-fails"] = "" }, (result, repo, fakes) =>
+        RunPowerShellCase(["-NoUpdate"], new Dictionary<string, string> { ["build-fails"] = "" }, (result, repo, fakes) =>
         {
             Assert.Equal(1, result.Exit);
-            Assert.Contains("the step 'import' failed with exit code 3", result.Output + result.Errors, StringComparison.Ordinal);
-            Assert.Equal(BuildCalls(repo).Take(2), Calls(fakes));
+            Assert.Contains("the step 'build' failed with exit code 3", result.Output + result.Errors, StringComparison.Ordinal);
+            Assert.Equal(BuildCalls(repo).Take(1), Calls(fakes));
         });
     }
 
@@ -225,14 +224,13 @@ public sealed class LauncherTests
         $"git -C {repo} log -1 --oneline",
     ];
 
-    /// <summary>The calls after the update, in order: the build, the import, and the play session.</summary>
+    /// <summary>The calls after the update, in order: the build and the play session. No Godot import runs (F-207).</summary>
     private static List<string> BuildCalls(string repo)
     {
         string game = Path.Combine(repo, "WhatYouCarry.Game");
         return
         [
             $"dotnet build {Path.Combine(repo, "WhatYouCarry.slnx")}",
-            $"godot --headless --editor --path {game} --build-solutions --quit",
             $"godot --path {game}",
         ];
     }

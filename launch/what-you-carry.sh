@@ -95,13 +95,11 @@ if [ "$update_checkout" = 1 ]; then
     update
 fi
 
+# The build writes the Game assembly where Godot reads it, so the game needs no Godot import step. The smoke
+# workflow starts the game the same way on each platform. The Godot step --build-solutions failed on Windows (F-207).
 STEP="build"
 echo "== build: dotnet build"
 dotnet build "$REPO/WhatYouCarry.slnx"
-
-STEP="import"
-echo "== import: the Godot import and the C# build"
-"$GODOT" --headless --editor --path "$GAME_DIR" --build-solutions --quit
 
 STEP="play"
 echo "== play: Escape or Start ends the session (D-311)"
