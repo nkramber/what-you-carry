@@ -2,6 +2,117 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 328: 2026-10-03, Codex
+
+Author: Codex
+Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
+
+### What this session did, and why
+
+- Re-reviewed PR #131 at effective code head `93dea9b` after the Windows and Deck launch reports arrived.
+- Verified the closed shell finding, reviewed the new build path, and updated the existing review record to `Ready for owner merge`.
+
+### State of the build
+
+- The effective code head was `93dea9b`. The review and handoff were pushed in metadata commit `f8d3217`; commit `42cf24c` records the post-push check results. The current remote head was verified as `42cf24c`.
+- Launcher tests passed, 15 tests. STE check passed with 0 findings.
+- Hosted build and test, bit identity, bots, asset, lint, document, and smoke checks passed at the code head. After publication, Gitar, `review-gate`, `evaluate`, asset, lint, document, and STE checks passed. Metadata-tip code checks skipped. `night-gate` failed as allowed by D-771.
+
+### In flight
+
+- The review record and handoff are published. The final check update is also published.
+
+### Traps and gotchas
+
+- Hosted PowerShell tests use fakes. The owner reports a real Windows launch and a Deck launch at `93dea9b`.
+- The known `night-gate` failure remains allowed by D-771.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The review is ready for the owner merge decision; D-771 allows the known `night-gate` failure.
+
+## Session 327: 2026-10-03, Codex
+
+Author: Codex
+Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
+
+### What this session did, and why
+
+- Reviewed all changed paths, tests, documents, PR comments, and the current CI evidence for PR #131.
+- Added the review record. It records no code finding, but blocks on the owner's Windows PC launch test.
+- Corrected two action-version counts in the PR description. D-768 lists five actions.
+
+### State of the build
+
+- The remote review metadata commit is `15e83c8`. The reviewed code head is `e8396e2`. The local full suite passed, 2,186 tests. Hosted build, test, bit-identity, bot, asset, lint, document, and smoke checks passed on the code head.
+- The `night-gate` check failed on the known night records. D-771 permits this failure. On metadata tip `15e83c8`, Gitar, `asset-qa`, `det-lint`, `doc-gate`, `documents`, and `ste-check` passed. Code-only checks skipped.
+- The review-gate and `evaluate` checks failed because the record verdict is `Blocked` pending the owner's Windows PC test.
+- The post-push Gitar dashboard approved the head and marked the shell finding as closed.
+
+### In flight
+
+- The owner Windows PC launch test remains in flight.
+
+### Traps and gotchas
+
+- The PowerShell CI tests use fakes. They do not run the installer against WindowsApps or start a real game.
+- The Deck shortcut and SSH test runs share `~/what-you-carry`. Each shortcut start checks out `main`.
+
+### Open questions that block progress
+
+The owner must report the Windows PC launch test before the review can approve the Windows launcher.
+
+### Next concrete action
+
+Run the Windows launch procedure on a Windows PC, then update the review record with that evidence.
+
+## Session 326: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR #131, author. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
+
+### What this session did, and why
+
+- PRs #110, #111, #113, #114, and #115 of Dependabot merged with CI red on `main` (F-206). `ActionDecisionTests` held the old pins as text, and `ci-skip` named setup-dotnet v6.0.0 while each workflow named v5.4.0.
+- PR #131 brings the setup-dotnet v6.0.0 of the Dependabot PR #112 to each workflow. The test now holds the five new pins. D-768 records the versions and revises in part D-619, D-620, and D-636.
+- Checked each new pin against the commit of its release tag, and read the breaking changes of each major. The night downloads by name or by pattern, so the path change of download-artifact v5 does not apply.
+- The owner asked for the launch work in the same PR, with no decision entry for the second concern. `launch/what-you-carry.sh` serves the Deck, and `launch/what-you-carry.ps1` serves Windows. Each updates to `main`, builds, imports, and plays. `LauncherTests` covers both with fakes.
+- Gitar does not review a PR that a bot opens. The commits moved from the Dependabot PR #112 to PR #131, and PR #112 closes (D-773).
+- The README has one procedure for each machine. The Mac keeps `make play`, because the work sessions share its checkout.
+
+### State of the build
+
+- The remote head is the branch tip of this PR. Locally, the full suite, `det-lint`, `asset-qa`, and `ste-check` are green.
+- The Deck ran the script over SSH: from the detached `34c2ddf` to `main` at `b58a68b`, the build, the import, and a play session that the test exit ended with code 0.
+- The owner ran the Windows test. The install, the Godot hash, and the command on the path passed. The PC had SDK 10.0.401 alone, and the build named the cause. After the winget install of 10.0.400, the Godot step `--build-solutions` failed with no build log (F-207). The game then started with `dotnet build` alone, so both scripts now skip the Godot step.
+
+### In flight
+
+- The owner ran `what-you-carry -NoUpdate` on Windows at `93dea9b` from the home directory: the build, then the game on Vulkan and WASAPI. The test exit ended the session at tick 115 with no error. The Windows test of Session 327 passed.
+- The Deck ran the script of `93dea9b` over SSH: the update to `main`, the build, and a play session that the test exit ended with code 0. The untracked test copy is gone, and the checkout is clean.
+- The automated pass, then `make codex-review PR=131`. CI was green at `78d02b1` on PR #112 outside `night-gate`, `evaluate`, and `review-gate`. PR #131 merges over the red night gate alone (D-771).
+- The merge order of D-772: PR #131, PR #130, the chore branch with the Dependabot group alone, then PR-22.
+
+### Traps and gotchas
+
+- Until the merge and one pull on the Deck, the command link `~/.local/bin/what-you-carry` and the desktop shortcut point to a file that does not exist.
+- The play shortcut on the Deck and the SSH test runs share `~/what-you-carry`. Each start of the shortcut checks out `main`.
+- The old desktop shortcut "The Thing Below" starts the repository `nkramber/the-thing-below`, not this game.
+- The PowerShell tests run on the Windows leg alone. No `pwsh` is on the Mac.
+- PR #130 must move D-753 and D-754 to D-769 and D-770 before its merge. The chore branch holds session 326 too, and it renumbers its entry (D-772).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, run `git -C ~/what-you-carry pull --ff-only origin main` on the Deck over SSH, so that the shortcut finds its script.
+
 ## Session 324: 2026-09-28, Codex
 
 Author: Codex
@@ -238,98 +349,3 @@ None.
 ### Next concrete action
 
 Review the merge summary, then merge PR #126 when ready.
-
-## Session 317: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
-
-### What this session did, and why
-
-- F-202 (D-724): the frame interpolated the two tick poses in a straight line, so a turn of 180 degrees drew the camera from the head. The Game now interpolates the look (`TickLook`), the yaw the short way, and places the pose of each frame with `OrbitCamera.Place`.
-- Exit test 1 fails on the pose interpolation of `main`: 1.5 meters in place of 3.0 at the fraction 0.25.
-- One placement costs about 0.7 microseconds on the spawn of seed 1, in a Release build on the Mac.
-- The shots of D-714 draw each frame at the fraction 0, so they cannot show F-202. The owner chose pairs of frames at a fraction of 0.5 as the evidence, and accepted the close frames of D-720 at the interpolated yaw (D-733). The owner confirmed exit test 3 (D-734), after a correction: the halfway frames with no turn differ in up to 1.1 percent of the pixels.
-
-### State of the build
-
-- Local: the full suite (2144 tests, Smoke included), `det-lint`, `ste-check`, and the Godot build pass. The remote head of `main` is `ec383bf`.
-
-### In flight
-
-- The gitar pass and the cross-provider review. The owner confirmed exit test 3 on the frames in `docs/reviews/pr-126-frames/` (D-734).
-
-### Traps and gotchas
-
-- The Game bot session ends one second after the first descent (PR-18), so the full-clearer capture ends at tick 3821 on floor 2. The death at tick 7140 of D-714 comes from `bot-run`.
-- A frame shot never shows a frame between two ticks (D-733). For a turn frame, patch `FrameShots.IsShotTick` in a scratch worktree, and run with `--fixed-fps 120`.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Answer the gitar pass. Then run `make codex-review PR=126` when each check but the Review gate workflow is green.
-
-## Session 316: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-98, author. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
-
-### What this session did, and why
-
-- Read the review of session 315: `Ready for owner merge` for the effective head b446cdd, with no finding.
-- Gitar approved b446cdd, and its one thread is resolved. The D-251 note for the review-gate line of the dashboard is posted.
-
-### State of the build
-
-- Each check of PR #125 passed at 8e29146, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays b446cdd.
-
-### In flight
-
-- The owner confirmation of the merge of PR #125 (D-524, D-533).
-
-### Traps and gotchas
-
-- macOS has no `timeout` command. A CI wait that starts with it ends at once with exit code 8, and every check reads pending.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, start PR-99 (D-724), the last PR before Gate 2.
-
-## Session 315: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-98, reviewer. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
-
-### What this session did, and why
-
-- Reviewed the code, tests, documents, comments, and frames of PR #125. No in-scope finding remains.
-- Added the review record for effective head `b446cdd` and this entry in one metadata commit (D-182).
-
-### State of the build
-
-- The local HUD and number-sight tests passed, 28 tests. The remote CI checks for work head `b446cdd` passed through documents-only tip `8e29146` (D-357).
-- The `review-gate` and dependent `evaluate` checks failed because the review record did not yet exist. They need a fresh run after this push.
-
-### In flight
-
-- The review record and this entry await the metadata commit and push to the PR branch.
-
-### Traps and gotchas
-
-- `GridRay.FirstSolid` throws when a march starts in rock. The grazing-edge test checks the step past the first open cell.
-- The PR tip includes documents after the effective work head. The review applies to `b446cdd`.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Wait for the review-gate checks, then give the owner the merge summary for PR #125.
