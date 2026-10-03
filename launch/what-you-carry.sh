@@ -8,7 +8,7 @@
 # The update stops when a tracked file has a change, so it never discards work. The environment variable WYC_GODOT
 # names the Godot .NET binary, as for the test suite. Without it, the script uses the binary of the Deck (D-294, D-428).
 # When a step fails, the terminal stays open until Enter, so a desktop shortcut shows the error.
-set -euo pipefail
+set -Eeuo pipefail
 
 GODOT_VERSION="4.7.2-stable"
 DEFAULT_GODOT="$HOME/godot/Godot_v${GODOT_VERSION}_mono_linux_x86_64/Godot_v${GODOT_VERSION}_mono_linux.x86_64"
@@ -62,7 +62,9 @@ update() {
     STEP="update"
     echo "== update: the newest main"
     git -C "$REPO" fetch origin main
-    if [ -n "$(git -C "$REPO" status --porcelain --untracked-files=no)" ]; then
+    # A separate assignment, so that a failed status read stops the script before the checkout.
+    changes="$(git -C "$REPO" status --porcelain --untracked-files=no)"
+    if [ -n "$changes" ]; then
         fail "a tracked file in $REPO has a change. Commit or remove the change, or start with --no-update."
     fi
     git -C "$REPO" checkout main

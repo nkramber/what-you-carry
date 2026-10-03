@@ -20,12 +20,16 @@ public sealed class LauncherTests
     private const string PowerShellScript = "launch/what-you-carry.ps1";
 
     // Each fake writes its name and its arguments to calls.log. The fake git prints status.txt for a status read, and
-    // the fake Godot exits with code 3 from the import when the file import-fails exists.
+    // exits with code 4 from the fetch when the file fetch-fails exists, and with code 5 from the status read when the
+    // file status-fails exists. The fake Godot exits with code 3 from the
+    // import when the file import-fails exists.
     private const string FakeShell = """
         #!/usr/bin/env bash
         dir="$(dirname "$0")"
         echo "$(basename "$0") $*" >> "$dir/calls.log"
         if [ "$(basename "$0")" = git ] && [ "$3" = status ] && [ -f "$dir/status.txt" ]; then cat "$dir/status.txt"; fi
+        if [ "$(basename "$0")" = git ] && [ "$3" = fetch ] && [ -f "$dir/fetch-fails" ]; then exit 4; fi
+        if [ "$(basename "$0")" = git ] && [ "$3" = status ] && [ -f "$dir/status-fails" ]; then exit 5; fi
         if [ "$(basename "$0")" = godot ] && [ "$1" = --headless ] && [ -f "$dir/import-fails" ]; then exit 3; fi
         exit 0
         """;
@@ -100,6 +104,33 @@ public sealed class LauncherTests
             Assert.Equal(3, result.Exit);
             Assert.Contains("the step 'import' failed with exit code 3", result.Errors, StringComparison.Ordinal);
             Assert.Equal(BuildCalls(repo).Take(2), Calls(fakes));
+        });
+    }
+
+    /// <summary>
+    /// A failed step inside a function names its step and keeps its exit code. Without errtrace, bash runs no ERR trap
+    /// in a function, and a failed fetch ended the script with no message (PR #131 review, Gitar).
+    /// </summary>
+    [Fact]
+    public void TheShellScriptStopsWithTheCodeOfAFailedFetch()
+    {
+        RunShellCase([], new Dictionary<string, string> { ["fetch-fails"] = "" }, (result, repo, fakes, home) =>
+        {
+            Assert.Equal(4, result.Exit);
+            Assert.Contains("the step 'update' failed with exit code 4", result.Errors, StringComparison.Ordinal);
+            Assert.Equal(UpdateCalls(repo).Take(1), Calls(fakes));
+        });
+    }
+
+    /// <summary>A failed status read stops the update before the checkout, because the script cannot know the tracked changes.</summary>
+    [Fact]
+    public void TheShellScriptStopsWithTheCodeOfAFailedStatusRead()
+    {
+        RunShellCase([], new Dictionary<string, string> { ["status-fails"] = "" }, (result, repo, fakes, home) =>
+        {
+            Assert.Equal(5, result.Exit);
+            Assert.Contains("the step 'update' failed with exit code 5", result.Errors, StringComparison.Ordinal);
+            Assert.Equal(UpdateCalls(repo).Take(2), Calls(fakes));
         });
     }
 
