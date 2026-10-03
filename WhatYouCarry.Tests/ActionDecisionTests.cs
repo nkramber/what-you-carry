@@ -21,19 +21,19 @@ public sealed class ActionDecisionTests
     private const string LocalPrefix = "./";
 
     /// <summary>The pinned use of <c>actions/checkout</c> (D-620, D-636).</summary>
-    public const string Checkout = "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0";
+    public const string Checkout = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1";
 
     /// <summary>The pinned use of <c>actions/setup-dotnet</c> (D-189, D-636).</summary>
-    public const string SetupDotnet = "actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0";
+    public const string SetupDotnet = "actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0";
 
     /// <summary>The pinned use of <c>actions/cache</c> (D-294, D-636).</summary>
-    public const string Cache = "actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0";
+    public const string Cache = "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0";
 
     /// <summary>The pinned use of <c>actions/upload-artifact</c> (D-280, D-636).</summary>
-    public const string UploadArtifact = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2";
+    public const string UploadArtifact = "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1";
 
     /// <summary>The pinned use of <c>actions/download-artifact</c> (D-619, D-636).</summary>
-    public const string DownloadArtifact = "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0";
+    public const string DownloadArtifact = "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1";
 
     /// <summary>Each action of the repository and the decision that is its dependency entry.</summary>
     private static readonly Dictionary<string, string> DecisionOfAction = new(StringComparer.Ordinal)
@@ -129,6 +129,25 @@ public sealed class ActionDecisionTests
         Assert.Contains("      - \"/\"", config, StringComparison.Ordinal);
         Assert.Contains("      - \"/.github/actions/*\"", config, StringComparison.Ordinal);
         Assert.Contains("      interval: weekly", config, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// One Dependabot PR bumps one action in every directory (D-756). The bumps #112 and #115 moved setup-dotnet in two PRs,
+    /// and the merge of #115 alone left the action on two pins.
+    /// </summary>
+    [Fact]
+    public void DependabotBumpsOneActionInEveryDirectoryInOnePr()
+    {
+        const string Group = """
+                groups:
+                  each-action:
+                    patterns:
+                      - "*"
+                    group-by: dependency-name
+            """;
+
+        string config = RepositoryRoot.ReadFile(".github/dependabot.yml").Replace("\r\n", "\n", StringComparison.Ordinal);
+        Assert.Contains(Group.Replace("\r\n", "\n", StringComparison.Ordinal), config, StringComparison.Ordinal);
     }
 
     /// <summary>F-171. The pin check takes a full commit with its release remark alone.</summary>

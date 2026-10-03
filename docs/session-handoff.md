@@ -2,6 +2,44 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 326: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: action pins, author. Branch `chore/action-pins-after-bumps`. PR pending merge. Base `b58a68b`.
+
+### What this session did, and why
+
+- The owner merged the Dependabot bumps #110, #111, #113, #114, and #115 at 04:39 to 04:40 UTC on 2026-10-03. Six Documents tests then failed on `main` at `b58a68b`.
+- The bump #115 moved setup-dotnet to v6.0.0 in `.github/actions/ci-skip` alone. The workflows kept v5.4.0, and the bump #112 of the workflows stayed open.
+- The owner kept the bumps. This PR pins setup-dotnet v6.0.0 in each workflow, and it moves the five pin constants of `ActionDecisionTests` to the new versions (D-755).
+- The owner chose a Dependabot group in this PR: one PR bumps one action in every directory (D-756). A new test reads the group.
+- The owner merges this PR over the red `night-gate` check alone (D-757).
+
+### State of the build
+
+- Remote head: see the PR. The full suite passes on the branch. The night record of `main` reads failure at the carried seed 9153, so `night-gate` stays red (D-757).
+- Each pin is the commit of its release tag. The session read each tag commit from the GitHub API.
+
+### In flight
+
+- The CI of this PR, the automated pass, and the cross-provider review.
+- PR #130 of PR-101 waits for this PR. After the merge, its session merges `main` into `fix/fixer-session-end`.
+- The bump #112 has no more work after the merge. Dependabot closes it, or the owner closes it.
+
+### Traps and gotchas
+
+- PR #130 holds D-753 and D-754 on its branch. This PR takes D-755 to D-757, so `main` skips two ids until PR #130 merges.
+- PR #130 holds session 325. This entry takes 326. When PR #130 merges after this PR, `handoff-rotate` puts its entry back in its place (D-406).
+- The `group-by: dependency-name` key works for version updates alone, and each directory must use one ecosystem.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, merge `main` into `fix/fixer-session-end`, and continue PR #130.
+
 ## Session 324: 2026-09-28, Codex
 
 Author: Codex
@@ -301,35 +339,3 @@ None.
 ### Next concrete action
 
 After the merge, start PR-99 (D-724), the last PR before Gate 2.
-
-## Session 315: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-98, reviewer. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
-
-### What this session did, and why
-
-- Reviewed the code, tests, documents, comments, and frames of PR #125. No in-scope finding remains.
-- Added the review record for effective head `b446cdd` and this entry in one metadata commit (D-182).
-
-### State of the build
-
-- The local HUD and number-sight tests passed, 28 tests. The remote CI checks for work head `b446cdd` passed through documents-only tip `8e29146` (D-357).
-- The `review-gate` and dependent `evaluate` checks failed because the review record did not yet exist. They need a fresh run after this push.
-
-### In flight
-
-- The review record and this entry await the metadata commit and push to the PR branch.
-
-### Traps and gotchas
-
-- `GridRay.FirstSolid` throws when a march starts in rock. The grazing-edge test checks the step past the first open cell.
-- The PR tip includes documents after the effective work head. The review applies to `b446cdd`.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Wait for the review-gate checks, then give the owner the merge summary for PR #125.
