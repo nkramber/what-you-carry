@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 331: 2026-10-03, Claude Code
 
 Author: Claude Code
-Session: PR-102, author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR pending. Base `04d17e9`.
+Session: PR-102, author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
 
 ### What this session did, and why
 
@@ -39,7 +39,7 @@ None. D-774 and D-775 wait for the confirmation of the owner under D-644.
 
 ### Next concrete action
 
-The owner confirms D-774 and D-775, reads the review record, and merges the PR. The promoted record of the branch night then makes the night gate green (D-557), and the next night on `main` runs seed 9153 from the extra seeds.
+The owner confirms D-774 and D-775, reads the review record, and merges PR #133. The promoted record of the branch night then makes the night gate green (D-557), and the next night on `main` runs seed 9153 from the extra seeds.
 
 ## Session 330: 2026-10-03, Codex
 

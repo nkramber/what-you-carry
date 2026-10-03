@@ -139,6 +139,8 @@ Gate: exit tests 1 to 3 pass. The `night-gate` check stays red, and the owner me
 
 ### PR-102: Night fix of seed 9153
 
+✅ Done in PR #133.
+
 Scope:
 
 - `WhatYouCarry.Core/Bots/FullClearer.cs`: the strike of an enemy in reach comes before the walk out (D-774, F-208). A clearer that leaves still strikes an enemy inside the reach of its weapon.
