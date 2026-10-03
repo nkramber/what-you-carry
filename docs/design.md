@@ -430,6 +430,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-206 | PRs #110, #111, #113, #114, and #115 of Dependabot merged on 2026-10-03 with CI red on `main`. `ActionDecisionTests` held the old pins as text, and the local action `ci-skip` named setup-dotnet v6.0.0 while each workflow named v5.4.0 | 2026-10-03 | ✅ PR #131: each workflow uses v6.0.0, and the test holds the new pins (D-768) |
 | F-207 | On the Windows PC of the owner, `Godot --headless --editor --build-solutions --quit` on `WhatYouCarry.Game` ended with "An EditorPlugin build callback failed", and Godot wrote no build log for the project. `dotnet build` of the solution passed, and the game then started and ended with the test exit. The Mac and the Deck pass the same Godot step. The cause is not known | 2026-10-03 | ⚠ PR #131: the launch scripts build with `dotnet build` alone, as the smoke workflow does on each platform. `make play` and the Deck runs keep the Godot step |
 | F-208 | The nights of 2026-10-02 and 2026-10-03: the full clearer softlocked on floor 4 of seed 9153. It left with a scavenger of six health in reach, which held the doorway of one cell to the stairwell, and each swing of the scavenger rolled it two meters back | 2026-10-03 | ✅ PR #133 (PR-102): the clearer strikes an enemy in reach also while it leaves (D-774) |
+| F-209 | PR #133 review P2-1: an enemy inside the reach whose box the height band of the blade misses holds the strike of the full clearer with no stall drop, in the hunt and in the walk out. With harmless weapons the policy softlocked on floor 1 | 2026-10-03 | ✅ PR #133 (PR-102): a strike that takes no health for ten seconds drops the enemy from the strike and the hunt (D-776) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -823,8 +824,8 @@ Gate: `ASessionWithNoEndMarkResumesThreeTimesAndThenNotifiesTheOwner` passes, an
 > *In plain English:* the night repair helper stopped halfway and told nobody. Now it waits for each long step, and it alerts the owner when it cannot finish.
 
 **PR-102: Night fix of seed 9153.** ✅ Done in PR #133.
-The full clearer strikes an enemy in reach also while it leaves (D-774, F-208). The nights of 2026-10-02 and 2026-10-03 read a softlock on floor 4 of seed 9153, a slice seed. Seed 9153 joins the extra fixed seeds (D-567).
-Gate: `FullClearerStrikesTheEnemyInReachWhileItLeaves` passes, and a branch night passes with seed 9153 in the list.
+The full clearer strikes an enemy in reach also while it leaves (D-774, F-208). The nights of 2026-10-02 and 2026-10-03 read a softlock on floor 4 of seed 9153, a slice seed. Seed 9153 joins the extra fixed seeds (D-567). A strike that takes no health off an enemy for ten seconds drops that enemy from the strike and the hunt (D-776, F-209).
+Gate: `FullClearerStrikesTheEnemyInReachWhileItLeaves` and `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` pass, and a branch night passes with seed 9153 in the list.
 > *In plain English:* the test bot that clears each floor stood still beside a door, with an enemy at its side. It now kills the enemy and walks on.
 
 **PR-22: Equipment slots, armor overlays, and weight.** 🔧

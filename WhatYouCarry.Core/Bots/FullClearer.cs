@@ -61,6 +61,12 @@ namespace WhatYouCarry.Core.Bots;
 /// swung while it left, each swing of the scavenger rolled the body two meters back from the doorway, and the walk
 /// back took the ticks until the next swing, so the floor ran out (F-208).
 /// </para>
+/// <para>
+/// A strike that takes no health off its enemy for <see cref="StalledTicks"/> ticks drops that enemy from the
+/// strike and from the hunt (D-776). The blade meets a box inside a height band over the feet alone, so an enemy
+/// inside the reach can stand where no swing lands, above a ledge or below one. Without the drop, such an enemy
+/// holds the policy in place until the floor runs out, in the hunt and in the walk out alike (F-209).
+/// </para>
 /// </remarks>
 public sealed class FullClearer : IBotPolicy
 {
@@ -93,6 +99,7 @@ public sealed class FullClearer : IBotPolicy
 
     private readonly PathFollower follower = new();
     private List<int> unreachable = [];
+    private List<int> unhurt = [];
     private readonly int lastFloor;
     private GridPathfinder? pathfinder;
     private int pathFloor;
@@ -103,6 +110,9 @@ public sealed class FullClearer : IBotPolicy
     private int targetHealth;
     private bool attackHeld;
     private bool leaving;
+    private int struck = NoTarget;
+    private int struckHealth;
+    private int struckTicks;
 
     /// <summary>The owner id that no enemy carries, which marks a policy with no target.</summary>
     private const int NoTarget = -1;
@@ -126,10 +136,13 @@ public sealed class FullClearer : IBotPolicy
     public string Name => PolicyName;
 
     /// <summary>
-    /// The owner ids that the hunt dropped on the floor that it walks now: an enemy that no path reaches, and one
-    /// that a hunt gained nothing on. The list starts empty on every floor.
+    /// The owner ids that the hunt dropped on the floor that it walks now: an enemy that no path reaches, one that a
+    /// hunt gained nothing on, and one that the strikes did not hurt (D-776). The list starts empty on every floor.
     /// </summary>
     public IReadOnlyList<int> Dropped => this.unreachable;
+
+    /// <summary>The owner ids that the strikes did not hurt on this floor. The strike in reach skips them (D-776, F-209).</summary>
+    public IReadOnlyList<int> Unhurt => this.unhurt;
 
     /// <inheritdoc/>
     public bool PromisesProgress => true;
@@ -145,6 +158,7 @@ public sealed class FullClearer : IBotPolicy
             this.pathfinder = new GridPathfinder(loop.Grid);
             this.pathFloor = loop.Floor;
             this.unreachable = [];
+            this.unhurt = [];
             this.leaving = false;
             this.Forget();
         }
@@ -170,9 +184,18 @@ public sealed class FullClearer : IBotPolicy
         // The strike comes before the walk out. An enemy in reach holds a walk out: each of its swings rolls the
         // body back from the stairwell, and the walk back takes the ticks until its next swing (F-208).
         Enemy? inReach = this.NearestLiving(loop, loop.Weapon.ReachCentimetres / 100.0f);
-        if (inReach is not null)
+        if (inReach is not null && !this.StrikeStalled(inReach))
         {
             return this.Strike(loop, inReach);
+        }
+
+        if (inReach is not null)
+        {
+            // Ten seconds of swings took no health off an enemy in reach, so no swing lands from here (F-209). The
+            // strike and the hunt both drop this enemy, and the walk goes on. The count starts again for the next one.
+            this.unhurt.Add(inReach.Owner);
+            this.unreachable.Add(inReach.Owner);
+            this.Forget();
         }
 
         this.attackHeld = false;
@@ -292,14 +315,17 @@ public sealed class FullClearer : IBotPolicy
         return 0;
     }
 
-    /// <summary>The living enemy nearest the body inside one distance, or null when none stands that near.</summary>
+    /// <summary>
+    /// The living enemy nearest the body inside one distance, or null when none stands that near. An enemy that the
+    /// strikes did not hurt on this floor does not count (D-776).
+    /// </summary>
     private Enemy? NearestLiving(SimulationLoop loop, float reach)
     {
         Enemy? nearest = null;
         float best = 0.0f;
         foreach (Enemy enemy in loop.Enemies)
         {
-            if (enemy.IsDead)
+            if (enemy.IsDead || this.IsUnhurt(enemy.Owner))
             {
                 continue;
             }
@@ -377,6 +403,24 @@ public sealed class FullClearer : IBotPolicy
         return nearest;
     }
 
+    /// <summary>
+    /// Answers whether the strikes took no health off an enemy for <see cref="StalledTicks"/> ticks (D-776). A hit
+    /// that lands starts the count again. The nearest enemy in reach changes from tick to tick when two stand near,
+    /// so the count runs on across that change, and a change alone never starts it again.
+    /// </summary>
+    private bool StrikeStalled(Enemy prey)
+    {
+        if (prey.Owner == this.struck && prey.Health < this.struckHealth)
+        {
+            this.struckTicks = 0;
+        }
+
+        this.struck = prey.Owner;
+        this.struckHealth = prey.Health;
+        this.struckTicks++;
+        return this.struckTicks >= StalledTicks;
+    }
+
     /// <summary>Faces one enemy and presses the attack bit (D-323, D-324).</summary>
     private Intent Strike(SimulationLoop loop, Enemy prey)
     {
@@ -390,7 +434,7 @@ public sealed class FullClearer : IBotPolicy
         return new Intent(loop.Tick, yawDelta, 0, 0, 0, attack);
     }
 
-    /// <summary>Drops the target and the path, so the next tick starts the hunt again.</summary>
+    /// <summary>Drops the target, the path, and the count of the strike, so the next tick starts the hunt again.</summary>
     private void Forget()
     {
         this.follower.Forget();
@@ -398,6 +442,9 @@ public sealed class FullClearer : IBotPolicy
         this.failed = 0;
         this.stalled = 0;
         this.attackHeld = false;
+        this.struck = NoTarget;
+        this.struckHealth = 0;
+        this.struckTicks = 0;
     }
 
     /// <summary>
@@ -479,6 +526,20 @@ public sealed class FullClearer : IBotPolicy
         }
 
         return count;
+    }
+
+    /// <summary>Answers whether the strikes did not hurt one enemy on this floor (D-776).</summary>
+    private bool IsUnhurt(int owner)
+    {
+        foreach (int dropped in this.unhurt)
+        {
+            if (dropped == owner)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Answers whether the hunt dropped one enemy on this floor, because no path led to it.</summary>

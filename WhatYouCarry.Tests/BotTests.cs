@@ -278,6 +278,26 @@ public sealed class BotTests
     }
 
     /// <summary>
+    /// A strike that takes no health off an enemy for ten seconds drops that enemy from the strike and the hunt
+    /// (D-776, F-209). The blade meets a box inside the height band of the weapon alone, so an enemy inside the
+    /// reach can stand where no swing lands, and the review of PR #133 found that such an enemy held the policy
+    /// until the floor ran out. Harmless weapons make every enemy such an enemy: no swing takes health, and no enemy
+    /// hurts the player. On seed 6 the policy then drops each enemy in reach and reaches the bottom. Without the
+    /// drop it strikes the first enemies of floor 1 until the timer expires, and the run reads a softlock at tick
+    /// 10800.
+    /// </summary>
+    [Fact]
+    public void FullClearerDropsAnEnemyThatTheStrikesDoNotHurt()
+    {
+        ContentSet harmless = WithHarmlessWeapons(TestWorld.Content);
+        BotRunResult result = BotRun.Play(new FullClearer(harmless), 6, harmless);
+        Assert.True(
+            result.End == BotRunEnd.Bottom,
+            $"Seed 6 with harmless weapons: the full clearer ended as {result.End} on floor {result.FloorsReached} after {result.Ticks} ticks, and a run that drops each enemy it cannot hurt reaches the bottom. {result.Error}");
+        Assert.Equal(15, result.FloorsReached);
+    }
+
+    /// <summary>
     /// The greedy descender leaves every floor of the night of 2026-09-23 (F-111, D-545, D-546). On 26 seeds that
     /// night read a softlock at `e069e16`. Seed 1268 wedged on a detour away from the stairwell, seed 947 also took a
     /// diagonal drop onto an overhang, and seeds 2669 and 2879 softlocked on that drop alone. The runs now reach the
@@ -517,5 +537,17 @@ public sealed class BotTests
     {
         Assert.Equal(4, (int)Core.Determinism.RngStream.Bot);
         Assert.NotNull(Core.Determinism.Rng.ForStream(1UL, Core.Determinism.RngStream.Bot));
+    }
+
+    /// <summary>A content set whose every weapon deals no damage, so no strike takes health and no enemy hurts the player.</summary>
+    private static ContentSet WithHarmlessWeapons(ContentSet content)
+    {
+        List<WeaponDefinition> weapons = [];
+        foreach (WeaponDefinition weapon in content.Weapons)
+        {
+            weapons.Add(weapon with { Damage = 0 });
+        }
+
+        return content with { Weapons = weapons };
     }
 }

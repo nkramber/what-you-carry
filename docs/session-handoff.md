@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 333: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR-102, correction author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Answered review round 1 of PR #133 (Session 332). P2-1 has full merit: an enemy inside the reach that no swing hurts held the strike with no stall drop, in the hunt before this PR and in the walk out after it.
+- The correction: a strike that takes no health off an enemy for ten seconds drops that enemy from the strike and the hunt (D-776, F-209). The count runs across the enemies in reach, because the nearest one changes from tick to tick when two stand near, and a count for each enemy alone never ended.
+- `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` plays seed 6 with harmless weapons to the bottom. On the policy with no stall drop it softlocks on floor 1 at tick 10800.
+- The response file is `docs/reviews/pr-133-response.md`. The same session wrote the fix of round 0 (Session 331).
+- The gitar pass of the first head `b384bae` approved with no finding and no thread. The branch night 37140330448 passed at that head with seed 9153 in the list.
+
+### State of the build
+
+- Remote head: see the PR. Local: the full suite passed 2191 tests, and `det-lint`, `asset-qa`, and `ste-check` report 0 findings.
+- The local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000 on the correction: 1703 bottoms, 4297 deaths, 0 softlocks, 0 crashes, the same counts as before the correction, in 8 min 18 s.
+- The correction moves the effective head, so the branch night runs again at the new head (D-547).
+
+### In flight
+
+- The gitar pass of the correction, the second branch night, and review round 2 (D-643).
+
+### Traps and gotchas
+
+- A content set with harmless weapons makes every enemy one that no swing hurts, and the enemies hurt nobody. Floor 1 of seed 1 then holds more such enemies than ten seconds each fit into the timer, so seed 1 softlocks also with the drop. Seed 6 reaches the bottom.
+- The band case of P2-1 needs an enemy 1.2 meters or more above or below the feet inside 1.6 meters, so a hand-built floor is hard. Harmless weapons reproduce the hold with no geometry.
+
+### Open questions that block progress
+
+None. D-774, D-775, and D-776 wait for the confirmation of the owner under D-644.
+
+### Next concrete action
+
+Review round 2 reads the correction. Then the owner confirms D-774 to D-776, reads the review record, and merges PR #133.
+
 ## Session 332: 2026-10-03, Codex
 
 Author: Codex
@@ -323,39 +359,3 @@ None.
 ### Next concrete action
 
 The owner can review and merge PR #129.
-
-## Session 323: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
-
-### What this session did, and why
-
-- Asked the owner OQ-22, OQ-51, and OQ-52, and the first item definitions that the roadmap needs (D-123). The answers are D-745 to D-752.
-- Added the `item` and `affix` content types, five items, three swords of tiers 1 to 3, and three affixes: lifesteal, burning, and swift. The owner left out sturdy.
-- Added `Core/Items/`: the rarities, the loot roller on the loot stream, and the affix behaviors. The player and the enemy implement `IWielder`.
-- Changed exit test 6 to `AffixValidatorRejectsUnknownBehavior`, because no item file names an affix (D-752).
-
-### State of the build
-
-- `main` is `bc41332`. The local build, `det-lint`, `asset-qa`, and `ste-check` are clean. The full local suite passed after the fix of one content count test.
-- Each code check of PR #129 is green at the work head `40cdf97`. The gitar pass approved it with no finding. The review record `docs/reviews/pr-129.md` gives `Ready for owner merge` for the effective head `240d987`.
-- The loop calls no affix, so the simulation version and the bit-identity answer stay as they are.
-
-### In flight
-
-- The owner confirmation of the merge of PR #129 (D-524, D-533).
-
-### Traps and gotchas
-
-- The item files sort by path, so `ring-plain` comes before `sword-basic` in `ContentSet.Items`.
-- The Overseer does not implement `IWielder`. PR-22 decides if burning reaches it, as a foe of the player.
-- `AffixBehaviors.Swift` returns the weapon with a shorter `WindupTicks`. The Game layer must play the clip windup at that length (PR-22).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the owner confirms, run `gh pr merge 129 --auto --squash`, wait on the checks, and write the merge prompt of `one-pr-one-session`.

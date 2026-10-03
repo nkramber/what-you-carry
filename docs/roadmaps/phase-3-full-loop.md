@@ -143,11 +143,11 @@ Gate: exit tests 1 to 3 pass. The `night-gate` check stays red, and the owner me
 
 Scope:
 
-- `WhatYouCarry.Core/Bots/FullClearer.cs`: the strike of an enemy in reach comes before the walk out (D-774, F-208). A clearer that leaves still strikes an enemy inside the reach of its weapon.
+- `WhatYouCarry.Core/Bots/FullClearer.cs`: the strike of an enemy in reach comes before the walk out (D-774, F-208). A clearer that leaves still strikes an enemy inside the reach of its weapon. A strike that takes no health off an enemy for ten seconds drops that enemy from the strike and the hunt (D-776, F-209).
 - `WhatYouCarry.Tools/NightGate/extra-seeds.json`: seed 9153 joins the extra fixed seeds of the full clearer (D-567).
-- `WhatYouCarry.Tests/BotTests.cs`: `FullClearerStrikesTheEnemyInReachWhileItLeaves` plays seed 9153 past floor 4, to the bottom or to a death.
+- `WhatYouCarry.Tests/BotTests.cs`: `FullClearerStrikesTheEnemyInReachWhileItLeaves` plays seed 9153 past floor 4, to the bottom or to a death. `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` plays seed 6 with harmless weapons to the bottom.
 - `WhatYouCarry.Tests/NightSeedsTests.cs`: the two tests of the `night-seeds` command read an extra seeds file of their own in a temporary root. A fix PR that adds a seed then changes no expected list.
-- `docs/design.md`: F-208, and the entry of this PR in section 7.
+- `docs/design.md`: F-208, F-209, and the entry of this PR in section 7.
 
 Out of scope: the roll reflex of `BotReflex` and the leave rule of D-439. The simulation version stays (G-20), because the bit-identity sweep plays the greedy descender and the coward, and the state of no run changes.
 
@@ -159,12 +159,13 @@ Exit tests:
 4. A local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000 reads no softlock and no crash.
 5. A branch night on `fix/night-37122879232` passes with seed 9153 in the list, and writes `night-branch/fix/night-37122879232` (D-538, D-567).
 6. `BitIdentityKnownAnswer` passes with no change of the answer (G-9).
+7. `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` passes. It fails on the policy with no stall drop, which softlocked on floor 1 at tick 10800.
 
-Review focus: the order of the strike and the walk out against D-439. Also the stall of a strike on an enemy that the blade cannot reach, and the test root of the seed command tests.
+Review focus: the order of the strike and the walk out against D-439. Also the stall drop of a strike that hurts nothing, and the test root of the seed command tests.
 
 Check clause: none.
 
-Gate: exit tests 1 to 6 pass.
+Gate: exit tests 1 to 7 pass.
 
 > *In plain English:* the test bot that clears each floor stood still beside a door, with an enemy at its side. It now kills the enemy and walks on.
 
