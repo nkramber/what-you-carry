@@ -1,5 +1,199 @@
 # Session handoff archive
 
+## Session 320: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: Gate 2, author. Branch `docs/gate-2-first-playable`. PR #127, pending merge. Base `ee04af7`.
+
+### What this session did, and why
+
+- Read sequence item 57 of the Phase 2 roadmap, and each exit test of that file against the records. Three tests had no pass on record: PR-66 exit test 10, PR-79 exit test 4, and the failed-night proof of PR-91 exit test 24.
+- PR-79 exit test 4 passes on PR #126: `review-gate` gave success on the documents commit `9909436` after the approving review `1c846f9`.
+- The owner folded PR-66 exit test 10 into the Gate 2 play (D-735), and carried the failed-night proof past the gate (D-736). No night on `main` failed after PR #109.
+- The session built `main` at `ee04af7`, and the smoke session passed. The owner played one floor and signed off on feel on two terms (D-740): the scavenger has no swing clip yet, and the world generation gets an overhaul later.
+- Neither term was in the plan. D-739 adds PR-100, the enemy swing clip, before PR-21, with OQ-211 for the clip source. The windup check of D-723 moves to PR-100, and F-203 records the rest pose. D-737 closes PR-66 exit test 10, and OQ-210 holds the overhaul.
+- The steps of the Overseer warn of an attack from outside the view, so F-198 closes (D-738).
+- Added the missing done marks: sequence item 45 (PR #105) and the PR-76 entry (PR #117).
+
+### State of the build
+
+- The remote head of `main` is `ee04af7`. This PR changes documents alone. `ste-check` gives 0 findings, and the Documents category passes 257 of 257.
+
+### In flight
+
+- The automated pass, the `review-override` label, and the owner confirmation of the merge (D-188, D-524, D-533).
+
+### Traps and gotchas
+
+- An enemy draws in the rest pose (D-401), so no play or frame can read the windup of a scavenger before PR-100.
+- The handoff of session 297 names the failed-night proof exit test 23 of PR-91. The roadmap puts it in exit test 24.
+
+### Open questions that block progress
+
+- OQ-211 blocks PR-100. OQ-210 blocks no PR.
+
+### Next concrete action
+
+After the merge, Phase 3 starts. Ask the owner OQ-211, then start PR-100 (D-739). The session after the first failed night on `main` states the result of the proof of D-736.
+
+## Session 319: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
+
+### What this session did, and why
+
+- Read the review of session 318: `Ready for owner merge` for the effective head 552874d, with no finding.
+- Gitar approved 1dd704b with no finding and no thread.
+
+### State of the build
+
+- The full CI, smoke, bit identity, and bots passed at 4cd4f67, which holds the code of 552874d. The later commits change documents alone, so their heavy jobs skip (D-357, D-474). Before the review record, only `evaluate` and `review-gate` were red. The remote head of `main` is `ec383bf`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #126 (D-524, D-533).
+
+### Traps and gotchas
+
+- The shots of D-714 match main to the pixel for any change between two ticks, because each frame of that capture has the fraction 0 (D-733).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, Gate 2 is next: PR-99 was the last PR before it (D-724).
+
+## Session 318: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-99, reviewer. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
+
+### What this session did, and why
+
+- Reviewed the camera interpolation change, its tests, its frame evidence, and the PR contracts.
+- Added the review record for effective head `552874d`. The provider gate passed. The review found no blocking defect.
+
+### State of the build
+
+- Local focused tests passed, 6 tests. The full suite passed, 2144 tests, on macOS arm64 with .NET 10.
+- GitHub run `36492529592` passed the three-platform CI and smoke checks on the same code. The later PR commits changed documents and frame evidence only.
+- The remote PR branch head at review start was `1dd704b`. The review record and this handoff are in the metadata commit pushed to the PR branch.
+
+### In flight
+
+- The owner can review and merge PR #126.
+
+### Traps and gotchas
+
+- Gitar's approval summary named no specific item. D-550 classifies it as a notice.
+- The frame pairs show the accepted camera position inside rock after tick 2800. D-733 and D-734 record this result.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Review the merge summary, then merge PR #126 when ready.
+
+## Session 317: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
+
+### What this session did, and why
+
+- F-202 (D-724): the frame interpolated the two tick poses in a straight line, so a turn of 180 degrees drew the camera from the head. The Game now interpolates the look (`TickLook`), the yaw the short way, and places the pose of each frame with `OrbitCamera.Place`.
+- Exit test 1 fails on the pose interpolation of `main`: 1.5 meters in place of 3.0 at the fraction 0.25.
+- One placement costs about 0.7 microseconds on the spawn of seed 1, in a Release build on the Mac.
+- The shots of D-714 draw each frame at the fraction 0, so they cannot show F-202. The owner chose pairs of frames at a fraction of 0.5 as the evidence, and accepted the close frames of D-720 at the interpolated yaw (D-733). The owner confirmed exit test 3 (D-734), after a correction: the halfway frames with no turn differ in up to 1.1 percent of the pixels.
+
+### State of the build
+
+- Local: the full suite (2144 tests, Smoke included), `det-lint`, `ste-check`, and the Godot build pass. The remote head of `main` is `ec383bf`.
+
+### In flight
+
+- The gitar pass and the cross-provider review. The owner confirmed exit test 3 on the frames in `docs/reviews/pr-126-frames/` (D-734).
+
+### Traps and gotchas
+
+- The Game bot session ends one second after the first descent (PR-18), so the full-clearer capture ends at tick 3821 on floor 2. The death at tick 7140 of D-714 comes from `bot-run`.
+- A frame shot never shows a frame between two ticks (D-733). For a turn frame, patch `FrameShots.IsShotTick` in a scratch worktree, and run with `--fixed-fps 120`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Answer the gitar pass. Then run `make codex-review PR=126` when each check but the Review gate workflow is green.
+
+## Session 316: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-98, author. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Read the review of session 315: `Ready for owner merge` for the effective head b446cdd, with no finding.
+- Gitar approved b446cdd, and its one thread is resolved. The D-251 note for the review-gate line of the dashboard is posted.
+
+### State of the build
+
+- Each check of PR #125 passed at 8e29146, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays b446cdd.
+
+### In flight
+
+- The owner confirmation of the merge of PR #125 (D-524, D-533).
+
+### Traps and gotchas
+
+- macOS has no `timeout` command. A CI wait that starts with it ends at once with exit code 8, and every check reads pending.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, start PR-99 (D-724), the last PR before Gate 2.
+
+## Session 315: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Reviewed the code, tests, documents, comments, and frames of PR #125. No in-scope finding remains.
+- Added the review record for effective head `b446cdd` and this entry in one metadata commit (D-182).
+
+### State of the build
+
+- The local HUD and number-sight tests passed, 28 tests. The remote CI checks for work head `b446cdd` passed through documents-only tip `8e29146` (D-357).
+- The `review-gate` and dependent `evaluate` checks failed because the review record did not yet exist. They need a fresh run after this push.
+
+### In flight
+
+- The review record and this entry await the metadata commit and push to the PR branch.
+
+### Traps and gotchas
+
+- `GridRay.FirstSolid` throws when a march starts in rock. The grazing-edge test checks the step past the first open cell.
+- The PR tip includes documents after the effective work head. The review applies to `b446cdd`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Wait for the review-gate checks, then give the owner the merge summary for PR #125.
+
 ## Session 314: 2026-09-28, Claude Code
 
 Author: Claude Code

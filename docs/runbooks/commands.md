@@ -45,6 +45,8 @@ The agent runs each Deck test over SSH, after the owner says that the Deck is re
 
 Without `XAUTHORITY`, X11 refuses the SSH session, and Godot falls back to Wayland. Godot 4.7.2 can then hang after the end line of the session (F-147). A player session on the Deck has the auth file, so Godot uses X11 there.
 
+The play shortcut of the README uses the same checkout, and each start checks out `main`. A test run checks out its own commit before step 3. Leave no tracked change after the run, or the next start of the shortcut stops.
+
 The build of step 3 is the Debug configuration, and it compiles optimized code (D-685). A frame log before PR-77 measured code with no optimization. In desktop mode over SSH, a frame of 18 to 19 ms comes every 2.245 seconds, also in an empty scene (F-190). A frame log reads those frames as the stall of the desktop, and not as a cost of the game (D-683).
 
 The swap line of a descent holds `fromWorker`, `digging`, `stagedTrees`, and `builtTrees`. When the loop took the plan of the worker, `digging` reads false and `builtTrees` reads 0 (F-193).
