@@ -19,6 +19,7 @@ Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pend
 - The focused grouping test passed. The local full suite aborted after 1,902 tests when the test host crashed.
 - The document tests passed (261 tests). `ste-check` and `doc-gate` passed with no findings.
 - Hosted CI at `33f81fe` passed outside the known `night-gate` failure and the review-dependent checks. D-775 allows that night failure for this PR.
+- The post-push Gitar review approved the work head and noted that security updates remain ungrouped. The review record includes the verified concern as P2-1.
 - The review record and this handoff entry will be pushed together as one metadata commit.
 
 ### In flight
