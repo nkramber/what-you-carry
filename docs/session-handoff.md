@@ -53,7 +53,9 @@ Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge.
 
 ### In flight
 
-- The CI of the push, then the automated pass, then `make codex-review PR=130`.
+- At `ad8c67d`, each check passed outside `night-gate`, `evaluate`, and `review-gate`. Gitar approved with no finding, and a PR comment answered its CI note with D-251 and D-770.
+- The cross-provider review of Session 330 gives `Ready for owner merge` for the effective head `c112c23`.
+- The owner merges PR #130 with the ruleset bypass, over the red `night-gate` check alone (D-770).
 
 ### Traps and gotchas
 
