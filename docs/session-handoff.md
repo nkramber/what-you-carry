@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 336: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-133, reviewer, round 3. Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Reviewed the correction of P2-2. `FullClearerCountsAHitOnAnotherEnemy` passes on `db623c8`, and P2-2 is fixed.
+- Rechecked the resolved Gitar thread. The health sum answers the target-swap claim, and the floor-wide count matches D-776.
+- The isolated pre-fix test run did not compile because the historical worktree lacked Godot references. The author reports that the new test fails on the old count before tick 1000.
+- Updated the review record to approve the effective head `db623c8`. D-774, D-775, and D-776 remain session answers for the owner to confirm at merge.
+
+### State of the build
+
+- Remote head at close: the metadata commit that carries this entry and the review record. Effective head: `db623c8561eb2a9648fb33b6fa47cb810809099e`.
+- The focused regression passed 1 test. Current-head CI passed Linux, Windows, macOS, the sweeps, smoke, bit identity, bots, asset QA, lint, documents, doc gate, STE, Gitar, and night gate.
+- `evaluate` and `review-gate` passed after this approving review record reached the PR branch. Heavy jobs skipped the metadata commit.
+
+### In flight
+
+- PR #133 awaits owner merge. The review record and this entry are published in one metadata commit.
+- The owner confirms D-774, D-775, and D-776 at merge under D-644.
+
+### Traps and gotchas
+
+- The old isolated worktree cannot compile the test project without Godot references. Do not report that attempt as a test failure.
+- The review applies to effective head `db623c8`; the metadata commit does not change it.
+
+### Open questions that block progress
+
+None. The owner confirms D-774, D-775, and D-776 at merge under D-644.
+
+### Next concrete action
+
+The owner reads the review record, confirms the session answers, and decides whether to merge PR #133.
+
 ## Session 335: 2026-10-03, Claude Code
 
 Author: Claude Code
@@ -319,46 +355,3 @@ The owner must report the Windows PC launch test before the review can approve t
 ### Next concrete action
 
 Run the Windows launch procedure on a Windows PC, then update the review record with that evidence.
-
-## Session 326: 2026-10-03, Claude Code
-
-Author: Claude Code
-Session: PR #131, author. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
-
-### What this session did, and why
-
-- PRs #110, #111, #113, #114, and #115 of Dependabot merged with CI red on `main` (F-206). `ActionDecisionTests` held the old pins as text, and `ci-skip` named setup-dotnet v6.0.0 while each workflow named v5.4.0.
-- PR #131 brings the setup-dotnet v6.0.0 of the Dependabot PR #112 to each workflow. The test now holds the five new pins. D-768 records the versions and revises in part D-619, D-620, and D-636.
-- Checked each new pin against the commit of its release tag, and read the breaking changes of each major. The night downloads by name or by pattern, so the path change of download-artifact v5 does not apply.
-- The owner asked for the launch work in the same PR, with no decision entry for the second concern. `launch/what-you-carry.sh` serves the Deck, and `launch/what-you-carry.ps1` serves Windows. Each updates to `main`, builds, imports, and plays. `LauncherTests` covers both with fakes.
-- Gitar does not review a PR that a bot opens. The commits moved from the Dependabot PR #112 to PR #131, and PR #112 closes (D-773).
-- The README has one procedure for each machine. The Mac keeps `make play`, because the work sessions share its checkout.
-
-### State of the build
-
-- The remote head is the branch tip of this PR. Locally, the full suite, `det-lint`, `asset-qa`, and `ste-check` are green.
-- The Deck ran the script over SSH: from the detached `34c2ddf` to `main` at `b58a68b`, the build, the import, and a play session that the test exit ended with code 0.
-- The owner ran the Windows test. The install, the Godot hash, and the command on the path passed. The PC had SDK 10.0.401 alone, and the build named the cause. After the winget install of 10.0.400, the Godot step `--build-solutions` failed with no build log (F-207). The game then started with `dotnet build` alone, so both scripts now skip the Godot step.
-
-### In flight
-
-- The owner ran `what-you-carry -NoUpdate` on Windows at `93dea9b` from the home directory: the build, then the game on Vulkan and WASAPI. The test exit ended the session at tick 115 with no error. The Windows test of Session 327 passed.
-- The Deck ran the script of `93dea9b` over SSH: the update to `main`, the build, and a play session that the test exit ended with code 0. The untracked test copy is gone, and the checkout is clean.
-- The automated pass, then `make codex-review PR=131`. CI was green at `78d02b1` on PR #112 outside `night-gate`, `evaluate`, and `review-gate`. PR #131 merges over the red night gate alone (D-771).
-- The merge order of D-772: PR #131, PR #130, the chore branch with the Dependabot group alone, then PR-22.
-
-### Traps and gotchas
-
-- Until the merge and one pull on the Deck, the command link `~/.local/bin/what-you-carry` and the desktop shortcut point to a file that does not exist.
-- The play shortcut on the Deck and the SSH test runs share `~/what-you-carry`. Each start of the shortcut checks out `main`.
-- The old desktop shortcut "The Thing Below" starts the repository `nkramber/the-thing-below`, not this game.
-- The PowerShell tests run on the Windows leg alone. No `pwsh` is on the Mac.
-- PR #130 must move D-753 and D-754 to D-769 and D-770 before its merge. The chore branch holds session 326 too, and it renumbers its entry (D-772).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, run `git -C ~/what-you-carry pull --ff-only origin main` on the Deck over SSH, so that the shortcut finds its script.
