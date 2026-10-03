@@ -1,5 +1,35 @@
 # Session handoff archive
 
+## Session 316: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-98, author. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Read the review of session 315: `Ready for owner merge` for the effective head b446cdd, with no finding.
+- Gitar approved b446cdd, and its one thread is resolved. The D-251 note for the review-gate line of the dashboard is posted.
+
+### State of the build
+
+- Each check of PR #125 passed at 8e29146, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays b446cdd.
+
+### In flight
+
+- The owner confirmation of the merge of PR #125 (D-524, D-533).
+
+### Traps and gotchas
+
+- macOS has no `timeout` command. A CI wait that starts with it ends at once with exit code 8, and every check reads pending.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, start PR-99 (D-724), the last PR before Gate 2.
+
 ## Session 315: 2026-09-28, Codex
 
 Author: Codex

@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 327: 2026-10-03, Codex
+
+Author: Codex
+Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
+
+### What this session did, and why
+
+- Reviewed all changed paths, tests, documents, PR comments, and the current CI evidence for PR #131.
+- Added the review record. It records no code finding, but blocks on the owner's Windows PC launch test.
+- Corrected two action-version counts in the PR description. D-768 lists five actions.
+
+### State of the build
+
+- The reviewed code head is `e8396e2`. The local full suite passed, 2,186 tests. The hosted build, test, bit-identity, bot, asset, lint, document, and smoke checks passed.
+- The `night-gate` check failed on the known night records. D-771 permits this failure. The review-gate and `evaluate` checks need a fresh run after publication.
+
+### In flight
+
+- The review record and this entry need one metadata commit and a push to `fix/action-pins-and-launch`.
+- The owner Windows PC launch test remains in flight.
+
+### Traps and gotchas
+
+- The PowerShell CI tests use fakes. They do not run the installer against WindowsApps or start a real game.
+- The Deck shortcut and SSH test runs share `~/what-you-carry`. Each shortcut start checks out `main`.
+
+### Open questions that block progress
+
+The owner must report the Windows PC launch test before the review can approve the Windows launcher.
+
+### Next concrete action
+
+Run the Windows launch procedure on a Windows PC, then update the review record with that evidence.
+
 ## Session 326: 2026-10-03, Claude Code
 
 Author: Claude Code
@@ -312,33 +346,3 @@ None.
 ### Next concrete action
 
 Answer the gitar pass. Then run `make codex-review PR=126` when each check but the Review gate workflow is green.
-
-## Session 316: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-98, author. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
-
-### What this session did, and why
-
-- Read the review of session 315: `Ready for owner merge` for the effective head b446cdd, with no finding.
-- Gitar approved b446cdd, and its one thread is resolved. The D-251 note for the review-gate line of the dashboard is posted.
-
-### State of the build
-
-- Each check of PR #125 passed at 8e29146, except `evaluate` and `review-gate`, which waited for the review record. The effective head stays b446cdd.
-
-### In flight
-
-- The owner confirmation of the merge of PR #125 (D-524, D-533).
-
-### Traps and gotchas
-
-- macOS has no `timeout` command. A CI wait that starts with it ends at once with exit code 8, and every check reads pending.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, start PR-99 (D-724), the last PR before Gate 2.
