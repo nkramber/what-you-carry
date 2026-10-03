@@ -1,6 +1,6 @@
 # Phase 3 roadmap: Full loop
 
-Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, PR-100, PR-101, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. PR-100 applies D-739. PR-101 applies D-761. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, PR-100, PR-102, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. PR-100 applies D-739. PR-102 applies D-761. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 2 is `phase-2-first-playable.md`. Gate 2 must pass before PR-21 starts.
 
@@ -32,7 +32,7 @@ This phase carries the sensitive number of the design: the death payout curve (D
 | F-33 | The economy gate had no reproducible comparison | PR-27, M-5 |
 | F-42 | No decision names the rarity tiers that D-49's colors need | PR-21, PR-26 |
 | F-43 | D-128 needs a model and a budget for Tier 3 that nobody recorded | PR-32 |
-| F-204 | No roadmap PR built the block of D-26 | PR-101 |
+| F-204 | No roadmap PR built the block of D-26 | PR-102 |
 | F-205 | A hit on the Overseer gave lifesteal an endless heal | PR-22 |
 
 ## 3. Guardrails for this phase
@@ -122,7 +122,7 @@ Scope:
 - The affix hooks of the loop: the affixes of each item that the player wears act on each hit and each swing (D-747, D-750, D-751). The Overseer stays outside the hooks (D-758). The swing clip plays a swift windup at its shorter length.
 - The Game argument `--armor <set>` starts a run in one full set. The `loadout` list of the run record header stores the starting equipment (D-762, D-766).
 
-Out of scope: item stats beyond reduction and weight, armor tiers 1 to 3 (PR-26, OQ-212), the shield item, its model, and the block (PR-101), the bank (PR-30).
+Out of scope: item stats beyond reduction and weight, armor tiers 1 to 3 (PR-26, OQ-212), the shield item, its model, and the block (PR-102), the bank (PR-30).
 
 Exit tests:
 
@@ -142,7 +142,7 @@ Gate: exit tests 1 to 7 pass.
 
 > *In plain English:* what you wear shows on your body. Heavy pieces make you slower and harder to stagger. The pieces never clip through each other.
 
-### PR-101: Shield and block
+### PR-102: Shield and block
 
 Scope:
 
@@ -476,7 +476,7 @@ One person owns the program. Items run one at a time in this order. Gate 2 must 
 1. Owner: answer OQ-22, OQ-51, OQ-52. ✅ Answered 2026-09-28: D-745 to D-752.
 2. Owner: answer OQ-211. Then PR-100 (D-739), and then PR-21. ✅ OQ-211 answered 2026-09-28: D-741. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129.
 3. Owner: answer the first three armor sets from OQ-10, with the two weight numbers of D-316. ✅ OQ-5 answered 2026-09-12: D-314. ✅ Answered 2026-09-28 and 2026-09-29: D-753 to D-766.
-4. PR-22. Then the owner answers OQ-213, and PR-101 follows (D-761).
+4. PR-22. Then the owner answers OQ-213, and PR-102 follows (D-761).
 5. Owner: answer OQ-3 and OQ-53.
 6. PR-23.
 7. Owner: answer OQ-13 and OQ-54.
@@ -525,7 +525,7 @@ Open:
 - OQ-210: the overhaul of the world generation. Blocks no PR (D-737).
 - OQ-211: the source of the enemy swing clip. ✅ Answered 2026-09-28: D-741.
 - OQ-212: the armor tier scale. Blocks PR-26.
-- OQ-213: the block. Blocks PR-101.
+- OQ-213: the block. Blocks PR-102.
 
 Resolved 2026-09-28:
 
