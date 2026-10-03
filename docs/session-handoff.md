@@ -21,6 +21,8 @@ Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge.
 
 ### In flight
 
+- The CI of PR #130 waits for a fix of `main`. The five Dependabot merges #110, #111, #113, #114, and #115 at 04:39 to 04:40 UTC on 2026-10-03 left `main` red at `b58a68b`, with six failed Documents tests. The owner chose a new PR that keeps the bumps. After it merges, merge `main` into this branch, wait for green CI, and run `make codex-review PR=130`.
+- Gitar approved the work head `b1a56c1` with no finding.
 - The fixer draft of the night 37015330351 stays uncommitted in `~/Library/Application Support/wyc-night-fixer/work-37015330351` on the Mac Mini, on the local branch `fix/night-37015330351`. Its handoff text names a PR #130 that never opened.
 
 ### Traps and gotchas
