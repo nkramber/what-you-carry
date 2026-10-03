@@ -5,7 +5,7 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 331: 2026-10-03, Claude Code
 
 Author: Claude Code
-Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR pending merge. Base `04d17e9`.
+Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `04d17e9`.
 
 ### What this session did, and why
 
@@ -17,11 +17,13 @@ Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR pe
 ### State of the build
 
 - Remote head: see the PR. Locally, the full suite, `det-lint`, `asset-qa`, and `ste-check` are green after the merge.
-- The night record of `main` still reads failure at the carried seed 9153, so `night-gate` stays red. No decision lets this PR merge over it, because D-772 drops D-757.
+- The night record of `main` still reads failure at the carried seed 9153, so `night-gate` stays red. The owner chose a review now and a merge over that check alone (D-775).
+- At `33f81fe`, each check passed outside `night-gate`, `evaluate`, and `review-gate`. Gitar approved with no finding, and a PR comment answered its CI note with D-251.
 
 ### In flight
 
-- The CI of this PR, the automated pass, and then `make codex-review`.
+- The automated pass of the D-775 commit, and then `make codex-review PR=132`.
+- The owner merges PR #132 with the ruleset bypass, over the red `night-gate` check alone (D-775).
 
 ### Traps and gotchas
 
@@ -30,7 +32,7 @@ Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR pe
 
 ### Open questions that block progress
 
-- Before the merge, ask the owner how this PR merges if the night record of `main` still reads failure.
+None.
 
 ### Next concrete action
 
