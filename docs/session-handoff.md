@@ -5,14 +5,15 @@ Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first
 ## Session 326: 2026-10-03, Claude Code
 
 Author: Claude Code
-Session: PR #112, author. Branch `dependabot/github_actions/actions/setup-dotnet-6.0.0`. PR #112, pending merge. Base `b58a68b`.
+Session: PR #131, author. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
 
 ### What this session did, and why
 
 - PRs #110, #111, #113, #114, and #115 of Dependabot merged with CI red on `main` (F-206). `ActionDecisionTests` held the old pins as text, and `ci-skip` named setup-dotnet v6.0.0 while each workflow named v5.4.0.
-- PR #112 brings setup-dotnet v6.0.0 to each workflow. The test now holds the five new pins. D-768 records the versions and revises in part D-619, D-620, and D-636.
+- PR #131 brings the setup-dotnet v6.0.0 of the Dependabot PR #112 to each workflow. The test now holds the five new pins. D-768 records the versions and revises in part D-619, D-620, and D-636.
 - Checked each new pin against the commit of its release tag, and read the breaking changes of each major. The night downloads by name or by pattern, so the path change of download-artifact v5 does not apply.
 - The owner asked for the launch work in the same PR, with no decision entry for the second concern. `launch/what-you-carry.sh` serves the Deck, and `launch/what-you-carry.ps1` serves Windows. Each updates to `main`, builds, imports, and plays. `LauncherTests` covers both with fakes.
+- Gitar does not review a PR that a bot opens. The commits moved from the Dependabot PR #112 to PR #131, and PR #112 closes (D-773).
 - The README has one procedure for each machine. The Mac keeps `make play`, because the work sessions share its checkout.
 
 ### State of the build
@@ -23,8 +24,8 @@ Session: PR #112, author. Branch `dependabot/github_actions/actions/setup-dotnet
 ### In flight
 
 - The owner tests the Windows command on a Windows PC.
-- The automated pass, then `make codex-review PR=112`. CI is green at `78d02b1` outside `night-gate`, `evaluate`, and `review-gate`. PR #112 merges over the red night gate alone (D-771).
-- The merge order of D-772: PR #112, PR #130, the chore branch with the Dependabot group alone, then PR-22.
+- The automated pass, then `make codex-review PR=131`. CI was green at `78d02b1` on PR #112 outside `night-gate`, `evaluate`, and `review-gate`. PR #131 merges over the red night gate alone (D-771).
+- The merge order of D-772: PR #131, PR #130, the chore branch with the Dependabot group alone, then PR-22.
 
 ### Traps and gotchas
 
