@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 323: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
+
+### What this session did, and why
+
+- Asked the owner OQ-22, OQ-51, and OQ-52, and the first item definitions that the roadmap needs (D-123). The answers are D-745 to D-752.
+- Added the `item` and `affix` content types, five items, three swords of tiers 1 to 3, and three affixes: lifesteal, burning, and swift. The owner left out sturdy.
+- Added `Core/Items/`: the rarities, the loot roller on the loot stream, and the affix behaviors. The player and the enemy implement `IWielder`.
+- Changed exit test 6 to `AffixValidatorRejectsUnknownBehavior`, because no item file names an affix (D-752).
+
+### State of the build
+
+- `main` is `bc41332`. The local build, `det-lint`, `asset-qa`, and `ste-check` are clean. The full local suite passed after the fix of one content count test.
+- Each code check of PR #129 is green at the work head `40cdf97`. The gitar pass approved it with no finding. The review record `docs/reviews/pr-129.md` gives `Ready for owner merge` for the effective head `240d987`.
+- The loop calls no affix, so the simulation version and the bit-identity answer stay as they are.
+
+### In flight
+
+- The owner confirmation of the merge of PR #129 (D-524, D-533).
+
+### Traps and gotchas
+
+- The item files sort by path, so `ring-plain` comes before `sword-basic` in `ContentSet.Items`.
+- The Overseer does not implement `IWielder`. PR-22 decides if burning reaches it, as a foe of the player.
+- `AffixBehaviors.Swift` returns the weapon with a shorter `WindupTicks`. The Game layer must play the clip windup at that length (PR-22).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the owner confirms, run `gh pr merge 129 --auto --squash`, wait on the checks, and write the merge prompt of `one-pr-one-session`.
+
 ## Session 322: 2026-09-28, Codex
 
 Author: Codex

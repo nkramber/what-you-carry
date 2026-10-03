@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 333: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Re-reviewed the correction at `6da30fe` and verified that the security group meets D-776.
+- Closed P2-1 in the existing review record. The new verdict is `Ready for owner merge` for `6da30fe`.
+
+### State of the build
+
+- Remote head before this review commit: `6da30fe`.
+- The focused security grouping test passed, 1 test. The full suite passed, 2,191 tests, with no skips.
+- The Documents category passed, 262 tests, with no skips after the review record format fix.
+- `ste-check` and `doc-gate` passed with no findings.
+- Hosted CI, smoke, bit identity, sweeps, bots, asset QA, deterministic lint, documents, STE, Dependabot validation, and Gitar passed at `6da30fe`.
+- `night-gate` failed on the carried seed 9153, as D-775 permits. `review-gate` and `evaluate` failed before this record approved the current head.
+- This review record and handoff entry will be pushed in one metadata commit.
+
+### In flight
+
+- Verify the post-push checks and Gitar review. The owner can merge over the known night failure under D-775 when every other gate passes.
+
+### Traps and gotchas
+
+- The security group with pattern `"*"` can group more than one action in a PR. D-776 accepts this behavior.
+- The PR has no focused roadmap entry.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the post-push checks once. Report any failure beyond the night gate that D-775 allows.
+
 ## Session 332: 2026-10-03, Codex
 
 Author: Codex
@@ -325,39 +362,3 @@ None.
 ### Next concrete action
 
 The owner can review and merge PR #129.
-
-## Session 323: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
-
-### What this session did, and why
-
-- Asked the owner OQ-22, OQ-51, and OQ-52, and the first item definitions that the roadmap needs (D-123). The answers are D-745 to D-752.
-- Added the `item` and `affix` content types, five items, three swords of tiers 1 to 3, and three affixes: lifesteal, burning, and swift. The owner left out sturdy.
-- Added `Core/Items/`: the rarities, the loot roller on the loot stream, and the affix behaviors. The player and the enemy implement `IWielder`.
-- Changed exit test 6 to `AffixValidatorRejectsUnknownBehavior`, because no item file names an affix (D-752).
-
-### State of the build
-
-- `main` is `bc41332`. The local build, `det-lint`, `asset-qa`, and `ste-check` are clean. The full local suite passed after the fix of one content count test.
-- Each code check of PR #129 is green at the work head `40cdf97`. The gitar pass approved it with no finding. The review record `docs/reviews/pr-129.md` gives `Ready for owner merge` for the effective head `240d987`.
-- The loop calls no affix, so the simulation version and the bit-identity answer stay as they are.
-
-### In flight
-
-- The owner confirmation of the merge of PR #129 (D-524, D-533).
-
-### Traps and gotchas
-
-- The item files sort by path, so `ring-plain` comes before `sword-basic` in `ContentSet.Items`.
-- The Overseer does not implement `IWielder`. PR-22 decides if burning reaches it, as a foe of the player.
-- `AffixBehaviors.Swift` returns the weapon with a shorter `WindupTicks`. The Game layer must play the clip windup at that length (PR-22).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the owner confirms, run `gh pr merge 129 --auto --squash`, wait on the checks, and write the merge prompt of `one-pr-one-session`.
