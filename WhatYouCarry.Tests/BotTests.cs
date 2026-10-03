@@ -4,7 +4,9 @@ using System.IO;
 using System.Text.Json;
 using WhatYouCarry.Core.Bots;
 using WhatYouCarry.Core.Content;
+using WhatYouCarry.Core.Entities;
 using WhatYouCarry.Core.Logging;
+using WhatYouCarry.Core.Pathfinding;
 using WhatYouCarry.Core.Procgen;
 using WhatYouCarry.Core.Simulation;
 using WhatYouCarry.Tools;
@@ -260,6 +262,78 @@ public sealed class BotTests
     }
 
     /// <summary>
+    /// The full clearer strikes an enemy in reach also while it leaves (D-774, F-208). On seed 9153 the night of
+    /// 2026-10-02 read a softlock on floor 4. The policy left with a scavenger of six health in reach, and the
+    /// scavenger held the doorway of one cell to the stairwell. The policy never swung while it left. Each swing of
+    /// the scavenger rolled the body two meters back from the doorway, and the walk back took the ticks until the
+    /// next swing. The old policy softlocked at tick 18048 on floor 4. The run now passes floor 4, and it ends at
+    /// the bottom or by a death.
+    /// </summary>
+    [Fact]
+    public void FullClearerStrikesTheEnemyInReachWhileItLeaves()
+    {
+        BotRunResult result = BotRun.Play(new FullClearer(TestWorld.Content), 9153, TestWorld.Content);
+        Assert.True(
+            result.End == BotRunEnd.Bottom || result.End == BotRunEnd.Death,
+            $"Seed 9153: the full clearer ended as {result.End} on floor {result.FloorsReached} after {result.Ticks} ticks. {result.Error}");
+        Assert.True(result.FloorsReached > 4, $"Seed 9153: the full clearer reached floor {result.FloorsReached}, and the old policy softlocked on floor 4.");
+    }
+
+    /// <summary>
+    /// A strike that takes no health off an enemy for ten seconds drops that enemy from the strike and the hunt
+    /// (D-776, F-209). The blade meets a box inside the height band of the weapon alone, so an enemy inside the
+    /// reach can stand where no swing lands, and the review of PR #133 found that such an enemy held the policy
+    /// until the floor ran out. Harmless weapons make every enemy such an enemy: no swing takes health, and no enemy
+    /// hurts the player. On seed 6 the policy then drops each enemy in reach and reaches the bottom. Without the
+    /// drop it strikes the first enemies of floor 1 until the timer expires, and the run reads a softlock at tick
+    /// 10800.
+    /// </summary>
+    [Fact]
+    public void FullClearerDropsAnEnemyThatTheStrikesDoNotHurt()
+    {
+        ContentSet harmless = WithHarmlessWeapons(TestWorld.Content);
+        BotRunResult result = BotRun.Play(new FullClearer(harmless), 6, harmless);
+        Assert.True(
+            result.End == BotRunEnd.Bottom,
+            $"Seed 6 with harmless weapons: the full clearer ended as {result.End} on floor {result.FloorsReached} after {result.Ticks} ticks, and a run that drops each enemy it cannot hurt reaches the bottom. {result.Error}");
+        Assert.Equal(15, result.FloorsReached);
+    }
+
+    /// <summary>
+    /// A hit on an enemy other than the one that the strike selects starts the stall count again (D-776). The
+    /// automated pass of PR #133 found a count that read the selected enemy alone: a hit on the other enemy of a pair
+    /// that trades the nearest place never ended it, and the policy dropped an enemy that its swings hurt. The test
+    /// plays floor 1 of seed 6 with harmless weapons, so no swing takes health, and every two seconds it takes one
+    /// point of health off the living enemy farthest from the body, which the strike never selects. Each such hit
+    /// starts the count again, so the policy drops no enemy. With the count that read the selected enemy alone, the
+    /// policy dropped an enemy inside the first thousand ticks.
+    /// </summary>
+    [Fact]
+    public void FullClearerCountsAHitOnAnotherEnemy()
+    {
+        const int HitEveryTicks = 120;
+        const uint TicksPlayed = 3000;
+        ContentSet harmless = WithHarmlessWeapons(TestWorld.Content);
+        FullClearer policy = new(harmless);
+        SimulationLoop loop = new(6, harmless);
+        while (loop.Floor == 1 && !loop.Timer.Expired && loop.Tick < TicksPlayed)
+        {
+            Intent intent = policy.Next(loop);
+            Assert.True(policy.Unhurt.Count == 0, $"Seed 6 with harmless weapons: the policy dropped the enemy {(policy.Unhurt.Count > 0 ? policy.Unhurt[0] : -1)} at tick {loop.Tick}, and a hit on another enemy every {HitEveryTicks} ticks starts the count again.");
+            if (loop.Tick % HitEveryTicks == 0)
+            {
+                Enemy farthest = FarthestLiving(loop);
+                Assert.True(loop.LivingEnemies >= 2, $"Seed 6 with harmless weapons: {loop.LivingEnemies} enemy lives at tick {loop.Tick}, and the test needs two, so that the hit lands on one that the strike does not select.");
+                farthest.TakeHit(1);
+            }
+
+            loop.Step(intent);
+        }
+
+        Assert.True(loop.Tick >= TicksPlayed || loop.Floor > 1, $"Seed 6 with harmless weapons: the floor 1 run ended at tick {loop.Tick} on floor {loop.Floor}, before the test read {TicksPlayed} ticks.");
+    }
+
+    /// <summary>
     /// The greedy descender leaves every floor of the night of 2026-09-23 (F-111, D-545, D-546). On 26 seeds that
     /// night read a softlock at `e069e16`. Seed 1268 wedged on a detour away from the stairwell, seed 947 also took a
     /// diagonal drop onto an overhang, and seeds 2669 and 2879 softlocked on that drop alone. The runs now reach the
@@ -499,5 +573,35 @@ public sealed class BotTests
     {
         Assert.Equal(4, (int)Core.Determinism.RngStream.Bot);
         Assert.NotNull(Core.Determinism.Rng.ForStream(1UL, Core.Determinism.RngStream.Bot));
+    }
+
+    /// <summary>The living enemy farthest from the body of the player, which the strike in reach never selects.</summary>
+    private static Enemy FarthestLiving(SimulationLoop loop)
+    {
+        Enemy? farthest = null;
+        float best = -1.0f;
+        foreach (Enemy enemy in loop.Enemies)
+        {
+            float distance = PathWalk.Distance(loop.Body.Position, enemy.Body.Position);
+            if (!enemy.IsDead && distance > best)
+            {
+                farthest = enemy;
+                best = distance;
+            }
+        }
+
+        return farthest ?? throw new InvalidOperationException("No enemy lives, so no hit can land on one.");
+    }
+
+    /// <summary>A content set whose every weapon deals no damage, so no strike takes health and no enemy hurts the player.</summary>
+    private static ContentSet WithHarmlessWeapons(ContentSet content)
+    {
+        List<WeaponDefinition> weapons = [];
+        foreach (WeaponDefinition weapon in content.Weapons)
+        {
+            weapons.Add(weapon with { Damage = 0 });
+        }
+
+        return content with { Weapons = weapons };
     }
 }

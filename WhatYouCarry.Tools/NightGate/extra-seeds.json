@@ -1,7 +1,7 @@
 {
   "random-walker": [],
   "greedy-descender": [],
-  "full-clearer": [],
+  "full-clearer": [9153],
   "timer-tester": [],
   "coward": [],
   "reachability": []
