@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 324: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-21, reviewer. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
+
+### What this session did, and why
+
+- Reviewed the complete code, content, tests, documents, comments, and exit tests of PR #129 at effective head `240d987`.
+- Found no in-scope defect. Added the review record with `Ready for owner merge` after Gitar replaced its missing-record comment with an approval notice.
+
+### State of the build
+
+- PR head `40cdf97` has passing three-platform CI, smoke, and bit-identity checks, plus passing content, document, night, and Gitar checks. Metadata head `7e84c41` passed Gitar, `evaluate`, and `review-gate`, plus all other required checks.
+- The focused item tests passed 10 tests. Local `det-lint`, `ste-check`, and `asset-qa` each report 0 findings.
+- The review record and this entry are in one metadata commit. The later metadata amendment records the final checks.
+
+### In flight
+
+- The owner can review the record and merge PR #129.
+
+### Traps and gotchas
+
+- The PR tip `40cdf97` changes documents after effective code head `240d987`.
+- PR-22 owns the equipment hooks and swift clip timing. PR-26 owns enemy drops and loadouts.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can review and merge PR #129.
+
 ## Session 323: 2026-09-28, Claude Code
 
 Author: Claude Code

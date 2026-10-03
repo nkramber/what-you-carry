@@ -2,6 +2,43 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 334: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-133, reviewer, round 2. Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Reviewed the correction at effective head `86d9b99` and verified the claim on the resolved Gitar thread.
+- Confirmed that the health sum detects a hit on either enemy when two enemies trade the nearest place.
+- Found P2-2: no regression test proves that a hit on another target resets the strike count.
+- Updated `docs/reviews/pr-133.md`. P2-1 is fixed in `5e26c7f`. The current verdict is `Changes required` for P2-2.
+
+### State of the build
+
+- Remote code head before this metadata push: `86d9b9978ccf204b728f672447ae4153cbef8c32`.
+- Current-head CI passes for build, tests, sweeps, smoke, bit identity, bots, asset QA, lint, documents, doc gate, STE, Gitar, and night gate. `evaluate` and `review-gate` fail because no approving record covers the open finding.
+- The focused full-clearer tests pass 6 tests at the current head and at `5e26c7f`. The suite therefore does not prove the health-sum correction.
+- The review record and this entry are one metadata commit, pushed to `origin/fix/night-37122879232` and verified with `gh pr view`.
+
+### In flight
+
+- The author adds a test for a hit on an enemy other than the nearest target, then requests a new review round.
+- The owner confirms D-774, D-775, and D-776 at the merge under D-644.
+
+### Traps and gotchas
+
+- The harmless-weapon test cannot cover a hit on another enemy. A regression test must fail at `5e26c7f`.
+- The floor-wide count across encounters follows D-776. The Gitar comment's target-swap concern is fixed by the health sum.
+
+### Open questions that block progress
+
+P2-2 blocks approval until the author adds the regression test. No open OQ applies.
+
+### Next concrete action
+
+The author adds the test and requests a new review round on the new effective head.
+
 ## Session 333: 2026-10-03, Claude Code
 
 Author: Claude Code
@@ -327,36 +364,3 @@ None.
 ### Next concrete action
 
 After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.
-
-## Session 324: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-21, reviewer. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
-
-### What this session did, and why
-
-- Reviewed the complete code, content, tests, documents, comments, and exit tests of PR #129 at effective head `240d987`.
-- Found no in-scope defect. Added the review record with `Ready for owner merge` after Gitar replaced its missing-record comment with an approval notice.
-
-### State of the build
-
-- PR head `40cdf97` has passing three-platform CI, smoke, and bit-identity checks, plus passing content, document, night, and Gitar checks. Metadata head `7e84c41` passed Gitar, `evaluate`, and `review-gate`, plus all other required checks.
-- The focused item tests passed 10 tests. Local `det-lint`, `ste-check`, and `asset-qa` each report 0 findings.
-- The review record and this entry are in one metadata commit. The later metadata amendment records the final checks.
-
-### In flight
-
-- The owner can review the record and merge PR #129.
-
-### Traps and gotchas
-
-- The PR tip `40cdf97` changes documents after effective code head `240d987`.
-- PR-22 owns the equipment hooks and swift clip timing. PR-26 owns enemy drops and loadouts.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner can review and merge PR #129.
