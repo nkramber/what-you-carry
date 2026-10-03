@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 337: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR-102, author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- The hand-over of PR #133, the night fix of seed 9153. Review round 3 (Session 336) reads `Ready for owner merge` for the effective head `db623c8`. No finding is open.
+- The PR holds three changes of the full clearer: the strike before the walk out (D-774), the drop of an enemy after ten seconds of strikes that hurt nothing (D-776), and the count that reads the sum of the health of the enemies. Seed 9153 joins the extra fixed seeds (D-567). The roadmap id is PR-102 (D-775).
+- Sessions 331, 333, and 335 hold the rounds of this session. The response file `docs/reviews/pr-133-response.md` answers P2-1 and P2-2.
+- The notice "ready to merge" goes to the owner after this entry, with the PR link and the session answers D-774, D-775, and D-776 (D-644).
+
+### State of the build
+
+- Remote head: see the PR. The effective head is `db623c8`, and this entry is a metadata commit after the review record `c46901f`.
+- The branch nights 37140330448, 37143136198, 37144818723, and 37147689444 passed at `b384bae`, `5e26c7f`, `86d9b99`, and `db623c8`, each with seed 9153 in the list. The record `night-branch/fix/night-37122879232` reads success at `db623c8`.
+- Every check of `db623c8` passed but `evaluate` and `review-gate`, which waited for the approving record. The local suite passed 2192 tests, and the three local sweeps of 6000 full-clearer seeds read 0 softlocks and 0 crashes.
+
+### In flight
+
+- The owner merge of PR #133 (D-524). The fixer never merges.
+
+### Traps and gotchas
+
+- The merge needs the ruleset bypass for no check: the night gate of this PR is green by its branch night (D-538). After the merge, the promotion of D-557 makes that night the record of `main`, because each commit after `db623c8` is in the skip set.
+- The three decisions of this PR are session answers under D-644. The owner confirms them at the merge, or changes them with a new D-#.
+
+### Open questions that block progress
+
+None. D-774, D-775, and D-776 wait for the confirmation of the owner under D-644.
+
+### Next concrete action
+
+The owner reads the merge summary in the PR description, confirms D-774 to D-776, and merges PR #133. The next night on `main` then runs seed 9153 from the extra seeds.
+
 ## Session 336: 2026-10-03, Codex
 
 Author: Codex
@@ -320,38 +355,3 @@ None.
 ### Next concrete action
 
 The review is ready for the owner merge decision; D-771 allows the known `night-gate` failure.
-
-## Session 327: 2026-10-03, Codex
-
-Author: Codex
-Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
-
-### What this session did, and why
-
-- Reviewed all changed paths, tests, documents, PR comments, and the current CI evidence for PR #131.
-- Added the review record. It records no code finding, but blocks on the owner's Windows PC launch test.
-- Corrected two action-version counts in the PR description. D-768 lists five actions.
-
-### State of the build
-
-- The remote review metadata commit is `15e83c8`. The reviewed code head is `e8396e2`. The local full suite passed, 2,186 tests. Hosted build, test, bit-identity, bot, asset, lint, document, and smoke checks passed on the code head.
-- The `night-gate` check failed on the known night records. D-771 permits this failure. On metadata tip `15e83c8`, Gitar, `asset-qa`, `det-lint`, `doc-gate`, `documents`, and `ste-check` passed. Code-only checks skipped.
-- The review-gate and `evaluate` checks failed because the record verdict is `Blocked` pending the owner's Windows PC test.
-- The post-push Gitar dashboard approved the head and marked the shell finding as closed.
-
-### In flight
-
-- The owner Windows PC launch test remains in flight.
-
-### Traps and gotchas
-
-- The PowerShell CI tests use fakes. They do not run the installer against WindowsApps or start a real game.
-- The Deck shortcut and SSH test runs share `~/what-you-carry`. Each shortcut start checks out `main`.
-
-### Open questions that block progress
-
-The owner must report the Windows PC launch test before the review can approve the Windows launcher.
-
-### Next concrete action
-
-Run the Windows launch procedure on a Windows PC, then update the review record with that evidence.

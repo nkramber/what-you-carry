@@ -1,5 +1,40 @@
 # Session handoff archive
 
+## Session 327: 2026-10-03, Codex
+
+Author: Codex
+Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
+
+### What this session did, and why
+
+- Reviewed all changed paths, tests, documents, PR comments, and the current CI evidence for PR #131.
+- Added the review record. It records no code finding, but blocks on the owner's Windows PC launch test.
+- Corrected two action-version counts in the PR description. D-768 lists five actions.
+
+### State of the build
+
+- The remote review metadata commit is `15e83c8`. The reviewed code head is `e8396e2`. The local full suite passed, 2,186 tests. Hosted build, test, bit-identity, bot, asset, lint, document, and smoke checks passed on the code head.
+- The `night-gate` check failed on the known night records. D-771 permits this failure. On metadata tip `15e83c8`, Gitar, `asset-qa`, `det-lint`, `doc-gate`, `documents`, and `ste-check` passed. Code-only checks skipped.
+- The review-gate and `evaluate` checks failed because the record verdict is `Blocked` pending the owner's Windows PC test.
+- The post-push Gitar dashboard approved the head and marked the shell finding as closed.
+
+### In flight
+
+- The owner Windows PC launch test remains in flight.
+
+### Traps and gotchas
+
+- The PowerShell CI tests use fakes. They do not run the installer against WindowsApps or start a real game.
+- The Deck shortcut and SSH test runs share `~/what-you-carry`. Each shortcut start checks out `main`.
+
+### Open questions that block progress
+
+The owner must report the Windows PC launch test before the review can approve the Windows launcher.
+
+### Next concrete action
+
+Run the Windows launch procedure on a Windows PC, then update the review record with that evidence.
+
 ## Session 326: 2026-10-03, Claude Code
 
 Author: Claude Code
