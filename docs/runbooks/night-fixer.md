@@ -8,6 +8,10 @@ A launchd job on the Mac Mini of the owner runs every 15 minutes. It fetches `or
 
 When the newest night on `main` failed, and no session took that night, the script starts one Claude Code session. The session runs in a new worktree on the branch `fix/night-<run>`, with the prompt `docs/runbooks/night-fixer-prompt.md`. It skips each permission prompt, because the owner chose that (D-643).
 
+The session has no background tasks, and a command in the foreground can run 6 hours (D-769). A reply of the session ends it, so a background command stops with that reply. The session id is `00000000-0000-4000-8000-` and the run id with zeros in front to 12 digits.
+
+The session writes one line to the end mark after its last notice. When the session exits 0 with no end mark, the poll resumes the same session up to 3 times. Then it sends the notice "the night fixer stopped" and exits 1 (D-769). A session that exits with an error sends that notice with no resume (D-645).
+
 The session fixes the night, runs the gitar pass and branch nights, and then runs Codex review rounds. It sends a Pushover notice when the PR is ready to merge, and when it stops (D-645). It never merges. The owner merges (D-524).
 
 ## Files on the Mac
@@ -15,7 +19,7 @@ The session fixes the night, runs the gitar pass and branch nights, and then run
 | Path | What it holds |
 |---|---|
 | `~/Library/LaunchAgents/com.whatyoucarry.night-fixer.plist` | The launchd job |
-| `~/Library/Application Support/wyc-night-fixer/` | The copy of the script, the lock, the files `handled` and `queued`, each worktree, and each session log |
+| `~/Library/Application Support/wyc-night-fixer/` | The copy of the script, the lock, the files `handled` and `queued`, each worktree, each session log, and each end mark `end-<run>` |
 | `~/Library/Logs/wyc-night-fixer.log` | The output of each poll |
 
 ## Procedure: install
@@ -59,9 +63,15 @@ The session fixes the night, runs the gitar pass and branch nights, and then run
 
 ## Procedure: stop a session
 
-1. Read the process id in `~/Library/Application Support/wyc-night-fixer/lock/pid`.
-2. Stop that process and its session with `pkill -P <pid>`, then `kill <pid>`.
-3. The next poll removes the lock. The night of that session stays in the file `handled`, so no new session starts for it.
+1. Read the process id: `readlink ~/Library/Application\ Support/wyc-night-fixer/lock`.
+2. Stop the poll first with `kill <pid>`, so it starts no resume.
+3. Stop the session with `pkill -f '<session id>'`. The poll log names the session id.
+4. The next poll removes the lock. The night of that session stays in the file `handled`, so no new session starts for it.
+
+## Procedure: continue a session by hand
+
+1. Go to the worktree `~/Library/Application Support/wyc-night-fixer/work-<run>`.
+2. Run `claude --resume <session id>`. The poll log names the session id at the start of the session.
 
 ## Procedure: remove
 

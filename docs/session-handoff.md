@@ -2,6 +2,74 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 330: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-101, reviewer. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `0034e16`.
+
+### What this session did, and why
+
+- Reviewed the night-fixer change at effective head `c112c23`, its tests, documents, and PR comments.
+- Added the review record. The provider gate passed, and the review found no defect in scope.
+
+### State of the build
+
+- The remote head at review start was `ad8c67d`. The review record and this entry are one metadata commit, verified with `gh pr view`. The effective head remains `c112c23`.
+- The focused test passed, 23 tests. Hosted CI, smoke, bit identity, bots, asset, lint, documents, doc-gate, STE, and Gitar passed. The night gate failed as D-770 permits.
+
+### In flight
+
+- The owner can merge PR #130 after the metadata checks pass. Exit test 4 runs after merge.
+
+### Traps and gotchas
+
+- The known night-gate failure is the only accepted failed check under D-770. Do not read it as a failed product check.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can merge PR #130 under D-770. After the next failed night on `main`, record the result of exit test 4.
+
+## Session 329: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `0034e16`.
+
+### What this session did, and why
+
+- CI on `main` at `0034e16` passed: CI, smoke, bit identity, bots, `det-lint`, `asset-qa`, `ste-check`, and night promotion.
+- The Deck pulled `main` to `0034e16` over SSH (D-606). The command link `~/.local/bin/what-you-carry` now finds `launch/what-you-carry.sh`.
+- Merged `main` into this branch. D-753 and D-754 of this branch moved to D-769 and D-770 in each file, because PR-22 holds D-753 to D-767 (D-772).
+- D-771 cited D-754 as the same rule for PR #130. That citation now names D-770. D-772 and Session 326 keep the old ids, because they name the move.
+- Session 325 went back in its place under Session 326. `handoff-rotate` moved Sessions 318 and 319 to the archive.
+
+### State of the build
+
+- Remote head: see the PR. Locally, the full suite passed, 2,189 tests, after the rotation. `det-lint`, `asset-qa`, and `ste-check` each report 0 findings.
+- The night record of `main` reads failure, so `night-gate` stays red, and the owner merges over it (D-770).
+
+### In flight
+
+- At `ad8c67d`, each check passed outside `night-gate`, `evaluate`, and `review-gate`. Gitar approved with no finding, and a PR comment answered its CI note with D-251 and D-770.
+- The cross-provider review of Session 330 gives `Ready for owner merge` for the effective head `c112c23`.
+- The owner merges PR #130 with the ruleset bypass, over the red `night-gate` check alone (D-770).
+
+### Traps and gotchas
+
+- D-768 to D-773 are now in id order, but D-769 and D-770 carry the date 2026-10-02 under D-768 of 2026-10-03.
+- The chore branch `chore/action-pins-after-bumps` holds Session 326 too, and it renumbers its entry (D-772).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.
+
 ## Session 328: 2026-10-03, Codex
 
 Author: Codex
@@ -112,6 +180,43 @@ None.
 ### Next concrete action
 
 After the merge, run `git -C ~/what-you-carry pull --ff-only origin main` on the Deck over SSH, so that the shortcut finds its script.
+
+## Session 325: 2026-10-02, Claude Code
+
+Author: Claude Code
+Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `4043785`.
+
+### What this session did, and why
+
+- The night 37015330351 on `main` failed at the carried seed 9153 of the full clearer. The night notice of D-642 came: the job `notify` passed. This is the first part of PR-91 exit test 24 (D-736).
+- The fixer session of that night found the cause and wrote a fix, but it stopped before a commit. It started the sweep and the full suite in the background, and its reply then ended `claude -p` with exit 0. The poll sent no notice. The fixer part of PR-91 exit test 24 failed.
+- The fix: no background tasks, a command limit of 6 hours, an end mark, and up to 3 resumes of the same session, then a stop notice (D-769).
+- The owner leaves the night fix for the next failed night, as a test of the fixer, and merges this PR over the red night gate (D-770).
+
+### State of the build
+
+- Remote head: see the PR. The 23 `NightFixerTests` pass. The new test of the missing end mark fails on the poll of `main`.
+- The night record of `main` reads failure, so `night-gate` stays red (D-770).
+
+### In flight
+
+- The CI of PR #130 waits for a fix of `main`. The five Dependabot merges #110, #111, #113, #114, and #115 at 04:39 to 04:40 UTC on 2026-10-03 left `main` red at `b58a68b`, with six failed Documents tests. The owner chose a new PR that keeps the bumps. After it merges, merge `main` into this branch, wait for green CI, and run `make codex-review PR=130`.
+- Gitar approved the work head `b1a56c1` with no finding.
+- The fixer draft of the night 37015330351 stays uncommitted in `~/Library/Application Support/wyc-night-fixer/work-37015330351` on the Mac Mini, on the local branch `fix/night-37015330351`. Its handoff text names a PR #130 that never opened.
+
+### Traps and gotchas
+
+- A branch of this kind must not start with `fix/night-`. The poll counts each open PR from such a branch as a fix PR, and it queues the night.
+- The auto mode of the harness blocked an edit and a live test of the poll as an unsafe agent. The owner moved the session to the accept-edits mode.
+- The live behavior of `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` and `BASH_MAX_TIMEOUT_MS` comes from the code of the CLI 2.1.283, not from a live run. The next failed night tests it.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.
 
 ## Session 324: 2026-09-28, Codex
 
@@ -250,102 +355,3 @@ None.
 ### Next concrete action
 
 After the merge, write the merge prompt of `one-pr-one-session`.
-
-## Session 320: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: Gate 2, author. Branch `docs/gate-2-first-playable`. PR #127, pending merge. Base `ee04af7`.
-
-### What this session did, and why
-
-- Read sequence item 57 of the Phase 2 roadmap, and each exit test of that file against the records. Three tests had no pass on record: PR-66 exit test 10, PR-79 exit test 4, and the failed-night proof of PR-91 exit test 24.
-- PR-79 exit test 4 passes on PR #126: `review-gate` gave success on the documents commit `9909436` after the approving review `1c846f9`.
-- The owner folded PR-66 exit test 10 into the Gate 2 play (D-735), and carried the failed-night proof past the gate (D-736). No night on `main` failed after PR #109.
-- The session built `main` at `ee04af7`, and the smoke session passed. The owner played one floor and signed off on feel on two terms (D-740): the scavenger has no swing clip yet, and the world generation gets an overhaul later.
-- Neither term was in the plan. D-739 adds PR-100, the enemy swing clip, before PR-21, with OQ-211 for the clip source. The windup check of D-723 moves to PR-100, and F-203 records the rest pose. D-737 closes PR-66 exit test 10, and OQ-210 holds the overhaul.
-- The steps of the Overseer warn of an attack from outside the view, so F-198 closes (D-738).
-- Added the missing done marks: sequence item 45 (PR #105) and the PR-76 entry (PR #117).
-
-### State of the build
-
-- The remote head of `main` is `ee04af7`. This PR changes documents alone. `ste-check` gives 0 findings, and the Documents category passes 257 of 257.
-
-### In flight
-
-- The automated pass, the `review-override` label, and the owner confirmation of the merge (D-188, D-524, D-533).
-
-### Traps and gotchas
-
-- An enemy draws in the rest pose (D-401), so no play or frame can read the windup of a scavenger before PR-100.
-- The handoff of session 297 names the failed-night proof exit test 23 of PR-91. The roadmap puts it in exit test 24.
-
-### Open questions that block progress
-
-- OQ-211 blocks PR-100. OQ-210 blocks no PR.
-
-### Next concrete action
-
-After the merge, Phase 3 starts. Ask the owner OQ-211, then start PR-100 (D-739). The session after the first failed night on `main` states the result of the proof of D-736.
-
-## Session 319: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
-
-### What this session did, and why
-
-- Read the review of session 318: `Ready for owner merge` for the effective head 552874d, with no finding.
-- Gitar approved 1dd704b with no finding and no thread.
-
-### State of the build
-
-- The full CI, smoke, bit identity, and bots passed at 4cd4f67, which holds the code of 552874d. The later commits change documents alone, so their heavy jobs skip (D-357, D-474). Before the review record, only `evaluate` and `review-gate` were red. The remote head of `main` is `ec383bf`.
-
-### In flight
-
-- The owner confirmation of the merge of PR #126 (D-524, D-533).
-
-### Traps and gotchas
-
-- The shots of D-714 match main to the pixel for any change between two ticks, because each frame of that capture has the fraction 0 (D-733).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, Gate 2 is next: PR-99 was the last PR before it (D-724).
-
-## Session 318: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-99, reviewer. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
-
-### What this session did, and why
-
-- Reviewed the camera interpolation change, its tests, its frame evidence, and the PR contracts.
-- Added the review record for effective head `552874d`. The provider gate passed. The review found no blocking defect.
-
-### State of the build
-
-- Local focused tests passed, 6 tests. The full suite passed, 2144 tests, on macOS arm64 with .NET 10.
-- GitHub run `36492529592` passed the three-platform CI and smoke checks on the same code. The later PR commits changed documents and frame evidence only.
-- The remote PR branch head at review start was `1dd704b`. The review record and this handoff are in the metadata commit pushed to the PR branch.
-
-### In flight
-
-- The owner can review and merge PR #126.
-
-### Traps and gotchas
-
-- Gitar's approval summary named no specific item. D-550 classifies it as a notice.
-- The frame pairs show the accepted camera position inside rock after tick 2800. D-733 and D-734 record this result.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Review the merge summary, then merge PR #126 when ready.

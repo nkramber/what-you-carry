@@ -1,5 +1,104 @@
 # Session handoff archive
 
+## Session 320: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: Gate 2, author. Branch `docs/gate-2-first-playable`. PR #127, pending merge. Base `ee04af7`.
+
+### What this session did, and why
+
+- Read sequence item 57 of the Phase 2 roadmap, and each exit test of that file against the records. Three tests had no pass on record: PR-66 exit test 10, PR-79 exit test 4, and the failed-night proof of PR-91 exit test 24.
+- PR-79 exit test 4 passes on PR #126: `review-gate` gave success on the documents commit `9909436` after the approving review `1c846f9`.
+- The owner folded PR-66 exit test 10 into the Gate 2 play (D-735), and carried the failed-night proof past the gate (D-736). No night on `main` failed after PR #109.
+- The session built `main` at `ee04af7`, and the smoke session passed. The owner played one floor and signed off on feel on two terms (D-740): the scavenger has no swing clip yet, and the world generation gets an overhaul later.
+- Neither term was in the plan. D-739 adds PR-100, the enemy swing clip, before PR-21, with OQ-211 for the clip source. The windup check of D-723 moves to PR-100, and F-203 records the rest pose. D-737 closes PR-66 exit test 10, and OQ-210 holds the overhaul.
+- The steps of the Overseer warn of an attack from outside the view, so F-198 closes (D-738).
+- Added the missing done marks: sequence item 45 (PR #105) and the PR-76 entry (PR #117).
+
+### State of the build
+
+- The remote head of `main` is `ee04af7`. This PR changes documents alone. `ste-check` gives 0 findings, and the Documents category passes 257 of 257.
+
+### In flight
+
+- The automated pass, the `review-override` label, and the owner confirmation of the merge (D-188, D-524, D-533).
+
+### Traps and gotchas
+
+- An enemy draws in the rest pose (D-401), so no play or frame can read the windup of a scavenger before PR-100.
+- The handoff of session 297 names the failed-night proof exit test 23 of PR-91. The roadmap puts it in exit test 24.
+
+### Open questions that block progress
+
+- OQ-211 blocks PR-100. OQ-210 blocks no PR.
+
+### Next concrete action
+
+After the merge, Phase 3 starts. Ask the owner OQ-211, then start PR-100 (D-739). The session after the first failed night on `main` states the result of the proof of D-736.
+
+## Session 319: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
+
+### What this session did, and why
+
+- Read the review of session 318: `Ready for owner merge` for the effective head 552874d, with no finding.
+- Gitar approved 1dd704b with no finding and no thread.
+
+### State of the build
+
+- The full CI, smoke, bit identity, and bots passed at 4cd4f67, which holds the code of 552874d. The later commits change documents alone, so their heavy jobs skip (D-357, D-474). Before the review record, only `evaluate` and `review-gate` were red. The remote head of `main` is `ec383bf`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #126 (D-524, D-533).
+
+### Traps and gotchas
+
+- The shots of D-714 match main to the pixel for any change between two ticks, because each frame of that capture has the fraction 0 (D-733).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, Gate 2 is next: PR-99 was the last PR before it (D-724).
+
+## Session 318: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-99, reviewer. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
+
+### What this session did, and why
+
+- Reviewed the camera interpolation change, its tests, its frame evidence, and the PR contracts.
+- Added the review record for effective head `552874d`. The provider gate passed. The review found no blocking defect.
+
+### State of the build
+
+- Local focused tests passed, 6 tests. The full suite passed, 2144 tests, on macOS arm64 with .NET 10.
+- GitHub run `36492529592` passed the three-platform CI and smoke checks on the same code. The later PR commits changed documents and frame evidence only.
+- The remote PR branch head at review start was `1dd704b`. The review record and this handoff are in the metadata commit pushed to the PR branch.
+
+### In flight
+
+- The owner can review and merge PR #126.
+
+### Traps and gotchas
+
+- Gitar's approval summary named no specific item. D-550 classifies it as a notice.
+- The frame pairs show the accepted camera position inside rock after tick 2800. D-733 and D-734 record this result.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Review the merge summary, then merge PR #126 when ready.
+
 ## Session 317: 2026-09-28, Claude Code
 
 Author: Claude Code
