@@ -1,6 +1,6 @@
 # Phase 3 roadmap: Full loop
 
-Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, PR-100, PR-101, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. PR-100 applies D-739. PR-101 applies D-769 and D-770. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
+Status: **focused roadmap, active.** This file expands Phase 3 of `docs/design.md` section 7: PR-21 to PR-32, PR-100, PR-101, PR-102, M-4, and M-5. It applies D-149, D-151 to D-154, and D-165. PR-100 applies D-739. PR-101 applies D-769 and D-770. It does not restate a decision. It cites the D-# id. Written 2026-09-07 in ASD-STE100.
 
 The design doc holds the system map (section 3), the cost model (section 4), and the tenets (section 6.1). Phase 2 is `phase-2-first-playable.md`. Gate 2 must pass before PR-21 starts.
 
@@ -20,6 +20,7 @@ This phase carries the sensitive number of the design: the death payout curve (D
 |---|---|---|
 | F-5 | The v1 doc never said whether banked gear enters the dungeon | PR-30 |
 | F-203 | The scavenger and the Overseer attack from the rest pose, so no windup shows | PR-100 |
+| F-208 | The full clearer softlocked beside a doorway of one cell with a scavenger in reach, on seed 9153 | PR-102 |
 | F-9 | Resume at floor start made a quit a free heal | PR-31 |
 | F-10 | Random affixes cannot show on an enemy | PR-21, PR-26 |
 | F-11 | Free ascension reversed a v1 position on a changed premise | M-5 |
@@ -119,7 +120,7 @@ Scope:
 - `docs/runbooks/night-fixer.md`: the end mark, the resume, the stop of a session, and the manual continuation.
 - `WhatYouCarry.Tests/NightFixerTests.cs`: the tests of exit tests 1 to 3, with a fake session and a test checkout.
 
-Out of scope: the night fix of seed 9153 of the night 37015330351. The next failed night on `main` gives it to the fixer (D-770).
+Out of scope: the night fix of seed 9153 of the night 37015330351. The next failed night on `main` gives it to the fixer (D-770). PR-102 holds that fix.
 
 Exit tests:
 
@@ -135,6 +136,39 @@ Check clause: none.
 Gate: exit tests 1 to 3 pass. The `night-gate` check stays red, and the owner merges over it (D-770).
 
 > *In plain English:* the night repair helper stopped halfway and told nobody. Now it waits for each long step, picks up again when it stops early, and alerts the owner if it still cannot finish.
+
+### PR-102: Night fix of seed 9153
+
+✅ Done in PR #133.
+
+Scope:
+
+- `WhatYouCarry.Core/Bots/FullClearer.cs`: the strike of an enemy in reach comes before the walk out (D-774, F-208). A clearer that leaves still strikes an enemy inside the reach of its weapon. A strike that takes no health off an enemy for ten seconds drops that enemy from the strike and the hunt (D-776, F-209).
+- `WhatYouCarry.Tools/NightGate/extra-seeds.json`: seed 9153 joins the extra fixed seeds of the full clearer (D-567).
+- `WhatYouCarry.Tests/BotTests.cs`: `FullClearerStrikesTheEnemyInReachWhileItLeaves` plays seed 9153 past floor 4, to the bottom or to a death. `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` plays seed 6 with harmless weapons to the bottom. `FullClearerCountsAHitOnAnotherEnemy` takes health off an enemy that the strike does not select, and the policy drops none.
+- `WhatYouCarry.Tests/NightSeedsTests.cs`: the two tests of the `night-seeds` command read an extra seeds file of their own in a temporary root. A fix PR that adds a seed then changes no expected list.
+- `docs/design.md`: F-208, F-209, and the entry of this PR in section 7.
+
+Out of scope: the roll reflex of `BotReflex` and the leave rule of D-439. The simulation version stays (G-20), because the bit-identity sweep plays the greedy descender and the coward, and the state of no run changes.
+
+Exit tests:
+
+1. `FullClearerStrikesTheEnemyInReachWhileItLeaves` passes. It fails on the old policy, which softlocked at tick 18048 on floor 4.
+2. `NightSeedsCommandPrintsTheListOfAShard` passes with an extra seed of its own file, and `TheExtraSeedFileHoldsEachSweepPastItsFixedRange` passes with seed 9153 in the file (D-567).
+3. The full suite, `det-lint`, `ste-check`, and `asset-qa` pass.
+4. A local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000 reads no softlock and no crash.
+5. A branch night on `fix/night-37122879232` passes with seed 9153 in the list, and writes `night-branch/fix/night-37122879232` (D-538, D-567).
+6. `BitIdentityKnownAnswer` passes with no change of the answer (G-9).
+7. `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` passes. It fails on the policy with no stall drop, which softlocked on floor 1 at tick 10800.
+8. `FullClearerCountsAHitOnAnotherEnemy` passes. It fails on the count that read the selected enemy alone, which dropped an enemy after a hit on another enemy.
+
+Review focus: the order of the strike and the walk out against D-439. Also the stall drop of a strike that hurts nothing, and the test root of the seed command tests.
+
+Check clause: none.
+
+Gate: exit tests 1 to 8 pass.
+
+> *In plain English:* the test bot that clears each floor stood still beside a door, with an enemy at its side. It now kills the enemy and walks on.
 
 ### PR-22: Equipment slots, armor overlays, and weight
 
