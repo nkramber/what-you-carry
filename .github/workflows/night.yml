@@ -63,7 +63,7 @@ jobs:
       - name: Keep the record of main for each job
         # A re-run of this job uploads the record again under the same name, and that upload replaces the artifact of
         # the earlier attempt, as the sweep uploads do (F-155).
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: main-night
           path: ${{ runner.temp }}/main-night.json
@@ -148,7 +148,7 @@ jobs:
         # The crash text of a failed run lives in its log alone, and the runner is gone after the job (D-280). A sweep
         # that fails before its runs, or the seed sweep, has no logs, and the step says so instead of failing in silence.
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: bot-logs-${{ matrix.sweep }}-${{ matrix.shard }}
           path: bot-logs
@@ -158,7 +158,7 @@ jobs:
         # A re-run of the failed jobs of a night runs this shard again, and its result replaces the result of the
         # earlier attempt, so the record reads the newest attempt. Each shard has an artifact name of its own (D-655).
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: night-sweep-${{ matrix.sweep }}-${{ matrix.shard }}
           path: ${{ runner.temp }}/sweep/
