@@ -1,5 +1,110 @@
 # Session handoff archive
 
+## Session 323: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
+
+### What this session did, and why
+
+- Asked the owner OQ-22, OQ-51, and OQ-52, and the first item definitions that the roadmap needs (D-123). The answers are D-745 to D-752.
+- Added the `item` and `affix` content types, five items, three swords of tiers 1 to 3, and three affixes: lifesteal, burning, and swift. The owner left out sturdy.
+- Added `Core/Items/`: the rarities, the loot roller on the loot stream, and the affix behaviors. The player and the enemy implement `IWielder`.
+- Changed exit test 6 to `AffixValidatorRejectsUnknownBehavior`, because no item file names an affix (D-752).
+
+### State of the build
+
+- `main` is `bc41332`. The local build, `det-lint`, `asset-qa`, and `ste-check` are clean. The full local suite passed after the fix of one content count test.
+- Each code check of PR #129 is green at the work head `40cdf97`. The gitar pass approved it with no finding. The review record `docs/reviews/pr-129.md` gives `Ready for owner merge` for the effective head `240d987`.
+- The loop calls no affix, so the simulation version and the bit-identity answer stay as they are.
+
+### In flight
+
+- The owner confirmation of the merge of PR #129 (D-524, D-533).
+
+### Traps and gotchas
+
+- The item files sort by path, so `ring-plain` comes before `sword-basic` in `ContentSet.Items`.
+- The Overseer does not implement `IWielder`. PR-22 decides if burning reaches it, as a foe of the player.
+- `AffixBehaviors.Swift` returns the weapon with a shorter `WindupTicks`. The Game layer must play the clip windup at that length (PR-22).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the owner confirms, run `gh pr merge 129 --auto --squash`, wait on the checks, and write the merge prompt of `one-pr-one-session`.
+
+## Session 322: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-100, reviewer. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-100 diff at effective head `a03c756` against the four roadmap exit tests and the affected contracts.
+- Found no in-scope defect. Added `docs/reviews/pr-128.md` with the provider gate, verified comments, findings, checks, and verdict.
+- Inspected the Tier 4 frame for exit test 3. The scavenger windup reads in the supplied frame (D-744).
+
+### State of the build
+
+- `main` is `9da1817`. CI, smoke, bit identity, asset QA, deterministic lint, STE, document gate, documents, night gate, and Gitar passed for PR head `fe46148`. The focused local tests passed 60 of 60. Local `asset-qa` and `det-lint` each report 0 findings.
+- The remote PR head after the metadata push is recorded in the review file and verified with `gh pr view`.
+
+### In flight
+
+- Owner review and merge confirmation for PR #128.
+
+### Traps and gotchas
+
+- The PR checks `review-gate` and `evaluate` failed before this review because the review record did not exist. The pushed record should satisfy those checks.
+- No supplied frame shows the Overseer swing because the timer-tester does not turn the camera (D-738). Exit test 3 checks the scavenger.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the pushed review record and merge summary, then confirm the merge of PR #128.
+
+## Session 321: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: PR-100, author. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
+
+### What this session did, and why
+
+- Asked OQ-211. The premise of its option one held for the scavenger alone: the pick swings 30, 6, and 30 ticks, and a clip plays tick for tick. D-741: the scavenger plays `player.sword-swing.json` on its own bones, and the Overseer plays its own clip `overseer.pick-swing.json`, an overhead chop of 66 ticks.
+- The check of `asset-qa` paired a clip with the model that its file names, so it never posed the player clip on the scavenger. D-742: `asset-qa` reads the family, hunter, and weapon files, and it poses each enemy model with the swing clip of its weapon.
+- The first run of that check found a clip of 0.0417 meters between the right upper arm and the hood of the scavenger at tick 18. D-743: the player clip turns the right arm to [70, 0, 0] at that tick.
+- `EnemyNodes.AfterTick` poses each enemy tree and the Overseer from its swing tick through `EnemyPose`. `EnemyClips` checks each clip against its weapon and its model. `Main` logs a failure of the enemy trees and quits (T-2).
+- Ran the Tier 4 captures of D-714 at the PR head. Tick 3060 is the one shot with a scavenger windup in front. The owner confirmed that the windup reads (D-744), and the frames are in `docs/reviews/pr-128-frames/`.
+
+### State of the build
+
+- The remote head of `main` is `9da1817`. Locally at the code commit `a03c756`: the full suite passes 2158 of 2158, the Smoke category included. `asset-qa`, `det-lint`, and `ste-check` give 0 findings. The bit-identity sweep gives the known answer `1023ce079eb0af50`, and the Godot build passes.
+- On PR #128 at `fe46148`, each check is green but `evaluate` and `review-gate`, which waited for the record (D-577). The automated pass approved `fe46148` with no finding. The review record gives `Ready for owner merge` for the effective head `a03c756`.
+
+### In flight
+
+- The owner confirmation of the merge of PR #128 (D-524, D-533), then the auto-merge.
+
+### Traps and gotchas
+
+- A frame shot draws one tick in 60, and the windup of the scavenger lasts 12 ticks. A scan of the full-clearer run in Core found the shot ticks of a windup in advance. The player body or a wall hid most of them.
+- The timer-tester never turns the camera, so no bot frame shows the windup of the Overseer (D-738).
+- A test fixture that writes a partial family or hunter file now gets a load finding of its own from `asset-qa` (D-742).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, write the merge prompt of `one-pr-one-session`.
+
 ## Session 320: 2026-09-28, Claude Code
 
 Author: Claude Code

@@ -2,6 +2,121 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 333: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Re-reviewed the correction at `6da30fe` and verified that the security group meets D-776.
+- Closed P2-1 in the existing review record. The new verdict is `Ready for owner merge` for `6da30fe`.
+
+### State of the build
+
+- Remote head before this review commit: `6da30fe`.
+- The focused security grouping test passed, 1 test. The full suite passed, 2,191 tests, with no skips.
+- The Documents category passed, 262 tests, with no skips after the review record format fix.
+- `ste-check` and `doc-gate` passed with no findings.
+- Hosted CI, smoke, bit identity, sweeps, bots, asset QA, deterministic lint, documents, STE, Dependabot validation, and Gitar passed at `6da30fe`.
+- `night-gate` failed on the carried seed 9153, as D-775 permits. `review-gate` and `evaluate` failed before this record approved the current head.
+- This review record and handoff entry will be pushed in one metadata commit.
+
+### In flight
+
+- Verify the post-push checks and Gitar review. The owner can merge over the known night failure under D-775 when every other gate passes.
+
+### Traps and gotchas
+
+- The security group with pattern `"*"` can group more than one action in a PR. D-776 accepts this behavior.
+- The PR has no focused roadmap entry.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the post-push checks once. Report any failure beyond the night gate that D-775 allows.
+
+## Session 332: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Reviewed all five changed paths and the PR comments.
+- Found that `group-by: dependency-name` does not group security updates across directories. D-657 enables Dependabot security updates, and D-774 states the broader one-action-per-PR rule.
+- Added the review record with finding P2-1. The verdict is `Changes required` for effective head `33f81fe`.
+
+### State of the build
+
+- Remote head before this review commit: `15fe03a`.
+- The focused grouping test passed. The local full suite aborted after 1,902 tests when the test host crashed.
+- The document tests passed (261 tests). `ste-check` and `doc-gate` passed with no findings.
+- Hosted CI at `33f81fe` passed outside the known `night-gate` failure and the review-dependent checks. D-775 allows that night failure for this PR.
+- The post-push Gitar review approved the work head and noted that security updates remain ungrouped. The review record includes the verified concern as P2-1.
+- The review record and this handoff entry will be pushed together as one metadata commit.
+
+### In flight
+
+- The author must answer finding P2-1 before the review can approve this head.
+
+### Traps and gotchas
+
+- `group-by: dependency-name` covers version updates only. The repository also enables Dependabot security updates (D-657).
+- The PR has no focused roadmap entry.
+
+### Open questions that block progress
+
+None. The review records the scope gap as P2-1 for the author to answer.
+
+### Next concrete action
+
+Answer P2-1, then start the next author review round for PR #132.
+
+## Session 331: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Merged `main` at `04d17e9` into this branch, as D-772 orders. The workflow pins and `ActionDecisionTests` of `main` stand (D-768).
+- The branch dropped its pin fix and its D-755 and D-757. Its D-756 is now D-774, and its Session 326 entry is now this entry.
+- The branch keeps the group `each-action` of `.github/dependabot.yml`: one PR bumps one action in every directory (D-774). `DependabotBumpsOneActionInEveryDirectoryInOnePr` reads the group.
+- Round 1 of the cross-provider review (Session 332) gave `Changes required` at `33f81fe`: P2-1, security updates do not use the group. The finding holds, because `group-by` applies to version updates alone. The owner chose the group `security` with `applies-to: security-updates` (D-776). `DependabotGroupsSecurityUpdatesInEveryDirectory` reads it, and it fails on the old file. `docs/reviews/pr-132-response.md` answers the round.
+- Round 2 gives `Ready for owner merge` for the effective head `6da30fe`, with P2-1 fixed.
+- PR-101 exit test 4 fails. The night 37122879232 on `main` at `04d17e9` failed at 12:36 UTC. The poll started its session at 12:50 UTC as PID 20293, Claude Code 2.1.288. After 3 hours the process had 0.19 seconds of CPU time, an empty session log, and no transcript. Its main thread waited in one `openat` call. The poll runs `claude -p` with no time limit, so no end mark, no resume, and no notice came (T-2).
+
+### State of the build
+
+- Remote head: see the PR. Locally, the full suite, `det-lint`, `asset-qa`, and `ste-check` are green after the merge.
+- The night record of `main` still reads failure at the carried seed 9153, so `night-gate` stays red. The owner chose a review now and a merge over that check alone (D-775).
+- At `33f81fe`, each check passed outside `night-gate`, `evaluate`, and `review-gate`. Gitar approved `33f81fe` and `15fe03a` with no finding, and a PR comment answered its CI note with D-251. No `Gitar review` comment was necessary.
+- Locally, after the P2-1 correction, the full suite passed, 2,191 tests.
+- At `6da30fe`, each check passed outside `night-gate`, `evaluate`, and `review-gate`, and Gitar approved with no finding.
+
+### In flight
+
+- At `1602b56`, `review-gate`, `evaluate`, and Gitar passed. The owner holds the merge of PR #132 until the cause of the fixer hang is known. D-775 still permits the merge over the red `night-gate` check.
+- PID 20293 still waits on the prompt. An answer of Allow lets the session of the night 37122879232 continue.
+
+### Traps and gotchas
+
+- The `group-by: dependency-name` key works for version updates alone, and each directory must use one ecosystem.
+- `main` has no D-753 to D-767, because PR-22 holds them (D-772).
+- The night 37015330351 ran on Claude Code 2.1.283. The update to 2.1.288 came at 06:47 UTC on 2026-10-03. The worktree of the fixer keeps its git directory on `/Volumes/SSD-1TB`. The owner found the cause on the Mac Mini: two macOS prompts, "2.1.288" and "claude" "would like to access files on a removable volume". macOS gives each new version of the binary a new identity, so each update asks again, and the open waits for the answer.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+A fresh session fixes the cause in its own PR: the fixer checkout moves off the removable volume, and the session start gets a time limit with a notice. After that, the owner decides the merge of PR #132.
+
 ## Session 330: 2026-10-03, Codex
 
 Author: Codex
@@ -250,108 +365,3 @@ None.
 ### Next concrete action
 
 The owner can review and merge PR #129.
-
-## Session 323: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-21, author. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
-
-### What this session did, and why
-
-- Asked the owner OQ-22, OQ-51, and OQ-52, and the first item definitions that the roadmap needs (D-123). The answers are D-745 to D-752.
-- Added the `item` and `affix` content types, five items, three swords of tiers 1 to 3, and three affixes: lifesteal, burning, and swift. The owner left out sturdy.
-- Added `Core/Items/`: the rarities, the loot roller on the loot stream, and the affix behaviors. The player and the enemy implement `IWielder`.
-- Changed exit test 6 to `AffixValidatorRejectsUnknownBehavior`, because no item file names an affix (D-752).
-
-### State of the build
-
-- `main` is `bc41332`. The local build, `det-lint`, `asset-qa`, and `ste-check` are clean. The full local suite passed after the fix of one content count test.
-- Each code check of PR #129 is green at the work head `40cdf97`. The gitar pass approved it with no finding. The review record `docs/reviews/pr-129.md` gives `Ready for owner merge` for the effective head `240d987`.
-- The loop calls no affix, so the simulation version and the bit-identity answer stay as they are.
-
-### In flight
-
-- The owner confirmation of the merge of PR #129 (D-524, D-533).
-
-### Traps and gotchas
-
-- The item files sort by path, so `ring-plain` comes before `sword-basic` in `ContentSet.Items`.
-- The Overseer does not implement `IWielder`. PR-22 decides if burning reaches it, as a foe of the player.
-- `AffixBehaviors.Swift` returns the weapon with a shorter `WindupTicks`. The Game layer must play the clip windup at that length (PR-22).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the owner confirms, run `gh pr merge 129 --auto --squash`, wait on the checks, and write the merge prompt of `one-pr-one-session`.
-
-## Session 322: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-100, reviewer. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
-
-### What this session did, and why
-
-- Reviewed the complete PR-100 diff at effective head `a03c756` against the four roadmap exit tests and the affected contracts.
-- Found no in-scope defect. Added `docs/reviews/pr-128.md` with the provider gate, verified comments, findings, checks, and verdict.
-- Inspected the Tier 4 frame for exit test 3. The scavenger windup reads in the supplied frame (D-744).
-
-### State of the build
-
-- `main` is `9da1817`. CI, smoke, bit identity, asset QA, deterministic lint, STE, document gate, documents, night gate, and Gitar passed for PR head `fe46148`. The focused local tests passed 60 of 60. Local `asset-qa` and `det-lint` each report 0 findings.
-- The remote PR head after the metadata push is recorded in the review file and verified with `gh pr view`.
-
-### In flight
-
-- Owner review and merge confirmation for PR #128.
-
-### Traps and gotchas
-
-- The PR checks `review-gate` and `evaluate` failed before this review because the review record did not exist. The pushed record should satisfy those checks.
-- No supplied frame shows the Overseer swing because the timer-tester does not turn the camera (D-738). Exit test 3 checks the scavenger.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the pushed review record and merge summary, then confirm the merge of PR #128.
-
-## Session 321: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-100, author. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
-
-### What this session did, and why
-
-- Asked OQ-211. The premise of its option one held for the scavenger alone: the pick swings 30, 6, and 30 ticks, and a clip plays tick for tick. D-741: the scavenger plays `player.sword-swing.json` on its own bones, and the Overseer plays its own clip `overseer.pick-swing.json`, an overhead chop of 66 ticks.
-- The check of `asset-qa` paired a clip with the model that its file names, so it never posed the player clip on the scavenger. D-742: `asset-qa` reads the family, hunter, and weapon files, and it poses each enemy model with the swing clip of its weapon.
-- The first run of that check found a clip of 0.0417 meters between the right upper arm and the hood of the scavenger at tick 18. D-743: the player clip turns the right arm to [70, 0, 0] at that tick.
-- `EnemyNodes.AfterTick` poses each enemy tree and the Overseer from its swing tick through `EnemyPose`. `EnemyClips` checks each clip against its weapon and its model. `Main` logs a failure of the enemy trees and quits (T-2).
-- Ran the Tier 4 captures of D-714 at the PR head. Tick 3060 is the one shot with a scavenger windup in front. The owner confirmed that the windup reads (D-744), and the frames are in `docs/reviews/pr-128-frames/`.
-
-### State of the build
-
-- The remote head of `main` is `9da1817`. Locally at the code commit `a03c756`: the full suite passes 2158 of 2158, the Smoke category included. `asset-qa`, `det-lint`, and `ste-check` give 0 findings. The bit-identity sweep gives the known answer `1023ce079eb0af50`, and the Godot build passes.
-- On PR #128 at `fe46148`, each check is green but `evaluate` and `review-gate`, which waited for the record (D-577). The automated pass approved `fe46148` with no finding. The review record gives `Ready for owner merge` for the effective head `a03c756`.
-
-### In flight
-
-- The owner confirmation of the merge of PR #128 (D-524, D-533), then the auto-merge.
-
-### Traps and gotchas
-
-- A frame shot draws one tick in 60, and the windup of the scavenger lasts 12 ticks. A scan of the full-clearer run in Core found the shot ticks of a windup in advance. The player body or a wall hid most of them.
-- The timer-tester never turns the camera, so no bot frame shows the windup of the Overseer (D-738).
-- A test fixture that writes a partial family or hunter file now gets a load finding of its own from `asset-qa` (D-742).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, write the merge prompt of `one-pr-one-session`.

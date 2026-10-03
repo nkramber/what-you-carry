@@ -131,6 +131,43 @@ public sealed class ActionDecisionTests
         Assert.Contains("      interval: weekly", config, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// One Dependabot PR bumps one action in every directory (D-774). The bumps #112 and #115 moved setup-dotnet in two PRs,
+    /// and the merge of #115 alone left the action on two pins.
+    /// </summary>
+    [Fact]
+    public void DependabotBumpsOneActionInEveryDirectoryInOnePr()
+    {
+        const string Group = """
+                groups:
+                  each-action:
+                    patterns:
+                      - "*"
+                    group-by: dependency-name
+            """;
+
+        string config = RepositoryRoot.ReadFile(".github/dependabot.yml").Replace("\r\n", "\n", StringComparison.Ordinal);
+        Assert.Contains(Group.Replace("\r\n", "\n", StringComparison.Ordinal), config, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// One Dependabot security PR moves each action with an advisory in every directory (D-776). The group of
+    /// <c>group-by: dependency-name</c> applies to version updates alone, so a security update needs a group of its own.
+    /// </summary>
+    [Fact]
+    public void DependabotGroupsSecurityUpdatesInEveryDirectory()
+    {
+        const string Group = """
+                  security:
+                    applies-to: security-updates
+                    patterns:
+                      - "*"
+            """;
+
+        string config = RepositoryRoot.ReadFile(".github/dependabot.yml").Replace("\r\n", "\n", StringComparison.Ordinal);
+        Assert.Contains(Group.Replace("\r\n", "\n", StringComparison.Ordinal), config, StringComparison.Ordinal);
+    }
+
     /// <summary>F-171. The pin check takes a full commit with its release remark alone.</summary>
     [Theory]
     [InlineData("actions/checkout@v5", false)]
