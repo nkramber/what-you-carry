@@ -88,7 +88,7 @@ Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR #1
 - The branch keeps the group `each-action` of `.github/dependabot.yml`: one PR bumps one action in every directory (D-774). `DependabotBumpsOneActionInEveryDirectoryInOnePr` reads the group.
 - Round 1 of the cross-provider review (Session 332) gave `Changes required` at `33f81fe`: P2-1, security updates do not use the group. The finding holds, because `group-by` applies to version updates alone. The owner chose the group `security` with `applies-to: security-updates` (D-776). `DependabotGroupsSecurityUpdatesInEveryDirectory` reads it, and it fails on the old file. `docs/reviews/pr-132-response.md` answers the round.
 - Round 2 gives `Ready for owner merge` for the effective head `6da30fe`, with P2-1 fixed.
-- PR-101 exit test 4: no night ran on `main` after `04d17e9` yet. The newest night is 37015330351 of 2026-10-02 at `4043785`, before the merge of PR #130. The fixer poll log reads "a session already took the night 37015330351" alone. The test stays open.
+- PR-101 exit test 4 fails. The night 37122879232 on `main` at `04d17e9` failed at 12:36 UTC. The poll started its session at 12:50 UTC as PID 20293, Claude Code 2.1.288. After 3 hours the process had 0.19 seconds of CPU time, an empty session log, and no transcript. Its main thread waited in one `openat` call. The poll runs `claude -p` with no time limit, so no end mark, no resume, and no notice came (T-2).
 
 ### State of the build
 
@@ -100,12 +100,14 @@ Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR #1
 
 ### In flight
 
-- After `review-gate` turns green, the owner merges PR #132 with the ruleset bypass, over the red `night-gate` check alone (D-775).
+- At `1602b56`, `review-gate`, `evaluate`, and Gitar passed. The owner holds the merge of PR #132 until the cause of the fixer hang is known. D-775 still permits the merge over the red `night-gate` check.
+- PID 20293 still waits on the prompt. An answer of Allow lets the session of the night 37122879232 continue.
 
 ### Traps and gotchas
 
 - The `group-by: dependency-name` key works for version updates alone, and each directory must use one ecosystem.
 - `main` has no D-753 to D-767, because PR-22 holds them (D-772).
+- The night 37015330351 ran on Claude Code 2.1.283. The update to 2.1.288 came at 06:47 UTC on 2026-10-03. The worktree of the fixer keeps its git directory on `/Volumes/SSD-1TB`. The owner found the cause on the Mac Mini: two macOS prompts, "2.1.288" and "claude" "would like to access files on a removable volume". macOS gives each new version of the binary a new identity, so each update asks again, and the open waits for the answer.
 
 ### Open questions that block progress
 
@@ -113,7 +115,7 @@ None.
 
 ### Next concrete action
 
-After the next night on `main`, read `~/Library/Logs/wyc-night-fixer.log` and the fixer session log, and record PR-101 exit test 4.
+A fresh session fixes the cause in its own PR: the fixer checkout moves off the removable volume, and the session start gets a time limit with a notice. After that, the owner decides the merge of PR #132.
 
 ## Session 330: 2026-10-03, Codex
 
