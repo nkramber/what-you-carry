@@ -59,7 +59,8 @@ Session: PR #131, author. Branch `fix/action-pins-and-launch`. PR #131, pending 
 
 ### In flight
 
-- The owner runs `what-you-carry -NoUpdate` on Windows again, with no Godot step. The review of Session 327 waits for that result.
+- The owner ran `what-you-carry -NoUpdate` on Windows at `93dea9b` from the home directory: the build, then the game on Vulkan and WASAPI. The test exit ended the session at tick 115 with no error. The Windows test of Session 327 passed.
+- The Deck runs the new script once over SSH, and the untracked test copy goes away.
 - The automated pass, then `make codex-review PR=131`. CI was green at `78d02b1` on PR #112 outside `night-gate`, `evaluate`, and `review-gate`. PR #131 merges over the red night gate alone (D-771).
 - The merge order of D-772: PR #131, PR #130, the chore branch with the Dependabot group alone, then PR-22.
 
