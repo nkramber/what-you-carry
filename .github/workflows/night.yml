@@ -48,7 +48,7 @@ jobs:
     outputs:
       date: ${{ steps.plan.outputs.date }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Plan the seeds
         # D-564 to D-567: the UTC date of the night start selects the slice of every sweep. The record of main names the
         # failed seeds that this night carries. A night on a branch carries the seeds of main too, so its promotion
@@ -97,7 +97,7 @@ jobs:
       SHARD: ${{ matrix.shard }}
       NIGHT_DATE: ${{ needs.plan.outputs.date }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Start the sweep result
         # The result holds the summary line and the failure line of this sweep. An empty failure file means that the
         # sweep did not end (D-567). The step comes before the build, so a broken build still leaves a result.
@@ -178,7 +178,7 @@ jobs:
       # The status of the night record, which the job notify reads (D-642).
       status: ${{ steps.gather.outputs.status }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # The order check of a night on main asks git whether the record of main comes after the night commit (D-562).
           fetch-depth: 0
@@ -355,7 +355,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Send the Pushover notification
         uses: ./.github/actions/pushover
         with:
