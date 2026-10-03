@@ -60,13 +60,13 @@ Session: PR #131, author. Branch `fix/action-pins-and-launch`. PR #131, pending 
 ### In flight
 
 - The owner ran `what-you-carry -NoUpdate` on Windows at `93dea9b` from the home directory: the build, then the game on Vulkan and WASAPI. The test exit ended the session at tick 115 with no error. The Windows test of Session 327 passed.
-- The Deck runs the new script once over SSH, and the untracked test copy goes away.
+- The Deck ran the script of `93dea9b` over SSH: the update to `main`, the build, and a play session that the test exit ended with code 0. The untracked test copy is gone, and the checkout is clean.
 - The automated pass, then `make codex-review PR=131`. CI was green at `78d02b1` on PR #112 outside `night-gate`, `evaluate`, and `review-gate`. PR #131 merges over the red night gate alone (D-771).
 - The merge order of D-772: PR #131, PR #130, the chore branch with the Dependabot group alone, then PR-22.
 
 ### Traps and gotchas
 
-- The Deck holds an untracked copy of `launch/what-you-carry.sh` for the test. Remove it before the merge, or the pull of `main` refuses to overwrite it.
+- Until the merge and one pull on the Deck, the command link `~/.local/bin/what-you-carry` and the desktop shortcut point to a file that does not exist.
 - The play shortcut on the Deck and the SSH test runs share `~/what-you-carry`. Each start of the shortcut checks out `main`.
 - The old desktop shortcut "The Thing Below" starts the repository `nkramber/the-thing-below`, not this game.
 - The PowerShell tests run on the Windows leg alone. No `pwsh` is on the Mac.
