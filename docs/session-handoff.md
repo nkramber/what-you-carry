@@ -87,6 +87,7 @@ Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR #1
 - The branch dropped its pin fix and its D-755 and D-757. Its D-756 is now D-774, and its Session 326 entry is now this entry.
 - The branch keeps the group `each-action` of `.github/dependabot.yml`: one PR bumps one action in every directory (D-774). `DependabotBumpsOneActionInEveryDirectoryInOnePr` reads the group.
 - Round 1 of the cross-provider review (Session 332) gave `Changes required` at `33f81fe`: P2-1, security updates do not use the group. The finding holds, because `group-by` applies to version updates alone. The owner chose the group `security` with `applies-to: security-updates` (D-776). `DependabotGroupsSecurityUpdatesInEveryDirectory` reads it, and it fails on the old file. `docs/reviews/pr-132-response.md` answers the round.
+- Round 2 gives `Ready for owner merge` for the effective head `6da30fe`, with P2-1 fixed.
 - PR-101 exit test 4: no night ran on `main` after `04d17e9` yet. The newest night is 37015330351 of 2026-10-02 at `4043785`, before the merge of PR #130. The fixer poll log reads "a session already took the night 37015330351" alone. The test stays open.
 
 ### State of the build
@@ -95,11 +96,11 @@ Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR #1
 - The night record of `main` still reads failure at the carried seed 9153, so `night-gate` stays red. The owner chose a review now and a merge over that check alone (D-775).
 - At `33f81fe`, each check passed outside `night-gate`, `evaluate`, and `review-gate`. Gitar approved `33f81fe` and `15fe03a` with no finding, and a PR comment answered its CI note with D-251. No `Gitar review` comment was necessary.
 - Locally, after the P2-1 correction, the full suite passed, 2,191 tests.
+- At `6da30fe`, each check passed outside `night-gate`, `evaluate`, and `review-gate`, and Gitar approved with no finding.
 
 ### In flight
 
-- The CI and the automated pass of the P2-1 correction, and then round 2 of `make codex-review PR=132`.
-- The owner merges PR #132 with the ruleset bypass, over the red `night-gate` check alone (D-775).
+- After `review-gate` turns green, the owner merges PR #132 with the ruleset bypass, over the red `night-gate` check alone (D-775).
 
 ### Traps and gotchas
 
