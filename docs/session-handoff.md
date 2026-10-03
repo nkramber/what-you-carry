@@ -2,6 +2,45 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 331: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR-102, author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR pending. Base `04d17e9`.
+
+### What this session did, and why
+
+- The night 37122879232 on `main` failed at the carried seed 9153 of the full clearer, a softlock on floor 4 at the expiry (F-208). No job ended with a runner fault, so no re-run (D-585). The night 37015330351 of 2026-10-02 first read this seed, and D-770 left the fix to this night.
+- The trace of floor 4: the policy left at tick 9300 with a scavenger of six health in reach, and the scavenger held the doorway of one cell to the stairwell. The policy never swung while it left. Each swing of the scavenger rolled the body two meters back from the doorway, and the walk back took the ticks until the next swing. The run softlocked at tick 18048.
+- The fix: the strike of an enemy in reach comes before the walk out (D-774). Seed 9153 now kills the scavenger, leaves floor 4 near tick 9600, and dies on floor 5. Seed 9153 joins the extra fixed seeds (D-567). The roadmap id is PR-102 (D-775).
+- `FullClearerStrikesTheEnemyInReachWhileItLeaves` fails on the old policy: softlock on floor 4 after 18048 ticks. The two `night-seeds` command tests read an extra seeds file of their own in a temporary root, because the seed of D-567 broke their expected lists.
+- The fixer session of the night 37015330351 wrote the same fix in its worktree and never committed it (Session 325). This session verified the cause again on `04d17e9` with a trace, and took the fix with new ids.
+- No bisect names a commit: the seed first ran on 2026-10-02 as a slice seed, and it softlocks before PR-21 too. The leave rule of D-439 never struck while it left, since PR #85.
+- D-774 and D-775 are session answers under D-644, for the owner to confirm.
+
+### State of the build
+
+- Remote head: see the PR. Local: the full suite passed 2190 tests, and `det-lint`, `asset-qa`, and `ste-check` report 0 findings.
+- The local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000: 1703 bottoms, 4297 deaths, 0 softlocks, 0 crashes, in 8 min 54 s.
+- The simulation version stays at 19. PR #85 changed the same policy with no raise, and the bit-identity sweep plays the greedy descender and the coward.
+
+### In flight
+
+- The gitar pass, the branch night, and the Codex review, in the order of the night fixer runbook (D-643).
+
+### Traps and gotchas
+
+- A command test of `night-seeds` that reads the extra seeds of the checkout breaks on each seed of D-567. Give such a test a temporary root.
+- The strike in reach has no stall check. An enemy inside 1.6 meters that the blade cannot hit holds the policy, in the hunt before this PR and in the walk out after it. The sweep of 6000 seeds read none.
+- The worktree of the night 37015330351 still holds its uncommitted draft, with the stale ids D-753, D-754, and PR-101.
+
+### Open questions that block progress
+
+None. D-774 and D-775 wait for the confirmation of the owner under D-644.
+
+### Next concrete action
+
+The owner confirms D-774 and D-775, reads the review record, and merges the PR. The promoted record of the branch night then makes the night gate green (D-557), and the next night on `main` runs seed 9153 from the extra seeds.
+
 ## Session 330: 2026-10-03, Codex
 
 Author: Codex
@@ -319,39 +358,3 @@ None.
 ### Next concrete action
 
 Read the pushed review record and merge summary, then confirm the merge of PR #128.
-
-## Session 321: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-100, author. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
-
-### What this session did, and why
-
-- Asked OQ-211. The premise of its option one held for the scavenger alone: the pick swings 30, 6, and 30 ticks, and a clip plays tick for tick. D-741: the scavenger plays `player.sword-swing.json` on its own bones, and the Overseer plays its own clip `overseer.pick-swing.json`, an overhead chop of 66 ticks.
-- The check of `asset-qa` paired a clip with the model that its file names, so it never posed the player clip on the scavenger. D-742: `asset-qa` reads the family, hunter, and weapon files, and it poses each enemy model with the swing clip of its weapon.
-- The first run of that check found a clip of 0.0417 meters between the right upper arm and the hood of the scavenger at tick 18. D-743: the player clip turns the right arm to [70, 0, 0] at that tick.
-- `EnemyNodes.AfterTick` poses each enemy tree and the Overseer from its swing tick through `EnemyPose`. `EnemyClips` checks each clip against its weapon and its model. `Main` logs a failure of the enemy trees and quits (T-2).
-- Ran the Tier 4 captures of D-714 at the PR head. Tick 3060 is the one shot with a scavenger windup in front. The owner confirmed that the windup reads (D-744), and the frames are in `docs/reviews/pr-128-frames/`.
-
-### State of the build
-
-- The remote head of `main` is `9da1817`. Locally at the code commit `a03c756`: the full suite passes 2158 of 2158, the Smoke category included. `asset-qa`, `det-lint`, and `ste-check` give 0 findings. The bit-identity sweep gives the known answer `1023ce079eb0af50`, and the Godot build passes.
-- On PR #128 at `fe46148`, each check is green but `evaluate` and `review-gate`, which waited for the record (D-577). The automated pass approved `fe46148` with no finding. The review record gives `Ready for owner merge` for the effective head `a03c756`.
-
-### In flight
-
-- The owner confirmation of the merge of PR #128 (D-524, D-533), then the auto-merge.
-
-### Traps and gotchas
-
-- A frame shot draws one tick in 60, and the windup of the scavenger lasts 12 ticks. A scan of the full-clearer run in Core found the shot ticks of a windup in advance. The player body or a wall hid most of them.
-- The timer-tester never turns the camera, so no bot frame shows the windup of the Overseer (D-738).
-- A test fixture that writes a partial family or hunter file now gets a load finding of its own from `asset-qa` (D-742).
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, write the merge prompt of `one-pr-one-session`.

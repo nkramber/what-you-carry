@@ -55,6 +55,12 @@ namespace WhatYouCarry.Core.Bots;
 /// to the stairwell wound around the floor past expiry. On seed 2109 the last hunt dropped off a ledge that no
 /// move climbs back, so the way back looped around the floor. A player leaves in time, and so does the policy.
 /// </para>
+/// <para>
+/// A policy that leaves still strikes an enemy inside the reach of its weapon (D-774). On seed 9153 the night of
+/// 2026-10-02 found a doorway of one cell to the stairwell, with a scavenger of six health in it. The policy never
+/// swung while it left, each swing of the scavenger rolled the body two meters back from the doorway, and the walk
+/// back took the ticks until the next swing, so the floor ran out (F-208).
+/// </para>
 /// </remarks>
 public sealed class FullClearer : IBotPolicy
 {
@@ -161,11 +167,8 @@ public sealed class FullClearer : IBotPolicy
             return BotIntent.Roll(loop.Tick, loop.Yaw, onto);
         }
 
-        if (this.leaving)
-        {
-            return this.WalkToStairwell(loop);
-        }
-
+        // The strike comes before the walk out. An enemy in reach holds a walk out: each of its swings rolls the
+        // body back from the stairwell, and the walk back takes the ticks until its next swing (F-208).
         Enemy? inReach = this.NearestLiving(loop, loop.Weapon.ReachCentimetres / 100.0f);
         if (inReach is not null)
         {
@@ -173,6 +176,11 @@ public sealed class FullClearer : IBotPolicy
         }
 
         this.attackHeld = false;
+        if (this.leaving)
+        {
+            return this.WalkToStairwell(loop);
+        }
+
         Enemy? hunted = this.Hunted(loop);
         if (hunted is null)
         {

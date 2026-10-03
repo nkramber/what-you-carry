@@ -429,6 +429,7 @@ Status: ✅ done (code merged, or "doc" for a document-only correction) · 🔧 
 | F-203 | The Gate 2 play: the scavenger and the Overseer attack from the rest pose, with no swing clip, so no windup shows (D-401) | 2026-09-28 | ✅ PR #128 (PR-100): each enemy plays the swing clip of its weapon, and the owner confirmed the windup of the scavenger (D-744) |
 | F-206 | PRs #110, #111, #113, #114, and #115 of Dependabot merged on 2026-10-03 with CI red on `main`. `ActionDecisionTests` held the old pins as text, and the local action `ci-skip` named setup-dotnet v6.0.0 while each workflow named v5.4.0 | 2026-10-03 | ✅ PR #131: each workflow uses v6.0.0, and the test holds the new pins (D-768) |
 | F-207 | On the Windows PC of the owner, `Godot --headless --editor --build-solutions --quit` on `WhatYouCarry.Game` ended with "An EditorPlugin build callback failed", and Godot wrote no build log for the project. `dotnet build` of the solution passed, and the game then started and ended with the test exit. The Mac and the Deck pass the same Godot step. The cause is not known | 2026-10-03 | ⚠ PR #131: the launch scripts build with `dotnet build` alone, as the smoke workflow does on each platform. `make play` and the Deck runs keep the Godot step |
+| F-208 | The nights of 2026-10-02 and 2026-10-03: the full clearer softlocked on floor 4 of seed 9153. It left with a scavenger of six health in reach, which held the doorway of one cell to the stairwell, and each swing of the scavenger rolled it two meters back | 2026-10-03 | 🔧 PR-102: the clearer strikes an enemy in reach also while it leaves (D-774) |
 
 ## 6. Guardrails (the safety contract for every PR)
 
@@ -821,6 +822,11 @@ The session of the night fixer runs with no background tasks and a command limit
 Gate: `ASessionWithNoEndMarkResumesThreeTimesAndThenNotifiesTheOwner` passes, and it fails on the poll of `main`.
 > *In plain English:* the night repair helper stopped halfway and told nobody. Now it waits for each long step, and it alerts the owner when it cannot finish.
 
+**PR-102: Night fix of seed 9153.**
+The full clearer strikes an enemy in reach also while it leaves (D-774, F-208). The nights of 2026-10-02 and 2026-10-03 read a softlock on floor 4 of seed 9153, a slice seed. Seed 9153 joins the extra fixed seeds (D-567).
+Gate: `FullClearerStrikesTheEnemyInReachWhileItLeaves` passes, and a branch night passes with seed 9153 in the list.
+> *In plain English:* the test bot that clears each floor stood still beside a door, with an enemy at its side. It now kills the enemy and walks on.
+
 **PR-22: Equipment slots, armor overlays, and weight.** 🔧
 Implement the modeled slots and the two ring slots (D-18, D-55). Attach armor overlays and the shield to the shared base body (D-82). Implement damage reduction and weight on movement and dodge (D-23, D-26). Set the growth of the dodge cooldown with weight and the weight at which armor resists stagger (D-314, D-316).
 Gate: the PR-57 pose check passes for every armor piece on every animation (D-135).
@@ -983,7 +989,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
 13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97, PR-98, and PR-99 (D-715, D-716, D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125. ✅ PR-99 done in PR #126. ✅ PR-95 and M-3 done in PR #122.
 14. ✅ **← GATE 2.** Signed 2026-09-28 (D-740). The owner plays one floor and signs off on feel.
-15. PR-100 (D-739), PR-21, PR-101 (D-769), PR-22, PR-23. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129. ✅ PR-101 done in PR #130.
+15. PR-100 (D-739), PR-21, PR-101 (D-769), PR-102 (D-775), PR-22, PR-23. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129. ✅ PR-101 done in PR #130.
 16. PR-24, PR-25, PR-26.
 17. PR-32.
 18. PR-27, PR-28, PR-29.
