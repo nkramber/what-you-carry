@@ -2,6 +2,40 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 332: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-133, reviewer. Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-102 diff at effective head `5cb1b0c`, the roadmap tests, the behavior contract, and the Gitar comment.
+- The provider gate passed. The review found P2-1: a nearby enemy that the blade cannot hit can hold the clearer in the leave branch without the stall recovery.
+- Added `docs/reviews/pr-133.md` with the finding and a `Blocked` verdict. D-774 and D-775 still await owner confirmation under D-644.
+
+### State of the build
+
+- Remote implementation head: `5cb1b0c`. The full local suite passed 2190 tests. The focused regression passed within that run.
+- CI, smoke, bit identity, bots, asset QA, deterministic lint, documents, doc gate, STE, Gitar, and the night gate passed. `evaluate` and `review-gate` failed because the review record did not exist yet.
+- The review record and this entry are the metadata commit. The PR head after the push is verified with `gh pr view`.
+
+### In flight
+
+- The author must address P2-1. The owner must confirm D-774 and D-775. The review gate must read the pushed record.
+
+### Traps and gotchas
+
+- `NearestLiving` uses feet distance and weapon reach. Blade hits also require vertical overlap. The leave branch strikes before it walks and skips the hunt stall check.
+- The seed 9153 regression passes, but it does not cover an enemy inside scalar reach and outside the blade's vertical band.
+
+### Open questions that block progress
+
+None. D-774 and D-775 await the owner under D-644.
+
+### Next concrete action
+
+The author addresses P2-1 and asks the owner to confirm D-774 and D-775. Then a new review checks the fix and the current PR head.
+
 ## Session 331: 2026-10-03, Claude Code
 
 Author: Claude Code
@@ -325,36 +359,3 @@ None.
 ### Next concrete action
 
 After the owner confirms, run `gh pr merge 129 --auto --squash`, wait on the checks, and write the merge prompt of `one-pr-one-session`.
-
-## Session 322: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-100, reviewer. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
-
-### What this session did, and why
-
-- Reviewed the complete PR-100 diff at effective head `a03c756` against the four roadmap exit tests and the affected contracts.
-- Found no in-scope defect. Added `docs/reviews/pr-128.md` with the provider gate, verified comments, findings, checks, and verdict.
-- Inspected the Tier 4 frame for exit test 3. The scavenger windup reads in the supplied frame (D-744).
-
-### State of the build
-
-- `main` is `9da1817`. CI, smoke, bit identity, asset QA, deterministic lint, STE, document gate, documents, night gate, and Gitar passed for PR head `fe46148`. The focused local tests passed 60 of 60. Local `asset-qa` and `det-lint` each report 0 findings.
-- The remote PR head after the metadata push is recorded in the review file and verified with `gh pr view`.
-
-### In flight
-
-- Owner review and merge confirmation for PR #128.
-
-### Traps and gotchas
-
-- The PR checks `review-gate` and `evaluate` failed before this review because the review record did not exist. The pushed record should satisfy those checks.
-- No supplied frame shows the Overseer swing because the timer-tester does not turn the camera (D-738). Exit test 3 checks the scavenger.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the pushed review record and merge summary, then confirm the merge of PR #128.
