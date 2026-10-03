@@ -35,6 +35,22 @@ public sealed class NightFixerTests
         esac
         """;
 
+    // The fake session writes each call to claude-calls.log, and the three session settings to claude-env.log. The prompt
+    // of the test checkout is END_FILE alone, so the first call names the path of the end mark. The file claude-exit holds
+    // the exit code of each call. The file claude-ends-at holds the number of the call that writes the end mark.
+    private const string FakeClaude = """
+        #!/usr/bin/env bash
+        dir="$(dirname "$0")"
+        echo "$*" >> "$dir/claude-calls.log"
+        echo "background=${CLAUDE_CODE_DISABLE_BACKGROUND_TASKS:-} default=${BASH_DEFAULT_TIMEOUT_MS:-} max=${BASH_MAX_TIMEOUT_MS:-}" >> "$dir/claude-env.log"
+        if [ "$3" = "--session-id" ]; then printf '%s' "$2" > "$dir/end-path"; fi
+        if [ -f "$dir/claude-exit" ]; then exit "$(cat "$dir/claude-exit")"; fi
+        calls=$(( $(wc -l < "$dir/claude-calls.log") ))
+        if [ -f "$dir/claude-ends-at" ] && [ "$calls" -ge "$(cat "$dir/claude-ends-at")" ]; then
+          echo "ready to merge https://github.com/nkramber/what-you-carry/pull/1" > "$(cat "$dir/end-path")"
+        fi
+        """;
+
     [Fact]
     public void ARunningNightStartsNoSession()
     {
@@ -231,6 +247,67 @@ public sealed class NightFixerTests
         }, []);
     }
 
+    /// <summary>
+    /// D-753, the night 37015330351. A session that exits 0 with no end mark resumes 3 times under its own session id,
+    /// and then the poll sends a notice and exits 1. The old poll took the exit 0 as the end, and sent no notice.
+    /// </summary>
+    [Fact]
+    public void ASessionWithNoEndMarkResumesThreeTimesAndThenNotifiesTheOwner()
+    {
+        RunCase(new() { ["run.txt"] = $"56 completed failure {Sha}", ["open.txt"] = "0" }, (result, state) =>
+        {
+            Assert.Equal(1, result.Exit);
+            string directory = Path.GetDirectoryName(state)!;
+            string[] calls = File.ReadAllLines(Path.Combine(directory, "claude-calls.log"));
+            Assert.Equal(4, calls.Length);
+            Assert.EndsWith("--session-id 00000000-0000-4000-8000-000000000056 --dangerously-skip-permissions", calls[0], StringComparison.Ordinal);
+            for (int resume = 1; resume < calls.Length; resume++)
+            {
+                Assert.StartsWith("-p Your last reply ended this session before its end mark", calls[resume], StringComparison.Ordinal);
+                Assert.EndsWith("--resume 00000000-0000-4000-8000-000000000056 --dangerously-skip-permissions", calls[resume], StringComparison.Ordinal);
+            }
+
+            Assert.Contains("resume 3 of 3 starts", result.Output, StringComparison.Ordinal);
+            Assert.Contains("ended with no end mark after 3 resumes", result.Errors, StringComparison.Ordinal);
+            string notices = File.ReadAllText(Path.Combine(directory, "notices.log"));
+            Assert.Contains("The session for the night 56 ended with no end mark after 3 resumes", notices, StringComparison.Ordinal);
+            Assert.Equal("56\n", File.ReadAllText(Path.Combine(state, "handled")));
+        }, [], withCheckout: true);
+    }
+
+    /// <summary>A session that writes its end mark in its first resume ends the poll with that mark, and runs with no background tasks and a command limit of 6 hours (D-753).</summary>
+    [Fact]
+    public void ASessionThatWritesTheEndMarkEndsThePoll()
+    {
+        RunCase(new() { ["run.txt"] = $"57 completed failure {Sha}", ["open.txt"] = "0", ["claude-ends-at"] = "2" }, (result, state) =>
+        {
+            Assert.True(result.Exit == 0, result.Errors);
+            string directory = Path.GetDirectoryName(state)!;
+            Assert.Equal(2, File.ReadAllLines(Path.Combine(directory, "claude-calls.log")).Length);
+            Assert.Contains("the session for the night 57 ended: ready to merge https://github.com/nkramber/what-you-carry/pull/1", result.Output, StringComparison.Ordinal);
+            Assert.Equal(Path.Combine(state, "end-57"), File.ReadAllText(Path.Combine(directory, "end-path")));
+            foreach (string line in File.ReadAllLines(Path.Combine(directory, "claude-env.log")))
+            {
+                Assert.Equal("background=1 default=21600000 max=21600000", line);
+            }
+
+            Assert.False(File.Exists(Path.Combine(directory, "notices.log")), "A session with its end mark sends no notice from the poll.");
+        }, [], withCheckout: true);
+    }
+
+    /// <summary>A session that exits with an error resumes no time, and the poll sends the notice of its exit code (D-645).</summary>
+    [Fact]
+    public void ASessionThatFailsNotifiesTheOwnerWithNoResume()
+    {
+        RunCase(new() { ["run.txt"] = $"58 completed failure {Sha}", ["open.txt"] = "0", ["claude-exit"] = "3" }, (result, state) =>
+        {
+            Assert.Equal(3, result.Exit);
+            string directory = Path.GetDirectoryName(state)!;
+            Assert.Single(File.ReadAllLines(Path.Combine(directory, "claude-calls.log")));
+            Assert.Contains("The session for the night 58 ended with exit code 3", File.ReadAllText(Path.Combine(directory, "notices.log")), StringComparison.Ordinal);
+        }, [], withCheckout: true);
+    }
+
     [Fact]
     public void AFailedReadStopsThePollWithItsContext()
     {
@@ -254,7 +331,7 @@ public sealed class NightFixerTests
         string script = RepositoryRoot.ReadFile(".github/scripts/night-fixer.sh");
         Assert.Contains("git -C \"$checkout\" worktree add --quiet -b \"$branch\" \"$work\" origin/main", script, StringComparison.Ordinal);
         Assert.Contains("\"$work/docs/runbooks/night-fixer-prompt.md\"", script, StringComparison.Ordinal);
-        Assert.Contains("claude -p \"$prompt\" --dangerously-skip-permissions", script, StringComparison.Ordinal);
+        Assert.Contains("env \"${session_env[@]}\" claude -p \"$prompt\" --session-id \"$session\" --dangerously-skip-permissions", script, StringComparison.Ordinal);
         Assert.Contains("bash \"$(dirname \"$0\")/notify-owner.sh\"", script, StringComparison.Ordinal);
         Assert.Contains("--workflow night.yml --branch main --limit 1", script, StringComparison.Ordinal);
         Assert.Contains("ln -sn \"$$\" \"$lock\"", script, StringComparison.Ordinal);
@@ -281,9 +358,13 @@ public sealed class NightFixerTests
             "\"three branch nights failed\"",
             "\"the Codex three-strike stop\"",
             "\"ready to merge\"",
+            "Never end a reply while work is in flight.",
+            "Run each command in the foreground, and wait for its end.",
+            "Write the end mark as the last step of the session, after the last notice.",
             "RUN_ID",
             "RUN_SHA",
             "FIX_BRANCH",
+            "END_FILE",
         ];
         foreach (string rule in rules)
         {
@@ -315,10 +396,11 @@ public sealed class NightFixerTests
     }
 
     /// <summary>
-    /// Runs the poll with --dry-run under bash, with the fake first on the path and the state in a new directory. A lock
-    /// link names its target, and a lock directory is the old form with no process id. Windows skips it.
+    /// Runs the poll with --dry-run under bash, with the fakes first on the path and the state in a new directory. A lock
+    /// link names its target, and a lock directory is the old form with no process id. A case with a checkout gets a git
+    /// repository whose origin/main holds a prompt of the one word END_FILE, so the setup passes. Windows skips it.
     /// </summary>
-    private static void RunCase(Dictionary<string, string> files, Action<(int Exit, string Output, string Errors), string> check, string[]? arguments = null, string? lockLink = null, bool lockDirectory = false, int? guardAgeMinutes = null)
+    private static void RunCase(Dictionary<string, string> files, Action<(int Exit, string Output, string Errors), string> check, string[]? arguments = null, string? lockLink = null, bool lockDirectory = false, int? guardAgeMinutes = null, bool withCheckout = false)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -328,11 +410,17 @@ public sealed class NightFixerTests
         string directory = Path.Combine(Path.GetTempPath(), $"wyc-night-fixer-{Guid.NewGuid():N}");
         string state = Path.Combine(directory, "state");
         Directory.CreateDirectory(state);
+        using TemporaryGitRepository? checkout = withCheckout ? new TemporaryGitRepository() : null;
         try
         {
-            string gh = Path.Combine(directory, "gh");
-            File.WriteAllText(gh, FakeGh.Replace("\r\n", "\n", StringComparison.Ordinal) + "\n");
-            File.SetUnixFileMode(gh, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            WriteFake(directory, "gh", FakeGh);
+            WriteFake(directory, "claude", FakeClaude);
+            if (checkout is not null)
+            {
+                checkout.Commit("prompt", new Dictionary<string, string> { ["docs/runbooks/night-fixer-prompt.md"] = "END_FILE\n" });
+                checkout.Git(["remote", "add", "origin", checkout.Path]);
+            }
+
             foreach ((string name, string text) in files)
             {
                 string path = Path.Combine(directory, name);
@@ -357,7 +445,7 @@ public sealed class NightFixerTests
                 Directory.SetLastWriteTimeUtc(guard, DateTime.UtcNow.AddMinutes(-age));
             }
 
-            check(RunScript(directory, state, arguments ?? ["--dry-run"]), state);
+            check(RunScript(directory, state, arguments ?? ["--dry-run"], checkout?.Path ?? directory), state);
         }
         finally
         {
@@ -365,7 +453,15 @@ public sealed class NightFixerTests
         }
     }
 
-    private static (int Exit, string Output, string Errors) RunScript(string fakeDirectory, string state, string[] arguments)
+    [System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
+    private static void WriteFake(string directory, string name, string text)
+    {
+        string path = Path.Combine(directory, name);
+        File.WriteAllText(path, text.Replace("\r\n", "\n", StringComparison.Ordinal) + "\n");
+        File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+    }
+
+    private static (int Exit, string Output, string Errors) RunScript(string fakeDirectory, string state, string[] arguments, string checkout)
     {
         string script = Path.Combine(RepositoryRoot.Find(), ".github", "scripts", "night-fixer.sh");
         ProcessStartInfo start = new("bash") { RedirectStandardError = true, RedirectStandardOutput = true, UseShellExecute = false };
@@ -378,7 +474,7 @@ public sealed class NightFixerTests
         string path = Environment.GetEnvironmentVariable("PATH") ?? throw new InvalidOperationException("The test process has no PATH variable.");
         start.Environment["PATH"] = fakeDirectory + Path.PathSeparator + path;
         start.Environment["WYC_FIXER_STATE"] = state;
-        start.Environment["WYC_FIXER_REPO"] = fakeDirectory;
+        start.Environment["WYC_FIXER_REPO"] = checkout;
         start.Environment["WYC_NOTIFY_TRIES"] = "2";
         start.Environment["WYC_NOTIFY_PAUSE"] = "0";
 

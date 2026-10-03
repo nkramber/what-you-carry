@@ -814,6 +814,11 @@ Implement item definitions in JSON with tiers by depth band and a tier jump (D-4
 Gate: the affix set has one test per behavior, for the player and for an enemy.
 > *In plain English:* items get random extra powers, and an enemy that carries such an item uses the power against you.
 
+**PR-101: Night fixer end mark.** ✅ Done in PR #130.
+The session of the night fixer runs with no background tasks and a command limit of 6 hours. It writes an end mark after its last notice. The poll resumes a session with no end mark up to 3 times, and then sends a stop notice (D-753). The owner merges it over the red night gate (D-754).
+Gate: `ASessionWithNoEndMarkResumesThreeTimesAndThenNotifiesTheOwner` passes, and it fails on the poll of `main`.
+> *In plain English:* the night repair helper stopped halfway and told nobody. Now it waits for each long step, and it alerts the owner when it cannot finish.
+
 **PR-22: Equipment slots, armor overlays, and weight.** 🔧
 Implement the modeled slots and the two ring slots (D-18, D-55). Attach armor overlays and the shield to the shared base body (D-82). Implement damage reduction and weight on movement and dodge (D-23, D-26). Set the growth of the dodge cooldown with weight and the weight at which armor resists stagger (D-314, D-316).
 Gate: the PR-57 pose check passes for every armor piece on every animation (D-135).
@@ -976,7 +981,7 @@ One person owns the program. Items run one at a time in this order. The list cha
 12. PR-19, PR-20, PR-71, PR-72, PR-73, PR-62, PR-78, PR-74, PR-79, PR-80, PR-81. Then PR-82, PR-83, PR-84, PR-85, PR-87, PR-88, PR-86, PR-75, PR-89, PR-90. Then the open review findings (D-596), PR-76, PR-77, PR-93 (D-660). Then PR-94 (D-703). ✅ PR-19 done in PR #86. ✅ PR-20 done in PR #87. ✅ PR-71 done in PR #89. ✅ PR-72 done in PR #90. ✅ PR-73 done in PR #91. ✅ PR-62 done in PR #92. ✅ PR-78 done in PR #93. ✅ PR-74 done in PR #94. ✅ PR-79 done in PR #95. ✅ PR-80 done in PR #96. ✅ PR-81 done in PR #97. ✅ PR-82 done in PR #98. ✅ PR-83 done in PR #99. ✅ PR-84 done in PR #100. ✅ PR-87 done in PR #103. ✅ PR-88 done in PR #104. ✅ PR-86 done in PR #105. ✅ PR-91 done in PR #109. ✅ PR-76 done in PR #117. ✅ PR-77 done in PR #118. ✅ PR-93 done in PR #119. ✅ PR-94 done in PR #120.
 13. M-3, then PR-95 (D-710). Then PR-96, the Tier 4 pass of Gate 2 (D-711), then PR-97, PR-98, and PR-99 (D-715, D-716, D-724). ✅ PR-96 done in PR #123. ✅ PR-97 done in PR #124. ✅ PR-98 done in PR #125. ✅ PR-99 done in PR #126. ✅ PR-95 and M-3 done in PR #122.
 14. ✅ **← GATE 2.** Signed 2026-09-28 (D-740). The owner plays one floor and signs off on feel.
-15. PR-100 (D-739), PR-21, PR-22, PR-23. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129.
+15. PR-100 (D-739), PR-21, PR-101 (D-753), PR-22, PR-23. ✅ PR-100 done in PR #128. ✅ PR-21 done in PR #129. ✅ PR-101 done in PR #130.
 16. PR-24, PR-25, PR-26.
 17. PR-32.
 18. PR-27, PR-28, PR-29.

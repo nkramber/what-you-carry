@@ -3,7 +3,8 @@
 # Mini of the owner. When the newest night on main failed, and no session handled it yet, the poll starts one Claude
 # Code session in a new worktree from origin/main. The session follows docs/runbooks/night-fixer-prompt.md: it fixes the
 # night, runs gitar and branch nights, then Codex rounds, and it sends a Pushover notice when the PR is ready to merge or
-# when it stops. It never merges, and the owner merges (D-524).
+# when it stops. It never merges, and the owner merges (D-524). The session ends with one line in its end mark. A session
+# that exits with no end mark resumes up to 3 times, and then the poll sends a notice (D-753).
 #
 # Usage: night-fixer.sh [--dry-run]
 # --dry-run prints the decision and starts nothing.
@@ -121,12 +122,23 @@ fi
 
 branch="fix/night-${run}"
 work="${state}/work-${run}"
+# The session writes one line to the end mark after its last notice. A session that exits with no end mark did not end
+# its procedure (D-753).
+end="${state}/end-${run}"
+# A fixed session id from the run id, so the poll can resume the session, and the owner can find it (D-753).
+session=$(printf '00000000-0000-4000-8000-%012d' "$run")
+# The session has no background tasks, because a background command stops when the reply ends the session. A command in
+# the foreground can run 6 hours, the limit of a hosted job, so a branch night or a review round fits (D-753).
+session_env=(CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1 BASH_DEFAULT_TIMEOUT_MS=21600000 BASH_MAX_TIMEOUT_MS=21600000)
+resume_limit=3
+resume_prompt="Your last reply ended this session before its end mark, and the poll of the night fixer resumed it. Each background command stopped with that reply. Read the state of the worktree, the branch, the PR, and its checks. Then continue the procedure of the night fixer at the first step that did not end."
 
 # The setup of the session: the fetch, the worktree, and the prompt. It prints the prompt.
 prepare() {
   git -C "$checkout" fetch --quiet origin main >&2 || return 1
   git -C "$checkout" worktree add --quiet -b "$branch" "$work" origin/main >&2 || return 1
-  sed -e "s/RUN_ID/${run}/g" -e "s/RUN_SHA/${sha}/g" -e "s#FIX_BRANCH#${branch}#g" "$work/docs/runbooks/night-fixer-prompt.md" || return 1
+  sed -e "s/RUN_ID/${run}/g" -e "s/RUN_SHA/${sha}/g" -e "s#FIX_BRANCH#${branch}#g" -e "s#END_FILE#${end}#g" \
+    "$work/docs/runbooks/night-fixer-prompt.md" || return 1
 }
 
 # The poll marks the night handled only after the setup, or after the notice of a failed setup. A setup that failed
@@ -140,14 +152,33 @@ if ! prompt=$(prepare); then
 fi
 echo "$run" >> "$state/handled"
 log="${state}/session-${run}.log"
-echo "night-fixer: the session for the night ${run} starts in ${work}, and it logs to ${log}."
+echo "night-fixer: the session ${session} for the night ${run} starts in ${work}, and it logs to ${log}."
 set +e
-(cd "$work" && claude -p "$prompt" --dangerously-skip-permissions > "$log" 2>&1)
+(cd "$work" && env "${session_env[@]}" claude -p "$prompt" --session-id "$session" --dangerously-skip-permissions > "$log" 2>&1)
 rc=$?
 set -e
+
+# A session that exits 0 with no end mark stopped in the middle of its procedure, as the session of the night
+# 37015330351 did. The poll resumes it, and a session that still has no end mark sends a notice (T-2, D-753).
+resumes=0
+while [ "$rc" -eq 0 ] && [ ! -s "$end" ] && [ "$resumes" -lt "$resume_limit" ]; do
+  resumes=$((resumes + 1))
+  echo "night-fixer: the session for the night ${run} ended with no end mark, and resume ${resumes} of ${resume_limit} starts."
+  set +e
+  (cd "$work" && env "${session_env[@]}" claude -p "$resume_prompt" --resume "$session" --dangerously-skip-permissions >> "$log" 2>&1)
+  rc=$?
+  set -e
+done
+
 if [ "$rc" -ne 0 ]; then
   notify "What You Carry: the night fixer stopped" "The session for the night ${run} ended with exit code ${rc}. Its log is ${log} on the Mac Mini." \
     "https://github.com/${repo}/actions/runs/${run}"
   exit "$rc"
 fi
-echo "night-fixer: the session for the night ${run} ended."
+if [ ! -s "$end" ]; then
+  echo "night-fixer: the session for the night ${run} ended with no end mark after ${resumes} resumes." >&2
+  notify "What You Carry: the night fixer stopped" "The session for the night ${run} ended with no end mark after ${resumes} resumes, so its procedure did not end. Its log is ${log}, and its session id is ${session}, on the Mac Mini." \
+    "https://github.com/${repo}/actions/runs/${run}"
+  exit 1
+fi
+echo "night-fixer: the session for the night ${run} ended: $(cat "$end")"

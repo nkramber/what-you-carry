@@ -1,5 +1,37 @@
 # Session handoff archive
 
+## Session 315: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-98, reviewer. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
+
+### What this session did, and why
+
+- Reviewed the code, tests, documents, comments, and frames of PR #125. No in-scope finding remains.
+- Added the review record for effective head `b446cdd` and this entry in one metadata commit (D-182).
+
+### State of the build
+
+- The local HUD and number-sight tests passed, 28 tests. The remote CI checks for work head `b446cdd` passed through documents-only tip `8e29146` (D-357).
+- The `review-gate` and dependent `evaluate` checks failed because the review record did not yet exist. They need a fresh run after this push.
+
+### In flight
+
+- The review record and this entry await the metadata commit and push to the PR branch.
+
+### Traps and gotchas
+
+- `GridRay.FirstSolid` throws when a march starts in rock. The grazing-edge test checks the step past the first open cell.
+- The PR tip includes documents after the effective work head. The review applies to `b446cdd`.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Wait for the review-gate checks, then give the owner the merge summary for PR #125.
+
 ## Session 314: 2026-09-28, Claude Code
 
 Author: Claude Code

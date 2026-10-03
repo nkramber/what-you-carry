@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 325: 2026-10-02, Claude Code
+
+Author: Claude Code
+Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `4043785`.
+
+### What this session did, and why
+
+- The night 37015330351 on `main` failed at the carried seed 9153 of the full clearer. The night notice of D-642 came: the job `notify` passed. This is the first part of PR-91 exit test 24 (D-736).
+- The fixer session of that night found the cause and wrote a fix, but it stopped before a commit. It started the sweep and the full suite in the background, and its reply then ended `claude -p` with exit 0. The poll sent no notice. The fixer part of PR-91 exit test 24 failed.
+- The fix: no background tasks, a command limit of 6 hours, an end mark, and up to 3 resumes of the same session, then a stop notice (D-753).
+- The owner leaves the night fix for the next failed night, as a test of the fixer, and merges this PR over the red night gate (D-754).
+
+### State of the build
+
+- Remote head: see the PR. The 23 `NightFixerTests` pass. The new test of the missing end mark fails on the poll of `main`.
+- The night record of `main` reads failure, so `night-gate` stays red (D-754).
+
+### In flight
+
+- The fixer draft of the night 37015330351 stays uncommitted in `~/Library/Application Support/wyc-night-fixer/work-37015330351` on the Mac Mini, on the local branch `fix/night-37015330351`. Its handoff text names a PR #130 that never opened.
+
+### Traps and gotchas
+
+- A branch of this kind must not start with `fix/night-`. The poll counts each open PR from such a branch as a fix PR, and it queues the night.
+- The auto mode of the harness blocked an edit and a live test of the poll as an unsafe agent. The owner moved the session to the accept-edits mode.
+- The live behavior of `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` and `BASH_MAX_TIMEOUT_MS` comes from the code of the CLI 2.1.283, not from a live run. The next failed night tests it.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.
+
 ## Session 324: 2026-09-28, Codex
 
 Author: Codex
@@ -301,35 +336,3 @@ None.
 ### Next concrete action
 
 After the merge, start PR-99 (D-724), the last PR before Gate 2.
-
-## Session 315: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-98, reviewer. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
-
-### What this session did, and why
-
-- Reviewed the code, tests, documents, comments, and frames of PR #125. No in-scope finding remains.
-- Added the review record for effective head `b446cdd` and this entry in one metadata commit (D-182).
-
-### State of the build
-
-- The local HUD and number-sight tests passed, 28 tests. The remote CI checks for work head `b446cdd` passed through documents-only tip `8e29146` (D-357).
-- The `review-gate` and dependent `evaluate` checks failed because the review record did not yet exist. They need a fresh run after this push.
-
-### In flight
-
-- The review record and this entry await the metadata commit and push to the PR branch.
-
-### Traps and gotchas
-
-- `GridRay.FirstSolid` throws when a march starts in rock. The grazing-edge test checks the step past the first open cell.
-- The PR tip includes documents after the effective work head. The review applies to `b446cdd`.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Wait for the review-gate checks, then give the owner the merge summary for PR #125.
