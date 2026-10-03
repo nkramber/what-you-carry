@@ -15,12 +15,13 @@ Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pendin
 
 ### State of the build
 
-- The reviewed code head is `e8396e2`. The local full suite passed, 2,186 tests. The hosted build, test, bit-identity, bot, asset, lint, document, and smoke checks passed.
-- The `night-gate` check failed on the known night records. D-771 permits this failure. The review-gate and `evaluate` checks need a fresh run after publication.
+- The remote review metadata commit is `15e83c8`. The reviewed code head is `e8396e2`. The local full suite passed, 2,186 tests. Hosted build, test, bit-identity, bot, asset, lint, document, and smoke checks passed on the code head.
+- The `night-gate` check failed on the known night records. D-771 permits this failure. On metadata tip `15e83c8`, Gitar, `asset-qa`, `det-lint`, `doc-gate`, `documents`, and `ste-check` passed. Code-only checks skipped.
+- The review-gate and `evaluate` checks failed because the record verdict is `Blocked` pending the owner's Windows PC test.
+- The post-push Gitar dashboard approved the head and marked the shell finding as closed.
 
 ### In flight
 
-- The review record and this entry need one metadata commit and a push to `fix/action-pins-and-launch`.
 - The owner Windows PC launch test remains in flight.
 
 ### Traps and gotchas
