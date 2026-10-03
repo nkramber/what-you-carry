@@ -1,5 +1,41 @@
 # Session handoff archive
 
+## Session 320: 2026-09-28, Claude Code
+
+Author: Claude Code
+Session: Gate 2, author. Branch `docs/gate-2-first-playable`. PR #127, pending merge. Base `ee04af7`.
+
+### What this session did, and why
+
+- Read sequence item 57 of the Phase 2 roadmap, and each exit test of that file against the records. Three tests had no pass on record: PR-66 exit test 10, PR-79 exit test 4, and the failed-night proof of PR-91 exit test 24.
+- PR-79 exit test 4 passes on PR #126: `review-gate` gave success on the documents commit `9909436` after the approving review `1c846f9`.
+- The owner folded PR-66 exit test 10 into the Gate 2 play (D-735), and carried the failed-night proof past the gate (D-736). No night on `main` failed after PR #109.
+- The session built `main` at `ee04af7`, and the smoke session passed. The owner played one floor and signed off on feel on two terms (D-740): the scavenger has no swing clip yet, and the world generation gets an overhaul later.
+- Neither term was in the plan. D-739 adds PR-100, the enemy swing clip, before PR-21, with OQ-211 for the clip source. The windup check of D-723 moves to PR-100, and F-203 records the rest pose. D-737 closes PR-66 exit test 10, and OQ-210 holds the overhaul.
+- The steps of the Overseer warn of an attack from outside the view, so F-198 closes (D-738).
+- Added the missing done marks: sequence item 45 (PR #105) and the PR-76 entry (PR #117).
+
+### State of the build
+
+- The remote head of `main` is `ee04af7`. This PR changes documents alone. `ste-check` gives 0 findings, and the Documents category passes 257 of 257.
+
+### In flight
+
+- The automated pass, the `review-override` label, and the owner confirmation of the merge (D-188, D-524, D-533).
+
+### Traps and gotchas
+
+- An enemy draws in the rest pose (D-401), so no play or frame can read the windup of a scavenger before PR-100.
+- The handoff of session 297 names the failed-night proof exit test 23 of PR-91. The roadmap puts it in exit test 24.
+
+### Open questions that block progress
+
+- OQ-211 blocks PR-100. OQ-210 blocks no PR.
+
+### Next concrete action
+
+After the merge, Phase 3 starts. Ask the owner OQ-211, then start PR-100 (D-739). The session after the first failed night on `main` states the result of the proof of D-736.
+
 ## Session 319: 2026-09-28, Claude Code
 
 Author: Claude Code
