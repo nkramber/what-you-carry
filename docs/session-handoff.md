@@ -2,6 +2,39 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 328: 2026-10-03, Codex
+
+Author: Codex
+Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
+
+### What this session did, and why
+
+- Re-reviewed PR #131 at effective code head `93dea9b` after the Windows and Deck launch reports arrived.
+- Verified the closed shell finding, reviewed the new build path, and updated the existing review record to `Ready for owner merge`.
+
+### State of the build
+
+- The remote head before this metadata commit was `7955699`; the effective code head was `93dea9b`.
+- Launcher tests passed, 15 tests. STE check passed with 0 findings.
+- Hosted build and test, bit identity, bots, asset, lint, document, and smoke checks passed. `night-gate` failed as allowed by D-771. `review-gate` and `evaluate` await this record.
+
+### In flight
+
+- The review record and this handoff entry need one metadata commit and a push to `fix/action-pins-and-launch`.
+
+### Traps and gotchas
+
+- Hosted PowerShell tests use fakes. The owner reports a real Windows launch and a Deck launch at `93dea9b`.
+- The known `night-gate` failure remains allowed by D-771.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Commit both metadata files, push the PR branch, and verify its published head.
+
 ## Session 327: 2026-10-03, Codex
 
 Author: Codex
@@ -316,36 +349,3 @@ None.
 ### Next concrete action
 
 Review the merge summary, then merge PR #126 when ready.
-
-## Session 317: 2026-09-28, Claude Code
-
-Author: Claude Code
-Session: PR-99, author. Branch `feat/pr-99-camera-turn-frames`. PR #126, pending merge. Base `ec383bf`.
-
-### What this session did, and why
-
-- F-202 (D-724): the frame interpolated the two tick poses in a straight line, so a turn of 180 degrees drew the camera from the head. The Game now interpolates the look (`TickLook`), the yaw the short way, and places the pose of each frame with `OrbitCamera.Place`.
-- Exit test 1 fails on the pose interpolation of `main`: 1.5 meters in place of 3.0 at the fraction 0.25.
-- One placement costs about 0.7 microseconds on the spawn of seed 1, in a Release build on the Mac.
-- The shots of D-714 draw each frame at the fraction 0, so they cannot show F-202. The owner chose pairs of frames at a fraction of 0.5 as the evidence, and accepted the close frames of D-720 at the interpolated yaw (D-733). The owner confirmed exit test 3 (D-734), after a correction: the halfway frames with no turn differ in up to 1.1 percent of the pixels.
-
-### State of the build
-
-- Local: the full suite (2144 tests, Smoke included), `det-lint`, `ste-check`, and the Godot build pass. The remote head of `main` is `ec383bf`.
-
-### In flight
-
-- The gitar pass and the cross-provider review. The owner confirmed exit test 3 on the frames in `docs/reviews/pr-126-frames/` (D-734).
-
-### Traps and gotchas
-
-- The Game bot session ends one second after the first descent (PR-18), so the full-clearer capture ends at tick 3821 on floor 2. The death at tick 7140 of D-714 comes from `bot-run`.
-- A frame shot never shows a frame between two ticks (D-733). For a turn frame, patch `FrameShots.IsShotTick` in a scratch worktree, and run with `--fixed-fps 120`.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Answer the gitar pass. Then run `make codex-review PR=126` when each check but the Review gate workflow is green.
