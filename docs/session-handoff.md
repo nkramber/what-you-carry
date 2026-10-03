@@ -2,6 +2,44 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 326: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR #112, author. Branch `dependabot/github_actions/actions/setup-dotnet-6.0.0`. PR #112, pending merge. Base `b58a68b`.
+
+### What this session did, and why
+
+- PRs #110, #111, #113, #114, and #115 of Dependabot merged with CI red on `main` (F-206). `ActionDecisionTests` held the old pins as text, and `ci-skip` named setup-dotnet v6.0.0 while each workflow named v5.4.0.
+- PR #112 brings setup-dotnet v6.0.0 to each workflow. The test now holds the five new pins. D-768 records the versions and revises in part D-619, D-620, and D-636.
+- Checked each new pin against the commit of its release tag, and read the breaking changes of each major. The night downloads by name or by pattern, so the path change of download-artifact v5 does not apply.
+- The owner asked for the launch work in the same PR, with no decision entry for the second concern. `launch/what-you-carry.sh` serves the Deck, and `launch/what-you-carry.ps1` serves Windows. Each updates to `main`, builds, imports, and plays. `LauncherTests` covers both with fakes.
+- The README has one procedure for each machine. The Mac keeps `make play`, because the work sessions share its checkout.
+
+### State of the build
+
+- The remote head is the branch tip of this PR. Locally, the full suite, `det-lint`, `asset-qa`, and `ste-check` are green.
+- The Deck ran the script over SSH: from the detached `34c2ddf` to `main` at `b58a68b`, the build, the import, and a play session that the test exit ended with code 0.
+
+### In flight
+
+- The owner tests the Windows command on a Windows PC.
+- The automated pass, then `make codex-review PR=112`.
+
+### Traps and gotchas
+
+- The Deck holds an untracked copy of `launch/what-you-carry.sh` for the test. Remove it before the merge, or the pull of `main` refuses to overwrite it.
+- The play shortcut on the Deck and the SSH test runs share `~/what-you-carry`. Each start of the shortcut checks out `main`.
+- The old desktop shortcut "The Thing Below" starts the repository `nkramber/the-thing-below`, not this game.
+- The PowerShell tests run on the Windows leg alone. No `pwsh` is on the Mac.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, run `git -C ~/what-you-carry pull --ff-only origin main` on the Deck over SSH, so that the shortcut finds its script.
+
 ## Session 324: 2026-09-28, Codex
 
 Author: Codex
@@ -301,35 +339,3 @@ None.
 ### Next concrete action
 
 After the merge, start PR-99 (D-724), the last PR before Gate 2.
-
-## Session 315: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-98, reviewer. Branch `feat/pr-98-damage-numbers-prompt`. PR #125, pending merge. Base `db8e8cd`.
-
-### What this session did, and why
-
-- Reviewed the code, tests, documents, comments, and frames of PR #125. No in-scope finding remains.
-- Added the review record for effective head `b446cdd` and this entry in one metadata commit (D-182).
-
-### State of the build
-
-- The local HUD and number-sight tests passed, 28 tests. The remote CI checks for work head `b446cdd` passed through documents-only tip `8e29146` (D-357).
-- The `review-gate` and dependent `evaluate` checks failed because the review record did not yet exist. They need a fresh run after this push.
-
-### In flight
-
-- The review record and this entry await the metadata commit and push to the PR branch.
-
-### Traps and gotchas
-
-- `GridRay.FirstSolid` throws when a march starts in rock. The grazing-edge test checks the step past the first open cell.
-- The PR tip includes documents after the effective work head. The review applies to `b446cdd`.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Wait for the review-gate checks, then give the owner the merge summary for PR #125.
