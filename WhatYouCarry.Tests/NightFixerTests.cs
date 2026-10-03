@@ -248,7 +248,7 @@ public sealed class NightFixerTests
     }
 
     /// <summary>
-    /// D-753, the night 37015330351. A session that exits 0 with no end mark resumes 3 times under its own session id,
+    /// D-769, the night 37015330351. A session that exits 0 with no end mark resumes 3 times under its own session id,
     /// and then the poll sends a notice and exits 1. The old poll took the exit 0 as the end, and sent no notice.
     /// </summary>
     [Fact]
@@ -275,7 +275,7 @@ public sealed class NightFixerTests
         }, [], withCheckout: true);
     }
 
-    /// <summary>A session that writes its end mark in its first resume ends the poll with that mark, and runs with no background tasks and a command limit of 6 hours (D-753).</summary>
+    /// <summary>A session that writes its end mark in its first resume ends the poll with that mark, and runs with no background tasks and a command limit of 6 hours (D-769).</summary>
     [Fact]
     public void ASessionThatWritesTheEndMarkEndsThePoll()
     {

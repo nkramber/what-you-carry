@@ -48,7 +48,7 @@ jobs:
     outputs:
       date: ${{ steps.plan.outputs.date }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Plan the seeds
         # D-564 to D-567: the UTC date of the night start selects the slice of every sweep. The record of main names the
         # failed seeds that this night carries. A night on a branch carries the seeds of main too, so its promotion
@@ -63,7 +63,7 @@ jobs:
       - name: Keep the record of main for each job
         # A re-run of this job uploads the record again under the same name, and that upload replaces the artifact of
         # the earlier attempt, as the sweep uploads do (F-155).
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: main-night
           path: ${{ runner.temp }}/main-night.json
@@ -97,7 +97,7 @@ jobs:
       SHARD: ${{ matrix.shard }}
       NIGHT_DATE: ${{ needs.plan.outputs.date }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Start the sweep result
         # The result holds the summary line and the failure line of this sweep. An empty failure file means that the
         # sweep did not end (D-567). The step comes before the build, so a broken build still leaves a result.
@@ -107,13 +107,13 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/sweep"
           : > "${RUNNER_TEMP}/sweep/bot-deaths.txt"
           : > "${RUNNER_TEMP}/sweep/seed-failures.txt"
-      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
       - name: Build
         run: dotnet build WhatYouCarry.slnx
       - name: Take the record of main from the plan
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: main-night
           path: ${{ runner.temp }}
@@ -148,7 +148,7 @@ jobs:
         # The crash text of a failed run lives in its log alone, and the runner is gone after the job (D-280). A sweep
         # that fails before its runs, or the seed sweep, has no logs, and the step says so instead of failing in silence.
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: bot-logs-${{ matrix.sweep }}-${{ matrix.shard }}
           path: bot-logs
@@ -158,7 +158,7 @@ jobs:
         # A re-run of the failed jobs of a night runs this shard again, and its result replaces the result of the
         # earlier attempt, so the record reads the newest attempt. Each shard has an artifact name of its own (D-655).
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: night-sweep-${{ matrix.sweep }}-${{ matrix.shard }}
           path: ${{ runner.temp }}/sweep/
@@ -178,11 +178,11 @@ jobs:
       # The status of the night record, which the job notify reads (D-642).
       status: ${{ steps.gather.outputs.status }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # The order check of a night on main asks git whether the record of main comes after the night commit (D-562).
           fetch-depth: 0
-      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
       - name: Build
@@ -190,13 +190,13 @@ jobs:
         run: dotnet build WhatYouCarry.Tools/WhatYouCarry.Tools.csproj
       - name: Take the record of main from the plan
         if: always()
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: main-night
           path: ${{ runner.temp }}
       - name: Take the result of each sweep
         if: always()
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: night-sweep-*
           path: ${{ runner.temp }}/sweeps
@@ -355,7 +355,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Send the Pushover notification
         uses: ./.github/actions/pushover
         with:

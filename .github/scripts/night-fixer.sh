@@ -4,7 +4,7 @@
 # Code session in a new worktree from origin/main. The session follows docs/runbooks/night-fixer-prompt.md: it fixes the
 # night, runs gitar and branch nights, then Codex rounds, and it sends a Pushover notice when the PR is ready to merge or
 # when it stops. It never merges, and the owner merges (D-524). The session ends with one line in its end mark. A session
-# that exits with no end mark resumes up to 3 times, and then the poll sends a notice (D-753).
+# that exits with no end mark resumes up to 3 times, and then the poll sends a notice (D-769).
 #
 # Usage: night-fixer.sh [--dry-run]
 # --dry-run prints the decision and starts nothing.
@@ -123,12 +123,12 @@ fi
 branch="fix/night-${run}"
 work="${state}/work-${run}"
 # The session writes one line to the end mark after its last notice. A session that exits with no end mark did not end
-# its procedure (D-753).
+# its procedure (D-769).
 end="${state}/end-${run}"
-# A fixed session id from the run id, so the poll can resume the session, and the owner can find it (D-753).
+# A fixed session id from the run id, so the poll can resume the session, and the owner can find it (D-769).
 session=$(printf '00000000-0000-4000-8000-%012d' "$run")
 # The session has no background tasks, because a background command stops when the reply ends the session. A command in
-# the foreground can run 6 hours, the limit of a hosted job, so a branch night or a review round fits (D-753).
+# the foreground can run 6 hours, the limit of a hosted job, so a branch night or a review round fits (D-769).
 session_env=(CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1 BASH_DEFAULT_TIMEOUT_MS=21600000 BASH_MAX_TIMEOUT_MS=21600000)
 resume_limit=3
 resume_prompt="Your last reply ended this session before its end mark, and the poll of the night fixer resumed it. Each background command stopped with that reply. Read the state of the worktree, the branch, the PR, and its checks. Then continue the procedure of the night fixer at the first step that did not end."
@@ -159,7 +159,7 @@ rc=$?
 set -e
 
 # A session that exits 0 with no end mark stopped in the middle of its procedure, as the session of the night
-# 37015330351 did. The poll resumes it, and a session that still has no end mark sends a notice (T-2, D-753).
+# 37015330351 did. The poll resumes it, and a session that still has no end mark sends a notice (T-2, D-769).
 resumes=0
 while [ "$rc" -eq 0 ] && [ ! -s "$end" ] && [ "$resumes" -lt "$resume_limit" ]; do
   resumes=$((resumes + 1))

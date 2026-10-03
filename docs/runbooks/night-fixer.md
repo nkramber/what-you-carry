@@ -8,9 +8,9 @@ A launchd job on the Mac Mini of the owner runs every 15 minutes. It fetches `or
 
 When the newest night on `main` failed, and no session took that night, the script starts one Claude Code session. The session runs in a new worktree on the branch `fix/night-<run>`, with the prompt `docs/runbooks/night-fixer-prompt.md`. It skips each permission prompt, because the owner chose that (D-643).
 
-The session has no background tasks, and a command in the foreground can run 6 hours (D-753). A reply of the session ends it, so a background command stops with that reply. The session id is `00000000-0000-4000-8000-` and the run id with zeros in front to 12 digits.
+The session has no background tasks, and a command in the foreground can run 6 hours (D-769). A reply of the session ends it, so a background command stops with that reply. The session id is `00000000-0000-4000-8000-` and the run id with zeros in front to 12 digits.
 
-The session writes one line to the end mark after its last notice. When the session exits 0 with no end mark, the poll resumes the same session up to 3 times. Then it sends the notice "the night fixer stopped" and exits 1 (D-753). A session that exits with an error sends that notice with no resume (D-645).
+The session writes one line to the end mark after its last notice. When the session exits 0 with no end mark, the poll resumes the same session up to 3 times. Then it sends the notice "the night fixer stopped" and exits 1 (D-769). A session that exits with an error sends that notice with no resume (D-645).
 
 The session fixes the night, runs the gitar pass and branch nights, and then runs Codex review rounds. It sends a Pushover notice when the PR is ready to merge, and when it stops (D-645). It never merges. The owner merges (D-524).
 
