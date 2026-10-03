@@ -2,6 +2,42 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 332: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Reviewed all five changed paths and the PR comments.
+- Found that `group-by: dependency-name` does not group security updates across directories. D-657 enables Dependabot security updates, and D-774 states the broader one-action-per-PR rule.
+- Added the review record with finding P2-1. The verdict is `Changes required` for effective head `33f81fe`.
+
+### State of the build
+
+- Remote head before this review commit: `15fe03a`.
+- The focused grouping test passed. The local full suite aborted after 1,902 tests when the test host crashed.
+- The document tests passed (261 tests). `ste-check` and `doc-gate` passed with no findings.
+- Hosted CI at `33f81fe` passed outside the known `night-gate` failure and the review-dependent checks. D-775 allows that night failure for this PR.
+- The review record and this handoff entry will be pushed together as one metadata commit.
+
+### In flight
+
+- The author must answer finding P2-1 before the review can approve this head.
+
+### Traps and gotchas
+
+- `group-by: dependency-name` covers version updates only. The repository also enables Dependabot security updates (D-657).
+- The PR has no focused roadmap entry.
+
+### Open questions that block progress
+
+None. The review records the scope gap as P2-1 for the author to answer.
+
+### Next concrete action
+
+Answer P2-1, then start the next author review round for PR #132.
+
 ## Session 331: 2026-10-03, Claude Code
 
 Author: Claude Code
@@ -322,36 +358,3 @@ None.
 ### Next concrete action
 
 After the owner confirms, run `gh pr merge 129 --auto --squash`, wait on the checks, and write the merge prompt of `one-pr-one-session`.
-
-## Session 322: 2026-09-28, Codex
-
-Author: Codex
-Session: PR-100, reviewer. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
-
-### What this session did, and why
-
-- Reviewed the complete PR-100 diff at effective head `a03c756` against the four roadmap exit tests and the affected contracts.
-- Found no in-scope defect. Added `docs/reviews/pr-128.md` with the provider gate, verified comments, findings, checks, and verdict.
-- Inspected the Tier 4 frame for exit test 3. The scavenger windup reads in the supplied frame (D-744).
-
-### State of the build
-
-- `main` is `9da1817`. CI, smoke, bit identity, asset QA, deterministic lint, STE, document gate, documents, night gate, and Gitar passed for PR head `fe46148`. The focused local tests passed 60 of 60. Local `asset-qa` and `det-lint` each report 0 findings.
-- The remote PR head after the metadata push is recorded in the review file and verified with `gh pr view`.
-
-### In flight
-
-- Owner review and merge confirmation for PR #128.
-
-### Traps and gotchas
-
-- The PR checks `review-gate` and `evaluate` failed before this review because the review record did not exist. The pushed record should satisfy those checks.
-- No supplied frame shows the Overseer swing because the timer-tester does not turn the camera (D-738). Exit test 3 checks the scavenger.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-Read the pushed review record and merge summary, then confirm the merge of PR #128.

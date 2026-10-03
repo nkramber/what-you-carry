@@ -1,5 +1,38 @@
 # Session handoff archive
 
+## Session 322: 2026-09-28, Codex
+
+Author: Codex
+Session: PR-100, reviewer. Branch `feat/pr-100-enemy-swing-clip`. PR #128, pending merge. Base `9da1817`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-100 diff at effective head `a03c756` against the four roadmap exit tests and the affected contracts.
+- Found no in-scope defect. Added `docs/reviews/pr-128.md` with the provider gate, verified comments, findings, checks, and verdict.
+- Inspected the Tier 4 frame for exit test 3. The scavenger windup reads in the supplied frame (D-744).
+
+### State of the build
+
+- `main` is `9da1817`. CI, smoke, bit identity, asset QA, deterministic lint, STE, document gate, documents, night gate, and Gitar passed for PR head `fe46148`. The focused local tests passed 60 of 60. Local `asset-qa` and `det-lint` each report 0 findings.
+- The remote PR head after the metadata push is recorded in the review file and verified with `gh pr view`.
+
+### In flight
+
+- Owner review and merge confirmation for PR #128.
+
+### Traps and gotchas
+
+- The PR checks `review-gate` and `evaluate` failed before this review because the review record did not exist. The pushed record should satisfy those checks.
+- No supplied frame shows the Overseer swing because the timer-tester does not turn the camera (D-738). Exit test 3 checks the scavenger.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Read the pushed review record and merge summary, then confirm the merge of PR #128.
+
 ## Session 321: 2026-09-28, Claude Code
 
 Author: Claude Code
