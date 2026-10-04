@@ -1,5 +1,179 @@
 # Session handoff archive
 
+## Session 332: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-133, reviewer. Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-102 diff at effective head `5cb1b0c`, the roadmap tests, the behavior contract, and the Gitar comment.
+- The provider gate passed. The review found P2-1: a nearby enemy that the blade cannot hit can hold the clearer in the leave branch without the stall recovery.
+- Added `docs/reviews/pr-133.md` with the finding and a `Blocked` verdict. D-774 and D-775 still await owner confirmation under D-644.
+
+### State of the build
+
+- Remote implementation head: `5cb1b0c`. The full local suite passed 2190 tests. The focused regression passed within that run.
+- CI, smoke, bit identity, bots, asset QA, deterministic lint, documents, doc gate, STE, Gitar, and the night gate passed. `evaluate` and `review-gate` failed because the review record did not exist yet.
+- The review record and this entry are the metadata commit. The PR head after the push is verified with `gh pr view`.
+
+### In flight
+
+- The author must address P2-1. The owner must confirm D-774 and D-775. The review gate must read the pushed record.
+
+### Traps and gotchas
+
+- `NearestLiving` uses feet distance and weapon reach. Blade hits also require vertical overlap. The leave branch strikes before it walks and skips the hunt stall check.
+- The seed 9153 regression passes, but it does not cover an enemy inside scalar reach and outside the blade's vertical band.
+
+### Open questions that block progress
+
+None. D-774 and D-775 await the owner under D-644.
+
+### Next concrete action
+
+The author addresses P2-1 and asks the owner to confirm D-774 and D-775. Then a new review checks the fix and the current PR head.
+
+## Session 331: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR-102, author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- The night 37122879232 on `main` failed at the carried seed 9153 of the full clearer, a softlock on floor 4 at the expiry (F-208). No job ended with a runner fault, so no re-run (D-585). The night 37015330351 of 2026-10-02 first read this seed, and D-770 left the fix to this night.
+- The trace of floor 4: the policy left at tick 9300 with a scavenger of six health in reach, and the scavenger held the doorway of one cell to the stairwell. The policy never swung while it left. Each swing of the scavenger rolled the body two meters back from the doorway, and the walk back took the ticks until the next swing. The run softlocked at tick 18048.
+- The fix: the strike of an enemy in reach comes before the walk out (D-774). Seed 9153 now kills the scavenger, leaves floor 4 near tick 9600, and dies on floor 5. Seed 9153 joins the extra fixed seeds (D-567). The roadmap id is PR-102 (D-775).
+- `FullClearerStrikesTheEnemyInReachWhileItLeaves` fails on the old policy: softlock on floor 4 after 18048 ticks. The two `night-seeds` command tests read an extra seeds file of their own in a temporary root, because the seed of D-567 broke their expected lists.
+- The fixer session of the night 37015330351 wrote the same fix in its worktree and never committed it (Session 325). This session verified the cause again on `04d17e9` with a trace, and took the fix with new ids.
+- No bisect names a commit: the seed first ran on 2026-10-02 as a slice seed, and it softlocks before PR-21 too. The leave rule of D-439 never struck while it left, since PR #85.
+- D-774 and D-775 are session answers under D-644, for the owner to confirm.
+
+### State of the build
+
+- Remote head: see the PR. Local: the full suite passed 2190 tests, and `det-lint`, `asset-qa`, and `ste-check` report 0 findings.
+- The local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000: 1703 bottoms, 4297 deaths, 0 softlocks, 0 crashes, in 8 min 54 s.
+- The simulation version stays at 19. PR #85 changed the same policy with no raise, and the bit-identity sweep plays the greedy descender and the coward.
+
+### In flight
+
+- The gitar pass, the branch night, and the Codex review, in the order of the night fixer runbook (D-643).
+
+### Traps and gotchas
+
+- A command test of `night-seeds` that reads the extra seeds of the checkout breaks on each seed of D-567. Give such a test a temporary root.
+- The strike in reach has no stall check. An enemy inside 1.6 meters that the blade cannot hit holds the policy, in the hunt before this PR and in the walk out after it. The sweep of 6000 seeds read none.
+- The worktree of the night 37015330351 still holds its uncommitted draft, with the stale ids D-753, D-754, and PR-101.
+
+### Open questions that block progress
+
+None. D-774 and D-775 wait for the confirmation of the owner under D-644.
+
+### Next concrete action
+
+The owner confirms D-774 and D-775, reads the review record, and merges PR #133. The promoted record of the branch night then makes the night gate green (D-557), and the next night on `main` runs seed 9153 from the extra seeds.
+
+## Session 330: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-101, reviewer. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `0034e16`.
+
+### What this session did, and why
+
+- Reviewed the night-fixer change at effective head `c112c23`, its tests, documents, and PR comments.
+- Added the review record. The provider gate passed, and the review found no defect in scope.
+
+### State of the build
+
+- The remote head at review start was `ad8c67d`. The review record and this entry are one metadata commit, verified with `gh pr view`. The effective head remains `c112c23`.
+- The focused test passed, 23 tests. Hosted CI, smoke, bit identity, bots, asset, lint, documents, doc-gate, STE, and Gitar passed. The night gate failed as D-770 permits.
+
+### In flight
+
+- The owner can merge PR #130 after the metadata checks pass. Exit test 4 runs after merge.
+
+### Traps and gotchas
+
+- The known night-gate failure is the only accepted failed check under D-770. Do not read it as a failed product check.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The owner can merge PR #130 under D-770. After the next failed night on `main`, record the result of exit test 4.
+
+## Session 329: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `0034e16`.
+
+### What this session did, and why
+
+- CI on `main` at `0034e16` passed: CI, smoke, bit identity, bots, `det-lint`, `asset-qa`, `ste-check`, and night promotion.
+- The Deck pulled `main` to `0034e16` over SSH (D-606). The command link `~/.local/bin/what-you-carry` now finds `launch/what-you-carry.sh`.
+- Merged `main` into this branch. D-753 and D-754 of this branch moved to D-769 and D-770 in each file, because PR-22 holds D-753 to D-767 (D-772).
+- D-771 cited D-754 as the same rule for PR #130. That citation now names D-770. D-772 and Session 326 keep the old ids, because they name the move.
+- Session 325 went back in its place under Session 326. `handoff-rotate` moved Sessions 318 and 319 to the archive.
+
+### State of the build
+
+- Remote head: see the PR. Locally, the full suite passed, 2,189 tests, after the rotation. `det-lint`, `asset-qa`, and `ste-check` each report 0 findings.
+- The night record of `main` reads failure, so `night-gate` stays red, and the owner merges over it (D-770).
+
+### In flight
+
+- At `ad8c67d`, each check passed outside `night-gate`, `evaluate`, and `review-gate`. Gitar approved with no finding, and a PR comment answered its CI note with D-251 and D-770.
+- The cross-provider review of Session 330 gives `Ready for owner merge` for the effective head `c112c23`.
+- The owner merges PR #130 with the ruleset bypass, over the red `night-gate` check alone (D-770).
+
+### Traps and gotchas
+
+- D-768 to D-773 are now in id order, but D-769 and D-770 carry the date 2026-10-02 under D-768 of 2026-10-03.
+- The chore branch `chore/action-pins-after-bumps` holds Session 326 too, and it renumbers its entry (D-772).
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.
+
+## Session 328: 2026-10-03, Codex
+
+Author: Codex
+Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
+
+### What this session did, and why
+
+- Re-reviewed PR #131 at effective code head `93dea9b` after the Windows and Deck launch reports arrived.
+- Verified the closed shell finding, reviewed the new build path, and updated the existing review record to `Ready for owner merge`.
+
+### State of the build
+
+- The effective code head was `93dea9b`. The review and handoff were pushed in metadata commit `f8d3217`; commit `42cf24c` records the post-push check results. The current remote head was verified as `42cf24c`.
+- Launcher tests passed, 15 tests. STE check passed with 0 findings.
+- Hosted build and test, bit identity, bots, asset, lint, document, and smoke checks passed at the code head. After publication, Gitar, `review-gate`, `evaluate`, asset, lint, document, and STE checks passed. Metadata-tip code checks skipped. `night-gate` failed as allowed by D-771.
+
+### In flight
+
+- The review record and handoff are published. The final check update is also published.
+
+### Traps and gotchas
+
+- Hosted PowerShell tests use fakes. The owner reports a real Windows launch and a Deck launch at `93dea9b`.
+- The known `night-gate` failure remains allowed by D-771.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+The review is ready for the owner merge decision; D-771 allows the known `night-gate` failure.
+
 ## Session 327: 2026-10-03, Codex
 
 Author: Codex

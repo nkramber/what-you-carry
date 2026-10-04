@@ -1,6 +1,8 @@
 # Dependabot proposes a new pin for each action of the workflows and the local actions (D-636). Each use names a full
 # commit with its release in a remark, and Dependabot updates both. Each proposal is a PR, and every gate of a PR
 # binds it: CI, the automated pass, the cross-provider review, and a decision entry for the new version (G-16).
+# One PR bumps one action in every directory, so a merge never leaves one action on two pins (D-777).
+# A security update moves each action with an advisory in every directory in one PR too (D-779).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -9,3 +11,12 @@ updates:
       - "/.github/actions/*"
     schedule:
       interval: weekly
+    groups:
+      each-action:
+        patterns:
+          - "*"
+        group-by: dependency-name
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
