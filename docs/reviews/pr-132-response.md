@@ -21,3 +21,7 @@ D-776.
 ## Final head
 
 The correction commit is the new effective head. The handoff entry of Session 331 names the round.
+
+## The merge of main after PR #133
+
+PR #133 merged first and took D-774 to D-776 on `main`. The merge of `main` into this branch moves the ids of this branch to the next free ids, as D-772 orders for this branch. D-774 is now D-777, D-775 is now D-778, and D-776 is now D-779. The text of each decision stays the same. The sections above keep the ids of round 1. The handoff entries of Sessions 331 to 333 of this branch are now Sessions 338 to 340, with the new ids. `.github/dependabot.yml` and `ActionDecisionTests` cite the new ids in their remarks. The change moves the effective head, so the review reads the new head.

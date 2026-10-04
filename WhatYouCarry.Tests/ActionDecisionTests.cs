@@ -132,7 +132,7 @@ public sealed class ActionDecisionTests
     }
 
     /// <summary>
-    /// One Dependabot PR bumps one action in every directory (D-774). The bumps #112 and #115 moved setup-dotnet in two PRs,
+    /// One Dependabot PR bumps one action in every directory (D-777). The bumps #112 and #115 moved setup-dotnet in two PRs,
     /// and the merge of #115 alone left the action on two pins.
     /// </summary>
     [Fact]
@@ -151,7 +151,7 @@ public sealed class ActionDecisionTests
     }
 
     /// <summary>
-    /// One Dependabot security PR moves each action with an advisory in every directory (D-776). The group of
+    /// One Dependabot security PR moves each action with an advisory in every directory (D-779). The group of
     /// <c>group-by: dependency-name</c> applies to version updates alone, so a security update needs a group of its own.
     /// </summary>
     [Fact]

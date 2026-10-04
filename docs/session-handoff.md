@@ -2,14 +2,49 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
-## Session 333: 2026-10-03, Codex
+## Session 341: 2026-10-04, Claude Code
+
+Author: Claude Code
+Session: PR-132, correction author. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `f6f3df1`.
+
+### What this session did, and why
+
+- PR #132 had a merge conflict with `main` after PR #133 merged. Merged `main` at `f6f3df1` into this branch.
+- PR #133 took D-774 to D-776 on `main`. This branch moved its ids to the next free ids, as D-772 orders: D-774 to D-777, D-775 to D-778, and D-776 to D-779. The text of each decision stays the same. D-636 now names D-777.
+- `.github/dependabot.yml` and `ActionDecisionTests` cite D-777 and D-779 in their remarks. `docs/reviews/pr-132-response.md` records the move.
+- The branch entries of Sessions 331 to 333 collided with the entries of PR #133. They are now Sessions 338 to 340, with the new ids.
+
+### State of the build
+
+- Locally after the merge: the build, the full suite, `ste-check`, and `det-lint` are green.
+- The remark change moves the effective head, so the approval of `6da30fe` does not cover it. `review-gate` reads the new head.
+- The night runs of PR #133 passed at seed 9153. The `night-gate` check of this PR passed at `02cafd1`.
+
+### In flight
+
+- A new cross-provider review of the merge head, after the gitar pass and green CI.
+
+### Traps and gotchas
+
+- Review records keep the ids of their round. `docs/reviews/pr-132.md` cites D-774 to D-776 for the decisions that are now D-777 to D-779.
+- Each parallel branch takes D-# ids from the same free range. Look at `main` for the next free id before each merge.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Run `make gitar-wait PR=132`. When each check but the Review gate workflow is green, run `make codex-review PR=132`.
+
+## Session 340: 2026-10-03, Codex
 
 Author: Codex
 Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `04d17e9`.
 
 ### What this session did, and why
 
-- Re-reviewed the correction at `6da30fe` and verified that the security group meets D-776.
+- Re-reviewed the correction at `6da30fe` and verified that the security group meets D-779.
 - Closed P2-1 in the existing review record. The new verdict is `Ready for owner merge` for `6da30fe`.
 
 ### State of the build
@@ -19,16 +54,16 @@ Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pend
 - The Documents category passed, 262 tests, with no skips after the review record format fix.
 - `ste-check` and `doc-gate` passed with no findings.
 - Hosted CI, smoke, bit identity, sweeps, bots, asset QA, deterministic lint, documents, STE, Dependabot validation, and Gitar passed at `6da30fe`.
-- `night-gate` failed on the carried seed 9153, as D-775 permits. `review-gate` and `evaluate` failed before this record approved the current head.
+- `night-gate` failed on the carried seed 9153, as D-778 permits. `review-gate` and `evaluate` failed before this record approved the current head.
 - This review record and handoff entry will be pushed in one metadata commit.
 
 ### In flight
 
-- Verify the post-push checks and Gitar review. The owner can merge over the known night failure under D-775 when every other gate passes.
+- Verify the post-push checks and Gitar review. The owner can merge over the known night failure under D-778 when every other gate passes.
 
 ### Traps and gotchas
 
-- The security group with pattern `"*"` can group more than one action in a PR. D-776 accepts this behavior.
+- The security group with pattern `"*"` can group more than one action in a PR. D-779 accepts this behavior.
 - The PR has no focused roadmap entry.
 
 ### Open questions that block progress
@@ -37,9 +72,9 @@ None.
 
 ### Next concrete action
 
-Read the post-push checks once. Report any failure beyond the night gate that D-775 allows.
+Read the post-push checks once. Report any failure beyond the night gate that D-778 allows.
 
-## Session 332: 2026-10-03, Codex
+## Session 339: 2026-10-03, Codex
 
 Author: Codex
 Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `04d17e9`.
@@ -47,7 +82,7 @@ Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pend
 ### What this session did, and why
 
 - Reviewed all five changed paths and the PR comments.
-- Found that `group-by: dependency-name` does not group security updates across directories. D-657 enables Dependabot security updates, and D-774 states the broader one-action-per-PR rule.
+- Found that `group-by: dependency-name` does not group security updates across directories. D-657 enables Dependabot security updates, and D-777 states the broader one-action-per-PR rule.
 - Added the review record with finding P2-1. The verdict is `Changes required` for effective head `33f81fe`.
 
 ### State of the build
@@ -55,7 +90,7 @@ Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pend
 - Remote head before this review commit: `15fe03a`.
 - The focused grouping test passed. The local full suite aborted after 1,902 tests when the test host crashed.
 - The document tests passed (261 tests). `ste-check` and `doc-gate` passed with no findings.
-- Hosted CI at `33f81fe` passed outside the known `night-gate` failure and the review-dependent checks. D-775 allows that night failure for this PR.
+- Hosted CI at `33f81fe` passed outside the known `night-gate` failure and the review-dependent checks. D-778 allows that night failure for this PR.
 - The post-push Gitar review approved the work head and noted that security updates remain ungrouped. The review record includes the verified concern as P2-1.
 - The review record and this handoff entry will be pushed together as one metadata commit.
 
@@ -76,7 +111,7 @@ None. The review records the scope gap as P2-1 for the author to answer.
 
 Answer P2-1, then start the next author review round for PR #132.
 
-## Session 331: 2026-10-03, Claude Code
+## Session 338: 2026-10-03, Claude Code
 
 Author: Claude Code
 Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `04d17e9`.
@@ -84,23 +119,23 @@ Session: Dependabot group, author. Branch `chore/action-pins-after-bumps`. PR #1
 ### What this session did, and why
 
 - Merged `main` at `04d17e9` into this branch, as D-772 orders. The workflow pins and `ActionDecisionTests` of `main` stand (D-768).
-- The branch dropped its pin fix and its D-755 and D-757. Its D-756 is now D-774, and its Session 326 entry is now this entry.
-- The branch keeps the group `each-action` of `.github/dependabot.yml`: one PR bumps one action in every directory (D-774). `DependabotBumpsOneActionInEveryDirectoryInOnePr` reads the group.
-- Round 1 of the cross-provider review (Session 332) gave `Changes required` at `33f81fe`: P2-1, security updates do not use the group. The finding holds, because `group-by` applies to version updates alone. The owner chose the group `security` with `applies-to: security-updates` (D-776). `DependabotGroupsSecurityUpdatesInEveryDirectory` reads it, and it fails on the old file. `docs/reviews/pr-132-response.md` answers the round.
+- The branch dropped its pin fix and its D-755 and D-757. Its D-756 is now D-777, and its Session 326 entry is now this entry.
+- The branch keeps the group `each-action` of `.github/dependabot.yml`: one PR bumps one action in every directory (D-777). `DependabotBumpsOneActionInEveryDirectoryInOnePr` reads the group.
+- Round 1 of the cross-provider review (Session 339) gave `Changes required` at `33f81fe`: P2-1, security updates do not use the group. The finding holds, because `group-by` applies to version updates alone. The owner chose the group `security` with `applies-to: security-updates` (D-779). `DependabotGroupsSecurityUpdatesInEveryDirectory` reads it, and it fails on the old file. `docs/reviews/pr-132-response.md` answers the round.
 - Round 2 gives `Ready for owner merge` for the effective head `6da30fe`, with P2-1 fixed.
 - PR-101 exit test 4 fails. The night 37122879232 on `main` at `04d17e9` failed at 12:36 UTC. The poll started its session at 12:50 UTC as PID 20293, Claude Code 2.1.288. After 3 hours the process had 0.19 seconds of CPU time, an empty session log, and no transcript. Its main thread waited in one `openat` call. The poll runs `claude -p` with no time limit, so no end mark, no resume, and no notice came (T-2).
 
 ### State of the build
 
 - Remote head: see the PR. Locally, the full suite, `det-lint`, `asset-qa`, and `ste-check` are green after the merge.
-- The night record of `main` still reads failure at the carried seed 9153, so `night-gate` stays red. The owner chose a review now and a merge over that check alone (D-775).
+- The night record of `main` still reads failure at the carried seed 9153, so `night-gate` stays red. The owner chose a review now and a merge over that check alone (D-778).
 - At `33f81fe`, each check passed outside `night-gate`, `evaluate`, and `review-gate`. Gitar approved `33f81fe` and `15fe03a` with no finding, and a PR comment answered its CI note with D-251. No `Gitar review` comment was necessary.
 - Locally, after the P2-1 correction, the full suite passed, 2,191 tests.
 - At `6da30fe`, each check passed outside `night-gate`, `evaluate`, and `review-gate`, and Gitar approved with no finding.
 
 ### In flight
 
-- At `1602b56`, `review-gate`, `evaluate`, and Gitar passed. The owner holds the merge of PR #132 until the cause of the fixer hang is known. D-775 still permits the merge over the red `night-gate` check.
+- At `1602b56`, `review-gate`, `evaluate`, and Gitar passed. The owner holds the merge of PR #132 until the cause of the fixer hang is known. D-778 still permits the merge over the red `night-gate` check.
 - PID 20293 still waits on the prompt. An answer of Allow lets the session of the night 37122879232 continue.
 
 ### Traps and gotchas
@@ -117,251 +152,216 @@ None.
 
 A fresh session fixes the cause in its own PR: the fixer checkout moves off the removable volume, and the session start gets a time limit with a notice. After that, the owner decides the merge of PR #132.
 
-## Session 330: 2026-10-03, Codex
-
-Author: Codex
-Session: PR-101, reviewer. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `0034e16`.
-
-### What this session did, and why
-
-- Reviewed the night-fixer change at effective head `c112c23`, its tests, documents, and PR comments.
-- Added the review record. The provider gate passed, and the review found no defect in scope.
-
-### State of the build
-
-- The remote head at review start was `ad8c67d`. The review record and this entry are one metadata commit, verified with `gh pr view`. The effective head remains `c112c23`.
-- The focused test passed, 23 tests. Hosted CI, smoke, bit identity, bots, asset, lint, documents, doc-gate, STE, and Gitar passed. The night gate failed as D-770 permits.
-
-### In flight
-
-- The owner can merge PR #130 after the metadata checks pass. Exit test 4 runs after merge.
-
-### Traps and gotchas
-
-- The known night-gate failure is the only accepted failed check under D-770. Do not read it as a failed product check.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-The owner can merge PR #130 under D-770. After the next failed night on `main`, record the result of exit test 4.
-
-## Session 329: 2026-10-03, Claude Code
+## Session 337: 2026-10-03, Claude Code
 
 Author: Claude Code
-Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `0034e16`.
+Session: PR-102, author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
 
 ### What this session did, and why
 
-- CI on `main` at `0034e16` passed: CI, smoke, bit identity, bots, `det-lint`, `asset-qa`, `ste-check`, and night promotion.
-- The Deck pulled `main` to `0034e16` over SSH (D-606). The command link `~/.local/bin/what-you-carry` now finds `launch/what-you-carry.sh`.
-- Merged `main` into this branch. D-753 and D-754 of this branch moved to D-769 and D-770 in each file, because PR-22 holds D-753 to D-767 (D-772).
-- D-771 cited D-754 as the same rule for PR #130. That citation now names D-770. D-772 and Session 326 keep the old ids, because they name the move.
-- Session 325 went back in its place under Session 326. `handoff-rotate` moved Sessions 318 and 319 to the archive.
+- The hand-over of PR #133, the night fix of seed 9153. Review round 3 (Session 336) reads `Ready for owner merge` for the effective head `db623c8`. No finding is open.
+- The PR holds three changes of the full clearer: the strike before the walk out (D-774), the drop of an enemy after ten seconds of strikes that hurt nothing (D-776), and the count that reads the sum of the health of the enemies. Seed 9153 joins the extra fixed seeds (D-567). The roadmap id is PR-102 (D-775).
+- Sessions 331, 333, and 335 hold the rounds of this session. The response file `docs/reviews/pr-133-response.md` answers P2-1 and P2-2.
+- The notice "ready to merge" goes to the owner after this entry, with the PR link and the session answers D-774, D-775, and D-776 (D-644).
 
 ### State of the build
 
-- Remote head: see the PR. Locally, the full suite passed, 2,189 tests, after the rotation. `det-lint`, `asset-qa`, and `ste-check` each report 0 findings.
-- The night record of `main` reads failure, so `night-gate` stays red, and the owner merges over it (D-770).
+- Remote head: see the PR. The effective head is `db623c8`, and this entry is a metadata commit after the review record `c46901f`.
+- The branch nights 37140330448, 37143136198, 37144818723, and 37147689444 passed at `b384bae`, `5e26c7f`, `86d9b99`, and `db623c8`, each with seed 9153 in the list. The record `night-branch/fix/night-37122879232` reads success at `db623c8`.
+- Every check of `db623c8` passed but `evaluate` and `review-gate`, which waited for the approving record. The local suite passed 2192 tests, and the three local sweeps of 6000 full-clearer seeds read 0 softlocks and 0 crashes.
 
 ### In flight
 
-- At `ad8c67d`, each check passed outside `night-gate`, `evaluate`, and `review-gate`. Gitar approved with no finding, and a PR comment answered its CI note with D-251 and D-770.
-- The cross-provider review of Session 330 gives `Ready for owner merge` for the effective head `c112c23`.
-- The owner merges PR #130 with the ruleset bypass, over the red `night-gate` check alone (D-770).
+- The owner merge of PR #133 (D-524). The fixer never merges.
 
 ### Traps and gotchas
 
-- D-768 to D-773 are now in id order, but D-769 and D-770 carry the date 2026-10-02 under D-768 of 2026-10-03.
-- The chore branch `chore/action-pins-after-bumps` holds Session 326 too, and it renumbers its entry (D-772).
+- The merge needs the ruleset bypass for no check: the night gate of this PR is green by its branch night (D-538). After the merge, the promotion of D-557 makes that night the record of `main`, because each commit after `db623c8` is in the skip set.
+- The three decisions of this PR are session answers under D-644. The owner confirms them at the merge, or changes them with a new D-#.
 
 ### Open questions that block progress
 
-None.
+None. D-774, D-775, and D-776 wait for the confirmation of the owner under D-644.
 
 ### Next concrete action
 
-After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.
+The owner reads the merge summary in the PR description, confirms D-774 to D-776, and merges PR #133. The next night on `main` then runs seed 9153 from the extra seeds.
 
-## Session 328: 2026-10-03, Codex
+## Session 336: 2026-10-03, Codex
 
 Author: Codex
-Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
+Session: PR-133, reviewer, round 3. Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
 
 ### What this session did, and why
 
-- Re-reviewed PR #131 at effective code head `93dea9b` after the Windows and Deck launch reports arrived.
-- Verified the closed shell finding, reviewed the new build path, and updated the existing review record to `Ready for owner merge`.
+- Reviewed the correction of P2-2. `FullClearerCountsAHitOnAnotherEnemy` passes on `db623c8`, and P2-2 is fixed.
+- Rechecked the resolved Gitar thread. The health sum answers the target-swap claim, and the floor-wide count matches D-776.
+- The isolated pre-fix test run did not compile because the historical worktree lacked Godot references. The author reports that the new test fails on the old count before tick 1000.
+- Updated the review record to approve the effective head `db623c8`. D-774, D-775, and D-776 remain session answers for the owner to confirm at merge.
 
 ### State of the build
 
-- The effective code head was `93dea9b`. The review and handoff were pushed in metadata commit `f8d3217`; commit `42cf24c` records the post-push check results. The current remote head was verified as `42cf24c`.
-- Launcher tests passed, 15 tests. STE check passed with 0 findings.
-- Hosted build and test, bit identity, bots, asset, lint, document, and smoke checks passed at the code head. After publication, Gitar, `review-gate`, `evaluate`, asset, lint, document, and STE checks passed. Metadata-tip code checks skipped. `night-gate` failed as allowed by D-771.
+- Remote head at close: the metadata commit that carries this entry and the review record. Effective head: `db623c8561eb2a9648fb33b6fa47cb810809099e`.
+- The focused regression passed 1 test. Current-head CI passed Linux, Windows, macOS, the sweeps, smoke, bit identity, bots, asset QA, lint, documents, doc gate, STE, Gitar, and night gate.
+- `evaluate` and `review-gate` passed after this approving review record reached the PR branch. Heavy jobs skipped the metadata commit.
 
 ### In flight
 
-- The review record and handoff are published. The final check update is also published.
+- PR #133 awaits owner merge. The review record and this entry are published in one metadata commit.
+- The owner confirms D-774, D-775, and D-776 at merge under D-644.
 
 ### Traps and gotchas
 
-- Hosted PowerShell tests use fakes. The owner reports a real Windows launch and a Deck launch at `93dea9b`.
-- The known `night-gate` failure remains allowed by D-771.
+- The old isolated worktree cannot compile the test project without Godot references. Do not report that attempt as a test failure.
+- The review applies to effective head `db623c8`; the metadata commit does not change it.
 
 ### Open questions that block progress
 
-None.
+None. The owner confirms D-774, D-775, and D-776 at merge under D-644.
 
 ### Next concrete action
 
-The review is ready for the owner merge decision; D-771 allows the known `night-gate` failure.
+The owner reads the review record, confirms the session answers, and decides whether to merge PR #133.
 
-## Session 327: 2026-10-03, Codex
-
-Author: Codex
-Session: PR #131, reviewer. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
-
-### What this session did, and why
-
-- Reviewed all changed paths, tests, documents, PR comments, and the current CI evidence for PR #131.
-- Added the review record. It records no code finding, but blocks on the owner's Windows PC launch test.
-- Corrected two action-version counts in the PR description. D-768 lists five actions.
-
-### State of the build
-
-- The remote review metadata commit is `15e83c8`. The reviewed code head is `e8396e2`. The local full suite passed, 2,186 tests. Hosted build, test, bit-identity, bot, asset, lint, document, and smoke checks passed on the code head.
-- The `night-gate` check failed on the known night records. D-771 permits this failure. On metadata tip `15e83c8`, Gitar, `asset-qa`, `det-lint`, `doc-gate`, `documents`, and `ste-check` passed. Code-only checks skipped.
-- The review-gate and `evaluate` checks failed because the record verdict is `Blocked` pending the owner's Windows PC test.
-- The post-push Gitar dashboard approved the head and marked the shell finding as closed.
-
-### In flight
-
-- The owner Windows PC launch test remains in flight.
-
-### Traps and gotchas
-
-- The PowerShell CI tests use fakes. They do not run the installer against WindowsApps or start a real game.
-- The Deck shortcut and SSH test runs share `~/what-you-carry`. Each shortcut start checks out `main`.
-
-### Open questions that block progress
-
-The owner must report the Windows PC launch test before the review can approve the Windows launcher.
-
-### Next concrete action
-
-Run the Windows launch procedure on a Windows PC, then update the review record with that evidence.
-
-## Session 326: 2026-10-03, Claude Code
+## Session 335: 2026-10-03, Claude Code
 
 Author: Claude Code
-Session: PR #131, author. Branch `fix/action-pins-and-launch`. PR #131, pending merge. Base `b58a68b`.
+Session: PR-102, correction author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
 
 ### What this session did, and why
 
-- PRs #110, #111, #113, #114, and #115 of Dependabot merged with CI red on `main` (F-206). `ActionDecisionTests` held the old pins as text, and `ci-skip` named setup-dotnet v6.0.0 while each workflow named v5.4.0.
-- PR #131 brings the setup-dotnet v6.0.0 of the Dependabot PR #112 to each workflow. The test now holds the five new pins. D-768 records the versions and revises in part D-619, D-620, and D-636.
-- Checked each new pin against the commit of its release tag, and read the breaking changes of each major. The night downloads by name or by pattern, so the path change of download-artifact v5 does not apply.
-- The owner asked for the launch work in the same PR, with no decision entry for the second concern. `launch/what-you-carry.sh` serves the Deck, and `launch/what-you-carry.ps1` serves Windows. Each updates to `main`, builds, imports, and plays. `LauncherTests` covers both with fakes.
-- Gitar does not review a PR that a bot opens. The commits moved from the Dependabot PR #112 to PR #131, and PR #112 closes (D-773).
-- The README has one procedure for each machine. The Mac keeps `make play`, because the work sessions share its checkout.
+- Answered review round 2 of PR #133 (Session 334). P2-2 has full merit: the change of the stall count to the health sum had no test that failed on the count that read the selected enemy alone (T-3).
+- `FullClearerCountsAHitOnAnotherEnemy` plays floor 1 of seed 6 with harmless weapons, and every 120 ticks it takes one point of health off the living enemy farthest from the body. The policy drops no enemy. On the count of `5e26c7f` it dropped enemy 3 at tick 744.
+- A probe of 80 seeds with weapons of one damage point read no drop at either count, so natural play tells the two counts apart on no seed. The hit through `Enemy.TakeHit` stands in for the hit on the other enemy of a pair.
+- The response file holds P2-2. The same session wrote rounds 0 and 1 (Sessions 331 and 333).
+- The gitar pass of `86d9b99` approved, and gitar confirmed the health sum in its thread, which is resolved. The branch night 37144818723 passed at `86d9b99` with seed 9153 in the list.
 
 ### State of the build
 
-- The remote head is the branch tip of this PR. Locally, the full suite, `det-lint`, `asset-qa`, and `ste-check` are green.
-- The Deck ran the script over SSH: from the detached `34c2ddf` to `main` at `b58a68b`, the build, the import, and a play session that the test exit ended with code 0.
-- The owner ran the Windows test. The install, the Godot hash, and the command on the path passed. The PC had SDK 10.0.401 alone, and the build named the cause. After the winget install of 10.0.400, the Godot step `--build-solutions` failed with no build log (F-207). The game then started with `dotnet build` alone, so both scripts now skip the Godot step.
+- Remote head: see the PR. Local: the full suite passed 2192 tests, and `det-lint`, `asset-qa`, and `ste-check` report 0 findings. Core did not change in this round, so the sweep of Session 333 stands.
+- The test commit moves the effective head, so the branch night runs again at the new head (D-547).
 
 ### In flight
 
-- The owner ran `what-you-carry -NoUpdate` on Windows at `93dea9b` from the home directory: the build, then the game on Vulkan and WASAPI. The test exit ended the session at tick 115 with no error. The Windows test of Session 327 passed.
-- The Deck ran the script of `93dea9b` over SSH: the update to `main`, the build, and a play session that the test exit ended with code 0. The untracked test copy is gone, and the checkout is clean.
-- The automated pass, then `make codex-review PR=131`. CI was green at `78d02b1` on PR #112 outside `night-gate`, `evaluate`, and `review-gate`. PR #131 merges over the red night gate alone (D-771).
-- The merge order of D-772: PR #131, PR #130, the chore branch with the Dependabot group alone, then PR-22.
+- The gitar pass of the test commit, the fourth branch night, and review round 3 (D-643).
 
 ### Traps and gotchas
 
-- Until the merge and one pull on the Deck, the command link `~/.local/bin/what-you-carry` and the desktop shortcut point to a file that does not exist.
-- The play shortcut on the Deck and the SSH test runs share `~/what-you-carry`. Each start of the shortcut checks out `main`.
-- The old desktop shortcut "The Thing Below" starts the repository `nkramber/the-thing-below`, not this game.
-- The PowerShell tests run on the Windows leg alone. No `pwsh` is on the Mac.
-- PR #130 must move D-753 and D-754 to D-769 and D-770 before its merge. The chore branch holds session 326 too, and it renumbers its entry (D-772).
+- A regression test of the count needs a hit that the strike does not select. `Enemy.TakeHit` is public, and the test calls it on the farthest living enemy between two ticks of the loop.
+- The policy drops an enemy at tick 744 of seed 6 with harmless weapons when no hit lands, so a test of the count needs a hit at least every 600 strike ticks.
 
 ### Open questions that block progress
 
-None.
+None. D-774, D-775, and D-776 wait for the confirmation of the owner under D-644.
 
 ### Next concrete action
 
-After the merge, run `git -C ~/what-you-carry pull --ff-only origin main` on the Deck over SSH, so that the shortcut finds its script.
+Review round 3 reads the test. Then the owner confirms D-774 to D-776, reads the review record, and merges PR #133.
 
-## Session 325: 2026-10-02, Claude Code
-
-Author: Claude Code
-Session: PR-101, author. Branch `fix/fixer-session-end`. PR #130, pending merge. Base `4043785`.
-
-### What this session did, and why
-
-- The night 37015330351 on `main` failed at the carried seed 9153 of the full clearer. The night notice of D-642 came: the job `notify` passed. This is the first part of PR-91 exit test 24 (D-736).
-- The fixer session of that night found the cause and wrote a fix, but it stopped before a commit. It started the sweep and the full suite in the background, and its reply then ended `claude -p` with exit 0. The poll sent no notice. The fixer part of PR-91 exit test 24 failed.
-- The fix: no background tasks, a command limit of 6 hours, an end mark, and up to 3 resumes of the same session, then a stop notice (D-769).
-- The owner leaves the night fix for the next failed night, as a test of the fixer, and merges this PR over the red night gate (D-770).
-
-### State of the build
-
-- Remote head: see the PR. The 23 `NightFixerTests` pass. The new test of the missing end mark fails on the poll of `main`.
-- The night record of `main` reads failure, so `night-gate` stays red (D-770).
-
-### In flight
-
-- The CI of PR #130 waits for a fix of `main`. The five Dependabot merges #110, #111, #113, #114, and #115 at 04:39 to 04:40 UTC on 2026-10-03 left `main` red at `b58a68b`, with six failed Documents tests. The owner chose a new PR that keeps the bumps. After it merges, merge `main` into this branch, wait for green CI, and run `make codex-review PR=130`.
-- Gitar approved the work head `b1a56c1` with no finding.
-- The fixer draft of the night 37015330351 stays uncommitted in `~/Library/Application Support/wyc-night-fixer/work-37015330351` on the Mac Mini, on the local branch `fix/night-37015330351`. Its handoff text names a PR #130 that never opened.
-
-### Traps and gotchas
-
-- A branch of this kind must not start with `fix/night-`. The poll counts each open PR from such a branch as a fix PR, and it queues the night.
-- The auto mode of the harness blocked an edit and a live test of the poll as an unsafe agent. The owner moved the session to the accept-edits mode.
-- The live behavior of `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` and `BASH_MAX_TIMEOUT_MS` comes from the code of the CLI 2.1.283, not from a live run. The next failed night tests it.
-
-### Open questions that block progress
-
-None.
-
-### Next concrete action
-
-After the merge, read the poll log `~/Library/Logs/wyc-night-fixer.log` and the session log of the next failed night. Record PR-101 exit test 4 in the handoff entry.
-
-## Session 324: 2026-09-28, Codex
+## Session 334: 2026-10-03, Codex
 
 Author: Codex
-Session: PR-21, reviewer. Branch `feat/pr-21-items-tiers-affixes`. PR #129, pending merge. Base `bc41332`.
+Session: PR-133, reviewer, round 2. Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
 
 ### What this session did, and why
 
-- Reviewed the complete code, content, tests, documents, comments, and exit tests of PR #129 at effective head `240d987`.
-- Found no in-scope defect. Added the review record with `Ready for owner merge` after Gitar replaced its missing-record comment with an approval notice.
+- Reviewed the correction at effective head `86d9b99` and verified the claim on the resolved Gitar thread.
+- Confirmed that the health sum detects a hit on either enemy when two enemies trade the nearest place.
+- Found P2-2: no regression test proves that a hit on another target resets the strike count.
+- Updated `docs/reviews/pr-133.md`. P2-1 is fixed in `5e26c7f`. The current verdict is `Changes required` for P2-2.
 
 ### State of the build
 
-- PR head `40cdf97` has passing three-platform CI, smoke, and bit-identity checks, plus passing content, document, night, and Gitar checks. Metadata head `7e84c41` passed Gitar, `evaluate`, and `review-gate`, plus all other required checks.
-- The focused item tests passed 10 tests. Local `det-lint`, `ste-check`, and `asset-qa` each report 0 findings.
-- The review record and this entry are in one metadata commit. The later metadata amendment records the final checks.
+- Remote code head before this metadata push: `86d9b9978ccf204b728f672447ae4153cbef8c32`.
+- Current-head CI passes for build, tests, sweeps, smoke, bit identity, bots, asset QA, lint, documents, doc gate, STE, Gitar, and night gate. `evaluate` and `review-gate` fail because no approving record covers the open finding.
+- The focused full-clearer tests pass 6 tests at the current head and at `5e26c7f`. The suite therefore does not prove the health-sum correction.
+- The review record and this entry are one metadata commit, pushed to `origin/fix/night-37122879232` and verified with `gh pr view`.
 
 ### In flight
 
-- The owner can review the record and merge PR #129.
+- The author adds a test for a hit on an enemy other than the nearest target, then requests a new review round.
+- The owner confirms D-774, D-775, and D-776 at the merge under D-644.
 
 ### Traps and gotchas
 
-- The PR tip `40cdf97` changes documents after effective code head `240d987`.
-- PR-22 owns the equipment hooks and swift clip timing. PR-26 owns enemy drops and loadouts.
+- The harmless-weapon test cannot cover a hit on another enemy. A regression test must fail at `5e26c7f`.
+- The floor-wide count across encounters follows D-776. The Gitar comment's target-swap concern is fixed by the health sum.
 
 ### Open questions that block progress
 
-None.
+P2-2 blocks approval until the author adds the regression test. No open OQ applies.
 
 ### Next concrete action
 
-The owner can review and merge PR #129.
+The author adds the test and requests a new review round on the new effective head.
+
+## Session 333: 2026-10-03, Claude Code
+
+Author: Claude Code
+Session: PR-102, correction author, the night fixer of the night 37122879232 (D-643). Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Answered review round 1 of PR #133 (Session 332). P2-1 has full merit: an enemy inside the reach that no swing hurts held the strike with no stall drop, in the hunt before this PR and in the walk out after it.
+- The correction: a strike that takes no health off an enemy for ten seconds drops that enemy from the strike and the hunt (D-776, F-209). The count runs across the enemies in reach, because the nearest one changes from tick to tick when two stand near, and a count for each enemy alone never ended.
+- `FullClearerDropsAnEnemyThatTheStrikesDoNotHurt` plays seed 6 with harmless weapons to the bottom. On the policy with no stall drop it softlocks on floor 1 at tick 10800.
+- The response file is `docs/reviews/pr-133-response.md`. The same session wrote the fix of round 0 (Session 331).
+- The gitar pass of the first head `b384bae` approved with no finding and no thread. The branch night 37140330448 passed at that head with seed 9153 in the list.
+- The gitar pass of the correction `5e26c7f` approved with one finding, which has merit: a hit on one enemy while the count read the other one never ended the count. The count now reads the sum of the health of the enemies, which any hit that lands lowers, and the commit that carries this entry answers the thread. The branch night 37143136198 passed at `5e26c7f` with seed 9153 in the list.
+
+### State of the build
+
+- Remote head: see the PR. Local: the full suite passed 2191 tests, and `det-lint`, `asset-qa`, and `ste-check` report 0 findings.
+- The local sweep of the full clearer over seeds 1 to 5000 and 9001 to 10000 on the health sum rule: 1703 bottoms, 4297 deaths, 0 softlocks, 0 crashes, the same counts as before the correction, in 8 min 48 s.
+- The correction moves the effective head, so the branch night runs again at the new head (D-547).
+
+### In flight
+
+- The gitar pass of the health sum commit, the third branch night, and review round 2 (D-643).
+
+### Traps and gotchas
+
+- A content set with harmless weapons makes every enemy one that no swing hurts, and the enemies hurt nobody. Floor 1 of seed 1 then holds more such enemies than ten seconds each fit into the timer, so seed 1 softlocks also with the drop. Seed 6 reaches the bottom.
+- The band case of P2-1 needs an enemy 1.2 meters or more above or below the feet inside 1.6 meters, so a hand-built floor is hard. Harmless weapons reproduce the hold with no geometry.
+
+### Open questions that block progress
+
+None. D-774, D-775, and D-776 wait for the confirmation of the owner under D-644.
+
+### Next concrete action
+
+Review round 2 reads the correction. Then the owner confirms D-774 to D-776, reads the review record, and merges PR #133.
+
+## Session 332: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-133, reviewer. Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-102 diff at effective head `5cb1b0c`, the roadmap tests, the behavior contract, and the Gitar comment.
+- The provider gate passed. The review found P2-1: a nearby enemy that the blade cannot hit can hold the clearer in the leave branch without the stall recovery.
+- Added `docs/reviews/pr-133.md` with the finding and a `Blocked` verdict. D-774 and D-775 still await owner confirmation under D-644.
+
+### State of the build
+
+- Remote implementation head: `5cb1b0c`. The full local suite passed 2190 tests. The focused regression passed within that run.
+- CI, smoke, bit identity, bots, asset QA, deterministic lint, documents, doc gate, STE, Gitar, and the night gate passed. `evaluate` and `review-gate` failed because the review record did not exist yet.
+- The review record and this entry are the metadata commit. The PR head after the push is verified with `gh pr view`.
+
+### In flight
+
+- The author must address P2-1. The owner must confirm D-774 and D-775. The review gate must read the pushed record.
+
+### Traps and gotchas
+
+- `NearestLiving` uses feet distance and weapon reach. Blade hits also require vertical overlap. The leave branch strikes before it walks and skips the hunt stall check.
+- The seed 9153 regression passes, but it does not cover an enemy inside scalar reach and outside the blade's vertical band.
+
+### Open questions that block progress
+
+None. D-774 and D-775 await the owner under D-644.
+
+### Next concrete action
+
+The author addresses P2-1 and asks the owner to confirm D-774 and D-775. Then a new review checks the fix and the current PR head.

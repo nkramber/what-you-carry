@@ -213,6 +213,7 @@ public sealed class NightSeedsTests
     public void NightSeedsCommandPrintsTheListAndNamesTheWindow()
     {
         string directory = TempDirectory();
+        string root = TempRoot(directory, []);
         string carry = Path.Combine(directory, "night.json");
         File.WriteAllText(carry, NightRecordCommand.Build(Commit, new DateTime(2026, 9, 25, 5, 0, 0, DateTimeKind.Utc), "failure", string.Empty, NightSeeds.RecordFields(NightSeeds.DayZero, "failure", Failed(TimerTester.PolicyName, 5250), new Dictionary<string, List<ulong>>())));
         TextWriter savedOut = Console.Out;
@@ -224,19 +225,19 @@ public sealed class NightSeedsTests
             Console.SetOut(output);
             Console.SetError(errors);
 
-            int exit = Program.Main(["night-seeds", "--sweep", TimerTester.PolicyName, "--date", "2026-09-26", "--root", RepositoryRoot.Find(), "--carry", carry]);
+            int exit = Program.Main(["night-seeds", "--sweep", TimerTester.PolicyName, "--date", "2026-09-26", "--root", root, "--carry", carry]);
             Assert.Equal(0, exit);
             Assert.Equal("1-5000,6001-6500,5250", output.ToString().Trim());
             Assert.Contains("day 2", errors.ToString(), StringComparison.Ordinal);
             Assert.Contains("the slice 6001-6500", errors.ToString(), StringComparison.Ordinal);
             Assert.Contains("the carried seeds [5250]", errors.ToString(), StringComparison.Ordinal);
 
-            string[] common = ["--root", RepositoryRoot.Find(), "--carry", carry];
+            string[] common = ["--root", root, "--carry", carry];
             Assert.Equal(2, Program.Main(["night-seeds", "--sweep", "walker", "--date", "2026-09-26", .. common]));
             Assert.Equal(2, Program.Main(["night-seeds", "--sweep", Coward.PolicyName, "--date", "26-09-2026", .. common]));
             Assert.Equal(2, Program.Main(["night-seeds", "--sweep", Coward.PolicyName, "--date", "2026-09-23", .. common]));
-            Assert.Equal(2, Program.Main(["night-seeds", "--sweep", Coward.PolicyName, "--date", "2026-09-26", "--root", RepositoryRoot.Find(), "--carry", Path.Combine(directory, "absent.json")]));
-            Assert.Equal(2, Program.Main(["night-seeds", "--sweep", Coward.PolicyName, "--date", "2026-09-26", "--root", RepositoryRoot.Find()]));
+            Assert.Equal(2, Program.Main(["night-seeds", "--sweep", Coward.PolicyName, "--date", "2026-09-26", "--root", root, "--carry", Path.Combine(directory, "absent.json")]));
+            Assert.Equal(2, Program.Main(["night-seeds", "--sweep", Coward.PolicyName, "--date", "2026-09-26", "--root", root]));
             Assert.Contains("absent.json", errors.ToString(), StringComparison.Ordinal);
         }
         finally
@@ -669,11 +670,12 @@ public sealed class NightSeedsTests
         Assert.Equal(new ulong[] { 5100 }, NightSeeds.ReadFailures("full-clearer: 5100\n", "failures.txt")[FullClearer.PolicyName]);
     }
 
-    /// <summary>D-655. The seed command takes the shard, and refuses a shard out of range for the sweep with a clear error.</summary>
+    /// <summary>D-655. The seed command takes the shard, and refuses a shard out of range for the sweep with a clear error. Shard 1 alone takes the extra seed of the root of the test (D-567).</summary>
     [Fact]
     public void NightSeedsCommandPrintsTheListOfAShard()
     {
         string directory = TempDirectory();
+        string root = TempRoot(directory, [7000]);
         string carry = Path.Combine(directory, "night.json");
         File.WriteAllText(carry, NightRecordCommand.Build(Commit, new DateTime(2026, 9, 25, 5, 0, 0, DateTimeKind.Utc), "failure", string.Empty, NightSeeds.RecordFields(NightSeeds.DayZero, "failure", Failed(FullClearer.PolicyName, 5250), new Dictionary<string, List<ulong>>())));
         TextWriter savedOut = Console.Out;
@@ -684,13 +686,14 @@ public sealed class NightSeedsTests
             StringWriter errors = new();
             Console.SetOut(output);
             Console.SetError(errors);
-            string[] common = ["night-seeds", "--sweep", FullClearer.PolicyName, "--date", "2026-09-26", "--root", RepositoryRoot.Find(), "--carry", carry];
+            string[] common = ["night-seeds", "--sweep", FullClearer.PolicyName, "--date", "2026-09-26", "--root", root, "--carry", carry];
 
             Assert.Equal(0, Program.Main([.. common, "--shard", "1"]));
             Assert.Equal(0, Program.Main([.. common, "--shard", "2"]));
             Assert.Equal(0, Program.Main(common));
-            Assert.Equal(new[] { "1-2500,6001-6250,5250", "2501-5000,6251-6500", "1-5000,6001-6500,5250" }, output.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries));
+            Assert.Equal(new[] { "1-2500,6001-6250,5250,7000", "2501-5000,6251-6500", "1-5000,6001-6500,5250,7000" }, output.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries));
             Assert.Contains("the shard 2 of 2", errors.ToString(), StringComparison.Ordinal);
+            Assert.Contains("the extra seeds [7000]", errors.ToString(), StringComparison.Ordinal);
             Assert.Contains("because shard 1 runs them", errors.ToString(), StringComparison.Ordinal);
 
             foreach (string wrong in new[] { "0", "3", "x", "-1" })
@@ -700,7 +703,7 @@ public sealed class NightSeedsTests
                 Assert.Contains($"The shard '{wrong}' is not a shard of the sweep full-clearer", errors.ToString(), StringComparison.Ordinal);
             }
 
-            Assert.Equal(2, Program.Main(["night-seeds", "--sweep", Coward.PolicyName, "--date", "2026-09-26", "--root", RepositoryRoot.Find(), "--carry", carry, "--shard", "2"]));
+            Assert.Equal(2, Program.Main(["night-seeds", "--sweep", Coward.PolicyName, "--date", "2026-09-26", "--root", root, "--carry", carry, "--shard", "2"]));
             Assert.Contains("runs as 1 shard(s)", errors.ToString(), StringComparison.Ordinal);
         }
         finally
@@ -897,5 +900,26 @@ public sealed class NightSeedsTests
         string path = Path.Combine(Path.GetTempPath(), $"wyc-night-seeds-{Guid.NewGuid():N}");
         Directory.CreateDirectory(path);
         return path;
+    }
+
+    /// <summary>
+    /// A checkout root under one temporary directory, with an extra seeds file that holds the given seeds of the full
+    /// clearer and none of each other sweep. A command test reads this file and never the extra seeds of the checkout,
+    /// which each fix PR of a slice failure changes (D-567).
+    /// </summary>
+    private static string TempRoot(string directory, ulong[] fullClearerSeeds)
+    {
+        string root = Path.Combine(directory, "root");
+        string path = Path.Combine(root, NightSeeds.ExtraSeedsPath);
+        string? folder = Path.GetDirectoryName(path);
+        if (folder is null)
+        {
+            throw new InvalidOperationException($"The extra seeds path '{path}' has no directory.");
+        }
+
+        Directory.CreateDirectory(folder);
+        string seeds = string.Join(",", fullClearerSeeds);
+        File.WriteAllText(path, $"{{\"random-walker\":[],\"greedy-descender\":[],\"full-clearer\":[{seeds}],\"timer-tester\":[],\"coward\":[],\"reachability\":[]}}");
+        return root;
     }
 }
