@@ -2,6 +2,41 @@
 
 Rule (D-146, D-377, D-379): this file keeps the 10 newest sessions, newest first. Read the newest entry, and the newest entry that names your branch. At the end of a session, add a new entry at the top, then run `handoff-rotate`. It moves each entry beyond the tenth to the top of `docs/session-handoff-archive.md`.
 
+## Session 342: 2026-10-04, Codex
+
+Author: Codex
+Session: PR-132, reviewer. Branch `chore/action-pins-after-bumps`. PR #132, pending merge. Base `f6f3df1`.
+
+### What this session did, and why
+
+- Re-reviewed PR #132 at effective head `fb0bd1c` after the merge of `main` and the decision id changes.
+- Verified the Dependabot groups and the fixed P2-1 regression test. Updated the existing review record.
+
+### State of the build
+
+- Remote head before this review commit: `fb0bd1c`.
+- The focused action tests passed, 11 tests. The Documents category passed, 262 tests. `doc-gate` and `ste-check` passed.
+- Hosted CI, sweeps, smoke, bit identity, bots, asset QA, deterministic lint, documents, STE, Dependabot validation, night gate, and Gitar passed at `fb0bd1c`.
+- `review-gate` and `evaluate` failed before this record approved the current effective head.
+- The review record and this handoff entry will be pushed together in one metadata commit.
+
+### In flight
+
+- Verify the post-push checks and confirm the remote head.
+
+### Traps and gotchas
+
+- The Gitar comment reports the old review verdict. It found no issue and ran no functional validation.
+- The PR has no focused roadmap entry.
+
+### Open questions that block progress
+
+None.
+
+### Next concrete action
+
+Wait for the post-push checks with the session command. Confirm the remote head and report any new failure.
+
 ## Session 341: 2026-10-04, Claude Code
 
 Author: Claude Code
@@ -331,37 +366,3 @@ None. D-774, D-775, and D-776 wait for the confirmation of the owner under D-644
 ### Next concrete action
 
 Review round 2 reads the correction. Then the owner confirms D-774 to D-776, reads the review record, and merges PR #133.
-
-## Session 332: 2026-10-03, Codex
-
-Author: Codex
-Session: PR-133, reviewer. Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
-
-### What this session did, and why
-
-- Reviewed the complete PR-102 diff at effective head `5cb1b0c`, the roadmap tests, the behavior contract, and the Gitar comment.
-- The provider gate passed. The review found P2-1: a nearby enemy that the blade cannot hit can hold the clearer in the leave branch without the stall recovery.
-- Added `docs/reviews/pr-133.md` with the finding and a `Blocked` verdict. D-774 and D-775 still await owner confirmation under D-644.
-
-### State of the build
-
-- Remote implementation head: `5cb1b0c`. The full local suite passed 2190 tests. The focused regression passed within that run.
-- CI, smoke, bit identity, bots, asset QA, deterministic lint, documents, doc gate, STE, Gitar, and the night gate passed. `evaluate` and `review-gate` failed because the review record did not exist yet.
-- The review record and this entry are the metadata commit. The PR head after the push is verified with `gh pr view`.
-
-### In flight
-
-- The author must address P2-1. The owner must confirm D-774 and D-775. The review gate must read the pushed record.
-
-### Traps and gotchas
-
-- `NearestLiving` uses feet distance and weapon reach. Blade hits also require vertical overlap. The leave branch strikes before it walks and skips the hunt stall check.
-- The seed 9153 regression passes, but it does not cover an enemy inside scalar reach and outside the blade's vertical band.
-
-### Open questions that block progress
-
-None. D-774 and D-775 await the owner under D-644.
-
-### Next concrete action
-
-The author addresses P2-1 and asks the owner to confirm D-774 and D-775. Then a new review checks the fix and the current PR head.

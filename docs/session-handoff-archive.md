@@ -1,5 +1,39 @@
 # Session handoff archive
 
+## Session 332: 2026-10-03, Codex
+
+Author: Codex
+Session: PR-133, reviewer. Branch `fix/night-37122879232`. PR #133, pending merge. Base `04d17e9`.
+
+### What this session did, and why
+
+- Reviewed the complete PR-102 diff at effective head `5cb1b0c`, the roadmap tests, the behavior contract, and the Gitar comment.
+- The provider gate passed. The review found P2-1: a nearby enemy that the blade cannot hit can hold the clearer in the leave branch without the stall recovery.
+- Added `docs/reviews/pr-133.md` with the finding and a `Blocked` verdict. D-774 and D-775 still await owner confirmation under D-644.
+
+### State of the build
+
+- Remote implementation head: `5cb1b0c`. The full local suite passed 2190 tests. The focused regression passed within that run.
+- CI, smoke, bit identity, bots, asset QA, deterministic lint, documents, doc gate, STE, Gitar, and the night gate passed. `evaluate` and `review-gate` failed because the review record did not exist yet.
+- The review record and this entry are the metadata commit. The PR head after the push is verified with `gh pr view`.
+
+### In flight
+
+- The author must address P2-1. The owner must confirm D-774 and D-775. The review gate must read the pushed record.
+
+### Traps and gotchas
+
+- `NearestLiving` uses feet distance and weapon reach. Blade hits also require vertical overlap. The leave branch strikes before it walks and skips the hunt stall check.
+- The seed 9153 regression passes, but it does not cover an enemy inside scalar reach and outside the blade's vertical band.
+
+### Open questions that block progress
+
+None. D-774 and D-775 await the owner under D-644.
+
+### Next concrete action
+
+The author addresses P2-1 and asks the owner to confirm D-774 and D-775. Then a new review checks the fix and the current PR head.
+
 ## Session 331: 2026-10-03, Claude Code
 
 Author: Claude Code
